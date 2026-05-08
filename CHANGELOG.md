@@ -20,6 +20,7 @@
 - Updated `RepoSelectorForAnswer` to wait to query `Re3byUrIsDocument` until we have `preferredReposURIs` because preferred repos don't display even though they eventually do to trigger the display of the "preferred repositories" checkbox [#118]
 
 ## Chore
+- Updated version of `next-intl` to `v4.9.2` and `icu-minify` to `v4.11.1`, and added `override` of `postcss` to `v8.5.10` to address security vulnerabilities.
 - Updated `sanitize-html` to `v2.17.3` and `dompurify` to `v3.4.0` due to security issues. Also, updated `prettier` to `v3.8.3` and `@dmptool/types` to `v3.1.4`, and `lodash` override to `v.4.18.1`. Removed overrides for `minimatch` and `test-exclude`.
 
 ==========================================================================================
