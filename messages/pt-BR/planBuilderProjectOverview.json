@@ -357,7 +357,18 @@
       "hasAccess": "Estas pessoas atualmente têm acesso a este plano",
       "removeCollaborator": "Remover colaborador do projeto",
       "saveCollaboratorAccessUpdate": "Salvar atualização de acesso do colaborador",
-      "pendingInvites": "Estas pessoas não aceitaram o convite ainda"
+      "pendingInvites": "Estas pessoas não aceitaram o convite ainda",
+      "accessLevels": "O que significam estes níveis de acesso?"
+    },
+    "accessLevels": {
+      "primary": "Proprietário primário",
+      "edit": "Editor",
+      "comment": "Comentarista",
+      "own": "Coproprietário",
+      "primaryDescription": "O usuário é capaz de realizar todas as ações em um Plano (geralmente restrito ao proprietário/criador), e sua afiliação é a organização associada ao projeto",
+      "editDescription": "Tem direitos de edição aos planos (pode escrever e editar os planos).",
+      "commentDescription": "Has read-rights to the project (can view and comment on the plans).",
+      "ownDescription": "Has admin-rights to the project (can invite other users, edit the plans, and publish them)."
     },
     "buttons": {
       "invite": "Convidar colaboradores",
@@ -433,7 +444,7 @@
     "links": {
       "learnMoreAboutCreditTaxonomy": "Saiba mais sobre cada função"
     },
-    "memberRolesDescription": "<p>Select the role(s) that should be displayed within citations for this project member with the DMP.</p><p>We use an ANSI/NISO standard called CRediT, a community-owned 14 role taxonomy that can be used to describe the key types of contributions typically made to the production and publication of research output such as research articles. </p><p><link />Saiba mais sobre a Taxonomia CRediT ↗</p>"
+    "memberRolesDescription": "<p>Selecione a(s) função(ões) que devem ser exibida(s) nas citações referentes a este membro do projeto no DMP.</p><p>Utilizamos um padrão ANSI/NISO denominado CRediT, uma taxonomia de 14 funções de propriedade da comunidade, que pode ser utilizada para descrever os principais tipos de contribuições tipicamente realizadas na produção e publicação de resultados de pesquisa, tais como artigos científicos.</p><p><link />Saiba mais sobre a Taxonomia CRediT ↗</p>"
   },
   "ProjectsProjectMemberCreate": {
     "title": "Adicionar um novo membro ao projeto",

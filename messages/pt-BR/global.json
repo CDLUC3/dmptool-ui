@@ -510,7 +510,8 @@
         "label": "E-mail de feedbacks",
         "placeholder": "Digite o e-mail de feedback",
         "description": "Insira os e-mails separados por vírgulas.",
-        "helpText": "Por padrão este é o endereço de e-mail do contato organizações, mas você pode alterar o endereço de e-mail de feedback"
+        "helpText": "Por padrão este é o endereço de e-mail do contato organizações, mas você pode alterar o endereço de e-mail de feedback",
+        "invalidEmail": "Um ou mais endereços de e-mail são inválidos. Por favor, verifique e corrija os endereços de e-mail."
       },
       "feedbackText": {
         "label": "Mensagem exibida aos usuários solicitando feedback",

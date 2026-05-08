@@ -160,6 +160,11 @@ const ProjectsProjectCollaboration = () => {
     const meId = Number(meData?.me?.id);
     const currentCollaborator = projectCollaborators.find(c => Number(c.id) === id);
 
+    // Skip if access level hasn't changed
+    if ((currentCollaborator?.accessLevel ?? 'EDIT').toLowerCase() === accessLevel.toLowerCase()) {
+      return;
+    }
+
     // Primary owner cannot change their own access level away from primary
     if (Number(currentCollaborator?.user?.id) === meId &&
       currentCollaborator?.accessLevel === ProjectCollaboratorAccessLevel.Primary &&
@@ -439,16 +444,16 @@ const ProjectsProjectCollaboration = () => {
             aria-labelledby="current-access-heading">
             <h2 id="current-access-heading"
               className={styles.sectionTitle}>{t('headings.hasAccess')}</h2>
+            <details className={styles.accessLevelLegend}>
+              <summary>{t('headings.accessLevels')}</summary>
+              <ul>
+                <li><strong>{t('accessLevels.primary')}</strong> — {t('accessLevels.primaryDescription')}</li>
+                <li><strong>{t('accessLevels.own')}</strong> — {t('accessLevels.ownDescription')}</li>
+                <li><strong>{t('accessLevels.comment')}</strong> — {t('accessLevels.commentDescription')}</li>
+                <li><strong>{t('accessLevels.edit')}</strong> — {t('accessLevels.editDescription')}</li>
+              </ul>
+            </details>
             <div className={styles.membersList} role="list">
-              <details className={styles.accessLevelLegend}>
-                <summary>{t('headings.accessLevels')}</summary>
-                <ul>
-                  <li><strong>{t('accessLevels.primary')}</strong> — {t('accessLevels.primaryDescription')}</li>
-                  <li><strong>{t('accessLevels.own')}</strong> — {t('accessLevels.ownDescription')}</li>
-                  <li><strong>{t('accessLevels.comment')}</strong> — {t('accessLevels.commentDescription')}</li>
-                  <li><strong>{t('accessLevels.edit')}</strong> — {t('accessLevels.editDescription')}</li>
-                </ul>
-              </details>
               {hasAccess.length > 0 && hasAccess.map((collaborator) => {
                 const collaboratorName = `${collaborator?.user?.givenName} ${collaborator?.user?.surName}`;
                 const collaboratorAccessLevel = (
