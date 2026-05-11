@@ -140,7 +140,7 @@ const setupMocks = ({
   meError?: { message: string };
   feedbackError?: { message: string };
   collaboratorsError?: { message: string };
-  collaborators?: Array<{ accessLevel: string; user: { id: number } }>;
+  collaborators?: { accessLevel: string; user: { id: number } }[];
 } = {}) => {
   const meQueryReturn = {
     data: meLoading ? null : { me: mockMeData.me },

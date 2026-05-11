@@ -396,12 +396,13 @@ const ProjectsProjectCollaboration = () => {
   }, [projectCollaborators]);
 
   useEffect(() => {
-    if (queryError) {
-      setErrorMessages(queryError.message ? [queryError.message] : [])
+    const messages = [queryError?.message, meError?.message].filter(Boolean) as string[];
+    if (messages.length > 0) {
+      setErrorMessages(messages);
     }
-  }, [queryError])
+  }, [queryError, meError]);
 
-  if (loading) {
+  if (loading || meLoading) {
     return <Loading message={Global('messaging.loading')} />
   }
 
