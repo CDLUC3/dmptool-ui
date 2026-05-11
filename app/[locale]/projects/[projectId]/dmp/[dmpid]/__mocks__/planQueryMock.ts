@@ -102,10 +102,10 @@ export const mockPlanData = {
         totalQuestions: 1
       }
     ],
-    "planCreator": {
-      "id": 3,
-      "affiliation": {
-        "uri": "https://ror.org/03yrm5c26"
+    planCreator: {
+      id: 3,
+      affiliation: {
+        uri: "https://ror.org/03yrm5c26"
       }
     },
     created: "1741308996000",
