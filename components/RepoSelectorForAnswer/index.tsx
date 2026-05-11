@@ -85,6 +85,17 @@ function toSubjectAreaObject(str: string): { id: string; name: string } {
   return { id, name };
 }
 
+// Deduplicate repositories by URI to avoid duplicates in search results
+const dedupeByUri = (repos: Repository[]): Repository[] => {
+  const seenUris = new Set<string>();
+  return repos.filter(repo => {
+    const uri = repo.uri ?? '';
+    if (seenUris.has(uri)) return false;
+    seenUris.add(uri);
+    return true;
+  });
+};
+
 /* Research Output question's Repository Selection System */
 const RepoSelectorForAnswer = ({
   value,
@@ -260,7 +271,7 @@ const RepoSelectorForAnswer = ({
         return matchesSearch && matchesSubject && matchesType;
       }) as Repository[];
 
-      setRepositories(filtered);
+      setRepositories(dedupeByUri(filtered));
       setTotalCount(filtered.length);
       setTotalPages(1);
       setHasNextPage(false);
@@ -411,16 +422,7 @@ const RepoSelectorForAnswer = ({
           }
           return true;
         });
-        // Deduplicate by URI — the API can return the same repository more than once,
-        // which causes React duplicate-key warnings since we use uri as the item key.
-        const seenUris = new Set<string>();
-        const dedupedRepos = validRepos.filter(repo => {
-          const uri = repo.uri ?? '';
-          if (seenUris.has(uri)) return false;
-          seenUris.add(uri);
-          return true;
-        });
-        setRepositories(dedupedRepos);
+        setRepositories(dedupeByUri(validRepos));
         setTotalCount(repositoriesData.repositories.totalCount ?? 0);
         setTotalPages(Math.ceil((repositoriesData.repositories.totalCount ?? 0) / LIMIT));
         setHasNextPage(repositoriesData.repositories.hasNextPage ?? false);
@@ -445,7 +447,7 @@ const RepoSelectorForAnswer = ({
       preferredReposURIs.length > 0 &&
       preferredRepositoriesData?.re3byURIs &&
       showPreferredOnly) {
-      setRepositories(preferredRepositoriesData.re3byURIs as Repository[]);
+      setRepositories(dedupeByUri(preferredRepositoriesData.re3byURIs as Repository[]));
       setTotalCount(preferredRepositoriesData.re3byURIs.length);
       setTotalPages(1);
       setHasNextPage(false);
@@ -475,7 +477,7 @@ const RepoSelectorForAnswer = ({
         // Preferred URIs returned no results (URI mismatch etc.) — fall back to all repos
         setShowPreferredOnly(false);
       } else {
-        setRepositories(preferredRepositoriesData.re3byURIs as Repository[]);
+        setRepositories(dedupeByUri(preferredRepositoriesData.re3byURIs as Repository[]));
         setTotalCount(preferredRepositoriesData.re3byURIs.length);
         setTotalPages(1);
         setHasNextPage(false);
