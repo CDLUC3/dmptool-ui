@@ -9,7 +9,6 @@ import {
 } from "react-aria-components";
 import styles from './ProjectsProjectCollaboration.module.scss';
 import { AccessLevelKey } from '@/app/types';
-import { ACCESS_LEVELS } from '@/lib/constants';
 
 interface SaveCollaboratorAccessModalProps {
   collaboratorId: number;
@@ -37,7 +36,7 @@ const SaveCollaboratorAccessModal: React.FC<SaveCollaboratorAccessModalProps> = 
   const t = useTranslations('ProjectsProjectCollaboration');
 
   const isPrimaryDesignation = pendingAccessLevel === 'primary';
-  const accessLevelLabel = ACCESS_LEVELS[pendingAccessLevel.toLowerCase() as AccessLevelKey] ?? pendingAccessLevel;
+  const accessLevelLabel = t(`accessLevels.${pendingAccessLevel.toLowerCase() as AccessLevelKey}`, { defaultValue: pendingAccessLevel });
   return (
     <div className={styles.memberActions}>
       <DialogTrigger

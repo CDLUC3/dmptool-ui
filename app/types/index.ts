@@ -12,7 +12,6 @@ import {
   AnyQuestionType,
   DefaultResearchOutputCustomColumn
 } from '@dmptool/types';
-import { ACCESS_LEVELS } from "@/lib/constants";
 
 import { CalendarDate } from "@internationalized/date";
 
@@ -641,4 +640,4 @@ export interface ProjectDetailsFormInterface {
   parentResearchDomainId: string | number;
 }
 
-export type AccessLevelKey = keyof typeof ACCESS_LEVELS;
+export type AccessLevelKey = 'edit' | 'comment' | 'own' | 'primary';

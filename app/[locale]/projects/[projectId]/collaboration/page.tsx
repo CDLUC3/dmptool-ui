@@ -43,7 +43,6 @@ import Loading from '@/components/Loading';
 import { routePath } from '@/utils/routes';
 import { extractErrors } from '@/utils/errorHandler';
 import { useToast } from '@/context/ToastContext';
-import { ACCESS_LEVELS } from "@/lib/constants";
 import { AccessLevelKey } from "@/app/types";
 
 import RevokeCollaboratorModal from './RevokeCollaboratorModal';
@@ -208,7 +207,7 @@ const ProjectsProjectCollaboration = () => {
         );
         // Update the pending value to the confirmed saved value
         setPendingAccessLevels(prev => ({ ...prev, [id]: accessLevel.toLowerCase() }));
-        const accessLevelLabel = ACCESS_LEVELS[accessLevel.toLowerCase() as AccessLevelKey] ?? accessLevel;
+        const accessLevelLabel = t(`accessLevels.${accessLevel.toLowerCase() as AccessLevelKey}`, { defaultValue: accessLevel });
         const message = t('messages.success.updatedAccess', { name: collaboratorName, accessLevel: accessLevelLabel });
         toastState.add(message, { type: 'success', timeout: 3000 });
         setAnnouncement(message);
