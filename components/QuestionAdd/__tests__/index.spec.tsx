@@ -1507,7 +1507,7 @@ describe("Research Output Question Type", () => {
     // Find customize buttons (there should be multiple)
     const customizeButtons = screen.getAllByText('buttons.customize');
     const initialNoOfCloseButtons = screen.queryAllByText('buttons.close');;
-    expect(initialNoOfCloseButtons.length).toBe(1); // Only Output Type is expanded by default
+    expect(initialNoOfCloseButtons.length).toBe(0);
     expect(customizeButtons.length).toBeGreaterThan(0);
 
     // Click the first customize button (for Output Type which is always expanded)
@@ -1518,7 +1518,7 @@ describe("Research Output Question Type", () => {
     // Should show an additionalclose button after clicking and expanding
     await waitFor(() => {
       const closeButtons = screen.getAllByText('buttons.close');;
-      expect(closeButtons.length).toBe(2);
+      expect(closeButtons.length).toBe(1);
     });
   });
 
@@ -1699,6 +1699,10 @@ describe("Research Output Question Type", () => {
       />);
 
     // Find the panel
+    const outputTypeCheckbox = screen.getByTestId('checkbox-outputType');
+    await act(async () => { // open panel
+      fireEvent.click(outputTypeCheckbox);
+    });
     const panel = document.getElementById('panel-outputType');
     if (!panel) throw new Error('panel-outputType not found');
 

@@ -3,6 +3,7 @@
 - Added `UpdateAffiliation` and `AffiliationById` queries [#203]
 
 ## Updated
+- Updated `useResearchoutputTable` hook to not include `outputType` field as one that is initially enabled. Updated `expandedFields` logic for Research Output fields to be dynamic [#33]
 - Updated Request Feedback Options text [#226]
 - Updated `PlanOverviewPage` and `plan` schema to include the `planCreator` field now passed as part of `plan` query response, and fixed bug in determining `read-only` [#198]
 - Updated `RepoSelectorForAnswer` to fix the issue with repositories not displaying in repositories search modal. Main change was to place the repositoriesData handling into a useEffect, since fetchRepositoriesData is async [#224]

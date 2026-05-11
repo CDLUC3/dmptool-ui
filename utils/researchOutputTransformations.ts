@@ -487,7 +487,9 @@ export const jsonToState = (
     return {
       standardFields: initialStandardFields,
       additionalFields: [],
-      expandedFields: ['title', 'outputType'],
+      expandedFields: initialStandardFields
+        .filter(f => f.enabled)
+        .map(f => f.id),
     };
   }
 
