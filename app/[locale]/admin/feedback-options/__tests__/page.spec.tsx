@@ -35,8 +35,11 @@ jest.mock('next/link', () => ({
 
 jest.mock("@/components/Form", () => ({
   /*eslint-disable @typescript-eslint/no-explicit-any */
-  FormInput: ({ label, onChange, value }: any) => (
-    <input aria-label={label} value={value} onChange={onChange} />
+  FormInput: ({ label, onChange, value, isInvalid, errorMessage }: any) => (
+    <div>
+      <input aria-label={label} value={value} onChange={onChange} />
+      {isInvalid && errorMessage && <p role="alert">{errorMessage}</p>}
+    </div>
   ),
   /*eslint-disable @typescript-eslint/no-explicit-any */
   FormTextArea: ({ label, onChange, value, description, helpMessage }: any) => (
@@ -287,6 +290,42 @@ describe("FeedbackOptions", () => {
     expect(screen.getByText("sections.organizationSettings.items.manageUserAccounts.title")).toBeInTheDocument();
     expect(screen.getByText("sections.organizationSettings.items.customizeEmailText.title")).toBeInTheDocument();
     expect(screen.getByText("sections.organizationSettings.items.requestFeedbackOptions.title")).toBeInTheDocument();
+  });
+
+  it('should not show email validation error when email is valid', () => {
+    render(<FeedbackOptions />);
+
+    const emailInput = screen.getByRole('textbox', { name: 'fields.feedbackEmail.label' });
+    fireEvent.change(emailInput, { target: { value: 'valid@example.com' } });
+
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
+  it('should show email validation error when email is invalid', () => {
+    render(<FeedbackOptions />);
+
+    const emailInput = screen.getByRole('textbox', { name: 'fields.feedbackEmail.label' });
+    fireEvent.change(emailInput, { target: { value: 'not-a-valid-email' } });
+
+    expect(screen.getByRole('alert')).toHaveTextContent('fields.feedbackEmail.invalidEmail');
+  });
+
+  it('should not show email validation error when multiple valid emails are entered', () => {
+    render(<FeedbackOptions />);
+
+    const emailInput = screen.getByRole('textbox', { name: 'fields.feedbackEmail.label' });
+    fireEvent.change(emailInput, { target: { value: 'one@example.com, two@example.com, three@example.com' } });
+
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
+  it('should show email validation error when one of multiple emails is invalid', () => {
+    render(<FeedbackOptions />);
+
+    const emailInput = screen.getByRole('textbox', { name: 'fields.feedbackEmail.label' });
+    fireEvent.change(emailInput, { target: { value: 'valid@example.com, not-an-email' } });
+
+    expect(screen.getByRole('alert')).toHaveTextContent('fields.feedbackEmail.invalidEmail');
   });
 
   it("should pass accessibility tests", async () => {

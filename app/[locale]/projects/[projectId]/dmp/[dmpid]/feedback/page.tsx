@@ -7,7 +7,9 @@ import {
   Breadcrumb,
   Breadcrumbs,
   Button,
-  Link
+  Link,
+  Tooltip,
+  TooltipTrigger,
 } from 'react-aria-components';
 
 // GraphQL
@@ -15,6 +17,7 @@ import { useQuery, useMutation } from '@apollo/client/react';
 import {
   MeDocument,
   PlanFeedbackStatusDocument,
+  ProjectCollaboratorsDocument,
   RequestFeedbackDocument
 } from '@/generated/graphql';
 
@@ -73,8 +76,25 @@ const ProjectsProjectPlanFeedback = () => {
     variables: { planId: Number(dmpId) },
   });
 
+  // Get project collaborators
+  const { data: collaboratorsData, loading: collaboratorsLoading, error: collaboratorsError } = useQuery(ProjectCollaboratorsDocument,
+    {
+      variables: { projectId: Number(projectId) },
+      skip: (!projectId), // prevents the query from running when no projectId
+      fetchPolicy: 'network-only', // always fetch from network
+      notifyOnNetworkStatusChange: true
+    }
+  );
+
   // Initialize mutation
   const [RequestFeedbackMutation] = useMutation(RequestFeedbackDocument);
+
+
+  const isPrimaryCollaborator = collaboratorsData?.projectCollaborators?.some(
+    (collaborator) =>
+      collaborator?.user?.id === meData?.me?.id &&
+      collaborator?.accessLevel === "PRIMARY"
+  ) ?? false;
 
   const handleRequestFeedback = async () => {
     setErrorMessages([]);
@@ -130,8 +150,14 @@ const ProjectsProjectPlanFeedback = () => {
     }
   }, [feedbackError]);
 
+  useEffect(() => {
+    if (collaboratorsError) {
+      setErrorMessages(prev => [...prev, collaboratorsError.message]);
+    }
+  }, [collaboratorsError]);
 
-  if (meLoading || feedbackLoading) {
+
+  if (meLoading || feedbackLoading || collaboratorsLoading) {
     return <Loading message={Global('messaging.loading')} />;
   }
 
@@ -177,26 +203,45 @@ const ProjectsProjectPlanFeedback = () => {
                 onChange={setFeedbackMessage}
                 richText={false}
                 className={styles.messageTextarea}
-                disabled={isSubmitting}
+                disabled={isSubmitting || !isPrimaryCollaborator}
               />
             )}
             <div className={styles.submitSection}>
-              <Button
-                onPress={handleRequestFeedback}
-                className="react-aria-Button react-aria-Button--primary"
-                isDisabled={isSubmitting || feedbackRequested}
-                aria-describedby={feedbackRequested ? "feedback-success" : undefined}
-              >
-                {isSubmitting ? (
-                  <>
-                    <span className={styles.loadingSpinner} aria-hidden="true"></span>
-                    <span className="sr-only">{Global('messaging.submittingSROnly')}</span>
-                    {Global('messaging.submitting')}
-                  </>
-                ) : (
-                  t('form.submitButton')
-                )}
-              </Button>
+              {isPrimaryCollaborator ? (
+                <Button
+                  onPress={handleRequestFeedback}
+                  className="react-aria-Button react-aria-Button--primary"
+                  isDisabled={isSubmitting || feedbackRequested}
+                  aria-describedby={feedbackRequested ? "feedback-success" : undefined}
+                >
+                  {isSubmitting ? (
+                    <>
+                      <span className={styles.loadingSpinner} aria-hidden="true"></span>
+                      <span className="sr-only">{Global('messaging.submittingSROnly')}</span>
+                      {Global('messaging.submitting')}
+                    </>
+                  ) : (
+                    t('form.submitButton')
+                  )}
+                </Button>
+              ) : (
+                <TooltipTrigger delay={0}>
+                  <Button
+                    className={styles.submitButtonDisabled}
+                    aria-disabled={true}
+                    onPress={() => { }}
+                  >
+                    {t('form.submitButton')}
+                  </Button>
+                  <Tooltip
+                    placement="bottom"
+                    className={`${styles.tooltip} py-2 px-2`}
+                  >
+                    {t('form.primaryAccessRequired')}
+                  </Tooltip>
+                </TooltipTrigger>
+              )}
+
               {feedbackRequested && (
                 <span
                   ref={successMessageRef}

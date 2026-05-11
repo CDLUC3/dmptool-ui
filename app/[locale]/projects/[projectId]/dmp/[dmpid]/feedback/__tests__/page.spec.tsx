@@ -5,6 +5,7 @@ import { useQuery, useMutation } from '@apollo/client/react';
 import {
   MeDocument,
   PlanFeedbackStatusDocument,
+  ProjectCollaboratorsDocument,
   RequestFeedbackDocument,
 } from '@/generated/graphql';
 
@@ -126,14 +127,20 @@ const setupMocks = ({
   feedbackStatus = 'NONE',
   meLoading = false,
   feedbackLoading = false,
+  collaboratorsLoading = false,
   meError = undefined,
   feedbackError = undefined,
+  collaboratorsError = undefined,
+  collaborators = [{ accessLevel: 'PRIMARY', user: { id: mockMeData.me.id } }], // default: current user is PRIMARY
 }: {
   feedbackStatus?: FeedbackStatusType;
   meLoading?: boolean;
   feedbackLoading?: boolean;
+  collaboratorsLoading?: boolean;
   meError?: { message: string };
   feedbackError?: { message: string };
+  collaboratorsError?: { message: string };
+  collaborators?: { accessLevel: string; user: { id: number } }[];
 } = {}) => {
   const meQueryReturn = {
     data: meLoading ? null : { me: mockMeData.me },
@@ -149,6 +156,13 @@ const setupMocks = ({
       data: { planFeedbackStatus: 'REQUESTED' },
     }),
   };
+
+  const collaboratorsQueryReturn = {
+    data: collaboratorsLoading ? null : { projectCollaborators: collaborators },
+    loading: collaboratorsLoading,
+    error: collaboratorsError,
+  };
+
 
   const defaultQueryReturn: ReturnType<typeof useQuery> = {
     data: null,
@@ -166,6 +180,11 @@ const setupMocks = ({
       /*eslint-disable @typescript-eslint/no-explicit-any */
       return feedbackQueryReturn as any;
     }
+
+    if (document === ProjectCollaboratorsDocument) {
+      return collaboratorsQueryReturn as any;
+    }
+
     return defaultQueryReturn;
   });
 
@@ -190,7 +209,7 @@ describe('ProjectsProjectPlanFeedback', () => {
   });
 
   it('should show loading state while queries are in flight', () => {
-    setupMocks({ meLoading: true });
+    setupMocks({ meLoading: true, feedbackLoading: true, collaboratorsLoading: true });
     render(<ProjectsProjectPlanFeedback />);
     expect(screen.getByTestId('loading')).toBeInTheDocument();
   });
@@ -339,5 +358,47 @@ describe('ProjectsProjectPlanFeedback', () => {
     const { container } = render(<ProjectsProjectPlanFeedback />);
     const results = await axe(container);
     expect(results).toHaveNoViolations();
+  });
+
+  it('should render active submit button when current user is a PRIMARY collaborator', () => {
+    setupMocks({
+      collaborators: [{ accessLevel: 'PRIMARY', user: { id: mockMeData.me.id } }],
+    });
+    render(<ProjectsProjectPlanFeedback />);
+
+    const submitButton = screen.getByRole('button', { name: 'form.submitButton' });
+    expect(submitButton).toBeInTheDocument();
+    expect(submitButton).not.toHaveAttribute('aria-disabled', 'true');
+  });
+
+  it('should render disabled submit button when current user is NOT a PRIMARY collaborator', () => {
+    setupMocks({
+      collaborators: [
+        { accessLevel: 'OWN', user: { id: mockMeData.me.id } },
+        { accessLevel: 'PRIMARY', user: { id: 999 } },
+      ],
+    });
+    render(<ProjectsProjectPlanFeedback />);
+
+    const submitButton = screen.getByRole('button', { name: 'form.submitButton' });
+    expect(submitButton).toBeInTheDocument();
+    expect(submitButton).toHaveAttribute('aria-disabled', 'true');
+  });
+
+  it('should disable the textarea when current user is NOT a PRIMARY collaborator', () => {
+    setupMocks({
+      collaborators: [{ accessLevel: 'OWN', user: { id: mockMeData.me.id } }],
+    });
+    render(<ProjectsProjectPlanFeedback />);
+
+    const textarea = screen.getByRole('textbox', { name: 'form.label' });
+    expect(textarea).toBeDisabled();
+  });
+
+  it('should display error message when collaborators query fails', () => {
+    setupMocks({ collaboratorsError: { message: 'Failed to load collaborators' } });
+    render(<ProjectsProjectPlanFeedback />);
+
+    expect(screen.getByText('Failed to load collaborators')).toBeInTheDocument();
   });
 });

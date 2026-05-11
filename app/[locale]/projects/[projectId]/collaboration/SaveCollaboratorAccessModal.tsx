@@ -8,22 +8,25 @@ import {
   ModalOverlay
 } from "react-aria-components";
 import styles from './ProjectsProjectCollaboration.module.scss';
+import { AccessLevelKey } from '@/app/types';
 
-interface RevokeCollaboratorModalProps {
+interface SaveCollaboratorAccessModalProps {
   collaboratorId: number;
   collaboratorName: string;
   isOpen: boolean;
   isDeleting: boolean;
+  pendingAccessLevel: string;
   onOpenChange: (open: boolean) => void;
   onRevoke: (id: number, name: string) => void;
   onCancel: () => void;
 }
 
-const RevokeCollaboratorModal: React.FC<RevokeCollaboratorModalProps> = ({
+const SaveCollaboratorAccessModal: React.FC<SaveCollaboratorAccessModalProps> = ({
   collaboratorId,
   collaboratorName,
   isOpen,
   isDeleting,
+  pendingAccessLevel,
   onOpenChange,
   onRevoke,
   onCancel,
@@ -31,6 +34,9 @@ const RevokeCollaboratorModal: React.FC<RevokeCollaboratorModalProps> = ({
   // Localization
   const Global = useTranslations('Global');
   const t = useTranslations('ProjectsProjectCollaboration');
+
+  const isPrimaryDesignation = pendingAccessLevel === 'primary';
+  const accessLevelLabel = t(`accessLevels.${pendingAccessLevel.toLowerCase() as AccessLevelKey}`, { defaultValue: pendingAccessLevel });
   return (
     <div className={styles.memberActions}>
       <DialogTrigger
@@ -38,19 +44,24 @@ const RevokeCollaboratorModal: React.FC<RevokeCollaboratorModalProps> = ({
         onOpenChange={onOpenChange}
       >
         <Button
-          className="secondary"
-          aria-label={t('revokeAccessFor', { name: collaboratorName })}
+          className="primary"
+          aria-label={t('saveAccessFor', { name: collaboratorName })}
           isDisabled={isDeleting}
         >
-          {t('buttons.revoke')}
+          {Global('buttons.save')}
         </Button>
+
         <ModalOverlay className={`${styles.modalOverride} react-aria-ModalOverlay`}>
           <Modal>
             <Dialog>
               {({ close }) => (
                 <>
-                  <h3>{t('headings.removeCollaborator')}</h3>
-                  <p>{t('removeCollaborator')}</p>
+                  <h3>{t('headings.saveCollaboratorAccessUpdate')}</h3>
+                  {isPrimaryDesignation ? (
+                    <p>{t('primaryDesignationChangeWarning', { name: collaboratorName })}</p>
+                  ) : (
+                    <p>{t('saveCollaboratorAccess', { name: collaboratorName, accessLevel: accessLevelLabel })}</p>
+                  )}
                   <div className={styles.buttonContainer}>
                     <Button
                       className="secondary"
@@ -64,13 +75,13 @@ const RevokeCollaboratorModal: React.FC<RevokeCollaboratorModalProps> = ({
                     </Button>
                     <Button
                       className="primary"
-                      aria-label={t('deleteCollaborator', { name: collaboratorName })}
+                      aria-label={t('saveCollaboratorAccess', { name: collaboratorName, accessLevel: accessLevelLabel })}
                       onPress={() => {
                         onRevoke(collaboratorId, collaboratorName);
                         close();
                       }}
                     >
-                      {Global('buttons.delete')}
+                      {Global('buttons.save')}
                     </Button>
                   </div>
                 </>
@@ -84,4 +95,4 @@ const RevokeCollaboratorModal: React.FC<RevokeCollaboratorModalProps> = ({
 
 };
 
-export default RevokeCollaboratorModal;
+export default SaveCollaboratorAccessModal;

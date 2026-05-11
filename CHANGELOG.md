@@ -1,8 +1,13 @@
 ## Added
+- Added a `SaveCollaboratorAccessModal` to display to user when saving a change to a collaborator's access level [#228]
 - Added new `Notification` component for displaying notifications at top of page. Added new `CompleteFeedback` mutation [#191]
 - Added `UpdateAffiliation` and `AffiliationById` queries [#203]
 
 ## Updated
+- Updated `FeedbackOptions` page to properly validate and message user when submitted emails are not valid, and added the use of a save confirmation modal [#228]
+- Updated `AccessLevelRadioGroup` to include `PRIMARY` [#228]
+- Updated `ProjectsProjectCollaboration` component with new functionality to determine whether a user can make certain access level changes [#228]
+- Updated `ProjectsProjectPlanFeedback` component to disable the submit button do only Primary users can make the request [#228]
 - Updated `useResearchoutputTable` hook to not include `outputType` field as one that is initially enabled. Updated `expandedFields` logic for Research Output fields to be dynamic [#33]
 - Updated Request Feedback Options text [#226]
 - Updated `PlanOverviewPage` and `plan` schema to include the `planCreator` field now passed as part of `plan` query response, and fixed bug in determining `read-only` [#198]

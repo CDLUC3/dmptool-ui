@@ -312,7 +312,7 @@
     "para1": "When you click <strong>Grant access</strong> we'll send an email to this person inviting them to view your plan.",
     "para2": "If they aren't already a member of the DMP Tool we'll invite them to join.",
     "para3": "We have sent an invite to <strong>{email}</strong>. They will have access to this project.",
-    "para4": "To also add them as a Project Member, &lt;projectmember&gt; go to the Project Members page &lt;/projectmember&gt;.",
+    "para4": "To also add them as a Project Member, <projectmember> go to the Project Members page </projectmember>.",
     "para5": "They will have access to {access} DMPs in this project.",
     "messaging": {
       "errors": {
@@ -336,21 +336,38 @@
     "title": "Invite people and manage access",
     "description": "When you invite a person, we'll send an email to this person inviting them to view your plan.",
     "removeCollaborator": "Removing this member means they will no longer be able to collaborate on this plan.",
-    "canEdit": "Can edit plan",
-    "canComment": "Comment only",
-    "own": "Owner",
+    "saveCollaboratorAccess": "Updating the access level for {name} will change their permissions for this plan to {accessLevel}.",
+    "primaryDesignationChangeWarning": "Assigning {name} as Primary Owner will transfer your Primary Owner status to them. The access level for the current Primary Owner will be changed to Co-Owner. Do you want to continue?",
+    "canEdit": "Editor",
+    "canComment": "Commenter",
+    "own": "Co-Owner",
+    "primary": "Primary Owner",
     "cancelRemoval": "Cancel removal of project collaborator {name}",
     "deleteCollaborator": "Delete project collaborator {name}",
     "canEditPlanFor": "Can edit plan for {name}",
     "canCommentPlanFor": "Can comment on plan for {name}",
-    "canOwnPlanFor": "Own plan for {name}",
+    "canCoOwnPlanFor": "Can co-own plan for {name}",
+    "canPrimaryOwnPlanFor": "Can own plan for {name}",
     "revokeAccessFor": "Revoke access for {name}",
+    "saveAccessFor": "Save access for {name}",
     "deleteInviteFor": "Delete invite for {name}",
     "resendInviteFor": "Resend invite for {name}",
     "headings": {
       "hasAccess": "These people currently have access to this plan",
       "removeCollaborator": "Remove project collaborator",
-      "pendingInvites": "These people have not accepted invite yet"
+      "saveCollaboratorAccessUpdate": "Save collaborator access update",
+      "pendingInvites": "These people have not accepted invite yet",
+      "accessLevels": "What do these access levels mean?"
+    },
+    "accessLevels": {
+      "primary": "Primary Owner",
+      "edit": "Editor",
+      "comment": "Commenter",
+      "own": "Co-Owner",
+      "primaryDescription": "The user is able to perform all actions on a Plan (typically restricted to the owner/creator), and their affiliation is the organization associated with the project",
+      "editDescription": "Has edit-rights to the plans (can write and edit the plans).",
+      "commentDescription": "Has read-rights to the project (can view and comment on the plans).",
+      "ownDescription": "Has admin-rights to the project (can invite other users, edit the plans, and publish them)."
     },
     "buttons": {
       "invite": "Invite Collaborators",
@@ -368,6 +385,10 @@
         "resentInvite": "Successfully resent invite to {name}",
         "revokedAccess": "Successfully revoked access for {name}",
         "updatedAccess": "Successfully updated access for {name} to {accessLevel}"
+      },
+      "errors": {
+        "mustBePrimaryOwnerOrSuperAdmin": "Only the primary owner or a Super Admin can update Primary Owner access levels.",
+        "cannotRemoveOwnPrimary": "There must always be one primary owner for the project. Please assign another primary owner before removing this member."
       }
     }
   },
@@ -422,7 +443,7 @@
     "links": {
       "learnMoreAboutCreditTaxonomy": "Learn more about each role"
     },
-    "memberRolesDescription": "<p>Select the role(s) that should be displayed within citations for this project member with the DMP.</p><p>We use an ANSI/NISO standard called CRediT, a community-owned 14 role taxonomy that can be used to describe the key types of contributions typically made to the production and publication of research output such as research articles. </p><p>&lt;link /&gt;Learn more about CRediT Taxonomy ↗</p>"
+    "memberRolesDescription": "<p>Select the role(s) that should be displayed within citations for this project member with the DMP.</p><p>We use an ANSI/NISO standard called CRediT, a community-owned 14 role taxonomy that can be used to describe the key types of contributions typically made to the production and publication of research output such as research articles. </p><p><a href=\"https://credit.niso.org/\" target=\"_blank\">Learn more about CRediT Taxonomy ↗</a></p>"
   },
   "ProjectsProjectMemberCreate": {
     "title": "Add a new project member",

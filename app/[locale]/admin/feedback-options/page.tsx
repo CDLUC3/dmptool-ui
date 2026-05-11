@@ -25,6 +25,7 @@ import Loading from "@/components/Loading";
 import { routePath } from "@/utils/routes";
 import { checkErrors, extractErrors } from '@/utils/errorHandler';
 import logECS from '@/utils/clientLogger';
+import { isEmailListValid } from '@/utils/validation';
 import { useToast } from '@/context/ToastContext';
 import styles from "./feedbackOptions.module.scss";
 
@@ -100,12 +101,6 @@ const FeedbackOptions: React.FC = () => {
         .split(",")
         .map(email => email.trim())
         .filter(email => email !== "");
-
-      const invalidEmails = emails.filter(email => !email.includes("@"));
-      if (invalidEmails.length > 0) {
-        setErrorMessages([t("fields.feedbackEmail.invalidEmail")]);
-        return;
-      }
 
       const response = await UpdateAffiliationMutation({
         variables: {
@@ -243,6 +238,8 @@ const FeedbackOptions: React.FC = () => {
                       onChange={(e) => handleChange("feedbackEmails", e.target.value)}
                       isRequired={true}
                       helpMessage={t("fields.feedbackEmail.helpText")}
+                      isInvalid={!isEmailListValid(feedbackForm.feedbackEmails)}
+                      errorMessage={t("fields.feedbackEmail.invalidEmail")}
                     />
                   )}
                 </div>

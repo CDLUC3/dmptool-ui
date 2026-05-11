@@ -117,11 +117,24 @@ expect.extend(toHaveNoViolations);
 const setupMocks = (meData = null) => {
   // Create references OUTSIDE mockImplementation to prevent maximum update depth exceeded error
   const planQueryReturn = {
-    data: { plan: mockPlanData.plan },
+    data: {
+      plan: {
+        ...mockPlanData.plan,
+        project: {
+          collaborators: [
+            {
+              accessLevel: 'PRIMARY',
+              user: { id: 1 }, // matches default me.id above
+            },
+          ],
+        },
+      },
+    },
     loading: false,
     error: null,
     refetch: jest.fn(),
   };
+
 
   const feedbackQueryReturn = {
     data: null,
@@ -130,7 +143,13 @@ const setupMocks = (meData = null) => {
   };
 
   const meQueryReturn = {
-    data: meData,
+    data: meData ?? {
+      me: {
+        id: 1,
+        affiliation: { uri: 'mock-org-id' },
+        role: UserRole.Admin,
+      }
+    },
     loading: false,
     error: null,
     refetch: jest.fn(),
@@ -474,7 +493,7 @@ describe('PlanOverviewPage', () => {
     expect(within(sidebar).queryByRole('link', { name: 'buttons.preview' })).not.toBeInTheDocument();
     expect(within(sidebar).getByRole('button', { name: 'buttons.publish' })).toBeInTheDocument();
     expect(within(sidebar).getByRole('heading', { name: 'status.feedback.title' })).toBeInTheDocument();
-    expect(within(sidebar).getByRole('link', { name: 'links.request' })).toBeInTheDocument();
+    expect(within(sidebar).getByRole('button', { name: 'links.request' })).toBeInTheDocument();
     expect(within(sidebar).getByRole('heading', { name: 'status.title' })).toBeInTheDocument();
     expect(within(sidebar).queryByText('Draft')).not.toBeInTheDocument();
     expect(within(sidebar).getByText('buttons.linkUpdate')).toBeInTheDocument();
@@ -1587,6 +1606,89 @@ describe('PlanOverviewPage', () => {
     await waitFor(() => {
       // translations are mocked, so we check for the translation key
       expect(within(sidebar).getByText('status.feedback.complete')).toBeInTheDocument();
+    });
+  });
+
+  it('should render feedback as a clickable link when current user is a PRIMARY collaborator', async () => {
+    const meId = 42;
+
+    // Create references OUTSIDE mockImplementation
+    const planQueryReturn = {
+      data: {
+        plan: {
+          ...mockPlanData.plan,
+          project: {
+            collaborators: [{ accessLevel: 'PRIMARY', user: { id: meId } }],
+          },
+        },
+      },
+      loading: false,
+      error: null,
+      refetch: jest.fn(),
+    };
+    const meQueryReturn = {
+      data: { me: { id: meId, affiliation: { uri: 'mock-org-id' }, role: UserRole.Admin } },
+      loading: false,
+      error: null,
+    };
+
+    mockUseQuery.mockImplementation((document) => {
+      if (document === PlanDocument) return planQueryReturn;
+      if (document === MeDocument) return meQueryReturn;
+      return { data: null, loading: false, error: undefined } as any;
+    });
+
+    render(<PlanOverviewPage />);
+
+    const sidebar = screen.getByTestId('sidebar-panel');
+    await waitFor(() => {
+      expect(within(sidebar).getByRole('link', { name: 'links.request' })).toBeInTheDocument();
+    });
+  });
+
+  it('should render feedback as a disabled button with tooltip when current user is NOT a PRIMARY collaborator', async () => {
+    const meId = 99;
+
+    const planQueryReturn = {
+      data: {
+        plan: {
+          ...mockPlanData.plan,
+          project: {
+            collaborators: [
+              { accessLevel: 'OWN', user: { id: meId } },
+              { accessLevel: 'PRIMARY', user: { id: 1 } },
+            ],
+          },
+        },
+      },
+      loading: false,
+      error: null,
+      refetch: jest.fn(),
+    };
+    const meQueryReturn = {
+      data: { me: { id: meId, affiliation: { uri: 'mock-org-id' }, role: UserRole.Admin } },
+      loading: false,
+      error: null,
+    };
+
+    mockUseQuery.mockImplementation((document) => {
+      if (document === PlanDocument) return planQueryReturn;
+      if (document === MeDocument) return meQueryReturn;
+      return { data: null, loading: false, error: undefined } as any;
+    });
+
+    render(<PlanOverviewPage />);
+
+    const sidebar = screen.getByTestId('sidebar-panel');
+
+    await waitFor(() => {
+      // Link should not be present
+      expect(within(sidebar).queryByRole('link', { name: 'links.request' })).not.toBeInTheDocument();
+
+      // Should be a disabled button instead
+      const disabledButton = within(sidebar).getByRole('button', { name: 'links.request' });
+      expect(disabledButton).toBeInTheDocument();
+      expect(disabledButton).toHaveAttribute('aria-disabled', 'true');
     });
   });
 });

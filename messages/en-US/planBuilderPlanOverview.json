@@ -88,7 +88,8 @@
         "title": "Feedback",
         "none": "No feedback",
         "requested": "Feedback requested",
-        "completed": "Feedback received"
+        "completed": "Feedback received",
+        "disabledTooltip": "Only the primary owner can request feedback."
       }
     },
     "publishModal": {
@@ -256,7 +257,8 @@
       "label": "Send message to {orgName} support team",
       "placeholder": "Can you review my plan for any mistakes",
       "submitButton": "Request Feedback",
-      "successMessage": "Request sent"
+      "successMessage": "Request sent",
+      "primaryAccessRequired": "Only the primary owner can request feedback"
     },
     "messages": {
       "success": {

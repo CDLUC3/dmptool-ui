@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import {
@@ -17,9 +17,11 @@ import {
 //GraphQL
 import { useQuery } from '@apollo/client/react';
 import {
+  MeDocument,
   ProjectCollaborator,
   ProjectCollaboratorAccessLevel,
-  ProjectCollaboratorsDocument
+  ProjectCollaboratorsDocument,
+  UserRole,
 } from '@/generated/graphql';
 
 import {
@@ -41,10 +43,24 @@ import Loading from '@/components/Loading';
 import { routePath } from '@/utils/routes';
 import { extractErrors } from '@/utils/errorHandler';
 import { useToast } from '@/context/ToastContext';
+import { AccessLevelKey } from "@/app/types";
 
 import RevokeCollaboratorModal from './RevokeCollaboratorModal';
+import SaveCollaboratorAccessModal from './SaveCollaboratorAccessModal';
 import AccessLevelRadioGroup from './AccessLevelRadioGroup';
 import styles from './ProjectsProjectCollaboration.module.scss';
+
+function isSuperAdminOrPrimaryCollaborator(role: UserRole | undefined, projectCollaborators: ProjectCollaborator[], meId: number | undefined) {
+  const isSuperAdmin = role === UserRole.Superadmin;
+
+  const isPrimaryCollaborator = projectCollaborators.some(
+    (collaborator) =>
+      Number(collaborator.user?.id) === meId &&
+      collaborator.accessLevel === "PRIMARY"
+  );
+
+  return isSuperAdmin || isPrimaryCollaborator;
+}
 
 const ProjectsProjectCollaboration = () => {
   // Get projectId param
@@ -70,12 +86,19 @@ const ProjectsProjectCollaboration = () => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [isResending, setIsResending] = useState(false);
   const [deleteModalFor, setDeleteModalFor] = useState<number | null>(null);
+  const [saveModalFor, setSaveModalFor] = useState<number | null>(null);
+
+  // State for tracking access level updates
+  const [pendingAccessLevels, setPendingAccessLevels] = useState<Record<number, string>>({});
+
+  // Is user a SuperAdmin or Primary Owner?
+  const [isPrimaryOrSuperAdmin, setIsPrimaryOrSuperAdmin] = useState(false);
 
   // Added for accessibility
   const [announcement, setAnnouncement] = useState('');
 
   // Get project collaborators
-  const { data, loading, error: queryError } = useQuery(ProjectCollaboratorsDocument,
+  const { data, loading, error: queryError, refetch: refetchProjectCollaborators } = useQuery(ProjectCollaboratorsDocument,
     {
       variables: { projectId: Number(projectId) },
       skip: (!projectId), // prevents the query from running when no projectId
@@ -83,6 +106,12 @@ const ProjectsProjectCollaboration = () => {
       notifyOnNetworkStatusChange: true
     }
   );
+
+  // Me data to determine if user is primary owner or SuperAdmin
+  const { data: meData,
+    loading: meLoading,
+    error: meError
+  } = useQuery(MeDocument);
 
   // Call Server Action updateProjectCollaborator to update access level
   const updateAccessLevel = async (accessLevel: string, id: number) => {
@@ -103,22 +132,52 @@ const ProjectsProjectCollaboration = () => {
     }
   }
 
+  const handlePendingAccessLevelChange = (accessLevel: string, id: number) => {
+    if (!isPrimaryOrSuperAdmin && accessLevel === "primary") {
+      toastState.add(t('messages.errors.mustBePrimaryOwnerOrSuperAdmin'), { type: 'error' });
+      return;
+    }
+
+    // Prevent the primary owner from removing their own primary access, because there should always be one primary owner for the project. 
+    // They cannot remove primary ownership without assigning it to someone else first.
+    const isSuperAdmin = meData?.me?.role === UserRole.Superadmin;
+    const currentCollaborator = projectCollaborators.find(c => Number(c.id) === id);
+    if (!isSuperAdmin &&
+      currentCollaborator?.accessLevel === ProjectCollaboratorAccessLevel.Primary &&
+      accessLevel !== 'primary'
+    ) {
+      toastState.add(t('messages.errors.cannotRemoveOwnPrimary'), { type: 'error' });
+      return;
+    }
+    setPendingAccessLevels(prev => ({ ...prev, [id]: accessLevel }));
+  }
+
   const handleRadioChange = async (accessLevel: string, id: number | undefined, collaboratorName: string) => {
-    setErrorMessages([]); // Clear previous errors
-
+    setErrorMessages([]);
     if (!id) return;
-    // Find previous access level
-    const prevCollaborator = projectCollaborators.find(collab => collab.id === id);
-    const previousAccessLevel = prevCollaborator?.accessLevel;
 
-    // Optimistically update the UI
-    setProjectCollaborators(prev =>
-      prev.map(collab =>
-        collab.id === id
-          ? { ...collab, accessLevel: accessLevel.toUpperCase() as ProjectCollaboratorAccessLevel }
-          : collab
-      )
-    );
+    const meId = Number(meData?.me?.id);
+    const currentCollaborator = projectCollaborators.find(c => Number(c.id) === id);
+
+    // Skip if access level hasn't changed
+    if ((currentCollaborator?.accessLevel ?? 'EDIT').toLowerCase() === accessLevel.toLowerCase()) {
+      return;
+    }
+
+    // Primary owner cannot change their own access level away from primary
+    if (Number(currentCollaborator?.user?.id) === meId &&
+      currentCollaborator?.accessLevel === ProjectCollaboratorAccessLevel.Primary &&
+      accessLevel !== 'primary'
+    ) {
+      toastState.add(t('messages.errors.cannotRemoveOwnPrimary'), { type: 'error' });
+      return;
+    }
+
+    // Only SuperAdmin or Primary owner can assign primary access to another user
+    if (accessLevel === 'primary' && !isPrimaryOrSuperAdmin) {
+      toastState.add(t('messages.errors.mustBePrimaryOwnerOrSuperAdmin'), { type: 'error' });
+      return;
+    }
 
     const result = await updateAccessLevel(accessLevel, id);
 
@@ -128,27 +187,32 @@ const ProjectsProjectCollaboration = () => {
       } else {
         setErrorMessages([Global('messaging.somethingWentWrong')]);
       }
-      // revert optimistic update if mutation fails
-      setProjectCollaborators(prev => prev.map(collab =>
-        collab.id === id ? { ...collab, accessLevel: previousAccessLevel } : collab
-      ));
     } else {
       if (result?.data?.errors &&
         Object.values(result.data.errors).some(val => val != null && val !== '')
       ) {
-        // Convert nulls to undefined before passing to extractErrors
         const normalizedErrors = Object.fromEntries(
           Object.entries(result?.data?.errors ?? {}).map(([key, value]) => [key, value ?? undefined])
         );
-        // This will flatten field-level errors into an array of strings, since we have no form fields here
-        // and want to display any errors at the top of the page
         const errs = extractErrors(normalizedErrors);
         setErrorMessages(errs);
       } else {
-        // Since sited users can see the change real time as they select a different access level, we don't need a toast message here.
-        // However, we do want to announce the change for screen reader users
-        const message = t('messages.success.updatedAccess', { name: collaboratorName, accessLevel: accessLevel.toLowerCase() });
+        // Update projectCollaborators with the confirmed saved value
+        setProjectCollaborators(prev =>
+          prev.map(collab =>
+            collab.id === id
+              ? { ...collab, accessLevel: accessLevel.toUpperCase() as ProjectCollaboratorAccessLevel }
+              : collab
+          )
+        );
+        // Update the pending value to the confirmed saved value
+        setPendingAccessLevels(prev => ({ ...prev, [id]: accessLevel.toLowerCase() }));
+        const accessLevelLabel = t(`accessLevels.${accessLevel.toLowerCase() as AccessLevelKey}`, { defaultValue: accessLevel });
+        const message = t('messages.success.updatedAccess', { name: collaboratorName, accessLevel: accessLevelLabel });
+        toastState.add(message, { type: 'success', timeout: 3000 });
         setAnnouncement(message);
+        //refetch updated project collaborator data
+        await refetchProjectCollaborators();
       }
     }
   }
@@ -291,25 +355,31 @@ const ProjectsProjectCollaboration = () => {
   useEffect(() => {
     if (data && data.projectCollaborators) {
       // Filter out nulls and invites pending (user is null when invite not accepted)
-      setProjectCollaborators(
-        data.projectCollaborators.filter(
-          (c): c is ProjectCollaborator => c !== null
+      const collaborators = data.projectCollaborators.filter(
+        (c): c is ProjectCollaborator => c !== null
+      );
+
+      setProjectCollaborators(collaborators);
+
+      const withAccess = collaborators.filter(c => c?.user !== null);
+      setHasAccess(withAccess);
+      setInvitesPending(collaborators.filter(c => !c?.user));
+
+      // Seed pending access levels from fresh network data
+      setPendingAccessLevels(
+        Object.fromEntries(
+          withAccess.map(c => [Number(c.id), (c.accessLevel || 'EDIT').toLowerCase()])
         )
       );
 
-      // Filter collaborators who HAVE accepted invite already
-      setHasAccess(
-        data.projectCollaborators.filter((c): c is ProjectCollaborator => c?.user !== null)
-      );
-
-      // Filter collaborators who haven't accepted yet
-      setInvitesPending(
-        data.projectCollaborators.filter((c): c is ProjectCollaborator => !c?.user)
-      );
+      // Determine if current user is SuperAdmin or Primary Owner to conditionally render access level options
+      const meId = Number(meData?.me?.id);
+      const meRole = meData?.me?.role;
+      setIsPrimaryOrSuperAdmin(isSuperAdminOrPrimaryCollaborator(meRole, collaborators, meId));
     } else {
       setProjectCollaborators([]);
     }
-  }, [data]);
+  }, [data, meData]);
 
   useEffect(() => {
     if (projectCollaborators) {
@@ -326,12 +396,13 @@ const ProjectsProjectCollaboration = () => {
   }, [projectCollaborators]);
 
   useEffect(() => {
-    if (queryError) {
-      setErrorMessages(queryError.message ? [queryError.message] : [])
+    const messages = [queryError?.message, meError?.message].filter(Boolean) as string[];
+    if (messages.length > 0) {
+      setErrorMessages(messages);
     }
-  }, [queryError])
+  }, [queryError, meError]);
 
-  if (loading) {
+  if (loading || meLoading) {
     return <Loading message={Global('messaging.loading')} />
   }
 
@@ -373,10 +444,22 @@ const ProjectsProjectCollaboration = () => {
             aria-labelledby="current-access-heading">
             <h2 id="current-access-heading"
               className={styles.sectionTitle}>{t('headings.hasAccess')}</h2>
+            <details className={styles.accessLevelLegend}>
+              <summary>{t('headings.accessLevels')}</summary>
+              <ul>
+                <li><strong>{t('accessLevels.primary')}</strong> — {t('accessLevels.primaryDescription')}</li>
+                <li><strong>{t('accessLevels.own')}</strong> — {t('accessLevels.ownDescription')}</li>
+                <li><strong>{t('accessLevels.comment')}</strong> — {t('accessLevels.commentDescription')}</li>
+                <li><strong>{t('accessLevels.edit')}</strong> — {t('accessLevels.editDescription')}</li>
+              </ul>
+            </details>
             <div className={styles.membersList} role="list">
               {hasAccess.length > 0 && hasAccess.map((collaborator) => {
                 const collaboratorName = `${collaborator?.user?.givenName} ${collaborator?.user?.surName}`;
-                const collaboratorAccessLevel = (collaborator?.accessLevel || 'edit').toLowerCase();
+                const collaboratorAccessLevel = (
+                  pendingAccessLevels[Number(collaborator.id)] ?? collaborator.accessLevel ?? 'EDIT'
+                ).toLowerCase();
+
                 return (
                   <div
                     key={collaborator.id}
@@ -392,19 +475,47 @@ const ProjectsProjectCollaboration = () => {
 
                     <AccessLevelRadioGroup
                       value={collaboratorAccessLevel}
-                      onChange={value => handleRadioChange(value, Number(collaborator?.id), collaboratorName)}
+                      onChange={value =>
+                        handlePendingAccessLevelChange(value, Number(collaborator.id))
+                      }
                       collaboratorName={collaboratorName}
                     />
 
-                    <RevokeCollaboratorModal
-                      collaboratorId={Number(collaborator.id)}
-                      collaboratorName={collaboratorName}
-                      isOpen={deleteModalFor === collaborator.id}
-                      isDeleting={isDeleting}
-                      onOpenChange={open => setDeleteModalFor(open ? Number(collaborator.id) : null)}
-                      onRevoke={handleRevoke}
-                      onCancel={() => setDeleteModalFor(null)}
-                    />
+                    <div className={styles.buttonContainer}>
+                      <SaveCollaboratorAccessModal
+                        collaboratorId={Number(collaborator.id)}
+                        collaboratorName={collaboratorName}
+                        isOpen={saveModalFor === Number(collaborator.id)}
+                        isDeleting={isDeleting}
+                        pendingAccessLevel={pendingAccessLevels[Number(collaborator.id)]}
+                        onOpenChange={open => setSaveModalFor(open ? Number(collaborator.id) : null)}
+                        onRevoke={(id, name) => {
+                          handleRadioChange(
+                            pendingAccessLevels[id],
+                            id,
+                            name
+                          );
+                          setSaveModalFor(null);
+                        }}
+                        onCancel={() => {
+                          setSaveModalFor(null);
+                          setPendingAccessLevels(prev => ({
+                            ...prev,
+                            [Number(collaborator.id)]: (collaborator.accessLevel ?? 'EDIT').toLowerCase()
+                          }));
+                        }}
+                      />
+
+                      <RevokeCollaboratorModal
+                        collaboratorId={Number(collaborator.id)}
+                        collaboratorName={collaboratorName}
+                        isOpen={deleteModalFor === collaborator.id}
+                        isDeleting={isDeleting}
+                        onOpenChange={open => setDeleteModalFor(open ? Number(collaborator.id) : null)}
+                        onRevoke={handleRevoke}
+                        onCancel={() => setDeleteModalFor(null)}
+                      />
+                    </div>
                   </div>
                 )
               })}

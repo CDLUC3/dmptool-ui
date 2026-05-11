@@ -32,5 +32,3 @@ export const ACCESS_LEVELS_SEARCH_ID = "accessLevelsSearch";
 export const DOI_REGEX = /(?:doi:\s*)?(10\.\d{4,9}\/[-._;()\/:A-Z0-9]+)/i;
 export const QUESTION_TYPES_EXCLUDED_FROM_COMMENT_FIELD = [TEXT_AREA_QUESTION_TYPE, TEXT_FIELD_QUESTION_TYPE, RESEARCH_OUTPUT_QUESTION_TYPE];
 
-
-

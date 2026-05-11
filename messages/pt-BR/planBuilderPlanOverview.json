@@ -88,7 +88,8 @@
         "title": "Registrar",
         "none": "Nenhum feedback",
         "requested": "Feedback solicitado",
-        "completed": "Feedback recebido"
+        "completed": "Feedback recebido",
+        "disabledTooltip": "Apenas o proprietário principal pode solicitar feedback."
       }
     },
     "publishModal": {
@@ -256,7 +257,8 @@
       "label": "Enviar mensagem para a equipe de suporte da {orgName}",
       "placeholder": "Você pode rever o meu plano para quaisquer erros",
       "submitButton": "Solicitar feedback",
-      "successMessage": "Pedido enviado"
+      "successMessage": "Pedido enviado",
+      "primaryAccessRequired": "Apenas o proprietário principal pode solicitar feedback"
     },
     "messages": {
       "success": {

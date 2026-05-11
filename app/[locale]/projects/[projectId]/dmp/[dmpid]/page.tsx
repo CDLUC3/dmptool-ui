@@ -17,6 +17,8 @@ import {
   Modal,
   Radio,
   Text,
+  Tooltip,
+  TooltipTrigger,
 } from "react-aria-components";
 
 // GraphQL
@@ -241,6 +243,17 @@ const PlanOverviewPage: React.FC = () => {
     CHANGE_PRIMARY_CONTACT_URL: routePath("projects.dmp.members", { projectId, dmpId: planId }),
     RELATED_WORKS_URL: routePath("projects.dmp.related-works", { projectId, dmpId: planId }),
   }), [projectId, planId]);
+
+  const isPrimaryCollaborator = useMemo(() => {
+    const myId = me?.me?.id;
+    if (!myId || !data?.plan?.project?.collaborators) return false;
+
+    return data.plan.project.collaborators.some(
+      (collaborator) =>
+        collaborator?.user?.id === myId &&
+        collaborator?.accessLevel === "PRIMARY"
+    );
+  }, [me?.me?.id, data?.plan?.project?.collaborators]);
 
   const { FUNDINGS_URL, MEMBERS_URL, DOWNLOAD_URL, FEEDBACK_URL, CHANGE_PRIMARY_CONTACT_URL, RELATED_WORKS_URL } = urls;
 
@@ -813,13 +826,31 @@ const PlanOverviewPage: React.FC = () => {
                     }
                   </p>
                 </div>
-                <NextLink
-                  href={FEEDBACK_URL}
-                  className="side-panel-link"
-                  aria-label={Global("links.request")}
-                >
-                  {Global("links.request")}
-                </NextLink>
+                {isPrimaryCollaborator ? (
+                  <NextLink
+                    href={FEEDBACK_URL}
+                    className="side-panel-link"
+                    aria-label={Global("links.request")}
+                  >
+                    {Global("links.request")}
+                  </NextLink>
+                ) : (
+                  <TooltipTrigger delay={0}>
+                    <Button
+                      className={styles.sidePanelLinkDisabled}
+                      aria-disabled={true}
+                    >
+                      {Global("links.request")}
+                    </Button>
+                    <Tooltip
+                      placement="bottom"
+                      className={`${styles.tooltip} py-2 px-2`}
+                    >
+                      {t("status.feedback.disabledTooltip")}
+                    </Tooltip>
+                  </TooltipTrigger>
+                )}
+
               </div>
               {isEditingPlanStatus ? (
                 <div>

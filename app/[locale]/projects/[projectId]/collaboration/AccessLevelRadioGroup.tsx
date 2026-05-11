@@ -36,7 +36,10 @@ const AccessLevelRadioGroup: React.FC<AccessLevelRadioGroupProps> = ({
           <Radio value="comment" aria-label={t('canCommentPlanFor', { name: collaboratorName })} data-testid={`comment-${collaboratorName}`}>{t('canComment')}</Radio>
         </div>
         <div>
-          <Radio value="own" aria-label={t('canOwnPlanFor', { name: collaboratorName })} data-testid={`own-${collaboratorName}`}>{t('own')}</Radio>
+          <Radio value="own" aria-label={t('canCoOwnPlanFor', { name: collaboratorName })} data-testid={`own-${collaboratorName}`}>{t('own')}</Radio>
+        </div>
+        <div>
+          <Radio value="primary" aria-label={t('canPrimaryOwnPlanFor', { name: collaboratorName })} data-testid={`primary-${collaboratorName}`}>{t('primary')}</Radio>
         </div>
       </RadioGroupComponent>
     </div>

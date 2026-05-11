@@ -91,7 +91,7 @@
     "headingRelatedActions": "Related actions",
     "primaryEmailDesc": "This email will be used for your account login. It can also be used for password resets.",
     "SSODesc": "This email address is managed by cdl.edu and connected to the institution.",
-    "notificationsDesc": "This email address will be used for DMP notifications. &lt;manage&gt; Manage your notifications &lt;/manage&gt;.",
+    "notificationsDesc": "This email address will be used for DMP notifications. <manage> Manage your notifications </manage>.",
     "aliasEmailDesc": "Alias email addresses may be used to help others find you, for example if they‘d like to share a DMP with you.",
     "linkMakePrimary": "Make primary email address",
     "helpTextForAddAlias": "You will be sent an email to confirm this addition",
@@ -510,7 +510,8 @@
         "label": "Feedback email addresses",
         "placeholder": "Enter feedback email address",
         "description": "Enter emails separated by commas",
-        "helpText": "By default this is the organisations contact email address, However, you may change the feedback email address"
+        "helpText": "By default this is the organisations contact email address, However, you may change the feedback email address",
+        "invalidEmail": "One or more email addresses are invalid. Please check and try again."
       },
       "feedbackText": {
         "label": "Message displayed to users requesting feedback",

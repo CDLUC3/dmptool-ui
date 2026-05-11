@@ -640,3 +640,4 @@ export interface ProjectDetailsFormInterface {
   parentResearchDomainId: string | number;
 }
 
+export type AccessLevelKey = 'edit' | 'comment' | 'own' | 'primary';
