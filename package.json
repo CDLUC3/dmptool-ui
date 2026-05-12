@@ -25,7 +25,7 @@
   "dependencies": {
     "@apollo/client": "4.1.7",
     "@apollo/client-integration-nextjs": "0.14.5",
-    "@dmptool/types": "3.1.2",
+    "@dmptool/types": "3.1.4",
     "@elastic/ecs-pino-format": "1.5.0",
     "@fortawesome/fontawesome-svg-core": "6.6.0",
     "@fortawesome/free-solid-svg-icons": "6.6.0",
@@ -34,15 +34,15 @@
     "@react-stately/toast": "3.1.3",
     "classnames": "2.5.1",
     "deepmerge": "4.3.1",
-    "dompurify": "3.3.2",
+    "dompurify": "3.4.0",
     "graphql": "16.12.0",
     "html-react-parser": "5.2.17",
     "husky": "9.1.7",
     "jose": "6.1.3",
     "jsonwebtoken": "9.0.3",
     "loglevel": "1.9.2",
-    "next": "16.2.3",
-    "next-intl": "4.9.1",
+    "next": "^16.2.6",
+    "next-intl": "4.9.2",
     "node-fetch": "3.3.2",
     "nprogress": "0.2.0",
     "pino": "9.14.0",
@@ -50,9 +50,9 @@
     "react": "19.2.4",
     "react-aria-components": "1.16.0",
     "react-dom": "19.2.4",
-    "react-transition-progress": "^0.0.4",
+    "react-transition-progress": "0.0.4",
     "rxjs": "7.8.2",
-    "sanitize-html": "2.17.2",
+    "sanitize-html": "2.17.3",
     "tinymce": "7.9.2",
     "zod": "4.3.6"
   },
@@ -71,7 +71,7 @@
     "@types/jsonwebtoken": "9.0.10",
     "@types/next": "9.0.0",
     "@types/node": "24.12.2",
-    "@types/nprogress": "^0.2.3",
+    "@types/nprogress": "0.2.3",
     "@types/pino": "7.0.5",
     "@types/react": "18.3.28",
     "@types/react-dom": "18.3.7",
@@ -88,15 +88,14 @@
     "jest": "30.2.0",
     "jest-axe": "10.0.0",
     "jest-environment-jsdom": "30.2.0",
-    "prettier": "3.7.4",
+    "prettier": "3.8.3",
     "sass": "1.89.2",
     "ts-node": "10.9.2",
     "typescript": "5.9.3"
   },
   "overrides": {
-    "minimatch": "10.2.5",
     "@eslint/plugin-kit": "0.3.4",
-    "test-exclude": "7.0.2",
-    "lodash": "4.18.0"
+    "lodash": "4.18.1",
+    "postcss": "8.5.10"
   }
 }

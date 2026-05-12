@@ -369,6 +369,7 @@ export const publishNetworkErrorMock = [
 
 export const moveSectionSuccessMock = [
   ...mocks,
+  ...mocks, // second copy for the refetch() call after successful move
   {
     request: {
       query: MoveCustomSectionDocument,

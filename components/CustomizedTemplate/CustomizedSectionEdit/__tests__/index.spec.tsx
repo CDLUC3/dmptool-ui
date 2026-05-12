@@ -227,10 +227,13 @@ const moveQuestionNetworkErrorMock = {
 let apolloCache: InMemoryCache;
 
 describe('CustomizedSectionEdit', () => {
+  const mockRefetch = jest.fn().mockResolvedValue({});
+
   beforeEach(() => {
     apolloCache = new InMemoryCache();
     (useToast as jest.Mock).mockReturnValue(mockToast);
     jest.clearAllMocks();
+    mockRefetch.mockResolvedValue({});
   });
 
   afterEach(async () => {
@@ -259,7 +262,8 @@ describe('CustomizedSectionEdit', () => {
           setErrorMessages={mockSetErrorMessages}
           onMoveUp={jest.fn()}
           onMoveDown={jest.fn()}
-        />
+          refetch={mockRefetch}
+          />
       </MockedProvider>
     );
   };

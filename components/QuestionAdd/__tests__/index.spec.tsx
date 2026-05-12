@@ -484,6 +484,7 @@ describe("QuestionAdd", () => {
         questionText: 'New Question',
         json: expect.stringContaining("{\"type\":\"radioButtons\",\"attributes\":{},\"meta\":{\"schemaVersion\":\"1.0\"},\"options\":[{\"label\":\"Yes\",\"value\":\"Yes\",\"selected\":false}],\"showCommentField\":false}"),
         requirementText: "",
+        displayOrder: 5,
         guidanceText: "",
         sampleText: "",
         useSampleTextAsDefault: false,
@@ -534,6 +535,7 @@ describe("QuestionAdd", () => {
         questionText: 'New Question',
         json: "{\"type\":\"text\",\"attributes\":{\"maxLength\":1000,\"minLength\":0,\"pattern\":\"^.+$\"},\"meta\":{\"schemaVersion\":\"1.0\"},\"showCommentField\":false}",
         requirementText: "",
+        displayOrder: 5,
         guidanceText: "",
         sampleText: "",
         useSampleTextAsDefault: false,
@@ -675,6 +677,7 @@ describe("QuestionAdd", () => {
         questionText: 'New Question',
         json: "{\"type\":\"textArea\",\"attributes\":{\"maxLength\":1000,\"minLength\":0,\"cols\":40,\"rows\":20,\"asRichText\":true},\"meta\":{\"schemaVersion\":\"1.0\"},\"showCommentField\":false}",
         requirementText: "",
+        displayOrder: 5,
         guidanceText: "",
         sampleText: "",
         useSampleTextAsDefault: false,
@@ -737,6 +740,7 @@ describe("QuestionAdd", () => {
         questionText: 'New Question',
         json: "{\"type\":\"number\",\"attributes\":{\"max\":10000000,\"min\":0,\"step\":1},\"meta\":{\"schemaVersion\":\"1.0\"},\"showCommentField\":false}",
         requirementText: '',
+        displayOrder: 5,
         guidanceText: '',
         sampleText: '',
         required: false,
@@ -789,6 +793,7 @@ describe("QuestionAdd", () => {
         questionText: 'New Question',
         json: "{\"type\":\"currency\",\"attributes\":{\"max\":10000000,\"min\":0,\"step\":0.01,\"denomination\":\"GBP\"},\"meta\":{\"schemaVersion\":\"1.0\"},\"showCommentField\":false}",
         requirementText: '',
+        displayOrder: 5,
         guidanceText: '',
         sampleText: '',
         useSampleTextAsDefault: false,
@@ -1203,6 +1208,7 @@ describe("QuestionAdd", () => {
         questionText: 'New Question',
         json: "{\"type\":\"radioButtons\",\"attributes\":{},\"meta\":{\"schemaVersion\":\"1.0\"},\"options\":[{\"label\":\"Yes\",\"value\":\"Yes\",\"selected\":false}],\"showCommentField\":false}",
         requirementText: '',
+        displayOrder: 1,
         guidanceText: '',
         sampleText: '',
         useSampleTextAsDefault: false,
@@ -1501,7 +1507,7 @@ describe("Research Output Question Type", () => {
     // Find customize buttons (there should be multiple)
     const customizeButtons = screen.getAllByText('buttons.customize');
     const initialNoOfCloseButtons = screen.queryAllByText('buttons.close');;
-    expect(initialNoOfCloseButtons.length).toBe(1); // Only Output Type is expanded by default
+    expect(initialNoOfCloseButtons.length).toBe(0);
     expect(customizeButtons.length).toBeGreaterThan(0);
 
     // Click the first customize button (for Output Type which is always expanded)
@@ -1512,7 +1518,7 @@ describe("Research Output Question Type", () => {
     // Should show an additionalclose button after clicking and expanding
     await waitFor(() => {
       const closeButtons = screen.getAllByText('buttons.close');;
-      expect(closeButtons.length).toBe(2);
+      expect(closeButtons.length).toBe(1);
     });
   });
 
@@ -1693,6 +1699,10 @@ describe("Research Output Question Type", () => {
       />);
 
     // Find the panel
+    const outputTypeCheckbox = screen.getByTestId('checkbox-outputType');
+    await act(async () => { // open panel
+      fireEvent.click(outputTypeCheckbox);
+    });
     const panel = document.getElementById('panel-outputType');
     if (!panel) throw new Error('panel-outputType not found');
 

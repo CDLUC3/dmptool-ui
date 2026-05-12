@@ -124,8 +124,8 @@ const setupMocks = () => {
 };
 describe('RepositorySelectionSystem', () => {
   beforeEach(() => {
-    setupMocks();
     jest.clearAllMocks();
+    setupMocks();
     mockParams.mockReturnValue({
       templateId: '1',
     });
@@ -1303,7 +1303,7 @@ describe('RepositorySelectionSystem', () => {
   });
 
   describe('State Management', () => {
-    it('maintains selected repositories across modal open/close cycles', () => {
+    it('maintains selected repositories across modal open/close cycles', async () => {
       render(
         <RepositorySelectionSystem
           field={mockField}
@@ -1312,32 +1312,34 @@ describe('RepositorySelectionSystem', () => {
         />
       );
 
-      // Select a repository
       let addButton = screen.getByRole('button', { name: /researchOutput.repoSelector.buttons.addRepo/i });
       fireEvent.click(addButton);
 
-      const selectButton = screen.getAllByRole('button', { name: 'buttons.select' })[0];
+      // ← wait for repositories to render before interacting
+      const selectButton = await waitFor(() => {
+        const buttons = screen.getAllByRole('button', { name: 'buttons.select' });
+        expect(buttons.length).toBeGreaterThan(0);
+        return buttons[0];
+      });
+
       fireEvent.click(selectButton);
 
-      // Close modal
       let closeButton = screen.getByRole('button', { name: 'buttons.closeModal' });
       fireEvent.click(closeButton);
 
       expect(screen.getByText('Zenodo')).toBeInTheDocument();
 
-      // Open modal again
       addButton = screen.getByRole('button', { name: /researchOutput.repoSelector.buttons.addRepo/i });
       fireEvent.click(addButton);
 
-      // Repository should still be marked as selected
       expect(screen.getAllByRole('button', { name: 'buttons.remove' }).length).toBeGreaterThan(0);
 
       closeButton = screen.getByRole('button', { name: 'buttons.closeModal' });
       fireEvent.click(closeButton);
 
-      // Repository should still appear in selected items
       expect(screen.getByText('Zenodo')).toBeInTheDocument();
     });
+
 
     it('clears custom form fields after successful submission', async () => {
       render(

@@ -1,0 +1,34 @@
+{
+  "me": {
+    "id": 1,
+      "givenName": "Super",
+        "surName": "Admin",
+          "languageId": "en-US",
+            "role": "SUPERADMIN",
+              "emails": [
+                {
+                  "id": 16,
+                  "email": "super@example.com",
+                  "isPrimary": true,
+                  "isConfirmed": true,
+                  "__typename": "UserEmail"
+                }
+              ],
+                "errors": {
+      "general": null,
+        "email": null,
+          "password": null,
+            "role": null,
+              "__typename": "UserErrors"
+    },
+    "affiliation": {
+      "id": 1,
+        "name": "California Digital Library",
+          "displayName": "California Digital Library",
+            "searchName": "California Digital Library | cdlib.org | CDL ",
+              "uri": "https://ror.org/03yrm5c26",
+                "__typename": "Affiliation"
+    },
+    "__typename": "User"
+  }
+}

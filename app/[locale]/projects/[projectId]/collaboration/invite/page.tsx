@@ -38,6 +38,7 @@ const ProjectsProjectCollaborationInvite = () => {
 
   // Localization keys
   const Global = useTranslations('Global');
+  const ProjectsProjectCollaboration = useTranslations('ProjectsProjectCollaboration');
   const t = useTranslations('ProjectsProjectCollaborationInvite');
 
   const toastState = useToast(); // Access the toast state from context
@@ -219,13 +220,13 @@ const ProjectsProjectCollaborationInvite = () => {
                   onChange={handleRadioChange}
                 >
                   <div>
-                    <Radio value="edit">{t('radioButtons.access.edit')}</Radio>
+                    <Radio value="edit">{ProjectsProjectCollaboration('canEdit')}</Radio>
                   </div>
                   <div>
-                    <Radio value="comment">{t('radioButtons.access.comment')}</Radio>
+                    <Radio value="comment">{ProjectsProjectCollaboration('canComment')}</Radio>
                   </div>
                   <div>
-                    <Radio value="own">{t('radioButtons.access.own')}</Radio>
+                    <Radio value="own">{ProjectsProjectCollaboration('own')}</Radio>
                   </div>
                 </RadioGroupComponent>
               </div>

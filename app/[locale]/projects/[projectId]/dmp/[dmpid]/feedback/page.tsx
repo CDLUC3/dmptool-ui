@@ -1,76 +1,167 @@
 'use client';
 
-import React from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useParams } from 'next/navigation';
-import { useTranslations } from "next-intl";
+import { useTranslations } from 'next-intl';
 import {
   Breadcrumb,
   Breadcrumbs,
   Button,
-  Link
-} from "react-aria-components";
-import PageHeader from "@/components/PageHeader";
+  Link,
+  Tooltip,
+  TooltipTrigger,
+} from 'react-aria-components';
+
+// GraphQL
+import { useQuery, useMutation } from '@apollo/client/react';
+import {
+  MeDocument,
+  PlanFeedbackStatusDocument,
+  ProjectCollaboratorsDocument,
+  RequestFeedbackDocument
+} from '@/generated/graphql';
+
+// Components
+import PageHeader from '@/components/PageHeader';
+import ErrorMessages from '@/components/ErrorMessages';
 import {
   ContentContainer,
   LayoutWithPanel,
   SidebarPanel,
-} from "@/components/Container";
+} from '@/components/Container';
+import Loading from '@/components/Loading';
 import ExpandableContentSection from '@/components/ExpandableContentSection';
 import { FormTextArea } from '@/components/Form';
+
+// Utils and other
+import { SanitizeHTML } from '@/utils/sanitize';
 import { routePath } from '@/utils/routes';
+import logECS from '@/utils/clientLogger';
+import { checkErrors, extractErrors } from '@/utils/errorHandler';
+import { useToast } from '@/context/ToastContext';
 import styles from './ProjectsProjectPlanFeedback.module.scss';
 
 const ProjectsProjectPlanFeedback = () => {
   const params = useParams();
+  const toastState = useToast();
   const projectId = params.projectId as string;
   const dmpId = params.dmpid as string;
-  
-  // State management
-  const [isSubmitted, setIsSubmitted] = React.useState(false);
-  const [isSubmitting, setIsSubmitting] = React.useState(false);
-  const [feedbackMessage, setFeedbackMessage] = React.useState('');
-  
+
+  // error reference for error messages
+  const errorRef = useRef<HTMLDivElement | null>(null);
   // Refs for accessibility
-  const successMessageRef = React.useRef<HTMLSpanElement>(null);
-  
+  const successMessageRef = useRef<HTMLSpanElement>(null);
+
+  // State management
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [feedbackMessage, setFeedbackMessage] = useState('');
+  const [errorMessages, setErrorMessages] = useState<string[]>([]);
+
   // Translations
   const Global = useTranslations('Global');
   const t = useTranslations('ProjectsProjectPlanFeedback');
-  
+
+  // GraphQL queries and mutations
+  const { data: meData,
+    loading: meLoading,
+    error: meError
+  } = useQuery(MeDocument);
+
+  const {
+    data: feedbackData,
+    loading: feedbackLoading,
+    error: feedbackError,
+    refetch: refetchFeedbackStatus
+  } = useQuery(PlanFeedbackStatusDocument, {
+    variables: { planId: Number(dmpId) },
+  });
+
+  // Get project collaborators
+  const { data: collaboratorsData, loading: collaboratorsLoading, error: collaboratorsError } = useQuery(ProjectCollaboratorsDocument,
+    {
+      variables: { projectId: Number(projectId) },
+      skip: (!projectId), // prevents the query from running when no projectId
+      fetchPolicy: 'network-only', // always fetch from network
+      notifyOnNetworkStatusChange: true
+    }
+  );
+
+  // Initialize mutation
+  const [RequestFeedbackMutation] = useMutation(RequestFeedbackDocument);
+
+
+  const isPrimaryCollaborator = collaboratorsData?.projectCollaborators?.some(
+    (collaborator) =>
+      collaborator?.user?.id === meData?.me?.id &&
+      collaborator?.accessLevel === "PRIMARY"
+  ) ?? false;
+
   const handleRequestFeedback = async () => {
-    // Handle feedback request submission
-    console.log('Requesting feedback from University of California support team');
-    console.log('Feedback message:', feedbackMessage);
-    
-    // Set loading state
+    setErrorMessages([]);
     setIsSubmitting(true);
-    
+
     try {
-      // Simulate API call delay for demonstration
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // TODO: Add actual API endpoint call here
-      // await submitFeedbackRequest({
-      //   projectId,
-      //   dmpId,
-      //   message: feedbackMessage
-      // });
-      
-      // Set submitted state to trigger UI changes
-      setIsSubmitted(true);
-      
-      // Focus on success message for accessibility
-      setTimeout(() => {
-        successMessageRef.current?.focus();
-      }, 100);
-      
+      const response = await RequestFeedbackMutation({
+        variables: {
+          planId: Number(dmpId),
+          messageToOrg: feedbackMessage,
+        }
+      });
+
+      const [hasErrors, errs] = checkErrors(
+        response.data?.requestFeedback?.errors as Record<string, string | null | undefined>,
+        ['general', 'planId', 'feedbackComments']
+      );
+
+      if (hasErrors) {
+        const errorList = extractErrors(errs, ['general', 'planId', 'feedbackComments']);
+        setErrorMessages(errorList.length > 0 ? errorList : [Global('messaging.somethingWentWrong')]);
+        logECS('error', 'requestFeedback', {
+          error: errs,
+          url: { path: routePath('projects.dmp.feedback', { projectId, dmpId }) }
+        });
+        return;
+      }
+
+      // Success so refetch feedback status to update UI
+      await refetchFeedbackStatus();
+
+      toastState.add(t('messages.success.feedbackRequested'), { type: 'success' });
     } catch (error) {
-      console.error('Failed to submit feedback request:', error);
-      // Handle error state if needed
+      setErrorMessages([Global('messaging.somethingWentWrong')]);
+      logECS('error', 'requestFeedback', {
+        error,
+        url: { path: routePath('projects.dmp.feedback', { projectId, dmpId }) }
+      });
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  useEffect(() => {
+    if (meError) {
+      setErrorMessages(prev => [...prev, meError.message]);
+    }
+  }, [meError]);
+
+  useEffect(() => {
+    if (feedbackError) {
+      setErrorMessages(prev => [...prev, feedbackError.message]);
+    }
+  }, [feedbackError]);
+
+  useEffect(() => {
+    if (collaboratorsError) {
+      setErrorMessages(prev => [...prev, collaboratorsError.message]);
+    }
+  }, [collaboratorsError]);
+
+
+  if (meLoading || feedbackLoading || collaboratorsLoading) {
+    return <Loading message={Global('messaging.loading')} />;
+  }
+
+  const feedbackRequested = feedbackData?.planFeedbackStatus?.status === 'REQUESTED';
 
   return (
     <>
@@ -87,65 +178,72 @@ const ProjectsProjectPlanFeedback = () => {
             <Breadcrumb>{t('title')}</Breadcrumb>
           </Breadcrumbs>
         }
-        actions={
-          <>
-          </>
-        }
         className="page-project-feedback"
       />
 
       <LayoutWithPanel>
         <ContentContainer>
+          <ErrorMessages errors={errorMessages} ref={errorRef} />
           <p>
-            {t('description')}
+            {t('description', { orgName: meData?.me?.affiliation?.displayName || t('anonymousOrgName') })}
           </p>
 
-          {/* TODO: Pull message box content from database */}
           <div className={styles.messageBox}>
-            <p><strong>Hello John,</strong></p>
-            <p>Your plan <strong>&quot;Coastal Ocean Processes of North Greenland&quot;</strong> will be submitted to University of California Research Data Management and Library Research Support for feedback. Please allow three business days for someone to respond to your request.</p>
-            <p>The University of California Research Data Management Office can provide feedback on Data Management and Stewardship submissions of test plans or for classes but will not be reviewed. If you have any questions after submitting your plan, please submit a request to Research Data Management.</p>
-            <p>If you have included an University of California service (e.g., high-performance computing, regulated research storage) in your plan, please contact the Research Technology Office by submitting a request to Research Computing Services to ensure those services are available and any costs can be communicated.</p>
-            <p>It is recommended that you contact any third-party data repositories outside of University of California to become familiar with their requirements for depositing datasets or potential costs.</p>
-            <p>For additional information, visit University of California Research Data Management for more details on project support.</p>
-            <p><strong>Thank you,</strong><br />
-            University of California Research Data Management Office<br />
-            University of California Library Open Science and Scholarly Communication<br />
-            University of California</p>
-                  </div>
+            <p><strong>Hello {meData?.me?.givenName}</strong></p>
+            <SanitizeHTML html={meData?.me?.affiliation?.feedbackMessage || ''} />
+          </div>
 
           <div className={styles.feedbackForm}>
-            {!isSubmitted && (
+            {!feedbackRequested && (
               <FormTextArea
                 name="feedback-message"
-                label={t('form.label')}
+                label={t('form.label', { orgName: meData?.me?.affiliation?.displayName || t('anonymousOrgName') })}
                 placeholder={t('form.placeholder')}
                 value={feedbackMessage}
                 onChange={setFeedbackMessage}
                 richText={false}
                 className={styles.messageTextarea}
-                disabled={isSubmitting}
+                disabled={isSubmitting || !isPrimaryCollaborator}
               />
             )}
             <div className={styles.submitSection}>
-              <Button
-                onPress={handleRequestFeedback}
-                className="react-aria-Button react-aria-Button--primary"
-                isDisabled={isSubmitted || isSubmitting}
-                aria-describedby={isSubmitted ? "feedback-success" : undefined}
-              >
-                {isSubmitting ? (
-                  <>
-                    <span className={styles.loadingSpinner} aria-hidden="true"></span>
-                    <span className="sr-only">Submitting feedback request...</span>
-                    Submitting...
-                  </>
-                ) : (
-                  t('form.submitButton')
-                )}
-              </Button>
-              {isSubmitted && (
-                <span 
+              {isPrimaryCollaborator ? (
+                <Button
+                  onPress={handleRequestFeedback}
+                  className="react-aria-Button react-aria-Button--primary"
+                  isDisabled={isSubmitting || feedbackRequested}
+                  aria-describedby={feedbackRequested ? "feedback-success" : undefined}
+                >
+                  {isSubmitting ? (
+                    <>
+                      <span className={styles.loadingSpinner} aria-hidden="true"></span>
+                      <span className="sr-only">{Global('messaging.submittingSROnly')}</span>
+                      {Global('messaging.submitting')}
+                    </>
+                  ) : (
+                    t('form.submitButton')
+                  )}
+                </Button>
+              ) : (
+                <TooltipTrigger delay={0}>
+                  <Button
+                    className={styles.submitButtonDisabled}
+                    aria-disabled={true}
+                    onPress={() => { }}
+                  >
+                    {t('form.submitButton')}
+                  </Button>
+                  <Tooltip
+                    placement="bottom"
+                    className={`${styles.tooltip} py-2 px-2`}
+                  >
+                    {t('form.primaryAccessRequired')}
+                  </Tooltip>
+                </TooltipTrigger>
+              )}
+
+              {feedbackRequested && (
+                <span
                   ref={successMessageRef}
                   id="feedback-success"
                   className={styles.successMessage}
@@ -162,9 +260,9 @@ const ProjectsProjectPlanFeedback = () => {
           <section className={styles.teamFeedbackSection}>
             <h2>{t('teamFeedback.title')}</h2>
             <p>{t('teamFeedback.description')}</p>
-            <Link 
+            <Link
               href={routePath('projects.collaboration', { projectId })}
-                      className="react-aria-Button react-aria-Button--secondary"
+              className="react-aria-Button react-aria-Button--secondary"
             >
               {t('teamFeedback.updateAccessButton')}
             </Link>
@@ -172,7 +270,6 @@ const ProjectsProjectPlanFeedback = () => {
         </ContentContainer>
 
         <SidebarPanel>
-          {/* TODO: Pull sidebar content from database */}
           <div className={styles.sidebarContent}>
             <ExpandableContentSection
               id="university-support-feedback"
@@ -181,14 +278,14 @@ const ProjectsProjectPlanFeedback = () => {
               summaryCharLimit={150}
             >
               <p>{t('sidebar.universitySupport.description')}</p>
-              
+
               <p><strong>{t('sidebar.universitySupport.expertsCanTitle')}</strong></p>
               <ul>
                 <li>{t('sidebar.universitySupport.expertsCan.0')}</li>
                 <li>{t('sidebar.universitySupport.expertsCan.1')}</li>
                 <li>{t('sidebar.universitySupport.expertsCan.2')}</li>
               </ul>
-              
+
               <p>{t('sidebar.universitySupport.requestInfo')}</p>
             </ExpandableContentSection>
 
@@ -199,14 +296,14 @@ const ProjectsProjectPlanFeedback = () => {
               summaryCharLimit={150}
             >
               <p>{t('sidebar.teamMembers.description')}</p>
-              
+
               <p><strong>{t('sidebar.teamMembers.usefulWhenTitle')}</strong></p>
               <ul>
                 <li>{t('sidebar.teamMembers.usefulWhen.0')}</li>
                 <li>{t('sidebar.teamMembers.usefulWhen.1')}</li>
                 <li>{t('sidebar.teamMembers.usefulWhen.2')}</li>
               </ul>
-              
+
               <p>{t('sidebar.teamMembers.encourageInfo')}</p>
             </ExpandableContentSection>
           </div>

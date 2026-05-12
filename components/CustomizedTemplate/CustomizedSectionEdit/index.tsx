@@ -23,6 +23,7 @@ interface CustomizedSectionEditProps {
   displayOrder: number;
   templateCustomizationId: string | number;
   setErrorMessages: React.Dispatch<React.SetStateAction<string[]>>;
+  refetch: () => Promise<unknown>;
   onMoveUp?: () => void;
   onMoveDown?: () => void;
 }
@@ -32,6 +33,7 @@ const CustomizedSectionEdit: React.FC<CustomizedSectionEditProps> = ({
   displayOrder,
   templateCustomizationId,
   setErrorMessages,
+  refetch,
   onMoveUp,
   onMoveDown,
 }) => {
@@ -170,6 +172,8 @@ const CustomizedSectionEdit: React.FC<CustomizedSectionEditProps> = ({
         ]);
       } else {
         setAnnouncement(t('messages.questionMoved', { displayOrder: newDisplayOrder }));
+        // Refetch so that "Publish changes" button displays correctly based on whether there are unpublished changes after the move
+        await refetch();
       }
     } catch {
       setLocalQuestions(previousQuestions);

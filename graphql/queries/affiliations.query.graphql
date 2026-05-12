@@ -40,3 +40,14 @@ query ManagedAffiliationsWithGuidance($name: String, $versionedTemplateId: Int!,
     nextCursor
   }
 }
+
+query AffiliationById($affiliationId: Int!) {
+  affiliationById(affiliationId: $affiliationId) {
+    feedbackEmails
+    feedbackEnabled
+    feedbackMessage
+    displayName
+    name
+    id
+  }
+}

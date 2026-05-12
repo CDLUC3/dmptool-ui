@@ -223,6 +223,8 @@ const TemplateCustomizationOverview: React.FC = () => {
         });
       } else {
         showSuccessMoveSection();
+        // Refetch so that "Publish changes" button displays correctly based on whether there are unpublished changes after the move
+        await refetch();
       }
     } catch (err) {
       setLocalSections(previousSections); // revert
@@ -357,9 +359,11 @@ const TemplateCustomizationOverview: React.FC = () => {
     }
   }, [data]);
 
-  if (loading) {
-    return <Loading message={Global("messaging.loading")} />;
-  }
+// Only call loading if there is no data yet. Otherwise, the query refetch calls cause the page to scroll to top when user
+// changes ordering of section or questions
+if (loading && !data) {
+  return <Loading message={Global("messaging.loading")} />;
+}
 
   if (templateQueryErrors) {
     return <ErrorMessages errors={[templateQueryErrors.message]} />;
@@ -424,6 +428,7 @@ const TemplateCustomizationOverview: React.FC = () => {
                   displayOrder={section.displayOrder!}
                   templateCustomizationId={templateCustomizationId}
                   setErrorMessages={setErrorMessages}
+                  refetch={refetch}
                   onMoveUp={
                     section.sectionType === 'CUSTOM'
                       ? () => handleSectionMove(section.id!, 'up')

@@ -12,7 +12,8 @@ import {
   GuidanceGroupsDocument,
   GuidanceSourcesForPlanDocument,
   AddPlanGuidanceDocument,
-  RemovePlanGuidanceDocument
+  RemovePlanGuidanceDocument,
+  UserRole
 } from '@/generated/graphql';
 import {
   addAnswerAction,
@@ -3611,6 +3612,127 @@ describe('Auto save', () => {
         expect(updateAnswerAction).toHaveBeenCalled();
       });
     });
+  });
+});
+
+describe('PlanOverviewQuestionPageShared isAdmin/isReadOnly and feedback notification', () => {
+  beforeEach(() => {
+    setupMocks();
+    HTMLElement.prototype.scrollIntoView = mockScrollIntoView;
+    window.tinymce = { init: jest.fn(), remove: jest.fn() };
+    mockUseParams.mockReturnValue({ projectId: 1, dmpid: 1, sid: 22, qid: 344 });
+    mockUseRouter.mockReturnValue({ push: jest.fn() });
+    mockUseComments.mockReturnValue(defaultMockReturn);
+  });
+
+  it('shows NotificationHeader when feedbackStatus is REQUESTED', async () => {
+    const ORG_URI = 'https://ror.org/03yrm5c26';
+
+    // Ensure the plan's template owner URI matches the admin user's affiliation URI
+    const planWithRequested = {
+      ...mockPlanData,
+      plan: {
+        ...mockPlanData.plan,
+        feedbackStatus: { status: 'REQUESTED' },
+        versionedTemplate: {
+          ...mockPlanData.plan.versionedTemplate,
+          owner: {
+            ...mockPlanData.plan.versionedTemplate?.owner,
+            uri: ORG_URI,  // must match meAdmin's affiliation.uri
+          },
+        },
+      },
+    };
+
+    const meAdmin = {
+      ...mockMeData,
+      me: {
+        ...mockMeData.me,
+        affiliation: { uri: ORG_URI },  // <-- must match plan owner uri
+        role: UserRole.Admin,
+      },
+    };
+
+    mockUseQuery.mockImplementation((document) => {
+      if (document === PublishedQuestionDocument) {
+        return { data: mockQuestionDataForTextArea, loading: false, error: undefined, refetch: jest.fn() } as any;
+      }
+      if (document === AnswerByVersionedQuestionIdDocument) {
+        return { data: mockAnswerDataForTextArea, loading: false, error: undefined, refetch: jest.fn() } as any;
+      }
+      if (document === PlanDocument) {
+        return { data: planWithRequested, loading: false, refetch: mockRefetch } as any;
+      }
+      if (document === MeDocument) {
+        return { data: meAdmin, loading: false, error: undefined, refetch: jest.fn() } as any;  // <-- was missing
+      }
+      return { data: null, loading: false, error: undefined } as any;
+    });
+
+    await act(async () => {
+      render(<PlanOverviewQuestionPageShared config={config} />);
+    });
+
+    expect(screen.getByText('feedbackNotification.title')).toBeInTheDocument();
+    expect(screen.getByText('feedbackNotification.description')).toBeInTheDocument();
+  });
+
+  it('disables form submit and hides Save button when isReadOnly is true', async () => {
+    // Simulate feedbackStatus REQUESTED and user is not admin
+    const planWithRequested = { ...mockPlanData, plan: { ...mockPlanData.plan, feedbackStatus: { status: 'REQUESTED' }, planCreator: { ...mockPlanData.plan.planCreator, affiliation: { uri: 'https://ror.org/03yrm5c26' } } } };
+    const meAdmin = { ...mockMeData, me: { ...mockMeData.me, affiliation: { uri: 'https://ror.org/03yrm5c26' }, role: UserRole.Admin } };
+    mockUseQuery.mockImplementation((document) => {
+      if (document === PublishedQuestionDocument) {
+        return { data: mockQuestionDataForTextArea, loading: false, error: undefined, refetch: jest.fn() } as any;
+      }
+      if (document === AnswerByVersionedQuestionIdDocument) {
+        return { data: mockAnswerDataForTextArea, loading: false, error: undefined, refetch: jest.fn() } as any;
+      }
+      if (document === PlanDocument) {
+        return { data: planWithRequested, loading: false, refetch: mockRefetch } as any;
+      }
+      if (document === MeDocument) {
+        return { data: meAdmin, loading: false, error: undefined, refetch: jest.fn() } as any;
+      }
+      return { data: null, loading: false, error: undefined } as any;
+    });
+    await act(async () => {
+      render(<PlanOverviewQuestionPageShared config={config} />);
+    });
+    // Save button should not be rendered
+    expect(screen.queryByRole('button', { name: /save/i })).not.toBeInTheDocument();
+    // Form should prevent default on submit
+    const form = screen.getByTestId('question-form');
+    const preventDefaultSpy = jest.spyOn(Event.prototype, 'preventDefault');
+    fireEvent.submit(form);
+    expect(preventDefaultSpy).toHaveBeenCalled();
+    preventDefaultSpy.mockRestore();
+  });
+
+  it('shows Save button when isReadOnly is false (admin)', async () => {
+    // Simulate feedbackStatus REQUESTED but user is admin
+    const planWithRequested = { ...mockPlanData, plan: { ...mockPlanData.plan, feedbackStatus: { status: 'REQUESTED' }, versionedTemplate: { ...mockPlanData.plan.versionedTemplate, owner: { ...mockPlanData.plan.versionedTemplate.owner, uri: 'user-uri' } } } };
+    const meAdmin = { ...mockMeData, me: { ...mockMeData.me, affiliation: { uri: 'admin-uri' }, role: 'ADMIN' } };
+    mockUseQuery.mockImplementation((document) => {
+      if (document === PublishedQuestionDocument) {
+        return { data: mockQuestionDataForTextArea, loading: false, error: undefined, refetch: jest.fn() } as any;
+      }
+      if (document === AnswerByVersionedQuestionIdDocument) {
+        return { data: mockAnswerDataForTextArea, loading: false, error: undefined, refetch: jest.fn() } as any;
+      }
+      if (document === PlanDocument) {
+        return { data: planWithRequested, loading: false, refetch: mockRefetch } as any;
+      }
+      if (document === MeDocument) {
+        return { data: meAdmin, loading: false, error: undefined, refetch: jest.fn() } as any;
+      }
+      return { data: null, loading: false, error: undefined } as any;
+    });
+    await act(async () => {
+      render(<PlanOverviewQuestionPageShared config={config} />);
+    });
+    // Save button should be rendered
+    expect(screen.getByRole('button', { name: /save/i })).toBeInTheDocument();
   });
 });
 

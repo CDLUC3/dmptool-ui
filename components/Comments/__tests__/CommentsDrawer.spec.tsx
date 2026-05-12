@@ -96,7 +96,10 @@ const createMockMeQuery = (overrides = {}) => ({
       name: "Test Organization",
       displayName: "Test Organization",
       searchName: "test-organization",
-      uri: "https://test.org"
+      uri: "https://test.org",
+      feedbackEnabled: true,
+      feedbackMessage: "Test feedback message",
+      feedbackEmails: ["test@example.gov"]
     },
     ...overrides
   }

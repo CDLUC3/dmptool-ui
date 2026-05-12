@@ -324,13 +324,17 @@ const CustomQuestionNew: React.FC = () => {
             backUrl={routePath('template.customize.question.create', { templateCustomizationId }, { section_id: sectionId, step: 1 })}
             successUrl={routePath('template.customize', { templateCustomizationId })}
             onSave={async (commonFields) => {
+              // Filter out displayOrder from the commonFields since it's not needed for the mutation input and is causing issues with the type.
+              // We will set displayOrder in the backend based on the pinnedQuestionId and pinnedQuestionType that we are passing in to pin the 
+              // new question right after the last question in the section
+              const { displayOrder: _ignored, ...questionFields } = commonFields;
               const input = {
                 templateCustomizationId: Number(templateCustomizationId),
                 sectionId: Number(sectionId),
                 sectionType,
                 pinnedQuestionId: lastQuestionId,
                 pinnedQuestionType: lastQuestionType ?? null,
-                ...commonFields,
+                ...questionFields,
               };
               await addCustomQuestionMutation({ variables: { input } });
             }}
@@ -342,3 +346,4 @@ const CustomQuestionNew: React.FC = () => {
 }
 
 export default CustomQuestionNew;
+

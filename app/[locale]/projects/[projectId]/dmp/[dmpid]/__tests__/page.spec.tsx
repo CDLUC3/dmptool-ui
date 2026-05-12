@@ -9,20 +9,28 @@ import {
   updatePlanStatusAction,
   updatePlanTitleAction
 } from '../actions';
-import { useQuery } from '@apollo/client/react';
 import {
   PlanDocument,
   PlanFeedbackStatusDocument,
   RelatedWorksByPlanStatsDocument,
+  MeDocument,
+  UserRole,
 } from '@/generated/graphql';
 import { useToast } from '@/context/ToastContext';
 
-// Mock Apollo Client
-jest.mock('@apollo/client/react', () => ({
-  useQuery: jest.fn(),
-}));
+// --- Apollo Client Mocks ---
+let mockUseMutation: jest.Mock;
+const mockUseQuery = jest.fn();
 
-const mockUseQuery = jest.mocked(useQuery);
+jest.mock('@apollo/client/react', () => {
+  return {
+    ...jest.requireActual('@apollo/client/react'),
+    /* eslint-disable @typescript-eslint/no-explicit-any */
+    useQuery: (...args: any[]) => mockUseQuery(...args),
+    /* eslint-disable @typescript-eslint/no-explicit-any */
+    useMutation: (...args: any[]) => mockUseMutation(...args),
+  };
+});
 
 jest.mock('../actions/index', () => ({
   publishPlanAction: jest.fn(),
@@ -55,6 +63,14 @@ jest.mock('next-intl', () => ({
     return mockUseTranslations;
   }),
 }));
+
+jest.mock('next/link', () => ({
+  __esModule: true,
+  default: ({ href, children, ...props }: { href: string; children: React.ReactNode;[key: string]: unknown }) => (
+    <a href={href} {...props}>{children}</a>
+  ),
+}));
+
 
 // Mock the graphql hooks
 jest.mock("@/generated/graphql", () => ({
@@ -98,19 +114,45 @@ const mockToast = {
 
 expect.extend(toHaveNoViolations);
 
-const setupMocks = () => {
+const setupMocks = (meData = null) => {
   // Create references OUTSIDE mockImplementation to prevent maximum update depth exceeded error
   const planQueryReturn = {
-    data: { plan: mockPlanData.plan },
+    data: {
+      plan: {
+        ...mockPlanData.plan,
+        project: {
+          collaborators: [
+            {
+              accessLevel: 'PRIMARY',
+              user: { id: 1 }, // matches default me.id above
+            },
+          ],
+        },
+      },
+    },
     loading: false,
     error: null,
     refetch: jest.fn(),
   };
 
+
   const feedbackQueryReturn = {
     data: null,
     loading: false,
     error: undefined,
+  };
+
+  const meQueryReturn = {
+    data: meData ?? {
+      me: {
+        id: 1,
+        affiliation: { uri: 'mock-org-id' },
+        role: UserRole.Admin,
+      }
+    },
+    loading: false,
+    error: null,
+    refetch: jest.fn(),
   };
 
   const relatedWorksStatsQueryReturn = {
@@ -139,6 +181,10 @@ const setupMocks = () => {
       return relatedWorksStatsQueryReturn;
     }
 
+    if (document === MeDocument) {
+      return meQueryReturn;
+    }
+
     return {
       data: null,
       loading: false,
@@ -148,7 +194,15 @@ const setupMocks = () => {
   });
 };
 
+const adminMe = {
+  me: {
+    affiliation: { uri: 'mock-org-id' },
+    role: UserRole.Admin,
+  },
+};
+
 describe('PlanOverviewPage', () => {
+
   beforeEach(() => {
     setupMocks();
     HTMLElement.prototype.scrollIntoView = mockScrollIntoView;
@@ -162,10 +216,108 @@ describe('PlanOverviewPage', () => {
     (useToast as jest.Mock).mockReturnValue(mockToast);
 
     (useRouter as jest.Mock).mockReturnValue(mockRouter);
-  })
+
+    // Default useMutation mock returns a no-op function and empty object
+    mockUseMutation = jest.fn(() => [jest.fn(), {}]);
+    // Reset useQuery mock
+    mockUseQuery.mockClear();
+  });
 
   afterEach(() => {
     jest.clearAllMocks();
+  });
+
+
+  it('should render NotificationHeader when planFeedbackStatus.status is REQUESTED', async () => {
+    const planQueryReturn = {
+      data: {
+        plan: {
+          ...mockPlanData.plan,
+          feedbackStatus: { status: 'REQUESTED' },
+          planCreator: { ...mockPlanData.plan?.planCreator, affiliation: { uri: 'mock-org-id' } },
+        },
+      },
+      loading: false,
+      error: null,
+      refetch: jest.fn(),
+    };
+    const feedbackQueryReturn = {
+      data: { planFeedbackStatus: { status: 'REQUESTED', id: 123 } },
+      loading: false,
+      error: undefined,
+    };
+    const meQueryReturn = {
+      data: adminMe,
+      loading: false,
+      error: null,
+    };
+
+    mockUseQuery.mockImplementation((document) => {
+      if (document === PlanDocument) return planQueryReturn;
+      if (document === PlanFeedbackStatusDocument) return feedbackQueryReturn;
+      if (document === MeDocument) return meQueryReturn;
+      return { data: null, loading: false, error: undefined } as any;
+    });
+
+    render(<PlanOverviewPage />);
+    await waitFor(() => {
+      expect(screen.getByText('feedbackNotification.title')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'feedbackNotification.markAsDone' })).toBeInTheDocument();
+    });
+  });
+
+
+  it('should call completeFeedbackMutation and show toast when mark as done is confirmed', async () => {
+    const planQueryReturn = {
+      data: {
+        plan: {
+          ...mockPlanData.plan,
+          feedbackStatus: { status: 'REQUESTED' },
+          planCreator: { ...mockPlanData.plan?.planCreator, affiliation: { uri: 'mock-org-id' } },
+        },
+      },
+      loading: false,
+      error: null,
+      refetch: jest.fn(),
+    };
+    const mockRefetchFeedbackStatus = jest.fn().mockResolvedValue({});
+    const feedbackQueryReturn = {
+      data: { planFeedbackStatus: { status: 'REQUESTED', id: 123 } },
+      loading: false,
+      error: undefined,
+      refetch: mockRefetchFeedbackStatus,
+    };
+    const meQueryReturn = {
+      data: adminMe,
+      loading: false,
+      error: null,
+    };
+
+    mockUseQuery.mockImplementation((document) => {
+      if (document === PlanDocument) return planQueryReturn;
+      if (document === PlanFeedbackStatusDocument) return feedbackQueryReturn;
+      if (document === MeDocument) return meQueryReturn;
+      return { data: null, loading: false, error: undefined } as any;
+    });
+
+    const mockCompleteFeedback = jest.fn().mockResolvedValue({});
+    mockUseMutation = jest.fn(() => [mockCompleteFeedback, {}]);
+
+    render(<PlanOverviewPage />);
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'feedbackNotification.markAsDone' })).toBeInTheDocument();
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'feedbackNotification.markAsDone' }));
+
+    const confirmButton = await screen.findByRole('button', { name: 'feedbackNotification.markAsDone' });
+    fireEvent.click(confirmButton);
+
+    await waitFor(() => {
+      expect(mockCompleteFeedback).toHaveBeenCalled();
+      expect(mockRefetchFeedbackStatus).toHaveBeenCalled();
+      expect(mockToast.add).toHaveBeenCalledWith('feedbackNotification.markAsDoneSuccess', { type: 'success' });
+    });
   });
 
   it('should render loading state', () => {
@@ -338,10 +490,10 @@ describe('PlanOverviewPage', () => {
     // Check sidebar items
     const sidebar = screen.getByTestId('sidebar-panel');
     expect(sidebar).toBeInTheDocument();
-    expect(within(sidebar).getByRole('link', { name: 'buttons.preview' })).toBeInTheDocument();
+    expect(within(sidebar).queryByRole('link', { name: 'buttons.preview' })).not.toBeInTheDocument();
     expect(within(sidebar).getByRole('button', { name: 'buttons.publish' })).toBeInTheDocument();
     expect(within(sidebar).getByRole('heading', { name: 'status.feedback.title' })).toBeInTheDocument();
-    expect(within(sidebar).getByRole('link', { name: 'links.request' })).toBeInTheDocument();
+    expect(within(sidebar).getByRole('button', { name: 'links.request' })).toBeInTheDocument();
     expect(within(sidebar).getByRole('heading', { name: 'status.title' })).toBeInTheDocument();
     expect(within(sidebar).queryByText('Draft')).not.toBeInTheDocument();
     expect(within(sidebar).getByText('buttons.linkUpdate')).toBeInTheDocument();
@@ -1336,7 +1488,7 @@ describe('PlanOverviewPage', () => {
     };
 
     const feedbackQueryReturn = {
-      data: { planFeedbackStatus: 'NONE' },
+      data: { planFeedbackStatus: { status: 'NONE', id: 1 } },
       loading: false,
       error: undefined,
     };
@@ -1380,7 +1532,7 @@ describe('PlanOverviewPage', () => {
     };
 
     const feedbackQueryReturn = {
-      data: { planFeedbackStatus: 'REQUEST' },
+      data: { planFeedbackStatus: { status: 'REQUEST', id: 2 } },
       loading: false,
       error: undefined,
     };
@@ -1424,7 +1576,7 @@ describe('PlanOverviewPage', () => {
     };
 
     const feedbackQueryReturn = {
-      data: { planFeedbackStatus: 'COMPLETE' },
+      data: { planFeedbackStatus: { status: 'COMPLETE', id: 3 } },
       loading: false,
       error: undefined,
     };
@@ -1454,6 +1606,89 @@ describe('PlanOverviewPage', () => {
     await waitFor(() => {
       // translations are mocked, so we check for the translation key
       expect(within(sidebar).getByText('status.feedback.complete')).toBeInTheDocument();
+    });
+  });
+
+  it('should render feedback as a clickable link when current user is a PRIMARY collaborator', async () => {
+    const meId = 42;
+
+    // Create references OUTSIDE mockImplementation
+    const planQueryReturn = {
+      data: {
+        plan: {
+          ...mockPlanData.plan,
+          project: {
+            collaborators: [{ accessLevel: 'PRIMARY', user: { id: meId } }],
+          },
+        },
+      },
+      loading: false,
+      error: null,
+      refetch: jest.fn(),
+    };
+    const meQueryReturn = {
+      data: { me: { id: meId, affiliation: { uri: 'mock-org-id' }, role: UserRole.Admin } },
+      loading: false,
+      error: null,
+    };
+
+    mockUseQuery.mockImplementation((document) => {
+      if (document === PlanDocument) return planQueryReturn;
+      if (document === MeDocument) return meQueryReturn;
+      return { data: null, loading: false, error: undefined } as any;
+    });
+
+    render(<PlanOverviewPage />);
+
+    const sidebar = screen.getByTestId('sidebar-panel');
+    await waitFor(() => {
+      expect(within(sidebar).getByRole('link', { name: 'links.request' })).toBeInTheDocument();
+    });
+  });
+
+  it('should render feedback as a disabled button with tooltip when current user is NOT a PRIMARY collaborator', async () => {
+    const meId = 99;
+
+    const planQueryReturn = {
+      data: {
+        plan: {
+          ...mockPlanData.plan,
+          project: {
+            collaborators: [
+              { accessLevel: 'OWN', user: { id: meId } },
+              { accessLevel: 'PRIMARY', user: { id: 1 } },
+            ],
+          },
+        },
+      },
+      loading: false,
+      error: null,
+      refetch: jest.fn(),
+    };
+    const meQueryReturn = {
+      data: { me: { id: meId, affiliation: { uri: 'mock-org-id' }, role: UserRole.Admin } },
+      loading: false,
+      error: null,
+    };
+
+    mockUseQuery.mockImplementation((document) => {
+      if (document === PlanDocument) return planQueryReturn;
+      if (document === MeDocument) return meQueryReturn;
+      return { data: null, loading: false, error: undefined } as any;
+    });
+
+    render(<PlanOverviewPage />);
+
+    const sidebar = screen.getByTestId('sidebar-panel');
+
+    await waitFor(() => {
+      // Link should not be present
+      expect(within(sidebar).queryByRole('link', { name: 'links.request' })).not.toBeInTheDocument();
+
+      // Should be a disabled button instead
+      const disabledButton = within(sidebar).getByRole('button', { name: 'links.request' });
+      expect(disabledButton).toBeInTheDocument();
+      expect(disabledButton).toHaveAttribute('aria-disabled', 'true');
     });
   });
 });

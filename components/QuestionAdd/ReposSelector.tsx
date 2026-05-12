@@ -63,22 +63,16 @@ type AddRepositoryErrors = {
   website?: string;
 }
 function toSubjectAreaObject(str: string): { id: string; name: string } {
-  // Convert to ID-friendly slug
-  const id = str
-    .toLowerCase()
-    .replace(/[()]/g, '')          // remove parentheses
-    .replace(/[^a-z0-9\s-]/g, '')  // remove special chars except spaces/hyphens
-    .trim()
-    .replace(/\s+/g, '-');         // replace spaces with hyphens
-
-  // Convert to nice display form
   const name = str
     .trim()
-    .replace(/\s+/g, ' ')
-    .replace(/\w\S*/g, w => w[0].toUpperCase() + w.substring(1));
+    .replace(/\s+/g, ' ');
 
-  return { id, name };
+  return {
+    id: str.trim(),
+    name,
+  };
 }
+
 
 /* Research Output question's Repository Selection System */
 const RepositorySelectionSystem = ({
@@ -159,7 +153,9 @@ const RepositorySelectionSystem = ({
   ];
 
   // Repositories lazy query
-  const [fetchRepositoriesData, { data: repositoriesData }] = useLazyQuery(RepositoriesDocument);
+  const [fetchRepositoriesData, { data: repositoriesData }] = useLazyQuery(RepositoriesDocument, {
+    fetchPolicy: 'network-only',
+  });
 
   // Fetch repositories based on search term criteria
   const fetchRepositories = async ({
@@ -362,6 +358,7 @@ const RepositorySelectionSystem = ({
 
     const processRepoData = () => {
       if (repositoriesData?.repositories?.items) {
+
         if (isMounted) {
           // Filter out null items and CustomRepository items with actual errors
           const validRepos = repositoriesData.repositories.items.filter((item): item is Repository => {
@@ -657,7 +654,7 @@ const RepositorySelectionSystem = ({
 
                       {repositories
                         .filter((repo): repo is Repository & { id: string } => repo.id != null)
-                        .map((repo) => {
+                        .map((repo, idx) => {
                           const repoInterface: RepositoryInterface = {
                             id: repo.uri ?? '',
                             name: repo.name ?? '',
@@ -668,9 +665,11 @@ const RepositorySelectionSystem = ({
                             repositoryType: repo.repositoryTypes ?? []
                           };
                           const isSelected = selectedRepos[repoInterface.uri];
+                          // Ensure unique key by prefixing with 'modal-' and fallback to idx if needed
+                          const uniqueKey = `modal-${repoInterface.id}-${idx}`;
                           return (
                             <div
-                              key={repoInterface.id}
+                              key={uniqueKey}
                               className={`${styles.searchResultItem} ${isSelected ? styles.selected : ''}`}
                             >
                               <div className={styles.searchResultHeader}>

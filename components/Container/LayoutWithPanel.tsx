@@ -167,7 +167,7 @@ export const DrawerPanel: React.FC<DrawerPanelProps> = ({
 
   useEffect(() => {
     setIsMobile(size.viewport[0] < getSizeByName('md')[0]);
-  }, [size]);
+  }, [size.viewport[0]]);
 
   useEffect(() => {
     setStateOpen(isOpen);

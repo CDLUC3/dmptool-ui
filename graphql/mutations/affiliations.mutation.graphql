@@ -7,3 +7,20 @@ mutation AddAffiliation($input: AffiliationInput!) {
     uri
   }
 }
+
+mutation UpdateAffiliation($input: AffiliationInput!) {
+  updateAffiliation(input: $input) {
+    feedbackEmails
+    feedbackEnabled
+    feedbackMessage
+    id
+    uri
+    name
+    displayName
+    errors {
+      general
+      feedbackEmails
+      feedbackMessage
+    }
+  }
+}

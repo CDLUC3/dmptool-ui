@@ -79,7 +79,7 @@ describe('useResearchOutputTable', () => {
   it('should initialize with default standard fields and states', () => {
     const { result } = renderHook(() => useResearchOutputTable({ setHasUnsavedChanges, announce }));
     expect(result.current.standardFields.length).toBeGreaterThan(0);
-    expect(result.current.expandedFields).toEqual(['title', 'outputType']);
+    expect(result.current.expandedFields).toEqual(['title']);
     expect(result.current.nonCustomizableFieldIds).toContain('accessLevels');
     expect(result.current.additionalFields).toEqual([]);
     expect(typeof result.current.buildResearchOutputFormState).toBe('function');

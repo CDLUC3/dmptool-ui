@@ -487,7 +487,9 @@ export const jsonToState = (
     return {
       standardFields: initialStandardFields,
       additionalFields: [],
-      expandedFields: ['title', 'outputType'],
+      expandedFields: initialStandardFields
+        .filter(f => f.enabled)
+        .map(f => f.id),
     };
   }
 
@@ -600,6 +602,10 @@ export const jsonToState = (
             };
           }
           // If no custom options, it's using defaults mode - just update helpText
+        } else {
+          // Column absent from JSON means it was explicitly disabled when saved
+          // (stateToJSON omits disabled fields, so absence = disabled)
+          updated.enabled = false;
         }
         break;
       }

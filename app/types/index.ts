@@ -444,6 +444,8 @@ export interface PlanOverviewInterface {
   sourceTemplate?: string;
   templateVersion?: string;
   templatePublished?: string;
+  orgId?: string;
+  feedbackStatus?: string;
 }
 
 export interface ActionResponse {
@@ -638,3 +640,4 @@ export interface ProjectDetailsFormInterface {
   parentResearchDomainId: string | number;
 }
 
+export type AccessLevelKey = 'edit' | 'comment' | 'own' | 'primary';

@@ -102,9 +102,15 @@ export const mockPlanData = {
         totalQuestions: 1
       }
     ],
+    planCreator: {
+      id: 3,
+      affiliation: {
+        uri: "https://ror.org/03yrm5c26"
+      }
+    },
     created: "1741308996000",
     modified: "1741308996000",
-    dmpId: "",
+    dmpId: "https://doi.org/10.2312/abc123",
     registered: null,
     title: 'Reef Havens: Exploring the Role of Reef Ecosystems in Sustaining Eel Populations'
   }

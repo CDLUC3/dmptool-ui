@@ -92,7 +92,7 @@ export const useResearchOutputTable = ({ setHasUnsavedChanges, announce, initial
       id: RO_OUTPUT_TYPE_ID,
       label: QuestionAdd('researchOutput.labels.outputType'),
       languageTranslationKey: 'labels.outputType',
-      enabled: true,
+      enabled: false,
       helpText: '',
       required: false,
       outputTypeConfig: {
@@ -192,7 +192,7 @@ export const useResearchOutputTable = ({ setHasUnsavedChanges, announce, initial
       id: (field as any).id ?? `custom_field_${Date.now()}_${idx}`,// Ensure each field has a unique ID for updates
     })) as AdditionalFieldsType[])
   );
-  const [expandedFields, setExpandedFields] = useState<string[]>(hydrated?.expandedFields || ['title', 'outputType']);
+  const [expandedFields, setExpandedFields] = useState<string[]>(hydrated?.expandedFields || ['title']);
   // State for managing custom output types
   const [newOutputType, setNewOutputType] = useState<OutputTypeInterface>({ type: '', description: '' });
   // State for managing custom license types
@@ -339,7 +339,6 @@ export const useResearchOutputTable = ({ setHasUnsavedChanges, announce, initial
     if (enabled === true) {
       setExpandedFields(prev => [...prev, fieldId]); //expanded
     }
-    // Do NOT auto-collapse when unchecked
 
     // Announce the change
     const field = standardFields.find(f => f.id === fieldId);

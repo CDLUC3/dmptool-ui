@@ -64,7 +64,10 @@ describe('useComments', () => {
         name: "Test Organization",
         searchName: "test-organization",
         uri: "https://test.org",
-        displayName: "Test Organization"
+        displayName: "Test Organization",
+        feedbackEnabled: true,
+        feedbackMessage: "Test feedback message",
+        feedbackEmails: ["test@example.gov"]
       },
     }
   };

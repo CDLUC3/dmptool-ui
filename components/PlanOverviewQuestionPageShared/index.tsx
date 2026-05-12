@@ -26,6 +26,7 @@ import {
   MeDocument,
   PlanDocument,
   AnswerByVersionedQuestionIdDocument,
+  UserRole,
 } from '@/generated/graphql';
 import {
   addAnswerAction,
@@ -69,6 +70,7 @@ import SafeHtml from '@/components/SafeHtml';
 import Loading from '@/components/Loading';
 import { FormTextArea } from '@/components/Form';
 import GuidancePanel from '@/components/GuidancePanel';
+import NotificationHeader from '../Notification';
 
 // Utils and other
 import { useToast } from '@/context/ToastContext';
@@ -244,6 +246,7 @@ interface PlanData {
   title: string;
   openFeedbackRounds: boolean;
   feedbackId?: number | null;
+  feedbackStatus?: string;
   orgId: string;
   collaborators: number[];
   planOwners: number[] | null;
@@ -288,6 +291,8 @@ export const PlanOverviewQuestionPageShared: React.FC<{ config: QuestionPageConf
   const [answerId, setAnswerId] = useState<number | null>(null);
   // Track whether ResearchOutputAnswerComponent is in single-edit view
   const [isResearchOutputEditing, setIsResearchOutputEditing] = useState(false);
+  // Track whether the question should be read-only based on plan status and user role
+  const [isReadOnly, setIsReadOnly] = useState<boolean>(false);
 
   const [errors, setErrors] = useState<string[]>([]);
 
@@ -1293,6 +1298,7 @@ export const PlanOverviewQuestionPageShared: React.FC<{ config: QuestionPageConf
         title: planData?.plan?.project?.title ?? '',
         openFeedbackRounds: planData?.plan?.feedback?.some(f => f.completed == null) ?? false, // If any of the feedback rounds have not yet been completed
         feedbackId: planData?.plan?.feedback?.find(item => item.completed === null)?.id, //Get first feedback id where it has not yet been completed
+        feedbackStatus: planData?.plan?.feedbackStatus?.status ?? '', //Get feedback status from plan data
         orgId: planData?.plan?.versionedTemplate?.owner?.uri ?? '', //affiliation id for plan
         collaborators: planData?.plan?.project?.collaborators
           ?.map(c => c?.user?.id)
@@ -1336,10 +1342,19 @@ export const PlanOverviewQuestionPageShared: React.FC<{ config: QuestionPageConf
 
   }, [answerData, questionType]);
 
+  useEffect(() => {
+    const adminStatus =
+      !!(me?.me?.affiliation?.uri &&
+        me.me.affiliation.uri === planData?.plan?.planCreator?.affiliation?.uri &&
+        (me.me.role === UserRole.Admin || me.me.role === UserRole.Superadmin));
+
+    setIsReadOnly(planData?.plan?.feedbackStatus?.status === 'REQUESTED' && adminStatus);
+  }, [me?.me?.affiliation?.uri, me?.me?.role, planData, plan?.orgId]);
 
   // Auto-save logic
   useEffect(() => {
     if (!hasUnsavedChanges) return;
+    if (isReadOnly) return;
     if (!versionedQuestionId || !versionedSectionId || !question) return;
 
     // Set a timeout to auto-save after 3 seconds of inactivity
@@ -1364,6 +1379,7 @@ export const PlanOverviewQuestionPageShared: React.FC<{ config: QuestionPageConf
   // Auto-save on window blur and before unload
   useEffect(() => {
     const handleWindowBlur = () => {
+      if (isReadOnly) return;
       if (hasUnsavedChanges && !isAutoSaving) {
         if (autoSaveTimeoutRef.current) {
           clearTimeout(autoSaveTimeoutRef.current);
@@ -1415,6 +1431,7 @@ export const PlanOverviewQuestionPageShared: React.FC<{ config: QuestionPageConf
   const questionField = useRenderQuestionField({
     questionType,
     parsed,
+    readOnly: isReadOnly,
     textFieldProps: {
       textValue: typeof formData.textValue === 'string' ? formData.textValue : '',
       handleTextChange,
@@ -1509,7 +1526,6 @@ export const PlanOverviewQuestionPageShared: React.FC<{ config: QuestionPageConf
     return <div className="error">{Global('messaging.somethingWentWrong')}</div>;
   }
 
-
   return (
     <>
       <PageHeader
@@ -1533,6 +1549,13 @@ export const PlanOverviewQuestionPageShared: React.FC<{ config: QuestionPageConf
       <ErrorMessages errors={errors} ref={errorRef} />
 
       <LayoutWithPanel>
+        {plan?.feedbackStatus === "REQUESTED" && isReadOnly && (
+          <NotificationHeader
+            title={t("feedbackNotification.title")}
+          >
+            <p>{t("feedbackNotification.description")}</p>
+          </NotificationHeader>
+        )}
         <ContentContainer>
           <div className="container">
             {/**Requirements by funder */}
@@ -1557,7 +1580,7 @@ export const PlanOverviewQuestionPageShared: React.FC<{ config: QuestionPageConf
               <DmpIcon icon="down_arrow" />
               <Link href="#guidance" className={`${styles.guidanceLink} react-aria-Link`}>{PlanOverview('page.jumpToGuidance')}</Link>
             </p>
-            <Form onSubmit={handleSubmit}>
+            <Form onSubmit={isReadOnly ? (e) => e.preventDefault() : handleSubmit} data-testid="question-form">
               <Card data-testid='question-card'>
                 <span>{PlanOverview('headings.question')}</span>
                 <h2 id="question-title" className="h3">
@@ -1585,8 +1608,8 @@ export const PlanOverviewQuestionPageShared: React.FC<{ config: QuestionPageConf
                 )}
                 <div>
                   <div className={styles.buttonsRow}>
-                    {/**Only include sample text button for textArea question types and if sampleText is not empty */}
-                    {(questionType === TEXT_AREA_QUESTION_TYPE && (question?.sampleText || question?.customizationSampleText)) && (
+                    {/**Only include sample text button for textArea question types and if sampleText is not empty and NOT read-only */}
+                    {(questionType === TEXT_AREA_QUESTION_TYPE && !isReadOnly && (question?.sampleText || question?.customizationSampleText)) && (
                       <Button
                         ref={openSampleTextButtonRef}
                         className="tertiary small"
@@ -1634,6 +1657,7 @@ export const PlanOverviewQuestionPageShared: React.FC<{ config: QuestionPageConf
                       placeholder={Global('placeholders.enterComment')}
                       value={formData.commentValue}
                       onChange={handleCommentValueChange}
+                      disabled={isReadOnly}
                     />
                   )}
                 </div>
@@ -1642,32 +1666,34 @@ export const PlanOverviewQuestionPageShared: React.FC<{ config: QuestionPageConf
                   role="status">
                   {getLastSavedText()}
                 </div>
-                <div className={styles.modalAction}>
-                  {!(questionType === RESEARCH_OUTPUT_QUESTION_TYPE && isResearchOutputEditing) && (
-                    <>
-                      <div>
-                        <Button
-                          type="submit"
-                          data-secondary
-                          className="primary"
-                          aria-label={PlanOverview('labels.saveAnswer')}
-                          aria-disabled={isSubmitting}
-                        >
-                          {isSubmitting ? Global('buttons.saving') : Global('buttons.save')}
-                        </Button>
-                      </div>
-                      <div>
-                        <Button
-                          className="secondary"
-                          aria-label={PlanOverview('labels.returnToSection')}
-                          onPress={() => handleBackToSection()}
-                        >
-                          {PlanOverview('buttons.backToSection')}
-                        </Button>
-                      </div>
-                    </>
-                  )}
-                </div>
+                {!isReadOnly && (
+                  <div className={styles.modalAction}>
+                    {!(questionType === RESEARCH_OUTPUT_QUESTION_TYPE && isResearchOutputEditing) && (
+                      <>
+                        <div>
+                          <Button
+                            type="submit"
+                            data-secondary
+                            className="primary"
+                            aria-label={PlanOverview('labels.saveAnswer')}
+                            aria-disabled={isSubmitting}
+                          >
+                            {isSubmitting ? Global('buttons.saving') : Global('buttons.save')}
+                          </Button>
+                        </div>
+                        <div>
+                          <Button
+                            className="secondary"
+                            aria-label={PlanOverview('labels.returnToSection')}
+                            onPress={() => handleBackToSection()}
+                          >
+                            {PlanOverview('buttons.backToSection')}
+                          </Button>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )}
               </Card>
             </Form>
           </div>

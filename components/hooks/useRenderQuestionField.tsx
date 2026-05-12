@@ -62,6 +62,7 @@ export interface RenderQuestionFieldProps {
   questionType: string;
   parsed: ParsedQuestion | undefined;
   question?: Question;
+  readOnly?: boolean;
 
   radioProps?: {
     selectedRadioValue: string;
@@ -159,6 +160,7 @@ export interface RenderQuestionFieldProps {
 
 export function useRenderQuestionField({
   parsed,
+  readOnly,
   questionType,
   radioProps,
   checkBoxProps,
@@ -190,6 +192,7 @@ export function useRenderQuestionField({
             selectedRadioValue={radioProps?.selectedRadioValue}
             name="radio-buttons"
             handleRadioChange={radioProps?.handleRadioChange}
+            isDisabled={readOnly}
           />
         );
       }
@@ -202,6 +205,7 @@ export function useRenderQuestionField({
             parsedQuestion={parsed}
             selectedCheckboxValues={checkBoxProps?.selectedCheckboxValues}
             handleCheckboxGroupChange={checkBoxProps?.handleCheckboxGroupChange}
+            isDisabled={readOnly}
           />
         );
       }
@@ -215,6 +219,7 @@ export function useRenderQuestionField({
               parsedQuestion={parsed}
               selectedSelectValue={selectBoxProps.selectedSelectValue}
               handleSelectChange={selectBoxProps.handleSelectChange}
+              isDisabled={readOnly}
             />
           );
         }
@@ -229,6 +234,7 @@ export function useRenderQuestionField({
               parsedQuestion={parsed}
               selectedMultiSelectValues={multiSelectBoxProps.selectedMultiSelectValues}
               handleMultiSelectChange={multiSelectBoxProps.handleMultiSelectChange}
+              isDisabled={readOnly}
             />
           );
         }
@@ -249,6 +255,7 @@ export function useRenderQuestionField({
             onChange={textFieldProps?.handleTextChange}
             minLength={minLength}
             maxLength={maxLength}
+            disabled={readOnly}
           />
         );
       }
@@ -262,6 +269,7 @@ export function useRenderQuestionField({
             content={textAreaProps?.content ?? ''}
             setContent={(value) => textAreaProps?.setContent && textAreaProps?.setContent(value)}
             onChange={textAreaProps?.handleTextAreaChange}
+            disabled={readOnly}
           />
         );
       }
@@ -279,6 +287,7 @@ export function useRenderQuestionField({
             label="Date"
             minValue={minValue}
             maxValue={maxValue}
+            isDisabled={readOnly}
           />
         );
       }
@@ -291,6 +300,7 @@ export function useRenderQuestionField({
             parsedQuestion={parsed}
             dateRange={dateRangeProps?.dateRange}
             handleDateChange={dateRangeProps?.handleDateRangeChange}
+            isDisabled={readOnly}
           />
         );
       }
@@ -309,6 +319,7 @@ export function useRenderQuestionField({
             minValue={minValue}
             {...(typeof maxValue === 'number' ? { maxValue } : {})}
             step={step}
+            disabled={readOnly}
           />
         );
       }
@@ -323,6 +334,7 @@ export function useRenderQuestionField({
             handleNumberChange={numberRangeProps?.handleNumberRangeChange}
             startPlaceholder="start"
             endPlaceholder="end"
+            isDisabled={readOnly}
           />
         );
       }
@@ -335,6 +347,7 @@ export function useRenderQuestionField({
             parsedQuestion={parsed}
             inputCurrencyValue={currencyProps?.inputCurrencyValue}
             handleCurrencyChange={currencyProps?.handleCurrencyChange}
+            isDisabled={readOnly}
           />
         );
       }
@@ -355,6 +368,7 @@ export function useRenderQuestionField({
             minLength={minLength}
             maxLength={maxLength}
             pattern={pattern}
+            disabled={readOnly}
           />
         );
       }
@@ -375,6 +389,7 @@ export function useRenderQuestionField({
             minLength={minLength}
             maxLength={maxLength}
             pattern={pattern}
+            disabled={readOnly}
           />
         );
       }
@@ -387,6 +402,7 @@ export function useRenderQuestionField({
             parsedQuestion={parsed}
             selectedValue={booleanProps?.yesNoValue}
             handleRadioChange={booleanProps?.handleBooleanChange}
+            isDisabled={readOnly}
           />
         );
       }
@@ -403,6 +419,7 @@ export function useRenderQuestionField({
             setOtherField={typeaheadSearchProps.setOtherField}
             handleAffiliationChange={typeaheadSearchProps.handleAffiliationChange}
             handleOtherAffiliationChange={typeaheadSearchProps.handleOtherAffiliationChange}
+            isDisabled={readOnly}
           />
         );
       }
@@ -418,6 +435,7 @@ export function useRenderQuestionField({
             setRows={researchOutputTableAnswerProps?.setRows}
             onSave={researchOutputTableAnswerProps?.onSave}
             onEditingStateChange={researchOutputTableAnswerProps?.onEditingStateChange}
+            isDisabled={readOnly}
           />
         );
       }

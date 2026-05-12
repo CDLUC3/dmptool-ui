@@ -107,6 +107,7 @@ const ResearchOutputComponent: React.FC<ResearchOutputComponentProps> = ({
                     <Checkbox
                       isSelected={field.enabled}
                       isDisabled={isDisabled}
+                      data-testid={`checkbox-${field.id}`}
                       aria-describedby={isDisabled ? tooltipId : undefined}
                       className={
                         `react-aria-Checkbox ${(field.required)

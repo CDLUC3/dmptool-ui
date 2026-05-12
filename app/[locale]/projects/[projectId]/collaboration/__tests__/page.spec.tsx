@@ -7,6 +7,7 @@ import { removeProjectCollaboratorAction, updateProjectCollaboratorAction, resen
 import { mockScrollIntoView } from "@/__mocks__/common";
 
 import {
+  MeDocument,
   ProjectCollaboratorAccessLevel,
   ProjectCollaboratorsDocument,
 } from '@/generated/graphql';
@@ -134,21 +135,54 @@ const projectCollaboratorsMock = [
   }
 ];
 
-const MOCKS = [
-  // Successful project collaborators query
-  {
-    request: {
-      query: ProjectCollaboratorsDocument,
-      variables: {
-        projectId: 1
-      },
-    },
-    result: {
-      data: {
-        projectCollaborators: projectCollaboratorsMock,
+const meMock = {
+  request: {
+    query: MeDocument,
+    variables: {},
+  },
+  result: {
+    data: {
+      me: {
+        __typename: 'User',
+        id: 1,
+        givenName: 'Test',
+        surName: 'User',
+        languageId: null,
+        role: 'RESEARCHER',
+        emails: [],
+        errors: {
+          __typename: 'UserErrors',
+          general: null,
+          email: null,
+          password: null,
+          role: null,
+        },
+        affiliation: null,
       },
     },
   },
+};
+
+const projectCollaboratorsMockQuery = {
+  request: {
+    query: ProjectCollaboratorsDocument,
+    variables: {
+      projectId: 1
+    },
+  },
+  result: {
+    data: {
+      projectCollaborators: projectCollaboratorsMock,
+    },
+  },
+};
+
+const MOCKS = [
+  // Initial load
+  projectCollaboratorsMockQuery,
+  // Refetch after successful update
+  projectCollaboratorsMockQuery,
+  meMock,
 ];
 
 const ERROR_MOCKS = [
@@ -160,7 +194,8 @@ const ERROR_MOCKS = [
       },
     },
     error: new Error('Server Error')
-  }
+  },
+  meMock,
 ]
 
 
@@ -360,10 +395,6 @@ describe('ProjectsProjectCollaborationPage', () => {
     const inviteButton = await screen.findByRole('link', { name: "links.inviteAPerson" });
     expect(inviteButton).toBeInTheDocument();
 
-    const revokeButton = await screen.queryAllByRole('button', { name: /revokeAccessFor/i });
-    fireEvent.click(revokeButton[0]);
-
-
     // Find the specific label by testid
     const label = screen.getByTestId('edit-User One');
     // Within that label, grab the radio by aria label
@@ -373,7 +404,16 @@ describe('ProjectsProjectCollaborationPage', () => {
     fireEvent.click(input);
     expect(input).toBeChecked();
 
-    // Confirm 
+    // Click Save to trigger the update action (radio only stages a pending change)
+    const userOneItem = screen.getByRole('listitem', { name: /Project member: User One/i });
+    const saveButton = within(userOneItem).getByRole('button', { name: /saveAccessFor/i });
+    fireEvent.click(saveButton);
+
+    // Confirm in the save modal
+    const confirmButton = await screen.findByRole('button', { name: /saveCollaboratorAccess/i });
+    fireEvent.click(confirmButton);
+
+    // Confirm
     await waitFor(() => {
       expect(updateProjectCollaboratorAction).toHaveBeenCalledWith({
         projectCollaboratorId: 21,
@@ -391,23 +431,31 @@ describe('ProjectsProjectCollaborationPage', () => {
       );
     });
 
-    await waitFor(() => {
-      const revokeButton = screen.queryAllByRole('button', { name: /revokeAccessFor/i });
-      fireEvent.click(revokeButton[0]);
-    });
+    // Wait until data has been rendered
+    const inviteButton = await screen.findByRole('link', { name: "links.inviteAPerson" });
+    expect(inviteButton).toBeInTheDocument();
 
     // Find the specific label by testid
     const label = screen.getByTestId('own-User One');
     // Within that label, grab the radio by aria label
-    const input = within(label).getByLabelText('canOwnPlanFor');
+    const input = within(label).getByLabelText('canCoOwnPlanFor');
 
-    // Click and assert
+    // Click and assert (User One already has OWN — same value)
     fireEvent.click(input);
     expect(input).toBeChecked();
 
+    // Click Save to trigger the update action (radio only stages a pending change)
+    const userOneItem = screen.getByRole('listitem', { name: /Project member: User One/i });
+    const saveButton = within(userOneItem).getByRole('button', { name: /saveAccessFor/i });
+    fireEvent.click(saveButton);
+
+    // Confirm in the save modal
+    const confirmButton = await screen.findByRole('button', { name: /saveCollaboratorAccess/i });
+    fireEvent.click(confirmButton);
+
     // Should not call update action as the access level is the same
     await waitFor(() => {
-      expect(updateProjectCollaboratorAction).not.toHaveBeenCalledWith();
+      expect(updateProjectCollaboratorAction).not.toHaveBeenCalled();
     });
   });
 
@@ -431,10 +479,6 @@ describe('ProjectsProjectCollaborationPage', () => {
     const inviteButton = await screen.findByRole('link', { name: "links.inviteAPerson" });
     expect(inviteButton).toBeInTheDocument();
 
-    const revokeButton = await screen.queryAllByRole('button', { name: /revokeAccessFor/i });
-    fireEvent.click(revokeButton[0]);
-
-
     // Find the specific label by testid
     const label = screen.getByTestId('edit-User One');
     // Within that label, grab the radio by aria label
@@ -443,6 +487,15 @@ describe('ProjectsProjectCollaborationPage', () => {
     // Click and assert
     fireEvent.click(input);
     expect(input).toBeChecked();
+
+    // Click Save to trigger the update action (radio only stages a pending change)
+    const userOneItem = screen.getByRole('listitem', { name: /Project member: User One/i });
+    const saveButton = within(userOneItem).getByRole('button', { name: /saveAccessFor/i });
+    fireEvent.click(saveButton);
+
+    // Confirm in the save modal
+    const confirmButton = await screen.findByRole('button', { name: /saveCollaboratorAccess/i });
+    fireEvent.click(confirmButton);
 
     // Should display error message
     expect(await screen.findByText(/something went wrong/i)).toBeInTheDocument();
@@ -472,9 +525,6 @@ describe('ProjectsProjectCollaborationPage', () => {
     const inviteButton = await screen.findByRole('link', { name: "links.inviteAPerson" });
     expect(inviteButton).toBeInTheDocument();
 
-    const revokeButton = await screen.queryAllByRole('button', { name: /revokeAccessFor/i });
-    fireEvent.click(revokeButton[0]);
-
     // Find the specific label by testid
     const label = screen.getByTestId('edit-User One');
     // Within that label, grab the radio by aria label
@@ -483,6 +533,15 @@ describe('ProjectsProjectCollaborationPage', () => {
     // Click and assert
     fireEvent.click(input);
     expect(input).toBeChecked();
+
+    // Click Save to trigger the update action (radio only stages a pending change)
+    const userOneItem = screen.getByRole('listitem', { name: /Project member: User One/i });
+    const saveButton = within(userOneItem).getByRole('button', { name: /saveAccessFor/i });
+    fireEvent.click(saveButton);
+
+    // Confirm in the save modal
+    const confirmButton = await screen.findByRole('button', { name: /saveCollaboratorAccess/i });
+    fireEvent.click(confirmButton);
 
     // Should display error message
     expect(await screen.findByText(/Something went wrong with the handleRevoke action/i)).toBeInTheDocument();
@@ -509,9 +568,6 @@ describe('ProjectsProjectCollaborationPage', () => {
     const inviteButton = await screen.findByRole('link', { name: "links.inviteAPerson" });
     expect(inviteButton).toBeInTheDocument();
 
-    const revokeButton = await screen.queryAllByRole('button', { name: /revokeAccessFor/i });
-    fireEvent.click(revokeButton[0]);
-
     // Find the specific label by testid
     const label = screen.getByTestId('edit-User One');
     // Within that label, grab the radio by aria label
@@ -520,6 +576,15 @@ describe('ProjectsProjectCollaborationPage', () => {
     // Click and assert
     fireEvent.click(input);
     expect(input).toBeChecked();
+
+    // Click Save to trigger the update action (radio only stages a pending change)
+    const userOneItem = screen.getByRole('listitem', { name: /Project member: User One/i });
+    const saveButton = within(userOneItem).getByRole('button', { name: /saveAccessFor/i });
+    fireEvent.click(saveButton);
+
+    // Confirm in the save modal
+    const confirmButton = await screen.findByRole('button', { name: /saveCollaboratorAccess/i });
+    fireEvent.click(confirmButton);
 
     // Verify that router.push was called with "/login"
     await waitFor(() => {
@@ -659,6 +724,7 @@ describe('ProjectsProjectCollaborationPage', () => {
     });
 
   });
+
   it('should pass accessibility tests', async () => {
     const { container } = render(
       <MockedProvider mocks={MOCKS}>

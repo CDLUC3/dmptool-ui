@@ -336,13 +336,19 @@
     "title": "Convide pessoas e gerencie o acesso",
     "description": "Quando você convidar uma pessoa, enviaremos um e-mail para essa pessoa convidando-a para visualizar o seu plano.",
     "removeCollaborator": "Remover este membro significa que ele não poderá mais colaborar com este plano.",
-    "canEdit": "Pode editar plano",
-    "canComment": "Comentário somente",
-    "own": "O proprietário",
+    "saveCollaboratorAccess": "A atualização do nível de acesso de {name} alterará as permissões dele para este plano para {accessLevel}.",
+    "primaryDesignationChangeWarning": "Atribuir {name} como Proprietário Primário transferirá seu status de Proprietário Primário para eles. O nível de acesso do Proprietário Primário atual será alterado para Co-Proprietário. Deseja continuar?",
+    "canEdit": "Editora",
+    "canComment": "Comentarista",
+    "own": "Coproprietário",
+    "primary": "Proprietário primário",
     "cancelRemoval": "Cancelar a remoção do colaborador de projeto {name}",
     "deleteCollaborator": "Excluir colaborador do projeto {name}",
     "canEditPlanFor": "Pode editar o plano de {name}",
     "canCommentPlanFor": "Pode comentar no plano {name}",
+    "canCoOwnPlanFor": "Plano de copropriedade para {name}",
+    "canPrimaryOwnPlanFor": "Plano de propriedade primária para {name}",
+    "saveAccessFor": "Salvar acesso para {name}",
     "canOwnPlanFor": "Próprio plano para {name}",
     "revokeAccessFor": "Revogar o acesso para {name}",
     "deleteInviteFor": "Excluir convite para {name}",
@@ -350,12 +356,24 @@
     "headings": {
       "hasAccess": "Estas pessoas atualmente têm acesso a este plano",
       "removeCollaborator": "Remover colaborador do projeto",
-      "pendingInvites": "Estas pessoas não aceitaram o convite ainda"
+      "saveCollaboratorAccessUpdate": "Salvar atualização de acesso do colaborador",
+      "pendingInvites": "Estas pessoas não aceitaram o convite ainda",
+      "accessLevels": "O que significam estes níveis de acesso?"
+    },
+    "accessLevels": {
+      "primary": "Proprietário primário",
+      "edit": "Editor",
+      "comment": "Comentarista",
+      "own": "Coproprietário",
+      "primaryDescription": "O usuário é capaz de realizar todas as ações em um Plano (geralmente restrito ao proprietário/criador), e sua afiliação é a organização associada ao projeto",
+      "editDescription": "Tem direitos de edição aos planos (pode escrever e editar os planos).",
+      "commentDescription": "Has read-rights to the project (can view and comment on the plans).",
+      "ownDescription": "Has admin-rights to the project (can invite other users, edit the plans, and publish them)."
     },
     "buttons": {
       "invite": "Convidar colaboradores",
       "isDeleting": "está Apagando...",
-      "revoke": "Revoke",
+      "revoke": "Revogar",
       "deleteInvite": "Convite de exclusão",
       "resend": "Reenviar"
     },
@@ -368,6 +386,10 @@
         "resentInvite": "O convite foi reenviado com sucesso para {name}",
         "revokedAccess": "Acesso Revogado com sucesso para {name}",
         "updatedAccess": "Acesso atualizado com sucesso de {name} para {accessLevel}"
+      },
+      "errors": {
+        "mustBePrimaryOwnerOrSuperAdmin": "Apenas o proprietário principal ou um Super Admin pode atualizar os níveis de acesso do Proprietário Principal.",
+        "cannotRemoveOwnPrimary": "Há sempre um proprietário principal para o projeto. Por favor, atribua outro proprietário principal antes de remover este membro."
       }
     }
   },
@@ -422,7 +444,7 @@
     "links": {
       "learnMoreAboutCreditTaxonomy": "Saiba mais sobre cada função"
     },
-    "memberRolesDescription": "<p>Select the role(s) that should be displayed within citations for this project member with the DMP.</p><p>We use an ANSI/NISO standard called CRediT, a community-owned 14 role taxonomy that can be used to describe the key types of contributions typically made to the production and publication of research output such as research articles. </p><p><link />Saiba mais sobre a Taxonomia CRediT ↗</p>"
+    "memberRolesDescription": "<p>Selecione a(s) função(ões) que devem ser exibida(s) nas citações referentes a este membro do projeto no DMP.</p><p>Utilizamos um padrão ANSI/NISO denominado CRediT, uma taxonomia de 14 funções de propriedade da comunidade, que pode ser utilizada para descrever os principais tipos de contribuições tipicamente realizadas na produção e publicação de resultados de pesquisa, tais como artigos científicos.</p><p><link />Saiba mais sobre a Taxonomia CRediT ↗</p>"
   },
   "ProjectsProjectMemberCreate": {
     "title": "Adicionar um novo membro ao projeto",

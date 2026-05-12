@@ -85,6 +85,17 @@ function toSubjectAreaObject(str: string): { id: string; name: string } {
   return { id, name };
 }
 
+// Deduplicate repositories by URI to avoid duplicates in search results
+const dedupeByUri = (repos: Repository[]): Repository[] => {
+  const seenUris = new Set<string>();
+  return repos.filter(repo => {
+    const uri = repo.uri ?? '';
+    if (seenUris.has(uri)) return false;
+    seenUris.add(uri);
+    return true;
+  });
+};
+
 /* Research Output question's Repository Selection System */
 const RepoSelectorForAnswer = ({
   value,
@@ -175,10 +186,14 @@ const RepoSelectorForAnswer = ({
     variables: {
       uris: preferredReposURIs || []
     },
+    skip: !preferredReposURIs || preferredReposURIs.length === 0
   });
 
   // Repositories lazy query
-  const [fetchRepositoriesData] = useLazyQuery(RepositoriesDocument);
+  const [fetchRepositoriesData, { data: repositoriesData }] = useLazyQuery(RepositoriesDocument, {
+    fetchPolicy: 'network-only', // Always fetch fresh data when searching/filtering, don't rely on cache
+  });
+
 
   // Fetch repositories based on search term criteria
   const fetchRepositories = async ({
@@ -195,7 +210,7 @@ const RepoSelectorForAnswer = ({
     }
 
     try {
-      const { data } = await fetchRepositoriesData({
+      await fetchRepositoriesData({
         variables: {
           input: {
             paginationOptions: {
@@ -210,26 +225,6 @@ const RepoSelectorForAnswer = ({
           }
         }
       });
-      // Process the data immediately after fetching
-      if (data?.repositories?.items) {
-        // Filter out null items and CustomRepository items with actual errors
-        const validRepos = data.repositories.items.filter((item): item is Repository => {
-          if (!item) return false;
-          // Check if it's a CustomRepository with actual error values
-          if ('errors' in item && item.errors && (item.errors.general || item.errors.uri)) {
-            return false;
-          }
-          return true;
-        });
-        setRepositories(validRepos);
-        setTotalCount(data.repositories.totalCount ?? 0);
-        setTotalPages(Math.ceil((data.repositories.totalCount ?? 0) / LIMIT));
-        setHasNextPage(data.repositories.hasNextPage ?? false);
-        setHasPreviousPage(data.repositories.hasPreviousPage ?? false);
-      } else {
-        setRepositories([]);
-      }
-      setHasSearched(true);
     } catch (err) {
       handleApolloError(err, 'repoSelectorForAnswer.fetchRepositories');
     }
@@ -276,7 +271,7 @@ const RepoSelectorForAnswer = ({
         return matchesSearch && matchesSubject && matchesType;
       }) as Repository[];
 
-      setRepositories(filtered);
+      setRepositories(dedupeByUri(filtered));
       setTotalCount(filtered.length);
       setTotalPages(1);
       setHasNextPage(false);
@@ -414,6 +409,37 @@ const RepoSelectorForAnswer = ({
 
 
 
+  // Process repository results whenever `repositoriesData` changes.
+  useEffect(() => {
+    let isMounted = true;
+
+    if (repositoriesData?.repositories?.items) {
+      if (isMounted) {
+        const validRepos = repositoriesData.repositories.items.filter((item): item is Repository => {
+          if (!item) return false;
+          if ('errors' in item && item.errors && (item.errors.general || item.errors.uri)) {
+            return false;
+          }
+          return true;
+        });
+        setRepositories(dedupeByUri(validRepos));
+        setTotalCount(repositoriesData.repositories.totalCount ?? 0);
+        setTotalPages(Math.ceil((repositoriesData.repositories.totalCount ?? 0) / LIMIT));
+        setHasNextPage(repositoriesData.repositories.hasNextPage ?? false);
+        setHasPreviousPage(repositoriesData.repositories.hasPreviousPage ?? false);
+        setHasSearched(true);
+      }
+    } else if (repositoriesData) {
+      // Query ran but returned no items
+      if (isMounted) {
+        setRepositories([]);
+        setHasSearched(true);
+      }
+    }
+
+    return () => { isMounted = false; };
+  }, [repositoriesData]);
+
   // Set initial preferred repositories when modal first opens
   useEffect(() => {
     if (isModalOpen &&
@@ -421,7 +447,7 @@ const RepoSelectorForAnswer = ({
       preferredReposURIs.length > 0 &&
       preferredRepositoriesData?.re3byURIs &&
       showPreferredOnly) {
-      setRepositories(preferredRepositoriesData.re3byURIs as Repository[]);
+      setRepositories(dedupeByUri(preferredRepositoriesData.re3byURIs as Repository[]));
       setTotalCount(preferredRepositoriesData.re3byURIs.length);
       setTotalPages(1);
       setHasNextPage(false);
@@ -438,22 +464,26 @@ const RepoSelectorForAnswer = ({
   }, [isModalOpen, preferredReposURIs]);
 
   useEffect(() => {
-    // On initial page load, only fetch all repositories if not in preferred-only mode
-    if (!showPreferredOnly) {
-      handleSearch('');
-    }
+    // Fetch on initial load
+    handleSearch('');
+
   }, []);
 
   // When preferred data loads and we're in preferred-only mode, set it
   // When switching away from preferred-only, fetch all repositories
   useEffect(() => {
     if (showPreferredOnly && preferredRepositoriesData?.re3byURIs) {
-      setRepositories(preferredRepositoriesData.re3byURIs as Repository[]);
-      setTotalCount(preferredRepositoriesData.re3byURIs.length);
-      setTotalPages(1);
-      setHasNextPage(false);
-      setHasPreviousPage(false);
-      setHasSearched(true);
+      if (preferredRepositoriesData.re3byURIs.length === 0) {
+        // Preferred URIs returned no results (URI mismatch etc.) — fall back to all repos
+        setShowPreferredOnly(false);
+      } else {
+        setRepositories(dedupeByUri(preferredRepositoriesData.re3byURIs as Repository[]));
+        setTotalCount(preferredRepositoriesData.re3byURIs.length);
+        setTotalPages(1);
+        setHasNextPage(false);
+        setHasPreviousPage(false);
+        setHasSearched(true);
+      }
     } else if (!showPreferredOnly) {
       fetchRepositories({ page: 1, searchTerm });
     }
@@ -604,7 +634,7 @@ const RepoSelectorForAnswer = ({
                                 placeholder='e.g. DNA, titanium, FAIR, etc.'
                               />
                             </SearchField>
-                            {preferredReposURIs && preferredReposURIs.length > 0 && (
+                            {preferredReposURIs && preferredReposURIs.length > 0 && (preferredRepositoriesData?.re3byURIs?.length ?? 0) > 0 && (
                               <div className={styles.checkboxWrapper}>
                                 <Checkbox
                                   value='preferredOnly'

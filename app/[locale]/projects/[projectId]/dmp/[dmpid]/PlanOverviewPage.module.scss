@@ -98,6 +98,40 @@
   }
 }
 
+// disabled sidebar links
+.sidePanelLinkDisabled {
+  font-size: var(--fs-base);
+  font-weight: 600;
+  color: var(--link-color);
+  text-decoration: underline;
+  display: inline-block;
+  margin: 0;
+  flex-shrink: 0;
+
+  // Strip button defaults
+  background: none;
+  border: none;
+  padding: 0;
+
+  // Disabled state
+  opacity: 0.5;
+  cursor: not-allowed;
+
+  // No hover/focus interaction since it's disabled
+  &:hover {
+    color: var(--link-color); // prevent the blue-900 shift
+  }
+}
+
+.tooltip {
+  background-color: var(--gray-500);
+  color: var(--gray-50);
+  border-radius: 0.375rem;
+  font-size: var(--fs-small);
+}
+
+
+
 
 
 

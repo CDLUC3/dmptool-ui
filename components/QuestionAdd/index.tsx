@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 
@@ -20,6 +20,9 @@ import {
 } from "react-aria-components";
 
 // GraphQL
+import { useQuery } from '@apollo/client/react';
+import { QuestionsDisplayOrderDocument } from '@/generated/graphql';
+
 import {
   Question,
   QuestionOptions,
@@ -81,6 +84,7 @@ export interface QuestionCommonFields {
   sampleText?: string | null;
   useSampleTextAsDefault?: boolean;
   required?: boolean;
+  displayOrder?: number;
 }
 
 
@@ -192,6 +196,33 @@ const QuestionAdd = ({
       }));
     }
   }, [questionType, standardFields, additionalFields, buildResearchOutputFormState]);
+
+  // Query request for questions to calculate max displayOrder
+  const { data: questionDisplayOrders } = useQuery(QuestionsDisplayOrderDocument, {
+    variables: {
+      sectionId: Number(sectionId)
+    },
+    fetchPolicy: 'network-only', // Ensure we get the latest display orders
+    skip: !sectionId
+  });
+
+  // Calculate the display order of the new question based on the last displayOrder number
+  const getDisplayOrder = useCallback(() => {
+    if (!questionDisplayOrders?.questions?.length) {
+      return 1;
+    }
+
+    const validDisplayOrders = questionDisplayOrders.questions
+      .map(q => q?.displayOrder)
+      .filter((order): order is number => typeof order === 'number');
+
+    if (validDisplayOrders.length === 0) {
+      return 1;
+    }
+
+    const maxDisplayOrder = Math.max(...validDisplayOrders);
+    return maxDisplayOrder + 1;
+  }, [questionDisplayOrders]);
 
   // Send user back to the selection of question types
   const redirectToQuestionTypes = () => {
@@ -384,6 +415,7 @@ const QuestionAdd = ({
       sampleText: question?.sampleText,
       useSampleTextAsDefault: question?.useSampleTextAsDefault ?? false,
       required: question?.required,
+      displayOrder: getDisplayOrder(),
     };
 
     try {

@@ -1,3 +1,6 @@
 query PlanFeedbackStatus($planId: Int!) {
-  planFeedbackStatus(planId: $planId)
+  planFeedbackStatus(planId: $planId) {
+    id
+    status
+  }
 }

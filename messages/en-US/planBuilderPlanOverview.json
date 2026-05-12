@@ -63,7 +63,8 @@
       "progress": "{current} of {total}",
       "questionsAnswered": "question(s) answered",
       "update": "Update",
-      "updateSection": "Update {title}"
+      "updateSection": "Update {title}",
+      "view": "View"
     },
     "errors": {
       "invalidDmpId": "Invalid DMP ID: The DMP ID provided is not valid.",
@@ -87,7 +88,8 @@
         "title": "Feedback",
         "none": "No feedback",
         "requested": "Feedback requested",
-        "completed": "Feedback received"
+        "completed": "Feedback received",
+        "disabledTooltip": "Only the primary owner can request feedback."
       }
     },
     "publishModal": {
@@ -140,6 +142,19 @@
     },
     "links": {
       "editTitle": "Edit plan title"
+    },
+    "feedbackNotification": {
+      "title": "Feedback mode",
+      "description1": "You can view this plan and leave comments. When you're finished, click Mark as done.",
+      "description2": "Completing will remove your access and notify the plan author that your feedback is complete.",
+      "markAsDone": "Mark as done",
+      "confirmModal": {
+        "title": "Are you sure you want to complete your feedback?",
+        "description1": "The following will happen:",
+        "description2": "You will no longer be able to comment",
+        "description3": "The plan author will be notified that you have completed your feedback"
+      },
+      "markAsDoneSuccess": "You have successfully completed your feedback."
     }
   },
   "PlanCreate": {
@@ -218,7 +233,11 @@
     },
     "you": "you",
     "admin": "Admin",
-    "edited": "edited"
+    "edited": "edited",
+    "feedbackNotification": {
+      "title": "Feedback mode",
+      "description": "You can view this plan and leave comments."
+    }
   },
   "ProjectsProjectFunding": {
     "buttons": {
@@ -232,12 +251,19 @@
   },
   "ProjectsProjectPlanFeedback": {
     "title": "Request feedback",
-    "description": "You can get feedback from University of California support team, please read the following message from the team.",
+    "anonymousOrgName": "your institution",
+    "description": "You can get feedback from {orgName} support team, please read the following message from the team.",
     "form": {
-      "label": "Send message to University of California support team",
+      "label": "Send message to {orgName} support team",
       "placeholder": "Can you review my plan for any mistakes",
       "submitButton": "Request Feedback",
-      "successMessage": "Request sent"
+      "successMessage": "Request sent",
+      "primaryAccessRequired": "Only the primary owner can request feedback"
+    },
+    "messages": {
+      "success": {
+        "feedbackRequested": "Feedback successfully requested"
+      }
     },
     "teamFeedback": {
       "title": "Feedback from team members",

@@ -140,6 +140,11 @@
       "close": "Close",
       "saveAndPublish": "Save and publish",
       "publishing": "Publishing..."
+    },
+    "messages": {
+      "errors": {
+        "selectVisibilityError": "Please select a visibility option before publishing."
+      }
     }
   },
   "Breadcrumbs": {

@@ -92,6 +92,53 @@
   }
 }
 
-.modalOverride {
-  background-color: transparent !important;
+.accessLevelLegend {
+  margin-bottom: 1rem;
+
+  summary {
+    cursor: pointer;
+    list-style: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-weight: var(--fw-semibold);
+    color: var(--link-color, #005ea2);
+    user-select: none;
+
+    &::-webkit-details-marker {
+      display: none;
+    }
+
+    &::after { // Custom arrow indicator to toggle open/closed state
+      content: '';
+      display: inline-block;
+      width: 0.5em;
+      height: 0.5em;
+      border-right: 2px solid currentColor;
+      border-bottom: 2px solid currentColor;
+      transform: rotate(45deg);
+      transition: transform 0.2s ease;
+      margin-bottom: 0.15em;
+    }
+  }
+
+  &[open] summary::after { // Need to rotate arrow indicator when details is open and keep it centered
+    transform: rotate(-135deg);
+    margin-bottom: -0.15em;
+  }
+
+  ul {
+    margin-top: var(--space-4);
+    padding-left: var(--space-6);
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+}
+
+.buttonContainer {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  justify-content: flex-end;
 }

@@ -91,7 +91,7 @@
     "headingRelatedActions": "Ações relacionadas",
     "primaryEmailDesc": "Este e-mail será usado para seu login de conta. Ele também pode ser usado para redefinições de senha.",
     "SSODesc": "Este endereço de e-mail é gerenciado por cdl.edu e conectado à instituição.",
-    "notificationsDesc": "Este endereço de e-mail será usado para notificações DMP. &lt;manage&gt;Gerencie suas notificações&lt;/manage&gt;.",
+    "notificationsDesc": "Este endereço de e-mail será usado para notificações DMP. <manage>Gerencie suas notificações</manage>.",
     "aliasEmailDesc": "Os endereços de e-mail do pseudônimo podem ser usados para ajudar outros a encontrar você, por exemplo, se eles quiserem compartilhar um DMP com você.",
     "linkMakePrimary": "Endereço de e-mail principal",
     "helpTextForAddAlias": "Você receberá um e-mail para confirmar esta adição",
@@ -507,12 +507,16 @@
         }
       },
       "feedbackEmail": {
-        "label": "E-mail de feedback",
+        "label": "E-mail de feedbacks",
         "placeholder": "Digite o e-mail de feedback",
-        "helpText": "Por padrão este é o endereço de e-mail do contato organizações, mas você pode alterar o endereço de e-mail de feedback"
+        "description": "Insira os e-mails separados por vírgulas.",
+        "helpText": "Por padrão este é o endereço de e-mail do contato organizações, mas você pode alterar o endereço de e-mail de feedback",
+        "invalidEmail": "Um ou mais endereços de e-mail são inválidos. Por favor, verifique e corrija os endereços de e-mail."
       },
       "feedbackText": {
-        "label": "Solicitar feedback especializado",
+        "label": "Mensagem exibida aos usuários solicitando feedback",
+        "description": "Forneça informações aos usuários sobre o que esperar ao solicitarem feedback sobre seu DMP",
+        "helpText": "Mensagem de exemplo: Um bibliotecário de dados do Escritório da Presidência da Universidade da Califórnia (ucop.edu) responderá à sua solicitação em até 48 horas. Caso tenha dúvidas relacionadas a esta ação, por favor, entre em contato conosco pelo e-mail <mailtoLink>dmptool@ucop.edu.</mailtoLink>",
         "placeholder": "Digitar texto de feedback"
       }
     },
@@ -522,6 +526,11 @@
     "screenReader": {
       "feedbackEnabled": "As opções do feedback agora estão ativadas. Campos adicionais estão disponíveis abaixo.",
       "feedbackDisabled": "As opções do feedback agora estão desativadas. Campos adicionais estão ocultos."
+    },
+    "messages": {
+      "success": {
+        "feedbackOptionsUpdated": "Opções de feedback atualizadas com sucesso"
+      }
     }
   },
   "Account": {
@@ -826,6 +835,8 @@
     "messaging": {
       "loading": "Baixar",
       "loadingPage": "Carregando página...",
+      "submitting": "Enviando...",
+      "submittingSROnly": "Enviando solicitação de feedback...",
       "pageLoaded": "Página carregada",
       "noItemsFound": "Nenhum item encontrado",
       "somethingWentWrong": "Ocorreu um erro. Tente novamente.",

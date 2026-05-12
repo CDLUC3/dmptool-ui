@@ -16,7 +16,7 @@ label,
 }
 
 .help {
-  font-size: 1rem;
+  font-size: var(--font-size-small);
   color: var(--text-color);
   display: block;
   margin: 0 0 0.6rem;

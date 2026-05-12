@@ -63,7 +63,8 @@
       "progress": "{current} de {total}",
       "questionsAnswered": "questões respondidas",
       "update": "Atualização",
-      "updateSection": "Editar: {title}"
+      "updateSection": "Editar: {title}",
+      "view": "Visualizar"
     },
     "errors": {
       "invalidDmpId": "ID DMP inválido: O ID de DMP fornecido não é válido.",
@@ -87,7 +88,8 @@
         "title": "Registrar",
         "none": "Nenhum feedback",
         "requested": "Feedback solicitado",
-        "completed": "Feedback recebido"
+        "completed": "Feedback recebido",
+        "disabledTooltip": "Apenas o proprietário principal pode solicitar feedback."
       }
     },
     "publishModal": {
@@ -140,6 +142,19 @@
     },
     "links": {
       "editTitle": "Editar título do plano"
+    },
+    "feedbackNotification": {
+      "title": "Modo de feedback",
+      "description1": "Você pode visualizar este plano e deixar comentários. Quando terminar, clique em Marcar como concluído.",
+      "description2": "Concluir irá remover seu acesso e notificar o autor do plano que seu feedback está completo.",
+      "markAsDone": "Marcar como concluído",
+      "confirmModal": {
+        "title": "Tem certeza de que deseja concluir seu feedback?",
+        "description1": "O seguinte acontecerá:",
+        "description2": "Você não poderá mais comentar",
+        "description3": "O autor do plano será notificado que você completou seu feedback"
+      },
+      "markAsDoneSuccess": "Você completou seu feedback com sucesso."
     }
   },
   "PlanCreate": {
@@ -218,7 +233,11 @@
     },
     "you": "Você",
     "admin": "Administrador",
-    "edited": "editado"
+    "edited": "editado",
+    "feedbackNotification": {
+      "title": "Modo de feedback",
+      "description": "Você pode visualizar este plano e deixar comentários."
+    }
   },
   "ProjectsProjectFunding": {
     "buttons": {
@@ -232,12 +251,19 @@
   },
   "ProjectsProjectPlanFeedback": {
     "title": "Solicitar feedback",
-    "description": "Você pode receber feedback da equipe de suporte da Universidade da Califórnia, por favor leia a seguinte mensagem da equipe.",
+    "anonymousOrgName": "sua instituição",
+    "description": "Você pode receber feedback da equipe de suporte da {orgName}, por favor leia a seguinte mensagem da equipe.",
     "form": {
-      "label": "Enviar mensagem para a equipe de suporte da Universidade da Califórnia",
+      "label": "Enviar mensagem para a equipe de suporte da {orgName}",
       "placeholder": "Você pode rever o meu plano para quaisquer erros",
       "submitButton": "Solicitar feedback",
-      "successMessage": "Pedido enviado"
+      "successMessage": "Pedido enviado",
+      "primaryAccessRequired": "Apenas o proprietário principal pode solicitar feedback"
+    },
+    "messages": {
+      "success": {
+        "feedbackRequested": "Feedback solicitado com sucesso"
+      }
     },
     "teamFeedback": {
       "title": "Feedback dos membros da equipe",

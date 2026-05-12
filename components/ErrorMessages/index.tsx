@@ -51,7 +51,7 @@ const ErrorMessages = forwardRef<HTMLDivElement, ErrorMessagesProps>(
     };
 
     return (
-      <div className="messages error" role="alert" aria-live="assertive" ref={ref}>
+      <div className="messages error" role="alert" aria-live="assertive" ref={ref} data-testid="error-messages">
         {renderErrors()}
       </div>
     );

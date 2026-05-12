@@ -31,7 +31,7 @@ interface FormTextInputAreaProps {
   isRequiredVisualOnly?: boolean;
   isInvalid?: boolean;
   errorMessage?: string;
-  helpMessage?: string;
+  helpMessage?: string | React.ReactNode;
 
   // If true, render TinyMCEEditor; otherwise, render TextArea
   richText?: boolean;
@@ -91,7 +91,7 @@ const FormTextInputArea: React.FC<FormTextInputAreaProps> = ({
       </Label>
 
       {description && (
-        <Text slot="description" className="help-text">
+        <Text slot="description" className="help">
           {description}
         </Text>
       )}

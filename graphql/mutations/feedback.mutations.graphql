@@ -29,3 +29,34 @@ mutation AddFeedbackComment($planId: Int!, $planFeedbackId: Int!, $answerId: Int
     }
   }
 }
+
+mutation RequestFeedback($planId: Int!, $messageToOrg: String) {
+  requestFeedback(planId: $planId, messageToOrg: $messageToOrg) {
+    feedbackComments {
+      commentText
+      answerId
+      id
+    }
+    errors {
+      feedbackComments
+      general
+      planId
+    }
+    id
+    completed
+    completedBy {
+      id
+      email
+    }
+    messageToOrg
+  }
+}
+
+mutation CompleteFeedback($planId: Int!, $planFeedbackId: Int!) {
+  completeFeedback(planId: $planId, planFeedbackId: $planFeedbackId) {
+    id
+    errors {
+      general
+    }
+  }
+}

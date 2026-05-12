@@ -24,6 +24,9 @@ query Me{
       searchName
       uri
       acronyms
+      feedbackEmails
+      feedbackEnabled
+      feedbackMessage
     }
   }
 }

@@ -2,7 +2,9 @@
 
 import { useEffect, useState, useRef, useMemo, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { useFormatter, useTranslations } from 'next-intl';
+import { useFormatter, useTranslations } from "next-intl";
+// next/link is faster for basic links
+import NextLink from "next/link";
 import {
   Breadcrumb,
   Breadcrumbs,
@@ -15,17 +17,22 @@ import {
   Modal,
   Radio,
   Text,
+  Tooltip,
+  TooltipTrigger,
 } from "react-aria-components";
 
 // GraphQL
-import { useQuery } from '@apollo/client/react';
+import { useQuery, useMutation } from '@apollo/client/react';
 import {
+  CompleteFeedbackDocument,
+  MeDocument,
   PlanSectionProgress,
   PlanStatus,
   PlanVisibility,
   PlanDocument,
   PlanFeedbackStatusDocument,
   RelatedWorksByPlanStatsDocument,
+  UserRole,
 } from "@/generated/graphql";
 import {
   publishPlanAction,
@@ -40,6 +47,7 @@ import { DmpIcon } from "@/components/Icons";
 import { FormSelect, RadioGroupComponent } from "@/components/Form";
 import PageHeaderWithTitleChange from "@/components/PageHeaderWithTitleChange";
 import OverviewSection from "@/components/OverviewSection";
+import NotificationHeader from "@/components/Notification";
 
 // Utils and other
 import { routePath } from "@/utils/routes";
@@ -52,6 +60,7 @@ import {
 } from "@/app/types";
 import { DOI_REGEX } from "@/lib/constants";
 import styles from "./PlanOverviewPage.module.scss";
+import { logECS } from "@/utils/index";
 
 const PUBLISHED = "Published";
 const UNPUBLISHED = "Unpublished";
@@ -137,11 +146,14 @@ const PlanOverviewPage: React.FC = () => {
   // State hooks
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessages, setErrorMessages] = useState<string[]>([]);
   const [planVisibility, setPlanVisibility] = useState<PlanVisibility>(PlanVisibility.Private);
   const [planStatus, setPlanStatus] = useState<PlanStatus | null>(null);
   const [step, setStep] = useState(1);
   const [isEditingPlanStatus, setIsEditingPlanStatus] = useState(false);
+  // Track whether the question should be read-only based on plan status and user role
+  const [isReadOnly, setIsReadOnly] = useState<boolean>(false);
   const [planData, setPlanData] = useState<PlanOverviewInterface>({
     id: null,
     dmpId: "",
@@ -200,16 +212,27 @@ const PlanOverviewPage: React.FC = () => {
     data: feedbackData,
     loading: feedbackLoading,
     error: feedbackError,
+    refetch: refetchFeedbackStatus
   } = useQuery(PlanFeedbackStatusDocument, {
     variables: { planId: Number(planId) },
     skip: isNaN(planId),
   });
 
+  // Run me query to get user's name
+  const { data: me } = useQuery(MeDocument);
+
+  // Initialize completed feedbackmutation
+  const [completeFeedbackMutation, { error: completeFeedbackError }] = useMutation(CompleteFeedbackDocument);
+
+  // Check for returned GraphQL errors from feedback queries and mutations, and set error messages in state to be displayed in UI 
   useEffect(() => {
-    if (feedbackError) {
-      setErrorMessages(prev => [...prev, feedbackError.message]);
+    const newErrors: string[] = [];
+    if (feedbackError) newErrors.push(feedbackError.message);
+    if (completeFeedbackError) newErrors.push(completeFeedbackError.message);
+    if (newErrors.length > 0) {
+      setErrorMessages(prev => [...prev, ...newErrors]);
     }
-  }, [feedbackError]);
+  }, [feedbackError, completeFeedbackError]);
 
   // Memoize URLs to prevent unnecessary recalculations
   const urls = useMemo(() => ({
@@ -220,6 +243,17 @@ const PlanOverviewPage: React.FC = () => {
     CHANGE_PRIMARY_CONTACT_URL: routePath("projects.dmp.members", { projectId, dmpId: planId }),
     RELATED_WORKS_URL: routePath("projects.dmp.related-works", { projectId, dmpId: planId }),
   }), [projectId, planId]);
+
+  const isPrimaryCollaborator = useMemo(() => {
+    const myId = me?.me?.id;
+    if (!myId || !data?.plan?.project?.collaborators) return false;
+
+    return data.plan.project.collaborators.some(
+      (collaborator) =>
+        collaborator?.user?.id === myId &&
+        collaborator?.accessLevel === "PRIMARY"
+    );
+  }, [me?.me?.id, data?.plan?.project?.collaborators]);
 
   const { FUNDINGS_URL, MEMBERS_URL, DOWNLOAD_URL, FEEDBACK_URL, CHANGE_PRIMARY_CONTACT_URL, RELATED_WORKS_URL } = urls;
 
@@ -404,6 +438,41 @@ const PlanOverviewPage: React.FC = () => {
     }
   }, [updateTitle, t, toastState]);
 
+
+  const markFeedbackAsDone = async () => {
+    setErrorMessages([]);
+    setIsSubmitting(true);
+
+    try {
+      await completeFeedbackMutation({
+        variables: {
+          planId: Number(planId),
+          planFeedbackId: Number(feedbackData?.planFeedbackStatus?.id)
+        }
+      });
+      // Success so try and refetch feedback status to update UI
+      try {
+        await refetchFeedbackStatus();
+        const successMessage = t("feedbackNotification.markAsDoneSuccess");
+        toastState.add(successMessage, { type: "success" });
+      } catch (error) {
+        setErrorMessages([Global('messaging.somethingWentWrong')]);
+        logECS('error', 'markFeedbackAsDone', {
+          error,
+          url: { path: routePath('projects.dmp.show', { projectId, planId }) }
+        });
+      }
+    } catch (error) {
+      setErrorMessages([Global('messaging.somethingWentWrong')]);
+      logECS('error', 'markFeedbackAsDone', {
+        error,
+        url: { path: routePath('projects.dmp.show', { projectId, planId }) }
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   useEffect(() => {
     // When data from backend changes, set project data in state
     if (data && data.plan) {
@@ -439,6 +508,8 @@ const PlanOverviewPage: React.FC = () => {
         templateVersion: data?.plan?.versionedTemplate?.version ?? "",
         templatePublished: data?.plan?.versionedTemplate?.created ?? "",
         percentageAnswered: data?.plan?.progress?.percentComplete ?? 0,
+        orgId: data?.plan?.versionedTemplate?.owner?.uri ?? "",
+        feedbackStatus: data?.plan?.feedbackStatus?.status ?? "NONE",
       });
       setPlanVisibility(data.plan.visibility as PlanVisibility);
     }
@@ -449,6 +520,16 @@ const PlanOverviewPage: React.FC = () => {
       setErrorMessages(prev => [...prev, queryError.message]);
     }
   }, [queryError]);
+
+  useEffect(() => {
+    const adminStatus =
+      !!(me?.me?.affiliation?.uri &&
+        me.me.affiliation.uri === data?.plan?.planCreator?.affiliation?.uri &&
+        (me.me.role === UserRole.Admin || me.me.role === UserRole.Superadmin));
+
+    setIsReadOnly(planData?.feedbackStatus === 'REQUESTED' && adminStatus);
+  }, [me?.me?.affiliation?.uri, me?.me?.role, planData, planData?.orgId]);
+
 
   // Memoize checklist items to prevent unnecessary recalculations
   const checkListItems = useMemo(() => [
@@ -539,6 +620,8 @@ const PlanOverviewPage: React.FC = () => {
   if (loading) {
     return <div>{Global("messaging.loading")}...</div>;
   }
+
+  const hasFeedbackRequest = feedbackData?.planFeedbackStatus?.status === "REQUESTED";
   return (
     <>
       <PageHeaderWithTitleChange
@@ -569,7 +652,36 @@ const PlanOverviewPage: React.FC = () => {
         errors={errorMessages}
         ref={errorRef}
       />
+
       <LayoutWithPanel>
+        {hasFeedbackRequest && isReadOnly && (
+          <NotificationHeader
+            title={t("feedbackNotification.title")}
+            actionButtonText={t("feedbackNotification.markAsDone")}
+            modal={{
+              title: t("feedbackNotification.confirmModal.title"),
+              content: (
+                <>
+                  {t("feedbackNotification.confirmModal.description1")}
+                  <ul>
+                    <li>{t("feedbackNotification.confirmModal.description2")}</li>
+                    <li>{t("feedbackNotification.confirmModal.description3")}</li>
+                  </ul>
+
+                </>
+              ),
+              cancelButtonText: Global("buttons.close"),
+              confirmButtonText: t("feedbackNotification.markAsDone"),
+              isSubmitting,
+              submittingText: Global('buttons.saving')
+            }}
+            onMarkAsDone={markFeedbackAsDone}
+          >
+            <p>{t("feedbackNotification.description1")}</p>
+            <p>{t("feedbackNotification.description2")}</p>
+          </NotificationHeader>
+        )}
+
         <ContentContainer>
           <div className={"container"}>
             <div className={styles.planOverview}>
@@ -623,6 +735,13 @@ const PlanOverviewPage: React.FC = () => {
                 ? routePath("projects.dmp.versionedSection", { projectId, dmpId: planId, versionedSectionId: Number(sectionId) })
                 : routePath("projects.dmp.customSection", { projectId, dmpId: planId, csid: String(sectionId) });
 
+              // Determine the action label for the section button
+              const sectionActionLabel = (hasFeedbackRequest && isReadOnly)
+                ? t("sections.view")
+                : versionedSection.answeredQuestions === 0
+                  ? t("sections.start")
+                  : t("sections.update");
+
               return (
                 <section
                   key={versionedSection.versionedSectionId ?? `section-${idx}`}
@@ -662,7 +781,7 @@ const PlanOverviewPage: React.FC = () => {
                       })}
                       className={"react-aria-Button react-aria-Button--secondary"}
                     >
-                      {versionedSection.answeredQuestions === 0 ? t("sections.start") : t("sections.update")}
+                      {sectionActionLabel}
                     </Link>
                   </div>
                 </section>
@@ -674,15 +793,21 @@ const PlanOverviewPage: React.FC = () => {
         <SidebarPanel>
           <div className="status-panel-content side-panel">
             <div className={`buttonContainer withBorder  mb-5`}>
-              <Link
-                href={getNarrativeUrl(planData.dmpId)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="button-secondary"
+              {planData.dmpId && (
+                <NextLink
+                  href={getNarrativeUrl(planData.dmpId)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="button-secondary"
+                >
+                  {Global("buttons.preview")}
+                </NextLink>
+              )}
+
+              <Button
+                onPress={() => setIsModalOpen(true)}
+                isDisabled={hasFeedbackRequest && isReadOnly}
               >
-                {Global("buttons.preview")}
-              </Link>
-              <Button onPress={() => setIsModalOpen(true)}>
                 {Global("buttons.publish")}
               </Button>
             </div>
@@ -694,19 +819,38 @@ const PlanOverviewPage: React.FC = () => {
                     {feedbackLoading
                       ? `${Global("messaging.loading")}...`
                       : (() => {
-                        const raw = feedbackData?.planFeedbackStatus ?? "NONE";
+                        const raw = feedbackData?.planFeedbackStatus?.status ?? "NONE";
                         const key = `status.feedback.${String(raw).toLowerCase()}`;
                         return t(key);
                       })()
                     }
                   </p>
                 </div>
-                <Link
-                  href={FEEDBACK_URL}
-                  aria-label={Global("links.request")}
-                >
-                  {Global("links.request")}
-                </Link>
+                {isPrimaryCollaborator ? (
+                  <NextLink
+                    href={FEEDBACK_URL}
+                    className="side-panel-link"
+                    aria-label={Global("links.request")}
+                  >
+                    {Global("links.request")}
+                  </NextLink>
+                ) : (
+                  <TooltipTrigger delay={0}>
+                    <Button
+                      className={styles.sidePanelLinkDisabled}
+                      aria-disabled={true}
+                    >
+                      {Global("links.request")}
+                    </Button>
+                    <Tooltip
+                      placement="bottom"
+                      className={`${styles.tooltip} py-2 px-2`}
+                    >
+                      {t("status.feedback.disabledTooltip")}
+                    </Tooltip>
+                  </TooltipTrigger>
+                )}
+
               </div>
               {isEditingPlanStatus ? (
                 <div>
@@ -752,6 +896,7 @@ const PlanOverviewPage: React.FC = () => {
                 </div>
                 <Link
                   href="#"
+                  className="side-panel-link"
                   onPress={() => setIsModalOpen(true)}
                   aria-label={t("status.publish.label")}
                 >
@@ -762,12 +907,13 @@ const PlanOverviewPage: React.FC = () => {
                 <div>
                   <h3>{t("status.download.title")}</h3>
                 </div>
-                <Link
+                <NextLink
                   href={DOWNLOAD_URL}
+                  className="side-panel-link"
                   aria-label="download"
                 >
                   {t("status.download.title")}
-                </Link>
+                </NextLink>
               </div>
             </div>
           </div>

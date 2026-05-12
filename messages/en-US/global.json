@@ -91,7 +91,7 @@
     "headingRelatedActions": "Related actions",
     "primaryEmailDesc": "This email will be used for your account login. It can also be used for password resets.",
     "SSODesc": "This email address is managed by cdl.edu and connected to the institution.",
-    "notificationsDesc": "This email address will be used for DMP notifications. &lt;manage&gt; Manage your notifications &lt;/manage&gt;.",
+    "notificationsDesc": "This email address will be used for DMP notifications. <manage> Manage your notifications </manage>.",
     "aliasEmailDesc": "Alias email addresses may be used to help others find you, for example if they‘d like to share a DMP with you.",
     "linkMakePrimary": "Make primary email address",
     "helpTextForAddAlias": "You will be sent an email to confirm this addition",
@@ -507,12 +507,16 @@
         }
       },
       "feedbackEmail": {
-        "label": "Feedback email address",
+        "label": "Feedback email addresses",
         "placeholder": "Enter feedback email address",
-        "helpText": "By default this is the organisations contact email address, However, you may change the feedback email address"
+        "description": "Enter emails separated by commas",
+        "helpText": "By default this is the organisations contact email address, However, you may change the feedback email address",
+        "invalidEmail": "One or more email addresses are invalid. Please check and try again."
       },
       "feedbackText": {
-        "label": "Request Expert Feedback",
+        "label": "Message displayed to users requesting feedback",
+        "description": "Give info to users about what to expect when they request feedback on their DMP",
+        "helpText": "Sample message: A data librarian from University of California, Office of the President (ucop.edu) will respond to your request within 48 hours. If you have questions pertaining to this action please contact us at <mailtoLink>dmptool@ucop.edu.</mailtoLink>",
         "placeholder": "Enter feedback text"
       }
     },
@@ -522,6 +526,11 @@
     "screenReader": {
       "feedbackEnabled": "Feedback options are now enabled. Additional fields are available below.",
       "feedbackDisabled": "Feedback options are now disabled. Additional fields are hidden."
+    },
+    "messages": {
+      "success": {
+        "feedbackOptionsUpdated": "Feedback options updated successfully"
+      }
     }
   },
   "Account": {
@@ -833,6 +842,10 @@
     "messaging": {
       "loading": "Loading",
       "loadingPage": "Loading page...",
+      "submitting": "Submitting...",
+      "submittingSROnly": "Submitting feedback request...",
+      "save": "Save",
+      "saving": "Saving...",
       "pageLoaded": "Page loaded",
       "noItemsFound": "No items found",
       "somethingWentWrong": "Something went wrong. Please try again.",

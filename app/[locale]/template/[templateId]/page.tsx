@@ -231,6 +231,7 @@ const TemplateEditPage: React.FC = () => {
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    setErrorMessages([]); // Clear previous errors
     setModalErrorMessages([]); // Clear previous errors
     setIsPublishing(true);
 
@@ -708,6 +709,7 @@ const TemplateEditPage: React.FC = () => {
                 <RadioGroup
                   name="visibility"
                   onChange={handleVisibilityChange}
+                  isRequired
                   defaultValue={
                     template.latestPublishDate
                       ? template.latestPublishVisibility === "PUBLIC"
@@ -745,6 +747,7 @@ const TemplateEditPage: React.FC = () => {
                       <p className="text-gray-600 text-sm">{PublishTemplate("radioBtn.orgOnlyHelpText")}</p>
                     </div>
                   </Radio>
+                  <FieldError>{PublishTemplate("messages.errors.selectVisibilityError")}</FieldError>
                 </RadioGroup>
 
                 <p>

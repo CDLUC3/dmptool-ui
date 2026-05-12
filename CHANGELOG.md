@@ -1,4 +1,39 @@
 ## Added
+- Added a `SaveCollaboratorAccessModal` to display to user when saving a change to a collaborator's access level [#228]
+- Added new `Notification` component for displaying notifications at top of page. Added new `CompleteFeedback` mutation [#191]
+- Added `UpdateAffiliation` and `AffiliationById` queries [#203]
+
+## Updated
+- Updated `FeedbackOptions` page to properly validate and message user when submitted emails are not valid, and added the use of a save confirmation modal [#228]
+- Updated `AccessLevelRadioGroup` to include `PRIMARY` [#228]
+- Updated `ProjectsProjectCollaboration` component with new functionality to determine whether a user can make certain access level changes [#228]
+- Updated `ProjectsProjectPlanFeedback` component to disable the submit button do only Primary users can make the request [#228]
+- Updated `useResearchoutputTable` hook to not include `outputType` field as one that is initially enabled. Updated `expandedFields` logic for Research Output fields to be dynamic [#33]
+- Updated Request Feedback Options text [#226]
+- Updated `PlanOverviewPage` and `plan` schema to include the `planCreator` field now passed as part of `plan` query response, and fixed bug in determining `read-only` [#198]
+- Updated `RepoSelectorForAnswer` to fix the issue with repositories not displaying in repositories search modal. Main change was to place the repositoriesData handling into a useEffect, since fetchRepositoriesData is async [#224]
+- Updated `TemplateCustomizationOverview` to `refetch` data after a section reordering so that we know to display the "Publish changes" button. Also, updated `CustomSectionEdit` to `refetch` data after reordering questions for the same reason. [#200]
+- Updated `CustomQuestionNew` to filter out the `displayOrder` field from shared `commonFields` since it's not needed for the custom question mutation [#200]
+- Updated `TemplateEditPage` to clear errors when `handleSubmit` called [#200]
+- Updated back the `displayOrder` field and `QuestionDisplayOrderDocument` and `getDisplayOrder` function to `QuestionAdd` for calculating displayOrder, since cached data was somehow being used with the previous changes [#200]
+- Updated the `jsonToState` function in `researchOutputTransformations` to set `enabled === false` for `outputTypes` when there is no value saved in the question `json`. This makes sure that checkbox remains unchecked when RO question form is edited [#201]
+- Updated `PlanOverviewQuestionPageShared` to display feedback notification when user is Org Admin, and feedback has been requested. Also, made updates to `useRenderQuestionField.tsx` to disable fields when in that mode [#196]
+- Updated `PlanOverviewPage` section buttons to display `View` button text when in feedback mode [#196]
+- Updated `ReposSelector.tsx` to fix some issues with subject area searches [#118]
+- Updated `PlanOverviewPage` component to display a feedback mode notification at top of page when one has status=REQUESTED [#191]
+- Enhanced condition in `RepoSelectorForAnswer` to display the preferred Repositories checkbox [#118]
+- Updated `FeedbackOptions` component to use real data [#203]
+- Updated `RepoSelectorForAnswer` to wait to query `Re3byUrIsDocument` until we have `preferredReposURIs` because preferred repos don't display even though they eventually do to trigger the display of the "preferred repositories" checkbox [#118]
+
+## Chore
+- Updated version of `next-intl` to `v4.9.2` and `icu-minify` to `v4.11.1`, and added `override` of `postcss` to `v8.5.10` to address security vulnerabilities.
+- Updated `sanitize-html` to `v2.17.3` and `dompurify` to `v3.4.0` due to security issues. Also, updated `prettier` to `v3.8.3` and `@dmptool/types` to `v3.1.4`, and `lodash` override to `v.4.18.1`. Removed overrides for `minimatch` and `test-exclude`.
+
+==========================================================================================
+## All changes above the line happened after the merge to the main branch on April 20, 2026
+==========================================================================================
+## Added
+- Added new `RequestFeedback` mutation [#568]
 - Added new `PlanOverviewCustomQuestionUnderCustomSectionPage` at `/projects/[projectId]/dmp/[dmpid]/cs/[csid/cq/[cqid]`, `PlanOverviewCustomSectionPage` at `projects/[projectId]/dmp/[dmpid]/cs/[csid]`, and `PlanOverviewCustomQuestionUnderVersionedSectionPage` at `projects/[projectId]/dmp/[dmpid]/s/[sid]/cq/[cqid]` [#172]
 - Added new routes for `projects.dmp.customSection`, `projects.dmp.customQuestion.underVersionedSection`, `projects.dmp.customQuestion.underCustomSection` [#172]
 - Added new `projects.dmp.customSection` and `projects.dmp.customQuestion.detail` routes to routePath [#169]
@@ -28,6 +63,8 @@
 - Added related works project overview page [#700]
 
 ## Updated
+- Updated `users` query to include `feedbackEmails` [#568]
+- Updated `ProjectsProjectPlanFeedback` Request Feedback page. Hooked up the page to data and adjusted layout [#568]
 - Updated `ResearchOutputComponent` so that it disables checkboxes on the research output template builder form for all fields that are required [#33]
 - Updated `AnswerByVersionedQuestionId` query and `addAnswer` mutation schemas to pass in `versionedCustomSectionId` and `versionedCustomQuestionId` so that we can get answers to custom questions and save them accordingly [#174]
 - Updated `PublishedQuestion` query to include customization fields, and updated `PlanOverviewQuestionPageShared` component to use the new customization sample text and org info [#174]
@@ -66,6 +103,7 @@
 - Updated `/login` page step=email to include a "Back" button so user can go back to Step 1 [#997]
 
 ## Fixed
+- Fixed the sidebar panel links in `PlanOverviewPage` because they did not match or function consistently [#568]
 - Fixed some broken translation keys for Loading message [#165]
 - Fixed some issues in `Research Output` question answer form, where data flags checkboxes were not displaying and output types was missing the custom output
 - Fixed issue with missing `as builder` in `Dockerfile.prod`
@@ -75,7 +113,7 @@
 - Fixed bug where the published status on `/template/[templateId]` did not match that on the template cards at `/template` for the `unpublished changes` state. Added a shared hook for determining the correct status text [#875]
 
 ## Chore
-- Updated `@apollo/client` to `v4.1.7`, `@apollo/client-integration-nextjs` to `v0.14.5`, `next` to `v16.2.3`, `next-intl` to `v4.9.1`,`@types/node` to `v24.12.2`, `@types/sanitize-html` to `v2.16.1`, `brace-expansion` to `v2.1.0` and `minimatch` to `v10.2.5`.
+- Updated `@apollo/client` to `v4.1.7`, `@apollo/client-integration-nextjs` to `v0.14.5`, `next` to `v16.2.3`, `next-intl` to `v4.9.1`,`@types/node` to `v24.12.2`, `@types/sanitize-html` to `v2.16.1`, `brace-expansion` to `v2.1.0` and `minimatch` to `v10.2.5`, and `next` to `v16.2.6`.
 - Addressed `lodash` vulnerability by adding it as an `override` at v4.18.0 in `package.json` [#172]
 - Addressed `picomatch` package vulnerability [#169]
 - Updated version of `next` to `v16.2.0`, `sanitize-html` to `v2.17.2`, `react-aria/toast` to `v3.0.11`, `@react-stately/toast` to `3.1.3` and `react-aria-components` to `v1.16.0`. Fixed some unit tests related to the updates, and updated header logo `Image` and related `css` to remove warnings related to resizing.
