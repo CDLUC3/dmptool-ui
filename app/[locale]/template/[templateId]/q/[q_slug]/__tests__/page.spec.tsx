@@ -2065,7 +2065,7 @@ describe("Research Output Question Type - Edit", () => {
     expect(screen.getByText('researchOutput.labels.licenses')).toBeInTheDocument();
   });
 
-  it('should show tooltip for required fields (Title and Output Type) on edit', async () => {
+  it('should show tooltip for required fields', async () => {
     const mockQuestionTextArea = {
       data: { question: { id: 67, questionText: 'Research Output Table Question', json: researchOutputJson, displayOrder: 1, sectionId: 67, requirementText: '', guidanceText: '', sampleText: '', useSampleTextAsDefault: false, required: false } },
       loading: false,
@@ -2090,9 +2090,9 @@ describe("Research Output Question Type - Edit", () => {
     const outputTypeCheckbox = screen.getByLabelText('researchOutput.labels.outputType');
 
     expect(titleCheckbox).toBeDisabled();
-    expect(outputTypeCheckbox).toBeDisabled();
+    expect(outputTypeCheckbox).not.toBeDisabled();
 
-    expect(screen.getAllByText('researchOutput.tooltip.requiredFields')).toHaveLength(2);
+    expect(screen.getAllByText('researchOutput.tooltip.requiredFields')).toHaveLength(1);
   });
 
   it('should toggle field customization panels when customize button is clicked (edit)', async () => {

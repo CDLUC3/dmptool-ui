@@ -94,8 +94,9 @@ const ResearchOutputComponent: React.FC<ResearchOutputComponentProps> = ({
         </p>
         <div className={styles.fieldsList}>
           {standardFields.map((field) => {
-            // These fields are always required and cannot be turned off
-            const isDisabled = field.id === 'title' || field.id === 'outputType';
+            // Required fields will always have their checkbox checked and disabled to 
+            // prevent changes, and a tooltip explaining why it's disabled
+            const isDisabled = field.required;
             const tooltipId = `tooltip-${field.id}`;
 
             return (
@@ -108,7 +109,7 @@ const ResearchOutputComponent: React.FC<ResearchOutputComponentProps> = ({
                       isDisabled={isDisabled}
                       aria-describedby={isDisabled ? tooltipId : undefined}
                       className={
-                        `react-aria-Checkbox ${(field.id === 'title' || field.id === 'outputType')
+                        `react-aria-Checkbox ${(field.required)
                           ? styles.disabledCheckbox
                           : ''
                         }`

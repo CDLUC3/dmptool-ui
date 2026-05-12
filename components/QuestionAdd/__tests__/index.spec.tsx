@@ -1441,7 +1441,7 @@ describe("Research Output Question Type", () => {
     expect(screen.getByText('researchOutput.labels.initialAccessLevels')).toBeInTheDocument();
   });
 
-  it('should show tooltip for required fields (Title and Output Type)', async () => {
+  it('should show tooltip for required fields', async () => {
     const json = JSON.stringify({
       meta: {
         schemaVersion: "1.0"
@@ -1469,10 +1469,10 @@ describe("Research Output Question Type", () => {
     const outputTypeCheckbox = screen.getByLabelText('researchOutput.labels.outputType');
 
     expect(titleCheckbox).toBeDisabled();
-    expect(outputTypeCheckbox).toBeDisabled();
+    expect(outputTypeCheckbox).not.toBeDisabled();
 
     // Check for tooltip text
-    expect(screen.getAllByText('researchOutput.tooltip.requiredFields')).toHaveLength(2);
+    expect(screen.getAllByText('researchOutput.tooltip.requiredFields')).toHaveLength(1);
   });
 
   it('should toggle field customization panels when customize button is clicked', async () => {

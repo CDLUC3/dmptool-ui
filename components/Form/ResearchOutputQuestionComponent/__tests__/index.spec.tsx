@@ -139,7 +139,7 @@ describe('ResearchOutputComponent', () => {
       expect(screen.getByText('Initial Access Levels')).toBeInTheDocument();
     });
 
-    it('should disable Title and Output Type checkboxes', () => {
+    it('should disable the checkbox for required fields', () => {
       render(<ResearchOutputComponent {...defaultProps} />);
 
       const checkboxes = screen.getAllByRole('checkbox');
@@ -147,7 +147,7 @@ describe('ResearchOutputComponent', () => {
       const outputTypeCheckbox = checkboxes.find(cb => cb.closest('label')?.textContent?.includes('Output Type'));
 
       expect(titleCheckbox).toBeDisabled();
-      expect(outputTypeCheckbox).toBeDisabled();
+      expect(outputTypeCheckbox).not.toBeDisabled();
     });
 
     it('should show tooltip for required fields', () => {

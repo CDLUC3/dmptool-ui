@@ -28,6 +28,7 @@
 - Added related works project overview page [#700]
 
 ## Updated
+- Updated `ResearchOutputComponent` so that it disables checkboxes on the research output template builder form for all fields that are required [#33]
 - Updated `AnswerByVersionedQuestionId` query and `addAnswer` mutation schemas to pass in `versionedCustomSectionId` and `versionedCustomQuestionId` so that we can get answers to custom questions and save them accordingly [#174]
 - Updated `PublishedQuestion` query to include customization fields, and updated `PlanOverviewQuestionPageShared` component to use the new customization sample text and org info [#174]
 - Moved shared `actions` from `project/[projectId]/dmp/[dmpid]/s/[sid]/q/[qid]` to `@/app/actions` since they will be shared between the three question pages [#172]

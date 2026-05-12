@@ -20,7 +20,7 @@
     "label": "Output Type",
     "enabled": true,
     "helpText": "",
-    "required": true,
+    "required": false,
     "outputTypeConfig": {
       "mode": "defaults",
       "selectedDefaults": [],
