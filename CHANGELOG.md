@@ -113,7 +113,7 @@
 - Fixed bug where the published status on `/template/[templateId]` did not match that on the template cards at `/template` for the `unpublished changes` state. Added a shared hook for determining the correct status text [#875]
 
 ## Chore
-- Added override for `systeminformation` to `v5.31.6` due to high security vulnerabilty. It is used by `cypress`, and we are currently using the latest version of that. Also, updated the date in `LICENSE.md` file to the current year.
+- Updated `cypress` to `v15.15.0`. This also addresses a high security vulnerability in `systeminformation` dependency. Also, updated the date in `LICENSE.md` file to the current year.
 - Updated `@apollo/client` to `v4.1.7`, `@apollo/client-integration-nextjs` to `v0.14.5`, `next` to `v16.2.3`, `next-intl` to `v4.9.1`,`@types/node` to `v24.12.2`, `@types/sanitize-html` to `v2.16.1`, `brace-expansion` to `v2.1.0` and `minimatch` to `v10.2.5`, and `next` to `v16.2.6`.
 - Addressed `lodash` vulnerability by adding it as an `override` at v4.18.0 in `package.json` [#172]
 - Addressed `picomatch` package vulnerability [#169]
