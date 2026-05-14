@@ -52,7 +52,7 @@
     "react-dom": "19.2.4",
     "react-transition-progress": "0.0.4",
     "rxjs": "7.8.2",
-    "sanitize-html": "2.17.3",
+    "sanitize-html": "2.17.4",
     "tinymce": "7.9.2",
     "zod": "4.3.6"
   },
