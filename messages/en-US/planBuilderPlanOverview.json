@@ -138,7 +138,8 @@
         "successfullyUpdatedTitle": "Successfully updated the plan title",
         "successfullyPublished": "Successfully published the plan",
         "successfullyUpdatedStatus": "Successfully updated the plan status"
-      }
+      },
+      "readOnlyLinkMessage": "Only plan collaborators can edit this plan"
     },
     "links": {
       "editTitle": "Edit plan title"

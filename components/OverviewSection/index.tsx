@@ -18,7 +18,8 @@ interface OverviewSectionProps {
   /** The content to display under the heading */
   children: React.ReactNode;
   /** Whether to include link or not */
-  includeLink?: boolean ;
+  includeLink?: boolean;
+
 }
 
 const OverviewSection: React.FC<OverviewSectionProps> = ({

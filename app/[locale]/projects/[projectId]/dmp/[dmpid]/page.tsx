@@ -154,6 +154,7 @@ const PlanOverviewPage: React.FC = () => {
   const [isEditingPlanStatus, setIsEditingPlanStatus] = useState(false);
   // Track whether the question should be read-only based on plan status and user role
   const [isReadOnly, setIsReadOnly] = useState<boolean>(false);
+  const [isFeedbackRequested, setIsFeedbackRequested] = useState<boolean>(false);
   const [planData, setPlanData] = useState<PlanOverviewInterface>({
     id: null,
     dmpId: "",
@@ -476,6 +477,7 @@ const PlanOverviewPage: React.FC = () => {
   useEffect(() => {
     // When data from backend changes, set project data in state
     if (data && data.plan) {
+      console.log("***Plan", data.plan);
       setPlanData({
         id: Number(data?.plan.id) ?? null,
         dmpId: extractDOI(data?.plan.dmpId ?? ""),
@@ -512,6 +514,7 @@ const PlanOverviewPage: React.FC = () => {
         feedbackStatus: data?.plan?.feedbackStatus?.status ?? "NONE",
       });
       setPlanVisibility(data.plan.visibility as PlanVisibility);
+      setIsReadOnly(data?.plan?.readOnly || true);
     }
   }, [data]);
 
@@ -522,13 +525,8 @@ const PlanOverviewPage: React.FC = () => {
   }, [queryError]);
 
   useEffect(() => {
-    const adminStatus =
-      !!(me?.me?.affiliation?.uri &&
-        me.me.affiliation.uri === data?.plan?.planCreator?.affiliation?.uri &&
-        (me.me.role === UserRole.Admin || me.me.role === UserRole.Superadmin));
-
-    setIsReadOnly(planData?.feedbackStatus === 'REQUESTED' && adminStatus);
-  }, [me?.me?.affiliation?.uri, me?.me?.role, planData, planData?.orgId]);
+    setIsFeedbackRequested(planData?.feedbackStatus === 'REQUESTED');
+  }, [planData]);
 
 
   // Memoize checklist items to prevent unnecessary recalculations
@@ -622,6 +620,7 @@ const PlanOverviewPage: React.FC = () => {
   }
 
   const hasFeedbackRequest = feedbackData?.planFeedbackStatus?.status === "REQUESTED";
+  console.log("***Is read only?", isReadOnly);
   return (
     <>
       <PageHeaderWithTitleChange
@@ -654,7 +653,7 @@ const PlanOverviewPage: React.FC = () => {
       />
 
       <LayoutWithPanel>
-        {hasFeedbackRequest && isReadOnly && (
+        {isFeedbackRequested && (
           <NotificationHeader
             title={t("feedbackNotification.title")}
             actionButtonText={t("feedbackNotification.markAsDone")}
@@ -691,6 +690,7 @@ const PlanOverviewPage: React.FC = () => {
                 linkHref={FUNDINGS_URL}
                 linkText={t("funding.edit")}
                 linkAriaLabel={t("funding.edit")}
+                includeLink={!isReadOnly}
               >
                 <p>{planData.funderName}</p>
               </OverviewSection>
@@ -701,6 +701,7 @@ const PlanOverviewPage: React.FC = () => {
                 linkHref={MEMBERS_URL}
                 linkText={t("members.edit")}
                 linkAriaLabel={t("members.edit")}
+                includeLink={!isReadOnly}
               >
                 <p>
                   {planData.members.map((member, index) => (
@@ -721,7 +722,7 @@ const PlanOverviewPage: React.FC = () => {
                 linkHref={RELATED_WORKS_URL}
                 linkText={t("relatedWorks.edit")}
                 linkAriaLabel={t("relatedWorks.edit")}
-                includeLink={!!rwPlanStats?.hasPublishedPlan}
+                includeLink={!!rwPlanStats?.hasPublishedPlan || !isReadOnly}
               >
                 {!rwPlanStats?.hasPublishedPlan && <p>{t("relatedWorks.publish")}</p>}
                 {rwPlanStats?.hasPublishedPlan && rwPlanStats?.pendingCount != null && <p>{t("relatedWorks.pendingCount", { count: rwPlanStats?.pendingCount })}</p>}
@@ -803,13 +804,28 @@ const PlanOverviewPage: React.FC = () => {
                   {Global("buttons.preview")}
                 </NextLink>
               )}
-
-              <Button
-                onPress={() => setIsModalOpen(true)}
-                isDisabled={hasFeedbackRequest && isReadOnly}
-              >
-                {Global("buttons.publish")}
-              </Button>
+              {!isReadOnly ? (
+                <Button
+                  onPress={() => setIsModalOpen(true)}
+                >
+                  {Global("buttons.publish")}
+                </Button>
+              ) : (
+                <TooltipTrigger delay={0}>
+                  <Button
+                    aria-disabled={isReadOnly}
+                    className="button-disabled"
+                  >
+                    {Global("buttons.publish")}
+                  </Button>
+                  <Tooltip
+                    placement="bottom"
+                    className={`${styles.tooltip} py-2 px-2`}
+                  >
+                    {t('messages.readOnlyLinkMessage')}
+                  </Tooltip>
+                </TooltipTrigger>
+              )}
             </div>
             <div className="side-panel-content">
               <div className={`panelRow mb-5`}>
@@ -866,6 +882,7 @@ const PlanOverviewPage: React.FC = () => {
                       items={planStatusOptions}
                       onChange={(selected) => setPlanStatus(selected as PlanStatus)}
                       selectedKey={planStatus ?? planData.status}
+
                     >
                       {(item) => <ListBoxItem key={item.id}>{item.name}</ListBoxItem>}
                     </FormSelect>
@@ -878,14 +895,31 @@ const PlanOverviewPage: React.FC = () => {
                     <h3>{t("status.title")}</h3>
                     <p>{toTitleCase(planData.status)}</p>
                   </div>
-                  <Button
-                    className="button-as-link"
-                    data-testid="updateLink"
-                    onPress={handlePlanStatusChange}
-                    aria-label={t("status.select.changeLabel")}
-                  >
-                    {Global("buttons.linkUpdate")}
-                  </Button>
+                  {!isReadOnly ? (
+                    <Button
+                      className="button-as-link"
+                      data-testid="updateLink"
+                      onPress={handlePlanStatusChange}
+                      aria-label={t("status.select.changeLabel")}
+                    >
+                      {Global("buttons.linkUpdate")}
+                    </Button>
+                  ) : (
+                    <TooltipTrigger delay={0}>
+                      <Button
+                        className={styles.sidePanelLinkDisabled}
+                        aria-disabled={true}
+                      >
+                        {Global("buttons.linkUpdate")}
+                      </Button>
+                      <Tooltip
+                        placement="bottom"
+                        className={`${styles.tooltip} py-2 px-2`}
+                      >
+                        {t('messages.readOnlyLinkMessage')}
+                      </Tooltip>
+                    </TooltipTrigger>
+                  )}
                 </div>
               )}
 
@@ -894,26 +928,60 @@ const PlanOverviewPage: React.FC = () => {
                   <h3>{t("status.publish.title")}</h3>
                   <p>{planData.registered ? PUBLISHED : UNPUBLISHED}</p>
                 </div>
-                <Link
-                  href="#"
-                  className="side-panel-link"
-                  onPress={() => setIsModalOpen(true)}
-                  aria-label={t("status.publish.label")}
-                >
-                  {t("status.publish.label")}
-                </Link>
+                {!isReadOnly ? (
+                  <Link
+                    href="#"
+                    className="side-panel-link"
+                    onPress={() => setIsModalOpen(true)}
+                    aria-label={t("status.publish.label")}
+                  >
+                    {t("status.publish.label")}
+                  </Link>
+                ) : (
+                  <TooltipTrigger delay={0}>
+                    <Button
+                      className={styles.sidePanelLinkDisabled}
+                      aria-disabled={true}
+                    >
+                      {t("status.publish.label")}
+                    </Button>
+                    <Tooltip
+                      placement="bottom"
+                      className={`${styles.tooltip} py-2 px-2`}
+                    >
+                      {t('messages.readOnlyLinkMessage')}
+                    </Tooltip>
+                  </TooltipTrigger>
+                )}
               </div>
               <div className={`panelRow mb-5`}>
                 <div>
                   <h3>{t("status.download.title")}</h3>
                 </div>
-                <NextLink
-                  href={DOWNLOAD_URL}
-                  className="side-panel-link"
-                  aria-label="download"
-                >
-                  {t("status.download.title")}
-                </NextLink>
+                {!isReadOnly ? (
+                  <NextLink
+                    href={DOWNLOAD_URL}
+                    className="side-panel-link"
+                    aria-label="download"
+                  >
+                    {t("status.download.title")}
+                  </NextLink>
+                ) : (
+                  <TooltipTrigger delay={0}>
+                    <Button
+                      className={styles.sidePanelLinkDisabled}
+                      aria-disabled={true}
+                    >
+                      {t("status.download.title")}
+                    </Button>
+                    <Tooltip
+                      placement="bottom"
+                      className={`${styles.tooltip} py-2 px-2`}
+                    >
+                      {t('messages.readOnlyLinkMessage')}
+                    </Tooltip>
+                  </TooltipTrigger>
+                )}
               </div>
             </div>
           </div>
