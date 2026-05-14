@@ -79,7 +79,7 @@
     "@typescript-eslint/eslint-plugin": "8.56.1",
     "@typescript-eslint/parser": "8.56.1",
     "brace-expansion": "2.1.0",
-    "cypress": "15.10.0",
+    "cypress": "15.15.0",
     "domexception": "4.0.0",
     "dotenv": "16.6.1",
     "eslint": "9.18.0",
