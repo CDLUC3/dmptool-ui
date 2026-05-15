@@ -23,7 +23,7 @@
     "trivy-all": "npm run trivy-high && npm run trivy-med"
   },
   "dependencies": {
-    "@apollo/client": "4.1.7",
+    "@apollo/client": "4.1.9",
     "@apollo/client-integration-nextjs": "0.14.5",
     "@dmptool/types": "3.1.4",
     "@elastic/ecs-pino-format": "1.5.0",
