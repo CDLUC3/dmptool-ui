@@ -138,12 +138,14 @@
         "successfullyUpdatedTitle": "Título do plano atualizado com êxito",
         "successfullyPublished": "Plano publicado com sucesso",
         "successfullyUpdatedStatus": "Status do plano atualizado com sucesso"
-      }
+      },
+      "readOnlyLinkMessage": "Apenas colaboradores do plano podem editar este plano."
     },
     "links": {
       "editTitle": "Editar título do plano"
     },
     "feedbackNotification": {
+      "description": "Você pode visualizar este plano e deixar comentários.",
       "title": "Modo de feedback",
       "description1": "Você pode visualizar este plano e deixar comentários. Quando terminar, clique em Marcar como concluído.",
       "description2": "Concluir irá remover seu acesso e notificar o autor do plano que seu feedback está completo.",

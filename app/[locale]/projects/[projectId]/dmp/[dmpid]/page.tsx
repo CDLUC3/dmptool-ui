@@ -32,7 +32,6 @@ import {
   PlanDocument,
   PlanFeedbackStatusDocument,
   RelatedWorksByPlanStatsDocument,
-  UserRole,
 } from "@/generated/graphql";
 import {
   publishPlanAction,
@@ -222,7 +221,6 @@ const PlanOverviewPage: React.FC = () => {
   // Run me query to get user's name
   const { data: me } = useQuery(MeDocument);
 
-  console.log("***ME Data", me);
   // Initialize completed feedbackmutation
   const [completeFeedbackMutation, { error: completeFeedbackError }] = useMutation(CompleteFeedbackDocument);
 

@@ -438,12 +438,6 @@ button.medium {
 
 }
 
-// Sometimes we need to make the button look disabled without actually setting it as disabled so tooltips will work
-.button-disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
 // For info icon buttons used in popovers
 .popover-btn {
   display: inline-flex;
