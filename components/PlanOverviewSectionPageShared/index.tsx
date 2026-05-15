@@ -166,6 +166,17 @@ export const PlanOverviewSectionPageShared: React.FC<{ config: SectionPageConfig
     };
   }, [sectionData]);
 
+  // Determine if user is a collaborator with edit access - this will allow them to see "Update" on the section cards and access the question modals even if the plan is read-only
+  const isEditCollaborator = useMemo(() => {
+    const myId = me?.me?.id;
+    if (!myId || !planData?.plan?.project?.collaborators) return false;
+
+    return planData.plan.project.collaborators.some(
+      (collaborator) =>
+        collaborator?.user?.id === myId &&
+        collaborator?.accessLevel === "EDIT"
+    );
+  }, [me?.me?.id, planData?.plan?.project?.collaborators]);
 
 
   const questions: VersionedQuestion[] = useMemo(() => {
@@ -346,13 +357,14 @@ export const PlanOverviewSectionPageShared: React.FC<{ config: SectionPageConfig
                 </section>
               ) : (
                 questions.map((question) => {
+                  const canEditSections = !isReadOnly || isEditCollaborator;
+
                   // Determine the action label for the section button
-                  const sectionActionLabel = (isReadOnly)
+                  const sectionActionLabel = !canEditSections
                     ? t("sections.view")
                     : question.hasAnswer
                       ? t("sections.update")
                       : t("sections.start");
-
                   return (
                     <section
                       key={question.id}

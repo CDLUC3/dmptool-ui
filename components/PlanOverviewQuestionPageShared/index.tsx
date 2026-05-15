@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useTranslations } from "next-intl";
 import { CalendarDate, DateValue } from "@internationalized/date";
@@ -26,7 +26,6 @@ import {
   MeDocument,
   PlanDocument,
   AnswerByVersionedQuestionIdDocument,
-  UserRole,
 } from '@/generated/graphql';
 import {
   addAnswerAction,
@@ -303,8 +302,6 @@ export const PlanOverviewQuestionPageShared: React.FC<{ config: QuestionPageConf
   const openSampleTextButtonRef = useRef<HTMLButtonElement | null>(null);
   const openCommentsButtonRef = useRef<HTMLButtonElement | null>(null);
 
-
-
   // Question field states (excluding Research Output table)
   const [formData, setFormData] = useState<FormDataInterface>({
     affiliationData: { affiliationName: '', affiliationId: '' },
@@ -436,6 +433,23 @@ export const PlanOverviewQuestionPageShared: React.FC<{ config: QuestionPageConf
     planOwners: plan?.planOwners,
     collaborators: plan?.collaborators
   });
+
+  // Project collaborators who have access level "EDIT" can edit questions, even when other areas of the plan are read-only
+  const isEditCollaborator = useMemo(() => {
+    const myId = me?.me?.id;
+    if (!myId || !planData?.plan?.project?.collaborators) return false;
+
+    return planData.plan.project.collaborators.some(
+      (collaborator) =>
+        collaborator?.user?.id === myId &&
+        collaborator?.accessLevel === "EDIT"
+    );
+  }, [me?.me?.id, planData?.plan?.project?.collaborators]);
+
+  // Determine if the question should be read-only based on readOnly value and whether the user is an edit collaborator
+  const questionIsReadOnly = useMemo(() => {
+    return isReadOnly && !isEditCollaborator;
+  }, [isReadOnly, isEditCollaborator]);
 
   // Show Success Message
   const showSuccessToast = (type?: string) => {
@@ -1343,15 +1357,6 @@ export const PlanOverviewQuestionPageShared: React.FC<{ config: QuestionPageConf
 
   }, [answerData, questionType]);
 
-  // useEffect(() => {
-  //   const adminStatus =
-  //     !!(me?.me?.affiliation?.uri &&
-  //       me.me.affiliation.uri === planData?.plan?.planCreator?.affiliation?.uri &&
-  //       (me.me.role === UserRole.Admin || me.me.role === UserRole.Superadmin));
-
-  //   setIsReadOnly(planData?.plan?.feedbackStatus?.status === 'REQUESTED' && adminStatus);
-  // }, [me?.me?.affiliation?.uri, me?.me?.role, planData, plan?.planCreatorOrgId]);
-
   // Auto-save logic
   useEffect(() => {
     if (!hasUnsavedChanges) return;
@@ -1432,7 +1437,7 @@ export const PlanOverviewQuestionPageShared: React.FC<{ config: QuestionPageConf
   const questionField = useRenderQuestionField({
     questionType,
     parsed,
-    readOnly: isReadOnly,
+    readOnly: questionIsReadOnly, // Only show readOnly if user is not an edit collaborator
     textFieldProps: {
       textValue: typeof formData.textValue === 'string' ? formData.textValue : '',
       handleTextChange,
@@ -1581,7 +1586,7 @@ export const PlanOverviewQuestionPageShared: React.FC<{ config: QuestionPageConf
               <DmpIcon icon="down_arrow" />
               <Link href="#guidance" className={`${styles.guidanceLink} react-aria-Link`}>{PlanOverview('page.jumpToGuidance')}</Link>
             </p>
-            <Form onSubmit={isReadOnly ? (e) => e.preventDefault() : handleSubmit} data-testid="question-form">
+            <Form onSubmit={questionIsReadOnly ? (e) => e.preventDefault() : handleSubmit} data-testid="question-form">
               <Card data-testid='question-card'>
                 <span>{PlanOverview('headings.question')}</span>
                 <h2 id="question-title" className="h3">
@@ -1610,7 +1615,7 @@ export const PlanOverviewQuestionPageShared: React.FC<{ config: QuestionPageConf
                 <div>
                   <div className={styles.buttonsRow}>
                     {/**Only include sample text button for textArea question types and if sampleText is not empty and NOT read-only */}
-                    {(questionType === TEXT_AREA_QUESTION_TYPE && !isReadOnly && (question?.sampleText || question?.customizationSampleText)) && (
+                    {(questionType === TEXT_AREA_QUESTION_TYPE && !questionIsReadOnly && (question?.sampleText || question?.customizationSampleText)) && (
                       <Button
                         ref={openSampleTextButtonRef}
                         className="tertiary small"
@@ -1658,7 +1663,7 @@ export const PlanOverviewQuestionPageShared: React.FC<{ config: QuestionPageConf
                       placeholder={Global('placeholders.enterComment')}
                       value={formData.commentValue}
                       onChange={handleCommentValueChange}
-                      disabled={isReadOnly}
+                      disabled={questionIsReadOnly}
                     />
                   )}
                 </div>
@@ -1667,7 +1672,7 @@ export const PlanOverviewQuestionPageShared: React.FC<{ config: QuestionPageConf
                   role="status">
                   {getLastSavedText()}
                 </div>
-                {!isReadOnly && (
+                {!questionIsReadOnly && (
                   <div className={styles.modalAction}>
                     {!(questionType === RESEARCH_OUTPUT_QUESTION_TYPE && isResearchOutputEditing) && (
                       <>

@@ -17,8 +17,6 @@ import {
   Modal,
   Radio,
   Text,
-  Tooltip,
-  TooltipTrigger,
   DialogTrigger,
   Popover
 } from "react-aria-components";
@@ -224,6 +222,7 @@ const PlanOverviewPage: React.FC = () => {
   // Run me query to get user's name
   const { data: me } = useQuery(MeDocument);
 
+  console.log("***ME Data", me);
   // Initialize completed feedbackmutation
   const [completeFeedbackMutation, { error: completeFeedbackError }] = useMutation(CompleteFeedbackDocument);
 
@@ -255,6 +254,19 @@ const PlanOverviewPage: React.FC = () => {
       (collaborator) =>
         collaborator?.user?.id === myId &&
         collaborator?.accessLevel === "PRIMARY"
+    );
+  }, [me?.me?.id, data?.plan?.project?.collaborators]);
+
+  // Project collaborators who have 'EDIT' access level will see the "Update" section card button text since they can
+  // edit the question
+  const isEditCollaborator = useMemo(() => {
+    const myId = me?.me?.id;
+    if (!myId || !data?.plan?.project?.collaborators) return false;
+
+    return data.plan.project.collaborators.some(
+      (collaborator) =>
+        collaborator?.user?.id === myId &&
+        collaborator?.accessLevel === "EDIT"
     );
   }, [me?.me?.id, data?.plan?.project?.collaborators]);
 
@@ -739,8 +751,10 @@ const PlanOverviewPage: React.FC = () => {
                 ? routePath("projects.dmp.versionedSection", { projectId, dmpId: planId, versionedSectionId: Number(sectionId) })
                 : routePath("projects.dmp.customSection", { projectId, dmpId: planId, csid: String(sectionId) });
 
+              const canEditSections = !isReadOnly || isEditCollaborator;
+
               // Determine the action label for the section button
-              const sectionActionLabel = (isReadOnly)
+              const sectionActionLabel = !canEditSections
                 ? t("sections.view")
                 : versionedSection.answeredQuestions === 0
                   ? t("sections.start")
@@ -957,29 +971,14 @@ const PlanOverviewPage: React.FC = () => {
                 <div>
                   <h3>{t("status.download.title")}</h3>
                 </div>
-                {!isReadOnly ? (
-                  <NextLink
-                    href={DOWNLOAD_URL}
-                    className="side-panel-link"
-                    aria-label="download"
-                  >
-                    {t("status.download.title")}
-                  </NextLink>
-                ) : (
-                  <DialogTrigger>
-                    <Button
-                      className="link-disabled"
-                      aria-disabled={true}
-                    >
-                      {t("status.download.title")}
-                    </Button>
-                    <Popover placement="bottom" className="popover--inverse">
-                      <Dialog className="popoverContent">
-                        {t('messages.readOnlyLinkMessage')}
-                      </Dialog>
-                    </Popover>
-                  </DialogTrigger>
-                )}
+                {/**Any user who can access the plan can download the plan */}
+                <NextLink
+                  href={DOWNLOAD_URL}
+                  className="side-panel-link"
+                  aria-label="download"
+                >
+                  {t("status.download.title")}
+                </NextLink>
               </div>
             </div>
           </div>
