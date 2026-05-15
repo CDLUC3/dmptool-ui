@@ -44,7 +44,7 @@ import {
 import { ContentContainer, LayoutWithPanel, SidebarPanel } from "@/components/Container";
 import ErrorMessages from "@/components/ErrorMessages";
 import { DmpIcon } from "@/components/Icons";
-import { FormSelect, RadioGroupComponent } from "@/components/Form";
+import { FormSelect, RadioGroupComponent, TransitionLink } from "@/components/Form";
 import PageHeaderWithTitleChange from "@/components/PageHeaderWithTitleChange";
 import OverviewSection from "@/components/OverviewSection";
 import NotificationHeader from "@/components/Notification";
@@ -792,7 +792,7 @@ const PlanOverviewPage: React.FC = () => {
                         </span>
                       </p>
                     </div>
-                    <Link
+                    <TransitionLink
                       href={sectionRoute}
                       aria-label={t("sections.updateSection", {
                         title: versionedSection.title,
@@ -800,7 +800,7 @@ const PlanOverviewPage: React.FC = () => {
                       className={"react-aria-Button react-aria-Button--secondary"}
                     >
                       {sectionActionLabel}
-                    </Link>
+                    </TransitionLink>
                   </div>
                 </section>
               )

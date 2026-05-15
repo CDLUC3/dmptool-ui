@@ -26,6 +26,7 @@ import SafeHtml from '@/components/SafeHtml';
 import GuidancePanel from '@/components/GuidancePanel';
 import Loading from '@/components/Loading';
 import NotificationHeader from '../Notification';
+import { TransitionLink } from "@/components/Form";
 
 // Utils and other
 import { stripHtml } from '@/utils/general';
@@ -389,7 +390,7 @@ export const PlanOverviewSectionPageShared: React.FC<{ config: SectionPageConfig
                             </span>
                           </p>
                         </div>
-                        <Link
+                        <TransitionLink
                           href={question.link}
                           aria-label={t('sections.ariaLabel', {
                             action: question.hasAnswer ? t('sections.update') : t('sections.start'),
@@ -398,7 +399,7 @@ export const PlanOverviewSectionPageShared: React.FC<{ config: SectionPageConfig
                           className="react-aria-Button react-aria-Button--secondary"
                         >
                           {sectionActionLabel}
-                        </Link>
+                        </TransitionLink>
                       </div>
                     </section>
                   )
