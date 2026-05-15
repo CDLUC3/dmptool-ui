@@ -168,7 +168,7 @@ export const useComments = ({
         answerId: Number(comment?.answerId),
         answerCommentId: Number(comment?.id)
       });
-    } else if (planFeedbackId) {
+    } else {
       response = await removeFeedbackCommentAction({
         planId: Number(dmpId),
         planFeedbackCommentId: Number(comment?.id)
@@ -188,7 +188,6 @@ export const useComments = ({
 
   // Update comment action
   const updateComment = async (comment: MergedComment) => {
-
     let response;
     if (comment.isAnswerComment) {
       response = await updateAnswerCommentAction({
@@ -196,7 +195,7 @@ export const useComments = ({
         answerCommentId: Number(comment?.id),
         commentText: editingCommentText
       });
-    } else if (planFeedbackId) {
+    } else {
       response = await updateFeedbackCommentAction({
         planId: Number(dmpId),
         planFeedbackCommentId: Number(comment?.id),

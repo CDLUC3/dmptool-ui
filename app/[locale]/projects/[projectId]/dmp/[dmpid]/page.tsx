@@ -19,6 +19,8 @@ import {
   Text,
   Tooltip,
   TooltipTrigger,
+  DialogTrigger,
+  Popover
 } from "react-aria-components";
 
 // GraphQL
@@ -477,7 +479,6 @@ const PlanOverviewPage: React.FC = () => {
   useEffect(() => {
     // When data from backend changes, set project data in state
     if (data && data.plan) {
-      console.log("***Plan", data.plan);
       setPlanData({
         id: Number(data?.plan.id) ?? null,
         dmpId: extractDOI(data?.plan.dmpId ?? ""),
@@ -514,7 +515,7 @@ const PlanOverviewPage: React.FC = () => {
         feedbackStatus: data?.plan?.feedbackStatus?.status ?? "NONE",
       });
       setPlanVisibility(data.plan.visibility as PlanVisibility);
-      setIsReadOnly(data?.plan?.readOnly || true);
+      setIsReadOnly(data?.plan?.readOnly || false);
     }
   }, [data]);
 
@@ -619,8 +620,6 @@ const PlanOverviewPage: React.FC = () => {
     return <div>{Global("messaging.loading")}...</div>;
   }
 
-  const hasFeedbackRequest = feedbackData?.planFeedbackStatus?.status === "REQUESTED";
-  console.log("***Is read only?", isReadOnly);
   return (
     <>
       <PageHeaderWithTitleChange
@@ -690,7 +689,8 @@ const PlanOverviewPage: React.FC = () => {
                 linkHref={FUNDINGS_URL}
                 linkText={t("funding.edit")}
                 linkAriaLabel={t("funding.edit")}
-                includeLink={!isReadOnly}
+                disabled={isReadOnly}
+                hoverMessage={t('messages.readOnlyLinkMessage')}
               >
                 <p>{planData.funderName}</p>
               </OverviewSection>
@@ -701,7 +701,8 @@ const PlanOverviewPage: React.FC = () => {
                 linkHref={MEMBERS_URL}
                 linkText={t("members.edit")}
                 linkAriaLabel={t("members.edit")}
-                includeLink={!isReadOnly}
+                disabled={isReadOnly}
+                hoverMessage={t('messages.readOnlyLinkMessage')}
               >
                 <p>
                   {planData.members.map((member, index) => (
@@ -723,6 +724,8 @@ const PlanOverviewPage: React.FC = () => {
                 linkText={t("relatedWorks.edit")}
                 linkAriaLabel={t("relatedWorks.edit")}
                 includeLink={!!rwPlanStats?.hasPublishedPlan || !isReadOnly}
+                disabled={isReadOnly}
+                hoverMessage={t('messages.readOnlyLinkMessage')}
               >
                 {!rwPlanStats?.hasPublishedPlan && <p>{t("relatedWorks.publish")}</p>}
                 {rwPlanStats?.hasPublishedPlan && rwPlanStats?.pendingCount != null && <p>{t("relatedWorks.pendingCount", { count: rwPlanStats?.pendingCount })}</p>}
@@ -737,7 +740,7 @@ const PlanOverviewPage: React.FC = () => {
                 : routePath("projects.dmp.customSection", { projectId, dmpId: planId, csid: String(sectionId) });
 
               // Determine the action label for the section button
-              const sectionActionLabel = (hasFeedbackRequest && isReadOnly)
+              const sectionActionLabel = (isReadOnly)
                 ? t("sections.view")
                 : versionedSection.answeredQuestions === 0
                   ? t("sections.start")
@@ -811,20 +814,19 @@ const PlanOverviewPage: React.FC = () => {
                   {Global("buttons.publish")}
                 </Button>
               ) : (
-                <TooltipTrigger delay={0}>
+                <DialogTrigger>
                   <Button
                     aria-disabled={isReadOnly}
-                    className="button-disabled"
+                    className="link-disabled"
                   >
                     {Global("buttons.publish")}
                   </Button>
-                  <Tooltip
-                    placement="bottom"
-                    className={`${styles.tooltip} py-2 px-2`}
-                  >
-                    {t('messages.readOnlyLinkMessage')}
-                  </Tooltip>
-                </TooltipTrigger>
+                  <Popover placement="bottom" className="popover--inverse">
+                    <Dialog className="popoverContent">
+                      {t('messages.readOnlyLinkMessage')}
+                    </Dialog>
+                  </Popover>
+                </DialogTrigger>
               )}
             </div>
             <div className="side-panel-content">
@@ -851,20 +853,19 @@ const PlanOverviewPage: React.FC = () => {
                     {Global("links.request")}
                   </NextLink>
                 ) : (
-                  <TooltipTrigger delay={0}>
+                  <DialogTrigger>
                     <Button
-                      className={styles.sidePanelLinkDisabled}
+                      className="link-disabled"
                       aria-disabled={true}
                     >
                       {Global("links.request")}
                     </Button>
-                    <Tooltip
-                      placement="bottom"
-                      className={`${styles.tooltip} py-2 px-2`}
-                    >
-                      {t("status.feedback.disabledTooltip")}
-                    </Tooltip>
-                  </TooltipTrigger>
+                    <Popover placement="bottom" className="popover--inverse">
+                      <Dialog className="popoverContent">
+                        {t('messages.readOnlyLinkMessage')}
+                      </Dialog>
+                    </Popover>
+                  </DialogTrigger>
                 )}
 
               </div>
@@ -905,20 +906,19 @@ const PlanOverviewPage: React.FC = () => {
                       {Global("buttons.linkUpdate")}
                     </Button>
                   ) : (
-                    <TooltipTrigger delay={0}>
+                    <DialogTrigger>
                       <Button
-                        className={styles.sidePanelLinkDisabled}
+                        className="link-disabled"
                         aria-disabled={true}
                       >
                         {Global("buttons.linkUpdate")}
                       </Button>
-                      <Tooltip
-                        placement="bottom"
-                        className={`${styles.tooltip} py-2 px-2`}
-                      >
-                        {t('messages.readOnlyLinkMessage')}
-                      </Tooltip>
-                    </TooltipTrigger>
+                      <Popover placement="bottom" className="popover--inverse">
+                        <Dialog className="popoverContent">
+                          {t('messages.readOnlyLinkMessage')}
+                        </Dialog>
+                      </Popover>
+                    </DialogTrigger>
                   )}
                 </div>
               )}
@@ -938,20 +938,19 @@ const PlanOverviewPage: React.FC = () => {
                     {t("status.publish.label")}
                   </Link>
                 ) : (
-                  <TooltipTrigger delay={0}>
+                  <DialogTrigger>
                     <Button
-                      className={styles.sidePanelLinkDisabled}
+                      className="link-disabled"
                       aria-disabled={true}
                     >
                       {t("status.publish.label")}
                     </Button>
-                    <Tooltip
-                      placement="bottom"
-                      className={`${styles.tooltip} py-2 px-2`}
-                    >
-                      {t('messages.readOnlyLinkMessage')}
-                    </Tooltip>
-                  </TooltipTrigger>
+                    <Popover placement="bottom" className="popover--inverse">
+                      <Dialog className="popoverContent">
+                        {t('messages.readOnlyLinkMessage')}
+                      </Dialog>
+                    </Popover>
+                  </DialogTrigger>
                 )}
               </div>
               <div className={`panelRow mb-5`}>
@@ -967,20 +966,19 @@ const PlanOverviewPage: React.FC = () => {
                     {t("status.download.title")}
                   </NextLink>
                 ) : (
-                  <TooltipTrigger delay={0}>
+                  <DialogTrigger>
                     <Button
-                      className={styles.sidePanelLinkDisabled}
+                      className="link-disabled"
                       aria-disabled={true}
                     >
                       {t("status.download.title")}
                     </Button>
-                    <Tooltip
-                      placement="bottom"
-                      className={`${styles.tooltip} py-2 px-2`}
-                    >
-                      {t('messages.readOnlyLinkMessage')}
-                    </Tooltip>
-                  </TooltipTrigger>
+                    <Popover placement="bottom" className="popover--inverse">
+                      <Dialog className="popoverContent">
+                        {t('messages.readOnlyLinkMessage')}
+                      </Dialog>
+                    </Popover>
+                  </DialogTrigger>
                 )}
               </div>
             </div>

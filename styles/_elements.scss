@@ -152,6 +152,43 @@
   }
 }
 
+.react-aria-Popover.popoverContent {
+  --popover-bg: var(--gray-500);
+  --popover-fg: var(--gray-50);
+  --popover-border: transparent;
+}
+
+.react-aria-Popover.popoverContent .react-aria-Dialog,
+.react-aria-Dialog.popoverContent {
+  font-size: var(--fs-small);
+  padding: var(--space-2);
+}
+
+.react-aria-Popover.popover--inverse {
+  --popover-bg: var(--gray-500);
+  --popover-fg: var(--gray-50);
+  --popover-border: transparent;
+}
+
+// Fallback for runtime markup where react-aria classnames are not present
+.popover--inverse {
+  --popover-bg: var(--gray-500);
+  --popover-fg: var(--gray-50);
+  --popover-border: transparent;
+
+  box-shadow: 0 8px 20px rgba(0 0 0 / 0.1);
+  border-radius: 6px;
+  background: var(--popover-bg);
+  color: var(--popover-fg);
+  border: 1px solid var(--popover-border);
+}
+
+.popover--inverse .popoverContent,
+.popoverContent {
+  font-size: var(--fs-small);
+  padding: var(--space-2);
+}
+
 @keyframes popover-slide {
   from {
     transform: var(--origin);

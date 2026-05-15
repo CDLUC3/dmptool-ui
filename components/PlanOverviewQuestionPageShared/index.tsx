@@ -247,7 +247,7 @@ interface PlanData {
   openFeedbackRounds: boolean;
   feedbackId?: number | null;
   feedbackStatus?: string;
-  orgId: string;
+  planCreatorOrgId: string;
   collaborators: number[];
   planOwners: number[] | null;
 }
@@ -431,7 +431,7 @@ export const PlanOverviewQuestionPageShared: React.FC<{ config: QuestionPageConf
     dmpId,
     planFeedbackId: plan?.feedbackId,
     me,
-    planOrgId: plan?.orgId,
+    planOrgId: plan?.planCreatorOrgId,
     openFeedbackRounds: plan?.openFeedbackRounds,
     planOwners: plan?.planOwners,
     collaborators: plan?.collaborators
@@ -1299,7 +1299,7 @@ export const PlanOverviewQuestionPageShared: React.FC<{ config: QuestionPageConf
         openFeedbackRounds: planData?.plan?.feedback?.some(f => f.completed == null) ?? false, // If any of the feedback rounds have not yet been completed
         feedbackId: planData?.plan?.feedback?.find(item => item.completed === null)?.id, //Get first feedback id where it has not yet been completed
         feedbackStatus: planData?.plan?.feedbackStatus?.status ?? '', //Get feedback status from plan data
-        orgId: planData?.plan?.versionedTemplate?.owner?.uri ?? '', //affiliation id for plan
+        planCreatorOrgId: planData?.plan?.planCreator?.affiliation?.uri ?? '', //affiliation id for plan
         collaborators: planData?.plan?.project?.collaborators
           ?.map(c => c?.user?.id)
           .filter((id): id is number => id != null) ?? [], //filter out any null or undefined for projectCollaborators
@@ -1307,6 +1307,7 @@ export const PlanOverviewQuestionPageShared: React.FC<{ config: QuestionPageConf
       }
 
       setPlan(planInfo);
+      setIsReadOnly(planData?.plan?.readOnly ?? false);
     };
   }, [planData]);
 
@@ -1342,14 +1343,14 @@ export const PlanOverviewQuestionPageShared: React.FC<{ config: QuestionPageConf
 
   }, [answerData, questionType]);
 
-  useEffect(() => {
-    const adminStatus =
-      !!(me?.me?.affiliation?.uri &&
-        me.me.affiliation.uri === planData?.plan?.planCreator?.affiliation?.uri &&
-        (me.me.role === UserRole.Admin || me.me.role === UserRole.Superadmin));
+  // useEffect(() => {
+  //   const adminStatus =
+  //     !!(me?.me?.affiliation?.uri &&
+  //       me.me.affiliation.uri === planData?.plan?.planCreator?.affiliation?.uri &&
+  //       (me.me.role === UserRole.Admin || me.me.role === UserRole.Superadmin));
 
-    setIsReadOnly(planData?.plan?.feedbackStatus?.status === 'REQUESTED' && adminStatus);
-  }, [me?.me?.affiliation?.uri, me?.me?.role, planData, plan?.orgId]);
+  //   setIsReadOnly(planData?.plan?.feedbackStatus?.status === 'REQUESTED' && adminStatus);
+  // }, [me?.me?.affiliation?.uri, me?.me?.role, planData, plan?.planCreatorOrgId]);
 
   // Auto-save logic
   useEffect(() => {
@@ -1549,7 +1550,7 @@ export const PlanOverviewQuestionPageShared: React.FC<{ config: QuestionPageConf
       <ErrorMessages errors={errors} ref={errorRef} />
 
       <LayoutWithPanel>
-        {plan?.feedbackStatus === "REQUESTED" && isReadOnly && (
+        {plan?.feedbackStatus === "REQUESTED" && (
           <NotificationHeader
             title={t("feedbackNotification.title")}
           >

@@ -54,9 +54,8 @@ const CommentList = React.memo(function CommentList(props: CommentListProps) {
 
     handleUpdateComment({
       ...comment,
-
+      commentText: editingCommentText, // override with the edited version
     });
-    setEditingCommentText(''); // Clear the editing text after saving
   };
   return (
     <>

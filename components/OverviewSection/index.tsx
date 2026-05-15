@@ -1,5 +1,11 @@
 import React from "react";
-import { Link } from "react-aria-components";
+import {
+  Button,
+  Link,
+  Dialog,
+  DialogTrigger,
+  Popover
+} from "react-aria-components";
 import styles from "./OverviewSection.module.scss";
 
 interface OverviewSectionProps {
@@ -19,7 +25,10 @@ interface OverviewSectionProps {
   children: React.ReactNode;
   /** Whether to include link or not */
   includeLink?: boolean;
-
+  /** Whether the section is disabled */
+  disabled?: boolean;
+  /** The message to show on hover when disabled */
+  hoverMessage?: string;
 }
 
 const OverviewSection: React.FC<OverviewSectionProps> = ({
@@ -31,7 +40,10 @@ const OverviewSection: React.FC<OverviewSectionProps> = ({
   className = "",
   children,
   includeLink = true,
+  disabled = false,
+  hoverMessage = "",
 }) => {
+
   return (
     <section
       className={`${styles.overviewSection} ${className}`}
@@ -48,13 +60,31 @@ const OverviewSection: React.FC<OverviewSectionProps> = ({
       </div>
       {
         includeLink && (
-          <Link
-            href={linkHref}
-            aria-label={linkAriaLabel}
-            className={styles.overviewSectionLink}
-          >
-            {linkText}
-          </Link>
+          <>
+            {!disabled ? (
+              <Link
+                href={linkHref}
+                aria-label={linkAriaLabel}
+                className={styles.overviewSectionLink}
+              >
+                {linkText}
+              </Link>
+            ) : (
+              <DialogTrigger>
+                <Button
+                  className="link-disabled"
+                  aria-disabled={true}>
+                  {linkText}
+                </Button>
+
+                <Popover placement="bottom" className="popover--inverse">
+                  <Dialog className="popoverContent">
+                    {hoverMessage}
+                  </Dialog>
+                </Popover>
+              </DialogTrigger>
+            )}
+          </>
         )
       }
     </section>
