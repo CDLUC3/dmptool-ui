@@ -3678,9 +3678,27 @@ describe('PlanOverviewQuestionPageShared isAdmin/isReadOnly and feedback notific
   });
 
   it('disables form submit and hides Save button when isReadOnly is true', async () => {
-    // Simulate feedbackStatus REQUESTED and user is not admin
-    const planWithRequested = { ...mockPlanData, plan: { ...mockPlanData.plan, feedbackStatus: { status: 'REQUESTED' }, planCreator: { ...mockPlanData.plan.planCreator, affiliation: { uri: 'https://ror.org/03yrm5c26' } } } };
-    const meAdmin = { ...mockMeData, me: { ...mockMeData.me, affiliation: { uri: 'https://ror.org/03yrm5c26' }, role: UserRole.Admin } };
+    // Read-only plan and current user is NOT an EDIT collaborator
+    const planWithReadOnly = {
+      ...mockPlanData,
+      plan: {
+        ...mockPlanData.plan,
+        readOnly: true,
+        project: {
+          ...mockPlanData.plan.project,
+          collaborators: [{ accessLevel: 'VIEW', user: { id: 2 } }],
+        },
+      },
+    };
+
+    const meData = {
+      ...mockMeData,
+      me: {
+        ...mockMeData.me,
+        id: 1,
+      },
+    };
+
     mockUseQuery.mockImplementation((document) => {
       if (document === PublishedQuestionDocument) {
         return { data: mockQuestionDataForTextArea, loading: false, error: undefined, refetch: jest.fn() } as any;
@@ -3689,10 +3707,10 @@ describe('PlanOverviewQuestionPageShared isAdmin/isReadOnly and feedback notific
         return { data: mockAnswerDataForTextArea, loading: false, error: undefined, refetch: jest.fn() } as any;
       }
       if (document === PlanDocument) {
-        return { data: planWithRequested, loading: false, refetch: mockRefetch } as any;
+        return { data: planWithReadOnly, loading: false, refetch: mockRefetch } as any;
       }
       if (document === MeDocument) {
-        return { data: meAdmin, loading: false, error: undefined, refetch: jest.fn() } as any;
+        return { data: meData, loading: false, error: undefined, refetch: jest.fn() } as any;
       }
       return { data: null, loading: false, error: undefined } as any;
     });
@@ -3709,10 +3727,27 @@ describe('PlanOverviewQuestionPageShared isAdmin/isReadOnly and feedback notific
     preventDefaultSpy.mockRestore();
   });
 
-  it('shows Save button when isReadOnly is false (admin)', async () => {
-    // Simulate feedbackStatus REQUESTED but user is admin
-    const planWithRequested = { ...mockPlanData, plan: { ...mockPlanData.plan, feedbackStatus: { status: 'REQUESTED' }, versionedTemplate: { ...mockPlanData.plan.versionedTemplate, owner: { ...mockPlanData.plan.versionedTemplate.owner, uri: 'user-uri' } } } };
-    const meAdmin = { ...mockMeData, me: { ...mockMeData.me, affiliation: { uri: 'admin-uri' }, role: 'ADMIN' } };
+  it('shows Save button when plan is read-only but current user is an EDIT collaborator', async () => {
+    const planWithReadOnly = {
+      ...mockPlanData,
+      plan: {
+        ...mockPlanData.plan,
+        readOnly: true,
+        project: {
+          ...mockPlanData.plan.project,
+          collaborators: [{ accessLevel: 'EDIT', user: { id: 1 } }],
+        },
+      },
+    };
+
+    const meData = {
+      ...mockMeData,
+      me: {
+        ...mockMeData.me,
+        id: 1,
+      },
+    };
+
     mockUseQuery.mockImplementation((document) => {
       if (document === PublishedQuestionDocument) {
         return { data: mockQuestionDataForTextArea, loading: false, error: undefined, refetch: jest.fn() } as any;
@@ -3721,10 +3756,10 @@ describe('PlanOverviewQuestionPageShared isAdmin/isReadOnly and feedback notific
         return { data: mockAnswerDataForTextArea, loading: false, error: undefined, refetch: jest.fn() } as any;
       }
       if (document === PlanDocument) {
-        return { data: planWithRequested, loading: false, refetch: mockRefetch } as any;
+        return { data: planWithReadOnly, loading: false, refetch: mockRefetch } as any;
       }
       if (document === MeDocument) {
-        return { data: meAdmin, loading: false, error: undefined, refetch: jest.fn() } as any;
+        return { data: meData, loading: false, error: undefined, refetch: jest.fn() } as any;
       }
       return { data: null, loading: false, error: undefined } as any;
     });

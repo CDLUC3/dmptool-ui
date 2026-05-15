@@ -357,6 +357,37 @@ input[type="submit"].link {
   @include button-link;
 }
 
+// Disabled link button styles
+.react-aria-Button.link-disabled,
+.react-aria-Button--link-disabled,
+button.link-disabled,
+.button--link-disabled,
+input[type="button"].link-disabled,
+input[type="reset"].link-disabled,
+input[type="submit"].link-disabled {
+  @include button-link;
+  color: var(--slate-400);
+  cursor: not-allowed;
+
+  &[data-focus-visible],
+  &:focus-visible,
+  &:focus {
+    outline: none !important;
+    outline-offset: 0 !important;
+    box-shadow: none !important;
+    background: none !important;
+    color: var(--slate-400) !important;
+  }
+
+  &:hover,
+  &:active,
+  &[data-pressed] {
+    background: none;
+    color: var(--slate-400);
+    text-decoration: underline;
+  }
+}
+
 .react-aria-Button.danger,
 .react-aria-Button--danger,
 button.danger,

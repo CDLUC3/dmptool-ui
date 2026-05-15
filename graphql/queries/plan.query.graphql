@@ -96,5 +96,6 @@ query Plan($planId: Int!) {
         uri
       }
     }
+    readOnly
   }
 }

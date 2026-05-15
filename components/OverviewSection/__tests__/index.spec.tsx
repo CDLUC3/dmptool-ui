@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { axe, toHaveNoViolations } from "jest-axe";
 import OverviewSection from "../index";
 
@@ -54,5 +54,36 @@ describe("OverviewSection", () => {
     expect(screen.getByText("Count: 5")).toBeInTheDocument();
     expect(screen.getByText("Item 1")).toBeInTheDocument();
     expect(screen.getByText("Item 2")).toBeInTheDocument();
+  });
+
+  it("renders a disabled edit control and no link when disabled", () => {
+    render(
+      <OverviewSection
+        {...defaultProps}
+        disabled
+        hoverMessage="Only collaborators can edit"
+      >
+        <p>Test content</p>
+      </OverviewSection>,
+    );
+
+    expect(screen.queryByRole("link", { name: "Edit test section" })).not.toBeInTheDocument();
+    const disabledButton = screen.getByRole("button", { name: "Edit" });
+    expect(disabledButton).toHaveAttribute("aria-disabled", "true");
+  });
+
+  it("shows popover message via DialogTrigger when disabled control is pressed", () => {
+    render(
+      <OverviewSection
+        {...defaultProps}
+        disabled
+        hoverMessage="Only collaborators can edit"
+      >
+        <p>Test content</p>
+      </OverviewSection>,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Edit" }));
+    expect(screen.getByText("Only collaborators can edit")).toBeInTheDocument();
   });
 });

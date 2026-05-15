@@ -138,12 +138,14 @@
         "successfullyUpdatedTitle": "Successfully updated the plan title",
         "successfullyPublished": "Successfully published the plan",
         "successfullyUpdatedStatus": "Successfully updated the plan status"
-      }
+      },
+      "readOnlyLinkMessage": "Only plan collaborators can edit this plan."
     },
     "links": {
       "editTitle": "Edit plan title"
     },
     "feedbackNotification": {
+      "description": "You can view this plan and leave comments.",
       "title": "Feedback mode",
       "description1": "You can view this plan and leave comments. When you're finished, click Mark as done.",
       "description2": "Completing will remove your access and notify the plan author that your feedback is complete.",

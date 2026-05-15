@@ -17,8 +17,8 @@ import {
   Modal,
   Radio,
   Text,
-  Tooltip,
-  TooltipTrigger,
+  DialogTrigger,
+  Popover
 } from "react-aria-components";
 
 // GraphQL
@@ -32,7 +32,6 @@ import {
   PlanDocument,
   PlanFeedbackStatusDocument,
   RelatedWorksByPlanStatsDocument,
-  UserRole,
 } from "@/generated/graphql";
 import {
   publishPlanAction,
@@ -44,7 +43,7 @@ import {
 import { ContentContainer, LayoutWithPanel, SidebarPanel } from "@/components/Container";
 import ErrorMessages from "@/components/ErrorMessages";
 import { DmpIcon } from "@/components/Icons";
-import { FormSelect, RadioGroupComponent } from "@/components/Form";
+import { FormSelect, RadioGroupComponent, TransitionLink } from "@/components/Form";
 import PageHeaderWithTitleChange from "@/components/PageHeaderWithTitleChange";
 import OverviewSection from "@/components/OverviewSection";
 import NotificationHeader from "@/components/Notification";
@@ -154,6 +153,7 @@ const PlanOverviewPage: React.FC = () => {
   const [isEditingPlanStatus, setIsEditingPlanStatus] = useState(false);
   // Track whether the question should be read-only based on plan status and user role
   const [isReadOnly, setIsReadOnly] = useState<boolean>(false);
+  const [isFeedbackRequested, setIsFeedbackRequested] = useState<boolean>(false);
   const [planData, setPlanData] = useState<PlanOverviewInterface>({
     id: null,
     dmpId: "",
@@ -252,6 +252,19 @@ const PlanOverviewPage: React.FC = () => {
       (collaborator) =>
         collaborator?.user?.id === myId &&
         collaborator?.accessLevel === "PRIMARY"
+    );
+  }, [me?.me?.id, data?.plan?.project?.collaborators]);
+
+  // Project collaborators who have 'EDIT' access level will see the "Update" section card button text since they can
+  // edit the question
+  const isEditCollaborator = useMemo(() => {
+    const myId = me?.me?.id;
+    if (!myId || !data?.plan?.project?.collaborators) return false;
+
+    return data.plan.project.collaborators.some(
+      (collaborator) =>
+        collaborator?.user?.id === myId &&
+        collaborator?.accessLevel === "EDIT"
     );
   }, [me?.me?.id, data?.plan?.project?.collaborators]);
 
@@ -512,6 +525,7 @@ const PlanOverviewPage: React.FC = () => {
         feedbackStatus: data?.plan?.feedbackStatus?.status ?? "NONE",
       });
       setPlanVisibility(data.plan.visibility as PlanVisibility);
+      setIsReadOnly(data?.plan?.readOnly || false);
     }
   }, [data]);
 
@@ -522,13 +536,8 @@ const PlanOverviewPage: React.FC = () => {
   }, [queryError]);
 
   useEffect(() => {
-    const adminStatus =
-      !!(me?.me?.affiliation?.uri &&
-        me.me.affiliation.uri === data?.plan?.planCreator?.affiliation?.uri &&
-        (me.me.role === UserRole.Admin || me.me.role === UserRole.Superadmin));
-
-    setIsReadOnly(planData?.feedbackStatus === 'REQUESTED' && adminStatus);
-  }, [me?.me?.affiliation?.uri, me?.me?.role, planData, planData?.orgId]);
+    setIsFeedbackRequested(planData?.feedbackStatus === 'REQUESTED');
+  }, [planData]);
 
 
   // Memoize checklist items to prevent unnecessary recalculations
@@ -621,7 +630,6 @@ const PlanOverviewPage: React.FC = () => {
     return <div>{Global("messaging.loading")}...</div>;
   }
 
-  const hasFeedbackRequest = feedbackData?.planFeedbackStatus?.status === "REQUESTED";
   return (
     <>
       <PageHeaderWithTitleChange
@@ -654,7 +662,7 @@ const PlanOverviewPage: React.FC = () => {
       />
 
       <LayoutWithPanel>
-        {hasFeedbackRequest && isReadOnly && (
+        {isFeedbackRequested && (
           <NotificationHeader
             title={t("feedbackNotification.title")}
             actionButtonText={t("feedbackNotification.markAsDone")}
@@ -691,6 +699,8 @@ const PlanOverviewPage: React.FC = () => {
                 linkHref={FUNDINGS_URL}
                 linkText={t("funding.edit")}
                 linkAriaLabel={t("funding.edit")}
+                disabled={isReadOnly}
+                hoverMessage={t('messages.readOnlyLinkMessage')}
               >
                 <p>{planData.funderName}</p>
               </OverviewSection>
@@ -701,6 +711,8 @@ const PlanOverviewPage: React.FC = () => {
                 linkHref={MEMBERS_URL}
                 linkText={t("members.edit")}
                 linkAriaLabel={t("members.edit")}
+                disabled={isReadOnly}
+                hoverMessage={t('messages.readOnlyLinkMessage')}
               >
                 <p>
                   {planData.members.map((member, index) => (
@@ -721,7 +733,9 @@ const PlanOverviewPage: React.FC = () => {
                 linkHref={RELATED_WORKS_URL}
                 linkText={t("relatedWorks.edit")}
                 linkAriaLabel={t("relatedWorks.edit")}
-                includeLink={!!rwPlanStats?.hasPublishedPlan}
+                includeLink={!!rwPlanStats?.hasPublishedPlan || !isReadOnly}
+                disabled={isReadOnly}
+                hoverMessage={t('messages.readOnlyLinkMessage')}
               >
                 {!rwPlanStats?.hasPublishedPlan && <p>{t("relatedWorks.publish")}</p>}
                 {rwPlanStats?.hasPublishedPlan && rwPlanStats?.pendingCount != null && <p>{t("relatedWorks.pendingCount", { count: rwPlanStats?.pendingCount })}</p>}
@@ -735,8 +749,10 @@ const PlanOverviewPage: React.FC = () => {
                 ? routePath("projects.dmp.versionedSection", { projectId, dmpId: planId, versionedSectionId: Number(sectionId) })
                 : routePath("projects.dmp.customSection", { projectId, dmpId: planId, csid: String(sectionId) });
 
+              const canEditSections = !isReadOnly || isEditCollaborator;
+
               // Determine the action label for the section button
-              const sectionActionLabel = (hasFeedbackRequest && isReadOnly)
+              const sectionActionLabel = !canEditSections
                 ? t("sections.view")
                 : versionedSection.answeredQuestions === 0
                   ? t("sections.start")
@@ -774,7 +790,7 @@ const PlanOverviewPage: React.FC = () => {
                         </span>
                       </p>
                     </div>
-                    <Link
+                    <TransitionLink
                       href={sectionRoute}
                       aria-label={t("sections.updateSection", {
                         title: versionedSection.title,
@@ -782,7 +798,7 @@ const PlanOverviewPage: React.FC = () => {
                       className={"react-aria-Button react-aria-Button--secondary"}
                     >
                       {sectionActionLabel}
-                    </Link>
+                    </TransitionLink>
                   </div>
                 </section>
               )
@@ -803,13 +819,27 @@ const PlanOverviewPage: React.FC = () => {
                   {Global("buttons.preview")}
                 </NextLink>
               )}
-
-              <Button
-                onPress={() => setIsModalOpen(true)}
-                isDisabled={hasFeedbackRequest && isReadOnly}
-              >
-                {Global("buttons.publish")}
-              </Button>
+              {!isReadOnly ? (
+                <Button
+                  onPress={() => setIsModalOpen(true)}
+                >
+                  {Global("buttons.publish")}
+                </Button>
+              ) : (
+                <DialogTrigger>
+                  <Button
+                    aria-disabled={isReadOnly}
+                    className="link-disabled"
+                  >
+                    {Global("buttons.publish")}
+                  </Button>
+                  <Popover placement="bottom" className="popover--inverse">
+                    <Dialog className="popoverContent">
+                      {t('messages.readOnlyLinkMessage')}
+                    </Dialog>
+                  </Popover>
+                </DialogTrigger>
+              )}
             </div>
             <div className="side-panel-content">
               <div className={`panelRow mb-5`}>
@@ -835,20 +865,19 @@ const PlanOverviewPage: React.FC = () => {
                     {Global("links.request")}
                   </NextLink>
                 ) : (
-                  <TooltipTrigger delay={0}>
+                  <DialogTrigger>
                     <Button
-                      className={styles.sidePanelLinkDisabled}
+                      className="link-disabled"
                       aria-disabled={true}
                     >
                       {Global("links.request")}
                     </Button>
-                    <Tooltip
-                      placement="bottom"
-                      className={`${styles.tooltip} py-2 px-2`}
-                    >
-                      {t("status.feedback.disabledTooltip")}
-                    </Tooltip>
-                  </TooltipTrigger>
+                    <Popover placement="bottom" className="popover--inverse">
+                      <Dialog className="popoverContent">
+                        {t('messages.readOnlyLinkMessage')}
+                      </Dialog>
+                    </Popover>
+                  </DialogTrigger>
                 )}
 
               </div>
@@ -866,6 +895,7 @@ const PlanOverviewPage: React.FC = () => {
                       items={planStatusOptions}
                       onChange={(selected) => setPlanStatus(selected as PlanStatus)}
                       selectedKey={planStatus ?? planData.status}
+
                     >
                       {(item) => <ListBoxItem key={item.id}>{item.name}</ListBoxItem>}
                     </FormSelect>
@@ -878,14 +908,30 @@ const PlanOverviewPage: React.FC = () => {
                     <h3>{t("status.title")}</h3>
                     <p>{toTitleCase(planData.status)}</p>
                   </div>
-                  <Button
-                    className="button-as-link"
-                    data-testid="updateLink"
-                    onPress={handlePlanStatusChange}
-                    aria-label={t("status.select.changeLabel")}
-                  >
-                    {Global("buttons.linkUpdate")}
-                  </Button>
+                  {!isReadOnly ? (
+                    <Button
+                      className="button-as-link"
+                      data-testid="updateLink"
+                      onPress={handlePlanStatusChange}
+                      aria-label={t("status.select.changeLabel")}
+                    >
+                      {Global("buttons.linkUpdate")}
+                    </Button>
+                  ) : (
+                    <DialogTrigger>
+                      <Button
+                        className="link-disabled"
+                        aria-disabled={true}
+                      >
+                        {Global("buttons.linkUpdate")}
+                      </Button>
+                      <Popover placement="bottom" className="popover--inverse">
+                        <Dialog className="popoverContent">
+                          {t('messages.readOnlyLinkMessage')}
+                        </Dialog>
+                      </Popover>
+                    </DialogTrigger>
+                  )}
                 </div>
               )}
 
@@ -894,19 +940,36 @@ const PlanOverviewPage: React.FC = () => {
                   <h3>{t("status.publish.title")}</h3>
                   <p>{planData.registered ? PUBLISHED : UNPUBLISHED}</p>
                 </div>
-                <Link
-                  href="#"
-                  className="side-panel-link"
-                  onPress={() => setIsModalOpen(true)}
-                  aria-label={t("status.publish.label")}
-                >
-                  {t("status.publish.label")}
-                </Link>
+                {!isReadOnly ? (
+                  <Link
+                    href="#"
+                    className="side-panel-link"
+                    onPress={() => setIsModalOpen(true)}
+                    aria-label={t("status.publish.label")}
+                  >
+                    {t("status.publish.label")}
+                  </Link>
+                ) : (
+                  <DialogTrigger>
+                    <Button
+                      className="link-disabled"
+                      aria-disabled={true}
+                    >
+                      {t("status.publish.label")}
+                    </Button>
+                    <Popover placement="bottom" className="popover--inverse">
+                      <Dialog className="popoverContent">
+                        {t('messages.readOnlyLinkMessage')}
+                      </Dialog>
+                    </Popover>
+                  </DialogTrigger>
+                )}
               </div>
               <div className={`panelRow mb-5`}>
                 <div>
                   <h3>{t("status.download.title")}</h3>
                 </div>
+                {/**Any user who can access the plan can download the plan */}
                 <NextLink
                   href={DOWNLOAD_URL}
                   className="side-panel-link"

@@ -19,6 +19,7 @@ import PageHeader from "@/components/PageHeader";
 import { Card } from "@/components/Card/card";
 import { ContentContainer, LayoutWithPanel, SidebarPanel } from "@/components/Container";
 import OverviewSection from "@/components/OverviewSection";
+import { TransitionLink } from "@/components/Form";
 import Loading from "@/components/Loading";
 
 // Utils and other
@@ -379,13 +380,13 @@ const ProjectOverviewPage: React.FC = () => {
                       </Link>
                     </div>
                     <div className="plan-action">
-                      <Link
+                      <TransitionLink
                         href={routePath("projects.dmp.show", { projectId, dmpId: String(plan.id) })}
                         className="react-aria-Button react-aria-Button--primary"
                         aria-label={ProjectOverview("updatePlan")}
                       >
                         {ProjectOverview("update")}
-                      </Link>
+                      </TransitionLink>
                     </div>
                   </div>
                 </Card>
@@ -414,16 +415,6 @@ const ProjectOverviewPage: React.FC = () => {
                   {ProjectOverview("status.collaboration.link_text")}
                 </Link>
               </div>
-              {/** Feedback
-              <div className={`panelRow mb-5`}>
-                <div>
-                  <h3>{ProjectOverview('status.feedback.title')}</h3>
-                </div>
-                <Link className={"side-panel-link"} href={FEEDBACK_URL} aria-label={Global('links.request')} >
-                  {Global('links.request')}
-                </Link >
-              </div >
-*/}
             </div>
           </div>
         </SidebarPanel>
