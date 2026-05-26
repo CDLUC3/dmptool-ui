@@ -8,6 +8,7 @@
 - Added `UpdateAffiliation` and `AffiliationById` queries [#203]
 
 ## Updated
+- Updated `handleRevoke` method in `ProjectsProjectColalboration` component so that we revert the optimistic update if errors are returned as part of the successful response [#228]
 - Updated `ProjectsProjectCollaboration`, `ProjectsProjectFunding`, `ProjectsProjectMembers` and `ProjectsProjectDetail` to query `project` resolver instead to get its data, so that we can easily get `readOnly` data. Updated those components to disable or remove form fields, CTAs and links in `readOnly` mode [#245]
 - Updated `ProjectOverviewPage` to change links to `view` versions, disable some CTAs,hide `related works` section, and change plan button text to "View plan in `readOnly` mode [#245]
 - Updated `AccessLevelRadioGroup` and `ResearchDomainCascadingDropdown` to pass in a `isDisabled` prop so that we can disable the radio buttons for readOnly mode [#245]

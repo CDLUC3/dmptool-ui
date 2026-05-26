@@ -282,6 +282,8 @@ const ProjectsProjectCollaboration = () => {
         // This will flatten field-level errors into an array of strings, since we have no form fields here
         // and want to display any errors at the top of the page
         const errs = extractErrors(normalizedErrors);
+        // revert optimistic update if mutation fails
+        setProjectCollaborators(originalCollaborators);
         setErrorMessages(errs);
       } else {
         //Successfully updated
