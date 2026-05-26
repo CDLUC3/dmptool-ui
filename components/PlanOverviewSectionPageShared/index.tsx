@@ -169,16 +169,16 @@ export const PlanOverviewSectionPageShared: React.FC<{ config: SectionPageConfig
   }, [sectionData]);
 
   // Determine if user is a collaborator with edit access - this will allow them to see "Update" on the section cards and access the question modals even if the plan is read-only
-  const isEditCollaborator = useMemo(() => {
-    const myId = me?.me?.id;
-    if (!myId || !planData?.plan?.project?.collaborators) return false;
+const isEditCollaborator = useMemo(() => {
+  const myId = me?.me?.id;
+  if (!myId || !planData?.plan?.project?.collaborators) return false;
 
-    return planData.plan.project.collaborators.some(
-      (collaborator) =>
-        collaborator?.user?.id === myId &&
-        collaborator?.accessLevel === "EDIT"
-    );
-  }, [me?.me?.id, planData?.plan?.project?.collaborators]);
+  return planData.plan.project.collaborators.some(
+    (collaborator) =>
+      String(collaborator?.user?.id) === String(myId) && // Double-checking that the collaborator relationship is valid and has EDIT access
+      collaborator?.accessLevel === "EDIT"
+  );
+}, [me?.me?.id, planData?.plan?.project?.collaborators]);
 
   // Determine if user is an Org Admin that can see feedback request notifications
   const isOrgAdmin = useIsOrgAdmin(

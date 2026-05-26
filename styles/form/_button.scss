@@ -391,9 +391,9 @@ button.link-disabled,
 input[type="button"].link-disabled,
 input[type="reset"].link-disabled,
 input[type="submit"].link-disabled {
-  @include button-link;
   color: var(--slate-400);
   cursor: not-allowed;
+  @include button-link;
 
   &[data-focus-visible],
   &:focus-visible,
