@@ -152,9 +152,10 @@
       "markAsDone": "Mark as done",
       "confirmModal": {
         "title": "Are you sure you want to complete your feedback?",
-        "description1": "The following will happen:",
-        "description2": "You will no longer be able to comment",
-        "description3": "The plan author will be notified that you have completed your feedback"
+        "description": "You will no longer be able to leave comments. You will still be able to view the plan.",
+        "emailPromptLabel": "Do you want to send an email to the requestor that the feedback is completed?",
+        "emailPromptYes": "Yes, send an email",
+        "emailPromptNo": "No, skip sending email"
       },
       "markAsDoneSuccess": "You have successfully completed your feedback."
     }
