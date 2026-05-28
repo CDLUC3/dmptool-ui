@@ -39,7 +39,9 @@
 
 ## Fixed
 - Fixed issue with Feedback Notification headers displaying for any collaborator on the Plan Overview, Section and Question pages. It should only display to Org Admins and Super Admins. Added shared isOrgAdmin hook for pages. [#249]
+
 ## Chore
+- Updated `@apollo/client` to `v4.2.0`, `dompurify` to `v3.4.6`, `@types/react` to `v18.3.29`, `react` to `v19.2.6`, `react-dom` to `v19.2.6`, `@types/node` to `v24.12.4`, `@dmptool/types` to `v3.1.5`, `postcss` to `v8.5.15`, and `tmp` to `v0.2.7`. Removed `@eslint-plugin-kit` override, and added `qs` override to address security vulnerability. Updated `zod` to `v4.4.3` to match the version in updated `@dmptool/types`, otherwise I get errors.
 - Updated version of `sanitize-html` to `v2.17.4` [#225]
 - Updated version of `next-intl` to `v4.9.2` and `icu-minify` to `v4.11.1`, and added `override` of `postcss` to `v8.5.10` to address security vulnerabilities.
 - Updated `sanitize-html` to `v2.17.3` and `dompurify` to `v3.4.0` due to security issues. Also, updated `prettier` to `v3.8.3` and `@dmptool/types` to `v3.1.4`, and `lodash` override to `v.4.18.1`. Removed overrides for `minimatch` and `test-exclude`.
@@ -128,7 +130,6 @@
 - Fixed bug where the published status on `/template/[templateId]` did not match that on the template cards at `/template` for the `unpublished changes` state. Added a shared hook for determining the correct status text [#875]
 
 ## Chore
-- Updated `@apollo/client` to `v4.2.0`, `dompurify` to `v3.4.6`, `@types/react` to `v18.3.29`, `react` to `v19.2.6`, `react-dom` to `v19.2.6`, `@types/node` to `v24.12.4`, `@dmptool/types` to `v3.1.5`, and `postcss` to `v8.5.15`. Removed `@eslint-plugin-kit` override, and added `qs` override to address security vulnerability. Updated `zod` to `v4.4.3` to match the version in updated `@dmptool/types`, otherwise I get errors.
 - Updated version of `sanitize-html` to `v2.17.4` to address critical security vulnerability
 - Updated `cypress` to `v15.15.0`. This also addresses a high security vulnerability in `systeminformation` dependency. Also, updated the date in `LICENSE.md` file to the current year.
 - Updated `@apollo/client` to `v4.1.7`, `@apollo/client-integration-nextjs` to `v0.14.5`, `next` to `v16.2.3`, `next-intl` to `v4.9.1`,`@types/node` to `v24.12.2`, `@types/sanitize-html` to `v2.16.1`, `brace-expansion` to `v2.1.0` and `minimatch` to `v10.2.5`, and `next` to `v16.2.6`.
