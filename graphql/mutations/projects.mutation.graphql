@@ -20,3 +20,36 @@ mutation UpdateProject($input: UpdateProjectInput!) {
     }
   }
 }
+
+mutation ProjectImport($input: ProjectImportInput) {
+  projectImport(input: $input) {
+    abstractText
+    collaborators {
+      email
+      id
+      projectMemberId
+      user {
+        givenName
+        surName
+        role
+      }
+    }
+    endDate
+    errors {
+      general
+    }
+    id
+    startDate
+    researchDomain {
+      parentResearchDomain {
+        childResearchDomains {
+          id
+          name
+          uri
+        }
+        name
+        id
+      }
+    }
+  }
+}

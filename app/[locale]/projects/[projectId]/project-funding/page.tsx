@@ -23,7 +23,7 @@ import {
   ContentContainer,
   LayoutContainer,
 } from "@/components/Container"
-import { RadioGroupComponent } from '@/components/Form';
+import { RadioGroupComponent, TransitionButton } from '@/components/Form';
 
 // Utils and other
 import { routePath } from '@/utils/routes';
@@ -38,6 +38,7 @@ const ProjectsCreateProjectFunding = () => {
   const { projectId } = params;
 
   const [hasFunding, setHasFunding] = useState("yes");
+  const [formSubmitted, setFormSubmitted] = useState(false);
 
   // localization keys
   const Global = useTranslations('Global');
@@ -46,12 +47,13 @@ const ProjectsCreateProjectFunding = () => {
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
+    setFormSubmitted(true);
+
     fundingsApiQuery({
       variables: {
         projectId: Number(projectId),
       }
     }).then(({ data }) => {
-
       // NOTE: In the previous step, we selected a funder. So when we get to
       // this point, we already have an affiliated funder. Using assertion here
       // to tell typescript we definltely have a value here.
@@ -61,7 +63,7 @@ const ProjectsCreateProjectFunding = () => {
       if (funder!.apiTarget && hasFunding === 'yes') {
         router.push(routePath('projects.create.projects.search', {
           projectId: projectId as string,
-        }, { affId: String(data?.project?.fundings?.[0]?.affiliation?.id) }));
+        }, { affId: String(data?.project?.fundings?.[0]?.affiliation?.id), id: String(data?.project?.fundings?.[0]?.id) }));
       } else {
         router.push(routePath('projects.project.info', {
           projectId: projectId as string,
@@ -115,13 +117,14 @@ const ProjectsCreateProjectFunding = () => {
 
             </RadioGroupComponent>
 
-            <Button
+            <TransitionButton
               type="submit"
-              className=""
+              loadingLabel={Global('buttons.loading')}
+              showLoading={true}
+              isDisabled={formSubmitted}
             >
               {Global('buttons.continue')}
-            </Button>
-
+            </TransitionButton>
           </Form>
 
         </ContentContainer>

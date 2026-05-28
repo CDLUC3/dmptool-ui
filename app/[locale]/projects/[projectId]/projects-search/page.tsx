@@ -1,12 +1,11 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import {
   Breadcrumb,
   Breadcrumbs,
-  Button,
   Form,
   Input,
   Label,
@@ -14,27 +13,30 @@ import {
   Text,
   TextField
 } from "react-aria-components";
-import { useLazyQuery, useQuery } from '@apollo/client/react';
+
+// GraphQL
+import { useLazyQuery, useMutation, useQuery } from '@apollo/client/react';
 import {
   ExternalProject,
   SearchExternalProjectsDocument,
-  AffiliationByIdDocument
+  AffiliationByIdDocument,
+  ProjectImportDocument
 } from '@/generated/graphql';
+
+// Components
 import PageHeader from "@/components/PageHeader";
 import {
   ContentContainer,
   LayoutContainer,
 } from "@/components/Container";
-import { routePath } from '@/utils/routes';
+import ErrorMessages from '@/components/ErrorMessages';
 
+// Utils and other
+import { routePath } from '@/utils/routes';
+import { useToast } from "@/context/ToastContext";
+import logECS from '@/utils/clientLogger';
 import styles from './ProjectsCreateProjectProjectSearch.module.scss';
 import { TransitionButton } from '@/components/Form';
-
-
-const formatRoleLabel = (roleUri: string): string => {
-  const segment = roleUri.split('/').pop() ?? roleUri;
-  return segment.charAt(0).toUpperCase() + segment.slice(1);
-};
 
 
 const ProjectsCreateProjectProjectSearch = () => {
@@ -43,6 +45,9 @@ const ProjectsCreateProjectProjectSearch = () => {
   const searchParams = useSearchParams();
   const { projectId } = params;
   const affiliationId = searchParams.get('affId');
+  const toastState = useToast();
+  //For scrolling to error in page
+  const errorRef = useRef<HTMLDivElement | null>(null);
 
   // Localization
   const Global = useTranslations('Global');
@@ -57,17 +62,19 @@ const ProjectsCreateProjectProjectSearch = () => {
   // State to track if a search has been performed
   const [hasSearched, setHasSearched] = useState<boolean>(false);
   const [projects, setProjects] = useState<ExternalProject[]>([]);
+  const [errorMessages, setErrorMessages] = useState<string[]>([]);
 
   const [searchExternalProjectsQuery, { loading, error }] = useLazyQuery(SearchExternalProjectsDocument);
 
   // Get affiliation URI for affiliationId passed from previous page
-  const { data: affiliationData, loading: affiliationLoading, error: affiliationError } = useQuery(AffiliationByIdDocument, {
+  const { data: affiliationData } = useQuery(AffiliationByIdDocument, {
     variables: {
       affiliationId: Number(affiliationId)
     }
   });
 
-  console.log("***Affiliation Data:", affiliationData);
+  // Initialize useProjectImportMutation for importing project details after selection
+  const [projectImportMutation] = useMutation(ProjectImportDocument);
 
   // Handles the Search button click
   const handleSearch = async (e: React.FormEvent) => {
@@ -119,17 +126,62 @@ const ProjectsCreateProjectProjectSearch = () => {
     }
   };
 
-  const handleSelectProject = (project: ExternalProject) => {
-    setProjectID(project.fundings?.[0]?.funderProjectNumber ?? '');
-    setProjectName(project.title ?? '');
-    setAwardYear(project.startDate?.slice(0, 4) ?? '');
-    setPrincipalInvestigator(
-      project.members
-        ?.map((m) => `${m.givenName ?? ''} ${m.surName ?? ''}`.trim())
-        .filter(Boolean)
-        .join('; ') ?? ''
-    );
+  const handleSelectProject = async (project: ExternalProject): Promise<void> => {
+    setErrorMessages([]);
+
+    try {
+      const response = await projectImportMutation({
+        variables: {
+          input: {
+            project: {
+              id: Number(projectId),
+              title: project.title ?? '',
+              abstractText: project.abstractText ?? undefined,
+              startDate: project.startDate ?? undefined,
+              endDate: project.endDate ?? undefined,
+            },
+            funding: project.fundings?.map((f) => ({
+              projectId: Number(projectId),
+              affiliationId: affiliationData!.affiliationById!.uri as string,
+              funderProjectNumber: f?.funderProjectNumber ?? undefined,
+              grantId: f?.grantId ?? undefined,
+              funderOpportunityNumber: f?.funderOpportunityNumber ?? undefined,
+            })) ?? [],
+            members: project.members?.map((m) => ({
+              projectId: Number(projectId),
+              affiliationId: m?.affiliationId ?? undefined,
+              givenName: m?.givenName ?? undefined,
+              surName: m?.surName ?? undefined,
+              orcid: m?.orcid ?? undefined,
+              email: m?.email ?? undefined,
+            })) ?? [],
+          },
+        },
+      });
+
+      const errors = response.data?.projectImport?.errors;
+      const hasErrors = errors && Object.values(errors)
+        .filter((v) => v && v !== 'ProjectErrors')
+        .length > 0;
+
+      if (hasErrors) {
+        setErrorMessages([errors?.general ?? t('messages.errors.selectedFailed')]);
+      } else {
+        toastState.add(
+          t('messages.success.projectSelected', { projectTitle: project.title || '' }),
+          { type: 'success' }
+        );
+        router.push(routePath('projects.show', { projectId: projectId as string }));
+      }
+    } catch (error) {
+      logECS('error', 'projectImportMutation', {
+        error,
+        url: { path: routePath('projects.create.projects.search', { projectId: projectId as string }) },
+      });
+      setErrorMessages([t('messages.errors.selectedFailed')]);
+    }
   };
+
 
   const handleAddProjectManually = (): Promise<void> => {
     return new Promise(() => {
@@ -155,6 +207,7 @@ const ProjectsCreateProjectProjectSearch = () => {
       />
       <LayoutContainer>
         <ContentContainer>
+          <ErrorMessages errors={errorMessages} ref={errorRef} />
           {/* Search Form */}
           <Form onSubmit={handleSearch} aria-labelledby="search-section">
             <section id="search-section" className={styles.searchSection}>
@@ -239,7 +292,8 @@ const ProjectsCreateProjectProjectSearch = () => {
                       const grantId = project.fundings?.[0]?.grantId ?? '—';
 
                       const investigators = project.members
-                        ?.map((m) => `${m.givenName ?? ''} ${m.surName ?? ''}`.trim())
+                        ?.filter((m) => m.role?.some((r) => r?.includes('/investigation')))
+                        .map((m) => `${m.givenName ?? ''} ${m.surName ?? ''}`.trim())
                         .filter(Boolean)
                         .join('; ') ?? '—';
 
@@ -271,13 +325,13 @@ const ProjectsCreateProjectProjectSearch = () => {
                             </dl>
                           </div>
                           <div className={styles.projectSelect}>
-                            <Button
+                            <TransitionButton
                               className="secondary select-button"
                               onPress={() => handleSelectProject(project)}
                               aria-label={`Select ${project.title}`}
                             >
                               {Global('buttons.select')}
-                            </Button>
+                            </TransitionButton>
                           </div>
                         </div>
                       );

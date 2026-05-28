@@ -131,6 +131,14 @@
     "buttons": {
       "addProjectManually": "Add project manually"
     },
+    "messages": {
+      "success": {
+        "projectSelected": "Project {projectTitle} selected. Redirecting to project overview page."
+      },
+      "error": {
+        "selectedFailed": "Failed to select project. Please try again."
+      }
+    },
     "headings": {
       "notInThisList": "Not in this list?",
       "noProjectFound": "No projects found",
@@ -138,7 +146,7 @@
     },
     "descriptions": {
       "addProjectManually": "If your project isn’t shown, you can add the details manually.",
-      "noProjectsFound": "We couldn’t find any projects matching your search. Try again with different details."
+      "noProjectFound": "We couldn’t find any projects matching your search. Try again with different details."
     },
     "definitions": {
       "awardId": "Award ID",

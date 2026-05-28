@@ -131,6 +131,14 @@
     "buttons": {
       "addProjectManually": "Add project manually"
     },
+    "messages": {
+      "success": {
+        "projectSelected": "Projeto {projectTitle} selecionado. Redirecionando para a página de visão geral do projeto."
+      },
+      "error": {
+        "selectedFailed": "Falha ao selecionar o projeto. Por favor, tente novamente."
+      }
+    },
     "headings": {
       "notInThisList": "Not in this list?",
       "noProjectFound": "No projects found",
