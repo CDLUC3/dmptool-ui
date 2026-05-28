@@ -125,6 +125,42 @@
       "radioNoDescription": "You can still proceed. If you receive funding later, you'll be able to link it to this project."
     }
   },
+  "ProjectsCreateProjectProjectSearch": {
+    "title": "Search for projects",
+    "description": "Enter details of your project to help find it in this funder's database. The more you enter the more likely it is to find your project.",
+    "buttons": {
+      "addProjectManually": "Add project manually"
+    },
+    "headings": {
+      "notInThisList": "Not in this list?",
+      "noProjectFound": "No projects found",
+      "projectsFound": "{count} projects found"
+    },
+    "descriptions": {
+      "addProjectManually": "If your project isn’t shown, you can add the details manually.",
+      "noProjectsFound": "We couldn’t find any projects matching your search. Try again with different details."
+    },
+    "definitions": {
+      "awardId": "Award ID",
+      "grantId": "Grant ID",
+      "principalInvestigator": "Principal Investigator(s)"
+    },
+    "form": {
+      "projectId": "Project ID",
+      "projectIdPlaceholder": "Enter project or award ID...",
+      "projectNamePlaceHolder": "Enter Project Name/Title...",
+      "projectAwardYearPlaceholder": "Enter award year...",
+      "projectPrincipalInvestigatorPlaceholder": "Enter PI Name or Profile ID...",
+      "projectIdHelpText": "Project or award ID, for example 5R01AI12345-02",
+      "projectName": "Project name",
+      "projectNameDescription": "All or part of the project name/title, for example Particle Physics",
+      "projectAwardYear": "Award year",
+      "projectPrincipalInvestigator": "Principal Investigator",
+      "projectPrincipalInvestigatorDescription": "PI names or profile IDs. Separate multiple items with semicolons (;).",
+      "ariaProjectIdInput": "Project ID input",
+      "ariaProjectIdHelpText": "Enter the project ID or grant number associated with your research project. This can be the unique identifier assigned by your funder or institution, such as a grant number, award ID, or project code. If you have multiple identifiers, try entering different ones to find your project."
+    }
+  },
   "ProjectsProjectDetail": {
     "title": "Project Details",
     "description": "Enter your Project Details, then hit Save below",

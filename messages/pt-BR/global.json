@@ -91,7 +91,7 @@
     "headingRelatedActions": "Ações relacionadas",
     "primaryEmailDesc": "Este e-mail será usado para seu login de conta. Ele também pode ser usado para redefinições de senha.",
     "SSODesc": "Este endereço de e-mail é gerenciado por cdl.edu e conectado à instituição.",
-    "notificationsDesc": "Este endereço de e-mail será usado para notificações DMP. <manage>Gerencie suas notificações</manage>.",
+    "notificationsDesc": "Este endereço de e-mail será usado para notificações DMP. &lt;manage&gt;Gerencie suas notificações&lt;/manage&gt;.",
     "aliasEmailDesc": "Os endereços de e-mail do pseudônimo podem ser usados para ajudar outros a encontrar você, por exemplo, se eles quiserem compartilhar um DMP com você.",
     "linkMakePrimary": "Endereço de e-mail principal",
     "helpTextForAddAlias": "Você receberá um e-mail para confirmar esta adição",
@@ -114,8 +114,8 @@
         "affiliationValidation": "O nome da instituição não pode ficar em branco e deve ter pelo menos 2 caracteres",
         "otherAffiliationValidation": "Outro nome de instituição não pode estar em branco e deve ter pelo menos 2 caracteres",
         "errorUpdatingProfile": "Erro ao atualizar perfil",
-        "errorSettingPrimaryEmail": "Erro ao definir o e-mail principal",
-        "errorAddingNewEmail": "Erro ao adicionar novo e-mail",
+        "errorSettingPrimaryEmail": "Error when setting primary email",
+        "errorAddingNewEmail": "Error when adding new email",
         "errorDeletingEmail": "Erro ao excluir e-mail"
       }
     }
@@ -507,16 +507,16 @@
         }
       },
       "feedbackEmail": {
-        "label": "E-mail de feedbacks",
+        "label": "Feedback email addresses",
         "placeholder": "Digite o e-mail de feedback",
-        "description": "Insira os e-mails separados por vírgulas.",
+        "description": "Enter emails separated by commas",
         "helpText": "Por padrão este é o endereço de e-mail do contato organizações, mas você pode alterar o endereço de e-mail de feedback",
-        "invalidEmail": "Um ou mais endereços de e-mail são inválidos. Por favor, verifique e corrija os endereços de e-mail."
+        "invalidEmail": "One or more email addresses are invalid. Please check and try again."
       },
       "feedbackText": {
-        "label": "Mensagem exibida aos usuários solicitando feedback",
-        "description": "Forneça informações aos usuários sobre o que esperar ao solicitarem feedback sobre seu DMP",
-        "helpText": "Mensagem de exemplo: Um bibliotecário de dados do Escritório da Presidência da Universidade da Califórnia (ucop.edu) responderá à sua solicitação em até 48 horas. Caso tenha dúvidas relacionadas a esta ação, por favor, entre em contato conosco pelo e-mail <mailtoLink>dmptool@ucop.edu.</mailtoLink>",
+        "label": "Message displayed to users requesting feedback",
+        "description": "Dê informações aos usuários sobre o que esperar quando eles solicitarem feedback sobre seu DMP",
+        "helpText": "Sample message: A data librarian from University of California, Office of the President (ucop.edu) will respond to your request within 48 hours. If you have questions pertaining to this action please contact us at <mailtoLink>dmptool@ucop.edu.</mailtoLink>",
         "placeholder": "Digitar texto de feedback"
       }
     },
@@ -529,7 +529,7 @@
     },
     "messages": {
       "success": {
-        "feedbackOptionsUpdated": "Opções de feedback atualizadas com sucesso"
+        "feedbackOptionsUpdated": "Feedback options updated successfully"
       }
     }
   },
@@ -668,8 +668,8 @@
         "guidanceTextUpdated": "Texto de orientação para {tagName} atualizado com sucesso. As alterações precisam ser publicadas para terem efeito."
       },
       "errors": {
-        "unableToAddOrganization": "Não foi possível adicionar a organização.",
-        "unableToRemoveOrganization": "Não foi possível remover a organização."
+        "unableToAddOrganization": "Unable to add organization",
+        "unableToRemoveOrganization": "Unable to remove organization"
       }
     },
     "labels": {
@@ -683,10 +683,12 @@
       "admin": "Administrador",
       "templates": "Modelos",
       "template": "Modelo",
+      "templateCustomizations": "Customizable templates",
       "createTemplate": "Criar um modelo",
       "selectExistingTemplate": "Selecionar um modelo existente",
       "templateHistory": "Histórico do modelo",
       "section": "Seção",
+      "customizeSection": "Personalizar seção",
       "addNewSection": "Adicionar uma nova seção",
       "updateSection": "Seção de atualização",
       "editSection": "Editar seção",
@@ -714,7 +716,7 @@
       "createText": "Criar texto",
       "editText": "Editar Texto",
       "group": "grupo",
-      "relatedWorks": "Obras Relacionadas"
+      "relatedWorks": "Published Research Outputs"
     },
     "form": {
       "yesLabel": "Sim",
@@ -732,15 +734,16 @@
     "dataFormat": "Formato de dados:",
     "dataVolume": "Volume dos dados",
     "opensInNewTab": "Abrir em uma nova aba",
-    "noGuidanceAvailable": "A organização selecionada não tem orientação para esta pergunta",
+    "noGuidanceAvailable": "The selected organization has no guidance for this question",
     "buttons": {
       "search": "Buscar",
-      "searching": "Pesquisando",
+      "searching": "Searching...",
       "lookup": "Procurar",
       "select": "Select",
+      "selecting": "Selecting...",
       "next": "Seguinte",
       "save": "Salvar",
-      "saving": "Salvando",
+      "saving": "Saving...",
       "saveAndAdd": "Salvar e adicionar",
       "saveAndUpdate": "Salvar e atualizar",
       "saveChanges": "Salvar as alterações",
@@ -748,7 +751,7 @@
       "remove": "Remover",
       "removeAll": "Remover todos os",
       "confirm": "Confirmação",
-      "confirming": "Confirmando",
+      "confirming": "Confirming...",
       "change": "Mudança",
       "cancel": "Cancelar",
       "linkUpdate": "Atualização",
@@ -765,19 +768,21 @@
       "close": "Fechar",
       "closeModal": "Fechar modal",
       "loadMore": "Carregar mais",
-      "loading": "Carregando",
+      "loading": "Loading...",
       "addAnother": "Adicionar mais",
       "goToProject": "Ir para o projeto",
       "back": "Voltar",
-      "backToList": "Voltar para a lista",
+      "backToList": "Back to list",
       "add": "Adicionar",
       "customize": "Personalizar",
       "applyFilter": "Aplicar filtro(s)",
-      "applyFilterSingular": "Aplicar filtro",
+      "applyFilterSingular": "Apply filter",
       "moreInfo": "Mais informações",
       "lessInfo": "Menos informações",
       "createNewPlan": "Criar nova DMP",
-      "view": "Ver"
+      "deletingCustomization": "Excluindo personalização...",
+      "deleteCustomization": "Excluir personalização",
+      "view": "View"
     },
     "labels": {
       "required": "Obrigatório",
@@ -786,40 +791,42 @@
       "startDate": "Data de início",
       "endDate": "Data final",
       "funderSearch": "Pesquisar por nome do financiador",
+      "nameSearch": "Search by name",
       "requiredField": "Marcar como obrigatório?",
       "previousPage": "Página anterior",
       "nextPage": "Próxima página",
       "name": "Nome:",
       "url": "URL:",
-      "unit": "Unidade",
-      "description": "Descrição",
+      "unit": "Unit",
+      "description": "Descrição:",
       "searchTerm": "Termo para pesquisa",
       "title": "Título",
-      "dataFlags": "Sinalizadores de dados",
-      "outputType": "Tipo de saída",
-      "repositories": "Repositórios",
-      "metadataStandards": "Padrões de metadados",
-      "licenses": "Licenças",
-      "initialAccessLevels": "Níveis de acesso inicial",
-      "anticipatedReleaseDate": "Data prevista de lançamento",
-      "anticipatedFileSize": "Tamanho de arquivo previsto",
-      "fileSizeUnit": "Unidade de tamanho do arquivo",
-      "selectAnItem": "Selecione um item",
-      "mayContainSensitiveData": "Pode conter dados sensíveis?",
-      "mayContainPersonalData": "Pode conter informações pessoalmente identificáveis?",
-      "additionalComments": "Comentários adicionais"
+      "dataFlags": "Data Flags",
+      "outputType": "Output Type",
+      "repositories": "Repositories",
+      "metadataStandards": "Metadata Standards",
+      "licenses": "Licenses",
+      "initialAccessLevels": "Initial Access Levels",
+      "anticipatedReleaseDate": "Anticipated Release Date",
+      "anticipatedFileSize": "Anticipated File Size",
+      "fileSizeUnit": "File size unit",
+      "selectAnItem": "Select an item",
+      "mayContainSensitiveData": "May contain sensitive data?",
+      "mayContainPersonalData": "May contain personally identifiable information?",
+      "additionalComments": "Additional comments"
     },
     "helpText": {
       "searchHelpText": "Pesquisar por organização de pesquisa, estação de campo ou laboratório, descrição de modelo, etc.",
       "funderSearch": "Pesquisar por organização de pesquisa, nome do financiador ou palavras-chave relacionadas.",
-      "dataFlags": "Marque todas as afirmações que são verdadeiras sobre o conjunto de dados"
+      "dataFlags": "Mark all of the statements that are true about the dataset"
     },
     "descriptions": {
       "requiredFieldDescription": "Atenção aos usuários que isto é considerado uma questão necessária para este template DMP pela organização. Os usuários poderão optar por ignorar isso dentro da ferramenta e não será necessário responder antes de movê-la."
     },
     "placeholders": {
       "funderSearch": "Insira o nome da pasta",
-      "enterComment": "Insira seu comentário"
+      "nameSearch": "Enter name...",
+      "enterComment": "Enter your comment"
     },
     "links": {
       "clearFilter": "limpar filtro",
@@ -835,10 +842,12 @@
     },
     "messaging": {
       "loading": "Baixar",
-      "loadingPage": "Carregando página...",
-      "submitting": "Enviando...",
-      "submittingSROnly": "Enviando solicitação de feedback...",
-      "pageLoaded": "Página carregada",
+      "loadingPage": "Loading page...",
+      "submitting": "Submitting...",
+      "submittingSROnly": "Submitting feedback request...",
+      "save": "Save",
+      "saving": "Saving...",
+      "pageLoaded": "Page loaded",
       "noItemsFound": "Nenhum item encontrado",
       "somethingWentWrong": "Ocorreu um erro. Tente novamente.",
       "resultsText": "Os resultados {name} correspondem à sua pesquisa",
@@ -853,7 +862,7 @@
         "questionUnexpectedFormat": "Formato inesperado para question.json.",
         "questionJSONFParseFailed": "JSON.parse falhou.",
         "requiredField": "{field} é obrigatório",
-        "errorParsingData": "Erro ao analisar dados"
+        "errorParsingData": "Error parsing data"
       },
       "numDisplaying": "Mostrando {num} de {total}",
       "unsavedChangesWarning": "Você tem alterações não salvas. Tem certeza que deseja sair desta página?"
@@ -864,7 +873,11 @@
       "logic": "Lógica"
     },
     "headings": {
-      "preview": "Pré-visualizar"
+      "preview": "Pré-visualizar",
+      "requirementsByFunder": "Requirements by {funder}",
+      "guidanceFromOrg": "Guidance from {org}",
+      "requirements": "Requirements",
+      "guidance": "Guidance"
     },
     "version": "Versão",
     "questionTypes": {
@@ -884,12 +897,13 @@
       "dateRange": "Intervalo de datas",
       "filteredSearch": "Pesquisa com filtros",
       "table": "Tabela",
-      "affiliationSearch": "Busca de afiliação"
+      "affiliationSearch": "Busca de afiliação",
+      "researchOutputTable": "Research output table"
     },
     "status": {
-      "published": "Publicado",
-      "draft": "Rascunho",
-      "unpublishedChanges": "Alterações não publicadas",
+      "published": "Published",
+      "draft": "Draft",
+      "unpublishedChanges": "Unpublished changes",
       "notStarted": "Não iniciado"
     }
   },

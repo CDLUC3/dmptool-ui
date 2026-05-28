@@ -32,15 +32,10 @@ import { routePath } from '@/utils/routes';
 const ProjectsCreateProjectFunding = () => {
   const router = useRouter();
   const params = useParams();
+
   const [fundingsApiQuery] = useLazyQuery(ProjectFundingsApiDocument, {});
 
   const { projectId } = params;
-  const PROJECT_SEARCH_URL = routePath('projects.create.projects.search', {
-    projectId: projectId as string,
-  });
-  const PROJECT_EDIT_URL = routePath('projects.project.info', {
-    projectId: projectId as string,
-  });
 
   const [hasFunding, setHasFunding] = useState("yes");
 
@@ -56,17 +51,22 @@ const ProjectsCreateProjectFunding = () => {
         projectId: Number(projectId),
       }
     }).then(({ data }) => {
-      let nextUrl: string = PROJECT_EDIT_URL;
 
       // NOTE: In the previous step, we selected a funder. So when we get to
       // this point, we already have an affiliated funder. Using assertion here
       // to tell typescript we definltely have a value here.
       const fundings = data!.project!.fundings!;
       const funder = fundings[0]!.affiliation;
+
       if (funder!.apiTarget && hasFunding === 'yes') {
-        nextUrl = PROJECT_SEARCH_URL;
+        router.push(routePath('projects.create.projects.search', {
+          projectId: projectId as string,
+        }, { affId: String(data?.project?.fundings?.[0]?.affiliation?.id) }));
+      } else {
+        router.push(routePath('projects.project.info', {
+          projectId: projectId as string,
+        }));
       }
-      router.push(nextUrl);
     });
   }
 

@@ -1,16 +1,16 @@
 {
   "RelatedWorksPlanPage": {
-    "title": "Obras Relacionadas",
-    "description": "Combine trabalhos relacionados ao seu projeto de pesquisa.",
+    "title": "Published Research Outputs",
+    "description": "Match published research outputs to your research project.",
     "buttons": {
-      "addRelatedWorkManually": "Adicionar trabalho relacionado"
+      "addRelatedWorkManually": "Add Published Research Output"
     }
   },
   "RelatedWorksProjectPage": {
-    "title": "Obras Relacionadas",
-    "description": "Combine trabalhos relacionados ao seu projeto de pesquisa.",
+    "title": "Published Research Outputs",
+    "description": "Match published research outputs to your research project.",
     "buttons": {
-      "addRelatedWorkManually": "Adicionar trabalho relacionado"
+      "addRelatedWorkManually": "Add Published Research Output"
     }
   },
   "RelatedWorksList": {
@@ -35,21 +35,21 @@
     },
     "messages": {
       "PENDING": {
-        "noResults": "Nenhum trabalho pendente encontrado.\nVocê não tem nenhum trabalho pendente para revisar.",
-        "noFilteredResults": "Nenhum trabalho pendente corresponde aos filtros atuais."
+        "noResults": "No pending outputs found.\n You have no pending outputs to review.",
+        "noFilteredResults": "No pending outputs match your current filters."
       },
       "ACCEPTED": {
-        "noResults": "Nenhuma obra relacionada encontrada.\nVocê ainda não marcou nenhuma obra como relacionada. Confira a aba Pendente para começar.",
-        "noFilteredResults": "Nenhuma obra relacionada corresponde aos filtros atuais."
+        "noResults": "No published outputs found.\nYou haven’t marked any outputs as published yet. Check the Pending tab to get started.",
+        "noFilteredResults": "No published outputs match your current filters."
       },
       "REJECTED": {
-        "noResults": "Nenhuma obra descartada encontrada.\nVocê não descartou nenhuma obra.",
-        "noFilteredResults": "Nenhum trabalho rejeitado corresponde aos filtros atuais."
+        "noResults": "No rejected outputs found.\nYou haven’t rejected any outputs.",
+        "noFilteredResults": "No rejected outputs match your current filters."
       }
     }
   },
   "RelatedWorksListItem": {
-    "title": "Abrir a versão publicada deste serviço",
+    "title": "Open the published version of this output",
     "buttons": {
       "expand": "Expanda",
       "collapse": "Recolher",
@@ -72,11 +72,11 @@
       "funders": "Finalizações"
     },
     "instructions": {
-      "review": "Revise a informação sobre este trabalho potencialmente relacionado abaixo, e aceite-a como relacionada ou rejeite-a como não relacionada.",
+      "review": "Review the information about this candidate published research output below, and then accept it as published or reject it as unrelated.",
       "actions": {
-        "PENDING": "Se você rejeitar este trabalho relacionado, você poderá recuperá-lo mais tarde na guia Rejeitada.",
-        "ACCEPTED": "Se você rejeitar este trabalho relacionado, você poderá recuperá-lo mais tarde na guia Rejeitada.",
-        "REJECTED": "Você pode recuperar este trabalho relacionado aceitando-o, você verá em seguida na aba Aceitada."
+        "PENDING": "If you reject this output, you can recover it later from the Rejected tab.",
+        "ACCEPTED": "If you reject this output, you can recover it later from the Rejected tab.",
+        "REJECTED": "Você pode recuperar esta saída aceitando-a, você verá então na aba Aceitada."
       }
     }
   },
@@ -88,9 +88,9 @@
       "LOW": "baixo"
     },
     "status": {
-      "PENDING": "Pendente",
-      "ACCEPTED": "Aceito",
-      "REJECTED": "Rejeitados"
+      "PENDING": "Pending",
+      "ACCEPTED": "Published",
+      "REJECTED": "Rejected"
     },
     "workType": {
       "ARTICLE": "artigo",
@@ -133,25 +133,25 @@
   },
   "RelatedWorksTabs": {
     "tabs": {
-      "pending": "Pendente",
-      "accepted": "Aceito",
-      "rejected": "Rejeitados"
+      "pending": "Pending",
+      "accepted": "Published",
+      "rejected": "Rejected"
     }
   },
   "AddRelatedWorkProjectPage": {
-    "title": "Add related work",
-    "description": "To manually add a related work to a project, select a plan, then enter work's DOI below and click Lookup to find it. Click Accept to add the work to the project. You can run multiple searches on this page to add more than one work."
+    "title": "Add Published Research Output",
+    "description": "To manually add a published research output to a project, select a plan, then enter output's DOI below and click Lookup to find it. Click Accept to add the output to the project. You can run multiple searches on this page to add more than one output."
   },
   "AddRelatedWorkPlanPage": {
-    "title": "Add related work",
-    "description": "To manually add a related work to a plan, enter work's DOI below and click Lookup to find it. Click Accept to add the work to the plan. You can run multiple searches on this page to add more than one work."
+    "title": "Add Published Research Output",
+    "description": "To manually add a published research output to a plan, enter output's DOI below and click Lookup to find it. Click Accept to add the output to the plan. You can run multiple searches on this page to add more than one output."
   },
   "RelatedWorksAdd": {
-    "title": "Add related work",
+    "title": "Adicionar Saída de Pesquisa Publicada",
     "searchLabel": "Digital Object Identifier (DOI)",
     "planSelectLabel": "Select Plan",
-    "planSelectDescription": "Select a plan to add a related work.",
-    "searchDescription": "Enter the work's DOI in either short or URL form (e.g. <code>10.1000/182</code> or <code>https://doi.org/10.1000/182</code>), then click Lookup.",
+    "planSelectDescription": "Select a plan to add a published research output.",
+    "searchDescription": "Enter the output's DOI in either short or URL form (e.g. &lt;code&gt;10.1000/182&lt;/code&gt; or &lt;code&gt;https://doi.org/10.1000/182&lt;/code&gt;), then click Lookup.",
     "invalidDoi": "Please enter a valid DOI",
     "buttons": {
       "expand": "Expand",
@@ -165,9 +165,9 @@
       "type": "Type",
       "source": "Source",
       "dateReviewed": "Reviewed"
-    },
-    "RelatedWorksSelect": {
-      "planSelectPlaceholder": "All Plans"
     }
+  },
+  "RelatedWorksSelect": {
+    "planSelectPlaceholder": "Todos os Planos"
   }
 }

@@ -151,7 +151,7 @@
     "searchLabel": "Digital Object Identifier (DOI)",
     "planSelectLabel": "Select Plan",
     "planSelectDescription": "Select a plan to add a published research output.",
-    "searchDescription": "Enter the output's DOI in either short or URL form (e.g. <code>10.1000/182</code> or <code>https://doi.org/10.1000/182</code>), then click Lookup.",
+    "searchDescription": "Enter the output's DOI in either short or URL form (e.g. &lt;code&gt;10.1000/182&lt;/code&gt; or &lt;code&gt;https://doi.org/10.1000/182&lt;/code&gt;), then click Lookup.",
     "invalidDoi": "Please enter a valid DOI",
     "buttons": {
       "expand": "Expand",

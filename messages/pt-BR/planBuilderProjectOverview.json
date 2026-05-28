@@ -13,19 +13,19 @@
     "grantId": "ID do Financiamento",
     "edit": "Alterar",
     "editProject": "Editar Detalhes do Projeto",
-    "viewProject": "Ver detalhes do projeto",
+    "viewProject": "View project details",
     "fundings": "Fontes de financiamento",
     "fundingCount": "{count, plural, =0 {0 fontes de financiamento} one {1 fonte de financiamento} other {{count} fontes de financiamento}}",
     "fundingInfo": "{name} ({id})",
     "editFundings": "Editar detalhes do financiamento",
     "editFundingDetails": "Editar detalhes do financiamento",
-    "viewFundingDetails": "Ver detalhes do financiamento",
+    "viewFundingDetails": "View funding details",
     "projectMembers": "Membros de projeto",
     "memberCount": "{count, plural, =0 {0 membros da equipe} one {1 membro da equipe} other {{count} membros da equipe}}",
     "memberInfo": "{name} ({role})",
     "editMembers": "Editar Detalhes do Projeto",
     "editProjectMembers": "Editar Detalhes do Projeto",
-    "viewProjectMembers": "Ver membros do projeto",
+    "viewProjectMembers": "View project members",
     "outputCount": "{count, plural, =0 {0 outputs} one {1 output} other {{count} outputs}}",
     "editOutputs": "Editar resultados de pesquisa",
     "editResearchOutputs": "Editar resultados de pesquisa",
@@ -54,7 +54,7 @@
     "created": "Criado",
     "messages": {
       "errorGettingProject": "Erro ao obter detalhes do projeto",
-      "readOnlyLinkMessage": "Apenas colaboradores do projeto podem editar este projeto."
+      "readOnlyLinkMessage": "Only project collaborators can edit this project."
     },
     "status": {
       "collaboration": {
@@ -69,12 +69,12 @@
       }
     },
     "relatedWorks": {
-      "title": "Related works for this project",
+      "title": "Published research outputs for this project",
       "pendingCount": "{count} pending outputs",
       "acceptedCount": "{count} accepted outputs",
       "edit": "Adjust for this project",
-      "publish": "Publish a plan to start adding published outputs to your project",
-      "view": "Ver trabalhos relacionados a este projeto"
+      "view": "View related works for this project",
+      "publish": "Publish a plan to start adding published outputs to your project"
     }
   },
   "ProjectsListPage": {
@@ -125,6 +125,42 @@
       "radioNoDescription": "Você ainda pode prosseguir. Se receber fundos mais tarde, você poderá vinculá-lo a este projeto."
     }
   },
+  "ProjectsCreateProjectProjectSearch": {
+    "title": "Search for projects",
+    "description": "Enter details of your project to help find it in this funder's database. The more you enter the more likely it is to find your project.",
+    "buttons": {
+      "addProjectManually": "Add project manually"
+    },
+    "headings": {
+      "notInThisList": "Not in this list?",
+      "noProjectFound": "No projects found",
+      "projectsFound": "{count} projects found"
+    },
+    "descriptions": {
+      "addProjectManually": "If your project isn’t shown, you can add the details manually.",
+      "noProjectsFound": "We couldn’t find any projects matching your search. Try again with different details."
+    },
+    "definitions": {
+      "awardId": "Award ID",
+      "grantId": "Conceder ID",
+      "principalInvestigator": "Principal Investigator(s)"
+    },
+    "form": {
+      "projectId": "Project ID",
+      "projectIdPlaceholder": "Enter project or award ID...",
+      "projectNamePlaceHolder": "Enter Project Name/Title...",
+      "projectAwardYearPlaceholder": "Enter award year...",
+      "projectPrincipalInvestigatorPlaceholder": "Enter PI Name or Profile ID...",
+      "projectIdHelpText": "Project or award ID, for example 5R01AI12345-02",
+      "projectName": "Project name",
+      "projectNameDescription": "All or part of the project name/title, for example Particle Physics",
+      "projectAwardYear": "Award year",
+      "projectPrincipalInvestigator": "Principal Investigator",
+      "projectPrincipalInvestigatorDescription": "PI names or profile IDs. Separate multiple items with semicolons (;).",
+      "ariaProjectIdInput": "Project ID input",
+      "ariaProjectIdHelpText": "Enter the project ID or grant number associated with your research project. This can be the unique identifier assigned by your funder or institution, such as a grant number, award ID, or project code. If you have multiple identifiers, try entering different ones to find your project."
+    }
+  },
   "ProjectsProjectDetail": {
     "title": "Detalhes do Projeto",
     "description": "Digite seus Detalhes do projeto e, em seguida, clique em Salvar abaixo",
@@ -172,7 +208,7 @@
       "success": {
         "projectUpdated": "Detalhes do projeto atualizados com sucesso"
       },
-      "readOnlyLinkMessage": "Apenas colaboradores do projeto com níveis de acesso de Coproprietário ou Primário podem editar este projeto."
+      "readOnlyLinkMessage": "Somente colaboradores do projeto com níveis de acesso principal ou proprietário pode editar este projeto."
     }
   },
   "ProjectsProjectFundingEdit": {
@@ -251,7 +287,7 @@
         "errorGettingMembers": "Erro ao obter modelos"
       },
       "noMembers": "Nenhum membro encontrado",
-      "readOnlyLinkMessage": "Apenas colaboradores do projeto com níveis de acesso de Coproprietário ou Primário podem editar este projeto."
+      "readOnlyLinkMessage": "Somente colaboradores do projeto com níveis de acesso principal ou proprietário pode editar este projeto."
     }
   },
   "ProjectsProjectMembersEdit": {
@@ -344,44 +380,43 @@
     "title": "Convide pessoas e gerencie o acesso",
     "description": "Quando você convidar uma pessoa, enviaremos um e-mail para essa pessoa convidando-a para visualizar o seu plano.",
     "removeCollaborator": "Remover este membro significa que ele não poderá mais colaborar com este plano.",
-    "saveCollaboratorAccess": "A atualização do nível de acesso de {name} alterará as permissões dele para este plano para {accessLevel}.",
-    "primaryDesignationChangeWarning": "Atribuir {name} como Proprietário Primário transferirá seu status de Proprietário Primário para eles. O nível de acesso do Proprietário Primário atual será alterado para Co-Proprietário. Deseja continuar?",
-    "canEdit": "Editora",
-    "canComment": "Comentarista",
-    "own": "Coproprietário",
-    "primary": "Proprietário primário",
+    "saveCollaboratorAccess": "Updating the access level for {name} will change their permissions for this plan to {accessLevel}.",
+    "primaryDesignationChangeWarning": "Assigning {name} as Primary Owner will transfer your Primary Owner status to them. The access level for the current Primary Owner will be changed to Co-Owner. Do you want to continue?",
+    "canEdit": "Editor",
+    "canComment": "Commenter",
+    "own": "Co-Owner",
+    "primary": "Primary Owner",
     "cancelRemoval": "Cancelar a remoção do colaborador de projeto {name}",
     "deleteCollaborator": "Excluir colaborador do projeto {name}",
     "canEditPlanFor": "Pode editar o plano de {name}",
     "canCommentPlanFor": "Pode comentar no plano {name}",
-    "canCoOwnPlanFor": "Plano de copropriedade para {name}",
-    "canPrimaryOwnPlanFor": "Plano de propriedade primária para {name}",
-    "saveAccessFor": "Salvar acesso para {name}",
-    "canOwnPlanFor": "Próprio plano para {name}",
+    "canCoOwnPlanFor": "Can co-own plan for {name}",
+    "canPrimaryOwnPlanFor": "Can own plan for {name}",
     "revokeAccessFor": "Revogar o acesso para {name}",
+    "saveAccessFor": "Salvar acesso para {name}",
     "deleteInviteFor": "Excluir convite para {name}",
     "resendInviteFor": "Reenviar convite para {name}",
     "headings": {
       "hasAccess": "Estas pessoas atualmente têm acesso a este plano",
       "removeCollaborator": "Remover colaborador do projeto",
-      "saveCollaboratorAccessUpdate": "Salvar atualização de acesso do colaborador",
+      "saveCollaboratorAccessUpdate": "Save collaborator access update",
       "pendingInvites": "Estas pessoas não aceitaram o convite ainda",
-      "accessLevels": "O que significam estes níveis de acesso?"
+      "accessLevels": "What do these access levels mean?"
     },
     "accessLevels": {
-      "primary": "Proprietário primário",
+      "primary": "Primary Owner",
       "edit": "Editor",
-      "comment": "Comentarista",
-      "own": "Coproprietário",
-      "primaryDescription": "O usuário é capaz de realizar todas as ações em um Plano (geralmente restrito ao proprietário/criador), e sua afiliação é a organização associada ao projeto",
-      "editDescription": "Tem direitos de edição aos planos (pode escrever e editar os planos).",
+      "comment": "Commenter",
+      "own": "Co-Owner",
+      "primaryDescription": "The user is able to perform all actions on a Plan (typically restricted to the owner/creator), and their affiliation is the organization associated with the project",
+      "editDescription": "Has edit-rights to the plans (can write and edit the plans).",
       "commentDescription": "Has read-rights to the project (can view and comment on the plans).",
       "ownDescription": "Has admin-rights to the project (can invite other users, edit the plans, and publish them)."
     },
     "buttons": {
       "invite": "Convidar colaboradores",
       "isDeleting": "está Apagando...",
-      "revoke": "Revogar",
+      "revoke": "Revoke",
       "deleteInvite": "Convite de exclusão",
       "resend": "Reenviar"
     },
@@ -396,8 +431,8 @@
         "updatedAccess": "Acesso atualizado com sucesso de {name} para {accessLevel}"
       },
       "errors": {
-        "mustBePrimaryOwnerOrSuperAdmin": "Apenas o proprietário principal ou um Super Admin pode atualizar os níveis de acesso do Proprietário Principal.",
-        "cannotRemoveOwnPrimary": "Há sempre um proprietário principal para o projeto. Por favor, atribua outro proprietário principal antes de remover este membro."
+        "mustBePrimaryOwnerOrSuperAdmin": "Only the primary owner or a Super Admin can update Primary Owner access levels.",
+        "cannotRemoveOwnPrimary": "Deve haver sempre um proprietário principal para o projeto. Por favor, atribua outro proprietário principal antes de remover este membro."
       }
     }
   },
@@ -452,7 +487,7 @@
     "links": {
       "learnMoreAboutCreditTaxonomy": "Saiba mais sobre cada função"
     },
-    "memberRolesDescription": "<p>Selecione a(s) função(ões) que devem ser exibida(s) nas citações referentes a este membro do projeto no DMP.</p><p>Utilizamos um padrão ANSI/NISO denominado CRediT, uma taxonomia de 14 funções de propriedade da comunidade, que pode ser utilizada para descrever os principais tipos de contribuições tipicamente realizadas na produção e publicação de resultados de pesquisa, tais como artigos científicos.</p><p><link>Saiba mais sobre a Taxonomia CRediT ↗</link></p>"
+    "memberRolesDescription": "<p>Select the role(s) that should be displayed within citations for this project member with the DMP.</p><p>We use an ANSI/NISO standard called CRediT, a community-owned 14 role taxonomy that can be used to describe the key types of contributions typically made to the production and publication of research output such as research articles.</p><p><link>Learn more about CRediT Taxonomy ↗</link></p>"
   },
   "ProjectsProjectMemberCreate": {
     "title": "Adicionar um novo membro ao projeto",
