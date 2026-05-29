@@ -12,11 +12,11 @@
       "comment": "Comentário"
     },
     "headings": {
-      "comments": "Comments",
-      "leaveAComment": "Deixar uma foto",
+      "comments": "Comentários",
+      "leaveAComment": "Deixar um comentário",
       "requirementsBy": "Requisitos de {funder}",
-      "introduction": "Introduction",
-      "question": "Question"
+      "introduction": "Introdução",
+      "question": "Pergunta"
     },
     "labels": {
       "saveAnswer": "Resposta salva",
@@ -33,7 +33,7 @@
       "commentTooltip": "Você precisa salvar uma resposta antes que os usuários possam comentar.",
       "guidanceBy": "Guia por {name}",
       "funderSampleText": "{funder} texto de exemplo",
-      "organizationSampleText": "{org} sample text",
+      "organizationSampleText": "{org} texto de exemplo",
       "participantsWillBeNotified": "Os participantes serão notificados assim que submetidos.",
       "planTitlePlaceholder": "Inserir título do plano"
     },
@@ -64,11 +64,11 @@
       "questionsAnswered": "questões respondidas",
       "update": "Atualização",
       "updateSection": "Editar: {title}",
-      "view": "View"
+      "view": "Visualizar"
     },
     "errors": {
       "invalidDmpId": "ID DMP inválido: O ID de DMP fornecido não é válido.",
-      "invalidSectionId": "Invalid section ID: The section ID provided is not valid.",
+      "invalidSectionId": "ID de seção inválido: O ID de seção fornecido não é válido.",
       "sectionNotFound": "Seção não encontrada: Esta seção não pertence ao plano atual."
     },
     "status": {
@@ -145,11 +145,11 @@
       "editTitle": "Editar título do plano"
     },
     "feedbackNotification": {
-      "description": "You can view this plan and leave comments.",
-      "title": "Feedback mode",
-      "description1": "You can view this plan and leave comments. When you're finished, click Mark as done.",
-      "description2": "Completing will remove your access and notify the plan author that your feedback is complete.",
-      "markAsDone": "Mark as done",
+      "description": "Você pode visualizar este plano e deixar comentários.",
+      "title": "Modo de feedback",
+      "description1": "Você pode visualizar este plano e deixar comentários. Quando terminar, clique em Marcar como concluído.",
+      "description2": "Concluir irá remover seu acesso e notificar o autor do plano que seu feedback está completo.",
+      "markAsDone": "Marcar como concluído",
       "confirmModal": {
         "title": "Tem certeza de que deseja finalizar seu feedback?",
         "description": "Você não poderá mais deixar comentários. Você ainda poderá visualizar o plano.",
@@ -164,8 +164,8 @@
     "title": "Plano: Selecione um modelo DMP",
     "description": "Selecione um modelo para usar ao criar o DMP.",
     "checkbox": {
-      "filterByFunderLabel": "Filter by funder or organization",
-      "filterByFunderDescription": "Select if you want to only see templates by your funder or organization.",
+      "filterByFunderLabel": "Filtrar por financiador ou organização",
+      "filterByFunderDescription": "Selecione se você deseja ver apenas modelos do seu financiador ou organização.",
       "filterByBestPracticesLabel": "Filtrar por melhores práticas",
       "filterByBestPracticesDescription": "Selecione se você quer ver apenas os modelos de boas práticas"
     },
@@ -218,8 +218,8 @@
     "messages": {
       "success": {
         "questionSaved": "Detalhes da pergunta salvos com sucesso",
-        "questionDeleted": "Question detail successfully deleted",
-        "saved": "Changes successfully saved"
+        "questionDeleted": "Detalhes da pergunta excluídos com sucesso",
+        "saved": "Alterações salvas com sucesso."
       },
       "unsavedChanges": "Alterações não Salvas",
       "savedJustNow": "Salvo há pouco",
@@ -238,8 +238,8 @@
     "admin": "Administrador",
     "edited": "editado",
     "feedbackNotification": {
-      "title": "Feedback mode",
-      "description": "Você pode ver este plano e deixar comentários."
+      "title": "Modo de feedback",
+      "description": "Você pode visualizar este plano e deixar comentários."
     }
   },
   "ProjectsProjectFunding": {
@@ -250,23 +250,23 @@
       "errors": {
         "funderNumberNotFound": "Número do projeto fino não encontrado."
       },
-      "readOnlyLinkMessage": "Only plan collaborators with Co-Owner or Primary access levels can edit this project."
+      "readOnlyLinkMessage": "Apenas colaboradores do plano com níveis de acesso Co-Owner ou Primary podem editar este projeto."
     }
   },
   "ProjectsProjectPlanFeedback": {
     "title": "Solicitar feedback",
-    "anonymousOrgName": "your institution",
-    "description": "You can get feedback from {orgName} support team, please read the following message from the team.",
+    "anonymousOrgName": "Sua instituição",
+    "description": "Você pode obter feedback da equipe de suporte da {orgName}; por favor, leia a seguinte mensagem da equipe.",
     "form": {
-      "label": "Send message to {orgName} support team",
+      "label": "Enviar mensagem para a equipe de suporte da {orgName}",
       "placeholder": "Você pode rever o meu plano para quaisquer erros",
       "submitButton": "Solicitar feedback",
       "successMessage": "Pedido enviado",
-      "primaryAccessRequired": "Only the primary owner can request feedback"
+      "primaryAccessRequired": "Apenas o proprietário principal pode solicitar feedback"
     },
     "messages": {
       "success": {
-        "feedbackRequested": "Feedback successfully requested"
+        "feedbackRequested": "Feedback solicitado com sucesso"
       }
     },
     "teamFeedback": {
@@ -346,35 +346,35 @@
     }
   },
   "GuidancePanel": {
-    "bestPractice": "Best practice guidance",
-    "guidanceSourceSelection": "Select guidance source",
-    "removeGuidanceSource": "Remove guidance source",
-    "addGuidanceSource": "Add guidance source",
-    "addOrganization": "Customize best practice",
-    "showMore": "Show more",
-    "showLess": "Show less",
-    "more": "More",
-    "less": "Less",
+    "bestPractice": "Orientações sobre melhores práticas",
+    "guidanceSourceSelection": "Selecione a fonte de orientação",
+    "removeGuidanceSource": "Remover fonte de orientação",
+    "addGuidanceSource": "Adicionar fonte de orientação",
+    "addOrganization": "Personalizar as melhores práticas",
+    "showMore": "Mostrar mais",
+    "showLess": "Mostrar menos",
+    "more": "Mais",
+    "less": "Menos",
     "ariaLabels": {
-      "showMoreGuidance": "Show more guidance sources",
-      "showLessGuidance": "Show less guidance sources"
+      "showMoreGuidance": "Mostrar mais fontes de orientação",
+      "showLessGuidance": "Mostrar menos fontes de orientação"
     },
     "headings": {
-      "addMore": "Add more",
-      "customizeBestPractice": "Customize Best Practice",
-      "currentlyDisplaying": "Currently displaying"
+      "addMore": "Adicionar mais",
+      "customizeBestPractice": "Personalizar Melhores Práticas",
+      "currentlyDisplaying": "Exibindo atualmente"
     }
   },
   "SectionPage": {
     "errors": {
-      "errorLoadingSections": "Error loading questions {message}"
+      "errorLoadingSections": "Erro ao carregar perguntas {message}"
     },
     "navigation": {
-      "planNavigation": "Plan Navigation",
-      "planOverview": "Plan Overview"
+      "planNavigation": "Navegação do Plano",
+      "planOverview": "Visão Geral do Plano"
     },
     "headings": {
-      "noQuestionsAvailable": "No Questions Available"
+      "noQuestionsAvailable": "Nenhuma pergunta disponível"
     },
     "noQuestionsInSection": "Não há perguntas disponíveis nesta seção."
   }

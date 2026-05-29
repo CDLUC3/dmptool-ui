@@ -114,8 +114,8 @@
         "affiliationValidation": "O nome da instituição não pode ficar em branco e deve ter pelo menos 2 caracteres",
         "otherAffiliationValidation": "Outro nome de instituição não pode estar em branco e deve ter pelo menos 2 caracteres",
         "errorUpdatingProfile": "Erro ao atualizar perfil",
-        "errorSettingPrimaryEmail": "Error when setting primary email",
-        "errorAddingNewEmail": "Error when adding new email",
+        "errorSettingPrimaryEmail": "Erro ao definir o e-mail principal",
+        "errorAddingNewEmail": "Erro ao adicionar novo e-mail",
         "errorDeletingEmail": "Erro ao excluir e-mail"
       }
     }
@@ -507,16 +507,16 @@
         }
       },
       "feedbackEmail": {
-        "label": "Feedback email addresses",
+        "label": "E-mail de feedbacks",
         "placeholder": "Digite o e-mail de feedback",
-        "description": "Enter emails separated by commas",
+        "description": "Insira os e-mails separados por vírgulas.",
         "helpText": "Por padrão este é o endereço de e-mail do contato organizações, mas você pode alterar o endereço de e-mail de feedback",
-        "invalidEmail": "One or more email addresses are invalid. Please check and try again."
+        "invalidEmail": "Um ou mais endereços de e-mail são inválidos. Por favor, verifique e corrija os endereços de e-mail."
       },
       "feedbackText": {
-        "label": "Message displayed to users requesting feedback",
+        "label": "Mensagem exibida aos usuários solicitando feedback",
         "description": "Dê informações aos usuários sobre o que esperar quando eles solicitarem feedback sobre seu DMP",
-        "helpText": "Sample message: A data librarian from University of California, Office of the President (ucop.edu) will respond to your request within 48 hours. If you have questions pertaining to this action please contact us at <mailtoLink>dmptool@ucop.edu.</mailtoLink>",
+        "helpText": "Mensagem de exemplo: Um bibliotecário de dados do Escritório da Presidência da Universidade da Califórnia (ucop.edu) responderá à sua solicitação em até 48 horas. Caso tenha dúvidas relacionadas a esta ação, por favor, entre em contato conosco pelo e-mail <mailtoLink>dmptool@ucop.edu.</mailtoLink>",
         "placeholder": "Digitar texto de feedback"
       }
     },
@@ -529,7 +529,7 @@
     },
     "messages": {
       "success": {
-        "feedbackOptionsUpdated": "Feedback options updated successfully"
+        "feedbackOptionsUpdated": "Opções de feedback atualizadas com sucesso"
       }
     }
   },
@@ -668,8 +668,8 @@
         "guidanceTextUpdated": "Texto de orientação para {tagName} atualizado com sucesso. As alterações precisam ser publicadas para terem efeito."
       },
       "errors": {
-        "unableToAddOrganization": "Unable to add organization",
-        "unableToRemoveOrganization": "Unable to remove organization"
+        "unableToAddOrganization": "Não foi possível adicionar a organização.",
+        "unableToRemoveOrganization": "Não foi possível remover a organização."
       }
     },
     "labels": {
@@ -683,7 +683,7 @@
       "admin": "Administrador",
       "templates": "Modelos",
       "template": "Modelo",
-      "templateCustomizations": "Customizable templates",
+      "templateCustomizations": "Modelos personalizáveis",
       "createTemplate": "Criar um modelo",
       "selectExistingTemplate": "Selecionar um modelo existente",
       "templateHistory": "Histórico do modelo",
@@ -716,7 +716,7 @@
       "createText": "Criar texto",
       "editText": "Editar Texto",
       "group": "grupo",
-      "relatedWorks": "Published Research Outputs"
+      "relatedWorks": "Obras Relacionadas"
     },
     "form": {
       "yesLabel": "Sim",
@@ -734,16 +734,16 @@
     "dataFormat": "Formato de dados:",
     "dataVolume": "Volume dos dados",
     "opensInNewTab": "Abrir em uma nova aba",
-    "noGuidanceAvailable": "The selected organization has no guidance for this question",
+    "noGuidanceAvailable": "A organização selecionada não tem orientação para esta pergunta",
     "buttons": {
       "search": "Buscar",
-      "searching": "Searching...",
+      "searching": "Pesquisando...",
       "lookup": "Procurar",
       "select": "Select",
-      "selecting": "Selecting...",
+      "selecting": "Selecionando...",
       "next": "Seguinte",
       "save": "Salvar",
-      "saving": "Saving...",
+      "saving": "Salvando...",
       "saveAndAdd": "Salvar e adicionar",
       "saveAndUpdate": "Salvar e atualizar",
       "saveChanges": "Salvar as alterações",
@@ -751,7 +751,7 @@
       "remove": "Remover",
       "removeAll": "Remover todos os",
       "confirm": "Confirmação",
-      "confirming": "Confirming...",
+      "confirming": "Confirmando...",
       "change": "Mudança",
       "cancel": "Cancelar",
       "linkUpdate": "Atualização",
@@ -768,21 +768,21 @@
       "close": "Fechar",
       "closeModal": "Fechar modal",
       "loadMore": "Carregar mais",
-      "loading": "Loading...",
+      "loading": "Carregando...",
       "addAnother": "Adicionar mais",
       "goToProject": "Ir para o projeto",
       "back": "Voltar",
-      "backToList": "Back to list",
+      "backToList": "Voltar para a lista",
       "add": "Adicionar",
       "customize": "Personalizar",
       "applyFilter": "Aplicar filtro(s)",
-      "applyFilterSingular": "Apply filter",
+      "applyFilterSingular": "Aplicar filtro",
       "moreInfo": "Mais informações",
       "lessInfo": "Menos informações",
       "createNewPlan": "Criar nova DMP",
       "deletingCustomization": "Excluindo personalização...",
       "deleteCustomization": "Excluir personalização",
-      "view": "View"
+      "view": "Visualizar"
     },
     "labels": {
       "required": "Obrigatório",
@@ -791,42 +791,42 @@
       "startDate": "Data de início",
       "endDate": "Data final",
       "funderSearch": "Pesquisar por nome do financiador",
-      "nameSearch": "Search by name",
+      "nameSearch": "Pesquisar por nome",
       "requiredField": "Marcar como obrigatório?",
       "previousPage": "Página anterior",
       "nextPage": "Próxima página",
       "name": "Nome:",
       "url": "URL:",
-      "unit": "Unit",
-      "description": "Descrição:",
+      "unit": "Unidade",
+      "description": "Descrição",
       "searchTerm": "Termo para pesquisa",
       "title": "Título",
-      "dataFlags": "Data Flags",
-      "outputType": "Output Type",
-      "repositories": "Repositories",
-      "metadataStandards": "Metadata Standards",
-      "licenses": "Licenses",
-      "initialAccessLevels": "Initial Access Levels",
-      "anticipatedReleaseDate": "Anticipated Release Date",
-      "anticipatedFileSize": "Anticipated File Size",
-      "fileSizeUnit": "File size unit",
-      "selectAnItem": "Select an item",
-      "mayContainSensitiveData": "May contain sensitive data?",
-      "mayContainPersonalData": "May contain personally identifiable information?",
-      "additionalComments": "Additional comments"
+      "dataFlags": "Sinalizadores de dados",
+      "outputType": "Tipo de saída",
+      "repositories": "Repositórios",
+      "metadataStandards": "Padrões de metadata",
+      "licenses": "Licenças",
+      "initialAccessLevels": "Níveis de acesso iniciais",
+      "anticipatedReleaseDate": "Data de liberação antecipada",
+      "anticipatedFileSize": "Tamanho do arquivo antecipado",
+      "fileSizeUnit": "Unidade de tamanho do arquivo",
+      "selectAnItem": "Selecionar um item",
+      "mayContainSensitiveData": "Pode conter dados sensíveis?",
+      "mayContainPersonalData": "Pode conter informações de identificação pessoal?",
+      "additionalComments": "Comentários adicionais"
     },
     "helpText": {
       "searchHelpText": "Pesquisar por organização de pesquisa, estação de campo ou laboratório, descrição de modelo, etc.",
       "funderSearch": "Pesquisar por organização de pesquisa, nome do financiador ou palavras-chave relacionadas.",
-      "dataFlags": "Mark all of the statements that are true about the dataset"
+      "dataFlags": "Marcar todas as declarações que são verdadeiras sobre o conjunto de dados"
     },
     "descriptions": {
       "requiredFieldDescription": "Atenção aos usuários que isto é considerado uma questão necessária para este template DMP pela organização. Os usuários poderão optar por ignorar isso dentro da ferramenta e não será necessário responder antes de movê-la."
     },
     "placeholders": {
       "funderSearch": "Insira o nome da pasta",
-      "nameSearch": "Enter name...",
-      "enterComment": "Enter your comment"
+      "nameSearch": "Insira o nome...",
+      "enterComment": "Insira seu comentário"
     },
     "links": {
       "clearFilter": "limpar filtro",
@@ -841,13 +841,13 @@
       "viewHistory": "Ver histórico"
     },
     "messaging": {
-      "loading": "Baixar",
-      "loadingPage": "Loading page...",
-      "submitting": "Submitting...",
-      "submittingSROnly": "Submitting feedback request...",
-      "save": "Save",
-      "saving": "Saving...",
-      "pageLoaded": "Page loaded",
+      "loading": "Carregando",
+      "loadingPage": "Carregando página...",
+      "submitting": "Enviando...",
+      "submittingSROnly": "Enviando solicitação de feedback...",
+      "save": "Salvar",
+      "saving": "Salvando...",
+      "pageLoaded": "Página carregada",
       "noItemsFound": "Nenhum item encontrado",
       "somethingWentWrong": "Ocorreu um erro. Tente novamente.",
       "resultsText": "Os resultados {name} correspondem à sua pesquisa",
@@ -874,10 +874,10 @@
     },
     "headings": {
       "preview": "Pré-visualizar",
-      "requirementsByFunder": "Requirements by {funder}",
-      "guidanceFromOrg": "Guidance from {org}",
-      "requirements": "Requirements",
-      "guidance": "Guidance"
+      "requirementsByFunder": "Requisitos do {funder}",
+      "guidanceFromOrg": "Orientação da {org}",
+      "requirements": "Requisitos",
+      "guidance": "Orientação"
     },
     "version": "Versão",
     "questionTypes": {
@@ -898,12 +898,12 @@
       "filteredSearch": "Pesquisa com filtros",
       "table": "Tabela",
       "affiliationSearch": "Busca de afiliação",
-      "researchOutputTable": "Research output table"
+      "researchOutputTable": "Tabela de resultados de pesquisa"
     },
     "status": {
-      "published": "Published",
-      "draft": "Draft",
-      "unpublishedChanges": "Unpublished changes",
+      "published": "Publicado",
+      "draft": "Rascunho",
+      "unpublishedChanges": "Alterações não publicadas",
       "notStarted": "Não iniciado"
     }
   },

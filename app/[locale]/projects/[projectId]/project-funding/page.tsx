@@ -63,7 +63,7 @@ const ProjectsCreateProjectFunding = () => {
       if (funder!.apiTarget && hasFunding === 'yes') {
         router.push(routePath('projects.create.projects.search', {
           projectId: projectId as string,
-        }, { affId: String(data?.project?.fundings?.[0]?.affiliation?.id), id: String(data?.project?.fundings?.[0]?.id) }));
+        }, { affId: String(data?.project?.fundings?.[0]?.affiliation?.id) }));
       } else {
         router.push(routePath('projects.project.info', {
           projectId: projectId as string,

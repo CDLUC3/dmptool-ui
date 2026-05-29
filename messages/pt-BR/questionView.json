@@ -1,7 +1,7 @@
 {
   "QuestionView": {
     "cardType": "Pergunta",
-    "requirements": "Requirements by {orgName}",
+    "requirements": "Requisitos de {orgName}",
     "guidanceLink": "Pule para orientação adicional",
     "guidanceBy": "Guia por {orgName}",
     "backToSection": "Voltar para a seção",

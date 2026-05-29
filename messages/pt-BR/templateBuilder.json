@@ -18,51 +18,51 @@
     "templateList": "Lista de templates"
   },
   "CustomizableTemplates": {
-    "title": "Customizable templates",
-    "description": "Select a template that you can customize with additional guidance or questions.",
+    "title": "Modelos personalizáveis",
+    "description": "Selecione um modelo que você pode personalizar com orientações ou perguntas adicionais.",
     "templateStatus": {
-      "hasChanged": "Funder template has changed",
-      "notCustomized": "Not customized",
-      "published": "Published",
-      "unPublished": "Unpublished",
-      "notCustomizable": "Not customizable",
-      "lastCustomized": "Last customized date",
-      "lastCustomizedBy": "Last customized by",
-      "customizationStatus": "Customization status",
-      "templateLastUpdated": "Template last updated"
+      "hasChanged": "O modelo do financiador foi alterado.",
+      "notCustomized": "ão personalizado",
+      "published": "Publicado",
+      "unPublished": "Não publicado",
+      "notCustomizable": "ão personalizável",
+      "lastCustomized": "Última data de personalização",
+      "lastCustomizedBy": "Última personalização por",
+      "customizationStatus": "Status de personalização",
+      "templateLastUpdated": "Última atualização do modelo"
     },
     "heading": {
-      "deleteCustomization": "Delete customization"
+      "deleteCustomization": "Excluir personalização"
     },
     "descriptions": {
-      "deleteCustomization": "<strong>Your customizations to this template will be removed from the template. </strong>  This is not reversible."
+      "deleteCustomization": "<strong>Suas personalizações para este modelo serão removidas do modelo. </strong>  Isso não é reversível."
     },
     "buttons": {
-      "deleteCustomization": "Delete customization",
-      "deletingCustomizations": "Deleting customizations...",
-      "publishCustomization": "Publish customization",
-      "publishStatus": "Publish status",
-      "publishChanges": "Publish changes"
+      "deleteCustomization": "Excluir personalização",
+      "deletingCustomizations": "Excluindo personalizações...",
+      "publishCustomization": "Publicar personalização",
+      "publishStatus": "Status de publicação",
+      "publishChanges": "Publicar alterações"
     },
     "messages": {
       "success": {
-        "templateAddedSuccessfully": "Template {title} added successfully",
-        "successfullyDeletedCustomizations": "Successfully deleted the template customizations",
-        "sectionMoved": "Section successfully moved",
-        "successfullyUnpublishedCustomization": "Successfully unpublished the template customization"
+        "templateAddedSuccessfully": "Template {title} adicionado com sucesso",
+        "successfullyDeletedCustomizations": "Personalizações do modelo excluídas com sucesso",
+        "sectionMoved": "Seção movida com sucesso",
+        "successfullyUnpublishedCustomization": "Personalização do modelo não publicada com sucesso"
       },
       "error": {
         "deleteCustomizationError": "Error when deleting template customizations",
-        "saveCustomizationError": "Error when saving template customizations",
-        "updatingSectionMoveError": "Error when reordering sections",
-        "unpublishCustomizationError": "Error when unpublishing template customizations"
+        "saveCustomizationError": "Erro ao salvar personalizações do modelo",
+        "updatingSectionMoveError": "Erro ao reordenar seções",
+        "unpublishCustomizationError": "Erro ao despublicar personalizações do modelo"
       }
     },
     "status": {
-      "completed": "Completed",
-      "notCompleted": "Not completed",
-      "added": "Added",
-      "notAdded": "Não adicionado"
+      "completed": "Concluído",
+      "notCompleted": "ão concluído",
+      "added": "Adicionado",
+      "notAdded": "ão adicionado"
     }
   },
   "EditTemplates": {
@@ -85,9 +85,9 @@
     },
     "button": {
       "archiveTemplate": "Template de arquivo",
-      "archiving": "Archiving template...",
+      "archiving": "Arquivando template...",
       "saveAsDraft": "Salvar como rascunho",
-      "savingDraft": "Saving draft...",
+      "savingDraft": "Salvando rascunho...",
       "previewTemplate": "Pré-visualizar template",
       "publishTemplate": "Publicar template"
     },
@@ -139,7 +139,7 @@
     "button": {
       "close": "Fechar",
       "saveAndPublish": "Guardar e publicar",
-      "publishing": "Publishing..."
+      "publishing": "Publicando..."
     },
     "messages": {
       "errors": {
@@ -167,10 +167,10 @@
     },
     "messages": {
       "error": {
-        "errorDeletingQuestion": "Error when deleting question"
+        "errorDeletingQuestion": "Erro ao excluir a pergunta"
       },
       "success": {
-        "successDeletingQuestion": "Question deleted successfully"
+        "successDeletingQuestion": "Pergunta excluída com sucesso"
       },
       "questionMoved": "Seção movida para a posição {displayOrder}"
     },
@@ -255,71 +255,71 @@
     }
   },
   "SectionCustomize": {
-    "title": "Customize section",
+    "title": "Seção Personalizar",
     "breadcrumbs": {
-      "customizationTemplates": "Customization templates",
-      "customizeTemplate": "Customize template"
+      "customizationTemplates": "Modelos de personalização",
+      "customizeTemplate": "Personalizar modelo"
     },
     "buttons": {
-      "deleteCustomization": "Delete customization",
-      "deletingCustomizations": "Deleting customizations..."
+      "deleteCustomization": "Excluir personalização",
+      "deletingCustomizations": "Excluindo personalizações..."
     },
     "heading": {
-      "deleteCustomSection": "Delete custom section",
-      "deleteCustomization": "Delete section customization"
+      "deleteCustomSection": "Excluir seção personalizada",
+      "deleteCustomization": "Excluir personalização da seção"
     },
     "descriptions": {
-      "deleteCustomization": "<strong>Your customizations will be removed from this section. </strong>  This is not reversible.",
-      "deleteCustomSection": "<strong>Your custom section will be removed. This is not reversible.</strong>",
-      "tagDescription": "Tags are used to pull in your organization’s best practice information and will show for each question in this section. Tags are set by DMP Tool or the Funder that created this template originally and cannot be changed.",
-      "editGuidanceForTags": "Edit your Guidance for tags"
+      "deleteCustomization": "<strong>Suas personalizações serão removidas desta seção.</strong> Isso não é reversível.",
+      "deleteCustomSection": "<strong>Sua seção personalizada será removida. Isso não é reversível.</strong>",
+      "tagDescription": "As etiquetas são usadas para reunir as informações de melhores práticas da sua organização e serão exibidas para cada pergunta nesta seção. As etiquetas são definidas pela Ferramenta DMP ou pelo Financiador que criou este modelo originalmente e não podem ser alteradas.",
+      "editGuidanceForTags": "Edite suas orientações para tags."
     },
     "messages": {
-      "noContent": "Funder didn't add {label}",
+      "noContent": "O financiador não adicionou {label}",
       "success": {
-        "successfullyDeletedSectionCustomization": "Successfully deleted the section customizations"
+        "successfullyDeletedSectionCustomization": "Personalizações da seção excluídas com sucesso"
       },
       "error": {
-        "errorDeletingSectionCustomization": "Error deleting section customization"
+        "errorDeletingSectionCustomization": "Erro ao excluir personalizações da seção"
       }
     },
     "labels": {
-      "bestPracticeTags": "Best practice tags"
+      "bestPracticeTags": "Etiquetas de práticas recomendadas"
     }
   },
   "QuestionCustomize": {
-    "title": "Customize question",
+    "title": "Personalizar pergunta",
     "messages": {
-      "noContent": "Funder didn't add {label}",
+      "noContent": "O financiador não adicionou {label}",
       "success": {
-        "successfullyDeletedCustomization": "Successfully deleted the question customizations",
-        "successfullyUpdatedCustomization": "Successfully updated the question customizations"
+        "successfullyDeletedCustomization": "Personalizações da pergunta excluídas com sucesso",
+        "successfullyUpdatedCustomization": "Personalizações da pergunta atualizadas com sucesso"
       },
       "error": {
-        "errorDeletingCustomization": "Error deleting question customization",
-        "errorUpdatingCustomization": "Error updating question customization"
+        "errorDeletingCustomization": "Erro ao excluir personalização da pergunta",
+        "errorUpdatingCustomization": "Erro ao atualizar personalização da pergunta"
       }
     },
     "labels": {
-      "additionalGuidanceText": "Additional guidance text",
-      "additionalSampleText": "Additional sample text",
-      "requirements": "Requirements",
-      "guidance": "Guidance",
-      "sampleText": "Sample text"
+      "additionalGuidanceText": "Texto de orientação adicional",
+      "additionalSampleText": "Texto de amostra adicional",
+      "requirements": "Requisitos",
+      "guidance": "Orientação",
+      "sampleText": "Texto de amostra"
     },
     "helpText": {
-      "additionalGuidanceText": "Outline the guidance that a user should consider for this question.",
-      "additionalSampleText": "We will allow users to copy the same text into the Text field this will allow users to speed up content entry."
+      "additionalGuidanceText": "Descreva as orientações que um usuário deve considerar para esta pergunta.",
+      "additionalSampleText": "Permitiremos que os usuários copiem o mesmo texto para o campo de texto; isso permitirá que eles agilizem a inserção de conteúdo."
     },
     "heading": {
-      "deleteCustomization": "Delete customization"
+      "deleteCustomization": "Excluir personalização"
     },
     "descriptions": {
-      "deleteCustomization": "<strong>Your customizations to this template will be removed from the question. </strong>  This is not reversible."
+      "deleteCustomization": "<strong>Suas personalizações para este modelo serão removidas da pergunta. </strong>  Isso não é reversível."
     },
     "buttons": {
-      "deleteCustomization": "Delete customization",
-      "deletingCustomization": "Deleting customizations..."
+      "deleteCustomization": "Excluir personalização",
+      "deletingCustomization": "Excluindo personalizações..."
     }
   },
   "CreateSectionPage": {
@@ -432,10 +432,10 @@
       "requirementText": "Requisitos de perguntas (opcional, mas recomendado)",
       "guidanceText": "Orientação para perguntas (opcional mas recomendado)",
       "sampleText": "Texto de amostra",
-      "comment": "Additional comment"
+      "comment": "Comentário adicional"
     },
     "messages": {
-      "areYouSureYouWantToDelete": "Are you sure you want to delete this research output?",
+      "areYouSureYouWantToDelete": "Tem certeza de que deseja excluir esta saída de pesquisa?",
       "errors": {
         "questionTextRequired": "Conjunto de perguntas (obrigatório.",
         "questionUpdateError": "Erro ao criar a seção",
@@ -445,18 +445,18 @@
       "success": {
         "questionUpdated": "A pergunta foi atualizada com sucesso",
         "questionRemoved": "A pergunta foi removida com sucesso",
-        "successDeletingQuestion": "Question deleted successfully"
+        "successDeletingQuestion": "Pergunta excluída com sucesso"
       }
     },
     "headings": {
       "bestPractice": "Melhores práticas da Ferramenta DMP",
       "deleteQuestion": "Apagar Pergunta",
       "confirmDelete": "Confirmar exclusão?",
-      "addResearchOutput": "Add Research Output",
-      "editResearchOutput": "Edit Research Output"
+      "addResearchOutput": "Adicionar resultado de pesquisa",
+      "editResearchOutput": "Editar resultado de pesquisa"
     },
     "definitions": {
-      "type": "Type",
+      "type": "Tipo",
       "repository": "Repositório"
     }
   },
@@ -512,15 +512,15 @@
       "customTypeList": "Lista de tipos de saídas personalizados",
       "customAccessLevelList": "Lista de níveis de acesso personalizado",
       "helpText": "Texto de Ajuda para {fieldName}",
-      "mayContainSensitiveData": "May contain sensitive data?",
-      "mayContainPersonalData": "May contain personally identifiable information?",
-      "preferredRepositories": "Preferred repositories only",
-      "preferredMetadataStandards": "Preferred metadata standards only",
-      "displayPaginationCount": "Displaying standards {count} of {totalCount} in total",
-      "displayAdditionalCommentField": "Display additional comment area",
-      "additionalCommentBox": "Additional comment box",
-      "showCommentField": "Show a comment field where plan writers can explain their answer",
-      "doNotShowCommentField": "Do not add a comment field"
+      "mayContainSensitiveData": "Pode conter dados sensíveis?",
+      "mayContainPersonalData": "Pode conter informações identificáveis de pessoa física?",
+      "preferredRepositories": "Apenas repositórios preferenciais",
+      "preferredMetadataStandards": "Apenas padrões de metadados preferenciais",
+      "displayPaginationCount": "Exibindo padrões {count} de {totalCount} no total",
+      "displayAdditionalCommentField": "Exibir área de comentário adicional",
+      "additionalCommentBox": "Caixa de comentário adicional",
+      "showCommentField": "Mostrar um campo de comentário onde os redatores de plano podem explicar sua resposta",
+      "doNotShowCommentField": "Não adicionar um campo de comentário"
     },
     "buttons": {
       "addRow": "Adicionar linha",
@@ -536,20 +536,20 @@
       "requirementText": "Use isto para instruções específicas sobre o que os pesquisadores precisam incluir em sua resposta, tais como as propriedades dos seus dados que devem listar.",
       "guidanceText": "Permita que os pesquisadores saibam como fornecer melhor respostas aos requisitos, tais como políticas para considerar de sua organização ou quais fatores considerar.",
       "sampleText": "Os criadores de planos poderão copiar o texto da amostra para o campo como ponto de partida, para acelerar a entrada de conteúdo.",
-      "dataFlags": "Mark all of the statements that are true about the dataset",
-      "preferredRepositories": "These repositories were set by the template creator as preferred repositories to use.",
-      "preferredMetadataStandards": "These metadata standards were set by the template creator as preferred metadata standards to use."
+      "dataFlags": "Marque todas as afirmações que são verdadeiras sobre o conjunto de dados",
+      "preferredRepositories": "Esses repositórios foram definidos pelo criador do template como repositórios preferenciais para usar.",
+      "preferredMetadataStandards": "Esses padrões de metadados foram definidos pelo criador do template como padrões de metadados preferenciais para usar."
     },
     "headings": {
       "bestPractice": "Melhores práticas pela Ferramenta DMP",
-      "displayingRepositoriesStatus": "Displaying repositories {current} of {total}",
-      "noMatchesFound": "No matches found"
+      "displayingRepositoriesStatus": "Exibindo repositórios {current} de {total}",
+      "noMatchesFound": "Nenhuma correspondência encontrada"
     },
     "messages": {
       "errors": {
         "questionTextRequired": "Campo texto da pergunta é obrigatório.",
         "questionAddingError": "Erro ao adicionar pergunta.",
-        "questionUpdatingError": "Error when updating question.",
+        "questionUpdatingError": "Erro ao atualizar a pergunta.",
         "questionValidationError": "Valor inválido",
         "invalidQuestionType": "Tipo de questão inválido encontrado"
       },
@@ -575,12 +575,12 @@
         "repositoryRemoved": "Repositório removido."
       },
       "helpText": "O comprimento máximo é de 300 caracteres.",
-      "accessLevelDescriptionOPEN": "Allows open access to all areas",
-      "accessLevelDescriptionRESTRICTED": "Restricts access to certain areas",
-      "accessLevelDescriptionCLOSED": "Other type of access",
+      "accessLevelDescriptionOPEN": "Permite acesso aberto a todas as áreas",
+      "accessLevelDescriptionRESTRICTED": "Restringe o acesso a certas áreas",
+      "accessLevelDescriptionCLOSED": "Outro tipo de acesso",
       "headings": {
         "enableStandardFields": "Ativar campos padrão",
-        "additionalTextFields": "Text fields adicionais"
+        "additionalTextFields": "Campos de texto adicionais"
       },
       "description": "Selecione quais campos padrão para incluir na sua pergunta de saída da pesquisa. Você pode personalizar cada campo individualmente.",
       "tooltip": {
@@ -590,16 +590,16 @@
         "description": "Descrição:",
         "descriptionLowerCase": "Descrição",
         "taxonomyURL": "URL de taxonomia",
-        "websiteURL": "Website URL",
-        "title": "Title",
-        "dataFlags": "Data Flags",
-        "outputType": "Output Type",
-        "repositories": "Repositories",
-        "metadataStandards": "Metadata Standards",
-        "licenses": "Licenses",
-        "initialAccessLevels": "Initial Access Levels",
-        "useCustomList": "Use custom list",
-        "useDefaults": "Use defaults"
+        "websiteURL": "URL do website",
+        "title": "Título",
+        "dataFlags": "Sinalizadores de dados",
+        "outputType": "Tipo de saída",
+        "repositories": "Repositórios",
+        "metadataStandards": "Padrões de metadados",
+        "licenses": "Licenças",
+        "initialAccessLevels": "Níveis de Acesso Iniciais",
+        "useCustomList": "Usar lista personalizada",
+        "useDefaults": "Usar padrões"
       },
       "legends": {
         "dataFlag": "Quais bandeiras de dados a exibir"
@@ -624,8 +624,8 @@
         },
         "descriptionLabel": "Descrição do campo Repositories",
         "messages": {
-          "removedItem": "{name} removed",
-          "addedItem": "{name} added",
+          "removedItem": "{name} removido",
+          "addedItem": "{name} adicionado",
           "confirmRemoveAll": "Tem certeza que deseja remover todos os repositórios selecionados?",
           "allRemoved": "Todos os repositórios removidos",
           "customRepoAdded": "Repositório personalizado {name} adicionado com sucesso"
@@ -652,10 +652,10 @@
           "contactTitle": "E-mail de contato",
           "urlTitle": "Descrição do repositório",
           "dataAccessTitle": "Acesso aos dados",
-          "identifierTitle": "Persistent identifier"
+          "identifierTitle": "Identificador persistente"
         },
-        "singleRepo": "Repository",
-        "multipleRepo": "Repositories"
+        "singleRepo": "Repositório",
+        "multipleRepo": "Repositórios"
       },
       "metaDataStandards": {
         "headings": {
@@ -687,8 +687,8 @@
       "outputType": {
         "labels": {
           "defineOutputTypes": "Definir os tipos de saída",
-          "enterOutputType": "Enter type",
-          "typeDescription": "Type description",
+          "enterOutputType": "Digite o tipo",
+          "typeDescription": "Descrição do tipo",
           "removeOutputType": "Remover {type}"
         },
         "legends": {
@@ -701,17 +701,17 @@
       },
       "accessLevels": {
         "labels": {
-          "defineAccessLevels": "Define access levels",
-          "enterAccessLevel": "Enter access level",
-          "accessLevelDescription": "Access level description",
-          "removeAccessLevel": "Remove {level}"
+          "defineAccessLevels": "Definir níveis de acesso",
+          "enterAccessLevel": "Inserir nível de acesso",
+          "accessLevelDescription": "Descrição do nível de acesso",
+          "removeAccessLevel": "Remover {level}"
         },
         "legends": {
-          "default": "Default Access Levels",
-          "myAccessLevels": "My Access Levels"
+          "default": "Níveis de Acesso Padrão",
+          "myAccessLevels": "Meus Níveis de Acesso"
         },
         "buttons": {
-          "addAccessLevel": "Add access level"
+          "addAccessLevel": "Adicionar nível de acesso"
         }
       },
       "licenses": {
@@ -719,11 +719,11 @@
           "define": "Definir licenças preferidas",
           "defaultPreferred": "Licenças preferidas por padrão",
           "addLicense": "Adicionar licença",
-          "myLicenses": "My Licenses"
+          "myLicenses": "Minhas Licenças"
         },
         "buttons": {
           "addLicenseType": "Adicionar tipo de licença",
-          "removeLicenseType": "Remove {type}"
+          "removeLicenseType": "Remover {type}"
         }
       },
       "additionalFields": {
@@ -732,16 +732,16 @@
           "helpText": "O rótulo que será exibido para este campo"
         },
         "helpText": {
-          "label": "Help text",
-          "helpText": "Optional help text to guide users. Max length 300 characters."
+          "label": "Texto de ajuda",
+          "helpText": "Texto de ajuda opcional para orientar os usuários. Comprimento máximo 300 caracteres."
         },
         "maxLength": {
-          "label": "Setembro",
-          "helpText": "Maximum number of characters allowed (leave empty for no limit)"
+          "label": "Comprimento máximo",
+          "helpText": "Número máximo de caracteres permitidos (deixe vazio para não ter limite)"
         },
         "defaultValue": {
-          "label": "Default value",
-          "helpText": "Default value for this field"
+          "label": "Valor padrão",
+          "helpText": "Valor padrão para este campo"
         },
         "addFieldBtn": "Adicionar campo adicional"
       }

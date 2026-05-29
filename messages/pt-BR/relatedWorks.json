@@ -1,27 +1,27 @@
 {
   "RelatedWorksPlanPage": {
-    "title": "Published Research Outputs",
-    "description": "Match published research outputs to your research project.",
+    "title": "Obras Relacionadas",
+    "description": "Combine trabalhos relacionados ao seu projeto de pesquisa.",
     "buttons": {
-      "addRelatedWorkManually": "Add Published Research Output"
+      "addRelatedWorkManually": "Adicionar trabalho relacionado"
     }
   },
   "RelatedWorksProjectPage": {
-    "title": "Published Research Outputs",
-    "description": "Match published research outputs to your research project.",
+    "title": "Obras Publicadas",
+    "description": "Combine obras publicadas ao seu projeto de pesquisa.",
     "buttons": {
-      "addRelatedWorkManually": "Add Published Research Output"
+      "addRelatedWorkManually": "Adicionar obra publicada"
     }
   },
   "RelatedWorksList": {
     "filters": {
-      "planId": "Select Plan",
+      "planId": "Selecionar Plano",
       "filterByConfidence": "Filtro por confiança",
       "filterByType": "Filtrar por Tipo",
       "filterByTypePlaceholder": "All Types",
       "highlightMatches": "Destacar Partidas",
       "sort": "Ordenar",
-      "reset": "Reset",
+      "reset": "Reiniciar",
       "sortBy": {
         "ConfidenceHigh": "Confiança: Alta para Baixo",
         "ConfidenceLow": "Confiança: Baixo para Alto",
@@ -35,21 +35,21 @@
     },
     "messages": {
       "PENDING": {
-        "noResults": "No pending outputs found.\n You have no pending outputs to review.",
-        "noFilteredResults": "No pending outputs match your current filters."
+        "noResults": "Nenhuma saída pendente encontrada.\n Você não tem saídas pendentes para revisar.",
+        "noFilteredResults": "Nenhuma saída pendente corresponde aos seus filtros atuais."
       },
       "ACCEPTED": {
-        "noResults": "No published outputs found.\nYou haven’t marked any outputs as published yet. Check the Pending tab to get started.",
-        "noFilteredResults": "No published outputs match your current filters."
+        "noResults": "Nenhuma saída publicada encontrada.\nVocê ainda não marcou nenhuma saída como publicada. Verifique a aba Pendente para começar.",
+        "noFilteredResults": "Nenhuma saída publicada corresponde aos seus filtros atuais."
       },
       "REJECTED": {
-        "noResults": "No rejected outputs found.\nYou haven’t rejected any outputs.",
-        "noFilteredResults": "No rejected outputs match your current filters."
+        "noResults": "Nenhuma saída rejeitada encontrada.\nVocê ainda não rejeitou nenhuma saída.",
+        "noFilteredResults": "Nenhuma saída rejeitada corresponde aos seus filtros atuais."
       }
     }
   },
   "RelatedWorksListItem": {
-    "title": "Open the published version of this output",
+    "title": "Abrir a versão publicada desta saída",
     "buttons": {
       "expand": "Expanda",
       "collapse": "Recolher",
@@ -72,10 +72,10 @@
       "funders": "Finalizações"
     },
     "instructions": {
-      "review": "Review the information about this candidate published research output below, and then accept it as published or reject it as unrelated.",
+      "review": "Analise as informações sobre a produção de pesquisa publicada deste candidato apresentadas abaixo e, em seguida, aceite-as como publicadas ou rejeite-as como não relacionadas.",
       "actions": {
-        "PENDING": "If you reject this output, you can recover it later from the Rejected tab.",
-        "ACCEPTED": "If you reject this output, you can recover it later from the Rejected tab.",
+        "PENDING": "Se você rejeitar este resultado, poderá recuperá-lo posteriormente na guia Rejeitados.",
+        "ACCEPTED": "Se você rejeitar esta saída, poderá recuperá-la posteriormente na guia Rejeitados.",
         "REJECTED": "Você pode recuperar esta saída aceitando-a, você verá então na aba Aceitada."
       }
     }
@@ -88,9 +88,9 @@
       "LOW": "baixo"
     },
     "status": {
-      "PENDING": "Pending",
-      "ACCEPTED": "Published",
-      "REJECTED": "Rejected"
+      "PENDING": "Pendente",
+      "ACCEPTED": "Publicado",
+      "REJECTED": "Rejeitado"
     },
     "workType": {
       "ARTICLE": "artigo",
@@ -133,38 +133,38 @@
   },
   "RelatedWorksTabs": {
     "tabs": {
-      "pending": "Pending",
-      "accepted": "Published",
-      "rejected": "Rejected"
+      "pending": "Pendente",
+      "accepted": "Publicado",
+      "rejected": "Rejeitado"
     }
   },
   "AddRelatedWorkProjectPage": {
-    "title": "Add Published Research Output",
-    "description": "To manually add a published research output to a project, select a plan, then enter output's DOI below and click Lookup to find it. Click Accept to add the output to the project. You can run multiple searches on this page to add more than one output."
+    "title": "Adicionar produção de pesquisa publicada",
+    "description": "Para adicionar manualmente um resultado de pesquisa publicado a um projeto, selecione um plano, insira o DOI do resultado abaixo e clique em "Buscar" para localizá-lo. Clique em "Aceitar" para adicionar o resultado ao projeto. Você pode realizar várias buscas nesta página para adicionar mais de um resultado."
   },
   "AddRelatedWorkPlanPage": {
-    "title": "Add Published Research Output",
-    "description": "To manually add a published research output to a plan, enter output's DOI below and click Lookup to find it. Click Accept to add the output to the plan. You can run multiple searches on this page to add more than one output."
+    "title": "Adicionar produção de pesquisa publicada",
+    "description": "Para adicionar manualmente um resultado de pesquisa publicado a um plano, insira o DOI do resultado abaixo e clique em "Buscar" para localizá-lo. Clique em "Aceitar" para adicionar o resultado ao plano. Você pode realizar várias buscas nesta página para adicionar mais de um resultado."
   },
   "RelatedWorksAdd": {
     "title": "Adicionar Saída de Pesquisa Publicada",
     "searchLabel": "Digital Object Identifier (DOI)",
-    "planSelectLabel": "Select Plan",
-    "planSelectDescription": "Select a plan to add a published research output.",
-    "searchDescription": "Enter the output's DOI in either short or URL form (e.g. &lt;code&gt;10.1000/182&lt;/code&gt; or &lt;code&gt;https://doi.org/10.1000/182&lt;/code&gt;), then click Lookup.",
-    "invalidDoi": "Please enter a valid DOI",
+    "planSelectLabel": "Selecionar Plano",
+    "planSelectDescription": "Selecione um plano para adicionar uma saída de pesquisa publicada.",
+    "searchDescription": "Insira o DOI da saída em formato curto ou URL (por exemplo, &lt;code&gt;10.1000/182&lt;/code&gt; ou &lt;code&gt;https://doi.org/10.1000/182&lt;/code&gt;), depois clique em Buscar.",
+    "invalidDoi": "Por favor, insira um DOI válido",
     "buttons": {
-      "expand": "Expand",
-      "collapse": "Collapse",
-      "accept": "Accept",
-      "reject": "Reject"
+      "expand": "Expandir",
+      "collapse": "Recolher",
+      "accept": "Aceitar",
+      "reject": "Rejeitar"
     },
     "fieldNames": {
-      "planTitle": "Plan",
+      "planTitle": "Plano",
       "status": "Status",
-      "type": "Type",
-      "source": "Source",
-      "dateReviewed": "Reviewed"
+      "type": "Tipo",
+      "source": "Fonte",
+      "dateReviewed": "Revisado"
     }
   },
   "RelatedWorksSelect": {
