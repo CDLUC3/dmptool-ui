@@ -317,16 +317,20 @@ const ProjectsCreateProjectProjectSearch = () => {
                             <h4 className={styles.projectName}>
                               {project.title ?? '—'}{yearRange && ` (${yearRange})`}
                             </h4>
-                            <dl>
-                              <dt>{t('definitions.awardId')}:</dt>
-                              <dd>{projectNumber}</dd>
-                              <dt>{t('definitions.grantId')}:</dt>
-                              <dd>{grantId}</dd>
+                            <dl className={styles.definitionList}>
+                              <div className={styles.definitionListItem}>
+                                <dt>{t('definitions.awardId')}:</dt>
+                                <dd>{projectNumber}</dd>
+                              </div>
+                              <div className={styles.definitionListItem}>
+                                <dt>{t('definitions.grantId')}:</dt>
+                                <dd>{grantId}</dd>
+                              </div>
                               {investigators && (
-                                <>
+                                <div className={styles.definitionListItem}>
                                   <dt>{t('definitions.principalInvestigator')}:</dt>
                                   <dd>{investigators}</dd>
-                                </>
+                                </div>
                               )}
                             </dl>
                           </div>
