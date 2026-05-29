@@ -359,10 +359,118 @@ describe('ProjectsProjectDetail', () => {
   });
 
   it('should redirect to project search page when Search button is clicked', () => {
+    (useSearchParams as jest.MockedFunction<typeof useSearchParams>).mockReturnValue({
+      get: (key: string) => {
+        const params: Record<string, string> = {
+          fromOverview: 'true',
+          projectFundingId: '99',
+        };
+        return params[key] || null;
+      },
+    } as unknown as ReturnType<typeof useSearchParams>);
+
+    const stableProjectReturn = {
+      data: {
+        project: {
+          title: 'Test Project',
+          abstractText: 'Test Abstract',
+          startDate: '2023-01-01',
+          endDate: '2023-12-31',
+          researchDomain: { id: '1' },
+          isTestProject: true,
+          readOnly: false,
+          fundings: [{ id: '99', affiliation: { apiTarget: 'someTarget' } }],
+        },
+      },
+      loading: false,
+      refetch: mockRefetch,
+    };
+
+    const stableTopLevelDomainsReturn = {
+      data: {
+        topLevelResearchDomains: [
+          { id: '1', name: 'Domain 1' },
+          { id: '2', name: 'Domain 2' },
+        ],
+      },
+      loading: false,
+      error: undefined,
+      refetch: mockRefetch,
+    };
+
+    mockUseQuery.mockImplementation((document) => {
+      if (document === ProjectDocument) {
+        return stableProjectReturn as any;
+      }
+      if (document === TopLevelResearchDomainsDocument) {
+        return stableTopLevelDomainsReturn as any;
+      }
+      return { data: null, loading: false, error: undefined } as any;
+    });
+
     render(<ProjectsProjectDetail />);
     const searchBtn = screen.getByTestId('search-projects-button');
     fireEvent.click(searchBtn);
     expect(mockRouter.push).toHaveBeenCalledWith('/en-US/projects/1/projects-search');
+  });
+
+  it('should hide search projects button when project has no fundings', () => {
+    render(<ProjectsProjectDetail />);
+    expect(screen.queryByTestId('search-projects-button')).not.toBeInTheDocument();
+  });
+
+  it('should hide search projects button when funder has no apiTarget', () => {
+    (useSearchParams as jest.MockedFunction<typeof useSearchParams>).mockReturnValue({
+      get: (key: string) => {
+        const params: Record<string, string> = {
+          fromOverview: 'true',
+          projectFundingId: '99',
+        };
+        return params[key] || null;
+      },
+    } as unknown as ReturnType<typeof useSearchParams>);
+
+    const stableProjectReturn = {
+      data: {
+        project: {
+          title: 'Test Project',
+          abstractText: 'Test Abstract',
+          startDate: '2023-01-01',
+          endDate: '2023-12-31',
+          researchDomain: { id: '1' },
+          isTestProject: true,
+          readOnly: false,
+          fundings: [{ id: '99', affiliation: { apiTarget: null } }],
+        },
+      },
+      loading: false,
+      refetch: mockRefetch,
+    };
+
+    const stableTopLevelDomainsReturn = {
+      data: {
+        topLevelResearchDomains: [
+          { id: '1', name: 'Domain 1' },
+          { id: '2', name: 'Domain 2' },
+        ],
+      },
+      loading: false,
+      error: undefined,
+      refetch: mockRefetch,
+    };
+
+    mockUseQuery.mockImplementation((document) => {
+      if (document === ProjectDocument) {
+        return stableProjectReturn as any;
+      }
+      if (document === TopLevelResearchDomainsDocument) {
+        return stableTopLevelDomainsReturn as any;
+      }
+      return { data: null, loading: false, error: undefined } as any;
+    });
+
+    render(<ProjectsProjectDetail />);
+    expect(screen.queryByTestId('search-projects-button')).not.toBeInTheDocument();
   });
 
   it('should pass axe accessibility test', async () => {

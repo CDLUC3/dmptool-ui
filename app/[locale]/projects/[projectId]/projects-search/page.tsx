@@ -64,7 +64,7 @@ const ProjectsCreateProjectProjectSearch = () => {
   const [projects, setProjects] = useState<ExternalProject[]>([]);
   const [errorMessages, setErrorMessages] = useState<string[]>([]);
 
-  const [searchExternalProjectsQuery, { loading, error }] = useLazyQuery(SearchExternalProjectsDocument);
+  const [searchExternalProjectsQuery, { loading }] = useLazyQuery(SearchExternalProjectsDocument);
 
   // Get affiliation URI for affiliationId passed from previous page
   const { data: affiliationData } = useQuery(AffiliationByIdDocument, {
@@ -87,12 +87,18 @@ const ProjectsCreateProjectProjectSearch = () => {
     }
 
     if (!affiliationId) {
-      console.error('Missing affiliationId');
+      logECS('error', 'ProjectsCreateProjectProjectSearch', {
+        error: 'Missing affiliationId in search parameters',
+        url: { path: routePath('projects.create.projects.search', { projectId: projectId as string }) },
+      });
       return;
     }
 
     if (!affiliationData?.affiliationById?.uri) {
-      console.error('Missing affiliation URI');
+      logECS('error', 'ProjectsCreateProjectProjectSearch', {
+        error: 'Missing affiliation URI',
+        url: { path: routePath('projects.create.projects.search', { projectId: projectId as string }) },
+      });
       setHasSearched(true);
       setProjects([]);
       return;

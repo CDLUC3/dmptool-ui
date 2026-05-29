@@ -140,11 +140,11 @@
   },
   "AddRelatedWorkProjectPage": {
     "title": "Adicionar produção de pesquisa publicada",
-    "description": "Para adicionar manualmente um resultado de pesquisa publicado a um projeto, selecione um plano, insira o DOI do resultado abaixo e clique em "Buscar" para localizá-lo. Clique em "Aceitar" para adicionar o resultado ao projeto. Você pode realizar várias buscas nesta página para adicionar mais de um resultado."
+    "description": "Para adicionar manualmente um resultado de pesquisa publicado a um projeto, selecione um plano, insira o DOI do resultado abaixo e clique em Buscar para localizá-lo. Clique em Aceitar para adicionar o resultado ao projeto. Você pode realizar várias buscas nesta página para adicionar mais de um resultado."
   },
   "AddRelatedWorkPlanPage": {
     "title": "Adicionar produção de pesquisa publicada",
-    "description": "Para adicionar manualmente um resultado de pesquisa publicado a um plano, insira o DOI do resultado abaixo e clique em "Buscar" para localizá-lo. Clique em "Aceitar" para adicionar o resultado ao plano. Você pode realizar várias buscas nesta página para adicionar mais de um resultado."
+    "description": "Para adicionar manualmente um resultado de pesquisa publicado a um plano, insira o DOI do resultado abaixo e clique em Buscar para localizá-lo. Clique em Aceitar para adicionar o resultado ao plano. Você pode realizar várias buscas nesta página para adicionar mais de um resultado."
   },
   "RelatedWorksAdd": {
     "title": "Adicionar Saída de Pesquisa Publicada",
