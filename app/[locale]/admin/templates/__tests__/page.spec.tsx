@@ -367,11 +367,6 @@ describe("OrganizationTemplateListPage", () => {
     render(
       <MockedProvider
         mocks={multipleItemsErrorMock}
-        defaultOptions={{
-          watchQuery: { errorPolicy: 'all' },
-          query: { errorPolicy: 'all' },
-          mutate: { errorPolicy: 'all' },
-        }}
       >
         <OrganizationTemplateListPage />
       </MockedProvider>,

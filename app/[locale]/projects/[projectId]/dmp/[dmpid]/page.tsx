@@ -460,7 +460,7 @@ const PlanOverviewPage: React.FC = () => {
   }, [updateTitle, t, toastState]);
 
 
-  const markFeedbackAsDone = async () => {
+  const markFeedbackAsDone = async (sendEmail: boolean) => {
     setErrorMessages([]);
     setIsSubmitting(true);
 
@@ -468,7 +468,8 @@ const PlanOverviewPage: React.FC = () => {
       await completeFeedbackMutation({
         variables: {
           planId: Number(planId),
-          planFeedbackId: Number(feedbackData?.planFeedbackStatus?.id)
+          planFeedbackId: Number(feedbackData?.planFeedbackStatus?.id),
+          sendEmail
         }
       });
       // Success so try and refetch feedback status to update UI
@@ -677,17 +678,15 @@ const PlanOverviewPage: React.FC = () => {
             modal={{
               title: t("feedbackNotification.confirmModal.title"),
               content: (
-                <>
-                  {t("feedbackNotification.confirmModal.description1")}
-                  <ul>
-                    <li>{t("feedbackNotification.confirmModal.description2")}</li>
-                    <li>{t("feedbackNotification.confirmModal.description3")}</li>
-                  </ul>
-
-                </>
+                <p>
+                  {t("feedbackNotification.confirmModal.description")}
+                </p>
               ),
               cancelButtonText: Global("buttons.close"),
               confirmButtonText: t("feedbackNotification.markAsDone"),
+              emailPromptLabel: t("feedbackNotification.confirmModal.emailPromptLabel"),
+              emailPromptYes: t("feedbackNotification.confirmModal.emailPromptYes"),
+              emailPromptNo: t("feedbackNotification.confirmModal.emailPromptNo"),
               isSubmitting,
               submittingText: Global('buttons.saving')
             }}

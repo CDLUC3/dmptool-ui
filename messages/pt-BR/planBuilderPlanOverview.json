@@ -151,10 +151,11 @@
       "description2": "Completing will remove your access and notify the plan author that your feedback is complete.",
       "markAsDone": "Mark as done",
       "confirmModal": {
-        "title": "Are you sure you want to complete your feedback?",
-        "description1": "The following will happen:",
-        "description2": "You will no longer be able to comment",
-        "description3": "The plan author will be notified that you have completed your feedback"
+        "title": "Tem certeza de que deseja finalizar seu feedback?",
+        "description": "Você não poderá mais deixar comentários. Você ainda poderá visualizar o plano.",
+        "emailPromptLabel": "Você deseja enviar um e-mail ao solicitante informando que o feedback foi concluído?",
+        "emailPromptYes": "Sim, envie um e-mail.",
+        "emailPromptNo": "ão, pule o envio do e-mail"
       },
       "markAsDoneSuccess": "Você completou seu feedback com sucesso."
     }
