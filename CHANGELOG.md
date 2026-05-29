@@ -8,6 +8,7 @@
 - Added `UpdateAffiliation` and `AffiliationById` queries [#203]
 
 ## Updated
+- Updated `Notification` component to include `yes/no` radio buttons for sending an email on feedback completion and updated content. Updated `PlanOverview` to use the new `sendEmail` boolean. Updated `completedFeedback` graphql mutation to include `sendEmail` boolean [#252]
 - Updated `handleRevoke` method in `ProjectsProjectColalboration` component so that we revert the optimistic update if errors are returned as part of the successful response [#228]
 - Updated `ProjectsProjectCollaboration`, `ProjectsProjectFunding`, `ProjectsProjectMembers` and `ProjectsProjectDetail` to query `project` resolver instead to get its data, so that we can easily get `readOnly` data. Updated those components to disable or remove form fields, CTAs and links in `readOnly` mode [#245]
 - Updated `ProjectOverviewPage` to change links to `view` versions, disable some CTAs,hide `related works` section, and change plan button text to "View plan in `readOnly` mode [#245]
@@ -39,6 +40,7 @@
 - Updated `RepoSelectorForAnswer` to wait to query `Re3byUrIsDocument` until we have `preferredReposURIs` because preferred repos don't display even though they eventually do to trigger the display of the "preferred repositories" checkbox [#118]
 
 ## Fixed
+- Fixed `type` errors resulting from deprecated `errorPolicy` in unit tests [#252]
 - Fixed issue with Feedback Notification headers displaying for any collaborator on the Plan Overview, Section and Question pages. It should only display to Org Admins and Super Admins. Added shared isOrgAdmin hook for pages. [#249]
 
 ## Chore

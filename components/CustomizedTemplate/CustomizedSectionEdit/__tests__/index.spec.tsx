@@ -258,7 +258,7 @@ describe('CustomizedSectionEdit', () => {
           onMoveUp={jest.fn()}
           onMoveDown={jest.fn()}
           refetch={mockRefetch}
-          />
+        />
       </MockedProvider>
     );
   };

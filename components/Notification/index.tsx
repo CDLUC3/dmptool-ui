@@ -7,7 +7,9 @@ import {
   DialogTrigger,
   Modal,
   ModalOverlay,
+  Radio,
 } from 'react-aria-components';
+import { RadioGroupComponent } from '../Form';
 import styles from './notification.module.scss';
 
 interface NotificationHeaderProps {
@@ -19,10 +21,13 @@ interface NotificationHeaderProps {
     content: React.ReactNode;
     cancelButtonText: string;
     confirmButtonText: string;
+    emailPromptLabel?: string;
+    emailPromptYes?: string;
+    emailPromptNo?: string;
     isSubmitting?: boolean;
     submittingText?: string;
   };
-  onMarkAsDone?: () => void | Promise<void>;
+  onMarkAsDone?: (sendEmail: boolean) => void | Promise<void>;
 }
 
 const NotificationHeader = ({
@@ -33,10 +38,11 @@ const NotificationHeader = ({
   onMarkAsDone,
 }: NotificationHeaderProps) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [sendEmail, setSendEmail] = useState<boolean>(true);
 
   const handleConfirm = (close: () => void) => {
     close();
-    onMarkAsDone?.();
+    onMarkAsDone?.(sendEmail);
   };
 
   return (
@@ -47,7 +53,13 @@ const NotificationHeader = ({
       </div>
 
       {onMarkAsDone && modal && (
-        <DialogTrigger isOpen={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogTrigger
+          isOpen={isModalOpen}
+          onOpenChange={(open) => {
+            setIsModalOpen(open);
+            if (!open) setSendEmail(true); // reset to default when modal closes
+          }}
+        >
           <Button className={styles.feedbackNotification__action}>
             {actionButtonText}
           </Button>
@@ -58,6 +70,25 @@ const NotificationHeader = ({
                   <>
                     <h3>{modal.title}</h3>
                     {modal.content}
+
+
+                    {modal.emailPromptLabel && (
+                      <RadioGroupComponent
+                        name="projectType"
+                        value={sendEmail ? 'yes' : 'no'}
+                        aria-label={modal.emailPromptLabel}
+                        radioGroupLabel={modal.emailPromptLabel}
+                        onChange={(val) => setSendEmail(val === 'yes')}
+                      >
+                        <div>
+                          <Radio value="yes">{modal.emailPromptYes}</Radio>
+                        </div>
+
+                        <div>
+                          <Radio value="no">{modal.emailPromptNo}</Radio>
+                        </div>
+                      </RadioGroupComponent>
+                    )}
                     <div className={styles.buttonGroup}>
                       <Button onPress={close} className="secondary">{modal.cancelButtonText}</Button>
                       <Button
