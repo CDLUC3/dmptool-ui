@@ -149,8 +149,8 @@
       "noProjectFound": "We couldn’t find any projects matching your search. Try again with different details."
     },
     "definitions": {
-      "awardId": "Award ID",
-      "grantId": "Grant ID",
+      "projectNumber": "Award/Project Number",
+      "grantId": "Award page",
       "principalInvestigator": "Principal Investigator(s)"
     },
     "form": {

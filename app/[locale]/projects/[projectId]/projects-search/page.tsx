@@ -303,9 +303,12 @@ const ProjectsCreateProjectProjectSearch = () => {
                         .filter(Boolean)
                         .join('; ') ?? '—';
 
-                      const yearRange = project.startDate
-                        ? `${project.startDate.slice(0, 4)}${project.endDate ? `–${project.endDate.slice(0, 4)}` : ''}`
+                      const startYear = project.startDate?.slice(0, 4);
+                      const endYear = project.endDate?.slice(0, 4);
+                      const yearRange = startYear || endYear
+                        ? `${startYear ?? '?'}–${endYear ?? '?'}`
                         : null;
+
                       return (
                         <div
                           key={index}
@@ -319,12 +322,21 @@ const ProjectsCreateProjectProjectSearch = () => {
                             </h4>
                             <dl className={styles.definitionList}>
                               <div className={styles.definitionListItem}>
-                                <dt>{t('definitions.awardId')}:</dt>
+                                <dt>{t('definitions.projectNumber')}:</dt>
                                 <dd>{projectNumber}</dd>
                               </div>
                               <div className={styles.definitionListItem}>
                                 <dt>{t('definitions.grantId')}:</dt>
-                                <dd>{grantId}</dd>
+                                <dd>
+                                  {grantId && grantId.startsWith('http') ? (
+                                    <a href={grantId} target="_blank" rel="noopener noreferrer">
+                                      {grantId}
+                                    </a>
+                                  ) : (
+                                    grantId
+                                  )}
+                                </dd>
+
                               </div>
                               {investigators && (
                                 <div className={styles.definitionListItem}>

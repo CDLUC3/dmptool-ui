@@ -149,8 +149,8 @@
       "noProjectsFound": "Não conseguimos encontrar nenhum projeto que combine com sua pesquisa. Tente novamente com detalhes diferentes."
     },
     "definitions": {
-      "awardId": "ID da Premiação",
-      "grantId": "Conceder ID",
+      "projectNumber": "Número do Prêmio/Projeto",
+      "grantId": "Página de Premiação",
       "principalInvestigator": "Investigador(es) Principal(is)"
     },
     "form": {
