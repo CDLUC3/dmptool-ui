@@ -1,5 +1,5 @@
 import React from "react";
-import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { MockedProvider } from "@apollo/client/testing/react";
 import { MyProjectsDocument } from "@/generated/graphql";
 import { axe, toHaveNoViolations } from "jest-axe";
@@ -545,6 +545,28 @@ const mocks = [
   },
 ];
 
+const emptyProjectsMocks = [
+  {
+    request: {
+      query: MyProjectsDocument,
+      variables: {
+        paginationOptions: {
+          limit: 3,
+        },
+      },
+    },
+    result: {
+      data: {
+        myProjects: {
+          items: [],
+          nextCursor: null,
+          totalCount: 0,
+        },
+      },
+    },
+  },
+];
+
 describe("OrganizationProjectsListPage", () => {
   beforeEach(() => {
     HTMLElement.prototype.scrollIntoView = mockScrollIntoView;
@@ -752,6 +774,24 @@ describe("OrganizationProjectsListPage", () => {
 
     await waitFor(() => {
       expect(screen.getByText("Project 3")).toBeInTheDocument();
+    });
+  });
+
+  it("should display empty state with CTA when organization has no projects", async () => {
+    await act(async () => {
+      render(
+        <MockedProvider mocks={emptyProjectsMocks}>
+          <OrganizationProjectsListPage />
+        </MockedProvider>,
+      );
+    });
+
+    await waitFor(() => {
+      const emptyState = screen.getByRole("status");
+      expect(within(emptyState).getByText("OrganizationProjects.messages.info.noProjectsHeading")).toBeInTheDocument();
+      expect(within(emptyState).getByText("OrganizationProjects.messages.info.noProjectsDescription")).toBeInTheDocument();
+      expect(within(emptyState).getByRole("link", { name: "Global.buttons.createNewPlan" })).toBeInTheDocument();
+      expect(screen.queryByText("Global.buttons.linkExpand")).not.toBeInTheDocument();
     });
   });
 

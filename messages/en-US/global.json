@@ -450,6 +450,10 @@
     "title": "Organization Projects",
     "intro": "Manage DMSP projects and plans across your organization",
     "messages": {
+      "info": {
+        "noProjectsHeading": "Organization projects will appear here",
+        "noProjectsDescription": "When researchers in your organization create data management plans, they will be listed here."
+      },
       "errors": {
         "errorRetrievingProjects": "Something went wrong with retrieving projects. Please try again later."
       }

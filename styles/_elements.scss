@@ -993,3 +993,20 @@ table,
     max-width: 75%;
   }
 }
+
+.empty-state {
+  text-align: center;
+  padding: var(--space-6) var(--space-4);
+  color: var(--text-secondary);
+
+  .empty-state-heading {
+    font-size: var(--fs-lg);
+    color: var(--text-primary);
+    margin-bottom: var(--space-2);
+  }
+
+  .empty-state-description {
+    max-width: 36rem;
+    margin: 0 auto var(--space-4);
+  }
+}
