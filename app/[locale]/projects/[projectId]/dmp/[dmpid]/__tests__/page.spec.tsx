@@ -1870,4 +1870,54 @@ describe('PlanOverviewPage', () => {
       expect(disabledButton).toHaveAttribute('aria-disabled', 'true');
     });
   });
+
+  it('should show requiredFields checklist item as complete when all required questions are answered', async () => {
+    const allRequiredAnsweredPlan = {
+      ...mockPlanData.plan,
+      versionedSections: mockPlanData.plan.versionedSections.map((s) => ({
+        ...s,
+        answeredRequiredQuestions: s.totalRequiredQuestions,
+      })),
+    };
+
+    const planQueryReturn = {
+      data: { plan: allRequiredAnsweredPlan },
+      loading: false,
+      error: null,
+      refetch: jest.fn(),
+    };
+
+    mockUseQuery.mockImplementation((document) => {
+      if (document === PlanDocument) return planQueryReturn;
+      if (document === MeDocument) return { data: { me: { id: 1, affiliation: { uri: 'mock-org-id' }, role: UserRole.Admin } }, loading: false, error: null };
+      return { data: null, loading: false, error: undefined } as any;
+    });
+
+    render(<PlanOverviewPage />);
+    fireEvent.click(screen.getByText(/buttons.publish/i));
+
+    await waitFor(() => {
+      // completedAllRequiredQuestions is true, so this item should not count as incomplete
+      const incompleteCount = screen.getByText((content) =>
+        content.includes('2') && content.includes('publishModal.publish.checklistInfo')
+      );
+      expect(incompleteCount).toBeInTheDocument();
+    });
+  });
+
+  it('should show requiredFields checklist item as incomplete when not all required questions are answered', async () => {
+    render(<PlanOverviewPage />); // default mock has incomplete required questions
+
+    fireEvent.click(screen.getByText(/buttons.publish/i));
+
+    await waitFor(() => {
+      const checklist = screen.getByTestId('checklist');
+      within(checklist).getByText('publishModal.publish.checklistItem.requiredFields');
+      // Incomplete count should reflect this item being in the error state
+      const incompleteCount = screen.getByText((content) =>
+        content.includes('3') && content.includes('publishModal.publish.checklistInfo')
+      );
+      expect(incompleteCount).toBeInTheDocument();
+    });
+  });
 });

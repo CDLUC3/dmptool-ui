@@ -69,10 +69,12 @@ query Project($projectId: Int!) {
         sectionType
         customSectionId
         answeredQuestions
+        answeredRequiredQuestions
         displayOrder
         versionedSectionId
         title
         totalQuestions
+        totalRequiredQuestions
       }
       title
       templateTitle

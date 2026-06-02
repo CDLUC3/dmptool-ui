@@ -160,6 +160,8 @@ const ProjectOverviewPage: React.FC = () => {
             ...section,
             // add sectionType if missing
             sectionType: section.sectionType ?? "BASE",
+            answeredRequiredQuestions: section.answeredRequiredQuestions ?? 0,
+            totalRequiredQuestions: section.totalRequiredQuestions ?? 0,
           }))
         })) ?? [],
         fundings:

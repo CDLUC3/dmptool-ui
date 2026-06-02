@@ -8,6 +8,7 @@
 - Added `UpdateAffiliation` and `AffiliationById` queries [#203]
 
 ## Updated
+- Updated `PlanOverviewPage` to use `totalRequiredQuestions` and `answeredRequiredQuestions` to display a message to user in Publish modal [#249]
 - Updated `Notification` component to include `yes/no` radio buttons for sending an email on feedback completion and updated content. Updated `PlanOverview` to use the new `sendEmail` boolean. Updated `completedFeedback` graphql mutation to include `sendEmail` boolean [#252]
 - Updated `handleRevoke` method in `ProjectsProjectColalboration` component so that we revert the optimistic update if errors are returned as part of the successful response [#228]
 - Updated `ProjectsProjectCollaboration`, `ProjectsProjectFunding`, `ProjectsProjectMembers` and `ProjectsProjectDetail` to query `project` resolver instead to get its data, so that we can easily get `readOnly` data. Updated those components to disable or remove form fields, CTAs and links in `readOnly` mode [#245]
