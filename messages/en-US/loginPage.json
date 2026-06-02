@@ -4,7 +4,7 @@
     "emailAddress": "Email address",
     "singleSignOn": "To enable Single Sign On (SSO), use your institutional address. You will be redirected to your institution's single sign on platform.",
     "password": "Password",
-    "forgotPassword": "Forgot password?",
+    "resetPassword": "Reset password",
     "continue": "Continue",
     "login": "Login",
     "signupText": "Create a free DMP Tool account instead",

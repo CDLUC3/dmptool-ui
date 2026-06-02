@@ -109,6 +109,23 @@ describe('LoginPage', () => {
     expect(emailField).toHaveAttribute('readonly');
   });
 
+  it("should show reset password link on the password step", async () => {
+    render(<LoginPage />);
+
+    fireEvent.change(screen.getByTestId("emailInput"), {
+      target: { value: "test@test.com" }
+    });
+
+    fireEvent.click(screen.getByTestId("actionContinue"));
+
+    await waitFor(() => {
+      expect(screen.getByRole("link", { name: "resetPassword" })).toBeInTheDocument();
+    });
+
+    // TODO: enable when reset password flow is implemented
+    // expect(screen.getByRole("link", { name: "resetPassword" })).toHaveAttribute("href", expect.not.stringContaining("#"));
+  });
+
   it("should redirect to home on successful login", async () => {
     jest.spyOn(global, 'fetch').mockImplementation((url) => {
       if (url === 'http://localhost:4000/apollo-signin') {

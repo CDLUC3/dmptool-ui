@@ -183,8 +183,10 @@ const LoginPage: React.FC = () => {
               <Label>{t('password')}</Label>
               <Input data-testid="passInput" />
               <FieldError />
-              <Text slot="description" className={styles.help}>
-                <Link>{t('forgotPassword')}</Link>
+              <Text slot="description">
+                <Link href="#" className={styles.resetPasswordLink}>
+                  {t('resetPassword')}
+                </Link>
               </Text>
             </TextField>
           )}
