@@ -2,8 +2,10 @@
 
 import React from "react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { ContentContainer, LayoutContainer } from "@/components/Container";
 import { Button } from "react-aria-components";
+import { TransitionLink } from "@/components/Form";
 import TemplateList from "@/components/TemplateList";
 import ProjectListItem from "@/components/ProjectListItem";
 import TemplateSelectListItem from "@/components/TemplateSelectListItem";
@@ -25,6 +27,10 @@ import {
 } from "../../shared/components";
 
 export default function ListsDataCardsPage() {
+  const Global = useTranslations("Global");
+  const ProjectsListPage = useTranslations("ProjectsListPage");
+  const OrganizationProjects = useTranslations("OrganizationProjects");
+
   // State for interactive examples
   const [selectedTemplate, setSelectedTemplate] = React.useState<number | null>(null);
   const [_expandedProject, _setExpandedProject] = React.useState<string | null>(null);
@@ -296,6 +302,9 @@ export default function ListsDataCardsPage() {
                   <a href="#project-list-item">Project List Item</a>
                 </li>
                 <li>
+                  <a href="#projects-empty-state">Projects Empty State</a>
+                </li>
+                <li>
                   <a href="#template-select-list">Template Select List</a>
                 </li>
                 <li>
@@ -489,6 +498,104 @@ const partialProject = {
                   <strong>Accessibility:</strong> Proper ARIA labels and keyboard navigation
                 </li>
               </ul>
+            </SGComponentExampleContent>
+          </SGComponentExample>
+        </section>
+
+        {/* Projects empty state */}
+        <section id="projects-empty-state">
+          <h2>Projects Empty State</h2>
+          <p>
+            Shown on the Plan Dashboard and Organization Projects list when the user has no projects. Uses global{" "}
+            <code>.empty-state</code> styles from <code>styles/_elements.scss</code>. Search with no matches uses a
+            separate plain message instead.
+          </p>
+
+          <SGComponentExample>
+            <SGComponentExampleHeader
+              title="Plan Dashboard (no projects)"
+              description="Used on /projects when totalCount is zero. Demo button uses a page anchor; production links to projects.create."
+            />
+            <SGComponentExampleContent>
+              <SGComponentExampleDemo>
+                <div className="template-list">
+                  <div className="empty-state" role="status">
+                    <h2 className="empty-state-heading">
+                      {ProjectsListPage("messages.info.noProjectsHeading")}
+                    </h2>
+                    <p className="empty-state-description">
+                      {ProjectsListPage("messages.info.noProjectsDescription")}
+                    </p>
+                    <TransitionLink
+                      href="#projects-empty-state"
+                      className="button-link button--primary"
+                    >
+                      {Global("buttons.createNewPlan")}
+                    </TransitionLink>
+                  </div>
+                </div>
+              </SGComponentExampleDemo>
+            </SGComponentExampleContent>
+          </SGComponentExample>
+
+          <SGComponentExample>
+            <SGComponentExampleHeader
+              title="Organization Projects (no projects)"
+              description="Used on /admin/projects when totalCount is zero"
+            />
+            <SGComponentExampleContent>
+              <SGComponentExampleDemo>
+                <div className="template-list">
+                  <div className="empty-state" role="status">
+                    <h2 className="empty-state-heading">
+                      {OrganizationProjects("messages.info.noProjectsHeading")}
+                    </h2>
+                    <p className="empty-state-description">
+                      {OrganizationProjects("messages.info.noProjectsDescription")}
+                    </p>
+                    <TransitionLink
+                      href="#projects-empty-state"
+                      className="button-link button--primary"
+                    >
+                      {Global("buttons.createNewPlan")}
+                    </TransitionLink>
+                  </div>
+                </div>
+              </SGComponentExampleDemo>
+            </SGComponentExampleContent>
+          </SGComponentExample>
+
+          <SGComponentExample>
+            <SGComponentExampleHeader
+              title="Search with no results"
+              description="Plain message when a search returns nothing (not the empty-state block)"
+            />
+            <SGComponentExampleContent>
+              <SGComponentExampleDemo>
+                <div className="template-list" role="list">
+                  <p>{Global("messaging.noItemsFound")}</p>
+                </div>
+              </SGComponentExampleDemo>
+
+              <h4>Usage</h4>
+              <SGCodeBlock>{`// Empty dashboard — app/[locale]/projects/page.tsx
+<div className="empty-state" role="status">
+  <h2 className="empty-state-heading">
+    {Project('messages.info.noProjectsHeading')}
+  </h2>
+  <p className="empty-state-description">
+    {Project('messages.info.noProjectsDescription')}
+  </p>
+  <TransitionLink
+    href={routePath('projects.create')}
+    className="button-link button--primary"
+  >
+    {Global('buttons.createNewPlan')}
+  </TransitionLink>
+</div>
+
+// Search miss — same page, different branch
+<p>{Global('messaging.noItemsFound')}</p>`}</SGCodeBlock>
             </SGComponentExampleContent>
           </SGComponentExample>
         </section>
