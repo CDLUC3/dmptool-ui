@@ -20,6 +20,7 @@ import PageHeader from "@/components/PageHeader";
 import ProjectListItem from "@/components/ProjectListItem";
 import { ContentContainer, LayoutContainer } from "@/components/Container";
 import ErrorMessages from "@/components/ErrorMessages";
+import { TransitionLink } from "@/components/Form";
 
 //GraphQL
 // TODO: Change to organization-scoped GraphQL query instead of MyProjectsDocument
@@ -396,6 +397,21 @@ const OrganizationProjectsListPage: React.FC = () => {
               >
                 {searchTerm && searchButtonClicked ? (
                   <p>{Global("messaging.noItemsFound")}</p>
+                ) : projects.length === 0 && totalCount === 0 && projectData?.myProjects ? (
+                  <div className="empty-state" role="status">
+                    <h2 className="empty-state-heading">
+                      {Project("messages.info.noProjectsHeading")}
+                    </h2>
+                    <p className="empty-state-description">
+                      {Project("messages.info.noProjectsDescription")}
+                    </p>
+                    <TransitionLink
+                      href={routePath("projects.create")}
+                      className="button-link button--primary"
+                    >
+                      {Global("buttons.createNewPlan")}
+                    </TransitionLink>
+                  </div>
                 ) : (
                   <>
                     {projects.map((project, index) => (

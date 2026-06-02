@@ -393,6 +393,21 @@ const ProjectsListPage: React.FC = () => {
               <div className='template-list' role="list">
                 {searchTerm && searchButtonClicked ? (
                   <p>{Global('messaging.noItemsFound')}</p>
+                ) : projects.length === 0 && totalCount === 0 ? (
+                  <div className="empty-state" role="status">
+                    <h2 className="empty-state-heading">
+                      {Project('messages.info.noProjectsHeading')}
+                    </h2>
+                    <p className="empty-state-description">
+                      {Project('messages.info.noProjectsDescription')}
+                    </p>
+                    <TransitionLink
+                      href={routePath('projects.create')}
+                      className="button-link button--primary"
+                    >
+                      {Global('buttons.createNewPlan')}
+                    </TransitionLink>
+                  </div>
                 ) : (
                   <>
                     {projects.map((project, index) => (
