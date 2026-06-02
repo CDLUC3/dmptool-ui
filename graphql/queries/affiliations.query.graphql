@@ -49,5 +49,6 @@ query AffiliationById($affiliationId: Int!) {
     displayName
     name
     id
+    uri
   }
 }

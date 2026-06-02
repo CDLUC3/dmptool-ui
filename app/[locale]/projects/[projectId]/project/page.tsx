@@ -58,6 +58,7 @@ const ProjectsProjectDetail = () => {
   const params = useParams();
   const searchParams = useSearchParams();
   const fromOverview = searchParams.get('fromOverview');
+  const projectFundingId = searchParams.get('projectFundingId');
   const router = useRouter();
   const projectId = String(params.projectId); // From route /projects/:projectId
 
@@ -67,7 +68,7 @@ const ProjectsProjectDetail = () => {
   //For scrolling to error in page
   const errorRef = useRef<HTMLDivElement | null>(null);
 
-  const PROJECT_SEARCH_REDIRECT_ROUTE = routePath('projects.create.projects.search', {
+  const PROJECT_SEARCH_URL = routePath('projects.create.projects.search', {
     projectId: projectId as string,
   });
 
@@ -88,6 +89,10 @@ const ProjectsProjectDetail = () => {
   // Track whether the project should be in read-only mode based on the "readOnly" field 
   // returned from the backend from ProjectDocument query
   const [isReadOnly, setIsReadOnly] = useState<boolean>(false);
+  // Does project have funder
+  const [hasFunder, setHasFunder] = useState<boolean>(false);
+  // Does funding in question have API target
+  const [hasApiTarget, setHasApiTarget] = useState<boolean>(false);
 
   // Localization keys
   const ProjectOverview = useTranslations('ProjectOverview');
@@ -280,6 +285,13 @@ const ProjectsProjectDetail = () => {
         isTestProject: project.isTestProject ? project.isTestProject.toString() : 'false'
       })
       setIsReadOnly(project.readOnly ?? false);
+      setHasFunder((project?.fundings?.length ?? 0) > 0);
+      setHasApiTarget(
+        project?.fundings?.some(
+          (funding) => String(funding.id) === projectFundingId && funding?.affiliation?.apiTarget
+        ) ?? false
+      );
+
     }
   }, [data])
 
@@ -424,26 +436,28 @@ const ProjectsProjectDetail = () => {
             )}
           </Form>
 
-          {!isReadOnly && (<div className="form-signpost my-8">
-            <div className="form-signpost-inner">
-              <div className="">
-                <p className="text-sm">
-                  {ProjectDetail('paragraphs.para1')}
-                </p>
-              </div>
-              <div className="form-signpost-button">
+          {/** Don't show if no funder, no apiTarget on the matching funder, or project is read-only */}
+          {!isReadOnly && hasFunder && hasApiTarget && (
+            <div className="form-signpost my-8">
+              <div className="form-signpost-inner">
+                <div className="">
+                  <p className="text-sm">
+                    {ProjectDetail('paragraphs.para1')}
+                  </p>
+                </div>
+                <div className="form-signpost-button">
 
-                <Button
-                  className="bg-slate-900 text-white px-4 py-2 rounded-md hover:bg-slate-800"
-                  data-testid="search-projects-button"
-                  onPress={() => router.push(PROJECT_SEARCH_REDIRECT_ROUTE)}
-                >
-                  {ProjectDetail('buttons.searchProjects')}
-                </Button>
+                  <Button
+                    className="bg-slate-900 text-white px-4 py-2 rounded-md hover:bg-slate-800"
+                    data-testid="search-projects-button"
+                    onPress={() => router.push(PROJECT_SEARCH_URL)}
+                  >
+                    {ProjectDetail('buttons.searchProjects')}
+                  </Button>
 
+                </div>
               </div>
             </div>
-          </div>
           )}
         </ContentContainer>
       </LayoutContainer >
