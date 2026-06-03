@@ -39,6 +39,7 @@ query Project($projectId: Int!) {
         displayName
         searchName
         uri
+        apiTarget
       }
       funderOpportunityNumber
       funderProjectNumber
@@ -101,9 +102,34 @@ query Project($projectId: Int!) {
 query ProjectFundingsApi($projectId: Int!) {
   project(projectId: $projectId) {
     fundings {
+      id
       affiliation {
         apiTarget
+        uri
+        id
       }
     }
+  }
+}
+
+query SearchExternalProjects($input: ExternalSearchInput!) {
+  searchExternalProjects(input: $input) {
+    abstractText
+    endDate
+    fundings {
+      funderProjectNumber
+      funderOpportunityNumber
+      grantId
+    }
+    members {
+      affiliationId
+      email
+      givenName
+      orcid
+      surName
+      role
+    }
+    startDate
+    title
   }
 }

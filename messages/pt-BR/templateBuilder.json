@@ -85,7 +85,7 @@
     },
     "button": {
       "archiveTemplate": "Template de arquivo",
-      "archving": "Arquivando template...",
+      "archiving": "Arquivando template...",
       "saveAsDraft": "Salvar como rascunho",
       "savingDraft": "Salvando rascunho...",
       "previewTemplate": "Pré-visualizar template",
@@ -143,7 +143,7 @@
     },
     "messages": {
       "errors": {
-        "selectVisibilityError": "Please select a visibility option before publishing."
+        "selectVisibilityError": "Por favor, selecione uma opção de visibilidade antes de publicar."
       }
     }
   },
@@ -159,7 +159,6 @@
     },
     "links": {
       "editQuestion": "Editar pergunta",
-      "customizeQuestion": "Personalizar",
       "addQuestion": "Adicionar pergunta"
     },
     "buttons": {
@@ -167,6 +166,12 @@
       "moveDown": "Mover pergunta para baixo"
     },
     "messages": {
+      "error": {
+        "errorDeletingQuestion": "Erro ao excluir a pergunta"
+      },
+      "success": {
+        "successDeletingQuestion": "Pergunta excluída com sucesso"
+      },
       "questionMoved": "Seção movida para a posição {displayOrder}"
     },
     "checklist": {
@@ -264,7 +269,7 @@
       "deleteCustomization": "Excluir personalização da seção"
     },
     "descriptions": {
-      "deleteCustomization": "<strong>Suas personalizações serão removidas desta seção. </strong>  Isso não é reversível.",
+      "deleteCustomization": "<strong>Suas personalizações serão removidas desta seção.</strong> Isso não é reversível.",
       "deleteCustomSection": "<strong>Sua seção personalizada será removida. Isso não é reversível.</strong>",
       "tagDescription": "As etiquetas são usadas para reunir as informações de melhores práticas da sua organização e serão exibidas para cada pergunta nesta seção. As etiquetas são definidas pela Ferramenta DMP ou pelo Financiador que criou este modelo originalmente e não podem ser alteradas.",
       "editGuidanceForTags": "Edite suas orientações para tags."
@@ -280,6 +285,41 @@
     },
     "labels": {
       "bestPracticeTags": "Etiquetas de práticas recomendadas"
+    }
+  },
+  "QuestionCustomize": {
+    "title": "Personalizar pergunta",
+    "messages": {
+      "noContent": "O financiador não adicionou {label}",
+      "success": {
+        "successfullyDeletedCustomization": "Personalizações da pergunta excluídas com sucesso",
+        "successfullyUpdatedCustomization": "Personalizações da pergunta atualizadas com sucesso"
+      },
+      "error": {
+        "errorDeletingCustomization": "Erro ao excluir personalização da pergunta",
+        "errorUpdatingCustomization": "Erro ao atualizar personalização da pergunta"
+      }
+    },
+    "labels": {
+      "additionalGuidanceText": "Texto de orientação adicional",
+      "additionalSampleText": "Texto de amostra adicional",
+      "requirements": "Requisitos",
+      "guidance": "Orientação",
+      "sampleText": "Texto de amostra"
+    },
+    "helpText": {
+      "additionalGuidanceText": "Descreva as orientações que um usuário deve considerar para esta pergunta.",
+      "additionalSampleText": "Permitiremos que os usuários copiem o mesmo texto para o campo de texto; isso permitirá que eles agilizem a inserção de conteúdo."
+    },
+    "heading": {
+      "deleteCustomization": "Excluir personalização"
+    },
+    "descriptions": {
+      "deleteCustomization": "<strong>Suas personalizações para este modelo serão removidas da pergunta. </strong>  Isso não é reversível."
+    },
+    "buttons": {
+      "deleteCustomization": "Excluir personalização",
+      "deletingCustomization": "Excluindo personalizações..."
     }
   },
   "CreateSectionPage": {
@@ -367,7 +407,7 @@
       "changeType": "Mudar os Tipos",
       "previewQuestion": "Pergunta de visualização",
       "deleteQuestion": "Excluir questão",
-      "addOutput": "Adicionar saída"
+      "addOutput": "Add Output"
     },
     "descriptions": {
       "sampleText": "Forneça um exemplo ou modelo de resposta esperada (opcional, mas recomendado)",
@@ -391,7 +431,8 @@
       "questionText": "Texto da questão",
       "requirementText": "Requisitos de perguntas (opcional, mas recomendado)",
       "guidanceText": "Orientação para perguntas (opcional mas recomendado)",
-      "sampleText": "Texto de amostra"
+      "sampleText": "Texto de amostra",
+      "comment": "Comentário adicional"
     },
     "messages": {
       "areYouSureYouWantToDelete": "Tem certeza de que deseja excluir esta saída de pesquisa?",
@@ -411,8 +452,8 @@
       "bestPractice": "Melhores práticas da Ferramenta DMP",
       "deleteQuestion": "Apagar Pergunta",
       "confirmDelete": "Confirmar exclusão?",
-      "addResearchOutput": "Adicionar saída de pesquisa",
-      "editResearchOutput": "Editar saída de pesquisa"
+      "addResearchOutput": "Adicionar resultado de pesquisa",
+      "editResearchOutput": "Editar resultado de pesquisa"
     },
     "definitions": {
       "type": "Tipo",
@@ -472,14 +513,14 @@
       "customAccessLevelList": "Lista de níveis de acesso personalizado",
       "helpText": "Texto de Ajuda para {fieldName}",
       "mayContainSensitiveData": "Pode conter dados sensíveis?",
-      "mayContainPersonalData": "Pode conter informações pessoalmente identificáveis?",
+      "mayContainPersonalData": "Pode conter informações identificáveis de pessoa física?",
       "preferredRepositories": "Apenas repositórios preferenciais",
       "preferredMetadataStandards": "Apenas padrões de metadados preferenciais",
-      "displayPaginationCount": "Exibindo {count} padrões de um total de {totalCount}",
-      "displayAdditionalCommentField": "Exibir área adicional para comentários",
+      "displayPaginationCount": "Exibindo padrões {count} de {totalCount} no total",
+      "displayAdditionalCommentField": "Exibir área de comentário adicional",
       "additionalCommentBox": "Caixa de comentário adicional",
-      "showCommentField": "Exibir uma área de comentários onde os escritores do plano podem explicar sua resposta",
-      "doNotShowCommentField": "Não adicionar uma área de comentários"
+      "showCommentField": "Mostrar um campo de comentário onde os redatores de plano podem explicar sua resposta",
+      "doNotShowCommentField": "Não adicionar um campo de comentário"
     },
     "buttons": {
       "addRow": "Adicionar linha",
@@ -496,8 +537,8 @@
       "guidanceText": "Permita que os pesquisadores saibam como fornecer melhor respostas aos requisitos, tais como políticas para considerar de sua organização ou quais fatores considerar.",
       "sampleText": "Os criadores de planos poderão copiar o texto da amostra para o campo como ponto de partida, para acelerar a entrada de conteúdo.",
       "dataFlags": "Marque todas as afirmações que são verdadeiras sobre o conjunto de dados",
-      "preferredRepositories": "Estes repositórios foram definidos pelo criador do modelo como repositórios preferenciais para uso.",
-      "preferredMetadataStandards": "Estes padrões de metadados foram definidos pelo criador do modelo como padrões de metadados preferenciais para uso."
+      "preferredRepositories": "Esses repositórios foram definidos pelo criador do template como repositórios preferenciais para usar.",
+      "preferredMetadataStandards": "Esses padrões de metadados foram definidos pelo criador do template como padrões de metadados preferenciais para usar."
     },
     "headings": {
       "bestPractice": "Melhores práticas pela Ferramenta DMP",
@@ -508,11 +549,13 @@
       "errors": {
         "questionTextRequired": "Campo texto da pergunta é obrigatório.",
         "questionAddingError": "Erro ao adicionar pergunta.",
+        "questionUpdatingError": "Erro ao atualizar a pergunta.",
         "questionValidationError": "Valor inválido",
         "invalidQuestionType": "Tipo de questão inválido encontrado"
       },
       "success": {
-        "questionAdded": "A pergunta foi adicionada com sucesso."
+        "questionAdded": "A pergunta foi adicionada com sucesso.",
+        "questionUpdated": "A pergunta foi atualizada com sucesso."
       }
     },
     "researchOutput": {
@@ -532,31 +575,31 @@
         "repositoryRemoved": "Repositório removido."
       },
       "helpText": "O comprimento máximo é de 300 caracteres.",
-      "accessLevelDescriptionOPEN": "Permite acesso livre a todas as áreas.",
-      "accessLevelDescriptionRESTRICTED": "Restringe o acesso a certas áreas.",
-      "accessLevelDescriptionCLOSED": "Outro tipo de acesso.",
+      "accessLevelDescriptionOPEN": "Permite acesso aberto a todas as áreas",
+      "accessLevelDescriptionRESTRICTED": "Restringe o acesso a certas áreas",
+      "accessLevelDescriptionCLOSED": "Outro tipo de acesso",
       "headings": {
         "enableStandardFields": "Ativar campos padrão",
-        "additionalTextFields": "Text fields adicionais"
+        "additionalTextFields": "Campos de texto adicionais"
       },
       "description": "Selecione quais campos padrão para incluir na sua pergunta de saída da pesquisa. Você pode personalizar cada campo individualmente.",
       "tooltip": {
         "requiredFields": "Esses campos são necessários para todas as saídas de pesquisa."
       },
       "labels": {
-        "description": "Descrição",
+        "description": "Descrição:",
         "descriptionLowerCase": "Descrição",
         "taxonomyURL": "URL de taxonomia",
-        "websiteURL": "URL do site",
+        "websiteURL": "URL do website",
         "title": "Título",
         "dataFlags": "Sinalizadores de dados",
         "outputType": "Tipo de saída",
         "repositories": "Repositórios",
         "metadataStandards": "Padrões de metadados",
         "licenses": "Licenças",
-        "initialAccessLevels": "Níveis de acesso iniciais",
-        "useCustomList": "Use lista personalizada",
-        "useDefaults": "Use padrões"
+        "initialAccessLevels": "Níveis de Acesso Iniciais",
+        "useCustomList": "Usar lista personalizada",
+        "useDefaults": "Usar padrões"
       },
       "legends": {
         "dataFlag": "Quais bandeiras de dados a exibir"
@@ -609,7 +652,7 @@
           "contactTitle": "E-mail de contato",
           "urlTitle": "Descrição do repositório",
           "dataAccessTitle": "Acesso aos dados",
-          "identifierTitle": "Persistent identifier"
+          "identifierTitle": "Identificador persistente"
         },
         "singleRepo": "Repositório",
         "multipleRepo": "Repositórios"
@@ -658,17 +701,17 @@
       },
       "accessLevels": {
         "labels": {
-          "defineAccessLevels": "Define access levels",
-          "enterAccessLevel": "Enter access level",
-          "accessLevelDescription": "Access level description",
-          "removeAccessLevel": "Remove {level}"
+          "defineAccessLevels": "Definir níveis de acesso",
+          "enterAccessLevel": "Inserir nível de acesso",
+          "accessLevelDescription": "Descrição do nível de acesso",
+          "removeAccessLevel": "Remover {level}"
         },
         "legends": {
-          "default": "Default Access Levels",
-          "myAccessLevels": "My Access Levels"
+          "default": "Níveis de Acesso Padrão",
+          "myAccessLevels": "Meus Níveis de Acesso"
         },
         "buttons": {
-          "addAccessLevel": "Add access level"
+          "addAccessLevel": "Adicionar nível de acesso"
         }
       },
       "licenses": {
@@ -676,11 +719,11 @@
           "define": "Definir licenças preferidas",
           "defaultPreferred": "Licenças preferidas por padrão",
           "addLicense": "Adicionar licença",
-          "myLicenses": "My Licenses"
+          "myLicenses": "Minhas Licenças"
         },
         "buttons": {
           "addLicenseType": "Adicionar tipo de licença",
-          "removeLicenseType": "Remove {type}"
+          "removeLicenseType": "Remover {type}"
         }
       },
       "additionalFields": {
@@ -690,11 +733,11 @@
         },
         "helpText": {
           "label": "Texto de ajuda",
-          "helpText": "Texto de ajuda opcional para orientar os usuários. Comprimento máximo de 300 caracteres."
+          "helpText": "Texto de ajuda opcional para orientar os usuários. Comprimento máximo 300 caracteres."
         },
         "maxLength": {
           "label": "Comprimento máximo",
-          "helpText": "Número máximo de caracteres permitidos (deixe vazio para sem limite)"
+          "helpText": "Número máximo de caracteres permitidos (deixe vazio para não ter limite)"
         },
         "defaultValue": {
           "label": "Valor padrão",

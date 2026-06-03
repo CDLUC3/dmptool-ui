@@ -1,4 +1,5 @@
 ## Added
+- Added `projectImport` mutation and `searchExternalProjects` query [#352]
 - Added a new `button-disabled` style to shared `_button.scss` [#244]
 - Added `readOnly` and `collaborators` fields to `Project` query schema [#244]
 - Added new shared styles `popoverContent`, `popover-inverse`, and `link-disabled` [#225]
@@ -9,6 +10,10 @@
 
 ## Updated
 - Updated `PlanOverviewPage` to use `totalRequiredQuestions` and `answeredRequiredQuestions` to display a message to user in Publish modal [#249]
+- Updated `CreateProjectsSearchFunder` and `ProjectsCreateProject` components to use <TransitionButton> [#352]
+- Updated `ProjectsCreateProjectFunding` component with <TransitionButton> and to pass affiliationId as a query parameter to project search page [#352]
+- Updated `ProjectsProjectDetail` component to not show the Search Projects button unless they have funding with an API [#352]
+- Hooked up `ProjectsCreateProjectProjectsSearch` component to backend. Use `searchExternalProjects` query to get search results and projectImport mutation to save to the appropriate tables [#352]
 - Updated `Notification` component to include `yes/no` radio buttons for sending an email on feedback completion and updated content. Updated `PlanOverview` to use the new `sendEmail` boolean. Updated `completedFeedback` graphql mutation to include `sendEmail` boolean [#252]
 - Updated `handleRevoke` method in `ProjectsProjectColalboration` component so that we revert the optimistic update if errors are returned as part of the successful response [#228]
 - Updated `ProjectsProjectCollaboration`, `ProjectsProjectFunding`, `ProjectsProjectMembers` and `ProjectsProjectDetail` to query `project` resolver instead to get its data, so that we can easily get `readOnly` data. Updated those components to disable or remove form fields, CTAs and links in `readOnly` mode [#245]
