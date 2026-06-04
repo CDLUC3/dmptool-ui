@@ -43,12 +43,37 @@ query ManagedAffiliationsWithGuidance($name: String, $versionedTemplateId: Int!,
 
 query AffiliationById($affiliationId: Int!) {
   affiliationById(affiliationId: $affiliationId) {
+    id
+    uri
+    provenance
+    active
+    name
+    displayName
+    homepage
+    fundrefId
+    acronyms
+    aliases
+    types
+    funder
+    managed
+    active
+    logoName
+    logoURI
     feedbackEmails
     feedbackEnabled
     feedbackMessage
-    displayName
-    name
-    id
-    uri
+    contactName
+    contactEmail
+    subHeaderLinks {
+      id
+      url
+      text
+    }
+    ssoEntityId
+    ssoEmailDomains {
+      id
+      domain
+    }
+    apiTarget
   }
 }

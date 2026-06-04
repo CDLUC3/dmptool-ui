@@ -211,7 +211,7 @@ const AddProjectFunderManually = () => {
           variables: {
             input: {
               funder: true,
-              name: fundingData.otherAffiliationName,
+              displayName: fundingData.otherAffiliationName,
             },
           },
         });
