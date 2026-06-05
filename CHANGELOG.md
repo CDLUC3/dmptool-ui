@@ -9,6 +9,7 @@
 - Added `UpdateAffiliation` and `AffiliationById` queries [#203]
 
 ## Updated
+- Updated `PlanOverviewPage` to use `totalRequiredQuestions` and `answeredRequiredQuestions` to display a message to user in Publish modal [#249]
 - Updated `CreateProjectsSearchFunder` and `ProjectsCreateProject` components to use <TransitionButton> [#352]
 - Updated `ProjectsCreateProjectFunding` component with <TransitionButton> and to pass affiliationId as a query parameter to project search page [#352]
 - Updated `ProjectsProjectDetail` component to not show the Search Projects button unless they have funding with an API [#352]
