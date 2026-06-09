@@ -446,6 +446,7 @@ export interface PlanOverviewInterface {
   templatePublished?: string;
   orgId?: string;
   feedbackStatus?: string;
+  completedAllRequiredQuestions?: boolean;
 }
 
 export interface ActionResponse {
