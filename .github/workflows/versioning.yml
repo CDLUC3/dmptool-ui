@@ -1,6 +1,7 @@
 name: Automated Versioning
-
 on:
+  workflow_dispatch:
+
   pull_request:
     types:
       - closed
@@ -12,7 +13,7 @@ permissions:
 
 jobs:
   version:
-    if: github.event.pull_request.merged == true
+    # if: github.event.pull_request.merged == true
     #GitHub-hosted runner with Ubuntu
     runs-on: ubuntu-latest 
 
@@ -20,7 +21,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-        ref: ${{ github.event.pull_request.base.ref }}
+          # ref: ${{ github.event.pull_request.base.ref }}
+          ref: ${{ github.ref_name }}
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
@@ -32,21 +34,7 @@ jobs:
       - name: Determine version bump
         id: bump
         run: |
-          PR_TITLE="${{ github.event.pull_request.title}}"
-
-          echo "PR title:"
-          echo "$PR_TITLE"
-
-          if [[ "$PR_TITLE" =~ ^major: ]]; then
-            echo "type=major" >> $GITHUB_OUTPUT
-          elif [[ "$PR_TITLE" =~ ^minor: ]]; then
-            echo "type=minor" >> $GITHUB_OUTPUT
-          elif [[ "$PR_TITLE" =~ ^patch: ]]; then
-            echo "type=patch" >> $GITHUB_OUTPUT
-          else
-            echo "PR title must start with major:, minor:, or patch:"
-            exit 1
-          fi
+          echo "type=minor" >> $GITHUB_OUTPUT
 
       - name: Bump version
         run: |
@@ -63,11 +51,15 @@ jobs:
           VERSION="${{ steps.version.outputs.version }}"
 
           {
-            head -n 1 CHANGELOG.md
-            echo ""
             echo "## v${VERSION}"
             echo ""
-            tail -n +2 CHANGELOG.md
+            echo "### Added"
+            echo ""
+            echo "### Updated"
+            echo ""
+            echo "### Fixed"
+            echo ""
+            cat CHANGELOG.md
           } > CHANGELOG.tmp
 
           mv CHANGELOG.tmp CHANGELOG.md
@@ -85,7 +77,7 @@ jobs:
 
           git commit -m "chore: release v${{ steps.version.outputs.version }}" || exit 0
 
-          git tag "v${{ steps.version.outputs.version }}"
+          # git tag "v${{ steps.version.outputs.version }}"
 
-          git push origin HEAD:${{ github.event.pull_request.base.ref }}
-          git push --tags
+          # git push origin HEAD:${{ github.event.pull_request.base.ref }}
+          # git push --tags
