@@ -337,6 +337,13 @@
       }
     }
   },
+  "AdminNotifications": {
+    "title": "Notifications",
+    "headings": {
+      "unread": "Unread notifications",
+      "previousNotifications": "Previous notifications"
+    }
+  },
   "OrganizationDetails": {
     "title": "Organization Details",
     "description": "View organization details",
@@ -782,7 +789,9 @@
       "createNewPlan": "Create New DMP",
       "deletingCustomization": "Deleting customization...",
       "deleteCustomization": "Delete customization",
-      "view": "View"
+      "view": "View",
+      "viewPlan": "View plan",
+      "markAsRead": "Mark as read"
     },
     "labels": {
       "required": "required",
