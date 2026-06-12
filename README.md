@@ -211,7 +211,7 @@ docker run -p 3000:3000 dmsp_frontend_prototype:dmsp_frontend_prod
 |   |-- api
 |       |-- setCookie
 |           |-- __tests__
-|           |-- route.ts
+|           |-- s3Uploader.ts
 |   |-- login
 |       |-- __tests__
 |       |-- login.module.scss

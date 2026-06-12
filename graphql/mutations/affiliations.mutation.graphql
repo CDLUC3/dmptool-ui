@@ -12,13 +12,14 @@ mutation UpdateAffiliation($input: AffiliationInput!) {
   updateAffiliation(input: $input) {
     id
     displayName
+    displayAbbreviation
+    displayDomain
     homepage
     acronyms
     aliases
     types
     funder
     managed
-    active
     feedbackEmails
     feedbackEnabled
     feedbackMessage
@@ -30,13 +31,21 @@ mutation UpdateAffiliation($input: AffiliationInput!) {
       text
     }
     ssoEntityId
-    ssoEmailDomains {
-      id
-      domain
-    }
+    ssoEmailDomains
     apiTarget
     errors {
       general
+      displayName
+      displayAbbreviation
+      displayDomain
+      contactEmail
+      contactName
+      types
+      subHeaderLinks
+      ssoEntityId
+      ssoEmailDomains
+      fundrefId
+      rorId
       feedbackEmails
       feedbackMessage
     }
@@ -49,18 +58,6 @@ mutation GenerateLogoUploadURL($affiliationURI: String!, $fileName: String!, $co
     fields
     errors {
       general
-    }
-  }
-}
-
-mutation FinalizeLogoUpload($affiliationURI: String!, $logoName: String!) {
-  finalizeLogoUpload(affiliationURI: $affiliationURI, logoName: $logoName) {
-    logoURI
-    logoName
-    errors {
-      general
-      logoURI
-      logoName
     }
   }
 }
