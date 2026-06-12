@@ -250,9 +250,7 @@ const OrganizationDetailsPage: React.FC = () => {
     setOrganization((prev) => ({ ...prev, ssoEmailDomains }));
   };
 
-  // Upload the organization's logo to S3 via the nextJS server-side proxy (/api/s3-proxy).
-  // Routing through the proxy avoids browser CORS restrictions against S3 / LocalStack and ensures the body is sent
-  // as multipart/form-data, which is required for S3 presigned POST uploads.
+  // Upload the organization's logo to S3 via the server side s3Upload hook.
   const uploadLogoToS3 = async (url: string, fields: string, file: File): Promise<string | undefined> => {
     if (!url || !fields || !file) {
       return undefined;
