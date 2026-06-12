@@ -611,7 +611,9 @@ describe('PlanOverviewSectionPage - BASE section with BASE questions or CUSTOM q
       expect(screen.getByText('What types of data will be produced during your project?')).toBeInTheDocument()
     );
 
-    expect(screen.getAllByText('sections.start')).toHaveLength(2);
+    await waitFor(() => {
+      expect(screen.getAllByText('sections.start')).toHaveLength(2);
+    });
     expect(screen.getAllByText('sections.update')).toHaveLength(1);
     expect(screen.queryByText('sections.view')).not.toBeInTheDocument();
   });

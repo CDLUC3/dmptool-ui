@@ -9,6 +9,7 @@
 - Added `UpdateAffiliation` and `AffiliationById` queries [#203]
 
 ## Updated
+- Updated `PlanOverviewPage` to use `totalRequiredQuestions` and `answeredRequiredQuestions` to display a message to user in Publish modal [#249]
 - Updated `CreateProjectsSearchFunder` and `ProjectsCreateProject` components to use <TransitionButton> [#352]
 - Updated `ProjectsCreateProjectFunding` component with <TransitionButton> and to pass affiliationId as a query parameter to project search page [#352]
 - Updated `ProjectsProjectDetail` component to not show the Search Projects button unless they have funding with an API [#352]
@@ -49,6 +50,9 @@
 - Fixed issue with Feedback Notification headers displaying for any collaborator on the Plan Overview, Section and Question pages. It should only display to Org Admins and Super Admins. Added shared isOrgAdmin hook for pages. [#249]
 
 ## Chore
+- Added Github Action workflows `versioning.yml` and `validation-version-label.yml` to automate versioning when merging from `development` into `stage`. [#271]
+- Addressed `shell-quote` vulnerability by running `npm audit fix` to update `package-lock.json` [#278]
+- Updated `tinymce` to `v7.9.3` due to high vulnerabilities [#276]
 - Updated `@apollo/client` to `v4.2.0`, `dompurify` to `v3.4.6`, `@types/react` to `v18.3.29`, `react` to `v19.2.6`, `react-dom` to `v19.2.6`, `@types/node` to `v24.12.4`, `@dmptool/types` to `v3.1.5`, `postcss` to `v8.5.15`, and `tmp` to `v0.2.7`. Removed `@eslint-plugin-kit` override, and added `qs` override to address security vulnerability. Updated `zod` to `v4.4.3` to match the version in updated `@dmptool/types`, otherwise I get errors.
 - Updated version of `sanitize-html` to `v2.17.4` [#225]
 - Updated version of `next-intl` to `v4.9.2` and `icu-minify` to `v4.11.1`, and added `override` of `postcss` to `v8.5.10` to address security vulnerabilities.

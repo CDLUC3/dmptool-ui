@@ -6,7 +6,6 @@ import { useToast } from "@/context/ToastContext";
 import {
   AffiliationByIdDocument,
   AffiliationType,
-  FinalizeLogoUploadDocument,
   GenerateLogoUploadUrlDocument,
   MeDocument,
   UpdateAffiliationDocument,
@@ -95,9 +94,6 @@ const setupApollo = (options: SetupOptions = {}) => {
     }
     if (document === GenerateLogoUploadUrlDocument) {
       return [generateMutationMock, { loading: false }];
-    }
-    if (document === FinalizeLogoUploadDocument) {
-      return [finalizeMutationMock, { loading: false }];
     }
     return [jest.fn(), { loading: false }];
   });

@@ -530,6 +530,7 @@ const PlanOverviewPage: React.FC = () => {
         templateVersion: data?.plan?.versionedTemplate?.version ?? "",
         templatePublished: data?.plan?.versionedTemplate?.created ?? "",
         percentageAnswered: data?.plan?.progress?.percentComplete ?? 0,
+        completedAllRequiredQuestions: data?.plan?.versionedSections?.every((section) => section.answeredRequiredQuestions === section.totalRequiredQuestions) ?? false,
         orgId: data?.plan?.versionedTemplate?.owner?.uri ?? "",
         feedbackStatus: data?.plan?.feedbackStatus?.status ?? "NONE",
       });
@@ -603,7 +604,7 @@ const PlanOverviewPage: React.FC = () => {
     {
       id: 5,
       content: <>{t("publishModal.publish.checklistItem.requiredFields")}</>,
-      completed: false, // Mark as not completed
+      completed: planData.completedAllRequiredQuestions
     },
     {
       id: 6,
