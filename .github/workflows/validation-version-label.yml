@@ -3,7 +3,7 @@ name: Validate Version Label
 on:
   pull_request:
     branches:
-      - stage
+      - main
     types:
       - opened
       - synchronize
@@ -37,7 +37,8 @@ jobs:
           echo "  patch=$HAS_PATCH"
 
           if [ "$COUNT" -eq 0 ]; then
-            echo "::warning::No version label found. Will default to patch bump on merge."
+            echo "::error::No version label found. Add exactly one of: version:major, version:minor, or version:patch"
+            exit 1
           fi
 
           if [ "$COUNT" -gt 1 ]; then
