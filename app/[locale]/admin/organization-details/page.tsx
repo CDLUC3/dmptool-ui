@@ -250,7 +250,7 @@ const OrganizationDetailsPage: React.FC = () => {
     setOrganization((prev) => ({ ...prev, ssoEmailDomains }));
   };
 
-  // Upload the organization's logo to S3 via the server side s3Upload hook.
+  // Upload the organization's logo to S3 via the server side uploadFileToS3 hook.
   const uploadLogoToS3 = async (url: string, fields: string, file: File): Promise<string | undefined> => {
     if (!url || !fields || !file) {
       return undefined;
@@ -285,7 +285,7 @@ const OrganizationDetailsPage: React.FC = () => {
   };
 
   // Generate a presigned URL that we can upload the logo to
-  const getPresignedURL = async (file: File): Promise<{ url: string | undefined, fields: string }> => {
+  const getPresignedURL = async (file: File): Promise<{ url: string | undefined; fields: string }> => {
     const response = await generatePresignedURLMutation({
       variables: {
         affiliationURI: organization.uri,
@@ -300,7 +300,6 @@ const OrganizationDetailsPage: React.FC = () => {
     if (responseErrors && responseErrors.general !== "") {
       setErrors((prevErrors) => [...prevErrors, responseErrors.general]);
     } else if (responseData) {
-
       return { url: responseData?.url, fields: responseData?.fields };
     } else {
       setErrors((prevErrors) => [...prevErrors, OrganizationDetails("messages.errors.logoFileUploadPartOne")]);
@@ -319,13 +318,13 @@ const OrganizationDetailsPage: React.FC = () => {
       // Then upload the file to S3 via our server side proxy
       const s3Key = await uploadLogoToS3(url, fields, uploadFile);
       if (s3Key) {
-        // Then update the Affiliation's LogoName to the S3 Key
+        // Then return the S3 key so we can set the logoName
         return s3Key;
       }
     }
     // Something went wrong. Errors will have been set elsewhere so just return a false;
     return undefined;
-  }
+  };
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleDrop = async (e: any) => {
@@ -391,7 +390,7 @@ const OrganizationDetailsPage: React.FC = () => {
       // Get the existing logo file name
       let logoName = organization.logoName;
 
-      // Process newly uploaded the logo if applicable
+      // Process newly uploaded logo if applicable
       if (uploadFile && logoName) {
         const s3Key: string | undefined = await processLogoUpload();
         if (!s3Key) {
@@ -399,14 +398,13 @@ const OrganizationDetailsPage: React.FC = () => {
           return [undefined, false];
         }
         logoName = s3Key;
-
       } else if (logoName && !logoUrl) {
         // If the logo was removed
         logoName = undefined;
       }
 
       const subHeaderLinks: AffiliationLinkInput[] = organizationLinks.map((link: OrganizationLink) => {
-        return { id: link.id, url: link.url, text: link.text }
+        return { id: link.id, url: link.url, text: link.text };
       });
 
       const response = await updateAffiliationMutation({
@@ -554,7 +552,7 @@ const OrganizationDetailsPage: React.FC = () => {
     setIsSubmitting(false);
   };
 
-  useEffect( () => {
+  useEffect(() => {
     // When data from backend changes, set organization data in state
     if (data && data.affiliationById) {
       // Abbreviation is a required field, so use what the admin entered, what ROR provided, or generate one
