@@ -69,6 +69,19 @@ jest.mock('next-intl', () => {
   };
 });
 
+// Mock next/link globally to avoid internal use-intersection state updates in jsdom tests.
+jest.mock('next/link', () => {
+  const React = require('react');
+
+  return {
+    __esModule: true,
+    default: React.forwardRef(({ href, children, ...props }: any, ref: any) => {
+      const normalizedHref = typeof href === 'string' ? href : (href?.pathname ?? '');
+      return React.createElement('a', { ref, href: normalizedHref, ...props }, children);
+    }),
+  };
+});
+
 // Mock the clientLogger
 jest.mock('@/utils/clientLogger', () => jest.fn());
 

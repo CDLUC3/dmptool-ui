@@ -440,8 +440,6 @@ describe('PlanOverviewQuestionPage render of questions', () => {
     expect(screen.getByRole('heading', { level: 3, name: 'Requirements by University of California' })).toBeInTheDocument();
     const orgRequirements = screen.getByText(/cleared by the ethics committee/i);
     expect(orgRequirements.tagName).toBe('P');
-    // check that the 'Jump to guidance' link is present
-    expect(screen.getByRole('link', { name: /page.jumpToGuidance/i })).toBeInTheDocument();
 
     // Check that question card is in the page with correct question details
     expect(screen.getByTestId('question-card')).toBeInTheDocument();
@@ -3627,19 +3625,25 @@ describe('PlanOverviewQuestionPageShared isAdmin/isReadOnly and feedback notific
 
   it('shows NotificationHeader when feedbackStatus is REQUESTED', async () => {
     const ORG_URI = 'https://ror.org/03yrm5c26';
+    const ORG_AFFILIATION_ID = 99;
 
-    // Ensure the plan's template owner URI matches the admin user's affiliation URI
+    // isOrgAdmin requires a PRIMARY collaborator whose affiliation.id matches me.affiliation.id
     const planWithRequested = {
       ...mockPlanData,
       plan: {
         ...mockPlanData.plan,
         feedbackStatus: { status: 'REQUESTED' },
-        versionedTemplate: {
-          ...mockPlanData.plan.versionedTemplate,
-          owner: {
-            ...mockPlanData.plan.versionedTemplate?.owner,
-            uri: ORG_URI,  // must match meAdmin's affiliation.uri
-          },
+        project: {
+          ...mockPlanData.plan.project,
+          collaborators: [
+            {
+              accessLevel: 'PRIMARY',
+              user: {
+                id: 1,
+                affiliation: { id: ORG_AFFILIATION_ID },
+              },
+            },
+          ],
         },
       },
     };
@@ -3648,7 +3652,11 @@ describe('PlanOverviewQuestionPageShared isAdmin/isReadOnly and feedback notific
       ...mockMeData,
       me: {
         ...mockMeData.me,
-        affiliation: { uri: ORG_URI },  // <-- must match plan owner uri
+        affiliation: {
+          ...mockMeData.me.affiliation,
+          id: ORG_AFFILIATION_ID,
+          uri: ORG_URI,
+        },
         role: UserRole.Admin,
       },
     };
@@ -3673,14 +3681,34 @@ describe('PlanOverviewQuestionPageShared isAdmin/isReadOnly and feedback notific
       render(<PlanOverviewQuestionPageShared config={config} />);
     });
 
-    expect(screen.getByText('feedbackNotification.title')).toBeInTheDocument();
-    expect(screen.getByText('feedbackNotification.description')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText('feedbackNotification.title')).toBeInTheDocument();
+      expect(screen.getByText('feedbackNotification.description')).toBeInTheDocument();
+    });
   });
 
   it('disables form submit and hides Save button when isReadOnly is true', async () => {
-    // Simulate feedbackStatus REQUESTED and user is not admin
-    const planWithRequested = { ...mockPlanData, plan: { ...mockPlanData.plan, feedbackStatus: { status: 'REQUESTED' }, planCreator: { ...mockPlanData.plan.planCreator, affiliation: { uri: 'https://ror.org/03yrm5c26' } } } };
-    const meAdmin = { ...mockMeData, me: { ...mockMeData.me, affiliation: { uri: 'https://ror.org/03yrm5c26' }, role: UserRole.Admin } };
+    // Read-only plan and current user is NOT an EDIT collaborator
+    const planWithReadOnly = {
+      ...mockPlanData,
+      plan: {
+        ...mockPlanData.plan,
+        readOnly: true,
+        project: {
+          ...mockPlanData.plan.project,
+          collaborators: [{ accessLevel: 'VIEW', user: { id: 2 } }],
+        },
+      },
+    };
+
+    const meData = {
+      ...mockMeData,
+      me: {
+        ...mockMeData.me,
+        id: 1,
+      },
+    };
+
     mockUseQuery.mockImplementation((document) => {
       if (document === PublishedQuestionDocument) {
         return { data: mockQuestionDataForTextArea, loading: false, error: undefined, refetch: jest.fn() } as any;
@@ -3689,10 +3717,10 @@ describe('PlanOverviewQuestionPageShared isAdmin/isReadOnly and feedback notific
         return { data: mockAnswerDataForTextArea, loading: false, error: undefined, refetch: jest.fn() } as any;
       }
       if (document === PlanDocument) {
-        return { data: planWithRequested, loading: false, refetch: mockRefetch } as any;
+        return { data: planWithReadOnly, loading: false, refetch: mockRefetch } as any;
       }
       if (document === MeDocument) {
-        return { data: meAdmin, loading: false, error: undefined, refetch: jest.fn() } as any;
+        return { data: meData, loading: false, error: undefined, refetch: jest.fn() } as any;
       }
       return { data: null, loading: false, error: undefined } as any;
     });
@@ -3709,10 +3737,27 @@ describe('PlanOverviewQuestionPageShared isAdmin/isReadOnly and feedback notific
     preventDefaultSpy.mockRestore();
   });
 
-  it('shows Save button when isReadOnly is false (admin)', async () => {
-    // Simulate feedbackStatus REQUESTED but user is admin
-    const planWithRequested = { ...mockPlanData, plan: { ...mockPlanData.plan, feedbackStatus: { status: 'REQUESTED' }, versionedTemplate: { ...mockPlanData.plan.versionedTemplate, owner: { ...mockPlanData.plan.versionedTemplate.owner, uri: 'user-uri' } } } };
-    const meAdmin = { ...mockMeData, me: { ...mockMeData.me, affiliation: { uri: 'admin-uri' }, role: 'ADMIN' } };
+  it('shows Save button when plan is read-only but current user is an EDIT collaborator', async () => {
+    const planWithReadOnly = {
+      ...mockPlanData,
+      plan: {
+        ...mockPlanData.plan,
+        readOnly: true,
+        project: {
+          ...mockPlanData.plan.project,
+          collaborators: [{ accessLevel: 'EDIT', user: { id: 1 } }],
+        },
+      },
+    };
+
+    const meData = {
+      ...mockMeData,
+      me: {
+        ...mockMeData.me,
+        id: 1,
+      },
+    };
+
     mockUseQuery.mockImplementation((document) => {
       if (document === PublishedQuestionDocument) {
         return { data: mockQuestionDataForTextArea, loading: false, error: undefined, refetch: jest.fn() } as any;
@@ -3721,10 +3766,10 @@ describe('PlanOverviewQuestionPageShared isAdmin/isReadOnly and feedback notific
         return { data: mockAnswerDataForTextArea, loading: false, error: undefined, refetch: jest.fn() } as any;
       }
       if (document === PlanDocument) {
-        return { data: planWithRequested, loading: false, refetch: mockRefetch } as any;
+        return { data: planWithReadOnly, loading: false, refetch: mockRefetch } as any;
       }
       if (document === MeDocument) {
-        return { data: meAdmin, loading: false, error: undefined, refetch: jest.fn() } as any;
+        return { data: meData, loading: false, error: undefined, refetch: jest.fn() } as any;
       }
       return { data: null, loading: false, error: undefined } as any;
     });

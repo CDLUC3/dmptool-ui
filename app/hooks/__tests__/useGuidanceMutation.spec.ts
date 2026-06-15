@@ -38,7 +38,8 @@ describe('useGuidanceMutations', () => {
     uri: 'https://ror.org/03yrm5c26',
     displayName: 'California Digital Library',
     funder: false,
-    id: 1
+    id: 1,
+    name: 'California Digital Library'
   };
 
   let mockAddMutation: jest.Mock;
@@ -501,14 +502,16 @@ describe('useGuidanceMutations', () => {
         uri: 'https://ror.org/1',
         displayName: 'Org 1',
         funder: false,
-        id: 1
+        id: 1,
+        name: 'Org 1'
       };
 
       const affiliation2: AffiliationSearch = {
         uri: 'https://ror.org/2',
         displayName: 'Org 2',
         funder: false,
-        id: 2
+        id: 2,
+        name: 'Org 2'
       };
 
       await act(async () => {

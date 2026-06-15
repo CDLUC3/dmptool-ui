@@ -39,6 +39,10 @@ query Plan($planId: Int!) {
       collaborators {
         user {
           id
+          affiliation {
+            id
+            uri
+          }
         }
         accessLevel
       }
@@ -96,5 +100,6 @@ query Plan($planId: Int!) {
         uri
       }
     }
+    readOnly
   }
 }

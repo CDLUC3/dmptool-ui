@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { ProjectItemProps } from "@/app/types";
+import { TransitionLink } from "@/components/Form";
 import styles from "./projectList.module.scss";
 import ExpandButton from "@/components/ExpandButton";
 
@@ -114,13 +115,13 @@ function ProjectListItem({ item }: { item: ProjectItemProps }) {
 
         <div className={styles.actions}>
           {item.link && (
-            <Link
+            <TransitionLink
               href={item.link}
               aria-label={`${Global("buttons.linkUpdate")} ${item.title}`}
               className={`react-aria-Button react-aria-Button--primary ${styles.updateButton}`}
             >
               {Global("buttons.linkUpdate")}
-            </Link>
+            </TransitionLink>
           )}
 
           <ExpandButton

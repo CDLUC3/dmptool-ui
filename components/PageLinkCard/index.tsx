@@ -1,5 +1,5 @@
 import React from 'react';
-import Link from 'next/link';
+import { TransitionLink } from "@/components/Form";
 import styles from './PageLinkCard.module.scss';
 
 export interface PageLinkItem {
@@ -29,7 +29,7 @@ const PageLinkCard: React.FC<PageLinkCardProps> = ({ sections }) => {
           {section.description && <p className={styles.sectionDescription}>{section.description}</p>}
           <div className={styles.sectionGrid}>
             {section.items.map((item, itemIndex) => (
-              <Link
+              <TransitionLink
                 key={itemIndex}
                 href={item.href}
                 className={styles.adminCard}
@@ -44,7 +44,7 @@ const PageLinkCard: React.FC<PageLinkCardProps> = ({ sections }) => {
                   )}
                 </div>
                 {item.description && <p id={`item-${sectionIndex}-${itemIndex}`}>{item.description}</p>}
-              </Link>
+              </TransitionLink>
             ))}
           </div>
         </section>

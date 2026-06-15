@@ -277,8 +277,11 @@ describe("CommentList", () => {
       const saveButton = screen.getByText("buttons.save");
       fireEvent.click(saveButton);
 
-      expect(defaultProps.handleUpdateComment).toHaveBeenCalledWith(mockComments[0]);
-      expect(defaultProps.setEditingCommentText).toHaveBeenCalledWith('');
+      expect(defaultProps.handleUpdateComment).toHaveBeenCalledWith({
+        ...mockComments[0],
+        commentText: "Editing this comment",
+      });
+      expect(defaultProps.setEditingCommentText).not.toHaveBeenCalled();
     });
 
     it("should call handleCancelEdit when cancel button is clicked", async () => {

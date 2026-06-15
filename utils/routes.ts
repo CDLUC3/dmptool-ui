@@ -123,7 +123,7 @@ const routes = {
   'account.notifications': '/account/notifications',
 
   // Admin routes
-  'admin.index': '/admin/',
+  'admin.index': '/admin',
   'admin.notifications': '/admin/notifications',
   'admin.templates': '/admin/templates',
 

@@ -196,8 +196,15 @@ const setupMocks = (meData = null) => {
 
 const adminMe = {
   me: {
-    affiliation: { uri: 'mock-org-id' },
+    affiliation: { id: 100, uri: 'mock-org-id' },
     role: UserRole.Admin,
+  },
+};
+
+const nonAdminMe = {
+  me: {
+    affiliation: { id: 100, uri: 'mock-org-id' },
+    role: UserRole.Researcher,
   },
 };
 
@@ -228,12 +235,20 @@ describe('PlanOverviewPage', () => {
   });
 
 
-  it('should render NotificationHeader when planFeedbackStatus.status is REQUESTED', async () => {
+  it('should render NotificationHeader when planFeedbackStatus.status is REQUESTED and user is an Org Admin', async () => {
     const planQueryReturn = {
       data: {
         plan: {
           ...mockPlanData.plan,
           feedbackStatus: { status: 'REQUESTED' },
+          project: {
+            collaborators: [
+              {
+                accessLevel: 'PRIMARY',
+                user: { id: 1, affiliation: { id: 100 } },
+              },
+            ],
+          },
           planCreator: { ...mockPlanData.plan?.planCreator, affiliation: { uri: 'mock-org-id' } },
         },
       },
@@ -266,6 +281,93 @@ describe('PlanOverviewPage', () => {
     });
   });
 
+  it('should NOT render NotificationHeader when planFeedbackStatus.status is REQUESTED and but user is NOT an Org Admin', async () => {
+    const planQueryReturn = {
+      data: {
+        plan: {
+          ...mockPlanData.plan,
+          feedbackStatus: { status: 'REQUESTED' },
+          project: {
+            collaborators: [
+              {
+                accessLevel: 'PRIMARY',
+                user: { id: 1, affiliation: { id: 100 } },
+              },
+            ],
+          },
+          planCreator: { ...mockPlanData.plan?.planCreator, affiliation: { uri: 'mock-org-id' } },
+        },
+      },
+      loading: false,
+      error: null,
+      refetch: jest.fn(),
+    };
+    const feedbackQueryReturn = {
+      data: { planFeedbackStatus: { status: 'REQUESTED', id: 123 } },
+      loading: false,
+      error: undefined,
+    };
+    const meQueryReturn = {
+      data: nonAdminMe,
+      loading: false,
+      error: null,
+    };
+
+    mockUseQuery.mockImplementation((document) => {
+      if (document === PlanDocument) return planQueryReturn;
+      if (document === PlanFeedbackStatusDocument) return feedbackQueryReturn;
+      if (document === MeDocument) return meQueryReturn;
+      return { data: null, loading: false, error: undefined } as any;
+    });
+
+    render(<PlanOverviewPage />);
+    await waitFor(() => {
+      expect(screen.queryByText('feedbackNotification.title')).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'feedbackNotification.markAsDone' })).not.toBeInTheDocument();
+    });
+  });
+
+  it('should not render NotificationHeader when plan feedback status is not REQUESTED', async () => {
+    const planQueryReturn = {
+      data: {
+        plan: {
+          ...mockPlanData.plan,
+          feedbackStatus: { status: 'NONE' },
+          project: {
+            collaborators: [
+              {
+                accessLevel: 'PRIMARY',
+                user: { id: 1, affiliation: { id: 100 } },
+              },
+            ],
+          },
+        },
+      },
+      loading: false,
+      error: null,
+      refetch: jest.fn(),
+    };
+
+    const feedbackQueryReturn = {
+      data: { planFeedbackStatus: { status: 'NONE', id: 123 } },
+      loading: false,
+      error: undefined,
+    };
+
+    mockUseQuery.mockImplementation((document) => {
+      if (document === PlanDocument) return planQueryReturn;
+      if (document === PlanFeedbackStatusDocument) return feedbackQueryReturn;
+      if (document === MeDocument) return { data: adminMe, loading: false, error: null };
+      return { data: null, loading: false, error: undefined } as any;
+    });
+
+    render(<PlanOverviewPage />);
+
+    await waitFor(() => {
+      expect(screen.queryByText('feedbackNotification.title')).not.toBeInTheDocument();
+    });
+  });
+
 
   it('should call completeFeedbackMutation and show toast when mark as done is confirmed', async () => {
     const planQueryReturn = {
@@ -273,6 +375,14 @@ describe('PlanOverviewPage', () => {
         plan: {
           ...mockPlanData.plan,
           feedbackStatus: { status: 'REQUESTED' },
+          project: {
+            collaborators: [
+              {
+                accessLevel: 'PRIMARY',
+                user: { id: 1, affiliation: { id: 100 } },
+              },
+            ],
+          },
           planCreator: { ...mockPlanData.plan?.planCreator, affiliation: { uri: 'mock-org-id' } },
         },
       },
@@ -425,7 +535,7 @@ describe('PlanOverviewPage', () => {
     expect(within(sidebar).getByRole('heading', { name: 'status.publish.title' })).toBeInTheDocument();
     expect(within(sidebar).getByText('status.publish.label')).toBeInTheDocument();
     expect(within(sidebar).getByRole('heading', { name: 'status.download.title' })).toBeInTheDocument();
-    expect(within(sidebar).getByRole('link', { name: 'download' })).toBeInTheDocument();
+    expect(within(sidebar).getByRole('link', { name: 'status.download.title' })).toBeInTheDocument();
   });
 
   it('should function as expected if plan data is missing id, dmpId, registered, title, and status', async () => {
@@ -500,7 +610,7 @@ describe('PlanOverviewPage', () => {
     expect(within(sidebar).getByRole('heading', { name: 'status.publish.title' })).toBeInTheDocument();
     expect(within(sidebar).getByText('status.publish.label')).toBeInTheDocument();
     expect(within(sidebar).getByRole('heading', { name: 'status.download.title' })).toBeInTheDocument();
-    expect(within(sidebar).getByRole('link', { name: 'download' })).toBeInTheDocument();
+    expect(within(sidebar).getByRole('link', { name: 'status.download.title' })).toBeInTheDocument();
   });
 
   it('should display plan status PUBLISHED if \'registered\' prop has a value', async () => {
@@ -645,7 +755,7 @@ describe('PlanOverviewPage', () => {
     });
   });
 
-  it('should not display related works counts for UNPUBLISHED if \'hasPublishedPlan\' prop is false', async () => {
+  it('should hide related works counts but keep edit link when hasPublishedPlan is false and plan is editable', async () => {
     const updatedMockPlanData = {
       ...mockPlanData.plan,
     };
@@ -694,7 +804,7 @@ describe('PlanOverviewPage', () => {
       expect(screen.getByText('relatedWorks.publish')).toBeInTheDocument();
       expect(screen.queryByText('relatedWorks.pendingCount')).not.toBeInTheDocument();
       expect(screen.queryByText('relatedWorks.acceptedCount')).not.toBeInTheDocument();
-      expect(screen.queryByRole('link', { name: 'relatedWorks.edit' })).not.toBeInTheDocument();
+      expect(screen.getByRole('link', { name: 'relatedWorks.edit' })).toBeInTheDocument();
     });
   });
 
@@ -765,6 +875,75 @@ describe('PlanOverviewPage', () => {
       const button = within(sectionWithNoAnswers).getByText('sections.start');
       expect(button).toBeInTheDocument();
     }
+  });
+
+  it('should keep section actions editable for EDIT collaborators when plan is read-only', async () => {
+    const meId = 77;
+
+    const planQueryReturn = {
+      data: {
+        plan: {
+          ...mockPlanData.plan,
+          readOnly: true,
+          project: {
+            collaborators: [{ accessLevel: 'EDIT', user: { id: meId } }],
+          },
+        },
+      },
+      loading: false,
+      error: null,
+      refetch: jest.fn(),
+    };
+
+    const meQueryReturn = {
+      data: { me: { id: meId, affiliation: { uri: 'mock-org-id' }, role: UserRole.Admin } },
+      loading: false,
+      error: null,
+    };
+
+    mockUseQuery.mockImplementation((document) => {
+      if (document === PlanDocument) return planQueryReturn;
+      if (document === MeDocument) return meQueryReturn;
+      return { data: null, loading: false, error: undefined } as any;
+    });
+
+    render(<PlanOverviewPage />);
+
+    await waitFor(() => {
+      expect(screen.getAllByText('sections.update').length).toBeGreaterThan(0);
+      expect(screen.getAllByText('sections.start').length).toBeGreaterThan(0);
+      expect(screen.queryByText('sections.view')).not.toBeInTheDocument();
+    });
+  });
+
+  it('should show read-only popover message for disabled OverviewSection edit control', async () => {
+    const planQueryReturn = {
+      data: {
+        plan: {
+          ...mockPlanData.plan,
+          readOnly: true,
+          feedbackStatus: { status: 'NONE' },
+        },
+      },
+      loading: false,
+      error: null,
+      refetch: jest.fn(),
+    };
+
+    mockUseQuery.mockImplementation((document) => {
+      if (document === PlanDocument) return planQueryReturn;
+      if (document === MeDocument) return { data: { me: { id: 1, affiliation: { uri: 'mock-org-id' }, role: UserRole.Admin } }, loading: false, error: null };
+      return { data: null, loading: false, error: undefined } as any;
+    });
+
+    render(<PlanOverviewPage />);
+
+    const fundingEditButton = screen.getByRole('button', { name: 'funding.edit' });
+    fireEvent.click(fundingEditButton);
+
+    await waitFor(() => {
+      expect(screen.getByText('messages.readOnlyLinkMessage')).toBeInTheDocument();
+    });
   });
 
   it('should open and close modal', async () => {

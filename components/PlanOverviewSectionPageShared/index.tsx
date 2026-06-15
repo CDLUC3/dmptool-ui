@@ -25,6 +25,8 @@ import PageHeader from "@/components/PageHeader";
 import SafeHtml from '@/components/SafeHtml';
 import GuidancePanel from '@/components/GuidancePanel';
 import Loading from '@/components/Loading';
+import NotificationHeader from '../Notification';
+import { TransitionLink } from "@/components/Form";
 
 // Utils and other
 import { stripHtml } from '@/utils/general';
@@ -32,6 +34,7 @@ import { routePath } from '@/utils/routes';
 import styles from './PlanOverviewSectionPage.module.scss';
 import { useGuidanceData } from '@/app/hooks/useGuidanceData';
 import { useGuidanceMutations, UseGuidanceMutationsProps } from "@/app/hooks/useGuidanceMutations";
+import { useIsOrgAdmin } from '@/app/hooks/useIsOrgAdmin';
 
 interface VersionedQuestion {
   id: string;
@@ -125,6 +128,8 @@ export const PlanOverviewSectionPageShared: React.FC<{ config: SectionPageConfig
 
   // State for navigation visibility
   const [showNavigation, setShowNavigation] = useState(true);
+  // Track whether the question should be read-only based on plan status and user role
+  const [isReadOnly, setIsReadOnly] = useState<boolean>(false);
 
   // Validate that dmpId is a valid number
   const planId = parseInt(dmpId);
@@ -163,6 +168,23 @@ export const PlanOverviewSectionPageShared: React.FC<{ config: SectionPageConfig
     };
   }, [sectionData]);
 
+  // Determine if user is a collaborator with edit access - this will allow them to see "Update" on the section cards and access the question modals even if the plan is read-only
+  const isEditCollaborator = useMemo(() => {
+    const myId = me?.me?.id;
+    if (!myId || !planData?.plan?.project?.collaborators) return false;
+
+    return planData.plan.project.collaborators.some(
+      (collaborator) =>
+        collaborator?.user?.id === myId &&
+        collaborator?.accessLevel === "EDIT"
+    );
+  }, [me?.me?.id, planData?.plan?.project?.collaborators]);
+
+  // Determine if user is an Org Admin that can see feedback request notifications
+  const isOrgAdmin = useIsOrgAdmin(
+    me?.me,
+    planData?.plan?.project?.collaborators
+  );
 
 
   const questions: VersionedQuestion[] = useMemo(() => {
@@ -171,7 +193,7 @@ export const PlanOverviewSectionPageShared: React.FC<{ config: SectionPageConfig
       ?.filter((q): q is NonNullable<typeof q> => q !== null)
       .map((q) => ({
         id: q.id?.toString() || '',
-        title: q.questionText || '',
+        title: stripHtml(q.questionText || ''),
         link: buildQuestionLink({ projectId, dmpId, sectionId: Number(sectionId), question: q }),
         hasAnswer: q.hasAnswer || false,
       })) || [];
@@ -195,7 +217,6 @@ export const PlanOverviewSectionPageShared: React.FC<{ config: SectionPageConfig
       buildGuidanceMutationParams({ planId, sectionId: Number(sectionId) })
     );
 
-
   // Hide navigation when close to footer
   useEffect(() => {
     const handleScroll = () => {
@@ -215,6 +236,10 @@ export const PlanOverviewSectionPageShared: React.FC<{ config: SectionPageConfig
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  useEffect(() => {
+    setIsReadOnly(planData?.plan?.readOnly ?? false);
+  }, [planData]);
+
   // Simple error handling - check for invalid DMP ID
   if (isNaN(planId)) {
     return <ErrorMessages errors={[t('errors.invalidDmpId')]} />;
@@ -223,7 +248,6 @@ export const PlanOverviewSectionPageShared: React.FC<{ config: SectionPageConfig
   if (questionsLoading || sectionLoading || planLoading) {
     return <Loading />;
   }
-
 
   if (questionsError) {
     return <div>{Section('errors.errorLoadingSections', { message: questionsError.message })}</div>;
@@ -242,7 +266,8 @@ export const PlanOverviewSectionPageShared: React.FC<{ config: SectionPageConfig
   const plan = {
     id: planData?.plan?.id?.toString() || '',
     title: planData?.plan?.versionedTemplate?.template?.name || '',
-    funder_name: planData?.plan?.project?.fundings?.[0]?.affiliation?.displayName || ''
+    funder_name: planData?.plan?.project?.fundings?.[0]?.affiliation?.displayName || '',
+    feedbackStatus: planData?.plan?.feedbackStatus?.status ?? '',
   };
 
   return (
@@ -268,6 +293,13 @@ export const PlanOverviewSectionPageShared: React.FC<{ config: SectionPageConfig
       />
 
       <LayoutWithPanel>
+        {plan?.feedbackStatus === "REQUESTED" && isOrgAdmin && (
+          <NotificationHeader
+            title={t("feedbackNotification.title")}
+          >
+            <p>{t("feedbackNotification.description")}</p>
+          </NotificationHeader>
+        )}
         <ContentContainer>
           <div className={styles.contentWrapper}>
             {/* Subtle plan navigation for very large screens */}
@@ -297,7 +329,10 @@ export const PlanOverviewSectionPageShared: React.FC<{ config: SectionPageConfig
                         className={`${styles.sectionLink} ${section.versionedSectionId === Number(sectionId) ? styles.currentSection : ''
                           }`}
                         aria-label={`Go to ${section.title} section`}
-                        aria-current={(section.versionedSectionId ?? section.customSectionId) === Number(sectionId)}
+                        aria-current={(section.versionedSectionId ?? section.customSectionId) === Number(sectionId)
+                          ? 'page'
+                          : undefined
+                        }
                       >
                         {section.title}
                       </Link>
@@ -314,14 +349,12 @@ export const PlanOverviewSectionPageShared: React.FC<{ config: SectionPageConfig
                   <SafeHtml html={section.introduction} />
                 </section>
               )}
-              <section aria-label={"Requirements"}>
-                {section?.requirements && (
-                  <>
-                    <h3 className="h4">{t('headings.requirementsBy', { funder: plan.funder_name })}</h3>
-                    <SafeHtml html={section?.requirements} />
-                  </>
-                )}
-              </section>
+              {section?.requirements && (
+                <section aria-label={"Requirements"}>
+                  <h3 className="h4">{t('headings.requirementsBy', { funder: plan.funder_name })}</h3>
+                  <SafeHtml html={section?.requirements} />
+                </section>
+              )}
 
               {questions.length === 0 ? (
                 <section className={styles.noQuestionsMessage}>
@@ -329,43 +362,53 @@ export const PlanOverviewSectionPageShared: React.FC<{ config: SectionPageConfig
                   <p>{Section('headings.noQuestionsInSection')}</p>
                 </section>
               ) : (
-                questions.map((question) => (
-                  <section
-                    key={question.id}
-                    className={styles.questionCard}
-                    aria-labelledby={`question-title-${question.id}`}
-                  >
-                    <div className={styles.questionHeader}>
-                      <div className={styles.questionTitle}>
-                        <h3 id={`question-title-${question.id}`}>
-                          {stripHtml(question.title)}
-                        </h3>
-                        <p aria-live="polite">
-                          <span
-                            className={styles.progressIndicator}
-                            aria-label={`Question status: ${question.hasAnswer ? t('question.answered') : t('question.notAnswered')}`}
-                          >
-                            <DmpIcon
-                              icon={question.hasAnswer ? 'check_circle' : 'cancel'}
-                              classes={`${styles.progressIcon} ${!question.hasAnswer ? styles.progressIconInactive : ''}`}
-                            />
-                            {question.hasAnswer ? t('question.answered') : t('question.notAnswered')}
-                          </span>
-                        </p>
+                questions.map((question) => {
+                  const canEditSections = !isReadOnly || isEditCollaborator;
+
+                  // Determine the action label for the section button
+                  const sectionActionLabel = !canEditSections
+                    ? t("sections.view")
+                    : question.hasAnswer
+                      ? t("sections.update")
+                      : t("sections.start");
+                  return (
+                    <section
+                      key={question.id}
+                      className={styles.questionCard}
+                      aria-labelledby={`question-title-${question.id}`}
+                    >
+                      <div className={styles.questionHeader}>
+                        <div className={styles.questionTitle}>
+                          <h3 id={`question-title-${question.id}`}>
+                            {question.title}
+                          </h3>
+                          <p aria-live="polite">
+                            <span
+                              className={styles.progressIndicator}
+                              aria-label={`Question status: ${question.hasAnswer ? t('question.answered') : t('question.notAnswered')}`}
+                            >
+                              <DmpIcon
+                                icon={question.hasAnswer ? 'check_circle' : 'cancel'}
+                                classes={`${styles.progressIcon} ${!question.hasAnswer ? styles.progressIconInactive : ''}`}
+                              />
+                              {question.hasAnswer ? t('question.answered') : t('question.notAnswered')}
+                            </span>
+                          </p>
+                        </div>
+                        <TransitionLink
+                          href={question.link}
+                          aria-label={t('sections.ariaLabel', {
+                            action: question.hasAnswer ? t('sections.update') : t('sections.start'),
+                            title: question.title
+                          })}
+                          className="react-aria-Button react-aria-Button--secondary"
+                        >
+                          {sectionActionLabel}
+                        </TransitionLink>
                       </div>
-                      <Link
-                        href={question.link}
-                        aria-label={t('sections.ariaLabel', {
-                          action: question.hasAnswer ? t('sections.update') : t('sections.start'),
-                          title: question.title
-                        })}
-                        className="react-aria-Button react-aria-Button--secondary"
-                      >
-                        {question.hasAnswer ? t('sections.update') : t('sections.start')}
-                      </Link>
-                    </div>
-                  </section>
-                ))
+                    </section>
+                  )
+                })
               )}
             </div>
           </div>

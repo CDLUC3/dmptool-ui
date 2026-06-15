@@ -1,5 +1,6 @@
 import { render, screen, waitFor, act } from '@testing-library/react';
 import { MockedProvider } from '@apollo/client/testing/react';
+import type { MockLink } from '@apollo/client/testing';
 import { useParams } from 'next/navigation';
 import { axe, toHaveNoViolations } from 'jest-axe';
 
@@ -62,6 +63,9 @@ jest.mock('@/utils/general', () => ({
 // Mock next/navigation
 jest.mock('next/navigation', () => ({
   useParams: jest.fn(),
+  useRouter: jest.fn(() => ({
+    push: jest.fn(),
+  })),
   notFound: jest.fn(),
 }));
 
@@ -76,6 +80,31 @@ const customMockParams = {
   dmpid: '456',
   csid: '456',
 };
+
+const normalizedCollaborators = Array.isArray(planMock.project?.collaborators)
+  ? planMock.project.collaborators
+  : planMock.project?.collaborators
+    ? [planMock.project.collaborators]
+    : [];
+
+const basePlanMock = {
+  ...planMock,
+  readOnly: false,
+  feedbackStatus: { status: 'NONE' },
+  project: {
+    ...planMock.project,
+    collaborators: normalizedCollaborators,
+  },
+};
+
+const makePlanMock = (overrides: Partial<typeof basePlanMock> = {}) => ({
+  ...basePlanMock,
+  ...overrides,
+  project: {
+    ...basePlanMock.project,
+    ...overrides.project,
+  },
+});
 
 const mocks = [
   // Successful questions query
@@ -110,7 +139,7 @@ const mocks = [
     },
     result: {
       data: {
-        plan: planMock,
+        plan: basePlanMock,
       },
     },
   },
@@ -198,7 +227,7 @@ const errorMocks = [
     },
     result: {
       data: {
-        plan: planMock,
+        plan: basePlanMock,
       },
     },
   },
@@ -263,7 +292,7 @@ const customMocks = [
   },
   {
     request: { query: PlanDocument, variables: { planId: 456 } },
-    result: { data: { plan: planMock } },
+    result: { data: { plan: basePlanMock } },
   },
   {
     request: {
@@ -311,6 +340,23 @@ const customMocks = [
   },
   // Base queries are intentionally absent — skip guards prevent them firing
 ];
+
+const withPlanOverride = (
+  apolloMocks: readonly MockLink.MockedResponse[],
+  planOverrides: Partial<typeof basePlanMock>
+): MockLink.MockedResponse[] => apolloMocks.map((mock) => {
+  if (mock.request.query === PlanDocument) {
+    return {
+      ...mock,
+      result: {
+        data: {
+          plan: makePlanMock(planOverrides),
+        },
+      },
+    };
+  }
+  return mock;
+});
 
 const baseConfig: SectionPageConfig = {
   sectionIdParamKey: 'sid',
@@ -483,25 +529,161 @@ describe('PlanOverviewSectionPage - BASE section with BASE questions or CUSTOM q
     );
 
     // Check that links are generated correctly
-    const questionLinks = screen.getAllByText('sections.start');
-    expect(questionLinks).toHaveLength(2);
+    const questionLinkWithStartText = screen.getAllByText('sections.start');
+    expect(questionLinkWithStartText).toHaveLength(2);
 
-    const questionLinksUpdate = screen.getAllByText('sections.update');
-    expect(questionLinksUpdate).toHaveLength(1);
-
-    expect(questionLinks[0]).toHaveAttribute(
+    expect(questionLinkWithStartText[0]).toHaveAttribute(
       'href',
       '/en-US/projects/123/dmp/456/s/456/q/1'
     );
-    expect(questionLinks[1]).toHaveAttribute(
+
+    expect(questionLinkWithStartText[1]).toHaveAttribute(
       'href',
       '/en-US/projects/123/dmp/456/s/456/q/3'
     );
 
-    expect(questionLinksUpdate[0]).toHaveAttribute(
+    const questionLinkWithUpdateText = screen.getAllByText('sections.update');
+    expect(questionLinkWithUpdateText).toHaveLength(1);
+
+    expect(questionLinkWithUpdateText[0]).toHaveAttribute(
       'href',
       '/en-US/projects/123/dmp/456/s/456/q/2'
     );
+
+  });
+
+  it('should show view action for all questions when read only and user is not edit collaborator', async () => {
+    const readOnlyMocks = withPlanOverride(mocks, {
+      readOnly: true,
+      project: {
+        ...basePlanMock.project,
+        collaborators: [
+          {
+            accessLevel: 'COMMENT',
+            user: {
+              id: meMock.id,
+            },
+          },
+        ],
+      },
+    });
+
+    render(
+      <MockedProvider mocks={readOnlyMocks}>
+        <PlanOverviewSectionPageShared config={baseConfig} />
+      </MockedProvider>
+
+    );
+
+    await waitFor(() =>
+      expect(screen.getByText('What types of data will be produced during your project?')).toBeInTheDocument()
+    );
+
+    expect(screen.getAllByText('sections.view')).toHaveLength(3);
+    expect(screen.queryByText('sections.start')).not.toBeInTheDocument();
+    expect(screen.queryByText('sections.update')).not.toBeInTheDocument();
+  });
+
+  it('should show start and update actions when read only and user is edit collaborator', async () => {
+    const editCollaboratorMocks = withPlanOverride(mocks, {
+      readOnly: true,
+      project: {
+        ...basePlanMock.project,
+        collaborators: [
+          {
+            accessLevel: 'EDIT',
+            user: {
+              id: meMock.id,
+            },
+          },
+        ],
+      },
+    });
+
+    render(
+      <MockedProvider mocks={editCollaboratorMocks}>
+        <PlanOverviewSectionPageShared config={baseConfig} />
+      </MockedProvider>
+
+    );
+
+    await waitFor(() =>
+      expect(screen.getByText('What types of data will be produced during your project?')).toBeInTheDocument()
+    );
+
+    expect(screen.getAllByText('sections.start')).toHaveLength(2);
+    expect(screen.getAllByText('sections.update')).toHaveLength(1);
+    expect(screen.queryByText('sections.view')).not.toBeInTheDocument();
+  });
+
+  it('should show feedback notification when feedback is requested and plan is read only', async () => {
+    const orgAdminMeMock = {
+      ...meMock,
+      role: 'ADMIN',
+      affiliation: {
+        ...meMock.affiliation,
+        id: 99,
+      },
+    };
+
+    const feedbackRequestedPlanMock = makePlanMock({
+      readOnly: true,
+      feedbackStatus: {
+        status: 'REQUESTED',
+      },
+      project: {
+        ...basePlanMock.project,
+        // Cast here because test fixtures infer a narrower collaborator user shape ({ id } only)
+        collaborators: [
+          {
+            accessLevel: 'PRIMARY',
+            user: {
+              id: orgAdminMeMock.id,
+              affiliation: { id: 99 },
+            },
+          },
+        ] as any,
+      },
+    });
+
+    const feedbackRequestedMocks = mocks.map((mock) => {
+      if (mock.request.query === PlanDocument) {
+        return {
+          ...mock,
+          result: {
+            data: {
+              plan: feedbackRequestedPlanMock,
+            },
+          },
+        };
+      }
+
+      if (mock.request.query === MeDocument) {
+        return {
+          ...mock,
+          result: {
+            data: {
+              me: orgAdminMeMock,
+            },
+          },
+        };
+      }
+
+      return mock;
+    });
+
+    render(
+      <MockedProvider mocks={feedbackRequestedMocks}>
+        <PlanOverviewSectionPageShared config={baseConfig} />
+      </MockedProvider>
+
+    );
+
+    await waitFor(() =>
+      expect(screen.getByText('feedbackNotification.title')).toBeInTheDocument()
+    );
+
+    expect(screen.getByText('feedbackNotification.description')).toBeInTheDocument();
   });
 
   it('should generate correct completed description for questions', async () => {

@@ -5,17 +5,8 @@
     padding: var(--space-2) 0;
     background-color: var(--color-background-subtle);
     border-bottom: 1px solid var(--gray-100);
-
-    display: grid;
-    grid-template-columns: 1fr auto;
-
     gap: var(--space-3);
     align-items: flex-start;
-
-    /* Make the content area span full width on mobile */
-    @include r.device(sm) {
-        grid-template-columns: 1fr;
-    }
 
     h2 {
         margin: 0;
@@ -47,8 +38,4 @@
     strong {
         font-weight: 600;
     }
-}
-
-.overviewSectionLink {
-    // Use standard link styling - no overrides needed
 }

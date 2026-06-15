@@ -2,10 +2,18 @@
 /// <reference types="cypress" />
 
 describe('Authentication flow tests', () => {
+  let baseUrl: string;
+  let email: string;
+  let password: string;
+
   // Base configuration
-  const baseUrl = Cypress.env('BASE_URL') || 'http://localhost:3000';
-  const email = Cypress.env('TEST_USER_EMAIL') || 'super@example.com';
-  const password = Cypress.env('TEST_USER_PASSWORD') || 'Password123$9';
+  before(() => {
+    cy.env(['BASE_URL', 'TEST_USER_EMAIL', 'TEST_USER_PASSWORD']).then((vars) => {
+      baseUrl = vars.BASE_URL ?? 'http://localhost:3000';
+      email = vars.TEST_USER_EMAIL ?? 'super@example.com';
+      password = vars.TEST_USER_PASSWORD ?? 'Password123$9';
+    });
+  });
 
   beforeEach(() => {
     // Clear cookies and local storage before each test
@@ -24,6 +32,15 @@ describe('Authentication flow tests', () => {
 
   describe('Login functionality', () => {
     it('logs in successfully with valid credentials', () => {
+      // Check server response before visiting
+      cy.request({
+        url: `${baseUrl}/en-US/login`,
+        failOnStatusCode: false,
+      }).then((response) => {
+        cy.log(`Status: ${response.status}`);
+        cy.log(`Body: ${JSON.stringify(response.body).slice(0, 500)}`);
+      });
+
       // Visit login page
       cy.visit(`${baseUrl}/en-US/login`);
 
@@ -46,8 +63,7 @@ describe('Authentication flow tests', () => {
         .click();
 
       // Expect to be redirected to homepage or dashboard
-      cy.url().should('eq', `${baseUrl}/en-US`);
-
+      cy.location('pathname').should('match', /^\/en-US\/?$/);
       // Verify authentication cookies are set
       cy.getCookie('dmspt').should('exist'); // access token
       cy.getCookie('dmspr').should('exist'); // refresh token
