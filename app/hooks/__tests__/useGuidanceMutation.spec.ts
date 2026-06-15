@@ -39,7 +39,7 @@ describe('useGuidanceMutations', () => {
     displayName: 'California Digital Library',
     funder: false,
     id: 1,
-    name: 'California Digital Library',
+    name: 'California Digital Library'
   };
 
   let mockAddMutation: jest.Mock;
@@ -503,7 +503,7 @@ describe('useGuidanceMutations', () => {
         displayName: 'Org 1',
         funder: false,
         id: 1,
-        name: 'Org 1',
+        name: 'Org 1'
       };
 
       const affiliation2: AffiliationSearch = {
@@ -511,7 +511,7 @@ describe('useGuidanceMutations', () => {
         displayName: 'Org 2',
         funder: false,
         id: 2,
-        name: 'Org 2',
+        name: 'Org 2'
       };
 
       await act(async () => {
