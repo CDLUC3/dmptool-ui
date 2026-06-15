@@ -317,17 +317,6 @@ export type AdminNotificationMetadataInput = {
   templateId?: InputMaybe<Scalars['Int']['input']>;
 };
 
-export type AdminNotificationOptions = {
-  /** The affiliation associated with the notification */
-  affiliationId: Scalars['String']['input'];
-  /** Whether the notification has been read */
-  isRead?: InputMaybe<Scalars['Boolean']['input']>;
-  /** Additional data providing the associated Ids for the notification */
-  metadata?: InputMaybe<AdminNotificationMetadataInput>;
-  /** The type of notification */
-  notificationType: AdminNotificationType;
-};
-
 export type AdminNotificationResults = {
   __typename?: 'AdminNotificationResults';
   /** The affiliation associated with the notification */
@@ -360,6 +349,8 @@ export type AdminNotificationResults = {
   template?: Maybe<Template>;
   /** The template customization associated with the notification if metadata contains a templateCustomizationId */
   templateCustomization?: Maybe<TemplateCustomization>;
+  /** The userId of the user associated with the notification */
+  userId?: Maybe<Scalars['Int']['output']>;
 };
 
 export type AdminNotificationResultsPage = {
@@ -1494,8 +1485,6 @@ export type Mutation = {
   _empty?: Maybe<Scalars['String']['output']>;
   /** Reactivate the specified user Account (Admin only) */
   activateUser?: Maybe<User>;
-  /** Create a new admin notification */
-  addAdminNotification: AdminNotificationResults;
   /** Create a new Affiliation */
   addAffiliation?: Maybe<Affiliation>;
   /** Assign an alternate identifier to the plan */
@@ -1763,11 +1752,6 @@ export type Mutation = {
 
 export type MutationActivateUserArgs = {
   userId: Scalars['Int']['input'];
-};
-
-
-export type MutationAddAdminNotificationArgs = {
-  input: AdminNotificationOptions;
 };
 
 
