@@ -1,111 +1,19 @@
 @use '@/styles/responsive' as r;
 
 
-.adminNotificationContainer {
-    margin-bottom: var(--space-8);
+.notificationSection {
+    margin-bottom: var(--space-2);
 
     h2 {
-        font-size: var(--fs-2xl);
+        font-size: var(--fs-lg);
         font-weight: var(--fw-bold);
         margin: 0 0 var(--space-4) 0;
         color: var(--heading-color);
         padding-bottom: var(--space-2);
     }
-
-    .sectionDescription {
-        margin: 0 0 var(--space-4) 0;
-        color: var(--text-color-base);
-        line-height: var(--lh-normal);
-        font-size: var(--fs-base);
-    }
 }
 
-.sectionGrid {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-4);
-}
-
-.adminCard {
-    display: block;
-    background: var(--bg-white);
-    border: none;
-    border-radius: var(--card-border-radius);
-    padding: var(--card-padding);
-    text-decoration: none;
-    color: inherit;
-    transition: all 0.2s ease;
-    box-shadow: var(--card-shadow);
-
-
-    &:hover {
-        text-decoration: none;
-
-    }
-
-    &:focus {
-        outline: 2px solid var(--focus-ring-color);
-        outline-offset: 2px;
-    }
-
-    &:hover .cardHeader h3,
-    &:focus .cardHeader h3 {
-        text-decoration: underline;
-        color: var(--blue-900);
-    }
-
-    .cardHeader {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        margin-bottom: var(--space-3);
-
-        h2 {
-            font-size: 0.5rem !important;
-            font-weight: var(--fw-bold);
-            margin: 0;
-            color: var(--heading-color);
-            flex: 1;
-            transition: text-decoration 0.2s ease;
-        }
-    }
-
-    p {
-        margin: 0;
-        color: var(--text-color-base);
-        line-height: var(--lh-normal);
-        font-weight: var(--fw-normal);
-    }
-}
-
-.notificationBadge {
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
-    font-size: var(--fs-xsmall);
-    color: var(--red-400);
-    white-space: nowrap;
-    margin-left: var(--space-2);
-
-    &::before {
-        content: '';
-        width: 8px;
-        height: 8px;
-        background: var(--red-400);
-        border-radius: 50%;
-        flex-shrink: 0;
-    }
-}
-
-// Responsive adjustments
-@include r.device(md) {
-    .sectionGrid {
-        gap: var(--space-3);
-    }
-}
-
-
-.templateItem {
+.notificationItem {
   margin-bottom: var(--space-4);
   border-radius: var(--card-border-radius);
   background: var(--bg-white);
@@ -113,28 +21,22 @@
   border: 1px solid var(--card-border);
 }
 
-.templateItemWrapper {
+.notificationItemWrapper {
   display: flex;
   flex-direction: row;
   align-items: flex-start;
   padding:var(--space-4) var(--space-5);
   flex-wrap: wrap; // allows items to wrap on smaller screens
   gap: var(--space-2);
-
-  @include r.device(sm) {
-      gap: var(--space-8);
-  }
 }
 
 
-.templateItemInner {
+.notificationItemInner {
   display: flex;
   flex-direction: column;
   flex: 1 1 80px; // allows the inner content to grow but not exceed 80px
   min-width: 0; // prevents flex overflow issues with long text
-  // gap: var(--space-4);
   align-items: flex-start;
-  margin-top: var(--space-5);
 
   @include r.device(sm) {
     flex-direction: row;
@@ -143,12 +45,11 @@
   }
 }
 
-.templateItemInnerExpanded {
+.notificationItemInnerExpanded {
   display: flex;
   flex-direction: column;
   flex: 1 1 400px; // allows the inner content to grow but not exceed 400px
   min-width: 0; // prevents flex overflow issues with long text
-  // gap: var(--space-4);
   align-items: flex-start;
   margin-top: var(--space-5);
 
@@ -159,7 +60,7 @@
   }
 }
 
-.templateItemContent {
+.notificationItemContent {
   flex: 1;
 }
 
@@ -172,21 +73,13 @@
   font-weight: var(--fw-normal);
 }
 
-.templateItemHeading {
+.notificationItemHeading {
   padding: 0;
   margin: 0 0 var(--space-2);
-  font-size: var(--fs-lg);
+  font-size: var(--fs-md);
   font-weight: var(--fw-semibold);
   color: var(--heading-color);
   line-height: var(--lh-tight);
-}
-
-.description {
-  margin-top: var(--space-1);
-  margin-bottom: var(--space-4);
-  color: var(--text-color);
-  font-size: var(--fs-small);
-  line-height: var(--lh-normal);
 }
 
 .metadata {
@@ -199,66 +92,11 @@
     margin-bottom: var(--space-1);
   }
 
-  .separator:before {
-    content: "";
-  }
-
   @include r.device(sm) {
     span {
       display: inline-block;
       margin-bottom: 0;
     }
-
-    .separator:before {
-      content: "•";
-      margin: 0 var(--space-2);
-    }
-  }
-}
-
-.guidance {
-  display: flex;
-  align-items: left;
-  justify-content: left;
-  gap: var(--space-2);
-  padding: var(--space-2) var(--space-5);
-  background-color: var(--blue-100);
-  border-radius: var(--border-radius-md);
-  color: var(--heading-color);
-  font-size: var(--fs-small);
-  font-weight: var(--fw-normal);
-}
-
-.updateLink {
-  color: var(--link-color) !important;
-  text-decoration: underline;
-  font-size: var(--fs-base);
-  line-height: var(--lh-normal);
-  font-family: var(--font-family-body);
-  font-weight: var(--fw-medium);
-
-  &:hover {
-    color: var(--link-hover-color) !important;
-  }
-
-  &:focus {
-    outline: 2px solid var(--focus-ring);
-    outline-offset: 2px;
-  }
-}
-
-.titleLink {
-  color: var(--link-color) !important;
-  text-decoration: none;
-
-  &:hover {
-    color: var(--link-hover-color) !important;
-    text-decoration: underline;
-  }
-
-  &:focus {
-    outline: 2px solid var(--focus-ring);
-    outline-offset: 2px;
   }
 }
 
@@ -275,26 +113,6 @@
   background: transparent !important;
 }
 
-// Button styling for the select button
-.TemplateItemActions {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-
-  @include r.device(sm) {
-    flex-shrink: 0;
-  }
-}
-
-
-.customizationNote {
-  display: flex;
-  align-items: center;
-  gap: var(--space-1);
-  color: var(--green-700);
-  font-size: var(--fs-small);
-}
-
 // Action buttons container
 .actions {
   display: flex;
@@ -308,7 +126,7 @@
   }
 }
 
-.templateItemInnerActions {
+.notificationItemInnerActions {
   margin-left: auto;
   flex: 0 0 auto; // only takes as much space as its content needs
 }

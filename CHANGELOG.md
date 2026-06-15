@@ -1,4 +1,5 @@
 ## Added
+- Added new `AdminNotification` card component, and new AdminNotification queries [#570]
 - Added `projectImport` mutation and `searchExternalProjects` query [#352]
 - Added a new `button-disabled` style to shared `_button.scss` [#244]
 - Added `readOnly` and `collaborators` fields to `Project` query schema [#244]
@@ -9,6 +10,7 @@
 - Added `UpdateAffiliation` and `AffiliationById` queries [#203]
 
 ## Updated
+- Hooked up `admin/notifications` page and updated the notifications card on the `admin` page to have dynamic notification count [#570]
 - Updated `PlanOverviewPage` to use `totalRequiredQuestions` and `answeredRequiredQuestions` to display a message to user in Publish modal [#249]
 - Updated `CreateProjectsSearchFunder` and `ProjectsCreateProject` components to use <TransitionButton> [#352]
 - Updated `ProjectsCreateProjectFunding` component with <TransitionButton> and to pass affiliationId as a query parameter to project search page [#352]
