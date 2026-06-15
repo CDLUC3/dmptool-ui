@@ -2,7 +2,11 @@
 
 import React from "react";
 import { useTranslations } from "next-intl";
+import { useQuery } from "@apollo/client/react";
 
+import {
+  AdminNotificationsDocument,
+} from "@/generated/graphql";
 import PageHeader from "@/components/PageHeader";
 import PageLinkCard, { PageLinkSection } from "@/components/PageLinkCard";
 import { ContentContainer, LayoutWithPanel, SidebarPanel } from "@/components/Container";
@@ -12,6 +16,7 @@ import styles from "./admin.module.scss";
 
 const AdminOverviewPage: React.FC = () => {
   const t = useTranslations("Admin");
+  const { data: notificationsData } = useQuery(AdminNotificationsDocument);
 
   const adminSections: PageLinkSection[] = [
     {
@@ -21,8 +26,8 @@ const AdminOverviewPage: React.FC = () => {
           title: t("sections.organisationTemplatesAndPlans.items.notifications.title"),
           description: t("sections.organisationTemplatesAndPlans.items.notifications.description"),
           href: routePath("admin.notifications"),
-          hasNotification: true,
-          notificationCount: 3,
+          hasNotification: !!(notificationsData?.adminNotifications?.totalCount && notificationsData.adminNotifications.totalCount > 0),
+          notificationCount: notificationsData?.adminNotifications?.totalCount || 0,
         },
         {
           title: t("sections.organisationTemplatesAndPlans.items.organizationTemplates.title"),

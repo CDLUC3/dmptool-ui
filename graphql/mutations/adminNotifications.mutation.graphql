@@ -1,0 +1,7 @@
+mutation MarkNotificationAsRead($markNotificationAsReadId: Int!) {
+  markNotificationAsRead(id: $markNotificationAsReadId)
+}
+
+mutation MarkNotificationAsUnRead($markNotificationAsUnReadId: Int!) {
+  markNotificationAsUnRead(id: $markNotificationAsUnReadId)
+}

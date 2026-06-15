@@ -291,6 +291,88 @@ export type AddTemplateCustomizationInput = {
   versionedTemplateId: Scalars['Int']['input'];
 };
 
+/** A collection of errors related to the Section */
+export type AdminNotificationErrors = {
+  __typename?: 'AdminNotificationErrors';
+  /** General error messages such as the object already exists */
+  general?: Maybe<Scalars['String']['output']>;
+};
+
+export type AdminNotificationMetadata = {
+  __typename?: 'AdminNotificationMetadata';
+  /** The associated plan Id for the notification, if applicable */
+  planId?: Maybe<Scalars['Int']['output']>;
+  /** The associated template customization Id for the notification, if applicable */
+  templateCustomizationId?: Maybe<Scalars['Int']['output']>;
+  /** The associated template Id for the notification, if applicable */
+  templateId?: Maybe<Scalars['Int']['output']>;
+};
+
+export type AdminNotificationMetadataInput = {
+  /** The associated plan Id for the notification, if applicable */
+  planId?: InputMaybe<Scalars['Int']['input']>;
+  /** The associated template customization Id for the notification, if applicable */
+  templateCustomizationId?: InputMaybe<Scalars['Int']['input']>;
+  /** The associated template Id for the notification, if applicable */
+  templateId?: InputMaybe<Scalars['Int']['input']>;
+};
+
+export type AdminNotificationResults = {
+  __typename?: 'AdminNotificationResults';
+  /** The affiliation associated with the notification */
+  affiliationId?: Maybe<Scalars['String']['output']>;
+  /** The timestamp when the Object was created */
+  created?: Maybe<Scalars['String']['output']>;
+  /** The user who created the notification */
+  createdBy?: Maybe<User>;
+  /** The user who created the Object */
+  createdById?: Maybe<Scalars['Int']['output']>;
+  /** Errors associated with the Object */
+  errors?: Maybe<AdminNotificationErrors>;
+  /** The feedback associated with the plan if metadata contains a planId */
+  feedback?: Maybe<PlanFeedback>;
+  /** The unique identifer for the Object */
+  id?: Maybe<Scalars['Int']['output']>;
+  /** Whether the notification has been read */
+  isRead?: Maybe<Scalars['Boolean']['output']>;
+  /** Additional data providing the associated Ids for the notification */
+  metadata?: Maybe<AdminNotificationMetadata>;
+  /** The timestamp when the Object was last modifed */
+  modified?: Maybe<Scalars['String']['output']>;
+  /** The user who last modified the Object */
+  modifiedById?: Maybe<Scalars['Int']['output']>;
+  /** The notification type */
+  notificationType?: Maybe<AdminNotificationType>;
+  /** The plan associated with the notification if metadata contains a planId */
+  plan?: Maybe<Plan>;
+  /** The template associated with the notification if metadata contains a templateId */
+  template?: Maybe<Template>;
+  /** The template customization associated with the notification if metadata contains a templateCustomizationId */
+  templateCustomization?: Maybe<TemplateCustomization>;
+  /** The userId of the user associated with the notification */
+  userId?: Maybe<Scalars['Int']['output']>;
+};
+
+export type AdminNotificationResultsPage = {
+  __typename?: 'AdminNotificationResultsPage';
+  currentOffset?: Maybe<Scalars['Int']['output']>;
+  hasNextPage: Scalars['Boolean']['output'];
+  hasPreviousPage?: Maybe<Scalars['Boolean']['output']>;
+  items: Array<AdminNotificationResults>;
+  nextCursor?: Maybe<Scalars['String']['output']>;
+  totalCount?: Maybe<Scalars['Int']['output']>;
+};
+
+/** The types of notifications for Admin Notification */
+export enum AdminNotificationType {
+  /** When feedback is requested on a plan */
+  FeedbackRequested = 'FEEDBACK_REQUESTED',
+  /** When a template is created */
+  TemplateCreated = 'TEMPLATE_CREATED',
+  /** When customization to a template has changed */
+  TemplateCustomizationChanged = 'TEMPLATE_CUSTOMIZATION_CHANGED'
+}
+
 /** A respresentation of an institution, organization or company */
 export type Affiliation = {
   __typename?: 'Affiliation';
@@ -1491,6 +1573,10 @@ export type Mutation = {
   introduction?: Maybe<Scalars['String']['output']>;
   /** Designates the specified Template as the default (SuperAdmin only) */
   markAsDefaultTemplate?: Maybe<Template>;
+  /** Mark a notification as read */
+  markNotificationAsRead: Scalars['Boolean']['output'];
+  /** Mark a notification as unread */
+  markNotificationAsUnRead: Scalars['Boolean']['output'];
   /** Merge two licenses */
   mergeLicenses?: Maybe<License>;
   /** Merge two metadata standards */
@@ -1915,6 +2001,16 @@ export type MutationGenerateLogoUploadUrlArgs = {
 
 export type MutationMarkAsDefaultTemplateArgs = {
   templateId: Scalars['Int']['input'];
+};
+
+
+export type MutationMarkNotificationAsReadArgs = {
+  id: Scalars['Int']['input'];
+};
+
+
+export type MutationMarkNotificationAsUnReadArgs = {
+  id: Scalars['Int']['input'];
 };
 
 
@@ -3204,6 +3300,12 @@ export type PublishedTemplateSearchResults = PaginatedQueryResults & {
 export type Query = {
   __typename?: 'Query';
   _empty?: Maybe<Scalars['String']['output']>;
+  /** Retrieve all notifications for a specific affiliation */
+  adminNotifications?: Maybe<AdminNotificationResultsPage>;
+  /** Retrieve all read notifications for a specific affiliation */
+  adminNotificationsRead?: Maybe<AdminNotificationResultsPage>;
+  /** Retrieve all unread notifications for a specific affiliation */
+  adminNotificationsUnread?: Maybe<AdminNotificationResultsPage>;
   /** Retrieve a specific Affiliation by its ID */
   affiliationById?: Maybe<Affiliation>;
   /** Retrieve a specific Affiliation by its URI */
@@ -3399,6 +3501,21 @@ export type Query = {
   users?: Maybe<UserSearchResults>;
   /** Get all VersionedGuidance for a given affiliation and Tag IDs */
   versionedGuidance: Array<VersionedGuidance>;
+};
+
+
+export type QueryAdminNotificationsArgs = {
+  paginationOptions?: InputMaybe<PaginationOptions>;
+};
+
+
+export type QueryAdminNotificationsReadArgs = {
+  paginationOptions?: InputMaybe<PaginationOptions>;
+};
+
+
+export type QueryAdminNotificationsUnreadArgs = {
+  paginationOptions?: InputMaybe<PaginationOptions>;
 };
 
 
@@ -4717,6 +4834,8 @@ export type TemplateCustomization = {
   modifiedById?: Maybe<Scalars['Int']['output']>;
   /** The status of the customization */
   status: TemplateCustomizationStatus;
+  /** The name of the parent template, included for convenience when fetching a customization with its template name */
+  templateName?: Maybe<Scalars['String']['output']>;
 };
 
 /** A collection of errors related to the Template Customization */
@@ -5873,6 +5992,20 @@ export type WorkVersion = {
   workType: WorkType;
 };
 
+export type MarkNotificationAsReadMutationVariables = Exact<{
+  markNotificationAsReadId: Scalars['Int']['input'];
+}>;
+
+
+export type MarkNotificationAsReadMutation = { __typename?: 'Mutation', markNotificationAsRead: boolean };
+
+export type MarkNotificationAsUnReadMutationVariables = Exact<{
+  markNotificationAsUnReadId: Scalars['Int']['input'];
+}>;
+
+
+export type MarkNotificationAsUnReadMutation = { __typename?: 'Mutation', markNotificationAsUnRead: boolean };
+
 export type AddAffiliationMutationVariables = Exact<{
   input: AffiliationInput;
 }>;
@@ -6493,6 +6626,25 @@ export type SetPrimaryUserEmailMutationVariables = Exact<{
 
 export type SetPrimaryUserEmailMutation = { __typename?: 'Mutation', setPrimaryUserEmail?: Array<{ __typename?: 'UserEmail', id?: number | null, email: string, isConfirmed: boolean, isPrimary: boolean, userId: number, errors?: { __typename?: 'UserEmailErrors', general?: string | null, userId?: string | null, email?: string | null } | null } | null> | null };
 
+export type AdminNotificationsUnreadQueryVariables = Exact<{
+  paginationOptions?: InputMaybe<PaginationOptions>;
+}>;
+
+
+export type AdminNotificationsUnreadQuery = { __typename?: 'Query', adminNotificationsUnread?: { __typename?: 'AdminNotificationResultsPage', hasNextPage: boolean, currentOffset?: number | null, hasPreviousPage?: boolean | null, nextCursor?: string | null, totalCount?: number | null, items: Array<{ __typename?: 'AdminNotificationResults', id?: number | null, notificationType?: AdminNotificationType | null, isRead?: boolean | null, created?: string | null, feedback?: { __typename?: 'PlanFeedback', id?: number | null, messageToOrg?: string | null } | null, createdBy?: { __typename?: 'User', id?: number | null, givenName?: string | null, surName?: string | null } | null, plan?: { __typename?: 'Plan', id?: number | null, title?: string | null, project?: { __typename?: 'Project', id?: number | null } | null } | null, template?: { __typename?: 'Template', id?: number | null, name: string } | null, templateCustomization?: { __typename?: 'TemplateCustomization', id?: number | null, templateName?: string | null } | null }> } | null };
+
+export type AdminNotificationsReadQueryVariables = Exact<{
+  paginationOptions?: InputMaybe<PaginationOptions>;
+}>;
+
+
+export type AdminNotificationsReadQuery = { __typename?: 'Query', adminNotificationsRead?: { __typename?: 'AdminNotificationResultsPage', hasNextPage: boolean, currentOffset?: number | null, hasPreviousPage?: boolean | null, nextCursor?: string | null, totalCount?: number | null, items: Array<{ __typename?: 'AdminNotificationResults', id?: number | null, notificationType?: AdminNotificationType | null, isRead?: boolean | null, created?: string | null, feedback?: { __typename?: 'PlanFeedback', id?: number | null, messageToOrg?: string | null } | null, createdBy?: { __typename?: 'User', id?: number | null, givenName?: string | null, surName?: string | null } | null, plan?: { __typename?: 'Plan', id?: number | null, title?: string | null, project?: { __typename?: 'Project', id?: number | null } | null } | null, template?: { __typename?: 'Template', id?: number | null, name: string } | null, templateCustomization?: { __typename?: 'TemplateCustomization', id?: number | null, templateName?: string | null } | null }> } | null };
+
+export type AdminNotificationsQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type AdminNotificationsQuery = { __typename?: 'Query', adminNotifications?: { __typename?: 'AdminNotificationResultsPage', hasNextPage: boolean, currentOffset?: number | null, hasPreviousPage?: boolean | null, nextCursor?: string | null, totalCount?: number | null, items: Array<{ __typename?: 'AdminNotificationResults', id?: number | null, notificationType?: AdminNotificationType | null, isRead?: boolean | null, created?: string | null, feedback?: { __typename?: 'PlanFeedback', id?: number | null, messageToOrg?: string | null } | null, createdBy?: { __typename?: 'User', id?: number | null, givenName?: string | null, surName?: string | null } | null, plan?: { __typename?: 'Plan', id?: number | null, title?: string | null, project?: { __typename?: 'Project', id?: number | null } | null } | null, template?: { __typename?: 'Template', id?: number | null, name: string } | null, templateCustomization?: { __typename?: 'TemplateCustomization', id?: number | null, templateName?: string | null } | null }> } | null };
+
 export type AffiliationsQueryVariables = Exact<{
   name: Scalars['String']['input'];
 }>;
@@ -7028,6 +7180,8 @@ export type VersionedGuidanceQueryVariables = Exact<{
 export type VersionedGuidanceQuery = { __typename?: 'Query', versionedGuidance: Array<{ __typename?: 'VersionedGuidance', tagId: number, id?: number | null, guidanceText?: string | null, errors?: { __typename?: 'VersionedGuidanceErrors', general?: string | null, guidanceId?: string | null, guidanceText?: string | null, tagId?: string | null, versionedGuidanceGroupId?: string | null } | null }> };
 
 
+export const MarkNotificationAsReadDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"MarkNotificationAsRead"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"markNotificationAsReadId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"Int"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"markNotificationAsRead"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"markNotificationAsReadId"}}}]}]}}]} as unknown as DocumentNode<MarkNotificationAsReadMutation, MarkNotificationAsReadMutationVariables>;
+export const MarkNotificationAsUnReadDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"MarkNotificationAsUnRead"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"markNotificationAsUnReadId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"Int"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"markNotificationAsUnRead"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"markNotificationAsUnReadId"}}}]}]}}]} as unknown as DocumentNode<MarkNotificationAsUnReadMutation, MarkNotificationAsUnReadMutationVariables>;
 export const AddAffiliationDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"AddAffiliation"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"AffiliationInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"addAffiliation"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"errors"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"general"}},{"kind":"Field","name":{"kind":"Name","value":"name"}}]}},{"kind":"Field","name":{"kind":"Name","value":"uri"}}]}}]}}]} as unknown as DocumentNode<AddAffiliationMutation, AddAffiliationMutationVariables>;
 export const UpdateAffiliationDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"UpdateAffiliation"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"AffiliationInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"updateAffiliation"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"feedbackEmails"}},{"kind":"Field","name":{"kind":"Name","value":"feedbackEnabled"}},{"kind":"Field","name":{"kind":"Name","value":"feedbackMessage"}},{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"uri"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"displayName"}},{"kind":"Field","name":{"kind":"Name","value":"errors"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"general"}},{"kind":"Field","name":{"kind":"Name","value":"feedbackEmails"}},{"kind":"Field","name":{"kind":"Name","value":"feedbackMessage"}}]}}]}}]}}]} as unknown as DocumentNode<UpdateAffiliationMutation, UpdateAffiliationMutationVariables>;
 export const AddAnswerDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"AddAnswer"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"planId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"Int"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"versionedSectionId"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"Int"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"versionedQuestionId"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"Int"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"versionedCustomSectionId"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"Int"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"versionedCustomQuestionId"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"Int"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"json"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"addAnswer"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"planId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"planId"}}},{"kind":"Argument","name":{"kind":"Name","value":"versionedSectionId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"versionedSectionId"}}},{"kind":"Argument","name":{"kind":"Name","value":"versionedQuestionId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"versionedQuestionId"}}},{"kind":"Argument","name":{"kind":"Name","value":"versionedCustomSectionId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"versionedCustomSectionId"}}},{"kind":"Argument","name":{"kind":"Name","value":"versionedCustomQuestionId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"versionedCustomQuestionId"}}},{"kind":"Argument","name":{"kind":"Name","value":"json"},"value":{"kind":"Variable","name":{"kind":"Name","value":"json"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"json"}},{"kind":"Field","name":{"kind":"Name","value":"modified"}}]}}]}}]} as unknown as DocumentNode<AddAnswerMutation, AddAnswerMutationVariables>;
@@ -7110,6 +7264,9 @@ export const UpdateUserProfileDocument = {"kind":"Document","definitions":[{"kin
 export const AddUserEmailDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"AddUserEmail"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"email"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"isPrimary"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"Boolean"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"addUserEmail"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"email"},"value":{"kind":"Variable","name":{"kind":"Name","value":"email"}}},{"kind":"Argument","name":{"kind":"Name","value":"isPrimary"},"value":{"kind":"Variable","name":{"kind":"Name","value":"isPrimary"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"email"}},{"kind":"Field","name":{"kind":"Name","value":"errors"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"general"}},{"kind":"Field","name":{"kind":"Name","value":"userId"}},{"kind":"Field","name":{"kind":"Name","value":"email"}}]}},{"kind":"Field","name":{"kind":"Name","value":"isPrimary"}},{"kind":"Field","name":{"kind":"Name","value":"isConfirmed"}},{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"userId"}}]}}]}}]} as unknown as DocumentNode<AddUserEmailMutation, AddUserEmailMutationVariables>;
 export const RemoveUserEmailDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"RemoveUserEmail"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"email"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"removeUserEmail"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"email"},"value":{"kind":"Variable","name":{"kind":"Name","value":"email"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"errors"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"general"}},{"kind":"Field","name":{"kind":"Name","value":"userId"}},{"kind":"Field","name":{"kind":"Name","value":"email"}}]}}]}}]}}]} as unknown as DocumentNode<RemoveUserEmailMutation, RemoveUserEmailMutationVariables>;
 export const SetPrimaryUserEmailDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"SetPrimaryUserEmail"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"email"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"setPrimaryUserEmail"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"email"},"value":{"kind":"Variable","name":{"kind":"Name","value":"email"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"errors"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"general"}},{"kind":"Field","name":{"kind":"Name","value":"userId"}},{"kind":"Field","name":{"kind":"Name","value":"email"}}]}},{"kind":"Field","name":{"kind":"Name","value":"email"}},{"kind":"Field","name":{"kind":"Name","value":"isConfirmed"}},{"kind":"Field","name":{"kind":"Name","value":"isPrimary"}},{"kind":"Field","name":{"kind":"Name","value":"userId"}}]}}]}}]} as unknown as DocumentNode<SetPrimaryUserEmailMutation, SetPrimaryUserEmailMutationVariables>;
+export const AdminNotificationsUnreadDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"AdminNotificationsUnread"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"paginationOptions"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"PaginationOptions"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"adminNotificationsUnread"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"paginationOptions"},"value":{"kind":"Variable","name":{"kind":"Name","value":"paginationOptions"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"hasNextPage"}},{"kind":"Field","name":{"kind":"Name","value":"currentOffset"}},{"kind":"Field","name":{"kind":"Name","value":"hasPreviousPage"}},{"kind":"Field","name":{"kind":"Name","value":"nextCursor"}},{"kind":"Field","name":{"kind":"Name","value":"totalCount"}},{"kind":"Field","name":{"kind":"Name","value":"items"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"feedback"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"messageToOrg"}}]}},{"kind":"Field","name":{"kind":"Name","value":"createdBy"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"givenName"}},{"kind":"Field","name":{"kind":"Name","value":"surName"}}]}},{"kind":"Field","name":{"kind":"Name","value":"plan"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"title"}},{"kind":"Field","name":{"kind":"Name","value":"project"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}}]}},{"kind":"Field","name":{"kind":"Name","value":"template"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}}]}},{"kind":"Field","name":{"kind":"Name","value":"templateCustomization"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"templateName"}}]}},{"kind":"Field","name":{"kind":"Name","value":"notificationType"}},{"kind":"Field","name":{"kind":"Name","value":"isRead"}},{"kind":"Field","name":{"kind":"Name","value":"created"}}]}}]}}]}}]} as unknown as DocumentNode<AdminNotificationsUnreadQuery, AdminNotificationsUnreadQueryVariables>;
+export const AdminNotificationsReadDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"AdminNotificationsRead"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"paginationOptions"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"PaginationOptions"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"adminNotificationsRead"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"paginationOptions"},"value":{"kind":"Variable","name":{"kind":"Name","value":"paginationOptions"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"hasNextPage"}},{"kind":"Field","name":{"kind":"Name","value":"currentOffset"}},{"kind":"Field","name":{"kind":"Name","value":"hasPreviousPage"}},{"kind":"Field","name":{"kind":"Name","value":"nextCursor"}},{"kind":"Field","name":{"kind":"Name","value":"totalCount"}},{"kind":"Field","name":{"kind":"Name","value":"items"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"feedback"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"messageToOrg"}}]}},{"kind":"Field","name":{"kind":"Name","value":"createdBy"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"givenName"}},{"kind":"Field","name":{"kind":"Name","value":"surName"}}]}},{"kind":"Field","name":{"kind":"Name","value":"plan"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"title"}},{"kind":"Field","name":{"kind":"Name","value":"project"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}}]}},{"kind":"Field","name":{"kind":"Name","value":"template"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}}]}},{"kind":"Field","name":{"kind":"Name","value":"templateCustomization"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"templateName"}}]}},{"kind":"Field","name":{"kind":"Name","value":"notificationType"}},{"kind":"Field","name":{"kind":"Name","value":"isRead"}},{"kind":"Field","name":{"kind":"Name","value":"created"}}]}}]}}]}}]} as unknown as DocumentNode<AdminNotificationsReadQuery, AdminNotificationsReadQueryVariables>;
+export const AdminNotificationsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"AdminNotifications"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"adminNotifications"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"hasNextPage"}},{"kind":"Field","name":{"kind":"Name","value":"currentOffset"}},{"kind":"Field","name":{"kind":"Name","value":"hasPreviousPage"}},{"kind":"Field","name":{"kind":"Name","value":"nextCursor"}},{"kind":"Field","name":{"kind":"Name","value":"totalCount"}},{"kind":"Field","name":{"kind":"Name","value":"items"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"feedback"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"messageToOrg"}}]}},{"kind":"Field","name":{"kind":"Name","value":"createdBy"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"givenName"}},{"kind":"Field","name":{"kind":"Name","value":"surName"}}]}},{"kind":"Field","name":{"kind":"Name","value":"plan"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"title"}},{"kind":"Field","name":{"kind":"Name","value":"project"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}}]}},{"kind":"Field","name":{"kind":"Name","value":"template"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}}]}},{"kind":"Field","name":{"kind":"Name","value":"templateCustomization"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"templateName"}}]}},{"kind":"Field","name":{"kind":"Name","value":"notificationType"}},{"kind":"Field","name":{"kind":"Name","value":"isRead"}},{"kind":"Field","name":{"kind":"Name","value":"created"}}]}}]}}]}}]} as unknown as DocumentNode<AdminNotificationsQuery, AdminNotificationsQueryVariables>;
 export const AffiliationsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"Affiliations"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"name"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"affiliations"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"name"},"value":{"kind":"Variable","name":{"kind":"Name","value":"name"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"totalCount"}},{"kind":"Field","name":{"kind":"Name","value":"nextCursor"}},{"kind":"Field","name":{"kind":"Name","value":"items"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"displayName"}},{"kind":"Field","name":{"kind":"Name","value":"uri"}},{"kind":"Field","name":{"kind":"Name","value":"apiTarget"}}]}}]}}]}}]} as unknown as DocumentNode<AffiliationsQuery, AffiliationsQueryVariables>;
 export const AffiliationFundersDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"AffiliationFunders"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"name"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"funderOnly"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"Boolean"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"paginationOptions"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"PaginationOptions"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"affiliations"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"name"},"value":{"kind":"Variable","name":{"kind":"Name","value":"name"}}},{"kind":"Argument","name":{"kind":"Name","value":"funderOnly"},"value":{"kind":"Variable","name":{"kind":"Name","value":"funderOnly"}}},{"kind":"Argument","name":{"kind":"Name","value":"paginationOptions"},"value":{"kind":"Variable","name":{"kind":"Name","value":"paginationOptions"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"totalCount"}},{"kind":"Field","name":{"kind":"Name","value":"nextCursor"}},{"kind":"Field","name":{"kind":"Name","value":"items"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"displayName"}},{"kind":"Field","name":{"kind":"Name","value":"apiTarget"}},{"kind":"Field","name":{"kind":"Name","value":"uri"}}]}}]}}]}}]} as unknown as DocumentNode<AffiliationFundersQuery, AffiliationFundersQueryVariables>;
 export const ManagedAffiliationsWithGuidanceDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"ManagedAffiliationsWithGuidance"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"name"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"versionedTemplateId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"Int"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"paginationOptions"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"PaginationOptions"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"managedAffiliationsWithGuidance"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"name"},"value":{"kind":"Variable","name":{"kind":"Name","value":"name"}}},{"kind":"Argument","name":{"kind":"Name","value":"versionedTemplateId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"versionedTemplateId"}}},{"kind":"Argument","name":{"kind":"Name","value":"paginationOptions"},"value":{"kind":"Variable","name":{"kind":"Name","value":"paginationOptions"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"items"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"funder"}},{"kind":"Field","name":{"kind":"Name","value":"displayName"}},{"kind":"Field","name":{"kind":"Name","value":"uri"}},{"kind":"Field","name":{"kind":"Name","value":"acronyms"}}]}},{"kind":"Field","name":{"kind":"Name","value":"limit"}},{"kind":"Field","name":{"kind":"Name","value":"totalCount"}},{"kind":"Field","name":{"kind":"Name","value":"hasNextPage"}},{"kind":"Field","name":{"kind":"Name","value":"hasPreviousPage"}},{"kind":"Field","name":{"kind":"Name","value":"nextCursor"}}]}}]}}]} as unknown as DocumentNode<ManagedAffiliationsWithGuidanceQuery, ManagedAffiliationsWithGuidanceQueryVariables>;
