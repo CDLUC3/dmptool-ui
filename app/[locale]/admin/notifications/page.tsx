@@ -117,7 +117,7 @@ const AdminNotificationsPage: React.FC = () => {
     }
 
     if (diffDays >= 1 && diffDays <= 5) {
-      return `${diffDays} day${diffDays === 1 ? "" : "s"} ago`;
+      return t('daysAgo', { diffDays, s: diffDays === 1 ? "" : "s" });
     }
 
     return formatDate(created);
@@ -127,6 +127,70 @@ const AdminNotificationsPage: React.FC = () => {
     setUnreadItems([]);
     setReadItems([]);
     await Promise.all([unreadRefetch(), readRefetch()]);
+  };
+
+  const mapNotificationToSection = (item: AdminNotificationItem) => {
+    const title = item.notificationType &&
+      notificationTitleKeys[item.notificationType as AdminNotificationType];
+
+    const viewLink = (() => {
+      switch (item.notificationType as AdminNotificationType) {
+        case AdminNotificationType.FeedbackRequested:
+          return item.plan
+            ? routePath("projects.dmp.show", { projectId: item.plan.project.id, dmpId: Number(item.plan.id) })
+            : "";
+        case AdminNotificationType.TemplateCreated:
+          return item.template
+            ? routePath("template.show", { templateId: Number(item.template.id) })
+            : "";
+        case AdminNotificationType.TemplateCustomizationChanged:
+          return item.templateCustomization
+            ? routePath("template.customize", { templateCustomizationId: 7 })
+            : "";
+        default:
+          return "";
+      }
+    })();
+
+    return {
+      id: item.id!,
+      notificationType: item.notificationType as AdminNotificationType,
+      cardTitle: title || "",
+      planTitle: item.plan?.title ?? item.template?.name ?? item.templateCustomization?.templateName ?? "",
+      viewLink,
+      date: item.created ? formatNotificationTime(item.created) : "",
+      contact: item.createdBy ? `${item.createdBy.givenName} ${item.createdBy.surName}` : "",
+      message: item.feedback?.messageToOrg ?? "",
+      isRead: item.isRead ?? false,
+    };
+  };
+
+  const handleLoadMoreUnread = async () => {
+    if (!unreadNextCursor) return;
+    try {
+      await fetchUnread({
+        variables: {
+          paginationOptions: { type: "CURSOR", cursor: unreadNextCursor, limit: LIMIT },
+        },
+      });
+    } catch (err) {
+      logECS("error", "handleLoadMoreUnread", { errors: err });
+      setErrors((prev) => [...prev, t("messages.errors.failedToLoadNotifications")]);
+    }
+  };
+
+  const handleLoadMoreRead = async () => {
+    if (!readNextCursor) return;
+    try {
+      await fetchRead({
+        variables: {
+          paginationOptions: { type: "CURSOR", cursor: readNextCursor, limit: LIMIT },
+        },
+      });
+    } catch (err) {
+      logECS("error", "handleLoadMoreRead", { errors: err });
+      setErrors((prev) => [...prev, t("messages.errors.failedToLoadNotifications")]);
+    }
   };
 
   // Load both on mount
@@ -140,7 +204,7 @@ const AdminNotificationsPage: React.FC = () => {
       } catch (err) {
         if (err instanceof Error && err.name === 'AbortError') return; // ignore navigation aborts
         logECS("error", "fetchNotifications", { errors: err });
-        setErrors(["Failed to load notifications"]);
+        setErrors([t("messages.errors.failedToLoadNotifications")]);
       } finally {
         setIsInitialLoad(false);
       }
@@ -167,40 +231,13 @@ const AdminNotificationsPage: React.FC = () => {
     setReadTotalCount(totalCount ?? null);
   }, [readData]);
 
-  const handleLoadMoreUnread = async () => {
-    if (!unreadNextCursor) return;
-    try {
-      await fetchUnread({
-        variables: {
-          paginationOptions: { type: "CURSOR", cursor: unreadNextCursor, limit: LIMIT },
-        },
-      });
-    } catch (err) {
-      logECS("error", "handleLoadMoreUnread", { errors: err });
-      setErrors((prev) => [...prev, "Failed to load more notifications"]);
-    }
-  };
-
-  const handleLoadMoreRead = async () => {
-    if (!readNextCursor) return;
-    try {
-      await fetchRead({
-        variables: {
-          paginationOptions: { type: "CURSOR", cursor: readNextCursor, limit: LIMIT },
-        },
-      });
-    } catch (err) {
-      logECS("error", "handleLoadMoreRead", { errors: err });
-      setErrors((prev) => [...prev, "Failed to load more notifications"]);
-    }
-  };
 
   useEffect(() => {
-    if (unreadError) setErrors((prev) => [...prev, "Failed to load unread notifications"]);
+    if (unreadError) setErrors((prev) => [...prev, t("messages.errors.failedToLoadNotifications")]);
   }, [unreadError]);
 
   useEffect(() => {
-    if (readError) setErrors((prev) => [...prev, "Failed to load read notifications"]);
+    if (readError) setErrors((prev) => [...prev, t("messages.errors.failedToLoadNotifications")]);
   }, [readError]);
 
 
@@ -230,40 +267,7 @@ const AdminNotificationsPage: React.FC = () => {
               <NotificationCard
                 heading={t("headings.unread")}
                 onToggleRead={refetchAll}
-                sections={unreadItems.map((item) => {
-                  const title = item.notificationType &&
-                    notificationTitleKeys[item.notificationType as AdminNotificationType];
-                  const viewLink = (() => {
-                    switch (item.notificationType as AdminNotificationType) {
-                      case AdminNotificationType.FeedbackRequested:
-                        return item.plan
-                          ? routePath("projects.dmp.show", { projectId: item.plan.project.id, dmpId: Number(item.plan.id) })
-                          : "";
-                      case AdminNotificationType.TemplateCreated:
-                        return item.template
-                          ? routePath("template.show", { templateId: Number(item.template.id) })
-                          : "";
-                      case AdminNotificationType.TemplateCustomizationChanged:
-                        return item.templateCustomization
-                          ? routePath("template.customize", { templateCustomizationId: 7 })
-                          : "";
-                      default:
-                        return "";
-                    }
-                  })();
-
-                  return {
-                    id: item.id!,
-                    notificationType: item.notificationType as AdminNotificationType,
-                    cardTitle: title || "",
-                    planTitle: item.plan?.title ?? item.template?.name ?? item.templateCustomization?.templateName ?? "",
-                    viewLink,
-                    date: item.created ? formatNotificationTime(item.created) : "",
-                    contact: item.createdBy ? `${item.createdBy.givenName} ${item.createdBy.surName}` : "",
-                    message: item.feedback?.messageToOrg ?? "",
-                    isRead: item.isRead ?? false,
-                  };
-                })}
+                sections={unreadItems.map(mapNotificationToSection)}
               />
 
               {unreadLoading || isInitialLoad ? (
@@ -289,39 +293,7 @@ const AdminNotificationsPage: React.FC = () => {
               <NotificationCard
                 heading={t("headings.previousNotifications")}
                 onToggleRead={refetchAll}
-                sections={readItems.map((item) => {
-                  const title = item.notificationType &&
-                    notificationTitleKeys[item.notificationType as AdminNotificationType];
-                  const viewLink = (() => {
-                    switch (item.notificationType as AdminNotificationType) {
-                      case AdminNotificationType.FeedbackRequested:
-                        return item.plan
-                          ? routePath("projects.dmp.show", { projectId: item.plan.project.id, dmpId: Number(item.plan.id) })
-                          : "";
-                      case AdminNotificationType.TemplateCreated:
-                        return item.template
-                          ? routePath("template.show", { templateId: Number(item.template.id) })
-                          : "";
-                      case AdminNotificationType.TemplateCustomizationChanged:
-                        return item.templateCustomization
-                          ? routePath("template.customize", { templateCustomizationId: 7 })
-                          : "";
-                      default:
-                        return "";
-                    }
-                  })();
-                  return {
-                    id: item.id!,
-                    notificationType: item.notificationType as AdminNotificationType,
-                    cardTitle: title || "",
-                    planTitle: item.plan?.title ?? item.template?.name ?? item.templateCustomization?.templateName ?? "",
-                    viewLink,
-                    date: item.created ? formatNotificationTime(item.created) : "",
-                    contact: item.createdBy ? `${item.createdBy.givenName} ${item.createdBy.surName}` : "",
-                    message: item.feedback?.messageToOrg ?? "",
-                    isRead: item.isRead ?? false,
-                  }
-                })}
+                sections={readItems.map(mapNotificationToSection)}
               />
               {readLoading || isInitialLoad ? (
                 <Loading variant="inline" message={Global("messaging.loading")} />

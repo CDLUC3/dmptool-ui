@@ -342,6 +342,7 @@
     "feedbackRequested": "Feedback requested",
     "funderTemplateAdd": "Funder template added",
     "funderTemplateCustomizationChanged": "Funder template customization changed",
+    "daysAgo": "{diffDays} day{s} ago",
     "headings": {
       "unread": "Unread notifications",
       "previousNotifications": "Previous notifications"
@@ -349,7 +350,10 @@
     "messages": {
       "noUnreadNotifications": "No unread notifications found",
       "noReadNotifications": "No previous notifications found",
-      "today": "Today"
+      "today": "Today",
+      "errors": {
+        "failedToLoadNotifications": "Failed to load notifications"
+      }
     },
     "description": "Notifications for your organization are listed below. Unread notifications are shown at the top. Click on a notification to view more details."
   },

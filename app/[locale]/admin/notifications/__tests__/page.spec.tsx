@@ -271,7 +271,7 @@ describe('AdminNotificationsPage', () => {
       renderComponent([errorMock, createReadMock()]);
 
       await waitFor(() => {
-        expect(screen.getByText('Failed to load notifications')).toBeInTheDocument();
+        expect(screen.getByText('messages.errors.failedToLoadNotifications')).toBeInTheDocument();
       });
     });
 
@@ -287,7 +287,7 @@ describe('AdminNotificationsPage', () => {
       renderComponent([createUnreadMock(), errorMock]);
 
       await waitFor(() => {
-        expect(screen.getByText('Failed to load notifications')).toBeInTheDocument();
+        expect(screen.getByText('messages.errors.failedToLoadNotifications')).toBeInTheDocument();
       });
     });
   });
