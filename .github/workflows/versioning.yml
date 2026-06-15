@@ -1,0 +1,91 @@
+name: Automated Versioning
+on:
+  pull_request:
+    types:
+      - closed
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  version:
+    if: github.event.pull_request.merged == true
+    #GitHub-hosted runner with Ubuntu
+    runs-on: ubuntu-latest 
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.ref }}
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Determine version bump
+        id: bump
+        env:
+          LABELS: ${{ join(github.event.pull_request.labels.*.name, ',') }}
+
+        run: |
+          if [[ "$LABELS" == *"version:major"* ]]; then
+            echo "type=major" >> $GITHUB_OUTPUT
+          elif [[ "$LABELS" == *"version:minor"* ]]; then
+            echo "type=minor" >> $GITHUB_OUTPUT
+          elif [[ "$LABELS" == *"version:patch"* ]]; then
+            echo "type=patch" >> $GITHUB_OUTPUT
+          else
+            echo "type=patch" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Bump version
+        run: |
+          npm version ${{ steps.bump.outputs.type }} --no-git-tag-version
+
+      - name: Get new version
+        id: version
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Update changelog
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+
+          {
+            echo "## v${VERSION}"
+            echo ""
+            echo "### Added"
+            echo ""
+            echo "### Updated"
+            echo ""
+            echo "### Fixed"
+            echo ""
+            echo "### Removed"
+            echo ""
+            echo "### Chore"
+            echo ""
+            cat CHANGELOG.md
+          } > CHANGELOG.tmp
+
+          mv CHANGELOG.tmp CHANGELOG.md
+
+      - name: Commit changes
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+
+          git add package.json CHANGELOG.md
+
+          git commit -m "chore: release v${{ steps.version.outputs.version }}" || exit 0
+
+          git tag -f "v${{ steps.version.outputs.version }}"
+
+          git push origin HEAD:${{ github.event.pull_request.base.ref }}
+          git push --tags --force
