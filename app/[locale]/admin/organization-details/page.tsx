@@ -77,6 +77,9 @@ interface OrganizationDetails {
 }
 
 const OrganizationDetailsPage: React.FC = () => {
+  const ALLOWED_FILE_TYPES = ["image/png", "image/jpeg", "image/svg+xml"];
+  const MAX_FILE_SIZE_BYTES = 2 * 1024 * 1024; // 2MB
+
   const router = useRouter();
   const toastState = useToast();
 
@@ -326,27 +329,48 @@ const OrganizationDetailsPage: React.FC = () => {
     return undefined;
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const handleDrop = async (e: any) => {
-    if (e.items && e.items.length > 0) {
-      if (e.items[0].name && e.items[0].type) {
-        setUploadFile(e.items[0]);
-        setLogoName(e.items[0].name);
-      } else {
-        setErrors((prevErrors) => [...prevErrors, OrganizationDetails("messages.errors.logoFileSelect")]);
-      }
+  // Validate that the file selected is in the proper format and size
+  const validateFile = (file: File): string | null => {
+    if (!ALLOWED_FILE_TYPES.includes(file.type)) {
+      return OrganizationDetails("messages.errors.logoFileSelect.format");
     }
+    if (file.size > MAX_FILE_SIZE_BYTES) {
+      return OrganizationDetails("messages.errors.logoFileSelect.size");
+    }
+    return null;
   };
 
-  // Process a file upload
-  const handleFileSelect = async (file: File) => {
-    if (file && file.name && file.type) {
-      setUploadFile(file);
-      setLogoName(file.name);
-    } else {
-      setErrors((prevErrors) => [...prevErrors, OrganizationDetails("messages.errors.logoFileSelect")]);
-    }
-  };
+   // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   const handleDrop = async (e: any) => {
+     if (e.items && e.items.length > 0) {
+       if (e.items[0].name && e.items[0].type) {
+         const validationError = validateFile(e.items[0] as File);
+         if (validationError === null) {
+           setUploadFile(e.items[0]);
+           setLogoName(e.items[0].name);
+         } else {
+           setErrors((prevErrors) => [...prevErrors, validationError]);
+         }
+       } else {
+         setErrors((prevErrors) => [...prevErrors, OrganizationDetails("messages.errors.logoFileSelect.select")]);
+       }
+     }
+   };
+
+   // Process a file upload
+   const handleFileSelect = async (file: File) => {
+     if (file && file.name && file.type) {
+       const validationError = validateFile(file);
+       if (validationError === null) {
+         setUploadFile(file);
+         setLogoName(file.name);
+       } else {
+         setErrors((prevErrors) => [...prevErrors, validationError]);
+       }
+     } else {
+       setErrors((prevErrors) => [...prevErrors, OrganizationDetails("messages.errors.logoFileSelect.select")]);
+     }
+   };
 
   // Clear the logo
   const handleLogoRemoval = () => {
@@ -1033,6 +1057,7 @@ const OrganizationDetailsPage: React.FC = () => {
                             onDrop={handleDrop}
                             aria-label={OrganizationDetails("upload.dropZone.ariaLabel")}
                             className={styles.dropZone}
+                            test-id={"logo-dropzone"}
                           >
                             <div className={styles.dropZoneContent}>
                               <div className={styles.uploadIcon}>

@@ -469,7 +469,7 @@
       "save": "Save",
       "addLink": "Add another link",
       "deleteLink": "Remove",
-      "removeLogo": "Remove"
+      "removeLogo": "Remove logo"
     },
     "upload": {
       "dropZone": {
@@ -493,7 +493,11 @@
         "contactEmail": "The contact email must be a valid email address",
         "types": "Please select at least one organization type",
         "linkURL": "Links must be a URL starting with http:// or https://",
-        "logoFileSelect": "Files must be in PNG, JPG, or SVG format and less than 2MB",
+        "logoFileSelect": {
+          "format": "Images must be in PNG, JPG, or SVG format",
+          "select": "Unable to upload your file at this time. Please select a different file and try again.",
+          "size": "Images must be less than 2MB"
+        },
         "logoFileUploadPartOne": "Unable to process your logo at this time. Please try again later.",
         "logoFileUploadPartTwo": "Unable to upload your logo at this time. Please try again later.",
         "logoName": "There was a problem uploading your logo. Please check the file and try again."
