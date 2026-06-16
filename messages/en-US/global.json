@@ -337,6 +337,26 @@
       }
     }
   },
+  "AdminNotifications": {
+    "title": "Notifications",
+    "feedbackRequested": "Feedback requested",
+    "funderTemplateAdd": "Funder template added",
+    "funderTemplateCustomizationChanged": "Funder template customization changed",
+    "daysAgo": "{diffDays} day{s} ago",
+    "headings": {
+      "unread": "Unread notifications",
+      "previousNotifications": "Previous notifications"
+    },
+    "messages": {
+      "noUnreadNotifications": "No unread notifications found",
+      "noReadNotifications": "No previous notifications found",
+      "today": "Today",
+      "errors": {
+        "failedToLoadNotifications": "Failed to load notifications"
+      }
+    },
+    "description": "Notifications for your organization are listed below. Unread notifications are shown at the top. Click on a notification to view more details."
+  },
   "OrganizationDetails": {
     "title": "Organization Details",
     "description": "Manage information about your organization.",
@@ -842,7 +862,11 @@
       "createNewPlan": "Create New DMP",
       "deletingCustomization": "Deleting customization...",
       "deleteCustomization": "Delete customization",
-      "view": "View"
+      "view": "View",
+      "viewPlan": "View plan",
+      "viewTemplate": "View template",
+      "markAsRead": "Mark as read",
+      "markAsUnread": "Mark as unread"
     },
     "labels": {
       "required": "required",

@@ -2,6 +2,7 @@
 - Wired up the Organization details page
 - Made some minor tweaks to the Organization details css file
 - Added an `S3Uploader` hook to facilitate uploads of files to S3 on the server side
+- Added new `AdminNotification` card component, and new AdminNotification queries [#570]
 - Added `projectImport` mutation and `searchExternalProjects` query [#352]
 - Added a new `button-disabled` style to shared `_button.scss` [#244]
 - Added `readOnly` and `collaborators` fields to `Project` query schema [#244]
@@ -16,6 +17,7 @@
 - Updated the `FormInput` component to accept either a string or a `React.ReactNode` object in the `helpMessage` so we can include resolvable URLs
 - Fixed a flaky test in the Plan Overview page tests
 - Fixed the `UpdateAnswer` mutation which was using the `AffiliationErrors` object (fixed the upstream schema in Apollo)
+- Hooked up `admin/notifications` page and updated the notifications card on the `admin` page to have dynamic notification count [#570]
 - Updated `PlanOverviewPage` to use `totalRequiredQuestions` and `answeredRequiredQuestions` to display a message to user in Publish modal [#249]
 - Updated `CreateProjectsSearchFunder` and `ProjectsCreateProject` components to use <TransitionButton> [#352]
 - Updated `ProjectsCreateProjectFunding` component with <TransitionButton> and to pass affiliationId as a query parameter to project search page [#352]
@@ -57,6 +59,7 @@
 - Fixed issue with Feedback Notification headers displaying for any collaborator on the Plan Overview, Section and Question pages. It should only display to Org Admins and Super Admins. Added shared isOrgAdmin hook for pages. [#249]
 
 ## Chore
+- Bump form-data from 4.0.5 to 4.0.6
 - Added Github Action workflows `versioning.yml` and `validation-version-label.yml` to automate versioning when merging from `development` into `stage`. [#271]
 - Addressed `shell-quote` vulnerability by running `npm audit fix` to update `package-lock.json` [#278]
 - Updated `tinymce` to `v7.9.3` due to high vulnerabilities [#276]
