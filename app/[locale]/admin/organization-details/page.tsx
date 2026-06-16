@@ -25,7 +25,7 @@ import { useToast } from "@/context/ToastContext";
 import { isValidEmail, logECS, routePath, scrollToTop } from "@/utils/index";
 import ErrorMessages from "@/components/ErrorMessages";
 import { S3UploadResponse } from "@/app/types";
-import { uploadFileToS3 } from "@/app/hooks/s3Uploader";
+import { uploadFileToS3 } from "@/app/[locale]/admin/organization-details/actions/s3Uploader";
 
 interface OrganizationDetailsPageErrors {
   general: string;
@@ -226,7 +226,7 @@ const OrganizationDetailsPage: React.FC = () => {
     if (order && order !== 0) {
       const updatedLinks: OrganizationLink[] = organizationLinks?.filter((row) => row.order !== order);
       setOrganizationLinks(updatedLinks || []);
-      setAnnouncement(OrganizationDetails("messages.linkRemoved", { order }));
+      setAnnouncement(OrganizationDetails("messages.linkRemoved", { number: order }));
       setHasUnsavedChanges(true);
     }
   };
@@ -1022,7 +1022,7 @@ const OrganizationDetailsPage: React.FC = () => {
                             className={styles.removeButton}
                             onClick={() => handleLogoRemoval()}
                           >
-                            Remove logo
+                            {OrganizationDetails("buttons.removeLogo")}
                           </button>
                         </div>
                       </div>

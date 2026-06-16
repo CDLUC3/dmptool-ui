@@ -468,7 +468,8 @@
     "buttons": {
       "save": "Save",
       "addLink": "Add another link",
-      "deleteLink": "Remove"
+      "deleteLink": "Remove",
+      "removeLogo": "Remove"
     },
     "upload": {
       "dropZone": {

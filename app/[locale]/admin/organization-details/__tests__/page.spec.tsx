@@ -17,7 +17,7 @@ jest.mock("@apollo/client/react", () => ({
   useMutation: jest.fn(),
 }));
 
-jest.mock("@/app/hooks/s3Uploader", () => ({
+jest.mock("@/app/[locale]/admin/organization-details/actions/s3Uploader", () => ({
   uploadFileToS3: jest.fn(),
 }));
 
