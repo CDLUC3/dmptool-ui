@@ -1,4 +1,7 @@
 ## Added
+- Wired up the Organization details page
+- Made some minor tweaks to the Organization details css file
+- Added an `S3Uploader` hook to facilitate uploads of files to S3 on the server side
 - Added new `AdminNotification` card component, and new AdminNotification queries [#570]
 - Added `projectImport` mutation and `searchExternalProjects` query [#352]
 - Added a new `button-disabled` style to shared `_button.scss` [#244]
@@ -10,6 +13,10 @@
 - Added `UpdateAffiliation` and `AffiliationById` queries [#203]
 
 ## Updated
+- Update feedback options page, fundings add page to work with the Affiliation `displayName`
+- Updated the `FormInput` component to accept either a string or a `React.ReactNode` object in the `helpMessage` so we can include resolvable URLs
+- Fixed a flaky test in the Plan Overview page tests
+- Fixed the `UpdateAnswer` mutation which was using the `AffiliationErrors` object (fixed the upstream schema in Apollo)
 - Hooked up `admin/notifications` page and updated the notifications card on the `admin` page to have dynamic notification count [#570]
 - Updated `PlanOverviewPage` to use `totalRequiredQuestions` and `answeredRequiredQuestions` to display a message to user in Publish modal [#249]
 - Updated `CreateProjectsSearchFunder` and `ProjectsCreateProject` components to use <TransitionButton> [#352]
