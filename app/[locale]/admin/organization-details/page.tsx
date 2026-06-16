@@ -344,13 +344,8 @@ const OrganizationDetailsPage: React.FC = () => {
    const handleDrop = async (e: any) => {
      if (e.items && e.items.length > 0) {
        if (e.items[0].name && e.items[0].type) {
-         const validationError = validateFile(e.items[0] as File);
-         if (validationError === null) {
-           setUploadFile(e.items[0]);
-           setLogoName(e.items[0].name);
-         } else {
-           setErrors((prevErrors) => [...prevErrors, validationError]);
-         }
+         const file: File = await e.items[0].getFile();
+         await handleFileSelect(file);
        } else {
          setErrors((prevErrors) => [...prevErrors, OrganizationDetails("messages.errors.logoFileSelect.select")]);
        }
