@@ -407,7 +407,7 @@ const OrganizationDetailsPage: React.FC = () => {
       }) || [AffiliationType.Other];
 
       // Get the existing logo file name
-      let logoName = organization.logoName;
+      let logoNameToSave = organization.logoName;
 
       // Process newly uploaded logo if applicable
       if (uploadFile && logoName) {
@@ -416,10 +416,10 @@ const OrganizationDetailsPage: React.FC = () => {
           // The processLogoUpload function will have set error messages if it failed, so just abort
           return [undefined, false];
         }
-        logoName = s3Key;
-      } else if (logoName && !logoUrl) {
+        logoNameToSave = s3Key;
+      } else if (logoNameToSave && !logoUrl) {
         // If the logo was removed
-        logoName = undefined;
+        logoNameToSave = undefined;
       }
 
       const subHeaderLinks: AffiliationLinkInput[] = organizationLinks.map((link: OrganizationLink) => {
@@ -438,7 +438,7 @@ const OrganizationDetailsPage: React.FC = () => {
             contactName: organization.contactName,
             contactEmail: organization.contactEmail,
             types,
-            logoName,
+            logoName: logoNameToSave,
             fundrefId: organization.fundrefId,
             ssoEntityId: organization.ssoEntityId,
             ssoEmailDomains: organization.ssoEmailDomains,
