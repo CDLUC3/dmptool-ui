@@ -31,8 +31,8 @@ query Me{
   }
 }
 
-query Users($paginationOptions: PaginationOptions, $term: String) {
-  users(paginationOptions: $paginationOptions, term: $term) {
+query Users($paginationOptions: PaginationOptions, $term: String, $role: UserRole) {
+  users(paginationOptions: $paginationOptions, term: $term, role: $role) {
     items {
       givenName
       surName
@@ -47,6 +47,9 @@ query Users($paginationOptions: PaginationOptions, $term: String) {
         dmpId
       }
       id
+      affiliation {
+        displayName
+      }
     }
     hasNextPage
     currentOffset

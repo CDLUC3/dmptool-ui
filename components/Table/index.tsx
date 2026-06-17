@@ -182,7 +182,7 @@ export function DmpTable({
       if (col.id === descriptor.column) {
         return { ...col, direction: descriptor.direction };
       }
-      return col;
+      return { ...col, direction: '' as const };  // reset all other columns otherwise it will get stuck on one sortField 
     });
 
     setSorting(descriptor);
@@ -213,7 +213,7 @@ export function DmpTable({
     >
       <DmpTableHeader className={styles.dmpTableHeader} columns={columns}>
         {(col) => (
-          <Column isRowHeader={col.isRowHeader} allowsSorting={col.allowsSorting}>
+          <Column id={col.id} isRowHeader={col.isRowHeader} allowsSorting={col.allowsSorting}>
             {col.name}
             {col.allowsSorting && (
               <>

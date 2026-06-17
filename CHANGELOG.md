@@ -10,6 +10,7 @@
 - Added `UpdateAffiliation` and `AffiliationById` queries [#203]
 
 ## Updated
+- Hooked up the `admin/user` page. Added search and sorting functionality [#240]
 - Hooked up `admin/notifications` page and updated the notifications card on the `admin` page to have dynamic notification count [#570]
 - Updated `PlanOverviewPage` to use `totalRequiredQuestions` and `answeredRequiredQuestions` to display a message to user in Publish modal [#249]
 - Updated `CreateProjectsSearchFunder` and `ProjectsCreateProject` components to use <TransitionButton> [#352]

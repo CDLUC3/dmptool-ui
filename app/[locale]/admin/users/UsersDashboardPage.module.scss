@@ -1,6 +1,9 @@
 
+@use '@/styles/responsive.scss' as r;
+
 .pageTools {
   display: flex;
+  flex-wrap: wrap;
   flex-direction: row;
   align-items: center;
   justify-content: flex-start;
@@ -8,11 +11,32 @@
 
   > * {
     width: 30%;
+    min-width: 200px; 
   }
 
   > button {
     width: auto;
   }
+}
+
+.searchInput {
+  margin-bottom: 0;
+
+  @include r.device(sm) {
+    margin-bottom: 2rem;
+  }
+}
+
+.roleSelect {
+  margin-bottom: 0.5rem;
+
+  @include r.device(sm) {
+    margin-bottom: 2rem;
+  }
+}
+
+.searchButton {
+  margin-bottom: 0.5rem;
 }
 
 .userList {
