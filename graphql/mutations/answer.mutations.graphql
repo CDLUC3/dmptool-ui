@@ -9,29 +9,11 @@ mutation AddAnswer($planId: Int!, $versionedSectionId: Int, $versionedQuestionId
 mutation UpdateAnswer($answerId: Int!, $json: String) {
   updateAnswer(answerId: $answerId, json: $json) {
     errors {
-      acronyms
-      aliases
-      contactEmail
-      contactName
-      displayName
-      feedbackEmails
-      feedbackMessage
-      fundrefId
       general
-      homepage
-      json
-      logoName
-      logoURI
-      name
-      planId
-      provenance
-      searchName
-      ssoEntityId
-      subHeaderLinks
-      types
-      uri
-      versionedQuestionId
       versionedSectionId
+      versionedQuestionId
+      planId
+      json
     }
     id
     json

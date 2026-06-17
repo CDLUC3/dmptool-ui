@@ -210,8 +210,9 @@ const AddProjectFunderManually = () => {
         const result = await addAffiliation({
           variables: {
             input: {
+              id: undefined,
               funder: true,
-              name: fundingData.otherAffiliationName,
+              displayName: fundingData.otherAffiliationName,
             },
           },
         });

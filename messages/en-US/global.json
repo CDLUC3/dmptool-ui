@@ -359,7 +359,7 @@
   },
   "OrganizationDetails": {
     "title": "Organization Details",
-    "description": "View organization details",
+    "description": "Manage information about your organization.",
     "sections": {
       "organizationDetails": {
         "title": "Edit organization details"
@@ -371,8 +371,8 @@
         "title": "Branding"
       },
       "organizationUrls": {
-        "title": "Organization URL(s)",
-        "description": "You can add up to 5 organization URLs."
+        "title": "Links",
+        "description": "You can add up to 5 links. They will appear at the top of the page for users from your organization and can be used to help connect users to important resources like a library guide, data repository, or other relevant page."
       },
       "identifiers": {
         "title": "Identifiers"
@@ -381,51 +381,95 @@
     "fields": {
       "organizationName": {
         "label": "Organization full name",
-        "placeholder": "Enter organization full name"
+        "placeholder": "Enter organization full name",
+        "helpMessage": "Research organization registry (ROR) name:",
+        "helpMessageNonRor": "The name of your organization as you want it to appear to users."
       },
       "organizationAbbr": {
         "label": "Organization abbreviated name",
-        "placeholder": "Enter abbreviated name"
+        "placeholder": "Enter abbreviated name",
+        "helpMessage": "Displayed when your organization name would otherwise be too long. Research organization registry (ROR) acronyms:",
+        "helpMessageNonRor": "An abbreviation for your organization (up to 10 characters) that will appear in areas of the site where a name would be too long."
+      },
+      "organizationDomain": {
+        "label": "Organization domain name",
+        "placeholder": "Enter organization domain name (e.g. example.com)",
+        "helpMessage": "Displayed along with your organization's name when users search. Research organization registry (ROR) homepage:",
+        "helpMessageNonRor": "The website domain of your organization. For example 'example.edu' not 'library.example.edu'. This will be used to help users find your organization when searching and will be displayed along with your organization's name in search results."
       },
       "organizationType": {
-        "label": "Organization Type"
+        "label": "Organization type(s)",
+        "types": {
+          "archive": "Archive",
+          "company": "Company",
+          "education": "Education",
+          "facility": "Facility",
+          "government": "Government",
+          "healthcare": "Healthcare",
+          "nonprofit": "Nonprofit",
+          "other": "Other"
+        }
       },
       "contactEmail": {
         "label": "Contact email",
         "placeholder": "Enter contact email"
       },
-      "linkText": {
+      "contactName": {
         "label": "Contact email text",
         "placeholder": "Enter link text"
       },
-      "url": {
-        "label": "URL",
-        "placeholder": "Enter organization URL"
-      },
-      "urlLinkText": {
-        "label": "Link text for URL",
-        "placeholder": "Enter link text"
+      "affiliationLinks": {
+        "title": "Organization links",
+        "order": {
+          "label": "Order",
+          "placeholder": "Enter order for this link"
+        },
+        "url": {
+          "label": "URL",
+          "placeholder": "Enter a URL"
+        },
+        "text": {
+          "label": "Link text for URL",
+          "placeholder": "Enter link text"
+        }
       },
       "fundRef": {
-        "label": "Crossref Funder Registry (FundRef)"
+        "label": "Crossref Funder Registry (FundRef)",
+        "helpMessage": "View the official Crossref record: "
       },
       "ror": {
-        "label": "Research Organization Registry (ROR)"
+        "label": "Research Organization Registry (ROR)",
+        "helpMessage": "View the official ROR record: "
       },
       "shibboleth": {
-        "label": "Institutional Sign In (Shibboleth)"
+        "label": "Single Sign On (SSO) EntityId",
+        "helpMessage": "The identifier for your organization's SSO connection."
       },
       "domains": {
-        "label": "Domain(s)"
+        "label": "SSO Email Domain(s)",
+        "helpMessage": "Used to help determine which email domains should be directed to your SSO connection when logging in or signing up. Separate email domains with commas."
+      },
+      "managed": {
+        "label": "Managed?",
+        "description": "Indicates that this organization has administrators who will manage templates, guidance and users."
+      },
+      "funder": {
+        "label": "Funder",
+        "description": "Indicates that this organization should be treated as a funder."
+      },
+      "apiTarget": {
+        "label": "API URL",
+        "description": "If the affiliation is a funder, providing this will enable the project search workflow (relies on application code to be in place)."
       }
     },
     "actions": {
-      "requestChange": "Request Change",
-      "removeUrl": "Remove URL",
-      "addAnotherUrl": "Add another URL"
+      "requestChange": "Request Change"
     },
     "buttons": {
-      "save": "Save"
+      "save": "Save",
+      "addLink": "Add another link",
+      "deleteLink": "Remove",
+      "removeLogo": "Remove logo"
     },
     "upload": {
       "dropZone": {
@@ -438,8 +482,29 @@
     },
     "messages": {
       "success": {
-        "organizationDetailsSaved": "Organization details saved successfully!"
-      }
+        "organizationDetailsSaved": "Organization details saved successfully!",
+        "addingLink": "Successfully added new link"
+      },
+      "errors": {
+        "organizationDetailsSave": "Unable to save your changes. Please check the form and try again.",
+        "displayName": "The organization name must be at least 2 characters long",
+        "displayAbbr": "The organization abbreviation must be at least 2 characters long",
+        "contactName": "The contact name must be at least 2 characters long",
+        "contactEmail": "The contact email must be a valid email address",
+        "types": "Please select at least one organization type",
+        "linkURL": "Links must be a URL starting with http:// or https://",
+        "logoFileSelect": {
+          "format": "Images must be in PNG, JPG, or SVG format",
+          "select": "Unable to upload your file at this time. Please select a different file and try again.",
+          "size": "Images must be less than 2MB"
+        },
+        "logoFileUploadPartOne": "Unable to process your logo at this time. Please try again later.",
+        "logoFileUploadPartTwo": "Unable to upload your logo at this time. Please try again later.",
+        "logoName": "There was a problem uploading your logo. Please check the file and try again."
+      },
+      "linkRowInfo": "Row {number}",
+      "linkAdded": "Row {nextNum} added",
+      "linkRemoved": "Row {number} removed"
     }
   },
   "EmailPreferences": {
