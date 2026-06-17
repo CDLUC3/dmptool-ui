@@ -38,7 +38,12 @@ query Project($projectId: Int!) {
         name
         displayName
         searchName
+        uri
+        apiTarget
       }
+      funderOpportunityNumber
+      funderProjectNumber
+      status
     }
     members {
       givenName
@@ -50,6 +55,11 @@ query Project($projectId: Int!) {
         uri
       }
       email
+      id
+      affiliation {
+        displayName
+      }
+      orcid
     }
     researchDomain {
       id
@@ -60,10 +70,12 @@ query Project($projectId: Int!) {
         sectionType
         customSectionId
         answeredQuestions
+        answeredRequiredQuestions
         displayOrder
         versionedSectionId
         title
         totalQuestions
+        totalRequiredQuestions
       }
       title
       templateTitle
@@ -74,15 +86,50 @@ query Project($projectId: Int!) {
       modified
       created
     }
+    readOnly
+    collaborators {
+      user {
+        id
+        givenName
+        surName
+      }
+      accessLevel
+      id
+    }
   }
 }
 
 query ProjectFundingsApi($projectId: Int!) {
   project(projectId: $projectId) {
     fundings {
+      id
       affiliation {
         apiTarget
+        uri
+        id
       }
     }
+  }
+}
+
+query SearchExternalProjects($input: ExternalSearchInput!) {
+  searchExternalProjects(input: $input) {
+    abstractText
+    endDate
+    fundings {
+      funderProjectNumber
+      funderOpportunityNumber
+      grantId
+    }
+    members {
+      affiliationId
+      email
+      givenName
+      orcid
+      surName
+      role
+    }
+    startDate
+    title
   }
 }

@@ -1722,6 +1722,7 @@ export const PlanOverviewQuestionPageShared: React.FC<{ config: QuestionPageConf
               onClearError={clearError}
               onAddOrganization={addGuidanceOrganization}
               onRemoveOrganization={removeGuidanceOrganization}
+              linkDisabled={questionIsReadOnly}
             />
           </div>
         </SidebarPanel>

@@ -13,16 +13,19 @@
     "grantId": "Grant ID",
     "edit": "Edit",
     "editProject": "Edit project details",
+    "viewProject": "View project details",
     "fundings": "Funding sources",
     "fundingCount": "{count, plural, =0 {0 funding sources} one {1 funding source} other {{count} funding sources}}",
     "fundingInfo": "{name} ({id})",
     "editFundings": "Edit funding details",
     "editFundingDetails": "Edit funding details",
+    "viewFundingDetails": "View funding details",
     "projectMembers": "Project members",
     "memberCount": "{count, plural, =0 {0 team members} one {1 team member} other {{count} team members}}",
     "memberInfo": "{name} ({role})",
     "editMembers": "Edit project members",
     "editProjectMembers": "Edit project members",
+    "viewProjectMembers": "View project members",
     "outputCount": "{count, plural, =0 {0 outputs} one {1 output} other {{count} outputs}}",
     "editOutputs": "Edit research outputs",
     "editResearchOutputs": "Edit research outputs",
@@ -46,10 +49,12 @@
     "sharePlan": "Share plan with others",
     "update": "Update plan",
     "updatePlan": "Update this plan",
+    "view": "View plan",
     "dateRange": "{startDate} to {endDate}",
     "created": "Created",
     "messages": {
-      "errorGettingProject": "Error getting project details"
+      "errorGettingProject": "Error getting project details",
+      "readOnlyLinkMessage": "Only project collaborators can edit this project."
     },
     "status": {
       "collaboration": {
@@ -68,6 +73,7 @@
       "pendingCount": "{count} pending outputs",
       "acceptedCount": "{count} accepted outputs",
       "edit": "Adjust for this project",
+      "view": "View related works for this project",
       "publish": "Publish a plan to start adding published outputs to your project"
     }
   },
@@ -119,6 +125,50 @@
       "radioNoDescription": "You can still proceed. If you receive funding later, you'll be able to link it to this project."
     }
   },
+  "ProjectsCreateProjectProjectSearch": {
+    "title": "Search for projects",
+    "description": "Enter details of your project to help find it in this funder's database. The more you enter the more likely it is to find your project.",
+    "buttons": {
+      "addProjectManually": "Add project manually"
+    },
+    "messages": {
+      "success": {
+        "projectSelected": "Project {projectTitle} selected. Redirecting to project overview page."
+      },
+      "error": {
+        "selectedFailed": "Failed to select project. Please try again."
+      }
+    },
+    "headings": {
+      "notInThisList": "Not in this list?",
+      "noProjectFound": "No projects found",
+      "projectsFound": "{count} projects found"
+    },
+    "descriptions": {
+      "addProjectManually": "If your project isn’t shown, you can add the details manually.",
+      "noProjectFound": "We couldn’t find any projects matching your search. Try again with different details."
+    },
+    "definitions": {
+      "projectNumber": "Award/Project Number",
+      "grantId": "Award page",
+      "principalInvestigator": "Principal Investigator(s)"
+    },
+    "form": {
+      "projectId": "Project ID",
+      "projectIdPlaceholder": "Enter project or award ID...",
+      "projectNamePlaceHolder": "Enter Project Name/Title...",
+      "projectAwardYearPlaceholder": "Enter award year...",
+      "projectPrincipalInvestigatorPlaceholder": "Enter PI Name or Profile ID...",
+      "projectIdHelpText": "Project or award ID, for example 5R01AI12345-02",
+      "projectName": "Project name",
+      "projectNameDescription": "All or part of the project name/title, for example Particle Physics",
+      "projectAwardYear": "Award year",
+      "projectPrincipalInvestigator": "Principal Investigator",
+      "projectPrincipalInvestigatorDescription": "PI names or profile IDs. Separate multiple items with semicolons (;).",
+      "ariaProjectIdInput": "Project ID input",
+      "ariaProjectIdHelpText": "Enter the project ID or grant number associated with your research project. This can be the unique identifier assigned by your funder or institution, such as a grant number, award ID, or project code. If you have multiple identifiers, try entering different ones to find your project."
+    }
+  },
   "ProjectsProjectDetail": {
     "title": "Project Details",
     "description": "Enter your Project Details, then hit Save below",
@@ -165,7 +215,8 @@
       },
       "success": {
         "projectUpdated": "Successfully updated project details"
-      }
+      },
+      "readOnlyLinkMessage": "Only project collaborators with Co-Owner or Primary access levels can edit this project."
     }
   },
   "ProjectsProjectFundingEdit": {
@@ -243,7 +294,8 @@
       "errors": {
         "errorGettingMembers": "Error getting members"
       },
-      "noMembers": "No members found"
+      "noMembers": "No members found",
+      "readOnlyLinkMessage": "Only project collaborators with Co-Owner or Primary access levels can edit this project."
     }
   },
   "ProjectsProjectMembersEdit": {
@@ -443,7 +495,7 @@
     "links": {
       "learnMoreAboutCreditTaxonomy": "Learn more about each role"
     },
-    "memberRolesDescription": "<p>Select the role(s) that should be displayed within citations for this project member with the DMP.</p><p>We use an ANSI/NISO standard called CRediT, a community-owned 14 role taxonomy that can be used to describe the key types of contributions typically made to the production and publication of research output such as research articles. </p><p><a href=\"https://credit.niso.org/\" target=\"_blank\">Learn more about CRediT Taxonomy ↗</a></p>"
+    "memberRolesDescription": "<p>Select the role(s) that should be displayed within citations for this project member with the DMP.</p><p>We use an ANSI/NISO standard called CRediT, a community-owned 14 role taxonomy that can be used to describe the key types of contributions typically made to the production and publication of research output such as research articles.</p><p><link>Learn more about CRediT Taxonomy ↗</link></p>"
   },
   "ProjectsProjectMemberCreate": {
     "title": "Add a new project member",

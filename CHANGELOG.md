@@ -1,4 +1,8 @@
 ## Added
+- Added new `AdminNotification` card component, and new AdminNotification queries [#570]
+- Added `projectImport` mutation and `searchExternalProjects` query [#352]
+- Added a new `button-disabled` style to shared `_button.scss` [#244]
+- Added `readOnly` and `collaborators` fields to `Project` query schema [#244]
 - Added new shared styles `popoverContent`, `popover-inverse`, and `link-disabled` [#225]
 - Added use of `TransitionLink` to some of the buttons in the Plan builder flow, so that it shows a loading transition when the user clicks on links [#225]
 - Added a `SaveCollaboratorAccessModal` to display to user when saving a change to a collaborator's access level [#228]
@@ -6,6 +10,20 @@
 - Added `UpdateAffiliation` and `AffiliationById` queries [#203]
 
 ## Updated
+- Hooked up `admin/notifications` page and updated the notifications card on the `admin` page to have dynamic notification count [#570]
+- Updated `PlanOverviewPage` to use `totalRequiredQuestions` and `answeredRequiredQuestions` to display a message to user in Publish modal [#249]
+- Updated `CreateProjectsSearchFunder` and `ProjectsCreateProject` components to use <TransitionButton> [#352]
+- Updated `ProjectsCreateProjectFunding` component with <TransitionButton> and to pass affiliationId as a query parameter to project search page [#352]
+- Updated `ProjectsProjectDetail` component to not show the Search Projects button unless they have funding with an API [#352]
+- Hooked up `ProjectsCreateProjectProjectsSearch` component to backend. Use `searchExternalProjects` query to get search results and projectImport mutation to save to the appropriate tables [#352]
+- Updated `Notification` component to include `yes/no` radio buttons for sending an email on feedback completion and updated content. Updated `PlanOverview` to use the new `sendEmail` boolean. Updated `completedFeedback` graphql mutation to include `sendEmail` boolean [#252]
+- Updated `handleRevoke` method in `ProjectsProjectColalboration` component so that we revert the optimistic update if errors are returned as part of the successful response [#228]
+- Updated `ProjectsProjectCollaboration`, `ProjectsProjectFunding`, `ProjectsProjectMembers` and `ProjectsProjectDetail` to query `project` resolver instead to get its data, so that we can easily get `readOnly` data. Updated those components to disable or remove form fields, CTAs and links in `readOnly` mode [#245]
+- Updated `ProjectOverviewPage` to change links to `view` versions, disable some CTAs,hide `related works` section, and change plan button text to "View plan in `readOnly` mode [#245]
+- Updated `AccessLevelRadioGroup` and `ResearchDomainCascadingDropdown` to pass in a `isDisabled` prop so that we can disable the radio buttons for readOnly mode [#245]
+- Updated `project` query schema with some additional fields so that I can use it for the various project pages [#245]
+- Updated `ProjectOverview` page with `readOnly` functionality [#244]
+- Updated `GuidancePanel` with `linkDisabled` prop in order to hide the `Customize guidance tabs` when in `readOnly` mode [#244]
 - Updated `OverviewSection` component to use `disabled` and `hoverMessage` props so that those links can be disabled with a popover message [#225]
 - Updated `PlanOverviewPage`, `PlanOverviewSectionPageShared`, and `PlanOverviewQuestionPageShared` components to display a `readOnly` mode. Added popover messages to disabled links [#225]
 - Updated `FeedbackOptions` page to properly validate and message user when submitted emails are not valid, and added the use of a save confirmation modal [#228]
@@ -30,8 +48,15 @@
 - Updated `RepoSelectorForAnswer` to wait to query `Re3byUrIsDocument` until we have `preferredReposURIs` because preferred repos don't display even though they eventually do to trigger the display of the "preferred repositories" checkbox [#118]
 
 ## Fixed
+- Fixed `type` errors resulting from deprecated `errorPolicy` in unit tests [#252]
 - Fixed issue with Feedback Notification headers displaying for any collaborator on the Plan Overview, Section and Question pages. It should only display to Org Admins and Super Admins. Added shared isOrgAdmin hook for pages. [#249]
+
 ## Chore
+- Bump form-data from 4.0.5 to 4.0.6
+- Added Github Action workflows `versioning.yml` and `validation-version-label.yml` to automate versioning when merging from `development` into `stage`. [#271]
+- Addressed `shell-quote` vulnerability by running `npm audit fix` to update `package-lock.json` [#278]
+- Updated `tinymce` to `v7.9.3` due to high vulnerabilities [#276]
+- Updated `@apollo/client` to `v4.2.0`, `dompurify` to `v3.4.6`, `@types/react` to `v18.3.29`, `react` to `v19.2.6`, `react-dom` to `v19.2.6`, `@types/node` to `v24.12.4`, `@dmptool/types` to `v3.1.5`, `postcss` to `v8.5.15`, and `tmp` to `v0.2.7`. Removed `@eslint-plugin-kit` override, and added `qs` override to address security vulnerability. Updated `zod` to `v4.4.3` to match the version in updated `@dmptool/types`, otherwise I get errors.
 - Updated version of `sanitize-html` to `v2.17.4` [#225]
 - Updated version of `next-intl` to `v4.9.2` and `icu-minify` to `v4.11.1`, and added `override` of `postcss` to `v8.5.10` to address security vulnerabilities.
 - Updated `sanitize-html` to `v2.17.3` and `dompurify` to `v3.4.0` due to security issues. Also, updated `prettier` to `v3.8.3` and `@dmptool/types` to `v3.1.4`, and `lodash` override to `v.4.18.1`. Removed overrides for `minimatch` and `test-exclude`.

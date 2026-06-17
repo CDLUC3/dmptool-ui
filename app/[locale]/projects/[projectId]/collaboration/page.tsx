@@ -20,7 +20,7 @@ import {
   MeDocument,
   ProjectCollaborator,
   ProjectCollaboratorAccessLevel,
-  ProjectCollaboratorsDocument,
+  ProjectDocument,
   UserRole,
 } from '@/generated/graphql';
 
@@ -97,8 +97,12 @@ const ProjectsProjectCollaboration = () => {
   // Added for accessibility
   const [announcement, setAnnouncement] = useState('');
 
+  // Track whether the project should be in read-only mode based on the "readOnly" field 
+  // returned from the backend from ProjectDocument query
+  const [isReadOnly, setIsReadOnly] = useState<boolean>(false);
+
   // Get project collaborators
-  const { data, loading, error: queryError, refetch: refetchProjectCollaborators } = useQuery(ProjectCollaboratorsDocument,
+  const { data, loading, error: queryError, refetch: refetchProjectCollaborators } = useQuery(ProjectDocument,
     {
       variables: { projectId: Number(projectId) },
       skip: (!projectId), // prevents the query from running when no projectId
@@ -278,6 +282,8 @@ const ProjectsProjectCollaboration = () => {
         // This will flatten field-level errors into an array of strings, since we have no form fields here
         // and want to display any errors at the top of the page
         const errs = extractErrors(normalizedErrors);
+        // revert optimistic update if mutation fails
+        setProjectCollaborators(originalCollaborators);
         setErrorMessages(errs);
       } else {
         //Successfully updated
@@ -353,9 +359,9 @@ const ProjectsProjectCollaboration = () => {
   }
 
   useEffect(() => {
-    if (data && data.projectCollaborators) {
+    if (data && data.project && data.project.collaborators) {
       // Filter out nulls and invites pending (user is null when invite not accepted)
-      const collaborators = data.projectCollaborators.filter(
+      const collaborators = data.project.collaborators.filter(
         (c): c is ProjectCollaborator => c !== null
       );
 
@@ -376,6 +382,7 @@ const ProjectsProjectCollaboration = () => {
       const meId = Number(meData?.me?.id);
       const meRole = meData?.me?.role;
       setIsPrimaryOrSuperAdmin(isSuperAdminOrPrimaryCollaborator(meRole, collaborators, meId));
+      setIsReadOnly(data.project.readOnly ?? false);
     } else {
       setProjectCollaborators([]);
     }
@@ -434,10 +441,16 @@ const ProjectsProjectCollaboration = () => {
           <p>
             {t('description')}
           </p>
-          <p>
-            <Link href={routePath('projects.collaboration.invite', { projectId })}
-              className={"react-aria-Button react-aria-Button--secondary"}>{t('links.inviteAPerson')}</Link>
-          </p>
+          {!isReadOnly && (
+            <p>
+              <Link
+                href={routePath('projects.collaboration.invite', { projectId })}
+                className={"react-aria-Button react-aria-Button--secondary"}
+              >
+                {t('links.inviteAPerson')}
+              </Link>
+            </p>
+          )}
 
           {/* Current access section */}
           <section className={styles.section}
@@ -479,43 +492,46 @@ const ProjectsProjectCollaboration = () => {
                         handlePendingAccessLevelChange(value, Number(collaborator.id))
                       }
                       collaboratorName={collaboratorName}
+                      isDisabled={isReadOnly}
                     />
 
-                    <div className={styles.buttonContainer}>
-                      <SaveCollaboratorAccessModal
-                        collaboratorId={Number(collaborator.id)}
-                        collaboratorName={collaboratorName}
-                        isOpen={saveModalFor === Number(collaborator.id)}
-                        isDeleting={isDeleting}
-                        pendingAccessLevel={pendingAccessLevels[Number(collaborator.id)]}
-                        onOpenChange={open => setSaveModalFor(open ? Number(collaborator.id) : null)}
-                        onRevoke={(id, name) => {
-                          handleRadioChange(
-                            pendingAccessLevels[id],
-                            id,
-                            name
-                          );
-                          setSaveModalFor(null);
-                        }}
-                        onCancel={() => {
-                          setSaveModalFor(null);
-                          setPendingAccessLevels(prev => ({
-                            ...prev,
-                            [Number(collaborator.id)]: (collaborator.accessLevel ?? 'EDIT').toLowerCase()
-                          }));
-                        }}
-                      />
+                    {!isReadOnly && (
+                      <div className={styles.buttonContainer}>
+                        <SaveCollaboratorAccessModal
+                          collaboratorId={Number(collaborator.id)}
+                          collaboratorName={collaboratorName}
+                          isOpen={saveModalFor === Number(collaborator.id)}
+                          isDeleting={isDeleting}
+                          pendingAccessLevel={pendingAccessLevels[Number(collaborator.id)]}
+                          onOpenChange={open => setSaveModalFor(open ? Number(collaborator.id) : null)}
+                          onRevoke={(id, name) => {
+                            handleRadioChange(
+                              pendingAccessLevels[id],
+                              id,
+                              name
+                            );
+                            setSaveModalFor(null);
+                          }}
+                          onCancel={() => {
+                            setSaveModalFor(null);
+                            setPendingAccessLevels(prev => ({
+                              ...prev,
+                              [Number(collaborator.id)]: (collaborator.accessLevel ?? 'EDIT').toLowerCase()
+                            }));
+                          }}
+                        />
 
-                      <RevokeCollaboratorModal
-                        collaboratorId={Number(collaborator.id)}
-                        collaboratorName={collaboratorName}
-                        isOpen={deleteModalFor === collaborator.id}
-                        isDeleting={isDeleting}
-                        onOpenChange={open => setDeleteModalFor(open ? Number(collaborator.id) : null)}
-                        onRevoke={handleRevoke}
-                        onCancel={() => setDeleteModalFor(null)}
-                      />
-                    </div>
+                        <RevokeCollaboratorModal
+                          collaboratorId={Number(collaborator.id)}
+                          collaboratorName={collaboratorName}
+                          isOpen={deleteModalFor === collaborator.id}
+                          isDeleting={isDeleting}
+                          onOpenChange={open => setDeleteModalFor(open ? Number(collaborator.id) : null)}
+                          onRevoke={handleRevoke}
+                          onCancel={() => setDeleteModalFor(null)}
+                        />
+                      </div>
+                    )}
                   </div>
                 )
               })}
@@ -523,92 +539,97 @@ const ProjectsProjectCollaboration = () => {
           </section>
 
           {/* Not accepted invite yet */}
-          <section className={styles.section}
-            aria-labelledby="not-accepted-heading">
-            <h2 id="not-accepted-heading" className={styles.sectionTitle}>{t('headings.pendingInvites')}</h2>
-            <div className={styles.membersList} role="list">
-              {invitesPending && invitesPending.map((pending) => {
-                const pendingName = pending?.user?.givenName || pending?.user?.surName ? `${pending?.user?.givenName} ${pending?.user?.surName}` : null;
-                const pendingAccessLevel = (pending?.accessLevel || 'edit').toLowerCase();
-                return (
-                  <div
-                    key={pending.id}
-                    className={styles.membersListItem}
-                    role="listitem"
-                    aria-label={`Pending invite: ${pendingName}`}
-                  >
-                    <div className={styles.memberInfo}>
-                      <h3 className={styles.memberName}>{pendingName ? pendingName : pending.email}</h3>
-                      <p className={styles.memberEmail}>{pendingName ? pending.email : null}</p>
-                      <p className={styles.memberRole}>{pending.created}</p>
+          {invitesPending.length > 0 && (
+            <section className={styles.section}
+              aria-labelledby="not-accepted-heading">
+              <h2 id="not-accepted-heading" className={styles.sectionTitle}>{t('headings.pendingInvites')}</h2>
+              <div className={styles.membersList} role="list">
+                {invitesPending && invitesPending.map((pending) => {
+                  const pendingName = pending?.user?.givenName || pending?.user?.surName ? `${pending?.user?.givenName} ${pending?.user?.surName}` : null;
+                  const pendingAccessLevel = (pending?.accessLevel || 'edit').toLowerCase();
+                  return (
+                    <div
+                      key={pending.id}
+                      className={styles.membersListItem}
+                      role="listitem"
+                      aria-label={`Pending invite: ${pendingName}`}
+                    >
+                      <div className={styles.memberInfo}>
+                        <h3 className={styles.memberName}>{pendingName ? pendingName : pending.email}</h3>
+                        <p className={styles.memberEmail}>{pendingName ? pending.email : null}</p>
+                        <p className={styles.memberRole}>{pending.created}</p>
+                      </div>
+                      <AccessLevelRadioGroup
+                        value={pendingAccessLevel}
+                        onChange={value => handleRadioChange(value, Number(pending?.id), pendingName ?? pending.email)}
+                        collaboratorName={pendingName ?? pending.email}
+                        isDisabled={isReadOnly}
+                      />
+                      {!isReadOnly && (
+                        <div className={styles.memberActions}>
+                          <DialogTrigger
+                            isOpen={deleteModalFor === pending.id}
+                            onOpenChange={open => setDeleteModalFor(open ? Number(pending.id) : null)}
+                          >
+                            <Button
+                              className="secondary"
+                              aria-label={t('deleteInviteFor', { name: pendingName ?? pending.email })}
+                              isDisabled={isDeleting}
+                            >
+                              {t('buttons.deleteInvite')}
+                            </Button>
+                            <ModalOverlay className={`${styles.modalOverride} react-aria-ModalOverlay`}>
+                              <Modal>
+                                <Dialog>
+                                  {({ close }) => (
+                                    <>
+                                      <h3>{t('headings.removeCollaborator')}</h3>
+                                      <p>{t('removeCollaborator')}</p>
+                                      <div className="button-container">
+                                        <Button
+                                          className="secondary"
+                                          aria-label={t('cancelRemoval', { name: pendingName ?? pending.email })}
+                                          autoFocus
+                                          onPress={() => {
+                                            setDeleteModalFor(null);
+                                            close();
+                                          }}>
+                                          {Global('buttons.cancel')}
+                                        </Button>
+                                        <Button
+                                          className="primary"
+                                          aria-label={t('deleteCollaborator', { name: pendingName ?? pending.email })}
+                                          onPress={() => {
+                                            handleRevoke(Number(pending.id), pendingName ?? pending.email);
+                                            close();
+                                          }}
+                                        >
+                                          {t('buttons.deleteInvite')}
+                                        </Button>
+                                      </div>
+                                    </>
+                                  )}
+                                </Dialog>
+                              </Modal>
+                            </ModalOverlay>
+                          </DialogTrigger>
+                          <Button
+                            className="secondary"
+                            type="button"
+                            onPress={() => handleResend(Number(pending?.id), pendingName ?? pending.email)}
+                            aria-label={t('resendInviteFor', { name: pendingName ?? pending.email })}
+                            isDisabled={isResending}
+                          >
+                            {t('buttons.resend')}
+                          </Button>
+                        </div>
+                      )}
                     </div>
-                    <AccessLevelRadioGroup
-                      value={pendingAccessLevel}
-                      onChange={value => handleRadioChange(value, Number(pending?.id), pendingName ?? pending.email)}
-                      collaboratorName={pendingName ?? pending.email}
-                    />
-                    <div className={styles.memberActions}>
-                      <DialogTrigger
-                        isOpen={deleteModalFor === pending.id}
-                        onOpenChange={open => setDeleteModalFor(open ? Number(pending.id) : null)}
-                      >
-                        <Button
-                          className="secondary"
-                          aria-label={t('deleteInviteFor', { name: pendingName ?? pending.email })}
-                          isDisabled={isDeleting}
-                        >
-                          {t('buttons.deleteInvite')}
-                        </Button>
-                        <ModalOverlay className={`${styles.modalOverride} react-aria-ModalOverlay`}>
-                          <Modal>
-                            <Dialog>
-                              {({ close }) => (
-                                <>
-                                  <h3>{t('headings.removeCollaborator')}</h3>
-                                  <p>{t('removeCollaborator')}</p>
-                                  <div className="button-container">
-                                    <Button
-                                      className="secondary"
-                                      aria-label={t('cancelRemoval', { name: pendingName ?? pending.email })}
-                                      autoFocus
-                                      onPress={() => {
-                                        setDeleteModalFor(null);
-                                        close();
-                                      }}>
-                                      {Global('buttons.cancel')}
-                                    </Button>
-                                    <Button
-                                      className="primary"
-                                      aria-label={t('deleteCollaborator', { name: pendingName ?? pending.email })}
-                                      onPress={() => {
-                                        handleRevoke(Number(pending.id), pendingName ?? pending.email);
-                                        close();
-                                      }}
-                                    >
-                                      {t('buttons.deleteInvite')}
-                                    </Button>
-                                  </div>
-                                </>
-                              )}
-                            </Dialog>
-                          </Modal>
-                        </ModalOverlay>
-                      </DialogTrigger>
-                      <Button
-                        className="secondary"
-                        type="button"
-                        onPress={() => handleResend(Number(pending?.id), pendingName ?? pending.email)}
-                        aria-label={t('resendInviteFor', { name: pendingName ?? pending.email })}
-                        isDisabled={isResending}
-                      >
-                        {t('buttons.resend')}
-                      </Button>
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          </section>
+                  )
+                })}
+              </div>
+            </section>
+          )}
         </ContentContainer>
       </LayoutContainer>
       <div aria-live="polite" aria-atomic="true" className="hidden-accessibly">

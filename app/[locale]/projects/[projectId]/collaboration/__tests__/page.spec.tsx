@@ -9,7 +9,7 @@ import { mockScrollIntoView } from "@/__mocks__/common";
 import {
   MeDocument,
   ProjectCollaboratorAccessLevel,
-  ProjectCollaboratorsDocument,
+  ProjectDocument,
 } from '@/generated/graphql';
 
 expect.extend(toHaveNoViolations);
@@ -49,91 +49,94 @@ jest.mock('next/navigation', () => ({
 const mockRouter = {
   push: jest.fn(),
 };
-const projectCollaboratorsMock = [
-  {
-    __typename: "ProjectCollaborator",
-    id: 21,
-    errors: {
-      __typename: "ProjectCollaboratorErrors",
-      accessLevel: null,
-      email: null,
-      general: null,
-      invitedById: null,
-      planId: null,
-      userId: null
+const projectMock = {
+  readOnly: false,
+  collaborators: [
+    {
+      __typename: "ProjectCollaborator",
+      id: 21,
+      errors: {
+        __typename: "ProjectCollaboratorErrors",
+        accessLevel: null,
+        email: null,
+        general: null,
+        invitedById: null,
+        planId: null,
+        userId: null
+      },
+      accessLevel: "OWN",
+      created: "2025-09-10 19:36:06",
+      email: "user1@example.com",
+      user: {
+        __typename: "User",
+        givenName: "User",
+        surName: "One",
+        email: "user1@example.com"
+      }
     },
-    accessLevel: "OWN",
-    created: "2025-09-10 19:36:06",
-    email: "user1@example.com",
-    user: {
-      __typename: "User",
-      givenName: "User",
-      surName: "One",
-      email: "user1@example.com"
+    {
+      __typename: "ProjectCollaborator",
+      id: 20,
+      errors: {
+        __typename: "ProjectCollaboratorErrors",
+        accessLevel: null,
+        email: null,
+        general: null,
+        invitedById: null,
+        planId: null,
+        userId: null
+      },
+      accessLevel: "OWN",
+      created: "2025-09-10 17:44:40",
+      email: "user2@example.com",
+      user: null
+    },
+    {
+      __typename: "ProjectCollaborator",
+      id: 22,
+      errors: {
+        __typename: "ProjectCollaboratorErrors",
+        accessLevel: null,
+        email: null,
+        general: null,
+        invitedById: null,
+        planId: null,
+        userId: null
+      },
+      accessLevel: "OWN",
+      created: "2025-09-10 19:36:26",
+      email: "user3@example.com",
+      user: {
+        __typename: "User",
+        givenName: "User",
+        surName: "Three",
+        email: "user3@example.com"
+      }
+    },
+    {
+      __typename: "ProjectCollaborator",
+      id: 18,
+      errors: {
+        __typename: "ProjectCollaboratorErrors",
+        accessLevel: null,
+        email: null,
+        general: null,
+        invitedById: null,
+        planId: null,
+        userId: null
+      },
+      accessLevel: "EDIT",
+      created: "2025-09-10 17:25:37",
+      email: "user4@example.com",
+      user: {
+        __typename: "User",
+        givenName: "User",
+        surName: "Four",
+        email: "user4@Example.com"
+      }
     }
-  },
-  {
-    __typename: "ProjectCollaborator",
-    id: 20,
-    errors: {
-      __typename: "ProjectCollaboratorErrors",
-      accessLevel: null,
-      email: null,
-      general: null,
-      invitedById: null,
-      planId: null,
-      userId: null
-    },
-    accessLevel: "OWN",
-    created: "2025-09-10 17:44:40",
-    email: "user2@example.com",
-    user: null
-  },
-  {
-    __typename: "ProjectCollaborator",
-    id: 22,
-    errors: {
-      __typename: "ProjectCollaboratorErrors",
-      accessLevel: null,
-      email: null,
-      general: null,
-      invitedById: null,
-      planId: null,
-      userId: null
-    },
-    accessLevel: "OWN",
-    created: "2025-09-10 19:36:26",
-    email: "user3@example.com",
-    user: {
-      __typename: "User",
-      givenName: "User",
-      surName: "Three",
-      email: "user3@example.com"
-    }
-  },
-  {
-    __typename: "ProjectCollaborator",
-    id: 18,
-    errors: {
-      __typename: "ProjectCollaboratorErrors",
-      accessLevel: null,
-      email: null,
-      general: null,
-      invitedById: null,
-      planId: null,
-      userId: null
-    },
-    accessLevel: "EDIT",
-    created: "2025-09-10 17:25:37",
-    email: "user4@example.com",
-    user: {
-      __typename: "User",
-      givenName: "User",
-      surName: "Four",
-      email: "user4@Example.com"
-    }
-  }
-];
+  ]
+};
 
 const meMock = {
   request: {
@@ -165,14 +168,14 @@ const meMock = {
 
 const projectCollaboratorsMockQuery = {
   request: {
-    query: ProjectCollaboratorsDocument,
+    query: ProjectDocument,
     variables: {
       projectId: 1
     },
   },
   result: {
     data: {
-      projectCollaborators: projectCollaboratorsMock,
+      project: projectMock,
     },
   },
 };
@@ -188,7 +191,7 @@ const MOCKS = [
 const ERROR_MOCKS = [
   {
     request: {
-      query: ProjectCollaboratorsDocument,
+      query: ProjectDocument,
       variables: {
         projectId: 1
       },
@@ -197,6 +200,30 @@ const ERROR_MOCKS = [
   },
   meMock,
 ]
+
+const readOnlyProjectMock = {
+  ...projectMock,
+  readOnly: true,
+};
+
+const readOnlyProjectCollaboratorsMockQuery = {
+  request: {
+    query: ProjectDocument,
+    variables: { projectId: 1 },
+  },
+  result: {
+    data: {
+      project: readOnlyProjectMock,
+    },
+  },
+};
+
+const READ_ONLY_MOCKS = [
+  readOnlyProjectCollaboratorsMockQuery,
+  readOnlyProjectCollaboratorsMockQuery,
+  meMock,
+];
+
 
 
 describe('ProjectsProjectCollaborationPage', () => {
@@ -739,6 +766,117 @@ describe('ProjectsProjectCollaborationPage', () => {
     });
     const results = await axe(container);
     expect(results).toHaveNoViolations();
+  });
+
+  describe('when isReadOnly is true', () => {
+    // Helper: wait for page data without relying on the invite link (which is hidden in read-only)
+    const waitForPageLoad = () =>
+      screen.findByRole('listitem', { name: /Project member: User One/i });
+
+    it('should not render the "Invite a Person" link', async () => {
+      await act(async () => {
+        render(
+          <MockedProvider mocks={READ_ONLY_MOCKS}>
+            <ProjectsProjectCollaboration />
+          </MockedProvider>
+        );
+      });
+
+      await waitForPageLoad();
+      expect(screen.queryByRole('link', { name: 'links.inviteAPerson' })).not.toBeInTheDocument();
+    });
+
+    it('should not render Save or Revoke buttons for active collaborators', async () => {
+      await act(async () => {
+        render(
+          <MockedProvider mocks={READ_ONLY_MOCKS}>
+            <ProjectsProjectCollaboration />
+          </MockedProvider>
+        );
+      });
+
+      await waitForPageLoad();
+      expect(screen.queryAllByRole('button', { name: /saveAccessFor/i })).toHaveLength(0);
+      expect(screen.queryAllByRole('button', { name: /revokeAccessFor/i })).toHaveLength(0);
+    });
+
+    it('should not render Delete Invite or Resend buttons for pending invites', async () => {
+      await act(async () => {
+        render(
+          <MockedProvider mocks={READ_ONLY_MOCKS}>
+            <ProjectsProjectCollaboration />
+          </MockedProvider>
+        );
+      });
+
+      await waitForPageLoad();
+      expect(screen.queryAllByRole('button', { name: /deleteInviteFor/i })).toHaveLength(0);
+      expect(screen.queryAllByRole('button', { name: /resendInviteFor/i })).toHaveLength(0);
+    });
+
+    it('should still render active collaborator names and emails', async () => {
+      await act(async () => {
+        render(
+          <MockedProvider mocks={READ_ONLY_MOCKS}>
+            <ProjectsProjectCollaboration />
+          </MockedProvider>
+        );
+      });
+
+      await waitForPageLoad();
+      expect(screen.getByText('User One')).toBeInTheDocument();
+      expect(screen.getByText('user1@example.com')).toBeInTheDocument();
+      expect(screen.getByText('User Three')).toBeInTheDocument();
+    });
+
+    it('should still render the pending invites section', async () => {
+      await act(async () => {
+        render(
+          <MockedProvider mocks={READ_ONLY_MOCKS}>
+            <ProjectsProjectCollaboration />
+          </MockedProvider>
+        );
+      });
+
+      await waitForPageLoad();
+      expect(screen.getByRole('heading', { name: 'headings.pendingInvites' })).toBeInTheDocument();
+      expect(screen.getByText('user2@example.com')).toBeInTheDocument();
+    });
+
+    it('should render AccessLevelRadioGroup as disabled for active collaborators', async () => {
+      await act(async () => {
+        render(
+          <MockedProvider mocks={READ_ONLY_MOCKS}>
+            <ProjectsProjectCollaboration />
+          </MockedProvider>
+        );
+      });
+
+      await waitForPageLoad();
+
+      // All radio inputs within the active collaborators list should be disabled
+      const activeSection = screen.getByRole('region', { name: /headings\.hasAccess/i });
+      const radios = within(activeSection).queryAllByRole('radio');
+      expect(radios.length).toBeGreaterThan(0);
+      radios.forEach(radio => expect(radio).toBeDisabled());
+    });
+
+    it('should render AccessLevelRadioGroup as disabled for pending invites', async () => {
+      await act(async () => {
+        render(
+          <MockedProvider mocks={READ_ONLY_MOCKS}>
+            <ProjectsProjectCollaboration />
+          </MockedProvider>
+        );
+      });
+
+      await waitForPageLoad();
+
+      const pendingSection = screen.getByRole('region', { name: /headings\.pendingInvites/i });
+      const radios = within(pendingSection).queryAllByRole('radio');
+      expect(radios.length).toBeGreaterThan(0);
+      radios.forEach(radio => expect(radio).toBeDisabled());
+    });
   });
 });
 

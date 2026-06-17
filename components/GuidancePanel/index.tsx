@@ -44,6 +44,7 @@ const GuidancePanel: React.FC<GuidancePanelProps> = ({
   onClearError,
   onAddOrganization,
   onRemoveOrganization,
+  linkDisabled = false,
 }) => {
   const Global = useTranslations('Global');
   const t = useTranslations('GuidancePanel');
@@ -445,7 +446,7 @@ const GuidancePanel: React.FC<GuidancePanelProps> = ({
           )}
 
           {/* Add Organization button when no overflow */}
-          {!hasOverflow && onAddOrganization && (
+          {!hasOverflow && onAddOrganization && !linkDisabled && (
             <div className={`${styles.actionButtons} ${styles.singleRow}`}>
               <Button
                 className="link"

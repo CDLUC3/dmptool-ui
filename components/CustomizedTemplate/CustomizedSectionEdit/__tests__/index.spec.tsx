@@ -249,11 +249,6 @@ describe('CustomizedSectionEdit', () => {
       <MockedProvider
         mocks={mocks}
         cache={apolloCache}
-        defaultOptions={{
-          query: { fetchPolicy: 'no-cache', errorPolicy: 'all' },
-          watchQuery: { fetchPolicy: 'no-cache', errorPolicy: 'all' },
-          mutate: { errorPolicy: 'all' }
-        }}
       >
         <CustomizedSectionEdit
           section={section}
@@ -263,7 +258,7 @@ describe('CustomizedSectionEdit', () => {
           onMoveUp={jest.fn()}
           onMoveDown={jest.fn()}
           refetch={mockRefetch}
-          />
+        />
       </MockedProvider>
     );
   };

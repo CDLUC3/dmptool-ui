@@ -74,6 +74,8 @@ query Plan($planId: Int!) {
       }
       sectionType
       customSectionId
+      totalRequiredQuestions
+      answeredRequiredQuestions
     }
     progress {
       answeredQuestions

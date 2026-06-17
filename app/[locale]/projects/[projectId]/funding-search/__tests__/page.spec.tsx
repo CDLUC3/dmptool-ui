@@ -696,7 +696,7 @@ describe("CreateProjectSearchFunder", () => {
     await waitFor(() => {
       expect(logECS).toHaveBeenCalledWith(
         'error',
-        'createProjectSearchFunder.popularFundersQuery',
+        'createProjectSearchFunder.handleSelectFunder',
         expect.objectContaining({
           error: expect.anything(),
         })

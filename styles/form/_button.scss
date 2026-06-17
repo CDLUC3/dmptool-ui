@@ -237,6 +237,32 @@ a.button-secondary {
   @include button-secondary;
 }
 
+@mixin button-disabled-look {
+  background: var(--slate-400);
+  color: var(--bg-white);
+  cursor: not-allowed;
+  opacity: 0.5;
+
+  &:hover,
+  &:active,
+  &:visited,
+  &[data-pressed] {
+    background: var(--slate-400);
+    color: var(--bg-white);
+    text-decoration: none;
+  }
+
+  &[data-focus-visible],
+  &:focus-visible,
+  &:focus {
+    outline: none !important;
+    outline-offset: 0 !important;
+    box-shadow: none !important;
+    background: var(--slate-400) !important;
+    color: var(--bg-white) !important;
+  }
+}
+
 // Styles for Link components with react-aria-Button classes
 a.react-aria-Button {
   text-decoration: none !important;
@@ -365,9 +391,9 @@ button.link-disabled,
 input[type="button"].link-disabled,
 input[type="reset"].link-disabled,
 input[type="submit"].link-disabled {
-  @include button-link;
   color: var(--slate-400);
   cursor: not-allowed;
+  @include button-link;
 
   &[data-focus-visible],
   &:focus-visible,
@@ -397,6 +423,16 @@ input[type="reset"].danger,
 input[type="submit"].danger {
   @include button-danger;
 }
+
+// Disabled-look button: primary button appearance, but visually disabled
+.react-aria-Button.disabled-button-look,
+button.disabled-button-look,
+input[type="button"].disabled-button-look,
+input[type="reset"].disabled-button-look,
+input[type="submit"].disabled-button-look {
+  @include button-disabled-look;
+}
+
 
 // This is to prevent the Button in FormSelect from taking on primary button colors
 .react-aria-Select .react-aria-Button.selectButton {

@@ -9,6 +9,11 @@ export const guidanceTypePolicies: TypePolicies = {
   GuidanceItem: {
     keyFields: false,
   },
+  GuidanceSource: {
+    fields: {
+      items: { merge: false },
+    },
+  },
   CustomSectionErrors: {
     keyFields: false,
   }
