@@ -200,6 +200,10 @@ export function DmpTable({
     }
   }, [columns]);
 
+  useEffect(() => {
+    setRows(rowData);
+  }, [rowData]);
+
   return (
     <Table
       aria-label={label}
@@ -223,11 +227,13 @@ export function DmpTable({
       </DmpTableHeader>
 
       <TableBody items={rows as DataRowSet} dependencies={[columns]}>
-        {(row) => (
-          <DmpTableRow row={row} columns={columns}>
-            {(col: DmpTableColumn) => <Cell>{row[col.id]}</Cell>}
-          </DmpTableRow>
-        )}
+        {(row) => {
+          return (
+            <DmpTableRow row={row} columns={columns}>
+              {(col: DmpTableColumn) => <Cell>{row[col.id]}</Cell>}
+            </DmpTableRow>
+          );
+        }}
       </TableBody>
     </Table>
   );

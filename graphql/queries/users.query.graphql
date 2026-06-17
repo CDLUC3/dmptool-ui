@@ -30,3 +30,30 @@ query Me{
     }
   }
 }
+
+query Users($paginationOptions: PaginationOptions, $term: String) {
+  users(paginationOptions: $paginationOptions, term: $term) {
+    items {
+      givenName
+      surName
+      email
+      active
+      role
+      created
+      last_sign_in
+      plans {
+        id
+        title
+        dmpId
+      }
+      id
+    }
+    hasNextPage
+    currentOffset
+    hasPreviousPage
+    totalCount
+    nextCursor
+    limit
+  }
+}
+

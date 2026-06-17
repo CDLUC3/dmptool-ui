@@ -1,10 +1,8 @@
 'use client'
 
-import React, { useState, useRef } from 'react';
-
+import React, { useEffect, useState, useRef } from 'react';
 import { useTranslations } from 'next-intl';
-import { routePath } from '@/utils/index';
-
+import { useLazyQuery } from "@apollo/client/react";
 import {
   FieldError,
   Breadcrumb,
@@ -19,76 +17,83 @@ import {
   SelectValue,
 } from 'react-aria-components';
 
+// GraphQL
+import {
+  UsersDocument,
+  UserRole,
+} from "@/generated/graphql";
+
+// Components
 import {
   ContentContainer,
   LayoutContainer,
 } from '@/components/Container';
-
 import FormInput from '@/components/Form/FormInput';
 import {
   DmpTable,
   DmpTableColumnSet,
 } from '@/components/Table';
-
 import PageHeader from '@/components/PageHeader';
 import Pagination from '@/components/Pagination';
 import ErrorMessages from '@/components/ErrorMessages';
 
+// Utils and other
 import styles from './UsersDashboardPage.module.scss';
+import { routePath } from '@/utils/routes';
+import { logECS } from '@/utils/index';
+import { handleApolloError } from '@/utils/apolloErrorHandler';
+import { useFormatDate } from "@/hooks/useFormatDate";
 
+const LIMIT = 1;
+
+interface UserRow {
+  id: string | null | undefined;
+  name: string;
+  email: string;
+  plans: number;
+  active: string;
+  role: UserRole | undefined;
+  created: string;
+  lastActivity: string | null;
+}
 
 const StaticPermissions = [
   'Super Admin',
   'Org Admin',
+  'Researcher',
 ]
-
-const StaticUserList = Array.from({ length: 8 }, (_, i) => {
-  const count = i + 1;
-  return {
-    id: count,
-    name: `User ${count} Name`,
-    email: `user${count}@example.com`,
-    school: "School",
-    plans: "24",
-    active: "Yes",
-    permission: "Super Admin",
-    created: "27/09/2025",
-    activity: "27/09/2025",
-  }
-});
 
 const initialColumns = [
   { id: 'id', name: 'id', isRowHeader: false },
   { id: 'name', name: 'Name', isRowHeader: true, allowsSorting: true, direction: "" as const },
   { id: 'email', name: 'Email', isRowHeader: true, allowsSorting: true, direction: "" as const },
-  { id: 'school', name: 'School', isRowHeader: true, allowsSorting: true, direction: "" as const },
   { id: 'plans', name: 'Plans', isRowHeader: true, allowsSorting: true, direction: "" as const },
   { id: 'active', name: 'Active', isRowHeader: true, allowsSorting: true, direction: "" as const },
-  { id: 'permission', name: 'Permission', isRowHeader: true, allowsSorting: true, direction: "" as const },
+  { id: 'role', name: 'Role', isRowHeader: true, allowsSorting: true, direction: "" as const },
   { id: 'created', name: 'Created', isRowHeader: true, allowsSorting: true, direction: "" as const },
-  { id: 'activity', name: 'Activity', isRowHeader: true, allowsSorting: true, direction: "" as const },
+  { id: 'lastActivity', name: 'Activity', isRowHeader: true, allowsSorting: true, direction: "" as const },
 ]
 
-const paginationProps = {
-  currentPage: 1,
-  totalPages: 10,
-  hasPreviousPage: false,
-  hasNextPage: true,
-  handlePageClick: () => { },
-};
-
-
 function OrgUserAccountsPage(): React.ReactElement {
+  const formatDate = useFormatDate();
   const usersTrans = useTranslations('Admin.users');
 
   const errorRef = useRef<HTMLDivElement | null>(null);
   const topRef = useRef<HTMLDivElement>(null);
   const [errors, setErrors] = useState<string[]>([]);
 
-  const [columns, setColumns] = useState<DmpTableColumnSet>(initialColumns);
+  const [users, setUsers] = useState<UserRow[]>([]);
   const [searchTerm, setSearchTerm] = useState<string>('');
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [totalPages, setTotalPages] = useState<number>(0);
+  const [hasNextPage, setHasNextPage] = useState<boolean | null>(false);
+  const [hasPreviousPage, setHasPreviousPage] = useState<boolean | null>(false);
+  const [columns, setColumns] = useState<DmpTableColumnSet>(initialColumns);
   const [isSearching, setIsSearching] = useState(false);
 
+  const [fetchUserData, { data: usersData, loading: usersLoading, error: usersError, refetch: usersRefetch }] = useLazyQuery(UsersDocument, {
+    notifyOnNetworkStatusChange: true,
+  });
 
   function handleSearchInput(e: React.ChangeEvent<HTMLInputElement>) {
     setErrors([]);
@@ -97,6 +102,23 @@ function OrgUserAccountsPage(): React.ReactElement {
     // TODO::
     console.log('TODO');
   }
+
+  // Handle pagination page click
+  const handlePageClick = async (page: number) => {
+    await fetchUserData({
+      variables: {
+        paginationOptions: {
+          offset: (page - 1) * LIMIT,
+          limit: LIMIT,
+          type: "OFFSET",
+          sortDir: "DESC",
+          selectOwnerURIs: [],
+          bestPractice: false
+        },
+        term: searchTerm
+      }
+    });
+  };
 
   function onSortChangeHandler(newColumns: DmpTableColumnSet) {
     // Make sure to update the column states
@@ -108,6 +130,68 @@ function OrgUserAccountsPage(): React.ReactElement {
     // setting, we will re-request the user list, from the backend, passing the
     // new sort order in the params.
   }
+
+  // Fetch published templates based on page, filters and search term criteria
+  const fetchUsers = async ({
+    page,
+    searchTerm = ''
+  }: {
+    page?: number;
+    searchTerm?: string;
+  }): Promise<void> => {
+    let offsetLimit = 0;
+    if (page) {
+      setCurrentPage(page);
+      offsetLimit = (page - 1) * LIMIT;
+    }
+
+    try {
+      await fetchUserData({
+        variables: {
+          paginationOptions: {
+            offset: offsetLimit,
+            limit: LIMIT,
+            type: "OFFSET",
+            sortDir: "DESC",
+          },
+          term: searchTerm,
+        }
+      });
+    } catch (err) {
+      handleApolloError(err, 'OrgUserAccountsPage.fetchUsers');
+    }
+  };
+
+  const transformUsers = (data: typeof usersData): UserRow[] => {
+    return data?.users?.items
+      ?.filter((user): user is NonNullable<typeof user> => user !== null)
+      .map((user) => ({
+        id: user.id?.toString(),
+        name: [user.givenName, user.surName].filter(Boolean).join(' '),
+        email: user.email ?? '',
+        plans: user.plans?.length ?? 0,
+        active: user.active ? 'Yes' : 'No',
+        role: user.role,
+        created: user.created ? formatDate(user.created) : '',
+        lastActivity: user.last_sign_in ? formatDate(user.last_sign_in) : null,
+      })) ?? [];
+  }
+
+
+  // Load on mount
+  useEffect(() => {
+    fetchUsers({ page: currentPage, searchTerm: '' });
+  }, []);
+
+  useEffect(() => {
+    if (usersData?.users?.items) {
+      const totalCount = usersData.users.totalCount ?? 0;
+      setTotalPages(Math.ceil(totalCount / LIMIT));
+      setHasNextPage(usersData.users.hasNextPage ?? false);
+      setHasPreviousPage(usersData.users.hasPreviousPage ?? false);
+      setUsers(transformUsers(usersData));
+    }
+  }, [usersData]);
 
   return (
     <>
@@ -174,11 +258,17 @@ function OrgUserAccountsPage(): React.ReactElement {
             label={usersTrans('userTable.label')}
             className={styles.userList}
             columnData={columns}
-            rowData={StaticUserList}
+            rowData={users}
             onDmpSortChange={onSortChangeHandler}
           />
 
-          <Pagination {...paginationProps} />
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            hasPreviousPage={hasPreviousPage}
+            hasNextPage={hasNextPage}
+            handlePageClick={handlePageClick}
+          />
         </ContentContainer>
       </LayoutContainer>
     </>
