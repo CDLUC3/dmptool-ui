@@ -5,7 +5,7 @@
 //
 // - [1] https://react-spectrum.adobe.com/react-aria/Table.html
 //
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import classNames from 'classnames';
 //import { useQuery } from '@apollo/client/react';
 
@@ -167,7 +167,7 @@ export function DmpTable({
   label,
   onDmpSortChange,
 }: DmpTableProps): React.ReactElement {
-
+  const isFirstRender = useRef(true);
   const [sorting, setSorting] = useState<SortDescriptor>({
     column: "",
     direction: "ascending",
@@ -190,15 +190,18 @@ export function DmpTable({
   }
 
   useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
     if (onDmpSortChange) {
       onDmpSortChange(columns);
     } else {
-      // Only use our internal sorting function if we never provided
-      // an onDmpSortChange() handler
       const sortedRows = sortData(rows, columns);
       setRows(sortedRows);
     }
   }, [columns]);
+
 
   useEffect(() => {
     setRows(rowData);

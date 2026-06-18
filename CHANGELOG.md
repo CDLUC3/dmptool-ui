@@ -1,4 +1,5 @@
 ## Added
+- Added `Users` graphql query and `admin.users.manage` route[#240]
 - Added new `AdminNotification` card component, and new AdminNotification queries [#570]
 - Added `projectImport` mutation and `searchExternalProjects` query [#352]
 - Added a new `button-disabled` style to shared `_button.scss` [#244]

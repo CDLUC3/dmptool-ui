@@ -93,7 +93,7 @@ function OrgUserAccountsPage(): React.ReactElement {
 
   // GraphQL queries
   const { data: meData } = useQuery(MeDocument);
-  const [fetchUserData, { data: usersData, loading: usersLoading, error: usersError, refetch: usersRefetch }] = useLazyQuery(UsersDocument, {
+  const [fetchUserData, { data: usersData, loading: usersLoading, error: usersError }] = useLazyQuery(UsersDocument, {
     notifyOnNetworkStatusChange: true,
     fetchPolicy: 'no-cache',
   });
@@ -214,10 +214,8 @@ function OrgUserAccountsPage(): React.ReactElement {
     page?: number;
     searchTerm?: string;
   }): Promise<void> => {
-    let offsetLimit = 0;
     if (page) {
       setCurrentPage(page);
-      offsetLimit = (page - 1) * LIMIT;
     }
 
     try {
@@ -282,6 +280,11 @@ function OrgUserAccountsPage(): React.ReactElement {
       setErrors([usersError.message]);
     }
   }, [usersError]);
+
+  // Sync columns state when initialColumns changes (i.e. when isSuperAdmin resolves)
+  useEffect(() => {
+    setColumns(initialColumns);
+  }, [initialColumns]);
 
 
   return (
