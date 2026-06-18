@@ -1,8 +1,8 @@
 'use client'
 
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
-import { useLazyQuery } from "@apollo/client/react";
+import { useLazyQuery, useQuery } from "@apollo/client/react";
 import {
   FieldError,
   Breadcrumb,
@@ -19,6 +19,7 @@ import {
 
 // GraphQL
 import {
+  MeDocument,
   UsersDocument,
   UserRole,
 } from "@/generated/graphql";
@@ -66,17 +67,6 @@ const RoleOptions: { label: string; value: UserRole | '' }[] = [
   { label: 'User', value: UserRole.Researcher },
 ];
 
-const initialColumns = [
-  { id: 'id', name: 'id', isRowHeader: false },
-  { id: 'name', name: 'Name', isRowHeader: true, allowsSorting: true, direction: "" as const },
-  { id: 'email', name: 'Email', isRowHeader: true, allowsSorting: true, direction: "" as const },
-  { id: 'plans', name: 'Plans', isRowHeader: true, allowsSorting: false, direction: "" as const },
-  { id: 'active', name: 'Active', isRowHeader: true, allowsSorting: true, direction: "" as const },
-  { id: 'role', name: 'Role', isRowHeader: true, allowsSorting: true, direction: "" as const },
-  { id: 'created', name: 'Created', isRowHeader: true, allowsSorting: true, direction: "" as const },
-  { id: 'lastActivity', name: 'Activity', isRowHeader: true, allowsSorting: true, direction: "" as const },
-]
-
 function OrgUserAccountsPage(): React.ReactElement {
   const formatDate = useFormatDate();
 
@@ -96,16 +86,43 @@ function OrgUserAccountsPage(): React.ReactElement {
   const [totalPages, setTotalPages] = useState<number>(0);
   const [hasNextPage, setHasNextPage] = useState<boolean | null>(false);
   const [hasPreviousPage, setHasPreviousPage] = useState<boolean | null>(false);
-  const [columns, setColumns] = useState<DmpTableColumnSet>(initialColumns);
 
   // Localization
   const usersTrans = useTranslations('Admin.users');
   const Global = useTranslations('Global');
 
+  // GraphQL queries
+  const { data: meData } = useQuery(MeDocument);
   const [fetchUserData, { data: usersData, loading: usersLoading, error: usersError, refetch: usersRefetch }] = useLazyQuery(UsersDocument, {
     notifyOnNetworkStatusChange: true,
     fetchPolicy: 'no-cache',
   });
+
+
+  const isSuperAdmin = meData?.me?.role === UserRole.Superadmin;
+  const SORT_FIELD_MAP: Record<string, string> = {
+    name: 'u.surName',
+    email: 'ue.email',
+    role: 'u.role',
+    active: 'u.active',
+    created: 'u.created',
+    lastActivity: 'u.last_sign_in',
+    organization: 'a.name',
+  };
+  const initialColumns = useMemo<DmpTableColumnSet>(() => [
+    { id: 'id', name: 'id', isRowHeader: false },
+    { id: 'name', name: 'Name', isRowHeader: true, allowsSorting: true, direction: "" as const },
+    { id: 'email', name: 'Email', isRowHeader: true, allowsSorting: true, direction: "" as const },
+    { id: 'plans', name: 'Plans', isRowHeader: true, allowsSorting: false, direction: "" as const },
+    { id: 'active', name: 'Active', isRowHeader: true, allowsSorting: true, direction: "" as const },
+    { id: 'role', name: 'Role', isRowHeader: true, allowsSorting: true, direction: "" as const },
+    ...(isSuperAdmin ? [{ id: 'organization', name: 'Organization', isRowHeader: true, allowsSorting: true, direction: "" as const }] : []),
+    { id: 'created', name: 'Created', isRowHeader: true, allowsSorting: true, direction: "" as const },
+    { id: 'lastActivity', name: 'Activity', isRowHeader: true, allowsSorting: true, direction: "" as const },
+  ], [isSuperAdmin]);
+
+  const [columns, setColumns] = useState<DmpTableColumnSet>(initialColumns);
+
 
   const buildQueryVars = (page: number, term: string, role: UserRole | '', sortField?: string, sortDir?: string) => ({
     paginationOptions: {
@@ -113,7 +130,7 @@ function OrgUserAccountsPage(): React.ReactElement {
       limit: LIMIT,
       type: "OFFSET",
       sortDir: sortDir ?? "DESC",
-      sortField: sortField,
+      sortField: sortField ? SORT_FIELD_MAP[sortField] : undefined,
     },
     term,
     ...(role ? { role } : {}),
@@ -128,6 +145,15 @@ function OrgUserAccountsPage(): React.ReactElement {
     setErrors([]);
     setSelectedRole(role);
     setCurrentPage(1);
+    try {
+      await fetchUserData({ variables: buildQueryVars(1, searchTerm, role, sortField, sortDir) });
+    } catch (err) {
+      logECS('error', 'OrgUserAccountsPage.handleRoleChange', {
+        error: err,
+        url: { path: routePath('admin.users') },
+      });
+      setErrors(['An error occurred while filtering. Please try again.']);
+    }
   };
 
   // Just updates the search term
@@ -142,7 +168,15 @@ function OrgUserAccountsPage(): React.ReactElement {
   const handleSearchSubmit = async () => {
     setErrors([]);
     setCurrentPage(1);
-    await fetchUserData({ variables: buildQueryVars(1, searchTerm, selectedRole, sortField, sortDir) });
+    try {
+      await fetchUserData({ variables: buildQueryVars(1, searchTerm, selectedRole, sortField, sortDir) });
+    } catch (err) {
+      logECS('error', 'OrgUserAccountsPage.handleSearchSubmit', {
+        error: err,
+        url: { path: routePath('admin.users') },
+      });
+      setErrors(['An error occurred while searching. Please try again.']);
+    }
   };
 
   // Handle pagination page click
@@ -154,25 +188,25 @@ function OrgUserAccountsPage(): React.ReactElement {
 
   const onSortChangeHandler = async (newColumns: DmpTableColumnSet) => {
     setColumns(newColumns);
-
     const activeSort = Array.from(newColumns).find(col => col.allowsSorting && col.direction !== '');
     if (activeSort) {
       const newSortField = activeSort.id;
       const newSortDir = activeSort.direction === 'ascending' ? 'ASC' : 'DESC';
-      console.log('newSortField:', newSortField, 'newSortDir:', newSortDir);
-
       setSortField(newSortField);
       setSortDir(newSortDir);
-
-      const vars = buildQueryVars(currentPage, searchTerm, selectedRole, newSortField, newSortDir);
-      console.log('vars:', JSON.stringify(vars, null, 2));
-
-      const result = await fetchUserData({ variables: vars });
-      console.log('fetch result:', result);
+      try {
+        await fetchUserData({ variables: buildQueryVars(currentPage, searchTerm, selectedRole, newSortField, newSortDir) });
+      } catch (err) {
+        logECS('error', 'OrgUserAccountsPage.onSortChangeHandler', {
+          error: err,
+          url: { path: routePath('admin.users') },
+        });
+        setErrors(['An error occurred while sorting. Please try again.']);
+      }
     }
   };
 
-  // Fetch published templates based on page, filters and search term criteria
+  // Fetch users based on page, filters and search term criteria
   const fetchUsers = async ({
     page,
     searchTerm = ''
@@ -236,24 +270,19 @@ function OrgUserAccountsPage(): React.ReactElement {
 
       const transformed = transformUsers(usersData);
       setUsers(transformed);
-
-      const hasSuperAdmin = transformed.some(user => user.role === RoleLabels[UserRole.Superadmin]);
-      setColumns(prev => {
-        const alreadyHasOrg = Array.from(prev).some(col => col.id === 'organization');
-        if (hasSuperAdmin && !alreadyHasOrg) {
-          // Insert before 'created'
-          const createdIndex = Array.from(prev).findIndex(col => col.id === 'created');
-          const next = [...prev];
-          next.splice(createdIndex, 0, { id: 'organization', name: 'Organization', isRowHeader: true, allowsSorting: true, direction: "" as const });
-          return next;
-        }
-        if (!hasSuperAdmin && alreadyHasOrg) {
-          return Array.from(prev).filter(col => col.id !== 'organization');
-        }
-        return prev;
-      });
     }
   }, [usersData]);
+
+  useEffect(() => {
+    if (usersError) {
+      logECS('error', 'OrgUserAccountsPage', {
+        error: usersError,
+        url: { path: routePath('admin.users') },
+      });
+      setErrors([usersError.message]);
+    }
+  }, [usersError]);
+
 
   return (
     <>
