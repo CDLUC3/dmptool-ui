@@ -289,7 +289,6 @@ function OrgUserAccountsPage(): React.ReactElement {
 
   useEffect(() => {
     if (usersData?.users?.items) {
-      console.log("***UsersData", usersData);
       setIsInitialLoad(false);
       const totalCount = usersData.users.totalCount ?? 0;
       setTotalPages(Math.ceil(totalCount / LIMIT));
