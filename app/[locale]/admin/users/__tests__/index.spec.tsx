@@ -87,7 +87,11 @@ const makeUser = (overrides = {}) => ({
   created: '2024-01-01',
   last_sign_in: '2024-06-01',
   plans: [],
-  affiliation: { displayName: 'Test Org' },
+  affiliation: {
+    id: 'org-1',
+    displayName: 'Test Org',
+    uri: 'http://example.com/orgs/1',
+  },
   ...overrides,
 });
 

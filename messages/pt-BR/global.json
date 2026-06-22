@@ -368,7 +368,17 @@
         "placeholder": "Digite um nome abreviado"
       },
       "organizationType": {
-        "label": "Tipo de Organização"
+        "label": "Tipo de Organização",
+        "types": {
+          "archive": "Arquivo",
+          "company": "Empresa",
+          "education": "Educação",
+          "facility": "Instalações",
+          "government": "Governo",
+          "healthcare": "Saúde",
+          "nonprofit": "Organização sem fins lucrativos",
+          "other": "Outro"
+        }
       },
       "contactEmail": {
         "label": "E-mail para contato",

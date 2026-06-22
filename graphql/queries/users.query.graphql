@@ -31,8 +31,8 @@ query Me{
   }
 }
 
-query Users($term: String, $role: UserRole, $paginationOptions: PaginationOptions, ) {
-  users(term: $term, role: $role,paginationOptions: $paginationOptions, ) {
+query Users($term: String, $role: UserRole, $affiliationId: String, $paginationOptions: PaginationOptions, ) {
+  users(term: $term, role: $role, affiliationId: $affiliationId, paginationOptions: $paginationOptions, ) {
     items {
       givenName
       surName
@@ -48,7 +48,9 @@ query Users($term: String, $role: UserRole, $paginationOptions: PaginationOption
       }
       id
       affiliation {
+        id
         displayName
+        uri
       }
     }
     hasNextPage

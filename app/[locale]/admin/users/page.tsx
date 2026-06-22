@@ -81,6 +81,9 @@ function OrgUserAccountsPage(): React.ReactElement {
   const [sortField, setSortField] = useState<string | undefined>(undefined);
   const [sortDir, setSortDir] = useState<string>('DESC');
 
+  // For filtering organizations (superadmin only)
+  const [selectedAffiliationId, setSelectedAffiliationId] = useState<string>('');
+  const [orgOptions, setOrgOptions] = useState<{ label: string; value: string }[]>([]);
 
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [totalPages, setTotalPages] = useState<number>(0);
@@ -124,7 +127,14 @@ function OrgUserAccountsPage(): React.ReactElement {
   const [columns, setColumns] = useState<DmpTableColumnSet>(initialColumns);
 
 
-  const buildQueryVars = (page: number, term: string, role: UserRole | '', sortField?: string, sortDir?: string) => ({
+  const buildQueryVars = (
+    page: number,
+    term: string,
+    role: UserRole | '',
+    sortField?: string,
+    sortDir?: string,
+    affiliationId?: string
+  ) => ({
     paginationOptions: {
       offset: (page - 1) * LIMIT,
       limit: LIMIT,
@@ -134,6 +144,7 @@ function OrgUserAccountsPage(): React.ReactElement {
     },
     term,
     ...(role ? { role } : {}),
+    ...(affiliationId ? { affiliationId } : {}),
   });
 
 
@@ -146,7 +157,7 @@ function OrgUserAccountsPage(): React.ReactElement {
     setSelectedRole(role);
     setCurrentPage(1);
     try {
-      await fetchUserData({ variables: buildQueryVars(1, searchTerm, role, sortField, sortDir) });
+      await fetchUserData({ variables: buildQueryVars(1, searchTerm, role, sortField, sortDir, selectedAffiliationId) });
     } catch (err) {
       logECS('error', 'OrgUserAccountsPage.handleRoleChange', {
         error: err,
@@ -155,6 +166,24 @@ function OrgUserAccountsPage(): React.ReactElement {
       setErrors(['An error occurred while filtering. Please try again.']);
     }
   };
+
+  const handleOrgChange = async (affiliationId: string) => {
+    setErrors([]);
+    setSelectedAffiliationId(affiliationId);
+    setCurrentPage(1);
+    try {
+      await fetchUserData({
+        variables: buildQueryVars(1, searchTerm, selectedRole, sortField, sortDir, affiliationId),
+      });
+    } catch (err) {
+      logECS('error', 'OrgUserAccountsPage.handleOrgChange', {
+        error: err,
+        url: { path: routePath('admin.users') },
+      });
+      setErrors(['An error occurred while filtering by organization. Please try again.']);
+    }
+  };
+
 
   // Just updates the search term
   const handleSearchInput = async (term: string) => {
@@ -169,7 +198,7 @@ function OrgUserAccountsPage(): React.ReactElement {
     setErrors([]);
     setCurrentPage(1);
     try {
-      await fetchUserData({ variables: buildQueryVars(1, searchTerm, selectedRole, sortField, sortDir) });
+      await fetchUserData({ variables: buildQueryVars(1, searchTerm, selectedRole, sortField, sortDir, selectedAffiliationId) });
     } catch (err) {
       logECS('error', 'OrgUserAccountsPage.handleSearchSubmit', {
         error: err,
@@ -182,7 +211,7 @@ function OrgUserAccountsPage(): React.ReactElement {
   // Handle pagination page click
   const handlePageClick = async (page: number) => {
     await fetchUserData({
-      variables: buildQueryVars(page, searchTerm, selectedRole, sortField, sortDir)
+      variables: buildQueryVars(page, searchTerm, selectedRole, sortField, sortDir, selectedAffiliationId)
     });
   };
 
@@ -220,7 +249,7 @@ function OrgUserAccountsPage(): React.ReactElement {
 
     try {
       await fetchUserData({
-        variables: buildQueryVars(page ?? currentPage, searchTerm, selectedRole)
+        variables: buildQueryVars(page ?? currentPage, searchTerm, selectedRole, sortField, sortDir, selectedAffiliationId)
       });
     } catch (err) {
       handleApolloError(err, 'OrgUserAccountsPage.fetchUsers');
@@ -260,6 +289,7 @@ function OrgUserAccountsPage(): React.ReactElement {
 
   useEffect(() => {
     if (usersData?.users?.items) {
+      console.log("***UsersData", usersData);
       setIsInitialLoad(false);
       const totalCount = usersData.users.totalCount ?? 0;
       setTotalPages(Math.ceil(totalCount / LIMIT));
@@ -270,6 +300,25 @@ function OrgUserAccountsPage(): React.ReactElement {
       setUsers(transformed);
     }
   }, [usersData]);
+
+  useEffect(() => {
+    if (usersData?.users?.items && isSuperAdmin) {
+      const newOrgs = usersData.users.items
+        .filter((u): u is NonNullable<typeof u> => u !== null)
+        .map(u => u.affiliation)
+        .filter((a): a is NonNullable<typeof a> => !!a?.uri && !!a?.displayName);
+
+      setOrgOptions(prev => {
+        const seen = new Map(prev.map(o => [o.value, o]));
+        for (const a of newOrgs) {
+          if (!seen.has(a.uri!)) {
+            seen.set(a.uri!, { label: a.displayName!, value: a.uri! });
+          }
+        }
+        return Array.from(seen.values()).sort((a, b) => a.label.localeCompare(b.label));
+      });
+    }
+  }, [usersData, isSuperAdmin]);
 
   useEffect(() => {
     if (usersError) {
@@ -324,6 +373,15 @@ function OrgUserAccountsPage(): React.ReactElement {
               onChange={e => handleSearchInput(e.target.value)}
               value={searchTerm}
             />
+
+            <Button
+              onPress={handleSearchSubmit}
+              isDisabled={usersLoading}
+              className={styles.searchButton}
+            >
+              {usersLoading ? Global('buttons.searching') : usersTrans('buttons.searchLabel')}
+            </Button>
+
             <Select
               name="permission"
               value={selectedRole}
@@ -347,13 +405,31 @@ function OrgUserAccountsPage(): React.ReactElement {
               <FieldError />
             </Select>
 
-            <Button
-              onPress={handleSearchSubmit}
-              isDisabled={usersLoading}
-              className={styles.searchButton}
-            >
-              {usersLoading ? Global('buttons.searching') : usersTrans('buttons.searchLabel')}
-            </Button>
+            {isSuperAdmin && (
+              <Select
+                name="organization"
+                value={selectedAffiliationId}
+                className={`react-aria-Select ${styles.organizationSelect}`}
+                onChange={(key) => handleOrgChange(key as string)}
+              >
+                <Label>{usersTrans('tools.organizationLabel')}</Label>
+                <Button>
+                  <SelectValue />
+                  <span aria-hidden="true">▼</span>
+                </Button>
+                <Popover>
+                  <ListBox>
+                    <ListBoxItem id="">All Organizations</ListBoxItem>
+                    {orgOptions.map((opt) => (
+                      <ListBoxItem key={opt.value} id={opt.value}>
+                        {opt.label}
+                      </ListBoxItem>
+                    ))}
+                  </ListBox>
+                </Popover>
+                <FieldError />
+              </Select>
+            )}
           </div>
 
           {isInitialLoad

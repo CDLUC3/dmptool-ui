@@ -10,7 +10,7 @@
   gap: var(--space-3);
 
   > * {
-    width: 30%;
+    width: 20%;
     min-width: 200px; 
   }
 
@@ -35,8 +35,29 @@
   }
 }
 
+.organizationSelect {
+  button {
+    display: flex;
+    align-items: center;
+    width: 100%;
+  }
+
+  :global(.react-aria-SelectValue) {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex: 1;
+    min-width: 0;
+  }
+
+  [aria-hidden='true'] {
+    flex-shrink: 0;
+  }
+}
+
 .searchButton {
   margin-bottom: 0.5rem;
+  margin-right: var(--space-8);
 }
 
 .userList {
