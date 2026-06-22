@@ -334,6 +334,8 @@ function OrgUserAccountsPage(): React.ReactElement {
     setColumns(initialColumns);
   }, [initialColumns]);
 
+  // Add a loading state guard before rendering pageTools
+  const isSuperAdminResolved = meData?.me !== undefined;
 
   return (
     <>
@@ -364,70 +366,74 @@ function OrgUserAccountsPage(): React.ReactElement {
       <LayoutContainer>
         <ContentContainer>
           <div className={styles.pageTools} role="search" ref={topRef}>
-            <FormInput
-              name="search"
-              type="search"
-              className={styles.searchInput}
-              label={usersTrans('tools.searchLabel')}
-              onChange={e => handleSearchInput(e.target.value)}
-              value={searchTerm}
-            />
+            {!isSuperAdminResolved ? null : (
+              <>
+                <FormInput
+                  name="search"
+                  type="search"
+                  className={styles.searchInput}
+                  label={usersTrans('tools.searchLabel')}
+                  onChange={e => handleSearchInput(e.target.value)}
+                  value={searchTerm}
+                />
 
-            <Button
-              onPress={handleSearchSubmit}
-              isDisabled={usersLoading}
-              className={styles.searchButton}
-            >
-              {usersLoading ? Global('buttons.searching') : usersTrans('buttons.searchLabel')}
-            </Button>
-
-            <Select
-              name="permission"
-              value={selectedRole}
-              className={`react-aria-Select ${styles.roleSelect}`}
-              onChange={(key) => handleRoleChange(key as UserRole | '')}
-            >
-              <Label>{usersTrans('tools.permissionLabel')}</Label>
-              <Button>
-                <SelectValue />
-                <span aria-hidden="true">▼</span>
-              </Button>
-              <Popover>
-                <ListBox>
-                  {RoleOptions.map((opt) => (
-                    <ListBoxItem key={opt.value} id={opt.value}>
-                      {opt.label}
-                    </ListBoxItem>
-                  ))}
-                </ListBox>
-              </Popover>
-              <FieldError />
-            </Select>
-
-            {isSuperAdmin && (
-              <Select
-                name="organization"
-                value={selectedAffiliationId}
-                className={`react-aria-Select ${styles.organizationSelect}`}
-                onChange={(key) => handleOrgChange(key as string)}
-              >
-                <Label>{usersTrans('tools.organizationLabel')}</Label>
-                <Button>
-                  <SelectValue />
-                  <span aria-hidden="true">▼</span>
+                <Button
+                  onPress={handleSearchSubmit}
+                  isDisabled={usersLoading}
+                  className={styles.searchButton}
+                >
+                  {usersLoading ? Global('buttons.searching') : usersTrans('buttons.searchLabel')}
                 </Button>
-                <Popover>
-                  <ListBox>
-                    <ListBoxItem id="">All Organizations</ListBoxItem>
-                    {orgOptions.map((opt) => (
-                      <ListBoxItem key={opt.value} id={opt.value}>
-                        {opt.label}
-                      </ListBoxItem>
-                    ))}
-                  </ListBox>
-                </Popover>
-                <FieldError />
-              </Select>
+
+                <Select
+                  name="permission"
+                  value={selectedRole}
+                  className={`react-aria-Select ${styles.roleSelect}`}
+                  onChange={(key) => handleRoleChange(key as UserRole | '')}
+                >
+                  <Label>{usersTrans('tools.permissionLabel')}</Label>
+                  <Button>
+                    <SelectValue />
+                    <span aria-hidden="true">▼</span>
+                  </Button>
+                  <Popover>
+                    <ListBox>
+                      {RoleOptions.map((opt) => (
+                        <ListBoxItem key={opt.value} id={opt.value}>
+                          {opt.label}
+                        </ListBoxItem>
+                      ))}
+                    </ListBox>
+                  </Popover>
+                  <FieldError />
+                </Select>
+
+                {isSuperAdmin && (
+                  <Select
+                    name="organization"
+                    value={selectedAffiliationId}
+                    className={`react-aria-Select ${styles.organizationSelect}`}
+                    onChange={(key) => handleOrgChange(key as string)}
+                  >
+                    <Label>{usersTrans('tools.organizationLabel')}</Label>
+                    <Button>
+                      <SelectValue />
+                      <span aria-hidden="true">▼</span>
+                    </Button>
+                    <Popover>
+                      <ListBox>
+                        <ListBoxItem id="">All Organizations</ListBoxItem>
+                        {orgOptions.map((opt) => (
+                          <ListBoxItem key={opt.value} id={opt.value}>
+                            {opt.label}
+                          </ListBoxItem>
+                        ))}
+                      </ListBox>
+                    </Popover>
+                    <FieldError />
+                  </Select>
+                )}
+              </>
             )}
           </div>
 
