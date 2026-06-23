@@ -95,6 +95,8 @@ query Project($projectId: Int!) {
       }
       accessLevel
       id
+      email
+      created
     }
   }
 }
