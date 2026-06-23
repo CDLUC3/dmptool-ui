@@ -372,6 +372,7 @@ function OrgUserAccountsPage(): React.ReactElement {
                 <FormInput
                   name="search"
                   type="search"
+                  data-testid="search-input"
                   className={styles.searchInput}
                   label={usersTrans('tools.searchLabel')}
                   onChange={e => handleSearchInput(e.target.value)}
