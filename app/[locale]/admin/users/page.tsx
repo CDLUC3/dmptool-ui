@@ -188,6 +188,7 @@ function OrgUserAccountsPage(): React.ReactElement {
   // Just updates the search term
   const handleSearchInput = async (term: string) => {
     setSearchTerm(term);
+    // If the search term is cleared, fetch all users again to refresh the data.
     if (term === '') {
       await fetchUserData({ variables: buildQueryVars(1, '', selectedRole, sortField, sortDir) });
     }
