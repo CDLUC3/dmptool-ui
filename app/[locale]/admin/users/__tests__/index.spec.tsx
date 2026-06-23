@@ -138,20 +138,6 @@ const renderPage = (mocks: any[]) =>
 describe('Admin - User Accounts Dashboard', () => {
 
   describe('initial render', () => {
-    beforeEach(() => {
-      jest.spyOn(console, 'error').mockImplementation((message, ...args) => {
-        // Suppress known React Aria useId act() warning
-        if (typeof message === 'string' && message.includes('not wrapped in act')) {
-          return;
-        }
-        console.error(message, ...args);
-      });
-    });
-
-    afterEach(() => {
-      jest.restoreAllMocks();
-    });
-
     it('shows loading state before data arrives', () => {
       renderPage([makeMeMock(UserRole.Researcher), makeUsersMock()]);
       expect(screen.getByTestId('mock-loading')).toBeInTheDocument();
@@ -159,57 +145,37 @@ describe('Admin - User Accounts Dashboard', () => {
 
     it('renders the search controls', async () => {
       renderPage([makeMeMock(UserRole.Researcher), makeUsersMock()]);
+      await waitFor(() => expect(screen.getByTestId('mock-table')).toBeInTheDocument());
 
-      await waitFor(() => expect(screen.getByRole('searchbox')).toBeInTheDocument());
-
-      await waitFor(() => expect(screen.getByRole('searchbox')).toBeInTheDocument());
-      await waitFor(() => expect(screen.getByText('Admin.users.buttons.searchLabel')).toBeInTheDocument());
+      expect(screen.getByLabelText(/Admin.users.tools.searchLabel/i)).toBeInTheDocument();
+      expect(screen.getByText('Admin.users.buttons.searchLabel')).toBeInTheDocument();
     });
 
     it('renders user rows after data loads', async () => {
       renderPage([makeMeMock(UserRole.Researcher), makeUsersMock()]);
       await waitFor(() => expect(screen.getByTestId('mock-table')).toBeInTheDocument());
 
-      await waitFor(() => expect(screen.getByText('alice@example.com')).toBeInTheDocument());
+      expect(screen.getByText('alice@example.com')).toBeInTheDocument();
     });
 
     it('shows no results message when users list is empty', async () => {
       renderPage([makeMeMock(UserRole.Researcher), makeUsersMock([])]);
       await waitFor(() => expect(screen.getByTestId('mock-table')).toBeInTheDocument());
 
-      await waitFor(() => expect(screen.getByText('Admin.users.userTable.noResults')).toBeInTheDocument());
+      expect(screen.getByText('Admin.users.userTable.noResults')).toBeInTheDocument();
     });
   });
 
   describe('superadmin column visibility', () => {
-    beforeEach(() => {
-      jest.spyOn(console, 'error').mockImplementation((message, ...args) => {
-        // Suppress known React Aria useId act() warning
-        if (typeof message === 'string' && message.includes('not wrapped in act')) {
-          return;
-        }
-        console.error(message, ...args);
-      });
-    });
-
-    afterEach(() => {
-      jest.restoreAllMocks();
-    });
-
     it('does not show Organization column for non-superadmin', async () => {
       renderPage([makeMeMock(UserRole.Admin), makeUsersMock()]);
       await waitFor(() => expect(screen.getByTestId('mock-table')).toBeInTheDocument());
 
-      await waitFor(() => expect(screen.queryByTestId('column-organization')).not.toBeInTheDocument());
+      expect(screen.queryByTestId('column-organization')).not.toBeInTheDocument();
     });
 
     it('shows Organization column for superadmin', async () => {
-      renderPage([
-        makeMeMock(UserRole.Superadmin),
-        makeMeMock(UserRole.Superadmin), // second copy in case of re-query
-        makeUsersMock(),
-      ]);
-
+      renderPage([makeMeMock(UserRole.Superadmin), makeUsersMock()]);
       await waitFor(() => expect(screen.getByTestId('mock-table')).toBeInTheDocument());
 
       await waitFor(() => expect(screen.getByTestId('column-organization')).toBeInTheDocument());
@@ -217,20 +183,6 @@ describe('Admin - User Accounts Dashboard', () => {
   });
 
   describe('search', () => {
-    beforeEach(() => {
-      jest.spyOn(console, 'error').mockImplementation((message, ...args) => {
-        // Suppress known React Aria useId act() warning
-        if (typeof message === 'string' && message.includes('not wrapped in act')) {
-          return;
-        }
-        console.error(message, ...args);
-      });
-    });
-
-    afterEach(() => {
-      jest.restoreAllMocks();
-    });
-
     it('triggers a new query when search button is pressed', async () => {
       const searchMock = {
         request: {
@@ -256,8 +208,7 @@ describe('Admin - User Accounts Dashboard', () => {
       };
 
       renderPage([makeMeMock(UserRole.Admin), makeUsersMock(), searchMock]);
-
-      await waitFor(() => expect(screen.getByRole('searchbox')).toBeInTheDocument());
+      await waitFor(() => expect(screen.getByTestId('mock-table')).toBeInTheDocument());
 
       await userEvent.type(screen.getByRole('searchbox'), 'alice');
       await userEvent.click(screen.getByText('Admin.users.buttons.searchLabel'));
@@ -265,11 +216,9 @@ describe('Admin - User Accounts Dashboard', () => {
       await waitFor(() => expect(screen.getByText('alice@example.com')).toBeInTheDocument());
     });
 
-
     it('re-fetches with empty term when search is cleared', async () => {
       renderPage([makeMeMock(UserRole.Admin), makeUsersMock(), makeUsersMock()]);
-
-      await waitFor(() => expect(screen.getByRole('searchbox')).toBeInTheDocument());
+      await waitFor(() => expect(screen.getByTestId('mock-table')).toBeInTheDocument());
 
       const input = screen.getByRole('searchbox');
       await userEvent.type(input, 'a');
@@ -280,20 +229,6 @@ describe('Admin - User Accounts Dashboard', () => {
   });
 
   describe('pagination', () => {
-    beforeEach(() => {
-      jest.spyOn(console, 'error').mockImplementation((message, ...args) => {
-        // Suppress known React Aria useId act() warning
-        if (typeof message === 'string' && message.includes('not wrapped in act')) {
-          return;
-        }
-        console.error(message, ...args);
-      });
-    });
-
-    afterEach(() => {
-      jest.restoreAllMocks();
-    });
-
     it('renders pagination with correct page info', async () => {
       const manyUsersMock = makeUsersMock(
         Array.from({ length: 5 }, (_, i) => makeUser({ id: i + 1, email: `user${i}@example.com` }))
@@ -307,20 +242,6 @@ describe('Admin - User Accounts Dashboard', () => {
   });
 
   describe('error handling', () => {
-    beforeEach(() => {
-      jest.spyOn(console, 'error').mockImplementation((message, ...args) => {
-        // Suppress known React Aria useId act() warning
-        if (typeof message === 'string' && message.includes('not wrapped in act')) {
-          return;
-        }
-        console.error(message, ...args);
-      });
-    });
-
-    afterEach(() => {
-      jest.restoreAllMocks();
-    });
-
     it('displays error message when query fails', async () => {
       const { logECS } = require('@/utils/index');
 
@@ -341,11 +262,9 @@ describe('Admin - User Accounts Dashboard', () => {
         expect(screen.getByText('Network error')).toBeInTheDocument();
       });
 
-      await waitFor(() => {
-        expect(logECS).toHaveBeenCalledWith('error', 'OrgUserAccountsPage', expect.objectContaining({
-          error: expect.anything(),
-        }));
-      });
+      expect(logECS).toHaveBeenCalledWith('error', 'OrgUserAccountsPage', expect.objectContaining({
+        error: expect.anything(),
+      }));
     });
   });
 
@@ -356,9 +275,7 @@ describe('Admin - User Accounts Dashboard', () => {
       await waitFor(() => expect(screen.getByTestId('mock-table')).toBeInTheDocument());
 
       const results = await axe(container);
-      await waitFor(() => {
-        expect(results).toHaveNoViolations();
-      });
+      expect(results).toHaveNoViolations();
     });
   });
 });
