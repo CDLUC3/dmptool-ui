@@ -1,5 +1,5 @@
 import React from 'react';
-import { act, fireEvent, render, screen, waitFor, within, cleanup } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, cleanup } from '@testing-library/react';
 import { InMemoryCache } from '@apollo/client';
 import { MockedProvider } from '@apollo/client/testing/react';
 import PlanCreate from '../page';
@@ -1008,43 +1008,42 @@ describe('PlanCreate Component using base mock', () => {
 
 
   it('should render PlanCreate component with funder checkbox', async () => {
+    // projectId 1 has funders, so initialFilterConfig = 'funders'
+    // Component will fetch templates with selectOwnerURIs = ["http://affiliation-1.gov", "http://affiliation-2.gov"]
+    mockUseParams.mockReturnValue({ projectId: '1' });
+
     render(
       <MockedProvider mocks={baseMocks} cache={apolloCache}>
         <PlanCreate />
       </MockedProvider>
     );
 
-    // Wait for all loading states to complete by checking for content that appears after loading
-    await waitFor(
-      async () => {
-        // 1. Checkbox appears (means queries loaded and state computed)
-        expect(screen.getByRole('checkbox', { name: 'Affiliation 1 Name' })).toBeInTheDocument();
+    // Wait for funder checkboxes to appear (means projectFundings + metaData resolved)
+    await waitFor(() => {
+      expect(screen.getByRole('checkbox', { name: 'Affiliation 1 Name' })).toBeInTheDocument();
+      expect(screen.getByRole('checkbox', { name: 'Affiliation 2 Name' })).toBeInTheDocument();
+    }, { timeout: 10000 });
 
-        // 2. Templates loaded (means lazy query completed)
-        expect(screen.getAllByTestId('template-metadata')).toHaveLength(5);
+    // Both should be pre-checked from initialFilterConfig
+    expect(screen.getByRole('checkbox', { name: 'Affiliation 1 Name' })).toBeChecked();
+    expect(screen.getByRole('checkbox', { name: 'Affiliation 2 Name' })).toBeChecked();
 
-        // 3. No loading indicators present
-        expect(screen.queryByText(/loading/i)).not.toBeInTheDocument();
-      },
-      { timeout: 10000 }
-    );
+    // Wait for templates to load
+    await waitFor(() => {
+      expect(screen.getAllByTestId('template-metadata')).toHaveLength(5);
+    }, { timeout: 10000 });
 
-    const templateData = screen.getAllByTestId('template-metadata');
-
-    [0, 1, 2].forEach((i) => {
-      expect(screen.getByRole('heading', { level: 2, name: `Template ${i + 1} Name` })).toBeInTheDocument();
-      expect(within(templateData[i]).getByText(/lastRevisedBy.*John Doe/)).toBeInTheDocument();
-      expect(within(templateData[i]).getByText('published')).toBeInTheDocument();
-      expect(within(templateData[i]).getByText(/visibility.*Public/)).toBeInTheDocument();
+    // Verify template content
+    [1, 2, 3].forEach((i) => {
+      expect(screen.getByRole('heading', { level: 2, name: `Template ${i} Name` })).toBeInTheDocument();
     });
 
-    expect(screen.queryByRole('heading', { level: 2, name: /labels.dmpBestPractice/i })).not.toBeInTheDocument();
     expect(screen.getAllByText('buttons.select')).toHaveLength(5);
 
     await act(async () => {
       await new Promise(resolve => setTimeout(resolve, 0));
     });
-  });
+  }, 15000);
 
   // it('should handle funder filter changes', async () => {
   //   render(

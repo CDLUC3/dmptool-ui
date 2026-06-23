@@ -30,3 +30,35 @@ query Me{
     }
   }
 }
+
+query Users($term: String, $role: UserRole, $affiliationId: String, $paginationOptions: PaginationOptions, ) {
+  users(term: $term, role: $role, affiliationId: $affiliationId, paginationOptions: $paginationOptions, ) {
+    items {
+      givenName
+      surName
+      email
+      active
+      role
+      created
+      last_sign_in
+      plans {
+        id
+        title
+        dmpId
+      }
+      id
+      affiliation {
+        id
+        displayName
+        uri
+      }
+    }
+    hasNextPage
+    currentOffset
+    hasPreviousPage
+    totalCount
+    nextCursor
+    limit
+  }
+}
+

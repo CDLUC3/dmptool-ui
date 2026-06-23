@@ -330,11 +330,14 @@
       },
       "tools": {
         "searchLabel": "Search by name or email",
-        "permissionLabel": "Permission"
+        "permissionLabel": "Role",
+        "organizationLabel": "Organization"
       },
       "userTable": {
-        "label": "User List"
-      }
+        "label": "User List",
+        "noResults": "No users found"
+      },
+      "manageUser": "Manage user {name}"
     }
   },
   "AdminNotifications": {

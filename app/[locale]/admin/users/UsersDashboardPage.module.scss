@@ -1,18 +1,64 @@
 
+@use '@/styles/responsive.scss' as r;
+
 .pageTools {
   display: flex;
+  flex-wrap: wrap;
   flex-direction: row;
   align-items: center;
   justify-content: flex-start;
   gap: var(--space-3);
 
   > * {
-    width: 30%;
+    width: 20%;
+    min-width: 200px; 
   }
 
   > button {
     width: auto;
+    min-width: unset;
   }
+}
+
+.searchInput {
+  margin-bottom: 0;
+
+  @include r.device(sm) {
+    margin-bottom: 2rem;
+  }
+}
+
+.roleSelect {
+  margin-bottom: 0.5rem;
+
+  @include r.device(sm) {
+    margin-bottom: 2rem;
+  }
+}
+
+.organizationSelect {
+  button {
+    display: flex;
+    align-items: center;
+    width: 100%;
+  }
+
+  :global(.react-aria-SelectValue) {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex: 1;
+    min-width: 0;
+  }
+
+  [aria-hidden='true'] {
+    flex-shrink: 0;
+  }
+}
+
+.searchButton {
+  margin-bottom: 0.5rem;
+  margin-right: var(--space-8);
 }
 
 .userList {

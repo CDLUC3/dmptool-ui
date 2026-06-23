@@ -126,6 +126,7 @@ const routes = {
   'admin.index': '/admin',
   'admin.notifications': '/admin/notifications',
   'admin.templates': '/admin/templates',
+  'admin.users.manage': '/admin/users/:userId/manage',
 
   // Guidance routes
   'admin.guidance.index': '/admin/guidance',

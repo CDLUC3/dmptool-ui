@@ -1,4 +1,5 @@
 ## Added
+- Added `Users` graphql query and `admin.users.manage` route[#240]
 - Wired up the Organization details page
 - Made some minor tweaks to the Organization details css file
 - Added an `S3Uploader` hook to facilitate uploads of files to S3 on the server side
@@ -13,6 +14,7 @@
 - Added `UpdateAffiliation` and `AffiliationById` queries [#203]
 
 ## Updated
+- Hooked up `admin/users` page with real data, and updated search features and table [#240]
 - Fixed bug in org logo upload logic
 - Update feedback options page, fundings add page to work with the Affiliation `displayName`
 - Updated the `FormInput` component to accept either a string or a `React.ReactNode` object in the `helpMessage` so we can include resolvable URLs
