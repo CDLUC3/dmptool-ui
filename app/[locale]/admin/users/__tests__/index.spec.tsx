@@ -220,7 +220,7 @@ describe('Admin - User Accounts Dashboard', () => {
       renderPage([makeMeMock(UserRole.Admin), makeUsersMock(), makeUsersMock()]);
       await waitFor(() => expect(screen.getByTestId('mock-table')).toBeInTheDocument());
 
-      const input = screen.getByRole('searchbox');
+      const input = screen.getByTestId('search-input') as HTMLInputElement;
       await userEvent.type(input, 'a');
       await userEvent.clear(input);
 
