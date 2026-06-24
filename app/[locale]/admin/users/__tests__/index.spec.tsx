@@ -178,7 +178,7 @@ describe('Admin - User Accounts Dashboard', () => {
       renderPage([makeMeMock(UserRole.Superadmin), makeUsersMock()]);
       await waitFor(() => expect(screen.getByTestId('mock-table')).toBeInTheDocument());
 
-      expect(screen.getByTestId('column-organization')).toBeInTheDocument();
+      await waitFor(() => expect(screen.getByTestId('column-organization')).toBeInTheDocument());
     });
   });
 
