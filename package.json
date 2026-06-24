@@ -82,7 +82,7 @@
     "cypress": "^15.15.0",
     "domexception": "4.0.0",
     "dotenv": "16.6.1",
-    "eslint": "9.27.0",
+    "eslint": "9.39.4",
     "eslint-config-next": "16.1.6",
     "eslint-plugin-unused-imports": "4.3.0",
     "jest": "30.2.0",
