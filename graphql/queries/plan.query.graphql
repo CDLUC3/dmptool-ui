@@ -105,3 +105,30 @@ query Plan($planId: Int!) {
     readOnly
   }
 }
+
+query Plans($projectId: Int!, $term: String, $paginationOptions: PaginationOptions) {
+  plans(projectId: $projectId, term: $term, paginationOptions: $paginationOptions) {
+    items {
+      id
+      templateOwnerAffiliationName
+      title
+      visibility
+      modified
+      createdBy
+      templateTitle
+      user {
+        givenName
+        surName
+        id
+        createdById
+      }
+    }
+    limit
+    hasNextPage
+    hasPreviousPage
+    currentOffset
+    availableSortFields
+    nextCursor
+    totalCount
+  }
+}

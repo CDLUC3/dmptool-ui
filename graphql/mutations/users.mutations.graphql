@@ -22,6 +22,30 @@ mutation UpdateUserProfile($input: UpdateUserProfileInput!) {
 }
 
 
+mutation UpdateUserInfo($input: UpdateUserInfoInput!) {
+  updateUserInfo(input: $input) {
+    id
+    givenName
+    surName
+    errors {
+      general
+      email
+      password
+      role
+    }
+    affiliation {
+      id
+      name
+      searchName
+      uri
+    }
+    languageId
+    email
+  }
+}
+
+
+
 mutation AddUserEmail($email: String!, $isPrimary: Boolean!) {
   addUserEmail(email: $email, isPrimary: $isPrimary) {
     email

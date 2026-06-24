@@ -338,6 +338,42 @@
         "noResults": "No users found"
       },
       "manageUser": "Manage user {name}"
+    },
+    "userProfile": {
+      "title": "User info for {name}",
+      "userProfileHeading": "Edit info for {name}",
+      "buttons": {
+        "viewAllUsers": "View all users"
+      },
+      "profileForm": {
+        "labels": {
+          "email": "Email",
+          "givenName": "First name",
+          "surName": "Last name",
+          "institution": "Institution",
+          "department": "Department or school",
+          "language": "Language"
+        }
+      },
+      "messages": {
+        "errors": {
+          "errorUpdatingProfile": "Error when updating profile",
+          "invalidEmail": "Invalid email address",
+          "givenName": "Invalid first name",
+          "surName": "Invalid last name",
+          "affiliation": "Invalid institution name",
+          "otherAffiliationValidation": "Invalid otherinstitution name"
+        },
+        "helpText": {
+          "institution": "Search for your institution",
+          "language": "Select your preferred language"
+        }
+      },
+      "userPlansTable": {
+        "label": "Plans",
+        "noResults": "No plans found for this user"
+      },
+      "cannotFindInstitution": "I cannot find my institution in the list"
     }
   },
   "AdminNotifications": {

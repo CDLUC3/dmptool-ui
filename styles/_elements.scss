@@ -701,7 +701,7 @@
 
 // This is used to contain the content of a section
 .sectionContainer {
-  margin-top: var(--space-6);
+  margin-top: var(--space-4);
   margin-bottom: var(--space-6);
 
   .sectionHeader {
@@ -711,7 +711,7 @@
   }
 
   .sectionContent {
-    padding: var(--space-4) var(--space-6);
+    padding: var(--space-6);
     margin-bottom: var(--space-4);
     border-radius: var(--card-border-radius);
     background: var(--bg-white);

@@ -1,0 +1,33 @@
+@use '@/styles/responsive.scss' as r;
+
+.userProfileFormContainer {
+  width: 69%;
+}
+
+.pageTools {
+  display: flex;
+  flex-wrap: wrap;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  gap: var(--space-3);
+
+  > * {
+    width: 20%;
+    min-width: 200px; 
+  }
+
+  > button {
+    width: auto;
+    min-width: unset;
+  }
+}
+
+.searchInput {
+  margin-bottom: 0;
+}
+
+.searchButton {
+  margin-top: 1.2rem;
+  margin-right: var(--space-8);
+}

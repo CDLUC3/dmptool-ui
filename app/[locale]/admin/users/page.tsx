@@ -258,6 +258,7 @@ function OrgUserAccountsPage(): React.ReactElement {
   };
 
   const transformUsers = (data: typeof usersData): UserRow[] => {
+    console.log("***Users data***", data);
     return data?.users?.items
       ?.filter((user): user is NonNullable<typeof user> => user !== null)
       .map((user) => {
@@ -266,7 +267,7 @@ function OrgUserAccountsPage(): React.ReactElement {
           id: user.id?.toString(),
           name: (
             <Link
-              href={routePath('admin.users.manage', { userId: String(user.id) })}
+              href={routePath('admin.users.manage', { userId: String(user.id), projectId: String(user.plans?.[0]?.project?.id ?? '') })}
               aria-label={usersTrans('manageUser', { name: fullName })}
             >
               {fullName}
