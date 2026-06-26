@@ -85,3 +85,11 @@ mutation SetPrimaryUserEmail($email: String!) {
     userId
   }
 }
+
+mutation ArchiveUser($userId: Int!) {
+  archiveUser(userId: $userId) {
+    errors {
+      general
+    }
+  }
+}

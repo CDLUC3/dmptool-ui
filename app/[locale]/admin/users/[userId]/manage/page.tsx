@@ -2,28 +2,22 @@
 
 import React, { useEffect, useState, useRef, useMemo } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
-import { useRouter, useParams } from "next/navigation";
+import Link from "next/link";
+import { useRouter, useParams, useSearchParams } from "next/navigation";
 import { usePathname } from "@/i18n/routing";
 import {
   Breadcrumb,
   Breadcrumbs,
   Button,
   Form,
-  Link,
   ListBoxItem,
-  Select,
-  Label,
-  Popover,
-  FieldError,
-  SelectValue,
 } from 'react-aria-components';
 
 // GraphQL queries and mutations
-// Apollo Client
 import { useQuery, useLazyQuery, useMutation } from '@apollo/client/react';
 import {
+  ArchiveUserDocument,
   LanguagesDocument,
-  MeDocument,
   UserErrors,
   UserDocument,
   UpdateUserInfoDocument,
@@ -38,7 +32,9 @@ import Pagination from '@/components/Pagination';
 import { FormInput, FormSelect } from "@/components/Form";
 import {
   ContentContainer,
-  LayoutContainer,
+  LayoutWithPanel,
+  LayoutSplitPanel,
+  FullWidthSection,
 } from '@/components/Container';
 import { TypeAheadWithOther, useAffiliationSearch } from "@/components/Form/TypeAheadWithOther";
 import Loading from '@/components/Loading';
@@ -51,10 +47,14 @@ import { useFormatDate } from "@/hooks/useFormatDate";
 // Utils and other
 import logECS from "@/utils/clientLogger";
 import { LanguageInterface } from "@/app/types";
-import { refreshAuthTokens } from "@/utils/authHelper";
-import { routePath } from '@/utils/routes';
-import { isValidEmail } from '@/utils/validation';
-import { handleApolloError } from '@/utils/apolloErrorHandler';
+import {
+  extractErrors,
+  handleApolloError,
+  isValidEmail,
+  refreshAuthTokens,
+  routePath
+} from "@/utils/index";
+import { useToast } from "@/context/ToastContext";
 import styles from './userProfile.module.scss';
 
 const LIMIT = 5;
@@ -79,21 +79,8 @@ interface UserProfileErrorInterface {
   languageId: string;
 }
 
-interface UserData {
-  email?: string | null;
-  givenName?: string | null;
-  surName?: string | null;
-  affiliation: {
-    id: number;
-    displayName: string;
-    uri: string;
-  }
-  languageId: string;
-}
-
 function OrgUserProfilePage(): React.ReactElement {
   const initialColumns = useMemo<DmpTableColumnSet>(() => [
-    { id: 'id', name: 'id', isRowHeader: false },
     { id: 'title', name: 'Project Title', isRowHeader: true, allowsSorting: true, direction: "" as const },
     { id: 'template', name: 'Template', isRowHeader: true, allowsSorting: true, direction: "" as const },
     { id: 'organization', name: 'Organization', isRowHeader: true, allowsSorting: false, direction: "" as const },
@@ -109,12 +96,16 @@ function OrgUserProfilePage(): React.ReactElement {
 
   const errorRef = useRef<HTMLDivElement | null>(null);
   const topRef = useRef<HTMLDivElement>(null);
+  //To control display of showSuccess toast message
+  const hasShownToastRef = useRef(false);
+
   const currentLocale = useLocale();
   const pathname = usePathname();
   const router = useRouter();
+  const toastState = useToast();
+  const searchParams = useSearchParams();
   const params = useParams();
   const userId = String(params.userId); // From route /users/:userId
-  const projectId = String(params.projectId); // From route /users/:userId/manage/:projectId
   const formatDate = useFormatDate();
 
   // State
@@ -142,6 +133,7 @@ function OrgUserProfilePage(): React.ReactElement {
     otherAffiliationName: "",
     languageId: "",
   });
+
   // Flag to indicate if this is the initial load of the page
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [columns, setColumns] = useState<DmpTableColumnSet>(initialColumns);
@@ -157,6 +149,12 @@ function OrgUserProfilePage(): React.ReactElement {
   const [hasNextPage, setHasNextPage] = useState<boolean | null>(false);
   const [hasPreviousPage, setHasPreviousPage] = useState<boolean | null>(false);
 
+  // For merging accounts
+  const [mergeSearchTerm, setMergeSearchTerm] = useState<string>('');
+  const [mergeSearchResults, setMergeSearchResults] = useState<{ id: string; email: string, name: string }[]>([]);
+  const [selectedMergeUser, setSelectedMergeUser] = useState<{ id: string; email: string, name: string } | null>(null);
+  const [showMergeConfirm, setShowMergeConfirm] = useState(false);
+
   // Localization
   const t = useTranslations('Admin.userProfile');
   const Global = useTranslations('Global');
@@ -165,13 +163,23 @@ function OrgUserProfilePage(): React.ReactElement {
   const ADMIN_USERS_URL = routePath('admin.users');
 
   // Run queries
-  const { data: languageData } = useQuery(LanguagesDocument,);
-  const { data: userData } = useQuery(UserDocument, {
+  const { data: languageData } = useQuery(LanguagesDocument);
+  const { data: userData, loading: userLoading } = useQuery(UserDocument, {
     variables: { userId: Number(userId) },
   });
 
+  const [archiveUserMutation] = useMutation(ArchiveUserDocument);
+
   // Initialize user profile mutation
-  const [updateUserInfoMutation, { loading: updateUserInfoLoading }] = useMutation(UpdateUserInfoDocument);
+  const [updateUserInfoMutation, { loading: updateUserInfoLoading }] = useMutation(UpdateUserInfoDocument, {
+    refetchQueries: [
+      {
+        query: UserDocument,
+        variables: { userId: Number(userId) },
+      }
+    ],
+    awaitRefetchQueries: true,
+  });
 
   // Initialize user plans query
   const [fetchUserPlanData, { data: planData, loading: plansLoading, error: plansError }] = useLazyQuery(PlansDocument, {
@@ -214,8 +222,13 @@ function OrgUserProfilePage(): React.ReactElement {
       sortField: sortField ? SORT_FIELD_MAP[sortField] : undefined,
     },
     term: searchTerm,
-    projectId: Number(projectId)
+    userId: Number(userId),
   });
+
+  const showSuccessToast = () => {
+    const successMessage = t("messages.success.profileUpdateSuccess");
+    toastState.add(successMessage, { type: "success" });
+  };
 
   const switchLanguage = async (newLocale: string, showToast = false) => {
     if (newLocale !== currentLocale) {
@@ -232,25 +245,25 @@ function OrgUserProfilePage(): React.ReactElement {
     }
   };
 
-  // Clear any errors for the current active field
-  const clearActiveFieldError = (name: string) => {
-    // Clear error for active field
-    setErrorMessages((prevErrors) => ({
-      ...prevErrors,
-      [name]: "",
-    }));
-  };
-
-  // Update form data
-  const handleUpdate = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    clearActiveFieldError(name);
-    setUserProfileFormData({ ...userProfileFormData, [name]: value });
+  // Clear all error messages
+  const clearAllErrorMessages = () => {
+    setErrorMessages([]);
+    setFieldErrors({
+      email: "",
+      givenName: "",
+      surName: "",
+      affiliationName: "",
+      affiliationId: "",
+      otherAffiliationName: "",
+      languageId: "",
+    });
   };
 
   // Handle any changes to form field values
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    handleUpdate(e);
+    const { name, value } = e.target;
+    clearAllErrorMessages();
+    setUserProfileFormData({ ...userProfileFormData, [name]: value });
   };
 
   // Client-side validation of fields
@@ -286,7 +299,6 @@ function OrgUserProfilePage(): React.ReactElement {
           break;
         }
     }
-    console.log("****Validating field***", name, value, error);
 
     setFieldErrors(prevErrors => ({
       ...prevErrors,
@@ -297,7 +309,6 @@ function OrgUserProfilePage(): React.ReactElement {
 
   // Check whether form is valid before submitting
   const isFormValid = (): boolean => {
-    console.log("***Validating form data***", userProfileFormData);
     // Initialize a flag for form validity
     let isValid = true;
 
@@ -318,7 +329,7 @@ function OrgUserProfilePage(): React.ReactElement {
   /* This function is called by the child component, UpdateEmailAddress
 when affiliation/institution is changed */
   const updateAffiliationFormData = async (id: string, value: string) => {
-    clearActiveFieldError("affiliationId");
+    clearAllErrorMessages();
     return setUserProfileFormData({
       ...userProfileFormData,
       affiliationName: value,
@@ -327,7 +338,6 @@ when affiliation/institution is changed */
   };
 
   const profileUpdateMutation = async () => {
-    console.log("***Updating user profile***", userProfileFormData);
     const response = await updateUserInfoMutation({
       variables: {
         input: {
@@ -342,8 +352,6 @@ when affiliation/institution is changed */
       },
     });
 
-    console.log("Profile update response:", response);
-
     return response.data;
   };
 
@@ -351,23 +359,34 @@ when affiliation/institution is changed */
   const updateProfile = async () => {
     try {
       const response = await profileUpdateMutation();
+
       if (response) {
-        // Refresh token to include preferred language in token
+        const userErrors = response.updateUserInfo?.errors;
+
+        if (userErrors) {
+          const errs = extractErrors<UserErrors>(userErrors, ["general", "email", "givenName", "surName"]);
+
+          if (errs.length > 0) {
+            setErrorMessages(errs);
+            logECS("error", "OrgUserProfilePage.updateProfile", {
+              errors: errs,
+              url: { path: routePath("admin.users.manage") },
+            });
+            return;
+          }
+        }
+
+        // No errors — proceed
         await refreshAuthTokens();
-        // Update pathname to match the selected language so user can see page in selected language
         await switchLanguage(userProfileFormData.languageId, true);
+        showSuccessToast();
       }
     } catch (error) {
-      console.log("***Error updating profile***", error);
-      // Handle errors
-      setErrorMessages((prevErrors) => ({
-        ...prevErrors,
-        general: t("messages.errors.errorUpdatingProfile"),
-      }));
-      logECS("error", "Error updating profile", {
+      logECS("error", "OrgUserProfilePage.updateProfile", {
         errors: error,
-        url: { path: routePath("account.profile") },
+        url: { path: routePath("admin.users.manage") },
       });
+      setErrorMessages([t("messages.errors.errorUpdatingProfile")]);
     }
   };
 
@@ -376,11 +395,10 @@ when affiliation/institution is changed */
     event.preventDefault();
 
     // Clear previous error messages
-    clearAllFieldErrors();
+    clearAllErrorMessages();
     setErrorMessages([]);
 
     if (isFormValid()) {
-      console.log("***Form is valid, submitting***");
       // Add new project member
       await updateProfile();
     } else {
@@ -409,7 +427,7 @@ when affiliation/institution is changed */
         error: err,
         url: { path: routePath('admin.users') },
       });
-      setErrorMessages(['An error occurred while searching. Please try again.']);
+      setErrorMessages([t("messages.errors.searchError")]);
     }
   };
 
@@ -419,6 +437,56 @@ when affiliation/institution is changed */
       page: currentPage, searchTerm: searchTerm
     });
   };
+
+  const handleMergeSearchInput = (term: string) => {
+    setMergeSearchTerm(term);
+  };
+
+  const handleMergeSearchSubmit = async () => {
+    // Dummy response until backend is ready
+    setMergeSearchResults([
+      { id: "99", email: 'dummy.user@example.com', name: 'Dummy User' },
+      { id: "100", email: 'test.user@example.com', name: 'Test User' },
+    ]);
+    setShowMergeConfirm(false);
+    setSelectedMergeUser(null);
+  };
+
+  const handleMergeSubmit = async () => {
+    // TODO: wire up mergeUsers mutation once backend is complete
+    toastState.add(t('mergeAccounts.successMessage'), { type: 'success' });
+    setShowMergeConfirm(false);
+    setSelectedMergeUser(null);
+    setMergeSearchResults([]);
+    setMergeSearchTerm('');
+  };
+
+  const handleArchiveUser = async () => {
+    try {
+      const response = await archiveUserMutation({
+        variables: { userId: Number(userId) },
+      });
+
+      const userErrors = response.data?.archiveUser?.errors;
+      if (userErrors && Object.keys(userErrors).length > 0) {
+        const errs = extractErrors<UserErrors>(userErrors, ["general"]);
+        if (errs.length > 0) {
+          setErrorMessages(errs);
+          return;
+        }
+      }
+
+      toastState.add(t('messages.success.archiveSuccess'), { type: 'success' });
+      router.push(ADMIN_USERS_URL);
+    } catch (err) {
+      logECS('error', 'OrgUserProfilePage.handleArchiveUser', {
+        error: err,
+        url: { path: routePath('admin.users') },
+      });
+      setErrorMessages([t('messages.errors.errorArchivingUser')]);
+    }
+  };
+
 
   const onSortChangeHandler = async (newColumns: DmpTableColumnSet) => {
     setColumns(newColumns);
@@ -435,27 +503,15 @@ when affiliation/institution is changed */
           error: err,
           url: { path: routePath('admin.users') },
         });
-        setErrorMessages(['An error occurred while sorting. Please try again.']);
+        setErrorMessages([t("messages.errors.searchError")]);
       }
     }
   };
 
-  const clearAllFieldErrors = () => {
-    setFieldErrors({
-      email: "",
-      givenName: "",
-      surName: "",
-      affiliationName: "",
-      affiliationId: "",
-      otherAffiliationName: "",
-      languageId: "",
-    });
-  }
-
 
   interface PlanRow {
     id: string | null | undefined;
-    title: string | null | undefined;
+    title: React.ReactNode;
     template: string | null | undefined;
     organization: string | null | undefined;
     owner: string | null | undefined;
@@ -464,13 +520,16 @@ when affiliation/institution is changed */
   }
 
   const transformPlans = (data: typeof planData): PlanRow[] => {
-    console.log("***Plans data***", data);
     return data?.plans?.items
       ?.filter((plan): plan is NonNullable<typeof plan> => plan !== null)
       .map((plan) => {
         return {
           id: plan.id?.toString(),
-          title: plan.title ?? '',
+          title: (
+            <Link href={routePath('admin.users.projects', { userId: userId })}>
+              {plan.title}
+            </Link>
+          ),
           template: plan.templateTitle ?? '',
           organization: plan.templateOwnerAffiliationName ?? '',
           owner: `${plan?.user?.givenName} ${plan?.user?.surName}`,
@@ -495,7 +554,7 @@ when affiliation/institution is changed */
         });
         setErrorMessages((prevErrors) => ({
           ...prevErrors,
-          general: "Something went wrong. Please try again.",
+          general: Global("messaging.somethingWentWrong"),
         }));
       }
     };
@@ -535,132 +594,263 @@ when affiliation/institution is changed */
       });
     }
   }, [userData]);
+
+  // Check for query param to display toast message after page load/navigation
+  useEffect(() => {
+    // Check if the toast has already been shown
+    if (hasShownToastRef.current) return;
+
+    const profileUpdated = searchParams.get("profileUpdated");
+    // If the profile was updated, show the success toast once
+    if (profileUpdated === "true") {
+      hasShownToastRef.current = true; // Prevent showing the toast again
+      showSuccessToast();
+      // Clean up the URL parameter
+      const newParams = new URLSearchParams(searchParams);
+      newParams.delete("profileUpdated");
+      const basePath = `/${currentLocale}${pathname}`;
+      const newUrl = `${basePath}${newParams.toString() ? `?${newParams.toString()}` : ""}`;
+      router.replace(newUrl);
+    }
+  }, [searchParams, currentLocale, pathname]);
+
+  const isPageLoading = userLoading || isInitialLoad;
+  const userName = userData?.user
+    ? `${userData.user.givenName} ${userData.user.surName}`
+    : undefined;
   return (
     <>
-      <PageHeader
-        title={t('title', { name: 'User Name' })}
-        description=""
-        showBackButton={true}
-        breadcrumbs={
-          <Breadcrumbs>
-            <Breadcrumb><Link href={routePath('admin.index')}>Admin</Link></Breadcrumb>
-            <Breadcrumb>{t('title', { name: 'User Name' })}</Breadcrumb>
-          </Breadcrumbs>
-        }
-        actions={
-          <>
-            <Link
-              href={ADMIN_USERS_URL}
-              className="button-link button--primary"
-            >
-              {t('buttons.viewAllUsers')}
-            </Link>
-          </>
-        }
-        className="page-organization-users-dashboard-header"
-      />
+      {userName && (
+        <PageHeader
+          title={t('title', { name: `${user?.givenName} ${user?.surName}` })}
+          description=""
+          showBackButton={true}
+          breadcrumbs={
+            <Breadcrumbs>
+              <Breadcrumb><Link href={routePath('admin.index')}>Admin</Link></Breadcrumb>
+              <Breadcrumb>{t('title', { name: `${user?.givenName} ${user?.surName}` })}</Breadcrumb>
+            </Breadcrumbs>
+          }
+          actions={
+            <>
+              <Link
+                href={ADMIN_USERS_URL}
+                className="button-link button--primary"
+              >
+                {t('buttons.viewAllUsers')}
+              </Link>
+            </>
+          }
+          className="page-organization-users-dashboard-header"
+        />
+      )}
       <ErrorMessages errors={errorMessages} ref={errorRef} />
-      <LayoutContainer>
-        <ContentContainer>
-          <h2>Testing</h2>
-          {/* Edit organization details section */}
-          <div className={styles.userProfileFormContainer}>
-            <div className={styles.sectionHeader}>
-              <h2>{t('userProfileHeading', { name: 'User Name' })}</h2>
-            </div>
-            <div className="sectionContainer">
-              <div className={`sectionContent`}>
-                <Form onSubmit={handleUserProfileFormSubmit}>
-                  <FormInput
-                    name="email"
-                    type="text"
-                    label={t("profileForm.labels.email")}
-                    value={userProfileFormData.email || ''}
-                    isRequired={true}
-                    onChange={handleInputChange}
-                    isInvalid={fieldErrors.email.length > 0}
-                    errorMessage={
-                      fieldErrors.email.length > 0
-                        ? fieldErrors.email
-                        : t("messages.errors.invalidEmail")
-                    }
-                  />
-
-                  <FormInput
-                    name="givenName"
-                    type="text"
-                    label={t("profileForm.labels.givenName")}
-                    value={userProfileFormData.givenName || ''}
-                    onChange={handleInputChange}
-                    isInvalid={!!fieldErrors.givenName}
-                    errorMessage={fieldErrors.givenName ?? ""}
-                  />
-
-                  <FormInput
-                    name="surName"
-                    type="text"
-                    label={t("profileForm.labels.surName")}
-                    isRequired={true}
-                    placeholder={userProfileFormData.surName}
-                    value={userProfileFormData.surName || ''}
-                    onChange={handleInputChange}
-                    isInvalid={!!fieldErrors.surName}
-                    errorMessage={fieldErrors.surName ?? ""}
-                  />
-
-                  <TypeAheadWithOther
-                    label={t("profileForm.labels.institution")}
-                    fieldName="institution"
-                    setOtherField={setOtherField}
-                    isRequired={true}
-                    error={fieldErrors.affiliationId ?? ''}
-                    helpText={t('messages.helpText.institution')}
-                    updateFormData={updateAffiliationFormData}
-                    value={userProfileFormData.affiliationName}
-                    suggestions={suggestions}
-                    onSearch={handleSearch}
-                  />
-                  {otherField && (
-                    <div className={`${styles.formRow} ${styles.oneItemRow}`}>
+      {isPageLoading ? (
+        <Loading message={Global('buttons.loading')} />
+      ) : (
+        <LayoutSplitPanel>
+          <LayoutWithPanel>
+            <ContentContainer>
+              {/* Edit organization details section */}
+              <div className={styles.formSection}>
+                <h2>{t('userProfileHeading', { name: 'User Name' })}</h2>
+                <div className="sectionContainer">
+                  <div className={`sectionContent`}>
+                    <Form onSubmit={handleUserProfileFormSubmit}>
                       <FormInput
-                        name="otherAffiliationName"
+                        name="email"
                         type="text"
-                        label={t("profileForm.labels.otherInstitution")}
-                        placeholder={userProfileFormData.otherAffiliationName}
-                        value={userProfileFormData.otherAffiliationName}
+                        label={t("profileForm.labels.email")}
+                        value={userProfileFormData.email || ''}
+                        isRequired={true}
                         onChange={handleInputChange}
-                        isInvalid={!!fieldErrors["otherAffiliationName"]}
-                        errorMessage={fieldErrors["otherAffiliationName"] ?? ""}
+                        isInvalid={fieldErrors.email.length > 0}
+                        errorMessage={
+                          fieldErrors.email.length > 0
+                            ? fieldErrors.email
+                            : t("messages.errors.invalidEmail")
+                        }
                       />
-                    </div>
-                  )}
 
-                  <FormSelect
-                    label={t("profileForm.labels.language")}
-                    isRequired
-                    name="language"
-                    items={languages}
-                    errorMessage="A selection is required"
-                    helpMessage={t("messages.helpText.language")}
-                    onChange={(selected) => setUserProfileFormData({ ...userProfileFormData, languageId: selected as string })}
-                    selectedKey={userProfileFormData.languageId}
-                  >
-                    {languages &&
-                      languages.map((language) => {
-                        return <ListBoxItem key={language.id}>{language.id}</ListBoxItem>;
-                      })}
-                  </FormSelect>
-                  <Button
-                    type="submit"
-                    isDisabled={updateUserInfoLoading}
-                    className={styles.btn}
-                  >
-                    {updateUserInfoLoading ? Global("buttons.saving") : Global("buttons.save")}
-                  </Button>
-                </Form>
+                      <FormInput
+                        name="givenName"
+                        type="text"
+                        label={t("profileForm.labels.givenName")}
+                        isRequiredVisualOnly={true}
+                        value={userProfileFormData.givenName || ''}
+                        onChange={handleInputChange}
+                        isInvalid={!!fieldErrors.givenName}
+                        errorMessage={fieldErrors.givenName ?? ""}
+                      />
+
+                      <FormInput
+                        name="surName"
+                        type="text"
+                        label={t("profileForm.labels.surName")}
+                        isRequiredVisualOnly={true}
+                        placeholder={userProfileFormData.surName}
+                        value={userProfileFormData.surName || ''}
+                        onChange={handleInputChange}
+                        isInvalid={!!fieldErrors.surName}
+                        errorMessage={fieldErrors.surName ?? ""}
+                      />
+
+                      <TypeAheadWithOther
+                        label={t("profileForm.labels.institution")}
+                        fieldName="institution"
+                        setOtherField={setOtherField}
+                        isRequiredVisualOnly={true}
+                        error={fieldErrors.affiliationId ?? ''}
+                        helpText={t('messages.helpText.institution')}
+                        updateFormData={updateAffiliationFormData}
+                        value={userProfileFormData.affiliationName}
+                        suggestions={suggestions}
+                        onSearch={handleSearch}
+                      />
+                      {otherField && (
+                        <div className={`${styles.formRow} ${styles.oneItemRow}`}>
+                          <FormInput
+                            name="otherAffiliationName"
+                            type="text"
+                            label={t("profileForm.labels.otherInstitution")}
+                            placeholder={userProfileFormData.otherAffiliationName}
+                            value={userProfileFormData.otherAffiliationName}
+                            onChange={handleInputChange}
+                            isInvalid={!!fieldErrors["otherAffiliationName"]}
+                            errorMessage={fieldErrors["otherAffiliationName"] ?? ""}
+                          />
+                        </div>
+                      )}
+
+                      <FormSelect
+                        label={t("profileForm.labels.language")}
+                        name="language"
+                        items={languages}
+                        errorMessage="A selection is required"
+                        helpMessage={t("messages.helpText.language")}
+                        onChange={(selected) => setUserProfileFormData({ ...userProfileFormData, languageId: selected as string })}
+                        selectedKey={userProfileFormData.languageId}
+                      >
+                        {languages &&
+                          languages.map((language) => {
+                            return <ListBoxItem key={language.id} id={language.id}>{language.id}</ListBoxItem>;
+                          })}
+                      </FormSelect>
+                      <div className={styles.buttonContainer}>
+                        <Button
+                          type="submit"
+                          isDisabled={updateUserInfoLoading}
+                          className={styles.btn}
+                        >
+                          {updateUserInfoLoading ? Global("buttons.saving") : Global("buttons.save")}
+                        </Button>
+                        <Button
+                          type="button"
+                          className="secondary"
+                          onPress={handleArchiveUser}
+                        >
+                          {Global("buttons.archive")}
+                        </Button>
+
+                      </div>
+
+                    </Form>
+                  </div>
+                </div>
               </div>
-            </div>
+              <div className={styles.formSection}>
+                <h2>{t("headings.identifiers")}</h2>
+                <dl>
+                  <div role="presentation" className={styles.definitionListItem}>
+                    <dt>{t("definitions.ssoId")}:{' '}</dt>
+                    <dd>{user?.ssoId}</dd>
+                  </div>
+                  <div role="presentation" className={styles.definitionListItem}>
+                    <dt>{t("definitions.orcid")}:{' '}</dt>
+                    <dd>
+                      {user?.orcid
+                        ? <a href={user.orcid} target="_blank" rel="noreferrer noopener">{user.orcid}</a>
+                        : null}
+                    </dd>
 
+                  </div>
+                </dl>
+              </div>
+
+              {/* Merge Accounts */}
+              <div className={styles.formSection}>
+                <h2>{t('headings.mergeAccounts')}</h2>
+                <div className="sectionContainer">
+                  <div className={`sectionContent`}>
+                    <div className={styles.pageTools} role="search">
+                      <>
+                        <FormInput
+                          name="mergeSearch"
+                          type="search"
+                          data-testid="search-input"
+                          className={styles.searchInput}
+                          label={Global('buttons.search')}
+                          onChange={e => handleMergeSearchInput(e.target.value)}
+                          value={mergeSearchTerm}
+                        />
+
+                        <Button
+                          onPress={handleMergeSearchSubmit}
+                          isDisabled={plansLoading}
+                          className={styles.searchButton}
+                        >
+                          {plansLoading ? Global('buttons.searching') : Global('buttons.search')}
+                        </Button>
+                      </>
+                    </div>
+                    {/** Dummy results */}
+                    {mergeSearchResults.length > 0 && !showMergeConfirm && (
+                      <div className={styles.mergeResults}>
+                        <FormSelect
+                          label={t('mergeAccounts.selectUser')}
+                          name="mergeUser"
+                          items={mergeSearchResults}
+                          onChange={(key) => {
+                            const found = mergeSearchResults.find(u => u.id === String(key));
+                            setSelectedMergeUser(found ?? null);
+                          }}
+                        >
+                          {mergeSearchResults.map(u => (
+                            <ListBoxItem key={u.id} id={String(u.id)}>{u.email}</ListBoxItem>
+                          ))}
+                        </FormSelect>
+
+                        <div className={styles.buttonContainer}>
+                          <Button
+                            onPress={() => handleMergeSubmit()}
+                            isDisabled={!selectedMergeUser}
+                            className={styles.btn}
+                          >
+                            {t('mergeAccounts.merge')}
+                          </Button>
+                          <Button
+                            onPress={() => {
+                              setShowMergeConfirm(false);
+                              setSelectedMergeUser(null);
+                              setMergeSearchResults([]);
+                              setMergeSearchTerm('');
+                            }}
+                            className="secondary"
+                          >
+                            {Global('buttons.cancel')}
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </ContentContainer>
+          </LayoutWithPanel>
+
+
+          {/**Plans table */}
+          <FullWidthSection>
             <h2>Plans</h2>
             <div className={styles.pageTools} role="search" ref={topRef}>
               <>
@@ -694,7 +884,7 @@ when affiliation/institution is changed */
               />
             }
 
-            {!plansLoading && plans && plans.length === 0 && (
+            {!plansLoading && plans && plans.length === 0 && !isInitialLoad && (
               <p>{t('userPlansTable.noResults')}</p>
             )}
 
@@ -705,9 +895,10 @@ when affiliation/institution is changed */
               hasNextPage={hasNextPage}
               handlePageClick={handlePageClick}
             />
-          </div>
-        </ContentContainer>
-      </LayoutContainer >
+
+          </FullWidthSection>
+        </LayoutSplitPanel >
+      )}
     </>
   );
 }

@@ -1,0 +1,15 @@
+.loadBtnContainer {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.remainingText {
+  font-size: var(--fs-small);
+  margin-top: var(--space-2);
+}
+
+.searchMatchText {
+  margin-bottom: var(--space-2);
+}

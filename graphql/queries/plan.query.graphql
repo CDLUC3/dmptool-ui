@@ -106,8 +106,8 @@ query Plan($planId: Int!) {
   }
 }
 
-query Plans($projectId: Int!, $term: String, $paginationOptions: PaginationOptions) {
-  plans(projectId: $projectId, term: $term, paginationOptions: $paginationOptions) {
+query Plans($userId: Int!, $term: String, $paginationOptions: PaginationOptions) {
+  plans(userId: $userId, term: $term, paginationOptions: $paginationOptions) {
     items {
       id
       templateOwnerAffiliationName

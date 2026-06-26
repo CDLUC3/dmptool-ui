@@ -29,6 +29,7 @@
     "outputCount": "{count, plural, =0 {0 outputs} one {1 output} other {{count} outputs}}",
     "editOutputs": "Edit research outputs",
     "editResearchOutputs": "Edit research outputs",
+    "researchOutputs": "Research outputs",
     "plan": "Plan",
     "plans": "Plans",
     "sections": "Sections",

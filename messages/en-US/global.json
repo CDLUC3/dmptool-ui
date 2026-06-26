@@ -340,10 +340,24 @@
       "manageUser": "Manage user {name}"
     },
     "userProfile": {
-      "title": "User info for {name}",
+      "title": "{name} profile",
       "userProfileHeading": "Edit info for {name}",
       "buttons": {
         "viewAllUsers": "View all users"
+      },
+      "headings": {
+        "identifiers": "Identifiers",
+        "mergeAccounts": "Merge Accounts"
+      },
+      "mergeAccounts": {
+        "selectUser": "Select a user to merge",
+        "merge": "Merge",
+        "confirmMessage": "The selected user's content {mergeEmail} will be merged into the account for {keepEmail}. The selected account will then be removed.",
+        "successMessage": "Accounts merged successfully"
+      },
+      "definitions": {
+        "ssoId": "Institutional SSO ID",
+        "orcid": "ORCiD"
       },
       "profileForm": {
         "labels": {
@@ -352,21 +366,28 @@
           "surName": "Last name",
           "institution": "Institution",
           "department": "Department or school",
-          "language": "Language"
+          "language": "Language",
+          "otherInstitution": "Other institution"
         }
       },
       "messages": {
         "errors": {
-          "errorUpdatingProfile": "Error when updating profile",
+          "errorUpdatingProfile": "Error updating profile",
           "invalidEmail": "Invalid email address",
           "givenName": "Invalid first name",
           "surName": "Invalid last name",
-          "affiliation": "Invalid institution name",
-          "otherAffiliationValidation": "Invalid otherinstitution name"
+          "affiliationValidation": "Invalid institution name",
+          "otherAffiliationValidation": "Invalid otherinstitution name",
+          "searchError": "An error occurred while searching. Please try again.",
+          "errorArchivingUser": "Unable to archive user account at this time."
         },
         "helpText": {
           "institution": "Search for your institution",
           "language": "Select your preferred language"
+        },
+        "success": {
+          "profileUpdateSuccess": "Successfully updated profile.",
+          "archiveSuccess": "Successfully archived user account."
         }
       },
       "userPlansTable": {
@@ -910,7 +931,9 @@
       "viewPlan": "View plan",
       "viewTemplate": "View template",
       "markAsRead": "Mark as read",
-      "markAsUnread": "Mark as unread"
+      "markAsUnread": "Mark as unread",
+      "archive": "Archive",
+      "archiving": "Archiving..."
     },
     "labels": {
       "required": "required",
