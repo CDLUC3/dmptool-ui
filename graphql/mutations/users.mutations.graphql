@@ -21,7 +21,6 @@ mutation UpdateUserProfile($input: UpdateUserProfileInput!) {
   }
 }
 
-
 mutation UpdateUserInfo($input: UpdateUserInfoInput!) {
   updateUserInfo(input: $input) {
     id
@@ -43,8 +42,6 @@ mutation UpdateUserInfo($input: UpdateUserInfoInput!) {
     email
   }
 }
-
-
 
 mutation AddUserEmail($email: String!, $isPrimary: Boolean!) {
   addUserEmail(email: $email, isPrimary: $isPrimary) {
@@ -91,5 +88,16 @@ mutation ArchiveUser($userId: Int!) {
     errors {
       general
     }
+  }
+}
+
+mutation UpdateUserRole($input: UpdateUserRoleInput!) {
+  updateUserRole(input: $input) {
+    errors {
+      general
+      role
+    }
+    id
+    role
   }
 }

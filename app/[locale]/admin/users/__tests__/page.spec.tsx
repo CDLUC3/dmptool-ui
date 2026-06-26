@@ -63,11 +63,16 @@ jest.mock('next-intl', () => ({
   useTranslations: (ns: string) => (key: string) => `${ns}.${key}`,
 }));
 
-jest.mock('@/utils/routes', () => ({
-  routePath: (name: string) => `/${name}`,
+jest.mock('@/utils/index', () => ({
+  logECS: jest.fn(),
 }));
 
 jest.mock('@/utils/index', () => ({
+  extractErrors: jest.fn().mockReturnValue([]),
+  handleApolloError: jest.fn(),
+  isValidEmail: (v: string) => v.includes('@'),
+  refreshAuthTokens: jest.fn(),
+  routePath: (name: string) => `/${name}`,
   logECS: jest.fn(),
 }));
 
@@ -218,9 +223,10 @@ describe('Admin - User Accounts Dashboard', () => {
 
     it('re-fetches with empty term when search is cleared', async () => {
       renderPage([makeMeMock(UserRole.Admin), makeUsersMock(), makeUsersMock()]);
-      await waitFor(() => expect(screen.getByTestId('mock-table')).toBeInTheDocument());
 
-      const input = screen.getByTestId('search-input') as HTMLInputElement;
+      // Wait for MeDocument to resolve and search controls to appear
+      const input = await screen.findByTestId('search-input');
+
       await userEvent.type(input, 'a');
       await userEvent.clear(input);
 

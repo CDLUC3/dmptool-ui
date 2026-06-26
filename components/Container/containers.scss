@@ -263,7 +263,7 @@
   @include layoutContainer;
   display: flex;
   flex-direction: column;
-  gap: 0; // or var(--layout-gap) if you want spacing between zones
+  gap: 0;
 
   // Override the bottom margin on LayoutWithPanel when it's a child
   > .layout-with-panel {

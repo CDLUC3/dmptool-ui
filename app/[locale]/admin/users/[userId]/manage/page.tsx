@@ -11,6 +11,7 @@ import {
   Button,
   Form,
   ListBoxItem,
+  Radio
 } from 'react-aria-components';
 
 // GraphQL queries and mutations
@@ -18,10 +19,13 @@ import { useQuery, useLazyQuery, useMutation } from '@apollo/client/react';
 import {
   ArchiveUserDocument,
   LanguagesDocument,
-  UserErrors,
-  UserDocument,
-  UpdateUserInfoDocument,
+  MeDocument,
   PlansDocument,
+  UpdateUserInfoDocument,
+  UpdateUserRoleDocument,
+  UserDocument,
+  UserErrors,
+  UserRole,
   UserQuery
 } from "@/generated/graphql";
 
@@ -29,7 +33,11 @@ import {
 import PageHeader from '@/components/PageHeader';
 import ErrorMessages from '@/components/ErrorMessages';
 import Pagination from '@/components/Pagination';
-import { FormInput, FormSelect } from "@/components/Form";
+import {
+  FormInput,
+  FormSelect,
+  RadioGroupComponent
+} from "@/components/Form";
 import {
   ContentContainer,
   LayoutWithPanel,
@@ -54,6 +62,7 @@ import {
   refreshAuthTokens,
   routePath
 } from "@/utils/index";
+import { RoleOptions } from "@/lib/constants";
 import { useToast } from "@/context/ToastContext";
 import styles from './userProfile.module.scss';
 
@@ -68,7 +77,6 @@ interface UserProfileFormInterface {
   otherAffiliationName: string;
   languageId: string;
 }
-
 interface UserProfileErrorInterface {
   email: string;
   givenName: string;
@@ -79,6 +87,18 @@ interface UserProfileErrorInterface {
   languageId: string;
 }
 
+interface PlanRow {
+  id: string | null | undefined;
+  title: React.ReactNode;
+  template: string | null | undefined;
+  organization: string | null | undefined;
+  owner: string | null | undefined;
+  updated: string;
+  visibility: string | null | undefined;
+}
+
+
+
 function OrgUserProfilePage(): React.ReactElement {
   const initialColumns = useMemo<DmpTableColumnSet>(() => [
     { id: 'title', name: 'Project Title', isRowHeader: true, allowsSorting: true, direction: "" as const },
@@ -88,17 +108,10 @@ function OrgUserProfilePage(): React.ReactElement {
     { id: 'updated', name: 'Updated', isRowHeader: true, allowsSorting: true, direction: "" as const },
   ], []);
 
-  const SORT_FIELD_MAP: Record<string, string> = {
-    title: 'p.title',
-    template: 'p.template',
-    visibility: 'p.visibility',
-  };
-
   const errorRef = useRef<HTMLDivElement | null>(null);
   const topRef = useRef<HTMLDivElement>(null);
   //To control display of showSuccess toast message
   const hasShownToastRef = useRef(false);
-
   const currentLocale = useLocale();
   const pathname = usePathname();
   const router = useRouter();
@@ -108,8 +121,13 @@ function OrgUserProfilePage(): React.ReactElement {
   const userId = String(params.userId); // From route /users/:userId
   const formatDate = useFormatDate();
 
-  // State
+  // States
+  // Flag to indicate if this is the initial load of the page
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [errorMessages, setErrorMessages] = useState<string[]>([]);
+  const [otherField, setOtherField] = useState(false);
+  const [languages, setLanguages] = useState<LanguageInterface[]>([]);
+  // User profile form data state
   const [userProfileFormData, setUserProfileFormData] = useState<UserProfileFormInterface>({
     email: "",
     givenName: "",
@@ -119,10 +137,6 @@ function OrgUserProfilePage(): React.ReactElement {
     otherAffiliationName: "",
     languageId: "",
   });
-  const [otherField, setOtherField] = useState(false);
-  const { suggestions, handleSearch } = useAffiliationSearch();
-  const [languages, setLanguages] = useState<LanguageInterface[]>([]);
-
   // Field errors
   const [fieldErrors, setFieldErrors] = useState<UserProfileErrorInterface>({
     email: "",
@@ -134,42 +148,52 @@ function OrgUserProfilePage(): React.ReactElement {
     languageId: "",
   });
 
-  // Flag to indicate if this is the initial load of the page
-  const [isInitialLoad, setIsInitialLoad] = useState(true);
+  // States for plans table
   const [columns, setColumns] = useState<DmpTableColumnSet>(initialColumns);
   const [sortField, setSortField] = useState<string | undefined>(undefined);
   const [sortDir, setSortDir] = useState<string>('DESC');
   const [plans, setPlans] = useState<PlanRow[]>([]);
   const [user, setUser] = useState<NonNullable<UserQuery['user']> | null>(null);
-  const [searchTerm, setSearchTerm] = useState<string>('');
 
-  // For pagination
+  // States for search
+  const [searchTerm, setSearchTerm] = useState<string>('');
+  const { suggestions, handleSearch } = useAffiliationSearch();
+
+  // States for pagination
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [totalPages, setTotalPages] = useState<number>(0);
   const [hasNextPage, setHasNextPage] = useState<boolean | null>(false);
   const [hasPreviousPage, setHasPreviousPage] = useState<boolean | null>(false);
 
-  // For merging accounts
+  // States for merging accounts
   const [mergeSearchTerm, setMergeSearchTerm] = useState<string>('');
   const [mergeSearchResults, setMergeSearchResults] = useState<{ id: string; email: string, name: string }[]>([]);
   const [selectedMergeUser, setSelectedMergeUser] = useState<{ id: string; email: string, name: string } | null>(null);
   const [showMergeConfirm, setShowMergeConfirm] = useState(false);
 
+  // State for changing a user's role
+  const [selectedRole, setSelectedRole] = useState<string>('');
+
+
+
   // Localization
   const t = useTranslations('Admin.userProfile');
   const Global = useTranslations('Global');
 
-  // Set URLs
+  // URL that directs users back to admin/users page after they archive a user. 
   const ADMIN_USERS_URL = routePath('admin.users');
 
+  // GraphQL queries and mutations
   // Run queries
   const { data: languageData } = useQuery(LanguagesDocument);
+  const { data: meData } = useQuery(MeDocument);
   const { data: userData, loading: userLoading } = useQuery(UserDocument, {
     variables: { userId: Number(userId) },
   });
 
+  // Mutations
   const [archiveUserMutation] = useMutation(ArchiveUserDocument);
-
+  const [updateUserRoleMutation] = useMutation(UpdateUserRoleDocument);
   // Initialize user profile mutation
   const [updateUserInfoMutation, { loading: updateUserInfoLoading }] = useMutation(UpdateUserInfoDocument, {
     refetchQueries: [
@@ -187,7 +211,9 @@ function OrgUserProfilePage(): React.ReactElement {
     fetchPolicy: 'no-cache',
   });
 
-  // Fetch users based on page, filters and search term criteria
+
+
+  // Fetch plans based on pagination page, filters and search term criteria
   const fetchPlans = async ({
     page,
     searchTerm = ''
@@ -208,6 +234,8 @@ function OrgUserProfilePage(): React.ReactElement {
     }
   };
 
+  // Builds the query variables for fetching user plans based on pagination, 
+  // search term, and sorting criteria
   const buildQueryVars = (
     page: number,
     searchTerm: string,
@@ -219,7 +247,7 @@ function OrgUserProfilePage(): React.ReactElement {
       limit: LIMIT,
       type: "OFFSET",
       sortDir: sortDir ?? "DESC",
-      sortField: sortField ? SORT_FIELD_MAP[sortField] : undefined,
+      sortField
     },
     term: searchTerm,
     userId: Number(userId),
@@ -230,6 +258,7 @@ function OrgUserProfilePage(): React.ReactElement {
     toastState.add(successMessage, { type: "success" });
   };
 
+  // Switches the language/locale of the page and reloads the page with the new locale.
   const switchLanguage = async (newLocale: string, showToast = false) => {
     if (newLocale !== currentLocale) {
       const params = new URLSearchParams();
@@ -259,14 +288,14 @@ function OrgUserProfilePage(): React.ReactElement {
     });
   };
 
-  // Handle any changes to form field values
+  // Handle any changes to User Profile form field values
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     clearAllErrorMessages();
     setUserProfileFormData({ ...userProfileFormData, [name]: value });
   };
 
-  // Client-side validation of fields
+  // Client-side validation of required form fields
   const validateField = (name: string, value: string | string[] | undefined) => {
     let error = '';
     switch (name) {
@@ -307,7 +336,7 @@ function OrgUserProfilePage(): React.ReactElement {
     return error;
   }
 
-  // Check whether form is valid before submitting
+  // Identifies field-level errors and returns a boolean indicating if the form is valid or not
   const isFormValid = (): boolean => {
     // Initialize a flag for form validity
     let isValid = true;
@@ -326,7 +355,7 @@ function OrgUserProfilePage(): React.ReactElement {
     return isValid;
   };
 
-  /* This function is called by the child component, UpdateEmailAddress
+  /* This function is called by the affiliation typeahead component
 when affiliation/institution is changed */
   const updateAffiliationFormData = async (id: string, value: string) => {
     clearAllErrorMessages();
@@ -337,33 +366,28 @@ when affiliation/institution is changed */
     });
   };
 
-  const profileUpdateMutation = async () => {
-    const response = await updateUserInfoMutation({
-      variables: {
-        input: {
-          userId: Number(userId),
-          email: userProfileFormData.email,
-          givenName: userProfileFormData.givenName,
-          surName: userProfileFormData.surName,
-          affiliationId: userProfileFormData.affiliationId,
-          otherAffiliationName: userProfileFormData.otherAffiliationName,
-          languageId: userProfileFormData.languageId,
-        },
-      },
-    });
-
-    return response.data;
-  };
-
   // Update Profile info
   const updateProfile = async () => {
     try {
-      const response = await profileUpdateMutation();
+      const response = await updateUserInfoMutation({
+        variables: {
+          input: {
+            userId: Number(userId),
+            email: userProfileFormData.email,
+            givenName: userProfileFormData.givenName,
+            surName: userProfileFormData.surName,
+            affiliationId: userProfileFormData.affiliationId,
+            otherAffiliationName: userProfileFormData.otherAffiliationName,
+            languageId: userProfileFormData.languageId,
+          },
+        },
+      });
 
-      if (response) {
-        const userErrors = response.updateUserInfo?.errors;
+      if (response.data) {
+        const userErrors = response.data.updateUserInfo?.errors;
 
         if (userErrors) {
+          // Checks for errors for these fields and extracts them into an array of error messages
           const errs = extractErrors<UserErrors>(userErrors, ["general", "email", "givenName", "surName"]);
 
           if (errs.length > 0) {
@@ -376,7 +400,8 @@ when affiliation/institution is changed */
           }
         }
 
-        // No errors — proceed
+        // Refreshes the users language so that they will immediately see their language choice
+        // reflected in the page
         await refreshAuthTokens();
         await switchLanguage(userProfileFormData.languageId, true);
         showSuccessToast();
@@ -390,7 +415,7 @@ when affiliation/institution is changed */
     }
   };
 
-  // Handle user profile form submit
+  // Handles the form submission for updating user profile information
   const handleUserProfileFormSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
@@ -399,7 +424,6 @@ when affiliation/institution is changed */
     setErrorMessages([]);
 
     if (isFormValid()) {
-      // Add new project member
       await updateProfile();
     } else {
       setErrorMessages([t('messages.errors.errorUpdatingProfile')])
@@ -407,7 +431,8 @@ when affiliation/institution is changed */
   };
 
 
-  // Just updates the search term
+  // Handles search input changes - updates the search term state and fetches 
+  // all users if the search term is cleared
   const handleSearchInput = async (term: string) => {
     setSearchTerm(term);
     // If the search term is cleared, fetch all users again to refresh the data.
@@ -416,7 +441,7 @@ when affiliation/institution is changed */
     }
   }
 
-  // Only fires when the button is pressed
+  // Handles the search submit button click - resets to page 1 and queries plans based on search term
   const handleSearchSubmit = async () => {
     setErrorMessages([]);
     setCurrentPage(1);
@@ -431,19 +456,22 @@ when affiliation/institution is changed */
     }
   };
 
-  // Handle pagination page click
+  // Handle pagination page click - query plans when pagination page is changed
   const handlePageClick = async (page: number) => {
     await fetchPlans({
-      page: currentPage, searchTerm: searchTerm
+      page, searchTerm
     });
   };
 
+  // Handle changes to the merge search input
   const handleMergeSearchInput = (term: string) => {
     setMergeSearchTerm(term);
   };
 
+  // Dummy function to simulate searching for users to merge
   const handleMergeSearchSubmit = async () => {
     // Dummy response until backend is ready
+    // TODO: Replace this with actual search results from backend once the mergeUsers mutation is implemented
     setMergeSearchResults([
       { id: "99", email: 'dummy.user@example.com', name: 'Dummy User' },
       { id: "100", email: 'test.user@example.com', name: 'Test User' },
@@ -452,6 +480,7 @@ when affiliation/institution is changed */
     setSelectedMergeUser(null);
   };
 
+  // Handle merging accounts
   const handleMergeSubmit = async () => {
     // TODO: wire up mergeUsers mutation once backend is complete
     toastState.add(t('mergeAccounts.successMessage'), { type: 'success' });
@@ -461,6 +490,7 @@ when affiliation/institution is changed */
     setMergeSearchTerm('');
   };
 
+  // Handle archiving a user
   const handleArchiveUser = async () => {
     try {
       const response = await archiveUserMutation({
@@ -487,7 +517,47 @@ when affiliation/institution is changed */
     }
   };
 
+  // Update user role
+  const handleRoleChange = async (newRole: string) => {
+    try {
+      const response = await updateUserRoleMutation({
+        variables: {
+          input: {
+            userId: Number(userId),
+            role: newRole as UserRole,
+          }
+        }
+      });
 
+      if (response.data) {
+        const userErrors = response.data.updateUserRole?.errors;
+
+        if (userErrors) {
+          // Checks for errors for these fields and extracts them into an array of error messages
+          const errs = extractErrors<UserErrors>(userErrors, ["general", "role"]);
+
+          if (errs.length > 0) {
+            setErrorMessages(errs);
+            logECS("error", "OrgUserProfilePage.handleRoleChange", {
+              errors: errs,
+              url: { path: routePath("admin.users.manage") },
+            });
+            return;
+          }
+        }
+
+        showSuccessToast();
+      }
+    } catch (err) {
+      logECS("error", "OrgUserProfilePage.handleRoleChange", {
+        errors: err,
+        url: { path: routePath("admin.users.manage") },
+      });
+      setErrorMessages([t("messages.errors.errorUpdatingUserRole")]);
+    }
+  };
+
+  // Handle sorting changes in the table
   const onSortChangeHandler = async (newColumns: DmpTableColumnSet) => {
     setColumns(newColumns);
     const activeSort = Array.from(newColumns).find(col => col.allowsSorting && col.direction !== '');
@@ -508,17 +578,7 @@ when affiliation/institution is changed */
     }
   };
 
-
-  interface PlanRow {
-    id: string | null | undefined;
-    title: React.ReactNode;
-    template: string | null | undefined;
-    organization: string | null | undefined;
-    owner: string | null | undefined;
-    updated: string;
-    visibility: string | null | undefined;
-  }
-
+  // Transform the plan data from the GraphQL query into a format suitable for the table
   const transformPlans = (data: typeof planData): PlanRow[] => {
     return data?.plans?.items
       ?.filter((plan): plan is NonNullable<typeof plan> => plan !== null)
@@ -526,7 +586,7 @@ when affiliation/institution is changed */
         return {
           id: plan.id?.toString(),
           title: (
-            <Link href={routePath('admin.users.projects', { userId: userId })}>
+            <Link href={routePath('admin.users.projects', { userId })}>
               {plan.title}
             </Link>
           ),
@@ -539,7 +599,7 @@ when affiliation/institution is changed */
       }) ?? [];
   };
 
-
+  // Set languages when languageData is loaded or changes
   useEffect(() => {
     const handleLanguageLoad = async () => {
       try {
@@ -563,11 +623,12 @@ when affiliation/institution is changed */
   }, [languageData]);
 
 
-  // Load on mount
+  // Load plans on mount
   useEffect(() => {
     fetchPlans({ page: currentPage, searchTerm: '' });
   }, []);
 
+  // Update plans state when planData changes, and set pagination info
   useEffect(() => {
     if (planData?.plans?.items) {
       setIsInitialLoad(false);
@@ -580,6 +641,7 @@ when affiliation/institution is changed */
     }
   }, [planData]);
 
+  // Update user profile form data when userData changes
   useEffect(() => {
     if (userData?.user) {
       setUser(userData.user);
@@ -592,10 +654,12 @@ when affiliation/institution is changed */
         otherAffiliationName: '',
         languageId: userData.user.languageId ?? '',
       });
+      setSelectedRole(userData.user.role ?? '');
     }
   }, [userData]);
 
-  // Check for query param to display toast message after page load/navigation
+  // This is needed because the toast message is wiped out when the user changes their language/locale.
+  // So we added a workaround, where we add the 'profileUpdated' query param, and display toast message after page load/navigation
   useEffect(() => {
     // Check if the toast has already been shown
     if (hasShownToastRef.current) return;
@@ -614,21 +678,48 @@ when affiliation/institution is changed */
     }
   }, [searchParams, currentLocale, pathname]);
 
+  useEffect(() => {
+    if (plansError) {
+      logECS('error', 'OrgUserProfilePage.fetchPlans', {
+        error: plansError,
+        url: { path: routePath('admin.users.manage') },
+      });
+      setErrorMessages([t('messages.errors.searchError')]);
+    }
+  }, [plansError]);
+
+
+  // Set whether page should be read-only based on the current user's role
+  const isReadOnly = meData?.me?.role !== UserRole.Superadmin;
+
+  // This is to show the loading spinner for initial load or when user data is being fetched
   const isPageLoading = userLoading || isInitialLoad;
+
+  // Derive the available roles based on the current user's role and current user's role
+  const availableRoles = RoleOptions.filter(option => {
+    if (option.value === '') return false; // exclude 'All Roles'
+    if (meData?.me?.role !== UserRole.Superadmin) {
+      return option.value !== UserRole.Superadmin; // Org Admins can't assign Superadmin
+    }
+    return true;
+  });
+
+  // Assemble user name since it's used in multiple places
   const userName = userData?.user
     ? `${userData.user.givenName} ${userData.user.surName}`
-    : undefined;
+    : t('userProfile')
+
   return (
     <>
-      {userName && (
+      {userData?.user && (
         <PageHeader
-          title={t('title', { name: `${user?.givenName} ${user?.surName}` })}
+          title={t('title', { name: userName })}
           description=""
           showBackButton={true}
           breadcrumbs={
             <Breadcrumbs>
               <Breadcrumb><Link href={routePath('admin.index')}>Admin</Link></Breadcrumb>
-              <Breadcrumb>{t('title', { name: `${user?.givenName} ${user?.surName}` })}</Breadcrumb>
+              <Breadcrumb>{t('title', { name: userName })}</Breadcrumb>
             </Breadcrumbs>
           }
           actions={
@@ -644,6 +735,7 @@ when affiliation/institution is changed */
           className="page-organization-users-dashboard-header"
         />
       )}
+
       <ErrorMessages errors={errorMessages} ref={errorRef} />
       {isPageLoading ? (
         <Loading message={Global('buttons.loading')} />
@@ -653,7 +745,7 @@ when affiliation/institution is changed */
             <ContentContainer>
               {/* Edit organization details section */}
               <div className={styles.formSection}>
-                <h2>{t('userProfileHeading', { name: 'User Name' })}</h2>
+                <h2>{t('userProfileHeading', { name: userName })}</h2>
                 <div className="sectionContainer">
                   <div className={`sectionContent`}>
                     <Form onSubmit={handleUserProfileFormSubmit}>
@@ -662,7 +754,8 @@ when affiliation/institution is changed */
                         type="text"
                         label={t("profileForm.labels.email")}
                         value={userProfileFormData.email || ''}
-                        isRequired={true}
+                        isRequiredVisualOnly={true}
+                        disabled={isReadOnly}
                         onChange={handleInputChange}
                         isInvalid={fieldErrors.email.length > 0}
                         errorMessage={
@@ -677,6 +770,7 @@ when affiliation/institution is changed */
                         type="text"
                         label={t("profileForm.labels.givenName")}
                         isRequiredVisualOnly={true}
+                        disabled={isReadOnly}
                         value={userProfileFormData.givenName || ''}
                         onChange={handleInputChange}
                         isInvalid={!!fieldErrors.givenName}
@@ -688,6 +782,7 @@ when affiliation/institution is changed */
                         type="text"
                         label={t("profileForm.labels.surName")}
                         isRequiredVisualOnly={true}
+                        disabled={isReadOnly}
                         placeholder={userProfileFormData.surName}
                         value={userProfileFormData.surName || ''}
                         onChange={handleInputChange}
@@ -700,6 +795,7 @@ when affiliation/institution is changed */
                         fieldName="institution"
                         setOtherField={setOtherField}
                         isRequiredVisualOnly={true}
+                        isDisabled={isReadOnly}
                         error={fieldErrors.affiliationId ?? ''}
                         helpText={t('messages.helpText.institution')}
                         updateFormData={updateAffiliationFormData}
@@ -726,6 +822,7 @@ when affiliation/institution is changed */
                         label={t("profileForm.labels.language")}
                         name="language"
                         items={languages}
+                        isDisabled={isReadOnly}
                         errorMessage="A selection is required"
                         helpMessage={t("messages.helpText.language")}
                         onChange={(selected) => setUserProfileFormData({ ...userProfileFormData, languageId: selected as string })}
@@ -736,112 +833,149 @@ when affiliation/institution is changed */
                             return <ListBoxItem key={language.id} id={language.id}>{language.id}</ListBoxItem>;
                           })}
                       </FormSelect>
-                      <div className={styles.buttonContainer}>
-                        <Button
-                          type="submit"
-                          isDisabled={updateUserInfoLoading}
-                          className={styles.btn}
-                        >
-                          {updateUserInfoLoading ? Global("buttons.saving") : Global("buttons.save")}
-                        </Button>
-                        <Button
-                          type="button"
-                          className="secondary"
-                          onPress={handleArchiveUser}
-                        >
-                          {Global("buttons.archive")}
-                        </Button>
-
-                      </div>
-
+                      {!isReadOnly && (
+                        <div className={styles.buttonContainer}>
+                          <Button
+                            type="submit"
+                            data-testid="save-profile-button"
+                            isDisabled={updateUserInfoLoading}
+                            className={styles.btn}
+                          >
+                            {updateUserInfoLoading ? Global("buttons.saving") : Global("buttons.save")}
+                          </Button>
+                          <Button
+                            type="button"
+                            className="secondary"
+                            data-testid="archive-user-button"
+                            onPress={handleArchiveUser}
+                          >
+                            {Global("buttons.archive")}
+                          </Button>
+                        </div>
+                      )}
                     </Form>
                   </div>
                 </div>
               </div>
-              <div className={styles.formSection}>
-                <h2>{t("headings.identifiers")}</h2>
-                <dl>
-                  <div role="presentation" className={styles.definitionListItem}>
-                    <dt>{t("definitions.ssoId")}:{' '}</dt>
-                    <dd>{user?.ssoId}</dd>
-                  </div>
-                  <div role="presentation" className={styles.definitionListItem}>
-                    <dt>{t("definitions.orcid")}:{' '}</dt>
-                    <dd>
-                      {user?.orcid
-                        ? <a href={user.orcid} target="_blank" rel="noreferrer noopener">{user.orcid}</a>
-                        : null}
-                    </dd>
 
-                  </div>
-                </dl>
-              </div>
-
-              {/* Merge Accounts */}
-              <div className={styles.formSection}>
-                <h2>{t('headings.mergeAccounts')}</h2>
-                <div className="sectionContainer">
-                  <div className={`sectionContent`}>
-                    <div className={styles.pageTools} role="search">
-                      <>
-                        <FormInput
-                          name="mergeSearch"
-                          type="search"
-                          data-testid="search-input"
-                          className={styles.searchInput}
-                          label={Global('buttons.search')}
-                          onChange={e => handleMergeSearchInput(e.target.value)}
-                          value={mergeSearchTerm}
-                        />
-
-                        <Button
-                          onPress={handleMergeSearchSubmit}
-                          isDisabled={plansLoading}
-                          className={styles.searchButton}
-                        >
-                          {plansLoading ? Global('buttons.searching') : Global('buttons.search')}
-                        </Button>
-                      </>
+              {/** Identifiers */}
+              {user?.ssoId || user?.orcid && (
+                <div className={styles.formSection}>
+                  <h2>{t("headings.identifiers")}</h2>
+                  <dl>
+                    <div role="presentation" className={styles.definitionListItem}>
+                      <dt>{t("definitions.ssoId")}:{' '}</dt>
+                      <dd>{user?.ssoId}</dd>
                     </div>
-                    {/** Dummy results */}
-                    {mergeSearchResults.length > 0 && !showMergeConfirm && (
-                      <div className={styles.mergeResults}>
-                        <FormSelect
-                          label={t('mergeAccounts.selectUser')}
-                          name="mergeUser"
-                          items={mergeSearchResults}
-                          onChange={(key) => {
-                            const found = mergeSearchResults.find(u => u.id === String(key));
-                            setSelectedMergeUser(found ?? null);
-                          }}
-                        >
-                          {mergeSearchResults.map(u => (
-                            <ListBoxItem key={u.id} id={String(u.id)}>{u.email}</ListBoxItem>
-                          ))}
-                        </FormSelect>
+                    <div role="presentation" className={styles.definitionListItem}>
+                      <dt>{t("definitions.orcid")}:{' '}</dt>
+                      <dd>
+                        {user?.orcid
+                          ? <a href={user.orcid} target="_blank" rel="noreferrer noopener">{user.orcid}</a>
+                          : null}
+                      </dd>
 
-                        <div className={styles.buttonContainer}>
+                    </div>
+                  </dl>
+                </div>
+              )}
+
+              {/* Merge Accounts only displays for SuperAdmin */}
+              {!isReadOnly && (
+                <div className={styles.formSection}>
+                  <h2>{t('headings.mergeAccounts')}</h2>
+                  <div className="sectionContainer">
+                    <div className={`sectionContent`}>
+                      <div className={styles.pageTools} role="search" aria-label={t('mergeAccounts.searchUsers')}>
+                        <>
+                          <FormInput
+                            name="mergeSearch"
+                            type="search"
+                            data-testid="search-merge-input"
+                            className={styles.searchInput}
+                            label={Global('buttons.search')}
+                            onChange={e => handleMergeSearchInput(e.target.value)}
+                            value={mergeSearchTerm}
+                          />
+
                           <Button
-                            onPress={() => handleMergeSubmit()}
-                            isDisabled={!selectedMergeUser}
-                            className={styles.btn}
+                            onPress={handleMergeSearchSubmit}
+                            isDisabled={plansLoading}
+                            className={styles.searchButton}
                           >
-                            {t('mergeAccounts.merge')}
+                            {plansLoading ? Global('buttons.searching') : Global('buttons.search')}
                           </Button>
-                          <Button
-                            onPress={() => {
-                              setShowMergeConfirm(false);
-                              setSelectedMergeUser(null);
-                              setMergeSearchResults([]);
-                              setMergeSearchTerm('');
-                            }}
-                            className="secondary"
-                          >
-                            {Global('buttons.cancel')}
-                          </Button>
-                        </div>
+                        </>
                       </div>
-                    )}
+                      {/** Dummy results */}
+                      {mergeSearchResults.length > 0 && !showMergeConfirm && (
+                        <div className={styles.mergeResults}>
+                          <FormSelect
+                            label={t('mergeAccounts.selectUser')}
+                            name="mergeUser"
+                            items={mergeSearchResults}
+                            onChange={(key) => {
+                              const found = mergeSearchResults.find(u => u.id === String(key));
+                              setSelectedMergeUser(found ?? null);
+                            }}
+                          >
+                            {mergeSearchResults.map(u => (
+                              <ListBoxItem key={u.id} id={String(u.id)}>{u.email}</ListBoxItem>
+                            ))}
+                          </FormSelect>
+
+                          <div className={styles.buttonContainer}>
+                            <Button
+                              onPress={() => handleMergeSubmit()}
+                              isDisabled={!selectedMergeUser}
+                              className={styles.btn}
+                            >
+                              {t('mergeAccounts.merge')}
+                            </Button>
+                            <Button
+                              onPress={() => {
+                                setShowMergeConfirm(false);
+                                setSelectedMergeUser(null);
+                                setMergeSearchResults([]);
+                                setMergeSearchTerm('');
+                              }}
+                              className="secondary"
+                            >
+                              {Global('buttons.cancel')}
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Change user roles - different options based on user permissions */}
+              <div className={styles.formSection}>
+                <h2>{t('headings.role')}</h2>
+                <div className="sectionContainer">
+                  <div className="sectionContent">
+                    <RadioGroupComponent
+                      name="role"
+                      value={selectedRole}
+                      radioGroupLabel={t('roleRadioLabel')}
+                      onChange={(value) => setSelectedRole(value as UserRole)}
+                    >
+                      {availableRoles.map(({ label, value }) => (
+                        <div key={value}>
+                          <Radio value={value}>{label}</Radio>
+                        </div>
+                      ))}
+                    </RadioGroupComponent>
+                    <div className={styles.buttonContainer}>
+                      <Button
+                        type="button"
+                        onPress={() => handleRoleChange(selectedRole)}
+                      >
+                        {Global('buttons.save')}
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -852,7 +986,7 @@ when affiliation/institution is changed */
           {/**Plans table */}
           <FullWidthSection>
             <h2>Plans</h2>
-            <div className={styles.pageTools} role="search" ref={topRef}>
+            <div className={styles.pageTools} role="search" ref={topRef} aria-label={t('userPlansTable.searchPlans')}>
               <>
                 <FormInput
                   name="search"
@@ -867,6 +1001,7 @@ when affiliation/institution is changed */
                 <Button
                   onPress={handleSearchSubmit}
                   isDisabled={plansLoading}
+                  data-testid="plans-search-button"
                   className={styles.searchButton}
                 >
                   {plansLoading ? Global('buttons.searching') : Global('buttons.search')}
@@ -884,18 +1019,18 @@ when affiliation/institution is changed */
               />
             }
 
-            {!plansLoading && plans && plans.length === 0 && !isInitialLoad && (
+            {/**Don't display pagination if there are no results. Just display the message with the table headings */}
+            {!plansLoading && plans && plans.length === 0 && !isInitialLoad ? (
               <p>{t('userPlansTable.noResults')}</p>
-            )}
-
-            <Pagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              hasPreviousPage={hasPreviousPage}
-              hasNextPage={hasNextPage}
-              handlePageClick={handlePageClick}
-            />
-
+            ) :
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                hasPreviousPage={hasPreviousPage}
+                hasNextPage={hasNextPage}
+                handlePageClick={handlePageClick}
+              />
+            }
           </FullWidthSection>
         </LayoutSplitPanel >
       )}

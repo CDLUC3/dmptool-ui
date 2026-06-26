@@ -328,7 +328,6 @@ const OrgUserProjectsPage: React.FC = () => {
 
   useEffect(() => {
     const currentUser = meData?.me?.id !== Number(userId);
-    console.log("***Current User ID:", meData?.me?.id, "User ID from params:", userId, "Is Read Only:", currentUser);
     if (currentUser) {
       setIsReadOnly(true);
     }

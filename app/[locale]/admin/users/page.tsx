@@ -40,11 +40,14 @@ import ErrorMessages from '@/components/ErrorMessages';
 import Loading from '@/components/Loading';
 
 // Utils and other
-import styles from './UsersDashboardPage.module.scss';
-import { routePath } from '@/utils/routes';
-import { logECS } from '@/utils/index';
-import { handleApolloError } from '@/utils/apolloErrorHandler';
+import {
+  routePath,
+  logECS,
+  handleApolloError
+} from '@/utils/index';
+import { RoleOptions } from '@/lib/constants';
 import { useFormatDate } from "@/hooks/useFormatDate";
+import styles from './UsersDashboardPage.module.scss';
 
 const LIMIT = 5;
 
@@ -59,13 +62,6 @@ interface UserRow {
   lastActivity: string | null;
   organization: string | null;
 }
-
-const RoleOptions: { label: string; value: UserRole | '' }[] = [
-  { label: 'All Roles', value: '' },
-  { label: 'Super Admin', value: UserRole.Superadmin },
-  { label: 'Admin', value: UserRole.Admin },
-  { label: 'User', value: UserRole.Researcher },
-];
 
 function OrgUserAccountsPage(): React.ReactElement {
   const formatDate = useFormatDate();
@@ -102,6 +98,9 @@ function OrgUserAccountsPage(): React.ReactElement {
   });
 
   const isSuperAdmin = meData?.me?.role === UserRole.Superadmin;
+
+  // This is needed because the GraphQL query returns different field names than the table columns, 
+  // so we need to map them for sorting purposes.
   const SORT_FIELD_MAP: Record<string, string> = {
     name: 'u.surName',
     email: 'ue.email',
@@ -111,6 +110,7 @@ function OrgUserAccountsPage(): React.ReactElement {
     lastActivity: 'u.last_sign_in',
     organization: 'a.name',
   };
+  // Columns for the users table
   const initialColumns = useMemo<DmpTableColumnSet>(() => [
     { id: 'name', name: 'Name', isRowHeader: true, allowsSorting: true, direction: "" as const },
     { id: 'email', name: 'Email', isRowHeader: true, allowsSorting: true, direction: "" as const },
@@ -125,6 +125,8 @@ function OrgUserAccountsPage(): React.ReactElement {
   const [columns, setColumns] = useState<DmpTableColumnSet>(initialColumns);
 
 
+  // Build the query variables for fetching users based on the current page, search term, role, sorting, 
+  // and organization filters
   const buildQueryVars = (
     page: number,
     term: string,
@@ -150,6 +152,7 @@ function OrgUserAccountsPage(): React.ReactElement {
     RoleOptions.filter(opt => opt.value !== '').map(opt => [opt.value, opt.label])
   );
 
+  // Handle select role filter change
   const handleRoleChange = async (role: UserRole | '') => {
     setErrors([]);
     setSelectedRole(role);
@@ -165,6 +168,7 @@ function OrgUserAccountsPage(): React.ReactElement {
     }
   };
 
+  // Handle select organization filter change for superadmins
   const handleOrgChange = async (affiliationId: string) => {
     setErrors([]);
     setSelectedAffiliationId(affiliationId);
@@ -183,7 +187,8 @@ function OrgUserAccountsPage(): React.ReactElement {
   };
 
 
-  // Just updates the search term
+  // Updates the search term state as the user types in the search input. 
+  // If the search term is cleared, it fetches all users again to refresh the data.
   const handleSearchInput = async (term: string) => {
     setSearchTerm(term);
     // If the search term is cleared, fetch all users again to refresh the data.
@@ -192,7 +197,7 @@ function OrgUserAccountsPage(): React.ReactElement {
     }
   }
 
-  // Only fires when the button is pressed
+  // Fetch users based on the current search term, role, and organization filters when the search button is clicked
   const handleSearchSubmit = async () => {
     setErrors([]);
     setCurrentPage(1);
@@ -214,6 +219,8 @@ function OrgUserAccountsPage(): React.ReactElement {
     });
   };
 
+  // Handle sorting changes from the users table. Updates the sortField and sortDir state, and fetches 
+  // the users again with the new sorting applied.
   const onSortChangeHandler = async (newColumns: DmpTableColumnSet) => {
     setColumns(newColumns);
     const activeSort = Array.from(newColumns).find(col => col.allowsSorting && col.direction !== '');
@@ -255,8 +262,8 @@ function OrgUserAccountsPage(): React.ReactElement {
     }
   };
 
+  // Transform the GraphQL user data into the format needed for the table
   const transformUsers = (data: typeof usersData): UserRow[] => {
-    console.log("***Users data***", data);
     return data?.users?.items
       ?.filter((user): user is NonNullable<typeof user> => user !== null)
       .map((user) => {
@@ -265,7 +272,7 @@ function OrgUserAccountsPage(): React.ReactElement {
           id: user.id?.toString(),
           name: (
             <Link
-              href={routePath('admin.users.manage', { userId: String(user.id), projectId: String(user.plans?.[0]?.project?.id ?? '') })}
+              href={routePath('admin.users.manage', { userId: String(user.id) })}
               aria-label={usersTrans('manageUser', { name: fullName })}
             >
               {fullName}
@@ -282,11 +289,12 @@ function OrgUserAccountsPage(): React.ReactElement {
       }) ?? [];
   };
 
-  // Load on mount
+  // Fetch users on initial load
   useEffect(() => {
     fetchUsers({ page: currentPage, searchTerm: '' });
   }, []);
 
+  // Update users state when usersData changes
   useEffect(() => {
     if (usersData?.users?.items) {
       setIsInitialLoad(false);
@@ -300,6 +308,7 @@ function OrgUserAccountsPage(): React.ReactElement {
     }
   }, [usersData]);
 
+  // Set organization options for superadmins based on the fetched users
   useEffect(() => {
     if (usersData?.users?.items && isSuperAdmin) {
       const newOrgs = usersData.users.items
@@ -319,6 +328,7 @@ function OrgUserAccountsPage(): React.ReactElement {
     }
   }, [usersData, isSuperAdmin]);
 
+  // Handle errors from the users query
   useEffect(() => {
     if (usersError) {
       logECS('error', 'OrgUserAccountsPage', {
@@ -334,7 +344,7 @@ function OrgUserAccountsPage(): React.ReactElement {
     setColumns(initialColumns);
   }, [initialColumns]);
 
-  // Add a loading state guard before rendering pageTools
+  // Add a loading state guard before rendering pageTools to avoid flashing of the organization select field for superadmins
   const isSuperAdminResolved = meData?.me !== undefined;
 
   return (
@@ -345,7 +355,7 @@ function OrgUserAccountsPage(): React.ReactElement {
         showBackButton={true}
         breadcrumbs={
           <Breadcrumbs>
-            <Breadcrumb><Link href={routePath('admin.index')}>Admin</Link></Breadcrumb>
+            <Breadcrumb><Link href={routePath('admin.index')}>{usersTrans('admin')}</Link></Breadcrumb>
             <Breadcrumb>{usersTrans('title')}</Breadcrumb>
           </Breadcrumbs>
         }
