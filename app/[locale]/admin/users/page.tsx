@@ -101,7 +101,6 @@ function OrgUserAccountsPage(): React.ReactElement {
     fetchPolicy: 'no-cache',
   });
 
-
   const isSuperAdmin = meData?.me?.role === UserRole.Superadmin;
   const SORT_FIELD_MAP: Record<string, string> = {
     name: 'u.surName',
@@ -113,7 +112,6 @@ function OrgUserAccountsPage(): React.ReactElement {
     organization: 'a.name',
   };
   const initialColumns = useMemo<DmpTableColumnSet>(() => [
-    { id: 'id', name: 'id', isRowHeader: false },
     { id: 'name', name: 'Name', isRowHeader: true, allowsSorting: true, direction: "" as const },
     { id: 'email', name: 'Email', isRowHeader: true, allowsSorting: true, direction: "" as const },
     { id: 'plans', name: 'Plans', isRowHeader: true, allowsSorting: false, direction: "" as const },
