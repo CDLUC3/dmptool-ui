@@ -14,6 +14,7 @@
 - Added `UpdateAffiliation` and `AffiliationById` queries [#203]
 
 ## Updated
+- Updated `PlanOverviewPage` to disable `request feedback` link when there is feedback is not enabled and there are no feedback emails [#285]
 - Hooked up `admin/users` page with real data, and updated search features and table [#240]
 - Fixed bug in org logo upload logic
 - Update feedback options page, fundings add page to work with the Affiliation `displayName`

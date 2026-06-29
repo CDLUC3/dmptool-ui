@@ -528,7 +528,6 @@ describe('PlanOverviewPage', () => {
     expect(within(sidebar).getByRole('link', { name: 'buttons.preview' })).toBeInTheDocument();
     expect(within(sidebar).getByRole('button', { name: 'buttons.publish' })).toBeInTheDocument();
     expect(within(sidebar).getByRole('heading', { name: 'status.feedback.title' })).toBeInTheDocument();
-    expect(within(sidebar).getByRole('link', { name: 'links.request' })).toBeInTheDocument();
     expect(within(sidebar).getByRole('heading', { name: 'status.title' })).toBeInTheDocument();
     expect(within(sidebar).getByText('Draft')).toBeInTheDocument();
     expect(within(sidebar).getByText('buttons.linkUpdate')).toBeInTheDocument();
@@ -1806,7 +1805,17 @@ describe('PlanOverviewPage', () => {
       refetch: jest.fn(),
     };
     const meQueryReturn = {
-      data: { me: { id: meId, affiliation: { uri: 'mock-org-id' }, role: UserRole.Admin } },
+      data: {
+        me: {
+          id: meId,
+          affiliation: {
+            uri: 'mock-org-id',
+            feedbackEnabled: true,
+            feedbackEmails: ['feedback@example.com']
+          },
+          role: UserRole.Admin
+        }
+      },
       loading: false,
       error: null,
     };
@@ -1822,6 +1831,55 @@ describe('PlanOverviewPage', () => {
     const sidebar = screen.getByTestId('sidebar-panel');
     await waitFor(() => {
       expect(within(sidebar).getByRole('link', { name: 'links.request' })).toBeInTheDocument();
+    });
+  });
+
+  it('should render feedback as a disabled button when feedbackEnabled is false', async () => {
+    const meId = 42;
+
+    const planQueryReturn = {
+      data: {
+        plan: {
+          ...mockPlanData.plan,
+          project: {
+            collaborators: [{ accessLevel: 'PRIMARY', user: { id: meId } }],
+          },
+        },
+      },
+      loading: false,
+      error: null,
+      refetch: jest.fn(),
+    };
+    const meQueryReturn = {
+      data: {
+        me: {
+          id: meId,
+          affiliation: {
+            uri: 'mock-org-id',
+            feedbackEnabled: false,
+            feedbackEmails: [],
+          },
+          role: UserRole.Admin
+        }
+      },
+      loading: false,
+      error: null,
+    };
+
+    mockUseQuery.mockImplementation((document) => {
+      if (document === PlanDocument) return planQueryReturn;
+      if (document === MeDocument) return meQueryReturn;
+      return { data: null, loading: false, error: undefined } as any;
+    });
+
+    render(<PlanOverviewPage />);
+
+    const sidebar = screen.getByTestId('sidebar-panel');
+    await waitFor(() => {
+      expect(within(sidebar).queryByRole('link', { name: 'links.request' })).not.toBeInTheDocument();
+      const disabledButton = within(sidebar).getByRole('button', { name: 'links.request' });
+      expect(disabledButton).toBeInTheDocument();
+      expect(disabledButton).toHaveAttribute('aria-disabled', 'true');
     });
   });
 

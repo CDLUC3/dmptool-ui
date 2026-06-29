@@ -636,6 +636,13 @@ const PlanOverviewPage: React.FC = () => {
     };
   }, [planData?.sourceTemplate, planData?.affiliationName, planData?.templateVersion, formattedPublishDate, t, Global]);
 
+  const isFeedbackEnabled = useMemo(() => {
+    const affiliation = me?.me?.affiliation;
+    if (!affiliation) return false;
+    return affiliation.feedbackEnabled === true && (affiliation.feedbackEmails?.length ?? 0) > 0;
+  }, [me?.me?.affiliation]);
+
+
   if (loading) {
     return <div>{Global("messaging.loading")}...</div>;
   }
@@ -865,7 +872,7 @@ const PlanOverviewPage: React.FC = () => {
                     }
                   </p>
                 </div>
-                {isPrimaryCollaborator ? (
+                {isPrimaryCollaborator && isFeedbackEnabled ? (
                   <TransitionLink
                     href={FEEDBACK_URL}
                     className="side-panel-link"
@@ -884,7 +891,10 @@ const PlanOverviewPage: React.FC = () => {
                     </Button>
                     <Popover placement="bottom" className="popover--inverse">
                       <Dialog aria-label={t('messages.readOnlyLinkMessage')} className="popoverContent">
-                        {t('messages.readOnlyLinkMessage')}
+                        {!isFeedbackEnabled
+                          ? t('messages.feedbackNotAvailable')
+                          : t('messages.readOnlyLinkMessage')
+                        }
                       </Dialog>
                     </Popover>
                   </DialogTrigger>
