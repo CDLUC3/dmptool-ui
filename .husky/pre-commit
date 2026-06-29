@@ -1,5 +1,5 @@
 npm run lint
-npm test
+npm test -- --coverage
 npm run type-check
 
 # Run Trivy to check for vulnerabilities in the filesystem

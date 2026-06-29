@@ -59,7 +59,6 @@ import {
   extractErrors,
   handleApolloError,
   isValidEmail,
-  refreshAuthTokens,
   routePath
 } from "@/utils/index";
 import { RoleOptions } from "@/lib/constants";
@@ -212,7 +211,6 @@ function OrgUserProfilePage(): React.ReactElement {
   });
 
 
-
   // Fetch plans based on pagination page, filters and search term criteria
   const fetchPlans = async ({
     page,
@@ -256,22 +254,6 @@ function OrgUserProfilePage(): React.ReactElement {
   const showSuccessToast = () => {
     const successMessage = t("messages.success.profileUpdateSuccess");
     toastState.add(successMessage, { type: "success" });
-  };
-
-  // Switches the language/locale of the page and reloads the page with the new locale.
-  const switchLanguage = async (newLocale: string, showToast = false) => {
-    if (newLocale !== currentLocale) {
-      const params = new URLSearchParams();
-      // There was an issue with the toast message disappearing when switching languages,
-      // so we added a query parameter to the URL to indicate that the profile was updated
-      if (showToast) {
-        params.set("profileUpdated", "true");
-      }
-      const queryString = params.toString();
-      const basePath = `/${newLocale}${pathname}`;
-      const newPath = queryString ? `${basePath}?${queryString}` : basePath;
-      router.push(newPath);
-    }
   };
 
   // Clear all error messages
@@ -399,11 +381,6 @@ when affiliation/institution is changed */
             return;
           }
         }
-
-        // Refreshes the users language so that they will immediately see their language choice
-        // reflected in the page
-        await refreshAuthTokens();
-        await switchLanguage(userProfileFormData.languageId, true);
         showSuccessToast();
       }
     } catch (error) {
@@ -592,7 +569,7 @@ when affiliation/institution is changed */
           ),
           template: plan.templateTitle ?? '',
           organization: plan.templateOwnerAffiliationName ?? '',
-          owner: `${plan?.user?.givenName} ${plan?.user?.surName}`,
+          owner: `${plan?.planCreator?.givenName} ${plan?.planCreator?.surName}`,
           updated: formatDate(plan.modified) ?? '',
           visibility: plan.visibility ?? '',
         };
@@ -743,7 +720,7 @@ when affiliation/institution is changed */
         <LayoutSplitPanel>
           <LayoutWithPanel>
             <ContentContainer>
-              {/* Edit organization details section */}
+              {/* Edit user details section */}
               <div className={styles.formSection}>
                 <h2>{t('userProfileHeading', { name: userName })}</h2>
                 <div className="sectionContainer">

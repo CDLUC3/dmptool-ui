@@ -116,7 +116,7 @@ query Plans($userId: Int!, $term: String, $paginationOptions: PaginationOptions)
       modified
       createdBy
       templateTitle
-      user {
+      planCreator {
         givenName
         surName
         id
