@@ -45,6 +45,9 @@ query Users($term: String, $role: UserRole, $affiliationId: String, $paginationO
         id
         title
         dmpId
+        project {
+          id
+        }
       }
       id
       affiliation {
@@ -62,3 +65,19 @@ query Users($term: String, $role: UserRole, $affiliationId: String, $paginationO
   }
 }
 
+query User($userId: Int!) {
+  user(userId: $userId) {
+    email
+    givenName
+    surName
+    role
+    affiliation {
+      id
+      displayName
+      uri
+    }
+    languageId
+    ssoId
+    orcid
+  }
+}

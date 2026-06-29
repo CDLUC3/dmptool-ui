@@ -6,7 +6,7 @@ import { TransitionLink } from "@/components/Form";
 import styles from "./projectList.module.scss";
 import ExpandButton from "@/components/ExpandButton";
 
-function ProjectListItem({ item }: { item: ProjectItemProps }) {
+function ProjectListItem({ item, isReadOnly }: { item: ProjectItemProps; isReadOnly?: boolean }) {
   const [expanded, setExpanded] = useState<boolean>(item.defaultExpanded);
   const t = useTranslations("ProjectOverview");
   const Global = useTranslations("Global");
@@ -35,7 +35,7 @@ function ProjectListItem({ item }: { item: ProjectItemProps }) {
               {item.link ? (
                 <Link
                   href={item.link}
-                  aria-label={`${Global("buttons.linkUpdate")} ${item.title}`}
+                  aria-label={item.title}
                   className={styles.titleLink}
                 >
                   {item.title}
@@ -117,10 +117,10 @@ function ProjectListItem({ item }: { item: ProjectItemProps }) {
           {item.link && (
             <TransitionLink
               href={item.link}
-              aria-label={`${Global("buttons.linkUpdate")} ${item.title}`}
+              aria-label={isReadOnly ? `${Global("buttons.view")} ${item.title}` : `${Global("buttons.linkUpdate")} ${item.title}`}
               className={`react-aria-Button react-aria-Button--primary ${styles.updateButton}`}
             >
-              {Global("buttons.linkUpdate")}
+              {isReadOnly ? Global("buttons.view") : Global("buttons.linkUpdate")}
             </TransitionLink>
           )}
 

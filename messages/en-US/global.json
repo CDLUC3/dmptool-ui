@@ -323,6 +323,7 @@
     },
     "users": {
       "title": "User Accounts",
+      "admin": "Admin",
       "description": "Below is a list of users registered for your organization",
       "buttons": {
         "createUserLabel": "Create User",
@@ -338,6 +339,69 @@
         "noResults": "No users found"
       },
       "manageUser": "Manage user {name}"
+    },
+    "userProfile": {
+      "title": "{name} profile",
+      "userProfileHeading": "Edit info for {name}",
+      "userProfile": "User profile",
+      "roleRadioLabel": "Select a role for this user",
+      "buttons": {
+        "viewAllUsers": "View all users"
+      },
+      "headings": {
+        "identifiers": "Identifiers",
+        "mergeAccounts": "Merge Accounts",
+        "role": "User role"
+      },
+      "mergeAccounts": {
+        "selectUser": "Select a user to merge",
+        "merge": "Merge",
+        "confirmMessage": "The selected user's content {mergeEmail} will be merged into the account for {keepEmail}. The selected account will then be removed.",
+        "successMessage": "Accounts merged successfully",
+        "searchUsers": "Search for users to merge"
+      },
+      "definitions": {
+        "ssoId": "Institutional SSO ID",
+        "orcid": "ORCiD"
+      },
+      "profileForm": {
+        "labels": {
+          "email": "Email",
+          "givenName": "First name",
+          "surName": "Last name",
+          "institution": "Institution",
+          "department": "Department or school",
+          "language": "Language",
+          "otherInstitution": "Other institution"
+        }
+      },
+      "messages": {
+        "errors": {
+          "errorUpdatingProfile": "Error updating profile",
+          "errorUpdatingRole": "Error updating user role",
+          "invalidEmail": "Invalid email address",
+          "givenName": "Invalid first name",
+          "surName": "Invalid last name",
+          "affiliationValidation": "Invalid institution name",
+          "otherAffiliationValidation": "Invalid otherinstitution name",
+          "searchError": "An error occurred while searching. Please try again.",
+          "errorArchivingUser": "Unable to archive user account at this time."
+        },
+        "helpText": {
+          "institution": "Search for your institution",
+          "language": "Select your preferred language"
+        },
+        "success": {
+          "profileUpdateSuccess": "Successfully updated profile.",
+          "archiveSuccess": "Successfully archived user account."
+        }
+      },
+      "userPlansTable": {
+        "label": "Plans",
+        "noResults": "No plans found for this user",
+        "searchPlans": "Search for plans"
+      },
+      "cannotFindInstitution": "I cannot find my institution in the list"
     }
   },
   "AdminNotifications": {
@@ -874,7 +938,9 @@
       "viewPlan": "View plan",
       "viewTemplate": "View template",
       "markAsRead": "Mark as read",
-      "markAsUnread": "Mark as unread"
+      "markAsUnread": "Mark as unread",
+      "archive": "Archive",
+      "archiving": "Archiving..."
     },
     "labels": {
       "required": "required",
