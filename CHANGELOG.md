@@ -1,4 +1,5 @@
 ## Added
+- Added `papaparse` package so that it's `unparse` method can handle things like quoting and escaping, type coercion, trailing newlines, etc [#238]
 - Added `UpdateUserInfo` and `ArchiveUser` mutations and `Plans`, `UserProjects`, and `User` queries [#281]
 - Added new, shared `LayoutSplitPanel` so that we can have one section with a right sidebar, and another section extending the full width [#281]
 - Added new route `admin.users.projects` [#281]
@@ -18,6 +19,7 @@
 - Added `UpdateAffiliation` and `AffiliationById` queries [#203]
 
 ## Updated
+- Updated `admin/users` page by adding a `Download as CSV` button, and removing the `Create user` button [#238]
 - Updated the `ProjectListItem` component to allow for `isReadOnly` mode [#281]
 - Hooked up `admin/users` page with real data, and updated search features and table [#240]
 - Fixed bug in org logo upload logic

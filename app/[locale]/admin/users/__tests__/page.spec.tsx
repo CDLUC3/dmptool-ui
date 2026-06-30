@@ -12,11 +12,6 @@ expect.extend(toHaveNoViolations);
 
 // --- Mocks ---
 
-jest.mock('@/components/PageHeader', () => ({
-  __esModule: true,
-  default: ({ title }: { title: string }) => <div data-testid="mock-page-header">{title}</div>,
-}));
-
 jest.mock('@/components/Loading', () => ({
   __esModule: true,
   default: ({ message }: { message: string }) => <div data-testid="mock-loading">{message}</div>,
@@ -129,6 +124,27 @@ const makeUsersMock = (items = [makeUser()], variables = {}) => ({
   },
 });
 
+const makeExportMock = (items = [makeUser()], variables = {}) => ({
+  request: {
+    query: UsersDocument,
+    variables: { term: '', ...variables },
+  },
+  result: {
+    data: {
+      users: {
+        items,
+        totalCount: items.length,
+        hasNextPage: false,
+        hasPreviousPage: false,
+        currentOffset: 0,
+        nextCursor: null,
+        limit: items.length,
+      },
+    },
+  },
+});
+
+
 // --- Helper ---
 
 const renderPage = (mocks: any[]) =>
@@ -141,6 +157,9 @@ const renderPage = (mocks: any[]) =>
 // --- Tests ---
 
 describe('Admin - User Accounts Dashboard', () => {
+  beforeEach(() => {
+    window.scrollTo = jest.fn();
+  });
 
   describe('initial render', () => {
     it('shows loading state before data arrives', () => {
@@ -188,6 +207,16 @@ describe('Admin - User Accounts Dashboard', () => {
   });
 
   describe('search', () => {
+    beforeEach(() => {
+      global.URL.createObjectURL = jest.fn(() => 'blob:mock-url');
+      global.URL.revokeObjectURL = jest.fn();
+      HTMLAnchorElement.prototype.click = jest.fn();
+    });
+
+    afterEach(() => {
+      jest.clearAllMocks();
+    });
+
     it('triggers a new query when search button is pressed', async () => {
       const searchMock = {
         request: {
@@ -213,9 +242,9 @@ describe('Admin - User Accounts Dashboard', () => {
       };
 
       renderPage([makeMeMock(UserRole.Admin), makeUsersMock(), searchMock]);
-      await waitFor(() => expect(screen.getByTestId('mock-table')).toBeInTheDocument());
 
-      await userEvent.type(screen.getByRole('searchbox'), 'alice');
+      const searchbox = await screen.findByRole('searchbox');
+      await userEvent.type(searchbox, 'alice');
       await userEvent.click(screen.getByText('Admin.users.buttons.searchLabel'));
 
       await waitFor(() => expect(screen.getByText('alice@example.com')).toBeInTheDocument());
@@ -265,7 +294,7 @@ describe('Admin - User Accounts Dashboard', () => {
       renderPage([makeMeMock(UserRole.Admin), errorMock]);
 
       await waitFor(() => {
-        expect(screen.getByText('Network error')).toBeInTheDocument();
+        expect(screen.getByText('Global.messaging.somethingWentWrong')).toBeInTheDocument();
       });
 
       expect(logECS).toHaveBeenCalledWith('error', 'OrgUserAccountsPage', expect.objectContaining({
@@ -273,6 +302,115 @@ describe('Admin - User Accounts Dashboard', () => {
       }));
     });
   });
+
+  describe('CSV download', () => {
+    beforeEach(() => {
+      global.URL.createObjectURL = jest.fn(() => 'blob:mock-url');
+      global.URL.revokeObjectURL = jest.fn();
+      HTMLAnchorElement.prototype.click = jest.fn();
+    });
+
+    afterEach(() => {
+      jest.clearAllMocks();
+    });
+    it('opens the confirmation modal when Download is clicked (org/non-superadmin)', async () => {
+      renderPage([makeMeMock(UserRole.Admin), makeUsersMock()]);
+      await waitFor(() => expect(screen.getByTestId('mock-table')).toBeInTheDocument());
+
+      await userEvent.click(screen.getByText('Admin.users.buttons.download'));
+
+      expect(screen.getByText('Admin.users.headings.confirmDownload')).toBeInTheDocument();
+      expect(screen.getByText('Admin.users.downloadWarning')).toBeInTheDocument();
+    });
+
+    it('triggers the export query and builds a CSV when confirmed', async () => {
+      const exportMock = makeExportMock([makeUser({ email: 'alice@example.com' })]);
+      renderPage([makeMeMock(UserRole.Admin), makeUsersMock(), exportMock]);
+      await waitFor(() => expect(screen.getByTestId('mock-table')).toBeInTheDocument());
+
+      await userEvent.click(screen.getByText('Admin.users.buttons.download'));
+      await userEvent.click(screen.getByText('Global.buttons.continue'));
+
+      await waitFor(() => expect(global.URL.createObjectURL).toHaveBeenCalled());
+    });
+
+    it('shows an error when there are no users to export', async () => {
+      const exportMock = makeExportMock([]);
+      renderPage([makeMeMock(UserRole.Admin), makeUsersMock(), exportMock]);
+      await waitFor(() => expect(screen.getByTestId('mock-table')).toBeInTheDocument());
+
+      await userEvent.click(screen.getByText('Admin.users.buttons.download'));
+      await userEvent.click(screen.getByText('Global.buttons.continue'));
+
+      await waitFor(() =>
+        expect(screen.getByText('No users found to export.')).toBeInTheDocument()
+      );
+    });
+
+    it('shows a generic error message when the export query fails', async () => {
+      const errorExportMock = {
+        request: { query: UsersDocument, variables: { term: '' } },
+        error: new Error('Export failed'),
+      };
+
+      renderPage([makeMeMock(UserRole.Admin), makeUsersMock(), errorExportMock]);
+      await waitFor(() => expect(screen.getByTestId('mock-table')).toBeInTheDocument());
+
+      await userEvent.click(screen.getByText('Admin.users.buttons.download'));
+      await userEvent.click(screen.getByText('Global.buttons.continue'));
+
+      await waitFor(() =>
+        expect(screen.getByText('Global.messaging.somethingWentWrong')).toBeInTheDocument()
+      );
+    });
+
+    it('cancel closes the modal without exporting', async () => {
+      renderPage([makeMeMock(UserRole.Admin), makeUsersMock()]);
+      await waitFor(() => expect(screen.getByTestId('mock-table')).toBeInTheDocument());
+
+      await userEvent.click(screen.getByText('Admin.users.buttons.download'));
+      expect(screen.getByText('Admin.users.headings.confirmDownload')).toBeInTheDocument();
+
+      await userEvent.click(screen.getByText('Global.buttons.cancel'));
+
+      await waitFor(() =>
+        expect(screen.queryByText('Admin.users.headings.confirmDownload')).not.toBeInTheDocument()
+      );
+      expect(global.URL.createObjectURL).not.toHaveBeenCalled();
+    });
+
+    describe('superadmin without organization selected', () => {
+      beforeEach(() => {
+        global.URL.createObjectURL = jest.fn(() => 'blob:mock-url');
+        global.URL.revokeObjectURL = jest.fn();
+        HTMLAnchorElement.prototype.click = jest.fn();
+      });
+
+      afterEach(() => {
+        jest.clearAllMocks();
+      });
+      it('disables download and shows explanatory popover instead of the confirm modal', async () => {
+        renderPage([makeMeMock(UserRole.Superadmin), makeUsersMock()]);
+
+        // Wait specifically for superadmin-gated UI (organization select) to mount,
+        // not just the table, since they depend on different async queries.
+        await screen.findByLabelText(/Admin.users.tools.organizationLabel/i);
+
+        const downloadButton = screen.getByText('Admin.users.buttons.download');
+        expect(downloadButton).toHaveAttribute('aria-disabled', 'true');
+
+        await userEvent.click(downloadButton);
+
+        expect(
+          screen.getByText('Admin.users.messages.disabledDownloadMessage')
+        ).toBeInTheDocument();
+        expect(
+          screen.queryByText('Admin.users.headings.confirmDownload')
+        ).not.toBeInTheDocument();
+      });
+    });
+  });
+
 
   describe('accessibility', () => {
     it('passes axe accessibility checks', async () => {

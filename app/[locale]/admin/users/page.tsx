@@ -3,7 +3,12 @@
 import React, { useEffect, useState, useRef, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
 import { useLazyQuery, useQuery } from "@apollo/client/react";
+import Papa from 'papaparse';
 import {
+  Dialog,
+  DialogTrigger,
+  Modal,
+  ModalOverlay,
   FieldError,
   Breadcrumb,
   Breadcrumbs,
@@ -49,6 +54,7 @@ import { RoleOptions } from '@/lib/constants';
 import { useFormatDate } from "@/hooks/useFormatDate";
 import styles from './UsersDashboardPage.module.scss';
 
+// Number of records to display per page in the users table
 const LIMIT = 5;
 
 interface UserRow {
@@ -63,14 +69,20 @@ interface UserRow {
   organization: string | null;
 }
 
+// For rendering of friendly labels for user roles in the users table
+const RoleLabels: Record<string, string> = Object.fromEntries(
+  RoleOptions.filter(opt => opt.value !== '').map(opt => [opt.value, opt.label])
+);
+
 function OrgUserAccountsPage(): React.ReactElement {
   const formatDate = useFormatDate();
-
   const errorRef = useRef<HTMLDivElement | null>(null);
   const topRef = useRef<HTMLDivElement>(null);
+
   const [errors, setErrors] = useState<string[]>([]);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
 
+  // State for users data, search term, selected role, sorting, and organization filter
   const [users, setUsers] = useState<UserRow[]>([]);
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [selectedRole, setSelectedRole] = useState<UserRole | ''>('');
@@ -81,10 +93,14 @@ function OrgUserAccountsPage(): React.ReactElement {
   const [selectedAffiliationId, setSelectedAffiliationId] = useState<string>('');
   const [orgOptions, setOrgOptions] = useState<{ label: string; value: string }[]>([]);
 
+  // Pagination state
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [totalPages, setTotalPages] = useState<number>(0);
   const [hasNextPage, setHasNextPage] = useState<boolean | null>(false);
   const [hasPreviousPage, setHasPreviousPage] = useState<boolean | null>(false);
+
+  // For delete confirmation modal
+  const [isConfirmOpen, setConfirmOpen] = useState(false);
 
   // Localization
   const usersTrans = useTranslations('Admin.users');
@@ -92,8 +108,17 @@ function OrgUserAccountsPage(): React.ReactElement {
 
   // GraphQL queries
   const { data: meData } = useQuery(MeDocument);
+
+  // Fetch for paginated users list
   const [fetchUserData, { data: usersData, loading: usersLoading, error: usersError }] = useLazyQuery(UsersDocument, {
     notifyOnNetworkStatusChange: true,
+    fetchPolicy: 'no-cache',
+  });
+
+  // Fetch all users for download purposes, so no pagination is applied
+  // We need to keep this query separate from the paginated users query because they have different loading states and we don't want to 
+  // interfere with the paginated users table when downloading all users.
+  const [fetchAllUsersForExport, { loading: exportLoading }] = useLazyQuery(UsersDocument, {
     fetchPolicy: 'no-cache',
   });
 
@@ -110,6 +135,7 @@ function OrgUserAccountsPage(): React.ReactElement {
     lastActivity: 'u.last_sign_in',
     organization: 'a.name',
   };
+
   // Columns for the users table
   const initialColumns = useMemo<DmpTableColumnSet>(() => [
     { id: 'name', name: 'Name', isRowHeader: true, allowsSorting: true, direction: "" as const },
@@ -124,6 +150,12 @@ function OrgUserAccountsPage(): React.ReactElement {
 
   const [columns, setColumns] = useState<DmpTableColumnSet>(initialColumns);
 
+  // Build export query vars for downloading all users as CSV
+  const buildExportVars = () => ({
+    term: searchTerm,
+    ...(selectedRole ? { role: selectedRole } : {}),
+    ...(selectedAffiliationId ? { affiliationId: selectedAffiliationId } : {}),
+  });
 
   // Build the query variables for fetching users based on the current page, search term, role, sorting, 
   // and organization filters
@@ -147,43 +179,61 @@ function OrgUserAccountsPage(): React.ReactElement {
     ...(affiliationId ? { affiliationId } : {}),
   });
 
-
-  const RoleLabels: Record<string, string> = Object.fromEntries(
-    RoleOptions.filter(opt => opt.value !== '').map(opt => [opt.value, opt.label])
-  );
-
-  // Handle select role filter change
-  const handleRoleChange = async (role: UserRole | '') => {
+  // Fetch users based on page, filters and search term criteria
+  const fetchUsers = async ({
+    page,
+    searchTerm = '',
+    role,
+    sortField: sortFieldOverride,
+    sortDir: sortDirOverride,
+    affiliationId,
+    context = 'fetchUsers',
+  }: {
+    page?: number;
+    searchTerm?: string;
+    role?: UserRole | '';
+    sortField?: string;
+    sortDir?: string;
+    affiliationId?: string;
+    context?: string;
+  }): Promise<void> => {
+    const resolvedPage = page ?? currentPage;
     setErrors([]);
-    setSelectedRole(role);
-    setCurrentPage(1);
+    setCurrentPage(resolvedPage);
+
     try {
-      await fetchUserData({ variables: buildQueryVars(1, searchTerm, role, sortField, sortDir, selectedAffiliationId) });
+      await fetchUserData({
+        variables: buildQueryVars(
+          resolvedPage,
+          searchTerm,
+          role ?? selectedRole,
+          sortFieldOverride ?? sortField,
+          sortDirOverride ?? sortDir,
+          affiliationId ?? selectedAffiliationId
+        )
+      });
     } catch (err) {
-      logECS('error', 'OrgUserAccountsPage.handleRoleChange', {
+      const wasRealError = handleApolloError(err, `OrgUserAccountsPage.fetchUsers - ${context}`);
+      if (!wasRealError) return; // AbortError — not a real failure, ignore silently
+
+      logECS('error', `OrgUserAccountsPage.fetchUsers - ${context}`, {
         error: err,
         url: { path: routePath('admin.users') },
       });
-      setErrors(['An error occurred while filtering. Please try again.']);
+      setErrors([Global('messaging.somethingWentWrong')]);
     }
+  };
+
+  // Handle select role filter change
+  const handleRoleChange = async (role: UserRole | '') => {
+    setSelectedRole(role);
+    await fetchUsers({ page: 1, role, context: 'handleRoleChange' });
   };
 
   // Handle select organization filter change for superadmins
   const handleOrgChange = async (affiliationId: string) => {
-    setErrors([]);
     setSelectedAffiliationId(affiliationId);
-    setCurrentPage(1);
-    try {
-      await fetchUserData({
-        variables: buildQueryVars(1, searchTerm, selectedRole, sortField, sortDir, affiliationId),
-      });
-    } catch (err) {
-      logECS('error', 'OrgUserAccountsPage.handleOrgChange', {
-        error: err,
-        url: { path: routePath('admin.users') },
-      });
-      setErrors(['An error occurred while filtering by organization. Please try again.']);
-    }
+    await fetchUsers({ page: 1, affiliationId, context: 'handleOrgChange' })
   };
 
 
@@ -193,30 +243,18 @@ function OrgUserAccountsPage(): React.ReactElement {
     setSearchTerm(term);
     // If the search term is cleared, fetch all users again to refresh the data.
     if (term === '') {
-      await fetchUserData({ variables: buildQueryVars(1, '', selectedRole, sortField, sortDir) });
+      await fetchUsers({ page: 1, searchTerm: '', context: 'handleSearchInput' });
     }
   }
 
   // Fetch users based on the current search term, role, and organization filters when the search button is clicked
   const handleSearchSubmit = async () => {
-    setErrors([]);
-    setCurrentPage(1);
-    try {
-      await fetchUserData({ variables: buildQueryVars(1, searchTerm, selectedRole, sortField, sortDir, selectedAffiliationId) });
-    } catch (err) {
-      logECS('error', 'OrgUserAccountsPage.handleSearchSubmit', {
-        error: err,
-        url: { path: routePath('admin.users') },
-      });
-      setErrors(['An error occurred while searching. Please try again.']);
-    }
+    await fetchUsers({ page: 1, searchTerm, context: 'handleSearchSubmit' });
   };
 
   // Handle pagination page click
   const handlePageClick = async (page: number) => {
-    await fetchUserData({
-      variables: buildQueryVars(page, searchTerm, selectedRole, sortField, sortDir, selectedAffiliationId)
-    });
+    await fetchUsers({ page, context: 'handlePageClick' });
   };
 
   // Handle sorting changes from the users table. Updates the sortField and sortDir state, and fetches 
@@ -229,36 +267,83 @@ function OrgUserAccountsPage(): React.ReactElement {
       const newSortDir = activeSort.direction === 'ascending' ? 'ASC' : 'DESC';
       setSortField(newSortField);
       setSortDir(newSortDir);
-      try {
-        await fetchUserData({ variables: buildQueryVars(currentPage, searchTerm, selectedRole, newSortField, newSortDir) });
-      } catch (err) {
-        logECS('error', 'OrgUserAccountsPage.onSortChangeHandler', {
-          error: err,
-          url: { path: routePath('admin.users') },
-        });
-        setErrors(['An error occurred while sorting. Please try again.']);
-      }
+      await fetchUsers({ sortField: newSortField, sortDir: newSortDir, context: 'onSortChangeHandler' });
     }
   };
 
-  // Fetch users based on page, filters and search term criteria
-  const fetchUsers = async ({
-    page,
-    searchTerm = ''
-  }: {
-    page?: number;
-    searchTerm?: string;
-  }): Promise<void> => {
-    if (page) {
-      setCurrentPage(page);
-    }
-
+  // Handles download of all filtered users from the users table into a CSV file.
+  const handleDownload = async () => {
+    setErrors([]);
     try {
-      await fetchUserData({
-        variables: buildQueryVars(page ?? currentPage, searchTerm, selectedRole, sortField, sortDir, selectedAffiliationId)
-      });
+      const { data } = await fetchAllUsersForExport({ variables: buildExportVars() });
+      const items = data?.users?.items?.filter(Boolean) ?? [];
+
+      if (!items.length) {
+        setErrors(['No users found to export.']);
+        return;
+      }
+
+      const cellMap: Record<string, (user: NonNullable<typeof items[0]>) => string | number> = {
+        name: user => [user.givenName, user.surName].filter(Boolean).join(' '),
+        email: user => user.email ?? '',
+        plans: user => user.plans?.length ?? 0,
+        nonTestPlans: user => user.plans?.filter(plan => plan?.project?.isTestProject === false).length ?? 0,
+        orcid: user => user.orcid ?? '',
+        sso: user => user.ssoId ?? '',
+        active: user => user.active ? 'Yes' : 'No',
+        role: user => RoleLabels[user.role] ?? user.role,
+        organization: user => user.affiliation?.displayName ?? '',
+        created: user => user.created ? formatDate(user.created) : '',
+        lastActivity: user => user.last_sign_in ? formatDate(user.last_sign_in) : '',
+      };
+
+      // Define a separate set of columns for export, since it includes additional fields like ORCID and SSO
+      const exportColumns: { id: string; name: string }[] = [
+        { id: 'name', name: 'Name' },
+        { id: 'email', name: 'Email' },
+        { id: 'plans', name: 'Plans' },
+        { id: 'nonTestPlans', name: 'Non-test Plans' },
+        { id: 'orcid', name: 'ORCID' },
+        { id: 'sso', name: 'SSO' },
+        { id: 'active', name: 'Active' },
+        { id: 'role', name: 'Role' },
+        ...(isSuperAdmin ? [{ id: 'organization', name: 'Organization' }] : []),
+        { id: 'created', name: 'Created' },
+        { id: 'lastActivity', name: 'Activity' },
+      ];
+
+      const rows = items
+        .filter((user): user is NonNullable<typeof user> => user !== null)
+        .map(user =>
+          Object.fromEntries(
+            exportColumns.map(col => [
+              col.name,
+              cellMap[col.id]?.(user) ?? '',
+            ])
+          )
+        );
+
+      const csv = Papa.unparse(rows, { header: true });
+      // Add BOM(Byte Order Mark — it's a special invisible character (U+FEFF) placed at the very start of a text file to
+      // signal how the file is encoded.) This is needed for Excel
+      const blob = new Blob(['\uFEFF', csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+
+      // Some browsers (like Safari) require the link to be added to the DOM before triggering the download.
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `users-${new Date().toISOString().slice(0, 10)}.csv`;
+      document.body.appendChild(link);
+
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
     } catch (err) {
-      handleApolloError(err, 'OrgUserAccountsPage.fetchUsers');
+      logECS('error', 'OrgUserAccountsPage.handleDownload', {
+        error: err,
+        url: { path: routePath('admin.users') },
+      });
+      setErrors([Global('messaging.somethingWentWrong')]);
     }
   };
 
@@ -335,7 +420,7 @@ function OrgUserAccountsPage(): React.ReactElement {
         error: usersError,
         url: { path: routePath('admin.users') },
       });
-      setErrors([usersError.message]);
+      setErrors([Global('messaging.somethingWentWrong')]);
     }
   }, [usersError]);
 
@@ -346,7 +431,9 @@ function OrgUserAccountsPage(): React.ReactElement {
 
   // Add a loading state guard before rendering pageTools to avoid flashing of the organization select field for superadmins
   const isSuperAdminResolved = meData?.me !== undefined;
-
+  // If SuperAdmins haven't selected an organization, we block the export button to avoid exporting all users across all 
+  // organizations.
+  const isExportBlocked = isSuperAdmin && !selectedAffiliationId;
   return (
     <>
       <PageHeader
@@ -361,12 +448,61 @@ function OrgUserAccountsPage(): React.ReactElement {
         }
         actions={
           <>
-            <Link
-              href="#"
-              className="button-link button--primary"
-            >
-              {usersTrans('buttons.createUserLabel')}
-            </Link>
+            <div className="button-container">
+              {/**SuperAdmins need to select an organization before downloading */}
+              {isExportBlocked ? (
+                <DialogTrigger key="download-blocked">
+                  <Button
+                    type="button"
+                    aria-disabled={true}
+                  >
+                    {usersTrans('buttons.download')}
+                  </Button>
+                  <Popover placement="bottom" className="popover--inverse">
+                    <Dialog
+                      aria-label={usersTrans('messages.disabledDownloadMessage')}
+                      className="popoverContent"
+                    >
+                      {usersTrans('messages.disabledDownloadMessage')}
+                    </Dialog>
+                  </Popover>
+                </DialogTrigger>
+              ) : (
+                <DialogTrigger isOpen={isConfirmOpen} onOpenChange={setConfirmOpen} key="download-confirm">
+                  <Button className="button--secondary">{usersTrans('buttons.download')}</Button>
+                  <ModalOverlay>
+                    <Modal>
+                      <Dialog>
+                        {({ close }) => (
+                          <>
+                            <h3>{usersTrans('headings.confirmDownload')}</h3>
+                            <p>{usersTrans('downloadWarning')}</p>
+                            <div className="button-container">
+                              <Button
+                                autoFocus onPress={close}
+                              >
+                                {Global('buttons.cancel')}
+                              </Button>
+                              <Button
+                                className="button--primary"
+                                isDisabled={exportLoading}
+                                onPress={async () => {
+                                  await handleDownload();
+                                  close();
+                                }}
+                              >
+                                {Global('buttons.continue')}
+                              </Button>
+                            </div>
+                          </>
+                        )}
+                      </Dialog>
+                    </Modal>
+                  </ModalOverlay>
+                </DialogTrigger>
+              )
+              }
+            </div>
           </>
         }
         className="page-organization-users-dashboard-header"
@@ -393,7 +529,7 @@ function OrgUserAccountsPage(): React.ReactElement {
                   isDisabled={usersLoading}
                   className={styles.searchButton}
                 >
-                  {usersLoading ? Global('buttons.searching') : usersTrans('buttons.searchLabel')}
+                  {usersTrans('buttons.searchLabel')}
                 </Button>
 
                 <Select
@@ -403,9 +539,11 @@ function OrgUserAccountsPage(): React.ReactElement {
                   onChange={(key) => handleRoleChange(key as UserRole | '')}
                 >
                   <Label>{usersTrans('tools.permissionLabel')}</Label>
-                  <Button>
+                  <Button
+                    className={styles.roleSelectButton}
+                  >
                     <SelectValue />
-                    <span aria-hidden="true">▼</span>
+                    <span aria-hidden="true" className={styles.selectArrow}>▼</span>
                   </Button>
                   <Popover>
                     <ListBox>
@@ -427,9 +565,9 @@ function OrgUserAccountsPage(): React.ReactElement {
                     onChange={(key) => handleOrgChange(key as string)}
                   >
                     <Label>{usersTrans('tools.organizationLabel')}</Label>
-                    <Button>
+                    <Button className={styles.organizationSelectButton}>
                       <SelectValue />
-                      <span aria-hidden="true">▼</span>
+                      <span aria-hidden="true" className={styles.selectArrow}>▼</span>
                     </Button>
                     <Popover>
                       <ListBox>
