@@ -139,7 +139,8 @@
         "successfullyPublished": "Successfully published the plan",
         "successfullyUpdatedStatus": "Successfully updated the plan status"
       },
-      "readOnlyLinkMessage": "Only plan collaborators can edit this plan."
+      "readOnlyLinkMessage": "Only the Primary Owner of a plan can request feedback",
+      "feedbackNotAvailable": "Feedback is currently not available"
     },
     "links": {
       "editTitle": "Edit plan title"
