@@ -55,7 +55,7 @@ import { useFormatDate } from "@/hooks/useFormatDate";
 import styles from './UsersDashboardPage.module.scss';
 
 // Number of records to display per page in the users table
-const LIMIT = 5;
+const LIMIT = 10;
 
 interface UserRow {
   id: string | null | undefined;
@@ -275,9 +275,24 @@ function OrgUserAccountsPage(): React.ReactElement {
   // Handles download of all filtered users from the users table into a CSV file.
   const handleDownload = async () => {
     setErrors([]);
+    const allUsers = [];
+    let hasMoreData = true;
     try {
       const { data } = await fetchAllUsersForExport({ variables: buildExportVars() });
-      const items = data?.users?.items?.filter(Boolean) ?? [];
+
+      while (hasMoreData) {
+        const { data } = await fetchAllUsersForExport({
+          variables: buildExportVars()
+        });
+
+        const users = data?.users?.items ?? [];
+        hasMoreData = data?.users?.hasNextPage ?? false;
+
+        if (!users.length) break;
+
+        allUsers.push(...users);
+      }
+      const items = allUsers.filter(Boolean) ?? [];
 
       if (!items.length) {
         setErrors(['No users found to export.']);
@@ -340,11 +355,19 @@ function OrgUserAccountsPage(): React.ReactElement {
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
     } catch (err) {
+      const { wasRealError, message } = handleApolloError(err, `OrgUserAccountsPage.handleDownload`);
+      if (!wasRealError) return; // AbortError — not a real failure, ignore silently
+
       logECS('error', 'OrgUserAccountsPage.handleDownload', {
         error: err,
         url: { path: routePath('admin.users') },
       });
-      setErrors([Global('messaging.somethingWentWrong')]);
+      setErrors([message]);
+      setIsInitialLoad(false);
+      logECS('error', 'OrgUserAccountsPage.handleDownload', {
+        error: err,
+        url: { path: routePath('admin.users') },
+      });
     }
   };
 
@@ -477,8 +500,8 @@ function OrgUserAccountsPage(): React.ReactElement {
                                 className="button--primary"
                                 isDisabled={exportLoading}
                                 onPress={async () => {
-                                  await handleDownload();
                                   close();
+                                  await handleDownload();
                                 }}
                               >
                                 {Global('buttons.continue')}
