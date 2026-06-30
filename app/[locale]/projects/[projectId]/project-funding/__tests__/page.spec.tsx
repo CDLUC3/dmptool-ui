@@ -26,6 +26,7 @@ const withAPIMocks = [
           fundings: [{
             affiliation: {
               apiTarget: '/api/target',
+              id: '99',
             },
           }],
         }
@@ -49,6 +50,7 @@ const withoutAPIMocks = [
           fundings: [{
             affiliation: {
               apiTarget: null,
+              id: '99',
             }
           }],
         }
@@ -124,7 +126,7 @@ describe('ProjectsCreateProjectFunding', () => {
     fireEvent.click(screen.getByLabelText('form.radioYesLabel'));
     fireEvent.click(screen.getByText('buttons.continue'));
     await waitFor(() => {
-      expect(mockUseRouter().push).toHaveBeenCalledWith('/en-US/projects/123/projects-search');
+      expect(mockUseRouter().push).toHaveBeenCalledWith('/en-US/projects/123/projects-search?affId=99');
     })
   });
 

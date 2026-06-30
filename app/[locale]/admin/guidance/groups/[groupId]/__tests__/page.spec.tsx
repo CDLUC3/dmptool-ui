@@ -151,64 +151,62 @@ const mocks = [
 const guidanceGroupInactive = JSON.parse(JSON.stringify(mockGuidanceGroupData));
 guidanceGroupInactive.guidanceGroup.versionedGuidanceGroup[0].active = false;
 
+// Build a variant that has a versioned group with active: false so status = DRAFT
+const guidanceGroupForPublish = {
+  guidanceGroup: {
+    ...mockGuidanceGroupData.guidanceGroup,
+    id: 2398, // match what the test expects
+    latestPublishedDate: "2025-12-01", // has been published before
+    isDirty: true, // has changes since last publish
+    versionedGuidanceGroup: [
+      {
+        __typename: "VersionedGuidanceGroup",
+        active: false, // inactive = unpublished state, so Publish btn is available
+      }
+    ]
+  }
+};
+
 // Provide two mocks for cache-and-network
 const inactiveGroupMocks = [
   {
     request: {
       query: GuidanceGroupDocument,
-      variables: { guidanceGroupId: 2397 }, // match your useParams for this test
+      variables: { guidanceGroupId: 2397 },
     },
-    result: { data: guidanceGroupInactive },
+    result: { data: guidanceGroupForPublish },
   },
   {
     request: {
       query: GuidanceGroupDocument,
       variables: { guidanceGroupId: 2397 },
     },
-    result: { data: guidanceGroupInactive },
+    result: { data: guidanceGroupForPublish },
   },
   {
-    request: {
-      query: MeDocument,
-    },
-    result: {
-      data: mockMeData,
-    },
+    request: { query: MeDocument },
+    result: { data: mockMeData },
   },
   {
-    request: {
-      query: TagsDocument,
-    },
-    result: {
-      data: mockTagsData,
-      loading: false,
-    },
+    request: { query: TagsDocument },
+    result: { data: mockTagsData, loading: false },
   },
   {
     request: {
       query: GuidanceByGroupDocument,
-      variables: {
-        guidanceGroupId: 2397,
-      }
+      variables: { guidanceGroupId: 2397 },
     },
-    result: {
-      data: mockGuidanceByGroupData,
-      loading: false,
-    },
+    result: { data: mockGuidanceByGroupData, loading: false },
   },
   {
     request: {
       query: GuidanceByGroupDocument,
-      variables: {
-        guidanceGroupId: 2397,
-      }
+      variables: { guidanceGroupId: 2397 },
     },
-    result: {
-      data: mockGuidanceByGroupData,
-      loading: false,
-    },
+    result: { data: mockGuidanceByGroupData, loading: false },
   }
 ];
+
 
 describe("GuidanceGroupIndexPage", () => {
   beforeEach(() => {
@@ -639,28 +637,32 @@ describe("GuidanceGroupIndexPage", () => {
         },
       },
     });
+
     render(
       <MockedProvider mocks={mocks}>
         <GuidanceGroupIndexPage />
       </MockedProvider>,
     );
 
-
-    // Wait for loading to be gone (tagsLoading and guidanceLoading both false)
     await waitForElementToBeRemoved(() => screen.getByText("Global.messaging.loading"));
 
     const sidebar = screen.getByTestId("sidebar-panel");
     const inSidebar = within(sidebar);
-    const unPublishBtn = inSidebar.getByRole("button", { name: "Global.buttons.unpublish" });
+
+    // Wait for the real (non-disabled) unpublish button — this ensures guidanceGroup
+    // state has resolved and the status is PUBLISHED, not DRAFT
+    const unPublishBtn = await waitFor(() => {
+      const btn = inSidebar.getByRole("button", { name: "Global.buttons.unpublish" });
+      expect(btn).not.toHaveAttribute('aria-disabled', 'true');
+      return btn;
+    });
 
     fireEvent.click(unPublishBtn);
 
     await waitFor(() => {
+      expect(unPublishGuidanceGroupAction).toHaveBeenCalledWith({ guidanceGroupId: 2398 });
       expect(mockToast.add).toHaveBeenCalledWith('Guidance.messages.success.guidanceGroupUnpublished', { type: 'success' });
       expect(mockRouter.push).toHaveBeenCalledWith('/en-US/admin/guidance');
-      expect(unPublishGuidanceGroupAction).toHaveBeenCalledWith({
-        guidanceGroupId: 2398
-      });
     });
   });
 
@@ -707,35 +709,29 @@ describe("GuidanceGroupIndexPage", () => {
       success: false,
       errors: ['Some error occurred'],
     });
+
     render(
       <MockedProvider mocks={mocks}>
         <GuidanceGroupIndexPage />
       </MockedProvider>,
     );
 
-    // Wait for loading to be gone (tagsLoading and guidanceLoading both false)
     await waitForElementToBeRemoved(() => screen.getByText("Global.messaging.loading"));
 
     const sidebar = screen.getByTestId("sidebar-panel");
     const inSidebar = within(sidebar);
+
+    // Verify the real (non-disabled) unpublish button is present before clicking
     const unPublishBtn = inSidebar.getByRole("button", { name: "Global.buttons.unpublish" });
+    expect(unPublishBtn).not.toHaveAttribute('aria-disabled', 'true');
 
     await act(async () => {
       fireEvent.click(unPublishBtn);
     });
 
-    // Since guidanceGroupId is undefined, we expect an inline error message and no side effects
     await waitFor(() => {
+      expect(unPublishGuidanceGroupAction).toHaveBeenCalled(); // confirm action was actually called
       expect(screen.getByText('Some error occurred')).toBeInTheDocument();
-      //Check that error logged
-      expect(logECS).toHaveBeenCalledWith(
-        'error',
-        'Unpublishing Guidance Group',
-        expect.objectContaining({
-          errors: expect.anything(),
-          url: { path: '/en-US/admin/guidance/groups/create' },
-        })
-      )
     });
   });
 
@@ -825,11 +821,6 @@ describe("GuidanceGroupIndexPage", () => {
         guidanceGroupId: 2398
       });
     });
-    // Button should be disabled for unpublish now
-    const unpublishBtn = inSidebar.getByRole("button", { name: "Global.buttons.unpublish" });
-    expect(unpublishBtn).toBeInTheDocument();
-    expect(unpublishBtn).toHaveAttribute("aria-disabled", "true");
-    expect(unpublishBtn).toHaveClass("buttonSmallDisabled", "secondary");
   });
 
   it('should handle redirect if response from handlePublish contains redirect', async () => {

@@ -24,6 +24,32 @@ query MyProjects($term: String, $paginationOptions: PaginationOptions) {
   }
 }
 
+query UserProjects($userId: Int!, $term: String, $paginationOptions: PaginationOptions) {
+  userProjects(userId: $userId, term: $term, paginationOptions: $paginationOptions) {
+    totalCount
+    nextCursor
+    items {
+      title
+      id
+      startDate
+      endDate
+      fundings {
+        name
+        grantId
+      }
+      members {
+        name
+        role
+        orcid
+      }
+      errors {
+        general
+        title
+      }
+    }
+  }
+}
+
 query Project($projectId: Int!) {
   project(projectId: $projectId) {
     title
@@ -39,6 +65,7 @@ query Project($projectId: Int!) {
         displayName
         searchName
         uri
+        apiTarget
       }
       funderOpportunityNumber
       funderProjectNumber
@@ -69,10 +96,12 @@ query Project($projectId: Int!) {
         sectionType
         customSectionId
         answeredQuestions
+        answeredRequiredQuestions
         displayOrder
         versionedSectionId
         title
         totalQuestions
+        totalRequiredQuestions
       }
       title
       templateTitle
@@ -92,6 +121,8 @@ query Project($projectId: Int!) {
       }
       accessLevel
       id
+      email
+      created
     }
   }
 }
@@ -99,9 +130,34 @@ query Project($projectId: Int!) {
 query ProjectFundingsApi($projectId: Int!) {
   project(projectId: $projectId) {
     fundings {
+      id
       affiliation {
         apiTarget
+        uri
+        id
       }
     }
+  }
+}
+
+query SearchExternalProjects($input: ExternalSearchInput!) {
+  searchExternalProjects(input: $input) {
+    abstractText
+    endDate
+    fundings {
+      funderProjectNumber
+      funderOpportunityNumber
+      grantId
+    }
+    members {
+      affiliationId
+      email
+      givenName
+      orcid
+      surName
+      role
+    }
+    startDate
+    title
   }
 }

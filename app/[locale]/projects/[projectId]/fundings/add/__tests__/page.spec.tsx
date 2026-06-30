@@ -69,7 +69,7 @@ const successMocks = [
       variables: {
         input: {
           funder: true,
-          name: "New-funderName-123",
+          displayName: "New-funderName-123",
         },
       },
     },
@@ -92,7 +92,7 @@ const successMocks = [
       variables: {
         input: {
           funder: true,
-          name: "New-funderName-123",
+          displayName: "New-funderName-123",
         },
       },
     },
@@ -185,7 +185,7 @@ const errorMocks = [
       variables: {
         input: {
           funder: true,
-          name: "Affiliate Field Error",
+          displayName: "Affiliate Field Error",
         },
       },
     },
@@ -209,7 +209,7 @@ const errorMocks = [
       variables: {
         input: {
           funder: true,
-          name: "Valid Affiliate",
+          displayName: "Valid Affiliate",
         },
       },
     },
@@ -300,7 +300,7 @@ const errorMocks = [
       variables: {
         input: {
           funder: true,
-          name: "Affiliate Exception",
+          displayName: "Affiliate Exception",
         },
       },
     },

@@ -1,3 +1,5 @@
+import { UserRole } from "@/generated/graphql";
+
 export const BOOLEAN_QUESTION_TYPE = "boolean";
 export const CHECKBOXES_QUESTION_TYPE = "checkBoxes";
 export const CURRENCY_QUESTION_TYPE = "currency";
@@ -31,4 +33,14 @@ export const LICENSE_SEARCH_ID = "licenseSearch";
 export const ACCESS_LEVELS_SEARCH_ID = "accessLevelsSearch";
 export const DOI_REGEX = /(?:doi:\s*)?(10\.\d{4,9}\/[-._;()\/:A-Z0-9]+)/i;
 export const QUESTION_TYPES_EXCLUDED_FROM_COMMENT_FIELD = [TEXT_AREA_QUESTION_TYPE, TEXT_FIELD_QUESTION_TYPE, RESEARCH_OUTPUT_QUESTION_TYPE];
+// This is the DOI shoulder for the Crossref funder id used when displaying that id on the Organization Details page.
+export const FUNDREF_BASE_URL = "https://doi.org/10.13039/";
+
+
+export const RoleOptions: { label: string; value: UserRole | '' }[] = [
+  { label: 'All Roles', value: '' },
+  { label: 'Super Admin', value: UserRole.Superadmin },
+  { label: 'Admin', value: UserRole.Admin },
+  { label: 'User', value: UserRole.Researcher },
+];
 

@@ -368,7 +368,17 @@
         "placeholder": "Digite um nome abreviado"
       },
       "organizationType": {
-        "label": "Tipo de Organização"
+        "label": "Tipo de Organização",
+        "types": {
+          "archive": "Arquivo",
+          "company": "Empresa",
+          "education": "Educação",
+          "facility": "Instalações",
+          "government": "Governo",
+          "healthcare": "Saúde",
+          "nonprofit": "Organização sem fins lucrativos",
+          "other": "Outro"
+        }
       },
       "contactEmail": {
         "label": "E-mail para contato",
@@ -515,7 +525,7 @@
       },
       "feedbackText": {
         "label": "Mensagem exibida aos usuários solicitando feedback",
-        "description": "Forneça informações aos usuários sobre o que esperar ao solicitarem feedback sobre seu DMP",
+        "description": "Dê informações aos usuários sobre o que esperar quando eles solicitarem feedback sobre seu DMP",
         "helpText": "Mensagem de exemplo: Um bibliotecário de dados do Escritório da Presidência da Universidade da Califórnia (ucop.edu) responderá à sua solicitação em até 48 horas. Caso tenha dúvidas relacionadas a esta ação, por favor, entre em contato conosco pelo e-mail <mailtoLink>dmptool@ucop.edu.</mailtoLink>",
         "placeholder": "Digitar texto de feedback"
       }
@@ -683,10 +693,12 @@
       "admin": "Administrador",
       "templates": "Modelos",
       "template": "Modelo",
+      "templateCustomizations": "Modelos personalizáveis",
       "createTemplate": "Criar um modelo",
       "selectExistingTemplate": "Selecionar um modelo existente",
       "templateHistory": "Histórico do modelo",
       "section": "Seção",
+      "customizeSection": "Personalizar seção",
       "addNewSection": "Adicionar uma nova seção",
       "updateSection": "Seção de atualização",
       "editSection": "Editar seção",
@@ -735,12 +747,13 @@
     "noGuidanceAvailable": "A organização selecionada não tem orientação para esta pergunta",
     "buttons": {
       "search": "Buscar",
-      "searching": "Pesquisando",
+      "searching": "Pesquisando...",
       "lookup": "Procurar",
       "select": "Select",
+      "selecting": "Selecionando...",
       "next": "Seguinte",
       "save": "Salvar",
-      "saving": "Salvando",
+      "saving": "Salvando...",
       "saveAndAdd": "Salvar e adicionar",
       "saveAndUpdate": "Salvar e atualizar",
       "saveChanges": "Salvar as alterações",
@@ -748,7 +761,7 @@
       "remove": "Remover",
       "removeAll": "Remover todos os",
       "confirm": "Confirmação",
-      "confirming": "Confirmando",
+      "confirming": "Confirmando...",
       "change": "Mudança",
       "cancel": "Cancelar",
       "linkUpdate": "Atualização",
@@ -765,7 +778,7 @@
       "close": "Fechar",
       "closeModal": "Fechar modal",
       "loadMore": "Carregar mais",
-      "loading": "Carregando",
+      "loading": "Carregando...",
       "addAnother": "Adicionar mais",
       "goToProject": "Ir para o projeto",
       "back": "Voltar",
@@ -777,7 +790,9 @@
       "moreInfo": "Mais informações",
       "lessInfo": "Menos informações",
       "createNewPlan": "Criar nova DMP",
-      "view": "Ver"
+      "deletingCustomization": "Excluindo personalização...",
+      "deleteCustomization": "Excluir personalização",
+      "view": "Visualizar"
     },
     "labels": {
       "required": "Obrigatório",
@@ -786,6 +801,7 @@
       "startDate": "Data de início",
       "endDate": "Data final",
       "funderSearch": "Pesquisar por nome do financiador",
+      "nameSearch": "Pesquisar por nome",
       "requiredField": "Marcar como obrigatório?",
       "previousPage": "Página anterior",
       "nextPage": "Próxima página",
@@ -798,27 +814,28 @@
       "dataFlags": "Sinalizadores de dados",
       "outputType": "Tipo de saída",
       "repositories": "Repositórios",
-      "metadataStandards": "Padrões de metadados",
+      "metadataStandards": "Padrões de metadata",
       "licenses": "Licenças",
-      "initialAccessLevels": "Níveis de acesso inicial",
-      "anticipatedReleaseDate": "Data prevista de lançamento",
-      "anticipatedFileSize": "Tamanho de arquivo previsto",
+      "initialAccessLevels": "Níveis de acesso iniciais",
+      "anticipatedReleaseDate": "Data de liberação antecipada",
+      "anticipatedFileSize": "Tamanho do arquivo antecipado",
       "fileSizeUnit": "Unidade de tamanho do arquivo",
-      "selectAnItem": "Selecione um item",
+      "selectAnItem": "Selecionar um item",
       "mayContainSensitiveData": "Pode conter dados sensíveis?",
-      "mayContainPersonalData": "Pode conter informações pessoalmente identificáveis?",
+      "mayContainPersonalData": "Pode conter informações de identificação pessoal?",
       "additionalComments": "Comentários adicionais"
     },
     "helpText": {
       "searchHelpText": "Pesquisar por organização de pesquisa, estação de campo ou laboratório, descrição de modelo, etc.",
       "funderSearch": "Pesquisar por organização de pesquisa, nome do financiador ou palavras-chave relacionadas.",
-      "dataFlags": "Marque todas as afirmações que são verdadeiras sobre o conjunto de dados"
+      "dataFlags": "Marcar todas as declarações que são verdadeiras sobre o conjunto de dados"
     },
     "descriptions": {
       "requiredFieldDescription": "Atenção aos usuários que isto é considerado uma questão necessária para este template DMP pela organização. Os usuários poderão optar por ignorar isso dentro da ferramenta e não será necessário responder antes de movê-la."
     },
     "placeholders": {
       "funderSearch": "Insira o nome da pasta",
+      "nameSearch": "Insira o nome...",
       "enterComment": "Insira seu comentário"
     },
     "links": {
@@ -834,10 +851,12 @@
       "viewHistory": "Ver histórico"
     },
     "messaging": {
-      "loading": "Baixar",
+      "loading": "Carregando",
       "loadingPage": "Carregando página...",
       "submitting": "Enviando...",
       "submittingSROnly": "Enviando solicitação de feedback...",
+      "save": "Salvar",
+      "saving": "Salvando...",
       "pageLoaded": "Página carregada",
       "noItemsFound": "Nenhum item encontrado",
       "somethingWentWrong": "Ocorreu um erro. Tente novamente.",
@@ -853,7 +872,7 @@
         "questionUnexpectedFormat": "Formato inesperado para question.json.",
         "questionJSONFParseFailed": "JSON.parse falhou.",
         "requiredField": "{field} é obrigatório",
-        "errorParsingData": "Erro ao analisar dados"
+        "errorParsingData": "Error parsing data"
       },
       "numDisplaying": "Mostrando {num} de {total}",
       "unsavedChangesWarning": "Você tem alterações não salvas. Tem certeza que deseja sair desta página?"
@@ -864,7 +883,11 @@
       "logic": "Lógica"
     },
     "headings": {
-      "preview": "Pré-visualizar"
+      "preview": "Pré-visualizar",
+      "requirementsByFunder": "Requisitos do {funder}",
+      "guidanceFromOrg": "Orientação da {org}",
+      "requirements": "Requisitos",
+      "guidance": "Orientação"
     },
     "version": "Versão",
     "questionTypes": {
@@ -884,7 +907,8 @@
       "dateRange": "Intervalo de datas",
       "filteredSearch": "Pesquisa com filtros",
       "table": "Tabela",
-      "affiliationSearch": "Busca de afiliação"
+      "affiliationSearch": "Busca de afiliação",
+      "researchOutputTable": "Tabela de resultados de pesquisa"
     },
     "status": {
       "published": "Publicado",

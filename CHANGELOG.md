@@ -1,4 +1,14 @@
 ## Added
+- Added `UpdateUserInfo` and `ArchiveUser` mutations and `Plans`, `UserProjects`, and `User` queries [#281]
+- Added new, shared `LayoutSplitPanel` so that we can have one section with a right sidebar, and another section extending the full width [#281]
+- Added new route `admin.users.projects` [#281]
+- Added a new `admin/users/[userId]/manage` page for Admins to edit a user's profile, and a new `admin/users/[userId]/projects` page to display a specified user's projects [#281]
+- Added `Users` graphql query and `admin.users.manage` route[#240]
+- Wired up the Organization details page
+- Made some minor tweaks to the Organization details css file
+- Added an `S3Uploader` hook to facilitate uploads of files to S3 on the server side
+- Added new `AdminNotification` card component, and new AdminNotification queries [#570]
+- Added `projectImport` mutation and `searchExternalProjects` query [#352]
 - Added a new `button-disabled` style to shared `_button.scss` [#244]
 - Added `readOnly` and `collaborators` fields to `Project` query schema [#244]
 - Added new shared styles `popoverContent`, `popover-inverse`, and `link-disabled` [#225]
@@ -8,6 +18,19 @@
 - Added `UpdateAffiliation` and `AffiliationById` queries [#203]
 
 ## Updated
+- Updated the `ProjectListItem` component to allow for `isReadOnly` mode [#281]
+- Hooked up `admin/users` page with real data, and updated search features and table [#240]
+- Fixed bug in org logo upload logic
+- Update feedback options page, fundings add page to work with the Affiliation `displayName`
+- Updated the `FormInput` component to accept either a string or a `React.ReactNode` object in the `helpMessage` so we can include resolvable URLs
+- Fixed a flaky test in the Plan Overview page tests
+- Fixed the `UpdateAnswer` mutation which was using the `AffiliationErrors` object (fixed the upstream schema in Apollo)
+- Hooked up `admin/notifications` page and updated the notifications card on the `admin` page to have dynamic notification count [#570]
+- Updated `PlanOverviewPage` to use `totalRequiredQuestions` and `answeredRequiredQuestions` to display a message to user in Publish modal [#249]
+- Updated `CreateProjectsSearchFunder` and `ProjectsCreateProject` components to use <TransitionButton> [#352]
+- Updated `ProjectsCreateProjectFunding` component with <TransitionButton> and to pass affiliationId as a query parameter to project search page [#352]
+- Updated `ProjectsProjectDetail` component to not show the Search Projects button unless they have funding with an API [#352]
+- Hooked up `ProjectsCreateProjectProjectsSearch` component to backend. Use `searchExternalProjects` query to get search results and projectImport mutation to save to the appropriate tables [#352]
 - Updated `Notification` component to include `yes/no` radio buttons for sending an email on feedback completion and updated content. Updated `PlanOverview` to use the new `sendEmail` boolean. Updated `completedFeedback` graphql mutation to include `sendEmail` boolean [#252]
 - Updated `handleRevoke` method in `ProjectsProjectColalboration` component so that we revert the optimistic update if errors are returned as part of the successful response [#228]
 - Updated `ProjectsProjectCollaboration`, `ProjectsProjectFunding`, `ProjectsProjectMembers` and `ProjectsProjectDetail` to query `project` resolver instead to get its data, so that we can easily get `readOnly` data. Updated those components to disable or remove form fields, CTAs and links in `readOnly` mode [#245]
@@ -40,10 +63,16 @@
 - Updated `RepoSelectorForAnswer` to wait to query `Re3byUrIsDocument` until we have `preferredReposURIs` because preferred repos don't display even though they eventually do to trigger the display of the "preferred repositories" checkbox [#118]
 
 ## Fixed
+- Updated the `project` graphql query to include `email` and `created` field so we can display info for invited project collaborators who haven't accepted invite [#287]
 - Fixed `type` errors resulting from deprecated `errorPolicy` in unit tests [#252]
 - Fixed issue with Feedback Notification headers displaying for any collaborator on the Plan Overview, Section and Question pages. It should only display to Org Admins and Super Admins. Added shared isOrgAdmin hook for pages. [#249]
 
 ## Chore
+- Updated `eslint` to `v9.39.4`, `prettier` to `v3.8.4`, `brace-expansion` to `v2.1.1`, `sanitize-html` to `v2.17.5`, `@apollo/client` to `v4.2.3`, `@dmptool/types` to `v3.1.7` and `dompurify` to `v3.4.11`. Also added override for `js-yaml` to `v4.2.0` due to vulnerability [#290]
+- Bump form-data from 4.0.5 to 4.0.6
+- Added Github Action workflows `versioning.yml` and `validation-version-label.yml` to automate versioning when merging from `development` into `stage`. [#271]
+- Addressed `shell-quote` vulnerability by running `npm audit fix` to update `package-lock.json` [#278]
+- Updated `tinymce` to `v7.9.3` due to high vulnerabilities [#276]
 - Updated `@apollo/client` to `v4.2.0`, `dompurify` to `v3.4.6`, `@types/react` to `v18.3.29`, `react` to `v19.2.6`, `react-dom` to `v19.2.6`, `@types/node` to `v24.12.4`, `@dmptool/types` to `v3.1.5`, `postcss` to `v8.5.15`, and `tmp` to `v0.2.7`. Removed `@eslint-plugin-kit` override, and added `qs` override to address security vulnerability. Updated `zod` to `v4.4.3` to match the version in updated `@dmptool/types`, otherwise I get errors.
 - Updated version of `sanitize-html` to `v2.17.4` [#225]
 - Updated version of `next-intl` to `v4.9.2` and `icu-minify` to `v4.11.1`, and added `override` of `postcss` to `v8.5.10` to address security vulnerabilities.

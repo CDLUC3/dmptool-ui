@@ -20,6 +20,7 @@
 - [Testing](#testing)
 - [API Routes](#api-routes)
 - [Working with GraphQL](#working-with-graphql)
+- [Automated Versioning](#automated-versioning)
 - [Contributing](#contributing)
 - [Contributors](#contributors)
 - [License](#license)
@@ -341,6 +342,22 @@ We use the `@apollo/client` package to manage the connection with Apollo Server.
 
 The `lib/graphql/graphqlHelper.ts` file provides logic for handling retries and processing GraphQL errors from Apollo Server.
 
+## Automated Versioning
+This project uses GitHub Actions to automatically manage version bumping and changelog updates whenever a pull request is merged from `development` into `stage`.
+
+### How It Works
+Two workflows handle versioning:
+1. Validate Version Label - Runs on every PR opened or updated against `stage`. If there is a version label applied, it will use that to determine the new version. If no label is applied, it will automatically do a `patch` version update.
+2. Automated Versioning - Runs when a PR is merged into `stage`. It reads the version label, bumps `package.json` using `npm version`, prepends a new section to `CHANGELOG.md`, commits both files, and pushes a Git tag. The command and tag are pushed directly to the `stage` branch by `github-actions`.
+
+### PR Labels
+When opening a PR from `development` to `stage`, you can apply one of the following labels. Labels can be found in the "Labels" dropdown on the PR page's right sidebar.
+
+| Label         | When to use                                                             |
+|---------------|-------------------------------------------------------------------------|
+| version:major | Breaking changes or significant new features (e.g., 1.0.0 -> 2.0.0)     |
+| version:minor | New backwards-compatible functionality (e.g., 1.0.0 -> 1.1.0)           |
+| version:patch | Bug fixes and minor backwards-compatible changes (e.g., 1.0.0 -> 1.0.1) |
 
 ## Contributing
 1. Clone the repo from github (`git clone git@github.com:CDLUC3/dmsp_frontend_prototype.git`)

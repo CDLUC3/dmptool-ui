@@ -21,6 +21,27 @@ mutation UpdateUserProfile($input: UpdateUserProfileInput!) {
   }
 }
 
+mutation UpdateUserInfo($input: UpdateUserInfoInput!) {
+  updateUserInfo(input: $input) {
+    id
+    givenName
+    surName
+    errors {
+      general
+      email
+      password
+      role
+    }
+    affiliation {
+      id
+      name
+      searchName
+      uri
+    }
+    languageId
+    email
+  }
+}
 
 mutation AddUserEmail($email: String!, $isPrimary: Boolean!) {
   addUserEmail(email: $email, isPrimary: $isPrimary) {
@@ -59,5 +80,24 @@ mutation SetPrimaryUserEmail($email: String!) {
     isConfirmed
     isPrimary
     userId
+  }
+}
+
+mutation ArchiveUser($userId: Int!) {
+  archiveUser(userId: $userId) {
+    errors {
+      general
+    }
+  }
+}
+
+mutation UpdateUserRole($input: UpdateUserRoleInput!) {
+  updateUserRole(input: $input) {
+    errors {
+      general
+      role
+    }
+    id
+    role
   }
 }
