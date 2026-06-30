@@ -58,9 +58,6 @@ jest.mock('next-intl', () => ({
   useTranslations: (ns: string) => (key: string) => `${ns}.${key}`,
 }));
 
-jest.mock('@/utils/index', () => ({
-  logECS: jest.fn(),
-}));
 
 jest.mock('@/utils/index', () => ({
   extractErrors: jest.fn().mockReturnValue([]),
@@ -169,9 +166,8 @@ describe('Admin - User Accounts Dashboard', () => {
 
     it('renders the search controls', async () => {
       renderPage([makeMeMock(UserRole.Researcher), makeUsersMock()]);
-      await waitFor(() => expect(screen.getByTestId('mock-table')).toBeInTheDocument());
 
-      expect(screen.getByLabelText(/Admin.users.tools.searchLabel/i)).toBeInTheDocument();
+      await screen.findByLabelText(/Admin.users.tools.searchLabel/i);
       expect(screen.getByText('Admin.users.buttons.searchLabel')).toBeInTheDocument();
     });
 
@@ -278,7 +274,12 @@ describe('Admin - User Accounts Dashboard', () => {
 
   describe('error handling', () => {
     it('displays error message when query fails', async () => {
-      const { logECS } = require('@/utils/index');
+      const { logECS, handleApolloError } = require('@/utils/index');
+
+      handleApolloError.mockReturnValue({
+        wasRealError: true,
+        message: 'Network error',
+      });
 
       const errorMock = {
         request: {
@@ -294,10 +295,10 @@ describe('Admin - User Accounts Dashboard', () => {
       renderPage([makeMeMock(UserRole.Admin), errorMock]);
 
       await waitFor(() => {
-        expect(screen.getByText('Global.messaging.somethingWentWrong')).toBeInTheDocument();
+        expect(screen.getByText('Network error')).toBeInTheDocument();
       });
 
-      expect(logECS).toHaveBeenCalledWith('error', 'OrgUserAccountsPage', expect.objectContaining({
+      expect(logECS).toHaveBeenCalledWith('error', 'OrgUserAccountsPage.fetchUsers - fetchUsers', expect.objectContaining({
         error: expect.anything(),
       }));
     });

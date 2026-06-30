@@ -53,6 +53,14 @@ export const errorLink = new ErrorLink(({ error, operation, forward }) => {
       ({ extensions }) => extensions?.code === 'FORBIDDEN'
     );
     if (forbidden) {
+      if (forbidden.message !== 'Invalid CSRF token') {
+        // Genuine authorization failure — retrying won't help and will just
+        // bypass errorLink on the second failure. Log it once, cleanly, here.
+        logECS('error', `[GraphQL Error]: FORBIDDEN (authorization) - ${forbidden.message}`, {
+          errorCode: 'FORBIDDEN_AUTHZ',
+        });
+        return; // no retry; propagates to component once, with a classifiable code
+      }
       return new Observable(observer => {
         (async () => {
           try {

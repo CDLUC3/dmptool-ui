@@ -110,7 +110,7 @@ function OrgUserAccountsPage(): React.ReactElement {
   const { data: meData } = useQuery(MeDocument);
 
   // Fetch for paginated users list
-  const [fetchUserData, { data: usersData, loading: usersLoading, error: usersError }] = useLazyQuery(UsersDocument, {
+  const [fetchUserData, { data: usersData, loading: usersLoading }] = useLazyQuery(UsersDocument, {
     notifyOnNetworkStatusChange: true,
     fetchPolicy: 'no-cache',
   });
@@ -213,14 +213,15 @@ function OrgUserAccountsPage(): React.ReactElement {
         )
       });
     } catch (err) {
-      const wasRealError = handleApolloError(err, `OrgUserAccountsPage.fetchUsers - ${context}`);
+      const { wasRealError, message } = handleApolloError(err, `OrgUserAccountsPage.fetchUsers - ${context}`);
       if (!wasRealError) return; // AbortError — not a real failure, ignore silently
 
       logECS('error', `OrgUserAccountsPage.fetchUsers - ${context}`, {
         error: err,
         url: { path: routePath('admin.users') },
       });
-      setErrors([Global('messaging.somethingWentWrong')]);
+      setErrors([message]);
+      setIsInitialLoad(false);
     }
   };
 
@@ -412,17 +413,6 @@ function OrgUserAccountsPage(): React.ReactElement {
       });
     }
   }, [usersData, isSuperAdmin]);
-
-  // Handle errors from the users query
-  useEffect(() => {
-    if (usersError) {
-      logECS('error', 'OrgUserAccountsPage', {
-        error: usersError,
-        url: { path: routePath('admin.users') },
-      });
-      setErrors([Global('messaging.somethingWentWrong')]);
-    }
-  }, [usersError]);
 
   // Sync columns state when initialColumns changes (i.e. when isSuperAdmin resolves)
   useEffect(() => {
