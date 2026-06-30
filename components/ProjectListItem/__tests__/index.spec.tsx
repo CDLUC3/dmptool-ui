@@ -61,7 +61,7 @@ describe("ProjectListItem", () => {
 
     // Check for update links (title link + update button)
     const updateLinks = screen.getAllByRole("link", { name: /buttons.linkUpdate/i });
-    expect(updateLinks.length).toBe(2);
+    expect(updateLinks.length).toBe(1);
 
     // Check for expand button
     expect(screen.getByRole("button", { name: /buttons.linkExpand/i })).toBeInTheDocument();
@@ -102,6 +102,14 @@ describe("ProjectListItem", () => {
     // But the collapsed metadata should still be visible
     expect(screen.getByText(/Dr. Erik Lindström/i)).toBeInTheDocument(); // This should still be in collapsed metadata
   });
+
+  it("shows view button instead of update when isReadOnly", () => {
+    render(<ProjectListItem item={mockProjectItem} isReadOnly={true} />);
+
+    expect(screen.getByRole("link", { name: /buttons.view/i })).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /buttons.linkUpdate/i })).not.toBeInTheDocument();
+  });
+
 
   it("should pass axe accessibility test", async () => {
     const { container } = render(

@@ -1,4 +1,8 @@
 ## Added
+- Added `UpdateUserInfo` and `ArchiveUser` mutations and `Plans`, `UserProjects`, and `User` queries [#281]
+- Added new, shared `LayoutSplitPanel` so that we can have one section with a right sidebar, and another section extending the full width [#281]
+- Added new route `admin.users.projects` [#281]
+- Added a new `admin/users/[userId]/manage` page for Admins to edit a user's profile, and a new `admin/users/[userId]/projects` page to display a specified user's projects [#281]
 - Added `Users` graphql query and `admin.users.manage` route[#240]
 - Wired up the Organization details page
 - Made some minor tweaks to the Organization details css file
@@ -15,6 +19,7 @@
 
 ## Updated
 - Updated `PlanOverviewPage` to disable `request feedback` link when there is feedback is not enabled and there are no feedback emails [#285]
+- Updated the `ProjectListItem` component to allow for `isReadOnly` mode [#281]
 - Hooked up `admin/users` page with real data, and updated search features and table [#240]
 - Fixed bug in org logo upload logic
 - Update feedback options page, fundings add page to work with the Affiliation `displayName`

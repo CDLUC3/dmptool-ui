@@ -92,6 +92,7 @@ jest.mock('@/components/hooks/getParsedQuestionJSON', () => {
 
 // Mock the useTemplateQuery hook
 jest.mock("@/generated/graphql", () => ({
+  ...jest.requireActual("@/generated/graphql"),
   useQuestionQuery: jest.fn(),
   useLicensesQuery: jest.fn(),
   useDefaultResearchOutputTypesQuery: jest.fn(),

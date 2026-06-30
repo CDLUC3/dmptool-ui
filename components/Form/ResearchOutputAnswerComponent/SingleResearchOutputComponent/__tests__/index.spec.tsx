@@ -90,6 +90,7 @@ jest.mock('@apollo/client/react', () => ({
 
 // Mock the generated GraphQL documents (these are imported by the component)
 jest.mock('@/generated/graphql', () => ({
+  ...jest.requireActual('@/generated/graphql'),
   RecommendedLicensesDocument: 'RecommendedLicensesDocument',
   DefaultResearchOutputTypesDocument: 'DefaultResearchOutputTypesDocument',
 }));

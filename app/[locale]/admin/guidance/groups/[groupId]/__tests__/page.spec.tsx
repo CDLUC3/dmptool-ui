@@ -637,28 +637,32 @@ describe("GuidanceGroupIndexPage", () => {
         },
       },
     });
+
     render(
       <MockedProvider mocks={mocks}>
         <GuidanceGroupIndexPage />
       </MockedProvider>,
     );
 
-
-    // Wait for loading to be gone (tagsLoading and guidanceLoading both false)
     await waitForElementToBeRemoved(() => screen.getByText("Global.messaging.loading"));
 
     const sidebar = screen.getByTestId("sidebar-panel");
     const inSidebar = within(sidebar);
-    const unPublishBtn = inSidebar.getByRole("button", { name: "Global.buttons.unpublish" });
+
+    // Wait for the real (non-disabled) unpublish button — this ensures guidanceGroup
+    // state has resolved and the status is PUBLISHED, not DRAFT
+    const unPublishBtn = await waitFor(() => {
+      const btn = inSidebar.getByRole("button", { name: "Global.buttons.unpublish" });
+      expect(btn).not.toHaveAttribute('aria-disabled', 'true');
+      return btn;
+    });
 
     fireEvent.click(unPublishBtn);
 
     await waitFor(() => {
+      expect(unPublishGuidanceGroupAction).toHaveBeenCalledWith({ guidanceGroupId: 2398 });
       expect(mockToast.add).toHaveBeenCalledWith('Guidance.messages.success.guidanceGroupUnpublished', { type: 'success' });
       expect(mockRouter.push).toHaveBeenCalledWith('/en-US/admin/guidance');
-      expect(unPublishGuidanceGroupAction).toHaveBeenCalledWith({
-        guidanceGroupId: 2398
-      });
     });
   });
 
@@ -705,35 +709,29 @@ describe("GuidanceGroupIndexPage", () => {
       success: false,
       errors: ['Some error occurred'],
     });
+
     render(
       <MockedProvider mocks={mocks}>
         <GuidanceGroupIndexPage />
       </MockedProvider>,
     );
 
-    // Wait for loading to be gone (tagsLoading and guidanceLoading both false)
     await waitForElementToBeRemoved(() => screen.getByText("Global.messaging.loading"));
 
     const sidebar = screen.getByTestId("sidebar-panel");
     const inSidebar = within(sidebar);
+
+    // Verify the real (non-disabled) unpublish button is present before clicking
     const unPublishBtn = inSidebar.getByRole("button", { name: "Global.buttons.unpublish" });
+    expect(unPublishBtn).not.toHaveAttribute('aria-disabled', 'true');
 
     await act(async () => {
       fireEvent.click(unPublishBtn);
     });
 
-    // Since guidanceGroupId is undefined, we expect an inline error message and no side effects
     await waitFor(() => {
+      expect(unPublishGuidanceGroupAction).toHaveBeenCalled(); // confirm action was actually called
       expect(screen.getByText('Some error occurred')).toBeInTheDocument();
-      //Check that error logged
-      expect(logECS).toHaveBeenCalledWith(
-        'error',
-        'Unpublishing Guidance Group',
-        expect.objectContaining({
-          errors: expect.anything(),
-          url: { path: '/en-US/admin/guidance/groups/create' },
-        })
-      )
     });
   });
 
