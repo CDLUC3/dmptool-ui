@@ -278,7 +278,7 @@ function OrgUserAccountsPage(): React.ReactElement {
     const allUsers = [];
     let hasMoreData = true;
     try {
-      const { data } = await fetchAllUsersForExport({ variables: buildExportVars() });
+      //const { data } = await fetchAllUsersForExport({ variables: buildExportVars() });
 
       while (hasMoreData) {
         const { data } = await fetchAllUsersForExport({
