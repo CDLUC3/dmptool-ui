@@ -5,7 +5,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { axe, toHaveNoViolations } from 'jest-axe';
 import { MockedProvider } from "@apollo/client/testing/react";
-import { MeDocument, UsersDocument, UserRole, User, UsersQuery } from '@/generated/graphql';
+import { MeDocument, UsersDocument, UserRole, UsersQuery } from '@/generated/graphql';
 import { logECS, handleApolloError } from '@/utils/index';
 import OrgUserAccountsPage from '../page';
 import { EXPORT_PAGE_SIZE } from '../page';
@@ -74,9 +74,8 @@ jest.mock('@/utils/index', () => ({
   logECS: jest.fn(),
 }));
 
-// Cast the mocked functions to their proper types for TypeScript
+// Cast the mocked function to type for TypeScript
 const mockedHandleApolloError = handleApolloError as jest.MockedFunction<typeof handleApolloError>;
-const mockedLogECS = logECS as jest.MockedFunction<typeof logECS>;
 
 jest.mock('@/hooks/useFormatDate', () => ({
   useFormatDate: () => (date: string) => date,

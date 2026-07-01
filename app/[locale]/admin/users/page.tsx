@@ -408,7 +408,7 @@ function OrgUserAccountsPage(): React.ReactElement {
       const rows = items
         .filter((user): user is NonNullable<typeof user> => user !== null)
         .map((user, index) => ({
-          'Count': index + 1, // Add a count column to the CSV export
+          Count: index + 1, // Add a count column to the CSV export
           ...Object.fromEntries(
             exportColumns.map(col => [col.name, cellMap[col.id]?.(user) ?? ''])
           )
