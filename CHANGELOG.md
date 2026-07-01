@@ -19,7 +19,7 @@
 - Added `UpdateAffiliation` and `AffiliationById` queries [#203]
 
 ## Updated
-- Updated `errorLink` is `graphqlHelper.ts` to only call `fetchCsrfToken` for `forbidden` errors if the message is `Invalid CSRF token`, and updated `handleApolloError` in `apolloErrorHandler.ts` to extract and return error message [#238]
+- Updated `errorLink` in `graphqlHelper.ts` to only call `fetchCsrfToken` for `forbidden` errors if the message is `Invalid CSRF token`, and updated `handleApolloError` in `apolloErrorHandler.ts` to extract and return error message [#238]
 - Updated `admin/users` page by adding a `Download as CSV` button. Download uses concurrent requests using apolloClient.query directly. Added download progress bar. [#238]
 - Updated the `ProjectListItem` component to allow for `isReadOnly` mode [#281]
 - Hooked up `admin/users` page with real data, and updated search features and table [#240]
