@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useRef, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
-import { useLazyQuery, useQuery } from "@apollo/client/react";
+import { useLazyQuery, useQuery, useApolloClient } from "@apollo/client/react";
 import Papa from 'papaparse';
 import {
   Dialog,
@@ -27,6 +27,7 @@ import {
   MeDocument,
   UsersDocument,
   UserRole,
+  UsersQuery,
 } from "@/generated/graphql";
 
 // Components
@@ -56,7 +57,9 @@ import styles from './UsersDashboardPage.module.scss';
 
 // Number of records to display per page in the users table
 const LIMIT = 10;
-
+export const EXPORT_PAGE_SIZE = 100; // Number of records to fetch per page when exporting users (matches backend)
+const EXPORT_CONCURRENCY = 5; // Number of concurrent requests to make when exporting users
+export type UsersPageItems = NonNullable<NonNullable<UsersQuery['users']>['items']>;
 interface UserRow {
   id: string | null | undefined;
   name: React.ReactNode;
@@ -75,7 +78,14 @@ const RoleLabels: Record<string, string> = Object.fromEntries(
 );
 
 function OrgUserAccountsPage(): React.ReactElement {
+  // Hooks
   const formatDate = useFormatDate();
+  const apolloClient = useApolloClient();
+
+  // Download states for progress export
+  const [exportProgress, setExportProgress] = useState<{ completed: number; total: number } | null>(null);
+  const [exportPhase, setExportPhase] = useState<'idle' | 'running' | 'done' | 'error'>('idle');
+
   const errorRef = useRef<HTMLDivElement | null>(null);
   const topRef = useRef<HTMLDivElement>(null);
 
@@ -115,13 +125,6 @@ function OrgUserAccountsPage(): React.ReactElement {
     fetchPolicy: 'no-cache',
   });
 
-  // Fetch all users for download purposes, so no pagination is applied
-  // We need to keep this query separate from the paginated users query because they have different loading states and we don't want to 
-  // interfere with the paginated users table when downloading all users.
-  const [fetchAllUsersForExport, { loading: exportLoading }] = useLazyQuery(UsersDocument, {
-    fetchPolicy: 'no-cache',
-  });
-
   const isSuperAdmin = meData?.me?.role === UserRole.Superadmin;
 
   // This is needed because the GraphQL query returns different field names than the table columns, 
@@ -149,6 +152,13 @@ function OrgUserAccountsPage(): React.ReactElement {
   ], [isSuperAdmin]);
 
   const [columns, setColumns] = useState<DmpTableColumnSet>(initialColumns);
+
+  const rawPercent = exportProgress
+    ? Math.round((exportProgress.completed / exportProgress.total) * 100)
+    : 0;
+
+  // This is what's shown and what's announced
+  const displayPercent = Math.floor(rawPercent / 10) * 10;
 
   // Build export query vars for downloading all users as CSV
   const buildExportVars = () => ({
@@ -275,24 +285,91 @@ function OrgUserAccountsPage(): React.ReactElement {
   // Handles download of all filtered users from the users table into a CSV file.
   const handleDownload = async () => {
     setErrors([]);
-    const allUsers = [];
-    let hasMoreData = true;
+    setExportProgress(null);
+    setExportPhase('running');
+
+    // Flag to indicate if the download process has been cancelled due to an error
+    let cancelled = false;
+
     try {
-      //const { data } = await fetchAllUsersForExport({ variables: buildExportVars() });
+      const baseVars = buildExportVars();
 
-      while (hasMoreData) {
-        const { data } = await fetchAllUsersForExport({
-          variables: buildExportVars()
-        });
+      // Fetch page 0 first so we know totalCount / how many pages exist
+      // Using apolloClient.query directly since useQuery/useLazyQuery doesn't support multiple concurrent queries in the same component
+      // and wants data kept in sync with re-renders
+      const first = await apolloClient.query({
+        query: UsersDocument,
+        fetchPolicy: 'no-cache', // Don't want to pollute the cache with potentially large amounts of data
+        variables: {
+          ...baseVars,
+          paginationOptions: {
+            offset: 0,
+            limit: EXPORT_PAGE_SIZE,
+            type: "OFFSET",
+          },
+        },
+      });
 
-        const users = data?.users?.items ?? [];
-        hasMoreData = data?.users?.hasNextPage ?? false;
-
-        if (!users.length) break;
-
-        allUsers.push(...users);
+      const firstItems = first.data?.users?.items ?? [];
+      if (!firstItems.length) {
+        setErrors([usersTrans('messages.noUsersToExport')]);
+        return;
       }
-      const items = allUsers.filter(Boolean) ?? [];
+      const totalCount = first.data?.users?.totalCount ?? firstItems.length;
+      const totalPages = Math.ceil(totalCount / EXPORT_PAGE_SIZE);
+
+      setExportProgress({ completed: 1, total: totalPages });
+
+      // Slot to hold each page's results, indexed by page number so we can
+      // reassemble in the correct order even though pages resolve out of order.
+      const pagesData: UsersPageItems[] = new Array(totalPages);
+      pagesData[0] = firstItems;
+
+      // Build an array of length = totalPages - 1, with values [1, 2, ..., totalPages - 1] 
+      // representing the remaining pages to fetch
+      const remainingPages = Array.from({ length: totalPages - 1 }, (_, i) => i + 1);
+      let cursor = 0;
+      let firstError: unknown = null;
+
+      // Simple bounded worker pool: N workers pull the next page index off
+      // the shared queue until it's empty.
+      const runWorker = async () => {
+        while (cursor < remainingPages.length && !cancelled) {
+          const pageIndex = remainingPages[cursor++];
+          try {
+            const { data } = await apolloClient.query({
+              query: UsersDocument,
+              fetchPolicy: 'no-cache',
+              variables: {
+                ...baseVars,
+                paginationOptions: {
+                  offset: pageIndex * EXPORT_PAGE_SIZE,
+                  limit: EXPORT_PAGE_SIZE,
+                  type: "OFFSET",
+                },
+              },
+            });
+            pagesData[pageIndex] = data?.users?.items ?? [];
+            setExportProgress(prev =>
+              prev ? { ...prev, completed: prev.completed + 1 } : prev
+            );
+          } catch (err) {
+            cancelled = true; // stop every worker from pulling pages
+            firstError ??= err; // capture the first error for reporting
+            return; // exit worker
+          }
+        }
+      };
+
+      const workerCount = Math.min(EXPORT_CONCURRENCY, remainingPages.length);
+      await Promise.all(Array.from({ length: workerCount }, () => runWorker()));
+
+      if (firstError) {
+        throw firstError; // rethrow the first error to be caught in the outer try/catch
+      }
+
+      const allUsers = pagesData.flat();
+      const items = allUsers.filter(Boolean);
 
       if (!items.length) {
         setErrors(['No users found to export.']);
@@ -330,13 +407,12 @@ function OrgUserAccountsPage(): React.ReactElement {
 
       const rows = items
         .filter((user): user is NonNullable<typeof user> => user !== null)
-        .map(user =>
-          Object.fromEntries(
-            exportColumns.map(col => [
-              col.name,
-              cellMap[col.id]?.(user) ?? '',
-            ])
+        .map((user, index) => ({
+          'Count': index + 1, // Add a count column to the CSV export
+          ...Object.fromEntries(
+            exportColumns.map(col => [col.name, cellMap[col.id]?.(user) ?? ''])
           )
+        })
         );
 
       const csv = Papa.unparse(rows, { header: true });
@@ -350,10 +426,11 @@ function OrgUserAccountsPage(): React.ReactElement {
       link.href = url;
       link.download = `users-${new Date().toISOString().slice(0, 10)}.csv`;
       document.body.appendChild(link);
-
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
+
+      setExportPhase('done');
     } catch (err) {
       const { wasRealError, message } = handleApolloError(err, `OrgUserAccountsPage.handleDownload`);
       if (!wasRealError) return; // AbortError — not a real failure, ignore silently
@@ -364,10 +441,13 @@ function OrgUserAccountsPage(): React.ReactElement {
       });
       setErrors([message]);
       setIsInitialLoad(false);
-      logECS('error', 'OrgUserAccountsPage.handleDownload', {
-        error: err,
-        url: { path: routePath('admin.users') },
-      });
+    } finally {
+      setExportProgress(null);
+      //Clear the phase after a short delay so "done"/"error" can be 
+      // announced by screen readers before resetting to idle
+      setTimeout(() => {
+        setExportPhase('idle');
+      }, 4000);
     }
   };
 
@@ -442,6 +522,7 @@ function OrgUserAccountsPage(): React.ReactElement {
     setColumns(initialColumns);
   }, [initialColumns]);
 
+
   // Add a loading state guard before rendering pageTools to avoid flashing of the organization select field for superadmins
   const isSuperAdminResolved = meData?.me !== undefined;
   // If SuperAdmins haven't selected an organization, we block the export button to avoid exporting all users across all 
@@ -460,13 +541,14 @@ function OrgUserAccountsPage(): React.ReactElement {
           </Breadcrumbs>
         }
         actions={
-          <>
+          <div className={styles.actionsContainer}>
             <div className="button-container">
               {/**SuperAdmins need to select an organization before downloading */}
               {isExportBlocked ? (
                 <DialogTrigger key="download-blocked">
                   <Button
                     type="button"
+                    className="button--primary"
                     aria-disabled={true}
                   >
                     {usersTrans('buttons.download')}
@@ -481,42 +563,84 @@ function OrgUserAccountsPage(): React.ReactElement {
                   </Popover>
                 </DialogTrigger>
               ) : (
-                <DialogTrigger isOpen={isConfirmOpen} onOpenChange={setConfirmOpen} key="download-confirm">
-                  <Button className="button--secondary">{usersTrans('buttons.download')}</Button>
-                  <ModalOverlay>
-                    <Modal>
-                      <Dialog>
-                        {({ close }) => (
-                          <>
-                            <h3>{usersTrans('headings.confirmDownload')}</h3>
-                            <p>{usersTrans('downloadWarning')}</p>
-                            <div className="button-container">
-                              <Button
-                                autoFocus onPress={close}
-                              >
-                                {Global('buttons.cancel')}
-                              </Button>
-                              <Button
-                                className="button--primary"
-                                isDisabled={exportLoading}
-                                onPress={async () => {
-                                  close();
-                                  await handleDownload();
-                                }}
-                              >
-                                {Global('buttons.continue')}
-                              </Button>
-                            </div>
-                          </>
-                        )}
-                      </Dialog>
-                    </Modal>
-                  </ModalOverlay>
-                </DialogTrigger>
-              )
-              }
+                <>
+                  <DialogTrigger isOpen={isConfirmOpen} onOpenChange={setConfirmOpen} key="download-confirm">
+                    <Button
+                      className="button--primary"
+                      isDisabled={exportProgress !== null}
+                    >
+                      {usersTrans('buttons.download')}
+                    </Button>
+                    <ModalOverlay>
+                      <Modal>
+                        <Dialog>
+                          {({ close }) => (
+                            <>
+                              <h3>{usersTrans('headings.confirmDownload')}</h3>
+                              <p>{usersTrans('downloadWarning')}</p>
+                              <div className="button-container">
+                                <Button
+                                  className="button--secondary"
+                                  autoFocus
+                                  onPress={close}
+                                >
+                                  {Global('buttons.cancel')}
+                                </Button>
+                                <Button
+                                  className="button--primary"
+                                  isDisabled={exportProgress !== null}
+                                  onPress={async () => {
+                                    close();
+                                    await handleDownload();
+                                  }}
+                                >
+                                  {Global('buttons.continue')}
+                                </Button>
+                              </div>
+                            </>
+                          )}
+                        </Dialog>
+                      </Modal>
+                    </ModalOverlay>
+                  </DialogTrigger>
+                </>
+              )}
             </div>
-          </>
+            {/* Status line, only rendered while an export is in flight */}
+            {exportPhase !== 'idle' && (
+              <div
+                className={styles.progressBarWrapper}
+                role={exportPhase === 'running' ? 'progressbar' : 'status'}
+                aria-live="polite"
+                aria-atomic="true"
+                aria-valuenow={exportPhase === 'running' ? displayPercent : undefined}
+                aria-valuemin={exportPhase === 'running' ? 0 : undefined}
+                aria-valuemax={exportPhase === 'running' ? 100 : undefined}
+                aria-label={
+                  exportPhase === 'running'
+                    ? Global('messaging.exportingLabel')
+                    : undefined
+                }
+              >
+                {exportPhase === 'running' && (
+                  <>
+                    <div className={styles.progressBarTrack}>
+                      <div
+                        className={styles.progressBarFill}
+                        style={{ width: `${displayPercent}%` }}
+                      />
+                    </div>
+                    <div className={styles.progressBarText}>
+                      {Global('messaging.exportingProgress', { percent: displayPercent })}
+                    </div>
+                  </>
+                )}
+                {exportPhase === 'done' && Global('messaging.exportComplete')}
+                {exportPhase === 'error' && Global('messaging.exportFailed')}
+              </div>
+            )}
+
+          </div>
         }
         className="page-organization-users-dashboard-header"
       />

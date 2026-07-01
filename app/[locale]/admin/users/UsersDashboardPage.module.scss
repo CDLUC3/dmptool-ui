@@ -70,3 +70,40 @@
 .selectArrow {
   color: var(--gray-50) !important;
 }
+
+// To allow progress text to wrap below the Download button
+.actionsContainer {
+  flex-wrap: wrap;
+  text-align:center;
+}
+
+/* Progress Bar*/
+.progressBarWrapper {
+  margin-top: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.progressBarTrack {
+  width: 160px;
+  height: 8px;
+  border-radius: 4px;
+  background: var(--slate-200);
+  overflow: hidden;
+}
+
+.progressBarFill {
+  height: 100%;
+  background: var(--blue-500);
+  transition: width 0.3s ease; // smooths the visual jump between 10% steps
+  border-radius: 4px;
+}
+
+.progressBarText {
+  font-size: var(--fs-base);
+  font-weight: 500;
+  white-space: nowrap;
+}
+/* End progress bar */

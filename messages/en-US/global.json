@@ -345,7 +345,8 @@
         "confirmDownload": "Export user data"
       },
       "messages": {
-        "disabledDownloadMessage": "You must select an organization to download the user list."
+        "disabledDownloadMessage": "You must select an organization to download the user list.",
+        "noUsersToExport": "There are no users to export for the selected organization."
       }
     },
     "userProfile": {
@@ -1022,7 +1023,11 @@
       "sectionIsExpanded": "Section is expanded",
       "sectionIsCollapsed": "Section is collapsed",
       "continueAnyway": "Continue anyway",
+      "exportingProgress": "Exporting progress: {percent}% complete",
       "error": "Something went wrong. Please try again.",
+      "exportComplete": "Export complete",
+      "exportFailed": "Export failed",
+      "exportingLabel": "Exporting...",
       "errors": {
         "invalidQuestionType": "Invalid question type found.",
         "questionUnexpectedFormat": "Unexpected format for question.json.",

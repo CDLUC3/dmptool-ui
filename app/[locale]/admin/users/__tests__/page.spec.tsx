@@ -5,10 +5,15 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { axe, toHaveNoViolations } from 'jest-axe';
 import { MockedProvider } from "@apollo/client/testing/react";
-import { MeDocument, UsersDocument, UserRole } from '@/generated/graphql';
+import { MeDocument, UsersDocument, UserRole, User, UsersQuery } from '@/generated/graphql';
+import { logECS, handleApolloError } from '@/utils/index';
 import OrgUserAccountsPage from '../page';
+import { EXPORT_PAGE_SIZE } from '../page';
 
 expect.extend(toHaveNoViolations);
+
+type UsersPageItems = NonNullable<NonNullable<UsersQuery['users']>['items']>;
+type UsersPageItem = UsersPageItems[number]; // single item, not the array
 
 // --- Mocks ---
 
@@ -60,6 +65,7 @@ jest.mock('next-intl', () => ({
 
 
 jest.mock('@/utils/index', () => ({
+  ...jest.requireActual('@/utils/index'),
   extractErrors: jest.fn().mockReturnValue([]),
   handleApolloError: jest.fn(),
   isValidEmail: (v: string) => v.includes('@'),
@@ -67,6 +73,10 @@ jest.mock('@/utils/index', () => ({
   routePath: (name: string) => `/${name}`,
   logECS: jest.fn(),
 }));
+
+// Cast the mocked functions to their proper types for TypeScript
+const mockedHandleApolloError = handleApolloError as jest.MockedFunction<typeof handleApolloError>;
+const mockedLogECS = logECS as jest.MockedFunction<typeof logECS>;
 
 jest.mock('@/hooks/useFormatDate', () => ({
   useFormatDate: () => (date: string) => date,
@@ -92,6 +102,24 @@ const makeUser = (overrides = {}) => ({
   ...overrides,
 });
 
+let userIdCounter = 1;
+
+export const makeTestUser = (overrides?: Partial<UsersPageItem>): UsersPageItem => ({
+  id: userIdCounter++,
+  givenName: 'Alice',
+  surName: 'Smith',
+  email: 'alice@example.com',
+  active: true,
+  role: UserRole.Researcher,
+  created: '2024-01-01T00:00:00.000Z',
+  last_sign_in: null,
+  plans: [],
+  affiliation: null,
+  ssoId: null,
+  orcid: null,
+  ...overrides,
+});
+
 const makeMeMock = (role: UserRole) => ({
   request: { query: MeDocument },
   result: { data: { me: { id: 1, role } } },
@@ -101,7 +129,7 @@ const makeUsersMock = (items = [makeUser()], variables = {}) => ({
   request: {
     query: UsersDocument,
     variables: {
-      paginationOptions: { offset: 0, limit: 5, type: 'OFFSET', sortDir: 'DESC', sortField: undefined },
+      paginationOptions: { offset: 0, limit: 10, type: 'OFFSET', sortDir: 'DESC', sortField: undefined },
       term: '',
       ...variables,
     },
@@ -115,27 +143,41 @@ const makeUsersMock = (items = [makeUser()], variables = {}) => ({
         hasPreviousPage: false,
         currentOffset: 0,
         nextCursor: null,
-        limit: 5,
+        limit: 10,
+        __typename: 'UserSearchResults'
       },
     },
   },
 });
 
-const makeExportMock = (items = [makeUser()], variables = {}) => ({
+export const makeExportMock = (
+  items: UsersPageItem[],
+  overrides?: Partial<{ term: string; role: string; affiliationId: string }>
+) => ({
   request: {
     query: UsersDocument,
-    variables: { term: '', ...variables },
+    variables: {
+      term: overrides?.term ?? '',
+      ...(overrides?.role ? { role: overrides.role } : {}),
+      ...(overrides?.affiliationId ? { affiliationId: overrides.affiliationId } : {}),
+      paginationOptions: {
+        offset: 0,
+        limit: EXPORT_PAGE_SIZE,
+        type: "OFFSET",
+      },
+    },
   },
   result: {
     data: {
       users: {
         items,
-        totalCount: items.length,
         hasNextPage: false,
         hasPreviousPage: false,
+        totalCount: items.length,
         currentOffset: 0,
         nextCursor: null,
-        limit: items.length,
+        limit: EXPORT_PAGE_SIZE,
+        __typename: 'UserSearchResults',
       },
     },
   },
@@ -156,6 +198,11 @@ const renderPage = (mocks: any[]) =>
 describe('Admin - User Accounts Dashboard', () => {
   beforeEach(() => {
     window.scrollTo = jest.fn();
+    jest.clearAllMocks();
+    mockedHandleApolloError.mockReturnValue({
+      wasRealError: true,
+      message: 'Network error',
+    });
   });
 
   describe('initial render', () => {
@@ -218,7 +265,7 @@ describe('Admin - User Accounts Dashboard', () => {
         request: {
           query: UsersDocument,
           variables: {
-            paginationOptions: { offset: 0, limit: 5, type: 'OFFSET', sortDir: 'DESC', sortField: undefined },
+            paginationOptions: { offset: 0, limit: 10, type: 'OFFSET', sortDir: 'DESC', sortField: undefined },
             term: 'alice',
           },
         },
@@ -231,7 +278,7 @@ describe('Admin - User Accounts Dashboard', () => {
               hasPreviousPage: false,
               currentOffset: 0,
               nextCursor: null,
-              limit: 5,
+              limit: 10,
             },
           },
         },
@@ -265,27 +312,34 @@ describe('Admin - User Accounts Dashboard', () => {
         Array.from({ length: 5 }, (_, i) => makeUser({ id: i + 1, email: `user${i}@example.com` }))
       );
 
-      renderPage([makeMeMock(UserRole.Admin), { ...manyUsersMock, result: { data: { users: { ...manyUsersMock.result.data.users, totalCount: 10, hasNextPage: true } } } }]);
-      await waitFor(() => expect(screen.getByTestId('mock-pagination')).toBeInTheDocument());
+      renderPage([
+        makeMeMock(UserRole.Admin),
+        {
+          ...manyUsersMock,
+          result: {
+            data: {
+              users: {
+                ...manyUsersMock.result.data.users,
+                totalCount: 15, // 15 users / 10 per page = 2 pages
+                hasNextPage: true,
+              },
+            },
+          },
+        },
+      ]);
 
+      await waitFor(() => expect(screen.getByTestId('mock-pagination')).toBeInTheDocument());
       await waitFor(() => expect(screen.getByText('Page 1 of 2')).toBeInTheDocument());
     });
   });
 
   describe('error handling', () => {
     it('displays error message when query fails', async () => {
-      const { logECS, handleApolloError } = require('@/utils/index');
-
-      handleApolloError.mockReturnValue({
-        wasRealError: true,
-        message: 'Network error',
-      });
-
       const errorMock = {
         request: {
           query: UsersDocument,
           variables: {
-            paginationOptions: { offset: 0, limit: 5, type: 'OFFSET', sortDir: 'DESC', sortField: undefined },
+            paginationOptions: { offset: 0, limit: 10, type: 'OFFSET', sortDir: 'DESC', sortField: undefined },
             term: '',
           },
         },
@@ -325,7 +379,9 @@ describe('Admin - User Accounts Dashboard', () => {
     });
 
     it('triggers the export query and builds a CSV when confirmed', async () => {
-      const exportMock = makeExportMock([makeUser({ email: 'alice@example.com' })]);
+      const exportMock = makeExportMock([
+        makeTestUser({ email: 'alice@example.com' }),
+      ]);
       renderPage([makeMeMock(UserRole.Admin), makeUsersMock(), exportMock]);
       await waitFor(() => expect(screen.getByTestId('mock-table')).toBeInTheDocument());
 
@@ -344,15 +400,22 @@ describe('Admin - User Accounts Dashboard', () => {
       await userEvent.click(screen.getByText('Global.buttons.continue'));
 
       await waitFor(() =>
-        expect(screen.getByText('No users found to export.')).toBeInTheDocument()
+        expect(screen.getByTestId('mock-errors')).toHaveTextContent('Admin.users.messages.noUsersToExport')
       );
     });
 
     it('shows a generic error message when the export query fails', async () => {
       const errorExportMock = {
-        request: { query: UsersDocument, variables: { term: '' } },
+        request: {
+          query: UsersDocument,
+          variables: {
+            term: '',
+            paginationOptions: { offset: 0, limit: 100, type: "OFFSET" },
+          },
+        },
         error: new Error('Export failed'),
       };
+
 
       renderPage([makeMeMock(UserRole.Admin), makeUsersMock(), errorExportMock]);
       await waitFor(() => expect(screen.getByTestId('mock-table')).toBeInTheDocument());
@@ -361,7 +424,7 @@ describe('Admin - User Accounts Dashboard', () => {
       await userEvent.click(screen.getByText('Global.buttons.continue'));
 
       await waitFor(() =>
-        expect(screen.getByText('Global.messaging.somethingWentWrong')).toBeInTheDocument()
+        expect(screen.getByTestId('mock-errors')).toHaveTextContent('Network error')
       );
     });
 
