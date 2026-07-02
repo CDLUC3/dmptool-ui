@@ -1,3 +1,6 @@
+## Updated
+- Updated the "Forgot Password" to "Reset password" [#79]
+
 ## Added
 - Added `UpdateUserInfo` and `ArchiveUser` mutations and `Plans`, `UserProjects`, and `User` queries [#281]
 - Added new, shared `LayoutSplitPanel` so that we can have one section with a right sidebar, and another section extending the full width [#281]
