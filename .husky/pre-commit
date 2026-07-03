@@ -1,9 +1,9 @@
-#npm run lint
-#npm test -- --coverage
-#npm run type-check
+npm run lint
+npm test -- --coverage
+npm run type-check
 
 # Run Trivy to check for vulnerabilities in the filesystem
-#npm run trivy-high
+npm run trivy-high
 
 # Run a non-blocking Trivy check for MEDIUM and LOW vulnerabilities
-#npm run trivy-med
+npm run trivy-med
