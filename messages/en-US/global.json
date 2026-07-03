@@ -461,7 +461,7 @@
       "organizationDomain": {
         "label": "Organization domain name",
         "placeholder": "Enter organization domain name (e.g. example.com)",
-        "helpMessage": "Displayed along with your organization's name when users search. Research organization registry (ROR) homepage:",
+        "helpMessage": "Displayed along with your organization's name when users search. Research organization registry (ROR) homepage: <link>{homepage}</link>",
         "helpMessageNonRor": "The website domain of your organization. For example 'example.edu' not 'library.example.edu'. This will be used to help users find your organization when searching and will be displayed along with your organization's name in search results."
       },
       "organizationType": {
@@ -527,14 +527,16 @@
       "apiTarget": {
         "label": "API URL",
         "description": "If the affiliation is a funder, providing this will enable the project search workflow (relies on application code to be in place)."
-      }
+      },
+      "identifiersMessage": "If you need to make a change to one of these fields, please <link>contact us</link>."
     },
     "actions": {
       "requestChange": "Request Change"
     },
     "buttons": {
       "save": "Save",
-      "addLink": "Add another link",
+      "addLink": "Add link",
+      "addAnotherLink": "Add another link",
       "deleteLink": "Remove",
       "removeLogo": "Remove logo"
     },

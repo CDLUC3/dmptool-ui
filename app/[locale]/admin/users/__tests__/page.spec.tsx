@@ -102,7 +102,30 @@ const makeUser = (overrides = {}) => ({
 
 const makeMeMock = (role: UserRole) => ({
   request: { query: MeDocument },
-  result: { data: { me: { id: 1, role } } },
+  result: {
+    data: {
+      me: {
+        id: 1,
+        givenName: 'Test',
+        surName: 'User',
+        languageId: 'en-US',
+        role,
+        emails: [],
+        errors: null,
+        affiliation: {
+          id: 'org-1',
+          name: 'Test Org',
+          displayName: 'Test Org',
+          searchName: 'test org',
+          uri: 'http://example.com/orgs/1',
+          acronyms: [],
+          feedbackEmails: [],
+          feedbackEnabled: false,
+          feedbackMessage: null,
+        },
+      },
+    },
+  },
 });
 
 const makeUsersMock = (items = [makeUser()], variables = {}) => ({
@@ -152,8 +175,8 @@ describe('Admin - User Accounts Dashboard', () => {
       renderPage([makeMeMock(UserRole.Researcher), makeUsersMock()]);
       await waitFor(() => expect(screen.getByTestId('mock-table')).toBeInTheDocument());
 
-      expect(screen.getByLabelText(/Admin.users.tools.searchLabel/i)).toBeInTheDocument();
-      expect(screen.getByText('Admin.users.buttons.searchLabel')).toBeInTheDocument();
+      expect(await screen.findByLabelText(/Admin.users.tools.searchLabel/i)).toBeInTheDocument();
+      expect(await screen.findByText('Admin.users.buttons.searchLabel')).toBeInTheDocument();
     });
 
     it('renders user rows after data loads', async () => {
