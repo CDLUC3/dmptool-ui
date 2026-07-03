@@ -567,6 +567,28 @@ const emptyProjectsMocks = [
   },
 ];
 
+const emptyProjectsNullTotalCountMocks = [
+  {
+    request: {
+      query: MyProjectsDocument,
+      variables: {
+        paginationOptions: {
+          limit: 3,
+        },
+      },
+    },
+    result: {
+      data: {
+        myProjects: {
+          items: [],
+          nextCursor: null,
+          totalCount: null,
+        },
+      },
+    },
+  },
+];
+
 describe("OrganizationProjectsListPage", () => {
   beforeEach(() => {
     HTMLElement.prototype.scrollIntoView = mockScrollIntoView;
@@ -795,6 +817,20 @@ describe("OrganizationProjectsListPage", () => {
     });
   });
 
+  it("should display empty state when totalCount is null and there are no projects", async () => {
+    await act(async () => {
+      render(
+        <MockedProvider mocks={emptyProjectsNullTotalCountMocks}>
+          <OrganizationProjectsListPage />
+        </MockedProvider>,
+      );
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText("OrganizationProjects.messages.info.noProjectsHeading")).toBeInTheDocument();
+    });
+  });
+
   it("should display no items found message when search yields no results", async () => {
     await act(async () => {
       render(
@@ -814,6 +850,8 @@ describe("OrganizationProjectsListPage", () => {
 
     await waitFor(() => {
       expect(screen.getByText("Global.messaging.noItemsFound")).toBeInTheDocument();
+      expect(screen.queryByRole("status")).not.toBeInTheDocument();
+      expect(screen.queryByText("OrganizationProjects.messages.info.noProjectsHeading")).not.toBeInTheDocument();
     });
   });
 

@@ -518,21 +518,23 @@ const partialProject = {
             />
             <SGComponentExampleContent>
               <SGComponentExampleDemo>
-                <div className="template-list">
-                  <div className="empty-state" role="status">
-                    <h2 className="empty-state-heading">
-                      {ProjectsListPage("messages.info.noProjectsHeading")}
-                    </h2>
-                    <p className="empty-state-description">
-                      {ProjectsListPage("messages.info.noProjectsDescription")}
-                    </p>
-                    <TransitionLink
-                      href="#projects-empty-state"
-                      className="button-link button--primary"
-                    >
-                      {Global("buttons.createNewPlan")}
-                    </TransitionLink>
-                  </div>
+                <div
+                  className="empty-state"
+                  role="status"
+                  aria-labelledby="styleguide-projects-empty-heading"
+                >
+                  <h2 id="styleguide-projects-empty-heading" className="empty-state-heading">
+                    {ProjectsListPage("messages.info.noProjectsHeading")}
+                  </h2>
+                  <p className="empty-state-description">
+                    {ProjectsListPage("messages.info.noProjectsDescription")}
+                  </p>
+                  <TransitionLink
+                    href="#projects-empty-state"
+                    className="button-link button--primary"
+                  >
+                    {Global("buttons.createNewPlan")}
+                  </TransitionLink>
                 </div>
               </SGComponentExampleDemo>
             </SGComponentExampleContent>
@@ -545,21 +547,23 @@ const partialProject = {
             />
             <SGComponentExampleContent>
               <SGComponentExampleDemo>
-                <div className="template-list">
-                  <div className="empty-state" role="status">
-                    <h2 className="empty-state-heading">
-                      {OrganizationProjects("messages.info.noProjectsHeading")}
-                    </h2>
-                    <p className="empty-state-description">
-                      {OrganizationProjects("messages.info.noProjectsDescription")}
-                    </p>
-                    <TransitionLink
-                      href="#projects-empty-state"
-                      className="button-link button--primary"
-                    >
-                      {Global("buttons.createNewPlan")}
-                    </TransitionLink>
-                  </div>
+                <div
+                  className="empty-state"
+                  role="status"
+                  aria-labelledby="styleguide-organization-projects-empty-heading"
+                >
+                  <h2 id="styleguide-organization-projects-empty-heading" className="empty-state-heading">
+                    {OrganizationProjects("messages.info.noProjectsHeading")}
+                  </h2>
+                  <p className="empty-state-description">
+                    {OrganizationProjects("messages.info.noProjectsDescription")}
+                  </p>
+                  <TransitionLink
+                    href="#projects-empty-state"
+                    className="button-link button--primary"
+                  >
+                    {Global("buttons.createNewPlan")}
+                  </TransitionLink>
                 </div>
               </SGComponentExampleDemo>
             </SGComponentExampleContent>
@@ -572,15 +576,17 @@ const partialProject = {
             />
             <SGComponentExampleContent>
               <SGComponentExampleDemo>
-                <div className="template-list" role="list">
-                  <p>{Global("messaging.noItemsFound")}</p>
-                </div>
+                <p>{Global("messaging.noItemsFound")}</p>
               </SGComponentExampleDemo>
 
               <h4>Usage</h4>
               <SGCodeBlock>{`// Empty dashboard — app/[locale]/projects/page.tsx
-<div className="empty-state" role="status">
-  <h2 className="empty-state-heading">
+<div
+  className="empty-state"
+  role="status"
+  aria-labelledby="projects-empty-heading"
+>
+  <h2 id="projects-empty-heading" className="empty-state-heading">
     {Project('messages.info.noProjectsHeading')}
   </h2>
   <p className="empty-state-description">
@@ -592,6 +598,11 @@ const partialProject = {
   >
     {Global('buttons.createNewPlan')}
   </TransitionLink>
+</div>
+
+// Project list (when items exist)
+<div className="template-list" role="list">
+  {projects.map(...)}
 </div>
 
 // Search miss — same page, different branch

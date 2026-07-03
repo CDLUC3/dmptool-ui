@@ -1,4 +1,6 @@
 ## Added
+- Added empty states to the Plan Dashboard (/projects) and Organization Projects (/admin/projects) when no projects exist
+- Documented the projects empty state pattern in the style guide (/styleguide/components/lists)
 - Added `UpdateUserInfo` and `ArchiveUser` mutations and `Plans`, `UserProjects`, and `User` queries [#281]
 - Added new, shared `LayoutSplitPanel` so that we can have one section with a right sidebar, and another section extending the full width [#281]
 - Added new route `admin.users.projects` [#281]
