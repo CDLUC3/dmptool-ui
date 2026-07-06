@@ -625,7 +625,7 @@ const QuestionEdit = () => {
   return (
     <>
       <PageHeader
-        title={t('title', { title: selectedQuestion?.question?.questionText ?? '' })}
+        title={t('title')}
         description=""
         showBackButton={false}
         breadcrumbs={

@@ -402,7 +402,7 @@
     }
   },
   "QuestionEdit": {
-    "title": "Editar: {title}",
+    "title": "Editar pergunta",
     "buttons": {
       "changeType": "Mudar os Tipos",
       "previewQuestion": "Pergunta de visualização",

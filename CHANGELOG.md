@@ -1,3 +1,6 @@
+## Updated
+- Simplified the page title on template question edit screens. The header is now a static "Edit Question" label rather than "Edit: {question title}", making long or HTML-formatted question text less likely to clutter the page header [#78]
+
 ## Added
 - Added `UpdateUserInfo` and `ArchiveUser` mutations and `Plans`, `UserProjects`, and `User` queries [#281]
 - Added new, shared `LayoutSplitPanel` so that we can have one section with a right sidebar, and another section extending the full width [#281]
