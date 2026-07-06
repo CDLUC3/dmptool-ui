@@ -540,7 +540,8 @@ const OrganizationDetailsPage: React.FC = () => {
       errs.types = OrganizationDetails("messages.errors.types");
     }
 
-    // Compute link errors locally — no reliance on state that hasn't flushed yet
+    // Validates Organization Links - checks for missing URL, empty URL, or invalid URL format. It collects the order values
+    // into invalidLinkOrders array, so the UI can highlight exactly which rows are invalid
     const invalidLinkOrders: number[] = organizationLinks
       .filter((link) => !link.url || link.url.trim().length === 0 || !URL.canParse(link.url))
       .map((link) => link.order);
@@ -569,6 +570,7 @@ const OrganizationDetailsPage: React.FC = () => {
     scrollToTop(topRef);
   };
 
+  // Shared function to submit the Affiliation update, with optional form validation
   const submitAffiliationUpdate = async (validateForm: boolean) => {
     // Prevent double submission
     if (isSubmitting) return;
