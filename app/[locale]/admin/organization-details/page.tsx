@@ -199,24 +199,6 @@ const OrganizationDetailsPage: React.FC = () => {
       : name.replace(" ", "").slice(0, 4).toUpperCase();
   };
 
-  // Remove parenthetical text from display name when it duplicates known acronym or domain.
-  const getNormalizedDisplayName = (
-    displayName: string,
-    acronyms: string[] = [],
-    displayDomain?: string | null,
-  ): string => {
-    const match = displayName.match(/\(([^)]+)\)/);
-    if (!match) {
-      return displayName;
-    }
-
-    const parenthesisText = match[1].trim();
-    const domain = displayDomain?.trim();
-    const shouldRemove = acronyms.includes(parenthesisText) || parenthesisText === domain;
-
-    return shouldRemove ? displayName.replace(match[0], "").trim() : displayName;
-  };
-
   // Update one of the Affiliation's fields
   const updateOrganizationContent = (key: string, value: string | string[] | boolean | number | null) => {
     setOrganization((prevContents) => ({
@@ -644,7 +626,7 @@ const OrganizationDetailsPage: React.FC = () => {
 
       const displayDomain = affiliationData.affiliationById.displayDomain;
       const acronyms = affiliationData.affiliationById.acronyms || [];
-      const fullName = getNormalizedDisplayName(affiliationData.affiliationById.displayName, acronyms, displayDomain);
+      const fullName = affiliationData.affiliationById.displayName;
 
       setOrganization({
         id: affiliationData.affiliationById.id,
