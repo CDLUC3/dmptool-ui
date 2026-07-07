@@ -41,7 +41,7 @@ export async function handleGraphQLErrors<TData, TVariables>(
           // Attempt to refresh the auth tokens
           try {
             const result = await refreshAuthTokens();
-            if (result) {
+            if (result && !result.shouldRedirect && 'response' in result) {
               await refetch();
             } else {
               // If refresh fails, log the error and add to the errorResponses

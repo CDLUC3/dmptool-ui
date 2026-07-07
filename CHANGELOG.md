@@ -1,4 +1,5 @@
 ## Added
+- Added new `/contact` page for users to message us [#297]
 - Added `UpdateUserInfo` and `ArchiveUser` mutations and `Plans`, `UserProjects`, and `User` queries [#281]
 - Added new, shared `LayoutSplitPanel` so that we can have one section with a right sidebar, and another section extending the full width [#281]
 - Added new route `admin.users.projects` [#281]

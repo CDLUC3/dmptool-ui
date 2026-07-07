@@ -42,7 +42,7 @@ function Footer() {
                     <a href="">Terms & Privacy</a>
                   </li>
                   <li>
-                    <a href="">Contact</a>
+                    <a href="/contact">Contact</a>
                   </li>
                   <li>
                     <a href="">Login</a>
