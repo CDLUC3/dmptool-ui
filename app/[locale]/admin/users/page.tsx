@@ -397,7 +397,6 @@ function OrgUserAccountsPage(): React.ReactElement {
         { id: 'plans', name: 'Plans' },
         { id: 'nonTestPlans', name: 'Non-test Plans' },
         { id: 'orcid', name: 'ORCID' },
-        { id: 'sso', name: 'SSO' },
         { id: 'active', name: 'Active' },
         { id: 'role', name: 'Role' },
         ...(isSuperAdmin ? [{ id: 'organization', name: 'Organization' }] : []),

@@ -1,5 +1,6 @@
 ## Added
 - Added `papaparse` package so that it's `unparse` method can handle things like quoting and escaping, type coercion, trailing newlines, etc [#238]
+- Added new `/contact` page for users to message us [#297]
 - Added `UpdateUserInfo` and `ArchiveUser` mutations and `Plans`, `UserProjects`, and `User` queries [#281]
 - Added new, shared `LayoutSplitPanel` so that we can have one section with a right sidebar, and another section extending the full width [#281]
 - Added new route `admin.users.projects` [#281]
@@ -19,8 +20,8 @@
 - Added `UpdateAffiliation` and `AffiliationById` queries [#203]
 
 ## Updated
-- Updated `errorLink` in `graphqlHelper.ts` to only call `fetchCsrfToken` for `forbidden` errors if the message is `Invalid CSRF token`, and updated `handleApolloError` in `apolloErrorHandler.ts` to extract and return error message [#238]
-- Updated `admin/users` page by adding a `Download as CSV` button. Download uses concurrent requests using apolloClient.query directly. Added download progress bar. [#238]
+- Updated "Publish" modal. Added "Required" and "Recommended" checklist sections, and added a requirement that the plan not be in test mode [#91]
+- Updated `PlanOverviewPage` to disable `request feedback` link when there is feedback is not enabled and there are no feedback emails [#285]
 - Updated the `ProjectListItem` component to allow for `isReadOnly` mode [#281]
 - Hooked up `admin/users` page with real data, and updated search features and table [#240]
 - Fixed bug in org logo upload logic

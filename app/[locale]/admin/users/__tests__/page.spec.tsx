@@ -213,9 +213,11 @@ describe('Admin - User Accounts Dashboard', () => {
     it('renders the search controls', async () => {
       renderPage([makeMeMock(UserRole.Researcher), makeUsersMock()]);
 
-      await screen.findByLabelText(/Admin.users.tools.searchLabel/i);
+      // Wait for the actual thing you're asserting on, not a proxy for it
+      expect(await screen.findByLabelText(/Admin.users.tools.searchLabel/i)).toBeInTheDocument();
       expect(screen.getByText('Admin.users.buttons.searchLabel')).toBeInTheDocument();
     });
+
 
     it('renders user rows after data loads', async () => {
       renderPage([makeMeMock(UserRole.Researcher), makeUsersMock()]);
@@ -285,8 +287,9 @@ describe('Admin - User Accounts Dashboard', () => {
 
       renderPage([makeMeMock(UserRole.Admin), makeUsersMock(), searchMock]);
 
-      const searchbox = await screen.findByRole('searchbox');
-      await userEvent.type(searchbox, 'alice');
+      // Wait for the search input itself, not a proxy for it
+      const searchInput = await screen.findByTestId('search-input');
+      await userEvent.type(searchInput, 'alice');
       await userEvent.click(screen.getByText('Admin.users.buttons.searchLabel'));
 
       await waitFor(() => expect(screen.getByText('alice@example.com')).toBeInTheDocument());

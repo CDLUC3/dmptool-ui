@@ -97,8 +97,8 @@
         "title": "Publish",
         "description1": "Publishing a Data Management Plan (DMP) assigns it a Digital Object Identifier (DOI). By publishing, you'll be able to link this plan to your ORCiD, and to project outputs such articles which will make it easier to show that you met your funder's requirements by the end of the project.",
         "description2": "This DOI uniquely identifies the DMP, facilitating easy reference and access in the future.",
-        "checklistTitle": "Before you publish your plan, we strongly recommend that you:",
-        "checklistInfo": "item(s) can be fixed",
+        "checklistTitle": "Before you publish your plan:",
+        "checklistInfo": "{count} item(s) can be fixed",
         "buttonNext": "Next: Set visibility",
         "visibilityTitle": "Publish: set visibility",
         "visibilityDescription": "Great, publishing your plan has many benefits.",
@@ -119,6 +119,7 @@
         },
         "checklistItem": {
           "primaryContact": "have a primary contact",
+          "mockProject": "Project is not marked as a test",
           "complete": "marked your plan as complete",
           "percentageAnswered": "have answered at least 50% of the questions (you answered {percentage}%)",
           "fundingText": "have identified your",
@@ -127,22 +128,27 @@
           "orcidText": "have designated the ORCiD for at least one of the",
           "projectMembers": "Project members"
         },
-        "publishButton": "Publish"
+        "publishButton": "Publish",
+        "recommended": "Recommended",
+        "required": "Required"
       }
     },
     "messages": {
       "errors": {
-        "updateTitleError": "There was an error updating the plan title"
+        "updateTitleError": "There was an error updating the plan title",
+        "requiredItemsIncomplete": "You must complete all required items before publishing the plan"
       },
       "success": {
         "successfullyUpdatedTitle": "Successfully updated the plan title",
         "successfullyPublished": "Successfully published the plan",
         "successfullyUpdatedStatus": "Successfully updated the plan status"
       },
-      "readOnlyLinkMessage": "Only plan collaborators can edit this plan."
+      "readOnlyLinkMessage": "Only the Primary Owner of a plan can request feedback",
+      "feedbackNotAvailable": "Feedback is currently not available"
     },
     "links": {
-      "editTitle": "Edit plan title"
+      "editTitle": "Edit plan title",
+      "projectDetailsPage": "Update in project details page"
     },
     "feedbackNotification": {
       "description": "You can view this plan and leave comments.",

@@ -146,8 +146,14 @@ const PlanOverviewPage: React.FC = () => {
   // State hooks
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  // Submitting feedback request
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // Submitting publish request
+  const [isPublishSubmitting, setIsPublishSubmitting] = useState(false);
+  // Plan status submitting
+  const [isPlanStatusSubmitting, setIsPlanStatusSubmitting] = useState(false);
   const [errorMessages, setErrorMessages] = useState<string[]>([]);
+  const [modalErrors, setModalErrors] = useState<string[]>([]);
   const [planVisibility, setPlanVisibility] = useState<PlanVisibility>(PlanVisibility.Private);
   const [planStatus, setPlanStatus] = useState<PlanStatus | null>(null);
   const [step, setStep] = useState(1);
@@ -179,6 +185,7 @@ const PlanOverviewPage: React.FC = () => {
   const dmpId = String(params.dmpid);
   const planId = Number(dmpId);
   const errorRef = useRef<HTMLDivElement | null>(null);
+  const modalErrorRef = useRef<HTMLDivElement | null>(null);
 
   const toastState = useToast();
 
@@ -292,9 +299,18 @@ const PlanOverviewPage: React.FC = () => {
   };
 
   const handleDialogCloseBtn = () => {
-    setIsModalOpen(false);
-    setStep(1);
+    handleModalOpenChange(false);
   };
+
+  const handleModalOpenChange = useCallback((open: boolean) => {
+    setIsModalOpen(open);
+    if (!open) {
+      setStep(1);
+      setModalErrors([]);
+      setIsPublishSubmitting(false);
+    }
+  }, []);
+
 
   // Call Server Action updatePlanStatusAction to run the updatePlanStatusMutation
   const updateStatus = useCallback(async (status: PlanStatus) => {
@@ -319,6 +335,7 @@ const PlanOverviewPage: React.FC = () => {
     e.preventDefault();
 
     setIsEditingPlanStatus(false);
+    setIsPlanStatusSubmitting(true);
 
     const status = planStatus ?? (planData.status as PlanStatus);
 
@@ -346,6 +363,7 @@ const PlanOverviewPage: React.FC = () => {
             ...prev,
             status,
           }));
+          setIsPlanStatusSubmitting(false);
           const successMessage = t("messages.success.successfullyUpdatedStatus");
           toastState.add(successMessage, { type: "success" });
         }
@@ -371,14 +389,120 @@ const PlanOverviewPage: React.FC = () => {
     };
   }, [planId, router]);
 
-  const handleSubmit = useCallback(async (event: React.FormEvent<HTMLFormElement>) => {
+  // Items in the required checklist that must be completed before publishing. Memoize to prevent recalculation on every render.
+  const requiredCheckListItems = useMemo(() => [
+    {
+      id: 1,
+      content: (
+        <>
+          <strong>
+            {t("publishModal.publish.checklistItem.primaryContact")}{" "}
+            <Link
+              href={CHANGE_PRIMARY_CONTACT_URL}
+              onPress={() => handleModalOpenChange(true)}
+            >
+              {planData.primaryContact}
+            </Link>
+          </strong>
+        </>
+      ),
+      completed: planData.members.some((member) => member.isPrimaryContact),
+    },
+    {
+      id: 2,
+      content: (
+        <>
+          <strong>
+            {t("publishModal.publish.checklistItem.mockProject")}{" "}
+            <Link
+              href={routePath("projects.project.info", { projectId })}
+              onPress={() => setIsModalOpen(false)}
+            >
+              {t("links.projectDetailsPage")}
+            </Link>
+          </strong></>
+      ),
+      completed: planData.isTestProject === false,
+    }
+  ], [planData]);
+
+
+  // Items recommended for publishing. Memoize to prevent recalculation on every render
+  const recommendedCheckListItems = useMemo(() => [
+    {
+      id: 3,
+      content: <>{t("publishModal.publish.checklistItem.complete")}</>,
+      completed: planData.status === "COMPLETE",
+    },
+    {
+      id: 4,
+      content: (
+        <>
+          {t("publishModal.publish.checklistItem.percentageAnswered", {
+            percentage: planData.percentageAnswered,
+          })}
+        </>
+      ),
+      completed: planData.percentageAnswered >= 50,
+    },
+    {
+      id: 5,
+      content: (
+        <>
+          {t("publishModal.publish.checklistItem.fundingText")} (
+          <Link
+            href={FUNDINGS_URL}
+            onPress={() => setIsModalOpen(false)}
+          >
+            {t("publishModal.publish.checklistItem.funding")}
+          </Link>
+          )
+        </>
+      ),
+      completed: !!planData.funderName, // Check if funderName exists
+    },
+    {
+      id: 6,
+      content: <>{t("publishModal.publish.checklistItem.requiredFields")}</>,
+      completed: planData.completedAllRequiredQuestions
+    },
+    {
+      id: 7,
+      content: (
+        <>
+          {t("publishModal.publish.checklistItem.orcidText")}{" "}
+          <Link
+            href={MEMBERS_URL}
+            onPress={() => setIsModalOpen(false)}
+          >
+            {t("publishModal.publish.checklistItem.projectMembers")}
+          </Link>
+        </>
+      ),
+      completed: planData.members.some((member) => member.orcid), // Check if any member has an ORCiD
+    },
+  ], [planData, CHANGE_PRIMARY_CONTACT_URL, FUNDINGS_URL, MEMBERS_URL]);
+
+  const handlePublishSubmit = useCallback(async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    // Close modal
-    setIsModalOpen(false);
+    // Clear stale modal errors before running validation/submission.
+    setModalErrors([]);
 
-    // Set step back to Step 1
-    setStep(1);
+    // Block publishing if required checklist items aren't complete
+    const hasIncompleteRequiredItems = requiredCheckListItems.some(
+      (item) => !item.completed
+    );
+
+    if (hasIncompleteRequiredItems) {
+      setStep(1);
+      setModalErrors([t("messages.errors.requiredItemsIncomplete")]);
+      setIsPublishSubmitting(false);
+      return;
+    }
+
+    // Set submitting state to true to disable the publish button and show loading state
+    setIsPublishSubmitting(true);
 
     const form = event.target as HTMLFormElement;
     const formData = new FormData(form);
@@ -386,33 +510,43 @@ const PlanOverviewPage: React.FC = () => {
     // Extract the selected radio button value, and make it upper case to match TemplateVisibility enum values
     const visibility = formData.get("visibility")?.toString().toUpperCase() as PlanVisibility;
 
-    const result = await publishPlan(visibility);
+    try {
+      const result = await publishPlan(visibility);
 
-    if (!result.success) {
-      const errors = result.errors;
+      if (!result.success) {
+        const errors = result.errors;
 
-      //Check if errors is an array or an object
-      if (Array.isArray(errors)) {
-        //Handle errors as an array
-        setErrorMessages(errors.length > 0 ? errors : [Global("messaging.somethingWentWrong")]);
+        //Check if errors is an array or an object
+        if (Array.isArray(errors)) {
+          //Handle errors as an array
+          setErrorMessages(errors.length > 0 ? errors : [Global("messaging.somethingWentWrong")]);
+        }
+        return;
       }
-    } else {
+
       if (result?.data?.errors) {
         const errs = extractErrors<PublishPlanErrors>(result?.data?.errors, ["general", "visibility", "status"]);
         if (errs.length > 0) {
           setErrorMessages(errs);
-        } else {
-          const successMessage = t("messages.success.successfullyPublished");
-          toastState.add(successMessage, { type: "success" });
+          return;
         }
       }
+
+      const successMessage = t("messages.success.successfullyPublished");
+      toastState.add(successMessage, { type: "success" });
+
+      // Close modal only on successful publish with no field-level errors.
+      handleModalOpenChange(false);
+
       //Need to refetch plan data to refresh the info that was changed
       await refetch();
 
       // Need to refetch related works project stats data
       await relatedWorksByProjectStatsRefetch();
+    } finally {
+      setIsPublishSubmitting(false);
     }
-  }, [publishPlan, Global, t, toastState, refetch, relatedWorksByProjectStatsRefetch]);
+  }, [publishPlan, Global, t, toastState, refetch, relatedWorksByProjectStatsRefetch, requiredCheckListItems, handleModalOpenChange]);
 
   // Call Server Action updatePlanTitleAction to run the updatePlanTitleMutation
   const updateTitle = useCallback(async (title: string) => {
@@ -533,6 +667,7 @@ const PlanOverviewPage: React.FC = () => {
         completedAllRequiredQuestions: data?.plan?.versionedSections?.every((section) => section.answeredRequiredQuestions === section.totalRequiredQuestions) ?? false,
         orgId: data?.plan?.versionedTemplate?.owner?.uri ?? "",
         feedbackStatus: data?.plan?.feedbackStatus?.status ?? "NONE",
+        isTestProject: data?.plan?.project?.isTestProject || false,
       });
       setPlanVisibility(data.plan.visibility as PlanVisibility);
       setIsReadOnly(data?.plan?.readOnly || false);
@@ -550,79 +685,6 @@ const PlanOverviewPage: React.FC = () => {
   }, [planData]);
 
 
-  // Memoize checklist items to prevent unnecessary recalculations
-  const checkListItems = useMemo(() => [
-    {
-      id: 1,
-      content: (
-        <>
-          <strong>
-            {t("publishModal.publish.checklistItem.primaryContact")}{" "}
-            <Link
-              href={CHANGE_PRIMARY_CONTACT_URL}
-              onPress={() => setIsModalOpen(false)}
-            >
-              {planData.primaryContact}
-            </Link>
-          </strong>
-        </>
-      ),
-      completed: planData.members.some((member) => member.isPrimaryContact),
-    },
-    {
-      id: 2,
-      content: <>{t("publishModal.publish.checklistItem.complete")}</>,
-      completed: planData.status === "COMPLETE",
-    },
-    {
-      id: 3,
-      content: (
-        <>
-          {t("publishModal.publish.checklistItem.percentageAnswered", {
-            percentage: planData.percentageAnswered,
-          })}
-        </>
-      ),
-      completed: planData.percentageAnswered >= 50,
-    },
-    {
-      id: 4,
-      content: (
-        <>
-          {t("publishModal.publish.checklistItem.fundingText")} (
-          <Link
-            href={FUNDINGS_URL}
-            onPress={() => setIsModalOpen(false)}
-          >
-            {t("publishModal.publish.checklistItem.funding")}
-          </Link>
-          )
-        </>
-      ),
-      completed: !!planData.funderName, // Check if funderName exists
-    },
-    {
-      id: 5,
-      content: <>{t("publishModal.publish.checklistItem.requiredFields")}</>,
-      completed: planData.completedAllRequiredQuestions
-    },
-    {
-      id: 6,
-      content: (
-        <>
-          {t("publishModal.publish.checklistItem.orcidText")}{" "}
-          <Link
-            href={MEMBERS_URL}
-            onPress={() => setIsModalOpen(false)}
-          >
-            {t("publishModal.publish.checklistItem.projectMembers")}
-          </Link>
-        </>
-      ),
-      completed: planData.members.some((member) => member.orcid), // Check if any member has an ORCiD
-    },
-  ], [planData, CHANGE_PRIMARY_CONTACT_URL, FUNDINGS_URL, MEMBERS_URL, t]);
-
   // Memoize computed descriptions to prevent recalculation on every render
   const { pageDescription, pageDescriptionWithVersion } = useMemo(() => {
     const description = (planData?.sourceTemplate && planData?.affiliationName)
@@ -636,9 +698,19 @@ const PlanOverviewPage: React.FC = () => {
     };
   }, [planData?.sourceTemplate, planData?.affiliationName, planData?.templateVersion, formattedPublishDate, t, Global]);
 
+  const isFeedbackEnabled = useMemo(() => {
+    const affiliation = me?.me?.affiliation;
+    if (!affiliation) return false;
+    return affiliation.feedbackEnabled === true && (affiliation.feedbackEmails?.length ?? 0) > 0;
+  }, [me?.me?.affiliation]);
+
+
   if (loading) {
     return <div>{Global("messaging.loading")}...</div>;
   }
+
+  // Calculate the number of checklist items that are not completed
+  const itemsToBeFixed = requiredCheckListItems.filter(item => !item.completed).length + recommendedCheckListItems.filter(item => !item.completed).length;
 
   return (
     <>
@@ -865,7 +937,7 @@ const PlanOverviewPage: React.FC = () => {
                     }
                   </p>
                 </div>
-                {isPrimaryCollaborator ? (
+                {isPrimaryCollaborator && isFeedbackEnabled ? (
                   <TransitionLink
                     href={FEEDBACK_URL}
                     className="side-panel-link"
@@ -884,7 +956,10 @@ const PlanOverviewPage: React.FC = () => {
                     </Button>
                     <Popover placement="bottom" className="popover--inverse">
                       <Dialog aria-label={t('messages.readOnlyLinkMessage')} className="popoverContent">
-                        {t('messages.readOnlyLinkMessage')}
+                        {!isFeedbackEnabled
+                          ? t('messages.feedbackNotAvailable')
+                          : t('messages.readOnlyLinkMessage')
+                        }
                       </Dialog>
                     </Popover>
                   </DialogTrigger>
@@ -909,7 +984,14 @@ const PlanOverviewPage: React.FC = () => {
                     >
                       {(item) => <ListBoxItem key={item.id}>{item.name}</ListBoxItem>}
                     </FormSelect>
-                    {isEditingPlanStatus && <Button type="submit">{Global("buttons.save")}</Button>}
+                    {isEditingPlanStatus && (
+                      <Button
+                        type="submit"
+                        isDisabled={isPlanStatusSubmitting}
+                      >
+                        {isPlanStatusSubmitting ? Global("buttons.saving") : Global("buttons.save")}
+                      </Button>
+                    )}
                   </Form>
                 </div>
               ) : (
@@ -998,12 +1080,16 @@ const PlanOverviewPage: React.FC = () => {
       <Modal
         isDismissable
         isOpen={isModalOpen}
-        onOpenChange={setIsModalOpen}
+        onOpenChange={handleModalOpenChange}
         data-testid="modal"
       >
         {step === 1 && (
           <Dialog>
             <div className={`${styles.publishModal} ${styles.dialogWrapper}`}>
+              <ErrorMessages
+                errors={modalErrors}
+                ref={modalErrorRef}
+              />
               <Heading slot="title">{t("publishModal.publish.title")}</Heading>
 
               <p>{t("publishModal.publish.description1")}</p>
@@ -1012,12 +1098,50 @@ const PlanOverviewPage: React.FC = () => {
 
               <Heading level={2}>{t("publishModal.publish.checklistTitle")}</Heading>
 
+              <h3 id="required-checklist-heading">{t("publishModal.publish.required")}</h3>
               <ul
                 className={styles.checkList}
-                data-testid="checklist"
+                data-testid="required-checklist"
+                aria-labelledby="required-checklist-heading"
               >
                 {/* Render completed items first */}
-                {checkListItems
+                {requiredCheckListItems
+                  .filter((item) => item.completed)
+                  .map((item) => (
+                    <li
+                      key={item.id}
+                      className={styles.iconTextListItem}
+                    >
+                      <div className={styles.iconWrapper}>
+                        <DmpIcon icon="check_circle_black" />
+                      </div>
+                      <div className={styles.textWrapper}>{item.content}</div>
+                    </li>
+                  ))}
+                {/* Render incomplete items next */}
+                {requiredCheckListItems
+                  .filter((item) => !item.completed)
+                  .map((item) => (
+                    <li
+                      key={item.id}
+                      className={styles.iconTextListItem}
+                    >
+                      <div className={styles.iconWrapper}>
+                        <DmpIcon icon="error_circle" />
+                      </div>
+                      <div className={styles.textWrapper}>{item.content}</div>
+                    </li>
+                  ))}
+              </ul>
+
+              <h3 id="recommended-checklist-heading">{t("publishModal.publish.recommended")}</h3>
+              <ul
+                className={styles.checkList}
+                data-testid="recommended-checklist"
+                aria-labelledby="recommended-checklist-heading"
+              >
+                {/* Render completed items first */}
+                {recommendedCheckListItems
                   .filter((item) => item.completed)
                   .map((item) => (
                     <li
@@ -1032,7 +1156,7 @@ const PlanOverviewPage: React.FC = () => {
                   ))}
 
                 {/* Render incomplete items next */}
-                {checkListItems
+                {recommendedCheckListItems
                   .filter((item) => !item.completed)
                   .map((item) => (
                     <li
@@ -1049,8 +1173,7 @@ const PlanOverviewPage: React.FC = () => {
 
               <p>
                 <strong>
-                  {checkListItems.filter((item) => !item.completed).length}{" "}
-                  {t("publishModal.publish.checklistInfo")}
+                  {t("publishModal.publish.checklistInfo", { count: itemsToBeFixed })}
                 </strong>
               </p>
 
@@ -1082,7 +1205,7 @@ const PlanOverviewPage: React.FC = () => {
           <Dialog>
             <div className={`${styles.publishModal} ${styles.dialogWrapper}`}>
               <Form
-                onSubmit={(e) => handleSubmit(e)}
+                onSubmit={(e) => handlePublishSubmit(e)}
                 data-testid="publishForm"
               >
                 <Heading slot="title">{t("publishModal.publish.visibilityTitle")}</Heading>
@@ -1123,7 +1246,12 @@ const PlanOverviewPage: React.FC = () => {
 
                 <div className="modal-actions">
                   <div>
-                    <Button type="submit">{t("publishModal.publish.title")}</Button>
+                    <Button
+                      type="submit"
+                      isDisabled={isPublishSubmitting}
+                    >
+                      {isPublishSubmitting ? Global('buttons.publishing') : Global("buttons.publish")}
+                    </Button>
                   </div>
                   <div>
                     <Button
