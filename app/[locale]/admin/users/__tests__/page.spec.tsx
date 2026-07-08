@@ -150,11 +150,12 @@ describe('Admin - User Accounts Dashboard', () => {
 
     it('renders the search controls', async () => {
       renderPage([makeMeMock(UserRole.Researcher), makeUsersMock()]);
-      await waitFor(() => expect(screen.getByTestId('mock-table')).toBeInTheDocument());
 
-      expect(screen.getByLabelText(/Admin.users.tools.searchLabel/i)).toBeInTheDocument();
+      // Wait for the actual thing you're asserting on, not a proxy for it
+      expect(await screen.findByLabelText(/Admin.users.tools.searchLabel/i)).toBeInTheDocument();
       expect(screen.getByText('Admin.users.buttons.searchLabel')).toBeInTheDocument();
     });
+
 
     it('renders user rows after data loads', async () => {
       renderPage([makeMeMock(UserRole.Researcher), makeUsersMock()]);
@@ -213,9 +214,10 @@ describe('Admin - User Accounts Dashboard', () => {
       };
 
       renderPage([makeMeMock(UserRole.Admin), makeUsersMock(), searchMock]);
-      await waitFor(() => expect(screen.getByTestId('mock-table')).toBeInTheDocument());
 
-      await userEvent.type(screen.getByRole('searchbox'), 'alice');
+      // Wait for the search input itself, not a proxy for it
+      const searchInput = await screen.findByTestId('search-input');
+      await userEvent.type(searchInput, 'alice');
       await userEvent.click(screen.getByText('Admin.users.buttons.searchLabel'));
 
       await waitFor(() => expect(screen.getByText('alice@example.com')).toBeInTheDocument());
