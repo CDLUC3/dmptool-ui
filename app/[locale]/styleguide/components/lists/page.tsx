@@ -43,6 +43,7 @@ export default function ListsDataCardsPage() {
       publishDate: "2024-01-10",
       visibility: "public",
       hasAdditionalGuidance: true,
+      bestPractices: true,
       defaultExpanded: false,
     },
     {
@@ -497,6 +498,12 @@ const partialProject = {
         <section id="template-select-list">
           <h2>Template Select List Item</h2>
           <p>Individual template item component with selection capabilities and rich metadata display.</p>
+          <p>
+            Templates flagged as a DMP Tool best practice show a gold badge in the top-left corner. The
+            &ldquo;Best practice&rdquo; label is a button that opens a short explanation on click. The first
+            example below is a best practice template and also has additional organisation guidance, showing how
+            both indicators appear together.
+          </p>
 
           <SGComponentExample>
             <SGComponentExampleHeader title="Template Selection Items" />
@@ -531,7 +538,8 @@ const template = {
   lastUpdated: "2024-01-15",
   publishStatus: "Published",
   visibility: "public",
-  hasAdditionalGuidance: true
+  hasAdditionalGuidance: true,
+  bestPractices: true // shows the gold "Best practice" badge
 };
 
 <TemplateSelectListItem
@@ -548,6 +556,10 @@ const template = {
                 </li>
                 <li>
                   <strong>Guidance indicators:</strong> Visual indicators for additional guidance
+                </li>
+                <li>
+                  <strong>Best practice badge:</strong> Gold corner badge with a click-to-open explanation for
+                  DMP Tool best practice templates
                 </li>
                 <li>
                   <strong>Selection states:</strong> Clear selection and action buttons

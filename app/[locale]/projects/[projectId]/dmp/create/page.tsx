@@ -22,6 +22,7 @@ import PageHeader from "@/components/PageHeader";
 import { ContentContainer, LayoutContainer } from '@/components/Container';
 import TemplateList from '@/components/TemplateList';
 import ErrorMessages from '@/components/ErrorMessages';
+import Loading from '@/components/Loading';
 import { CheckboxGroupComponent } from '@/components/Form';
 import Pagination from '@/components/Pagination';
 
@@ -463,6 +464,19 @@ const PlanCreate: React.FC = () => {
     return templateMetaData?.publishedTemplatesMetaData?.hasBestPracticeTemplates ?? false;
   }, [templateMetaData]);
 
+  // Whether the page is still performing its initial template load. Used to show a
+  // spinner (instead of the "no items found" message) before the first fetch has been
+  // applied, so the empty state doesn't flash on initial load. Once the user interacts
+  // (search/filter), we no longer suppress the empty state — an empty result should
+  // surface immediately as "no items found".
+  const isLoadingTemplates =
+    !userHasInteracted &&
+    (loading ||
+      projectFundingsLoading ||
+      userLoading ||
+      templatesMetaDataLoading ||
+      !initialSelectionApplied);
+
   const initialFilterConfig = useMemo(() => {
     // Don't calculate if user has interacted or data isn't ready
     if (
@@ -689,6 +703,8 @@ const PlanCreate: React.FC = () => {
                   handlePageClick={handlePageClick}
                 />)}
             </>
+          ) : isLoadingTemplates ? (
+            <Loading variant="inline" message={Global('messaging.loading')} />
           ) : (
             <p>{Global('messaging.noItemsFound')}</p>
           )}

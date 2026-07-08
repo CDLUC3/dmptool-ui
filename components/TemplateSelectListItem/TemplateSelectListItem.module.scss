@@ -9,8 +9,22 @@
   border: 1px solid var(--card-border);
 }
 
+$bp-navy: var(--blue-900);
+$bp-gold: color-mix(in srgb, var(--yellow-400) 60%, var(--white));
+$bp-gold-hover: color-mix(in srgb, var(--yellow-400) 80%, var(--white));
+
+.templateItemBestPractice {
+  position: relative;
+}
+
 .templateItemWrapper {
   padding: 1.25rem var(--space-5);
+}
+
+// When a corner badge is present, give the content room so the badge
+// never overlaps the funder text or the Select button.
+.templateItemWrapperWithBadge {
+  padding-top: 2.75rem;
 }
 
 
@@ -83,17 +97,106 @@
   }
 }
 
+// ---- Additional guidance: stays as the light-blue footer ----
 .guidance {
   display: flex;
-  align-items: left;
-  justify-content: left;
+  align-items: center;
   gap: var(--space-2);
   padding: var(--space-2) var(--space-5);
   background-color: var(--blue-100);
-  border-radius: var(--border-radius-md);
+  border-radius: 0 0 var(--card-border-radius) var(--card-border-radius);
   color: var(--heading-color);
   font-size: var(--fs-small);
   font-weight: var(--fw-normal);
+}
+
+// ---- Best practice: corner badge ----
+.bpBadge {
+  position: absolute;
+  top: 0;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background-color: $bp-gold;
+  color: $bp-navy;
+  font-size: var(--fs-small);
+  font-weight: var(--fw-semibold);
+  line-height: 1.4;
+  transition: background-color 0.15s ease-in-out;
+
+  // Hovering (or keyboard-focusing) the link lights up the whole badge.
+  &:hover,
+  &:focus-within {
+    background-color: $bp-gold-hover;
+  }
+}
+
+.bpBadgeLeft {
+  left: 0;
+  // Match the card's rounded top-left corner; round the inner (bottom-right) corner.
+  border-radius: var(--card-border-radius) 0 var(--border-radius-lg) 0;
+}
+
+.bpStar {
+  --icon-fill: #{$bp-navy};
+  display: block;
+  flex-shrink: 0;
+}
+
+// The label looks and behaves like a link so it's obvious it can be clicked.
+.bpLink {
+  background: none !important;
+  border: none;
+  margin: 0;
+  padding: 1px var(--space-1);
+  border-radius: var(--border-radius-sm);
+  color: $bp-navy !important;
+  font-size: var(--fs-small);
+  font-weight: var(--fw-semibold);
+  line-height: 1;
+  text-decoration: underline dotted;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  cursor: help;
+
+  // Keep the label transparent on interaction (the badge itself changes
+  // colour) instead of the global primary-button hover/focus styles.
+  &:hover:not(:disabled),
+  &[data-hovered],
+  &[data-pressed],
+  &:active,
+  &:focus,
+  &:focus-visible,
+  &[data-focused],
+  &[data-focus-visible] {
+    background: none !important;
+    color: $bp-navy !important;
+    text-decoration: underline solid;
+    text-underline-offset: 3px;
+  }
+
+  &:focus-visible,
+  &[data-focus-visible] {
+    outline: 2px solid $bp-navy !important;
+    outline-offset: 2px;
+  }
+}
+
+.bpPopover {
+  max-width: 20rem;
+}
+
+.bpPopoverContent {
+  background-color: $bp-navy;
+  color: var(--gray-50);
+  font-size: var(--fs-small);
+  line-height: var(--lh-normal);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--border-radius-md);
+  box-shadow: var(--card-shadow);
+  outline: none;
 }
 
 .updateLink {

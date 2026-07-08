@@ -329,6 +329,7 @@ const TemplateSelectTemplatePage = ({ templateName }: { templateName: string }) 
         lastRevisedBy: template?.modifiedByName || null,
         publishStatus: Global('published'),// These are all published templates
         hasAdditionalGuidance: false,
+        bestPractices: template?.bestPractice || false,
         defaultExpanded: false,
         visibility: template?.visibility,
       }))
