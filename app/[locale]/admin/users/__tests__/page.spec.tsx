@@ -215,7 +215,9 @@ describe('Admin - User Accounts Dashboard', () => {
       renderPage([makeMeMock(UserRole.Admin), makeUsersMock(), searchMock]);
       await waitFor(() => expect(screen.getByTestId('mock-table')).toBeInTheDocument());
 
-      await userEvent.type(screen.getByRole('searchbox'), 'alice');
+      // Search controls render only after MeDocument resolves; the table can appear first.
+      const input = await screen.findByTestId('search-input');
+      await userEvent.type(input, 'alice');
       await userEvent.click(screen.getByText('Admin.users.buttons.searchLabel'));
 
       await waitFor(() => expect(screen.getByText('alice@example.com')).toBeInTheDocument());
