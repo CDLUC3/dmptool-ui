@@ -23,6 +23,7 @@ export type MetaDataConfig = {
 
 export type StandardField = {
   id: string;
+  commonStandardId: string;
   label: string;
   languageTranslationKey?: string;
   enabled: boolean;

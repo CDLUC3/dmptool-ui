@@ -4,7 +4,8 @@ import {
   ResearchOutputTableQuestionType,
   AnyTableColumnQuestionType,
   RepositorySearchAnswerType,
-  DefaultResearchOutputCustomColumn
+  DefaultResearchOutputCustomColumn,
+  ResearchOutputTableColumnsEnum
 } from '@dmptool/types';
 import {
   RESEARCH_OUTPUT_QUESTION_TYPE,
@@ -36,6 +37,7 @@ type ResearchOutputState = {
 
 // Create a flexible column type for building columns dynamically
 type FlexibleResearchOutputColumn = {
+  commonStandardId: string;
   heading: string;
   required: boolean;
   enabled: boolean;
@@ -193,6 +195,7 @@ const buildColumnFromDefault = (
   } as AnyTableColumnQuestionType;
 
   return {
+    commonStandardId: field.commonStandardId,
     heading: field.label || defaultColumn.heading,
     required: field.required ?? defaultColumn.required,
     enabled: field.enabled ?? defaultColumn.enabled ?? false,
@@ -278,19 +281,20 @@ export const stateToJSON = (
           : defaultColumn.content;
 
         columns.push({
+          commonStandardId: ResearchOutputTableColumnsEnum.enum.data_flags,
           heading: field.label || defaultColumn.heading,
           required: field.required ?? defaultColumn.required ?? false,
           enabled: field.enabled ?? false,
           help: defaultColumn.help,
           content: {
-            type: 'checkBoxes',
+            type: "checkBoxes",
             meta: baseContent.meta,
             attributes: {
               ...baseContent.attributes,
               ...(field.languageTranslationKey && { labelTranslationKey: field.languageTranslationKey }),
             },
-            options: baseContent.options
-          }
+            options: baseContent.options,
+          },
         });
         break;
       }
@@ -300,21 +304,22 @@ export const stateToJSON = (
         if (!defaultColumn || defaultColumn.content.type !== 'repositorySearch') break;
 
         const repoColumn: FlexibleResearchOutputColumn = {
-          heading: field.label || defaultColumn?.heading || '',
+          commonStandardId: ResearchOutputTableColumnsEnum.enum.host,
+          heading: field.label || defaultColumn?.heading || "",
           required: field.required ?? defaultColumn?.required ?? false,
           enabled: field.enabled ?? false,
           help: defaultColumn?.help,
           content: {
-            type: 'repositorySearch',
+            type: "repositorySearch",
             meta: defaultColumn.content.meta,
             graphQL: defaultColumn.content.graphQL,
             attributes: {
               ...defaultColumn.content.attributes,
               ...(field.languageTranslationKey && { labelTranslationKey: field.languageTranslationKey }),
               label: field.label || defaultColumn.heading,
-              help: field.helpText || defaultColumn.content.attributes?.help || '',
-            }
-          }
+              help: field.helpText || defaultColumn.content.attributes?.help || "",
+            },
+          },
         };
 
         if (field.repoConfig?.customRepos && field.repoConfig.customRepos.length > 0) {
@@ -334,7 +339,8 @@ export const stateToJSON = (
         const defaultColumn = DEFAULT_COLUMNS_MAP.metadataStandards;
         if (!defaultColumn || defaultColumn.content.type !== 'metadataStandardSearch') break;
         const metadataColumn: FlexibleResearchOutputColumn = {
-          heading: field.label || defaultColumn?.heading || '',
+          commonStandardId: ResearchOutputTableColumnsEnum.enum.metadata,
+          heading: field.label || defaultColumn?.heading || "",
           required: field.required ?? defaultColumn?.required ?? false,
           enabled: field.enabled ?? false,
           content: {
@@ -343,9 +349,9 @@ export const stateToJSON = (
               ...defaultColumn?.content?.attributes,
               ...(field.languageTranslationKey && { labelTranslationKey: field.languageTranslationKey }),
               label: field.label || defaultColumn?.heading,
-              help: field.helpText || defaultColumn?.content?.attributes?.help || ''
-            }
-          }
+              help: field.helpText || defaultColumn?.content?.attributes?.help || "",
+            },
+          },
         };
 
         if (hasMetaDataConfig(field) && field.metaDataConfig?.customStandards && field.metaDataConfig.customStandards.length > 0) {
@@ -363,20 +369,21 @@ export const stateToJSON = (
         if (!defaultColumn || defaultColumn.content.type !== 'licenseSearch') break;
 
         const licenseColumn: FlexibleResearchOutputColumn = {
+          commonStandardId: ResearchOutputTableColumnsEnum.enum.license_ref,
           heading: field.label || defaultColumn?.heading,
           required: field.required ?? defaultColumn?.required ?? false,
           enabled: field.enabled ?? false,
           content: {
-            type: 'licenseSearch',
+            type: "licenseSearch",
             meta: defaultColumn.content.meta,
             graphQL: defaultColumn.content.graphQL,
             attributes: {
               ...defaultColumn.content.attributes,
               ...(field.languageTranslationKey && { labelTranslationKey: field.languageTranslationKey }),
               label: field.label || defaultColumn.heading,
-              help: field.helpText || defaultColumn.content.attributes?.help || ''
-            }
-          }
+              help: field.helpText || defaultColumn.content.attributes?.help || "",
+            },
+          },
         };
 
         if (field.licensesConfig?.mode === 'addToDefaults' && field.licensesConfig?.customTypes && field.licensesConfig.customTypes.length > 0) {
@@ -450,6 +457,7 @@ export const stateToJSON = (
       } as AnyTableColumnQuestionType;
 
       columns.push({
+        commonStandardId: customField.commonStandardId,
         heading: customField.heading,  // Use heading instead of customLabel/label
         required: false,
         enabled: true,
@@ -657,6 +665,7 @@ export const jsonToState = (
   const hydratedAdditionalFields = customCols.map((col: typeof DefaultResearchOutputTableQuestion['columns'][number], idx: number) => ({
     id: col.heading?.toLowerCase().replace(/\s+/g, '_') || `custom_field_${idx}`,
     heading: col.heading || `Custom Field ${idx + 1}`,
+    commonStandardId: ResearchOutputTableColumnsEnum.enum.custom,
     help: getHelpText(col.content?.attributes) || '',
     enabled: !!col.enabled,
     required: false,
@@ -683,18 +692,24 @@ export const jsonToState = (
     ...parsed.columns
       .filter((col) => col.enabled)
       .map((col) => {
-        const key = col?.heading;
-        switch (key) {
-          case 'researchOutput.title': return 'title';
-          case 'researchOutput.description': return 'description';
-          case 'researchOutput.outputType': return 'outputType';
-          case 'researchOutput.dataFlags': return 'dataFlags';
-          case 'researchOutput.repositories': return 'repoSelector';
-          case 'researchOutput.metadataStandards': return 'metadataStandards';
-          case 'researchOutput.licenses': return 'licenses';
-          case 'researchOutput.accessLevels': return 'accessLevels';
+        switch (col?.commonStandardId) {
+          case ResearchOutputTableColumnsEnum.enum.type:
+            return "outputType";
+          case ResearchOutputTableColumnsEnum.enum.data_flags:
+            return "dataFlags";
+          case ResearchOutputTableColumnsEnum.enum.data_access:
+            return "accessLevels";
+          case ResearchOutputTableColumnsEnum.enum.host:
+            return "repoSelector";
+          case ResearchOutputTableColumnsEnum.enum.metadata:
+            return "metadataStandards";
+          case ResearchOutputTableColumnsEnum.enum.license_ref:
+            return "licenses";
+          case ResearchOutputTableColumnsEnum.enum.title:
+          case ResearchOutputTableColumnsEnum.enum.description:
+            return col.commonStandardId;
           default:
-            return col.heading?.toLowerCase().replace(/\s+/g, '_');
+            return col.heading?.toLowerCase()?.replace(/\s+/g, '_');
         }
       })
   ];

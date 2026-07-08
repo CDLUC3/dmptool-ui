@@ -3,6 +3,7 @@ import { act, render, screen } from '@testing-library/react';
 import { axe, toHaveNoViolations } from 'jest-axe';
 import InitialAccessLevelField from '../InitialAccessLevel';
 import { AccessLevelsFieldProps } from '@/app/types';
+import { ResearchOutputTableColumnsEnum } from "@dmptool/types";
 
 expect.extend(toHaveNoViolations);
 
@@ -16,6 +17,7 @@ describe('InitialAccessLevelField', () => {
   const defaultProps: AccessLevelsFieldProps & { defaultAccessLevels: typeof mockDefaultAccessLevels } = {
     field: {
       id: 'accessLevels',
+      commonStandardId: ResearchOutputTableColumnsEnum.enum.data_access,
       label: 'Access Levels',
       enabled: true,
       accessLevelsConfig: {

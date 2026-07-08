@@ -34,6 +34,7 @@ import {
 } from '@/lib/constants';
 
 import { jsonToState, stateToJSON } from '@/utils/researchOutputTransformations';
+import { ResearchOutputTableColumnsEnum } from "@dmptool/types";
 
 const standardKeys = new Set([
   'researchOutput.title',
@@ -72,6 +73,7 @@ export const useResearchOutputTable = ({ setHasUnsavedChanges, announce, initial
   const initialStandardFields = useMemo<StandardField[]>(() => [
     {
       id: RO_TITLE_ID,
+      commonStandardId: ResearchOutputTableColumnsEnum.enum.title,
       label: QuestionAdd('researchOutput.labels.title'),
       languageTranslationKey: 'labels.title',
       enabled: true,
@@ -79,6 +81,7 @@ export const useResearchOutputTable = ({ setHasUnsavedChanges, announce, initial
     },
     {
       id: RO_DESCRIPTION_ID,
+      commonStandardId: ResearchOutputTableColumnsEnum.enum.description,
       label: QuestionAdd('researchOutput.labels.description'),
       languageTranslationKey: 'labels.description',
       enabled: false,
@@ -90,6 +93,7 @@ export const useResearchOutputTable = ({ setHasUnsavedChanges, announce, initial
     },
     {
       id: RO_OUTPUT_TYPE_ID,
+      commonStandardId: ResearchOutputTableColumnsEnum.enum.type,
       label: QuestionAdd('researchOutput.labels.outputType'),
       languageTranslationKey: 'labels.outputType',
       enabled: false,
@@ -103,6 +107,7 @@ export const useResearchOutputTable = ({ setHasUnsavedChanges, announce, initial
     },
     {
       id: RO_DATA_FLAGS_ID,
+      commonStandardId: ResearchOutputTableColumnsEnum.enum.data_flags,
       label: QuestionAdd('researchOutput.labels.dataFlags'),
       languageTranslationKey: 'labels.dataFlags',
       enabled: false,
@@ -129,6 +134,7 @@ export const useResearchOutputTable = ({ setHasUnsavedChanges, announce, initial
     },
     {
       id: RO_REPO_SELECTOR_ID,
+      commonStandardId: ResearchOutputTableColumnsEnum.enum.host,
       label: QuestionAdd('researchOutput.labels.repositories'),
       languageTranslationKey: 'labels.repositories',
       enabled: false,
@@ -142,6 +148,7 @@ export const useResearchOutputTable = ({ setHasUnsavedChanges, announce, initial
     },
     {
       id: RO_METADATA_STANDARD_SELECTOR_ID,
+      commonStandardId: ResearchOutputTableColumnsEnum.enum.metadata,
       label: QuestionAdd('researchOutput.labels.metadataStandards'),
       languageTranslationKey: 'labels.metadataStandards',
       enabled: false,
@@ -153,6 +160,7 @@ export const useResearchOutputTable = ({ setHasUnsavedChanges, announce, initial
     },
     {
       id: RO_LICENSES_ID,
+      commonStandardId: ResearchOutputTableColumnsEnum.enum.license_ref,
       label: QuestionAdd('researchOutput.labels.licenses'),
       languageTranslationKey: 'labels.licenses',
       enabled: false,
@@ -166,6 +174,7 @@ export const useResearchOutputTable = ({ setHasUnsavedChanges, announce, initial
     },
     {
       id: RO_ACCESS_LEVELS_ID,
+      commonStandardId: ResearchOutputTableColumnsEnum.enum.data_access,
       label: QuestionAdd('researchOutput.labels.initialAccessLevels'),
       languageTranslationKey: 'labels.initialAccessLevels',
       enabled: false,
@@ -524,6 +533,7 @@ export const useResearchOutputTable = ({ setHasUnsavedChanges, announce, initial
     const newId = `custom_field_${Date.now()}`;
     const newField: AdditionalFieldsType = {
       id: newId,
+      commonStandardId: ResearchOutputTableColumnsEnum.enum.custom,
       heading: 'Custom Field',
       help: '',
       enabled: true,
