@@ -973,7 +973,13 @@
       "selectAnItem": "Select an item",
       "mayContainSensitiveData": "May contain sensitive data?",
       "mayContainPersonalData": "May contain personally identifiable information?",
-      "additionalComments": "Additional comments"
+      "additionalComments": "Additional comments",
+      "show": "Show",
+      "hide": "Hide",
+      "showPassword": "Show password",
+      "hidePassword": "Hide password",
+      "passwordIsVisible": "Your password is visible",
+      "passwordIsHidden": "Your password is hidden"
     },
     "helpText": {
       "searchHelpText": "Search by research organization, field station or lab, template description, etc.",

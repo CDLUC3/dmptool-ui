@@ -1,12 +1,14 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useTranslations } from "next-intl";
 import {
+  Button,
   FieldError,
   Input,
   Label,
   Text,
   TextField,
 } from "react-aria-components";
+import styles from './formInput.module.scss';
 
 interface InputProps {
   name: string;
@@ -33,6 +35,10 @@ interface InputProps {
   minLength?: number;
   maxLength?: number;
   pattern?: string;
+  /** Defaults to true when type="password". */
+  showPasswordToggle?: boolean;
+  /** Defaults to false. */
+  defaultPasswordVisible?: boolean;
 }
 
 const FormInput = React.forwardRef<HTMLInputElement, InputProps & React.InputHTMLAttributes<HTMLInputElement>>(({
@@ -60,16 +66,44 @@ const FormInput = React.forwardRef<HTMLInputElement, InputProps & React.InputHTM
   minLength = undefined,
   maxLength = undefined,
   pattern,
+  showPasswordToggle = undefined,
+  defaultPasswordVisible = false,
   ...rest
 }, ref) => {
   const showRequired = isRequired || isRequiredVisualOnly;
   const t = useTranslations('Global.labels');
 
+  const isPassword = type === 'password';
+  const hasPasswordToggle = isPassword && (showPasswordToggle ?? true);
+  const [passwordVisible, setPasswordVisible] = useState(defaultPasswordVisible);
+  const effectiveType = isPassword && passwordVisible ? 'text' : type;
+
+  const inputElement = (
+    <Input
+      ref={ref}
+      id={id}
+      name={name}
+      type={effectiveType}
+      className={inputClasses}
+      placeholder={placeholder}
+      onChange={onChange}
+      value={value}
+      disabled={disabled}
+      aria-describedby={ariaDescribedBy}
+      aria-label={ariaLabel}
+      minLength={minLength}
+      maxLength={maxLength}
+      pattern={pattern}
+      aria-required={isRequired}
+      {...rest}
+    />
+  );
+
   return (
     <>
       <TextField
         name={name}
-        type={type}
+        type={effectiveType}
         className={`${className} react-aria-TextField ${isInvalid ? 'field-error' : ''}`}
         isRequired={isRequired}
         defaultValue={defaultValue}
@@ -87,24 +121,32 @@ const FormInput = React.forwardRef<HTMLInputElement, InputProps & React.InputHTM
           </Text>
         )}
 
-        <Input
-          ref={ref}
-          id={id}
-          name={name}
-          type={type}
-          className={inputClasses}
-          placeholder={placeholder}
-          onChange={onChange}
-          value={value}
-          disabled={disabled}
-          aria-describedby={ariaDescribedBy}
-          aria-label={ariaLabel}
-          minLength={minLength}
-          maxLength={maxLength}
-          pattern={pattern}
-          aria-required={isRequired}
-          {...rest}
-        />
+        {hasPasswordToggle ? (
+          <div className={styles.passwordField}>
+            {inputElement}
+            <Button
+              type="button"
+              className={`${styles.passwordToggle} link react-aria-Button`}
+              aria-label={passwordVisible ? t('hidePassword') : t('showPassword')}
+              onPress={() => setPasswordVisible((visible) => !visible)}
+              data-testid="password-toggle"
+            >
+              {/* title on inner span — react-aria Button strips it from the element */}
+              <span
+                className={styles.toggleLabel}
+                title={passwordVisible ? t('hidePassword') : t('showPassword')}
+              >
+                <span aria-hidden={passwordVisible}>{t('show')}</span>
+                <span aria-hidden={!passwordVisible}>{t('hide')}</span>
+              </span>
+            </Button>
+            <span className="hidden-accessibly" aria-live="polite">
+              {passwordVisible ? t('passwordIsVisible') : t('passwordIsHidden')}
+            </span>
+          </div>
+        ) : (
+          inputElement
+        )}
 
         {isInvalid && <FieldError className='error-message'>{errorMessage}</FieldError>}
 

@@ -823,7 +823,13 @@
       "selectAnItem": "Selecionar um item",
       "mayContainSensitiveData": "Pode conter dados sensíveis?",
       "mayContainPersonalData": "Pode conter informações de identificação pessoal?",
-      "additionalComments": "Comentários adicionais"
+      "additionalComments": "Comentários adicionais",
+      "show": "Mostrar",
+      "hide": "Ocultar",
+      "showPassword": "Mostrar senha",
+      "hidePassword": "Ocultar senha",
+      "passwordIsVisible": "Sua senha está visível",
+      "passwordIsHidden": "Sua senha está oculta"
     },
     "helpText": {
       "searchHelpText": "Pesquisar por organização de pesquisa, estação de campo ou laboratório, descrição de modelo, etc.",

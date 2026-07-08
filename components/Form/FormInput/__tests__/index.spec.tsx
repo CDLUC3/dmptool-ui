@@ -162,4 +162,121 @@ describe('FormInput', () => {
     const input = screen.getByRole('textbox', { name: 'Email' });
     expect(input).toHaveAttribute('aria-required', 'false');
   });
+
+  describe('password visibility toggle', () => {
+    it('should render a Show toggle by default for password fields', () => {
+      render(
+        <FormInput
+          name="password"
+          type="password"
+          label="Password"
+        />
+      );
+
+      const input = screen.getByLabelText('Password');
+      expect(input).toHaveAttribute('type', 'password');
+
+      const toggle = screen.getByTestId('password-toggle');
+      expect(toggle).toBeInTheDocument();
+      expect(toggle).toHaveAttribute('aria-label', 'showPassword');
+      expect(screen.getByText('show')).toHaveAttribute('aria-hidden', 'false');
+      expect(screen.getByText('hide')).toHaveAttribute('aria-hidden', 'true');
+      expect(screen.getByTitle('showPassword')).toBeInTheDocument();
+    });
+
+    it('should reveal and hide the password when the toggle is clicked', () => {
+      render(
+        <FormInput
+          name="password"
+          type="password"
+          label="Password"
+        />
+      );
+
+      const input = screen.getByLabelText('Password');
+      const toggle = screen.getByTestId('password-toggle');
+
+      fireEvent.click(toggle);
+      expect(input).toHaveAttribute('type', 'text');
+      expect(toggle).toHaveAttribute('aria-label', 'hidePassword');
+      expect(screen.getByText('hide')).toHaveAttribute('aria-hidden', 'false');
+      expect(screen.getByText('show')).toHaveAttribute('aria-hidden', 'true');
+      expect(screen.getByTitle('hidePassword')).toBeInTheDocument();
+      expect(screen.getByText('passwordIsVisible')).toBeInTheDocument();
+
+      fireEvent.click(toggle);
+      expect(input).toHaveAttribute('type', 'password');
+      expect(toggle).toHaveAttribute('aria-label', 'showPassword');
+      expect(screen.getByText('passwordIsHidden')).toBeInTheDocument();
+    });
+
+    it('should not render the toggle when showPasswordToggle is false', () => {
+      render(
+        <FormInput
+          name="password"
+          type="password"
+          label="Password"
+          showPasswordToggle={false}
+        />
+      );
+
+      expect(screen.getByLabelText('Password')).toHaveAttribute('type', 'password');
+      expect(screen.queryByTestId('password-toggle')).not.toBeInTheDocument();
+    });
+
+    it('should start revealed when defaultPasswordVisible is true', () => {
+      render(
+        <FormInput
+          name="password"
+          type="password"
+          label="Password"
+          defaultPasswordVisible={true}
+        />
+      );
+
+      expect(screen.getByLabelText('Password')).toHaveAttribute('type', 'text');
+      expect(screen.getByTestId('password-toggle')).toHaveAttribute('aria-label', 'hidePassword');
+      expect(screen.getByText('hide')).toHaveAttribute('aria-hidden', 'false');
+    });
+
+    it('should not render the toggle for non-password fields', () => {
+      render(
+        <FormInput
+          name="email"
+          type="email"
+          label="Email"
+        />
+      );
+
+      expect(screen.queryByTestId('password-toggle')).not.toBeInTheDocument();
+    });
+
+    it('should keep the value when toggling visibility', () => {
+      render(
+        <FormInput
+          name="password"
+          type="password"
+          label="Password"
+          defaultValue="Secret123"
+        />
+      );
+
+      const input = screen.getByLabelText('Password');
+      fireEvent.change(input, { target: { value: 'Secret123' } });
+      fireEvent.click(screen.getByTestId('password-toggle'));
+      expect(input).toHaveValue('Secret123');
+    });
+
+    it('should pass axe accessibility test with the toggle rendered', async () => {
+      const { container } = render(
+        <FormInput
+          name="password"
+          type="password"
+          label="Password"
+        />
+      );
+      const results = await axe(container);
+      expect(results).toHaveNoViolations();
+    });
+  });
 });
