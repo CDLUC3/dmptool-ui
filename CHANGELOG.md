@@ -1,4 +1,7 @@
 ## Added
+- Added show/hide password toggle to `FormInput`, enabled by default for password fields [#80]
+- Migrated login and signup pages to use `FormInput` for consistency with other auth forms [#80]
+- Added password field examples to the styleguide form-elements page [#80]
 - Added `UpdateUserInfo` and `ArchiveUser` mutations and `Plans`, `UserProjects`, and `User` queries [#281]
 - Added new, shared `LayoutSplitPanel` so that we can have one section with a right sidebar, and another section extending the full width [#281]
 - Added new route `admin.users.projects` [#281]
@@ -19,6 +22,7 @@
 
 ## Updated
 - Updated "Publish" modal. Added "Required" and "Recommended" checklist sections, and added a requirement that the plan not be in test mode [#91]
+- Fixed flaky admin users search test by waiting for the search input to render after `MeDocument` resolves before typing
 - Updated `PlanOverviewPage` to disable `request feedback` link when there is feedback is not enabled and there are no feedback emails [#285]
 - Updated the `ProjectListItem` component to allow for `isReadOnly` mode [#281]
 - Hooked up `admin/users` page with real data, and updated search features and table [#240]
