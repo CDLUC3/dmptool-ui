@@ -8,6 +8,66 @@
   border: 1px solid var(--gray-100);
   border-radius: 8px;
   background: var(--gray-50);
+
+  // Nested under .emailRow to out-specify the global `button` styles.
+  .emailLink {
+    cursor: pointer;
+    font-size: var(--fs-small);
+    font-weight: 400;
+    text-decoration: underline;
+    text-align: left;
+    color: inherit;
+    font-family: inherit;
+    background: none;
+    border: none;
+    padding: 0;
+    margin: 0;
+    width: fit-content;
+    transition: none;
+
+    &:hover:not(:disabled),
+    &:active:not(:disabled) {
+      background: none;
+      color: var(--blue-900);
+      text-decoration: underline;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--blue-900);
+      outline-offset: 2px;
+      background: none;
+      color: var(--blue-900);
+    }
+  }
+
+  .deleteButton {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    cursor: pointer;
+    background: none;
+    border: none;
+    padding: 4px;
+    margin: 0;
+    border-radius: 4px;
+    transition: none;
+
+    &:hover:not(:disabled),
+    &:active:not(:disabled) {
+      background: none;
+
+      .trashcanIcon {
+        fill: var(--red-500);
+      }
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--blue-900);
+      outline-offset: 2px;
+      background: none;
+    }
+  }
 }
 
 .emailContent {
@@ -24,12 +84,6 @@
   line-height: 1.4;
 }
 
-.emailLink {
-  cursor: pointer;
-  font-size: var(--fs-small);
-  text-decoration: underline;
-}
-
 .deleteDisabledMessage {
   margin: 0;
   padding: 0;
@@ -43,7 +97,6 @@
   fill: var(--blue-900);
 }
 
-// "Primary" lock badge shown in place of a delete control for the primary email.
 .primaryBadge {
   display: inline-flex;
   align-items: center;
@@ -60,4 +113,11 @@
 
 .primaryBadgeIcon {
   fill: var(--blue-900);
+}
+
+.dialogActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: var(--space-4, 16px);
 }

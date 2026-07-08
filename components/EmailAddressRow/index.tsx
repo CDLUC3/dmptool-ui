@@ -3,6 +3,14 @@
 import React from 'react';
 import classNames from 'classnames';
 import { useTranslations } from 'next-intl';
+import {
+  Button,
+  Dialog,
+  DialogTrigger,
+  Heading,
+  Modal,
+  ModalOverlay
+} from 'react-aria-components';
 import { DmpIcon } from '@/components/Icons';
 import styles from './emailAddressRow.module.scss';
 
@@ -26,7 +34,7 @@ export default function EmailAddressRow({
 
   const t = useTranslations('UserProfile');
 
-  const handleMakePrimary = (e: React.MouseEvent<HTMLDivElement>, email: string) => {
+  const handleMakePrimary = (e: React.MouseEvent<HTMLButtonElement>, email: string) => {
     e.preventDefault();
     if (makePrimaryEmail) {
       makePrimaryEmail(email);
@@ -41,7 +49,13 @@ export default function EmailAddressRow({
       <div className={styles.emailContent}>
         <p className={styles.emailAddress}>{email}</p>
         {isAlias && (
-          <div role="button" onClick={e => handleMakePrimary(e, email)} className={styles.emailLink}>{t('linkMakePrimary')}</div>
+          <button
+            type="button"
+            onClick={e => handleMakePrimary(e, email)}
+            className={styles.emailLink}
+          >
+            {t('linkMakePrimary')}
+          </button>
         )}
         {deleteDisabled && (
           <p className={styles.deleteDisabledMessage}>{t('primaryEmailCannotBeDeleted')}</p>
@@ -54,9 +68,42 @@ export default function EmailAddressRow({
           {t('primaryBadge')}
         </span>
       ) : (
-        <div onClick={() => deleteEmail && deleteEmail(email)} className="delete-email">
-          <DmpIcon icon="trashcan" classes={styles.trashcanIcon} />
-        </div>
+        <DialogTrigger>
+          <Button
+            className={`${styles.deleteButton} delete-email`}
+            aria-label={t('deleteEmailAria', { email })}
+          >
+            <DmpIcon icon="trashcan" classes={styles.trashcanIcon} />
+          </Button>
+          <ModalOverlay isDismissable>
+            <Modal>
+              <Dialog role="alertdialog">
+                {({ close }) => (
+                  <>
+                    <Heading slot="title">{t('deleteEmailConfirmTitle')}</Heading>
+                    <p>{t('deleteEmailConfirmMessage', { email })}</p>
+                    <div className={styles.dialogActions}>
+                      <Button className="secondary" onPress={close}>
+                        {t('btnCancel')}
+                      </Button>
+                      <Button
+                        className="danger"
+                        onPress={() => {
+                          if (deleteEmail) {
+                            deleteEmail(email);
+                          }
+                          close();
+                        }}
+                      >
+                        {t('btnDelete')}
+                      </Button>
+                    </div>
+                  </>
+                )}
+              </Dialog>
+            </Modal>
+          </ModalOverlay>
+        </DialogTrigger>
       )}
 
     </ div >
