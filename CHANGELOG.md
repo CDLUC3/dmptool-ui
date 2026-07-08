@@ -1,5 +1,5 @@
 ## Added
-- Added new `SkeletonListLoading` component that renders card-style skeleton placeholders for list views (e.g. project lists, template selection, project members).
+- Added new `SkeletonListLoading` component that renders card-style skeleton placeholders for list views (e.g. project lists, template selection, project members). Also supports a `grid` layout for responsive 2/3 column card grids (e.g. section and question type selection).
 - Added `UpdateUserInfo` and `ArchiveUser` mutations and `Plans`, `UserProjects`, and `User` queries [#281]
 - Added new, shared `LayoutSplitPanel` so that we can have one section with a right sidebar, and another section extending the full width [#281]
 - Added new route `admin.users.projects` [#281]

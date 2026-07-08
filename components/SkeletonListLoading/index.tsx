@@ -1,27 +1,24 @@
 "use client";
 
 import React from "react";
+import { useTranslations } from "next-intl";
 import styles from "./skeletonListLoading.module.scss";
 
 interface SkeletonListLoadingProps {
-  /** Number of skeleton list items to render */
+  /** Defaults to 5 for list layout, 6 for grid (fills 2 and 3 column rows evenly) */
   count?: number;
-  /** Additional CSS classes */
+  /** 'list' = stacked full-width cards, 'grid' = squarish cards matching `card-grid-list` */
+  layout?: "list" | "grid";
   className?: string;
-  /** Whether the loading state is active */
   isActive?: boolean;
-  /**
-   * Accessible loading message announced to screen readers.
-   * Pass a localized string, e.g. Global('messaging.loading') or a specific label
-   * such as "Loading projects".
-   */
+  /** Screen reader message. Defaults to localized Global('messaging.loadingList') */
   ariaLabel?: string;
 }
 
 const MIN_COUNT = 1;
 const MAX_COUNT = 20;
-const DEFAULT_COUNT = 5;
-const DEFAULT_ARIA_LABEL = "Loading list, please wait";
+const DEFAULT_LIST_COUNT = 5;
+const DEFAULT_GRID_COUNT = 6;
 
 function clampCount(count: number): number {
   return Math.min(Math.max(count, MIN_COUNT), MAX_COUNT);
@@ -38,23 +35,37 @@ function SkeletonListItem() {
   );
 }
 
+function SkeletonGridCard() {
+  return (
+    <div className={styles.skeletonCard}>
+      <div className={`${styles.bar} ${styles.barCardHeading}`} />
+      <div className={`${styles.bar} ${styles.barFull}`} />
+      <div className={`${styles.bar} ${styles.barMedium}`} />
+      <div className={`${styles.bar} ${styles.barButton}`} />
+    </div>
+  );
+}
+
 /**
- * Generic skeleton loader for card-style list views.
- * Renders decorative placeholder cards while list data loads.
- *
- * Screen readers hear a single polite status message; skeleton visuals are hidden.
+ * Skeleton loader for card-style list and grid views.
+ * Screen readers hear a single polite status message; the skeleton visuals are aria-hidden.
  */
 const SkeletonListLoading: React.FC<SkeletonListLoadingProps> = ({
-  count = DEFAULT_COUNT,
+  count,
+  layout = "list",
   className = "",
   isActive = true,
-  ariaLabel = DEFAULT_ARIA_LABEL,
+  ariaLabel,
 }) => {
+  const Global = useTranslations("Global");
+
   if (!isActive) {
     return null;
   }
 
-  const itemCount = clampCount(count);
+  const message = ariaLabel ?? Global("messaging.loadingList");
+  const isGrid = layout === "grid";
+  const itemCount = clampCount(count ?? (isGrid ? DEFAULT_GRID_COUNT : DEFAULT_LIST_COUNT));
   const containerClassName = [styles.container, className].filter(Boolean).join(" ");
 
   return (
@@ -70,15 +81,15 @@ const SkeletonListLoading: React.FC<SkeletonListLoadingProps> = ({
         className={styles.srOnly}
         data-testid="skeleton-list-loading-message"
       >
-        {ariaLabel}
+        {message}
       </span>
       <div
-        className={styles.list}
+        className={isGrid ? styles.grid : styles.list}
         aria-hidden="true"
       >
-        {Array.from({ length: itemCount }, (_, index) => (
-          <SkeletonListItem key={index} />
-        ))}
+        {Array.from({ length: itemCount }, (_, index) =>
+          isGrid ? <SkeletonGridCard key={index} /> : <SkeletonListItem key={index} />
+        )}
       </div>
     </div>
   );

@@ -1,3 +1,5 @@
+@use '@/styles/responsive.scss' as r;
+
 @keyframes pulse {
   0%,
   100% {
@@ -30,6 +32,22 @@
   flex-direction: column;
 }
 
+// Mirrors `.card-grid-list` in styles/_elements.scss so the skeleton grid
+// matches the real grid at every breakpoint
+.grid {
+  display: grid;
+  gap: var(--space-5);
+
+  @include r.device(md) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @include r.device(xl) {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+// Matches the ProjectListItem / TemplateSelectListItem card shell
 .skeletonItem {
   margin-bottom: var(--space-4);
   border-radius: var(--card-border-radius);
@@ -37,6 +55,18 @@
   box-shadow: var(--card-shadow);
   border: 1px solid var(--card-border);
   padding: 1.25rem var(--space-5);
+}
+
+// Matches the shared Card component shell
+.skeletonCard {
+  border-radius: var(--card-border-radius);
+  background: var(--card-background, var(--bg-white));
+  box-shadow: var(--card-shadow);
+  border: 1px solid var(--card-border);
+  padding: var(--card-padding, 1rem);
+  display: flex;
+  flex-direction: column;
+  min-height: 10rem;
 }
 
 .bar {
@@ -58,6 +88,12 @@
   height: 18px;
 }
 
+.barCardHeading {
+  width: 70%;
+  height: 20px;
+  margin-bottom: var(--space-3);
+}
+
 .barFull {
   width: 100%;
   height: 12px;
@@ -71,4 +107,12 @@
 .barShort {
   width: 40%;
   height: 10px;
+}
+
+// Button-shaped, pinned to the card bottom like CardFooter
+.barButton {
+  width: 5rem;
+  height: 2rem;
+  border-radius: var(--card-border-radius);
+  margin-top: auto;
 }

@@ -1002,6 +1002,7 @@
     },
     "messaging": {
       "loading": "Loading",
+      "loadingList": "Loading list, please wait...",
       "loadingPage": "Loading page...",
       "submitting": "Submitting...",
       "submittingSROnly": "Submitting feedback request...",

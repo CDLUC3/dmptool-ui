@@ -323,6 +323,11 @@ if (loading) {
                         <h4>Custom count (3 items)</h4>
                         <SkeletonListLoading count={3} />
                       </div>
+
+                      <div className="demo-section">
+                        <h4>Grid layout (6 cards, responsive 2/3 columns)</h4>
+                        <SkeletonListLoading layout="grid" />
+                      </div>
                     </div>
                   )}
                 </div>
@@ -331,14 +336,20 @@ if (loading) {
               <h4>Usage</h4>
               <SGCodeBlock>{`import SkeletonListLoading from '@/components/SkeletonListLoading';
 
-// In a list region while data loads — pass a localized, specific label
+// In a list region while data loads.
+// Announces localized Global('messaging.loadingList') by default;
+// pass ariaLabel for a more specific message.
 {loading ? (
-  <SkeletonListLoading
-    count={5}
-    ariaLabel={Global('messaging.loading')}
-  />
+  <SkeletonListLoading count={5} />
 ) : (
   items.map(...)
+)}
+
+// For card grids (e.g. inside a card-grid-list region)
+{loading ? (
+  <SkeletonListLoading layout="grid" />
+) : (
+  <div className="card-grid-list">{cards.map(...)}</div>
 )}`}</SGCodeBlock>
 
               <h4>Accessibility</h4>
@@ -348,8 +359,8 @@ if (loading) {
                   each skeleton card individually.
                 </li>
                 <li>
-                  Always pass a localized, context-specific <code>ariaLabel</code> (e.g. &quot;Loading projects&quot;
-                  rather than a generic default).
+                  The default message is localized (<code>Global(&apos;messaging.loadingList&apos;)</code>). Pass a
+                  context-specific <code>ariaLabel</code> (e.g. &quot;Loading projects&quot;) where it helps.
                 </li>
                 <li>
                   Skeleton visuals are marked <code>aria-hidden</code> so they do not clutter the accessibility tree
@@ -380,8 +391,19 @@ if (loading) {
                       <code>count</code>
                     </td>
                     <td>number</td>
-                    <td>5</td>
-                    <td>Number of skeleton list items to render (clamped between 1 and 20)</td>
+                    <td>5 (list) / 6 (grid)</td>
+                    <td>Number of skeleton items to render (clamped between 1 and 20)</td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <code>layout</code>
+                    </td>
+                    <td>&quot;list&quot; | &quot;grid&quot;</td>
+                    <td>&quot;list&quot;</td>
+                    <td>
+                      Stacked full-width cards, or squarish cards in a responsive 2/3 column grid matching{" "}
+                      <code>card-grid-list</code>
+                    </td>
                   </tr>
                   <tr>
                     <td>
@@ -404,9 +426,10 @@ if (loading) {
                       <code>ariaLabel</code>
                     </td>
                     <td>string</td>
-                    <td>&quot;Loading list, please wait&quot;</td>
+                    <td>Global(&apos;messaging.loadingList&apos;)</td>
                     <td>
-                      Loading message announced to screen readers. Pass a localized, context-specific string.
+                      Loading message announced to screen readers. Localized by default; pass a context-specific
+                      string to override.
                     </td>
                   </tr>
                 </tbody>
