@@ -18,6 +18,7 @@
 - Added `UpdateAffiliation` and `AffiliationById` queries [#203]
 
 ## Updated
+- Updated `EmailAddressRow` and `UpdateEmailAddress` so the non-removable primary email no longer shows a disabled trash icon, and instead displays a "Primary" lock badge with a note explaining how to change it. Added a shared `icon-lock` icon and `primaryEmailCannotBeDeleted`/`primaryBadge` translations [#56]
 - Updated "Publish" modal. Added "Required" and "Recommended" checklist sections, and added a requirement that the plan not be in test mode [#91]
 - Updated `PlanOverviewPage` to disable `request feedback` link when there is feedback is not enabled and there are no feedback emails [#285]
 - Updated the `ProjectListItem` component to allow for `isReadOnly` mode [#281]
