@@ -327,7 +327,8 @@
       "description": "Below is a list of users registered for your organization",
       "buttons": {
         "createUserLabel": "Create User",
-        "searchLabel": "Search"
+        "searchLabel": "Search",
+        "download": "Download as CSV"
       },
       "tools": {
         "searchLabel": "Search by name or email",
@@ -338,7 +339,15 @@
         "label": "User List",
         "noResults": "No users found"
       },
-      "manageUser": "Manage user {name}"
+      "manageUser": "Manage user {name}",
+      "downloadWarning": "This export may contain sensitive user information. Please ensure the downloaded file is stored securely and only shared with authorized individuals.",
+      "headings": {
+        "confirmDownload": "Export user data"
+      },
+      "messages": {
+        "disabledDownloadMessage": "You must select an organization to download the user list.",
+        "noUsersToExport": "There are no users to export for the selected organization."
+      }
     },
     "userProfile": {
       "title": "{name} profile",
@@ -1018,7 +1027,11 @@
       "sectionIsExpanded": "Section is expanded",
       "sectionIsCollapsed": "Section is collapsed",
       "continueAnyway": "Continue anyway",
+      "exportingProgress": "Exporting progress: {percent}% complete",
       "error": "Something went wrong. Please try again.",
+      "exportComplete": "Export complete",
+      "exportFailed": "Export failed",
+      "exportingLabel": "Exporting...",
       "errors": {
         "invalidQuestionType": "Invalid question type found.",
         "questionUnexpectedFormat": "Unexpected format for question.json.",
