@@ -121,7 +121,30 @@ export const makeTestUser = (overrides?: Partial<UsersPageItem>): UsersPageItem 
 
 const makeMeMock = (role: UserRole) => ({
   request: { query: MeDocument },
-  result: { data: { me: { id: 1, role } } },
+  result: {
+    data: {
+      me: {
+        id: 1,
+        givenName: 'Test',
+        surName: 'User',
+        languageId: 'en-US',
+        role,
+        emails: [],
+        errors: null,
+        affiliation: {
+          id: 'org-1',
+          name: 'Test Org',
+          displayName: 'Test Org',
+          searchName: 'test org',
+          uri: 'http://example.com/orgs/1',
+          acronyms: [],
+          feedbackEmails: [],
+          feedbackEnabled: false,
+          feedbackMessage: null,
+        },
+      },
+    },
+  },
 });
 
 const makeUsersMock = (items = [makeUser()], variables = {}) => ({
@@ -213,9 +236,8 @@ describe('Admin - User Accounts Dashboard', () => {
     it('renders the search controls', async () => {
       renderPage([makeMeMock(UserRole.Researcher), makeUsersMock()]);
 
-      // Wait for the actual thing you're asserting on, not a proxy for it
       expect(await screen.findByLabelText(/Admin.users.tools.searchLabel/i)).toBeInTheDocument();
-      expect(screen.getByText('Admin.users.buttons.searchLabel')).toBeInTheDocument();
+      expect(await screen.findByText('Admin.users.buttons.searchLabel')).toBeInTheDocument();
     });
 
 
