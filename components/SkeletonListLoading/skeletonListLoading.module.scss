@@ -1,0 +1,74 @@
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.container {
+  width: 100%;
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+}
+
+.skeletonItem {
+  margin-bottom: var(--space-4);
+  border-radius: var(--card-border-radius);
+  background: var(--bg-white);
+  box-shadow: var(--card-shadow);
+  border: 1px solid var(--card-border);
+  padding: 1.25rem var(--space-5);
+}
+
+.bar {
+  background-color: var(--gray-100);
+  border-radius: 2px;
+  animation: pulse 1.5s ease-in-out infinite;
+
+  &:not(:last-child) {
+    margin-bottom: var(--space-2);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
+.barTitle {
+  width: 50%;
+  height: 18px;
+}
+
+.barFull {
+  width: 100%;
+  height: 12px;
+}
+
+.barMedium {
+  width: 75%;
+  height: 12px;
+}
+
+.barShort {
+  width: 40%;
+  height: 10px;
+}
