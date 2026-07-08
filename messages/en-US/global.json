@@ -94,6 +94,8 @@
     "notificationsDesc": "This email address will be used for DMP notifications. <manage> Manage your notifications </manage>.",
     "aliasEmailDesc": "Alias email addresses may be used to help others find you, for example if they‘d like to share a DMP with you.",
     "linkMakePrimary": "Make primary email address",
+    "primaryEmailCannotBeDeleted": "To change your primary email, add another address below and set it as primary.",
+    "primaryBadge": "Primary",
     "helpTextForAddAlias": "You will be sent an email to confirm this addition",
     "helpTextSelectYourLanguage": "Select your preferred language",
     "helpTextSearchForInstitution": "Search for your institution",

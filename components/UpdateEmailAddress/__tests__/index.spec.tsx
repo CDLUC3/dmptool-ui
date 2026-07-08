@@ -186,6 +186,23 @@ describe('UpdateEmailAddressPage', () => {
     expect(screen.getByText(/me@test.com/i)).toBeInTheDocument();
   });
 
+  it('should render the primary badge and no delete control for the primary email', async () => {
+    render(
+      <UpdateEmailAddress
+        emailAddresses={mockEmailAddresses}
+      />
+    );
+
+    const primaryEmailRow = screen.getByText(/me@test.com/i).closest('[class*="emailRow"]');
+    expect(primaryEmailRow).toBeInTheDocument();
+
+    // Shows the affirmative "Primary" badge and the explanatory note
+    expect(within(primaryEmailRow as HTMLElement).getByText('primaryBadge')).toBeInTheDocument();
+    expect(within(primaryEmailRow as HTMLElement).getByText('primaryEmailCannotBeDeleted')).toBeInTheDocument();
+    // No delete affordance is rendered for the primary email
+    expect(document.querySelectorAll('.delete-email')).toHaveLength(1);
+  });
+
   it('should call removeUserEmailMutation when deleting an email', async () => {
     mockRemoveUserEmailMutationFn.mockResolvedValue({
       data: {

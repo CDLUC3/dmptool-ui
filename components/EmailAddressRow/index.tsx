@@ -4,15 +4,13 @@ import React from 'react';
 import classNames from 'classnames';
 import { useTranslations } from 'next-intl';
 import { DmpIcon } from '@/components/Icons';
-import { Button, Tooltip, TooltipTrigger } from 'react-aria-components';
 import styles from './emailAddressRow.module.scss';
 
 interface DeleteRowInterface {
   email: string;
   isAlias: boolean;
   additionalClassName?: string;
-  tooltip?: boolean;
-  toolTipMessage?: string;
+  deleteDisabled?: boolean;
   onDeleteSuccess?: (email: string) => void;
   makePrimaryEmail?: (email: string) => void;
   deleteEmail?: (email: string) => void;
@@ -21,8 +19,7 @@ export default function EmailAddressRow({
   email,
   isAlias,
   additionalClassName,
-  tooltip,
-  toolTipMessage,
+  deleteDisabled = false,
   makePrimaryEmail,
   deleteEmail
 }: DeleteRowInterface) {
@@ -46,19 +43,19 @@ export default function EmailAddressRow({
         {isAlias && (
           <div role="button" onClick={e => handleMakePrimary(e, email)} className={styles.emailLink}>{t('linkMakePrimary')}</div>
         )}
+        {deleteDisabled && (
+          <p className={styles.deleteDisabledMessage}>{t('primaryEmailCannotBeDeleted')}</p>
+        )}
       </div>
 
-      {tooltip ? (
-        <TooltipTrigger delay={0}>
-          <Button className={`${styles.tooltipButton} react-aria-Button`}>
-            <span className="hidden-accessibly">{toolTipMessage}</span>
-            <DmpIcon icon="trashcan" classes={styles.trashcanIcon + ' ' + (additionalClassName ? styles[additionalClassName] : '')} />
-          </Button>
-          <Tooltip placement="bottom right">{toolTipMessage}</Tooltip>
-        </TooltipTrigger>
+      {deleteDisabled ? (
+        <span className={styles.primaryBadge}>
+          <DmpIcon icon="lock" classes={styles.primaryBadgeIcon} width="16px" height="16px" />
+          {t('primaryBadge')}
+        </span>
       ) : (
         <div onClick={() => deleteEmail && deleteEmail(email)} className="delete-email">
-          <DmpIcon icon="trashcan" classes={styles.trashcanIcon + ' ' + (additionalClassName ? styles[additionalClassName] : '')} />
+          <DmpIcon icon="trashcan" classes={styles.trashcanIcon} />
         </div>
       )}
 

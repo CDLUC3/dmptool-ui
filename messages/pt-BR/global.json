@@ -94,6 +94,8 @@
     "notificationsDesc": "Este endereço de e-mail será usado para notificações DMP. <manage>Gerencie suas notificações</manage>.",
     "aliasEmailDesc": "Os endereços de e-mail do pseudônimo podem ser usados para ajudar outros a encontrar você, por exemplo, se eles quiserem compartilhar um DMP com você.",
     "linkMakePrimary": "Endereço de e-mail principal",
+    "primaryEmailCannotBeDeleted": "Para alterar seu e-mail principal, adicione outro endereço abaixo e defina-o como principal.",
+    "primaryBadge": "Principal",
     "helpTextForAddAlias": "Você receberá um e-mail para confirmar esta adição",
     "helpTextSelectYourLanguage": "Selecione seu idioma preferido",
     "helpTextSearchForInstitution": "Procurar sua instituição",
