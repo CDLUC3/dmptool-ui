@@ -637,7 +637,7 @@ const QuestionEdit = () => {
           </Breadcrumbs>
         }
         actions={null}
-        className=""
+        className="mb-3"
       />
 
       {/* Live region for announcements - visually hidden but read by screen readers */}
