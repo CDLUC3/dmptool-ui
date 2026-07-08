@@ -248,25 +248,31 @@ const ProjectOverviewPage: React.FC = () => {
               linkText={isReadOnly ? Global("buttons.view") : ProjectOverview("editFundingDetails")}
               linkAriaLabel={isReadOnly ? ProjectOverview("viewFundingDetails") : ProjectOverview("editFundingDetails")}
             >
-              <p>
-                <strong>{ProjectOverview("fundingCount", { count: project.fundings.length })}</strong>
-              </p>
-              <p>
-                {project.fundings.map((funding, index) => (
-                  <span
-                    key={funding.id}
-                    data-index={index}
-                  >
-                    {funding.grantId
-                      ? ProjectOverview("fundingInfo", {
-                        name: funding.name,
-                        id: funding.grantId,
-                      })
-                      : funding.name}
-                    {index < project.fundings.length - 1 && ", "}
-                  </span>
-                ))}
-              </p>
+              {project.fundings.length > 0 ? (
+                <>
+                  <p>
+                    <strong>{ProjectOverview("fundingCount", { count: project.fundings.length })}</strong>
+                  </p>
+                  <p>
+                    {project.fundings.map((funding, index) => (
+                      <span
+                        key={funding.id}
+                        data-index={index}
+                      >
+                        {funding.grantId
+                          ? ProjectOverview("fundingInfo", {
+                            name: funding.name,
+                            id: funding.grantId,
+                          })
+                          : funding.name}
+                        {index < project.fundings.length - 1 && ", "}
+                      </span>
+                    ))}
+                  </p>
+                </>
+              ) : (
+                <p>{ProjectOverview("noFunderSelected")}</p>
+              )}
             </OverviewSection>
 
             <OverviewSection

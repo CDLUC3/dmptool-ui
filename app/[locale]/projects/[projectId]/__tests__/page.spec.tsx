@@ -237,6 +237,17 @@ describe('ProjectOverviewPage', () => {
     expect(screen.getByText('plans')).toBeInTheDocument();
   });
 
+  it('should render noFunderSelected in funding sources section when project has no fundings', () => {
+    setupMocks(null, {
+      ...mockProjectData,
+      fundings: [],
+    });
+
+    render(<ProjectOverviewPage />);
+    expect(screen.getByText('noFunderSelected')).toBeInTheDocument();
+    expect(screen.queryByText(/0 funding sources/i)).not.toBeInTheDocument();
+  });
+
   it('should render noFunderSelected on plan card when plan funding is empty', () => {
     setupMocks(null, {
       ...mockProjectData,
