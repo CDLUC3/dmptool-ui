@@ -237,6 +237,21 @@ describe('ProjectOverviewPage', () => {
     expect(screen.getByText('plans')).toBeInTheDocument();
   });
 
+  it('should render noFunderSelected on plan card when plan funding is empty', () => {
+    setupMocks(null, {
+      ...mockProjectData,
+      plans: [
+        {
+          ...mockProjectData.plans[0],
+          funding: '',
+        },
+      ],
+    });
+
+    render(<ProjectOverviewPage />);
+    expect(screen.getByText('funding: noFunderSelected')).toBeInTheDocument();
+  });
+
   it('should display Loading message ', async () => {
 
     mockUseQuery.mockReturnValue({

@@ -782,7 +782,7 @@ const PlanOverviewPage: React.FC = () => {
                 disabled={isReadOnly}
                 hoverMessage={t('messages.readOnlyLinkMessage')}
               >
-                <p>{planData.funderName}</p>
+                <p>{planData.funderName || t("funding.noFunderSelected")}</p>
               </OverviewSection>
 
               <OverviewSection

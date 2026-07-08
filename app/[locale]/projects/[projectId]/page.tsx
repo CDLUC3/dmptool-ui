@@ -391,7 +391,7 @@ const ProjectOverviewPage: React.FC = () => {
                   key={plan.id}
                 >
                   <p className="mb-1">
-                    {ProjectOverview("funding")}: {plan.funding}
+                    {ProjectOverview("funding")}: {plan.funding || ProjectOverview("noFunderSelected")}
                   </p>
                   <h3 className="mt-0">{plan.templateTitle}</h3>
                   <div className="plan-sections mb-4">

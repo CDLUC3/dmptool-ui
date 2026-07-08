@@ -39,7 +39,8 @@
     },
     "funding": {
       "title": "Financiamento para este plano",
-      "edit": "Ajustar para este plano"
+      "edit": "Ajustar para este plano",
+      "noFunderSelected": "Nenhum financiador selecionado"
     },
     "members": {
       "title": "Planejar membros para este plano",
