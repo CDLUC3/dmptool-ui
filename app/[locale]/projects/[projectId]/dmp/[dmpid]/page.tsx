@@ -772,7 +772,7 @@ const PlanOverviewPage: React.FC = () => {
 
         <ContentContainer>
           <div className={"container"}>
-            <div className={styles.planOverview}>
+            <div className="project-overview">
               <OverviewSection
                 heading={t("funding.title")}
                 headingId="funding-title"

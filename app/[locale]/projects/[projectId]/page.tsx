@@ -229,7 +229,7 @@ const ProjectOverviewPage: React.FC = () => {
               linkAriaLabel={isReadOnly ? ProjectOverview("viewProject") : ProjectOverview("editProject")}
             >
               <p>
-                <strong>{project.title}</strong>
+                {project.title}
               </p>
               {project.startDate && project.endDate && (
                 <p>
@@ -251,7 +251,7 @@ const ProjectOverviewPage: React.FC = () => {
               {project.fundings.length > 0 ? (
                 <>
                   <p>
-                    <strong>{ProjectOverview("fundingCount", { count: project.fundings.length })}</strong>
+                    {ProjectOverview("fundingCount", { count: project.fundings.length })}
                   </p>
                   <p>
                     {project.fundings.map((funding, index) => (
@@ -283,7 +283,7 @@ const ProjectOverviewPage: React.FC = () => {
               linkAriaLabel={isReadOnly ? ProjectOverview("viewProjectMembers") : ProjectOverview("editProjectMembers")}
             >
               <p>
-                <strong>{ProjectOverview("memberCount", { count: project.projectMembers.length })}</strong>
+                {ProjectOverview("memberCount", { count: project.projectMembers.length })}
               </p>
               <p>
                 {project.projectMembers.map((member, index) => (
