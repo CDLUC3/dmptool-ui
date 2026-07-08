@@ -110,7 +110,9 @@ describe("ProjectListItem", () => {
       />,
     );
 
-    expect(screen.getByText("noFunderSelected")).toBeInTheDocument();
+    const funderMetadata = screen.getByText("noFunderSelected");
+    expect(funderMetadata).toBeInTheDocument();
+    expect(funderMetadata).not.toHaveAttribute("aria-label");
 
     fireEvent.click(screen.getByRole("button", { name: /buttons.linkExpand/i }));
 

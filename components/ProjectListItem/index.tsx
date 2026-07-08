@@ -69,10 +69,7 @@ function ProjectListItem({ item, isReadOnly }: { item: ProjectItemProps; isReadO
               aria-label="Project metadata"
             >
                 {/* Funder info */}
-                <span
-                  className={styles.metadataItem}
-                  aria-label="Funder"
-                >
+                <span className={styles.metadataItem}>
                   <span className={styles.srOnly}>Funder: </span>
                   {hasFunding ? (() => {
                     const funders = item.funding!.split(",");
