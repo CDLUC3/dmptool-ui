@@ -208,16 +208,10 @@ const ContactUsPage: React.FC = () => {
   // set contact form data with user name and email if user is authenticated
   useEffect(() => {
     if (meData?.me) {
-      const emails = meData.me.emails ?? [];
-      const primaryEmail =
-        emails.find((e) => e?.isPrimary)?.email ??
-        emails[0]?.email ??
-        '';
-
       setContactFormData((prev) => ({
         ...prev,
         name: `${meData.me?.givenName ?? ''} ${meData.me?.surName ?? ''}`.trim(),
-        email: primaryEmail,
+        email: meData.me?.email || ''
       }));
     }
   }, [meData]);
@@ -256,13 +250,13 @@ const ContactUsPage: React.FC = () => {
               )
             })}
             {isAuthenticated && (
-              <span> {t('contactDescriptionLoggedOut1')}</span>
+              <span> {t('contactDescriptionLoggedIn')}</span>
             )}
           </p>
 
           {!isAuthenticated && (
             <p>
-              {t('contactDescriptionLoggedOut2')}
+              {t('contactDescriptionLoggedOut')}
             </p>
           )}
           {isAuthenticated && (
@@ -344,7 +338,11 @@ const ContactUsPage: React.FC = () => {
             </address>
 
             <address className="mt-3">
-              <strong>Email</strong> <a href="mailto:dmptool@ucop.edu">dmptool@ucop.edu</a>
+              <strong>Email</strong>{' '}
+              {isAuthenticated
+                ? <a href={`mailto:${process.env.NEXT_PUBLIC_HELPDESK_EMAIL_ADDRESS}`}>{process.env.NEXT_PUBLIC_HELPDESK_EMAIL_ADDRESS}</a>
+                : <span>{process.env.NEXT_PUBLIC_HELPDESK_EMAIL_ADDRESS?.replace('@', ' [at] ').replace('.', ' [dot] ')}</span>
+              }
             </address>
 
             <div className="mt-3">

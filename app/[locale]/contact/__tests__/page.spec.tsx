@@ -54,7 +54,7 @@ const mockMeData = {
   me: {
     givenName: "Jane",
     surName: "Doe",
-    emails: [{ email: "jane.doe@example.com", isPrimary: true }],
+    email: "jane.doe@example.com"
   },
 };
 
@@ -100,8 +100,11 @@ const submitErrorMock = {
 
 // Helper to fill out and submit the required fields
 async function fillAndSubmit(user: ReturnType<typeof userEvent.setup>) {
-  const subjectInput = await screen.findByLabelText("form.labels.subject (required)");
-  const messageInput = await screen.findByLabelText("form.labels.message (required)");
+  // Wait for the me-query data to populate the pre-filled fields first
+  await screen.findByDisplayValue(formValues.email);
+
+  const subjectInput = screen.getByLabelText("form.labels.subject (required)");
+  const messageInput = screen.getByLabelText("form.labels.message (required)");
 
   await user.type(subjectInput, formValues.subject);
   await user.type(messageInput, formValues.message);
@@ -180,7 +183,7 @@ describe("ContactUsPage", () => {
 
     await waitFor(() => {
       expect(
-        screen.getByText("contactDescriptionLoggedOut2")
+        screen.getByText("contactDescriptionLoggedOut")
       ).toBeInTheDocument();
     });
 

@@ -28,6 +28,7 @@ query Me{
       feedbackEnabled
       feedbackMessage
     }
+    email
   }
 }
 
