@@ -1,0 +1,3 @@
+mutation SubmitContactForm($input: ContactFormInput!) {
+  submitContactForm(input: $input)
+}
