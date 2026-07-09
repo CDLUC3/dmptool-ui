@@ -41,7 +41,6 @@ const Loading: React.FC<LoadingProps> = ({
   isActive = true,
   variant = "page",
 }) => {
-
   if (!isActive) {
     return null;
   }
@@ -62,7 +61,7 @@ const Loading: React.FC<LoadingProps> = ({
           className="loading-spinner"
         />
       )}
-      <span className="loading-message">{message}</span>
+      {message && <span className="loading-message">{message}</span>}
     </div>
   );
 };

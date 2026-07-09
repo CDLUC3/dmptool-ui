@@ -10,6 +10,7 @@
     }
 
     .loading-message {
+        animation: loading-message-fade-in 90ms ease-out 50ms both;
         font-size: 1rem;
         color: var(--color-text-primary, #333);
     }
@@ -67,6 +68,24 @@
         .loading-message {
             font-size: 1.125rem;
             font-weight: 500;
+        }
+    }
+}
+
+@keyframes loading-message-fade-in {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .loading-component {
+        .loading-message {
+            animation: none;
         }
     }
 }
