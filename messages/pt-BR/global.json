@@ -460,6 +460,10 @@
     "title": "Projeto da organização",
     "intro": "Gerencie projetos e planos para DMSP em toda a sua organização",
     "messages": {
+      "info": {
+        "noProjectsHeading": "Os projetos da organização aparecerão aqui",
+        "noProjectsDescription": "Quando pesquisadores da sua organização criarem planos de gerenciamento de dados, eles serão listados aqui."
+      },
       "errors": {
         "errorRetrievingProjects": "Algo deu errado ao recuperar projetos. Por favor, tente novamente mais tarde."
       }
@@ -858,6 +862,7 @@
     },
     "messaging": {
       "loading": "Carregando",
+      "loadingList": "Carregando lista, aguarde...",
       "loadingPage": "Carregando página...",
       "submitting": "Enviando...",
       "submittingSROnly": "Enviando solicitação de feedback...",

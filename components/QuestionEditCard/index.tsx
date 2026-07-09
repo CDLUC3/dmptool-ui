@@ -192,14 +192,14 @@ const QuestionEditCard: React.FC<QuestionEditCardProps> = ({
         </TransitionLink>
         <div className={styles.orderButtons}>
           <Button
-            className={`${styles.btnDefault} ${styles.orderButton}`}
+            className={`order-button ${styles.orderButton}`}
             aria-label={EditQuestion("buttons.moveUp", { name: text })}
             onPress={() => handleDisplayOrderChange(questionId, questionDisplayOrder - 1)}
           >
             <UpArrowIcon />
           </Button>
           <Button
-            className={`${styles.btnDefault} ${styles.orderButton}`}
+            className={`order-button ${styles.orderButton}`}
             aria-label={EditQuestion("buttons.moveDown", { name: text })}
             onPress={() => handleDisplayOrderChange(questionId, questionDisplayOrder + 1)}
           >

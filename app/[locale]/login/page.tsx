@@ -168,7 +168,11 @@ const LoginPage: React.FC = () => {
               ariaLabel={t('password')}
               onChange={(e) => setPassword(e.target.value)}
               isRequired
-              helpMessage={<Link>{t('forgotPassword')}</Link>}
+              helpMessage={(
+                <Link href="#" className={styles.resetPasswordLink}>
+                  {t('resetPassword')}
+                </Link>
+              )}
               data-testid="passInput"
             />
           )}

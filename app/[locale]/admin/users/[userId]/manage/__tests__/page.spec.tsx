@@ -147,7 +147,30 @@ const makeUser = (overrides = {}) => ({
 
 const makeMeMock = (role: UserRole) => ({
   request: { query: MeDocument },
-  result: { data: { me: { id: 99, role } } },
+  result: {
+    data: {
+      me: {
+        id: 99,
+        givenName: 'Current',
+        surName: 'User',
+        languageId: 'en-US',
+        role,
+        emails: [],
+        errors: null,
+        affiliation: {
+          id: 'org-1',
+          name: 'Test Org',
+          displayName: 'Test Org',
+          searchName: 'test org',
+          uri: 'https://ror.org/example',
+          acronyms: [],
+          feedbackEmails: [],
+          feedbackEnabled: false,
+          feedbackMessage: null,
+        },
+      },
+    },
+  },
 });
 
 const makeUserMock = (user = makeUser()) => ({

@@ -1,0 +1,118 @@
+@use '@/styles/responsive.scss' as r;
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.container {
+  width: 100%;
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+}
+
+// Mirrors `.card-grid-list` in styles/_elements.scss so the skeleton grid
+// matches the real grid at every breakpoint
+.grid {
+  display: grid;
+  gap: var(--space-5);
+
+  @include r.device(md) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @include r.device(xl) {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+// Matches the ProjectListItem / TemplateSelectListItem card shell
+.skeletonItem {
+  margin-bottom: var(--space-4);
+  border-radius: var(--card-border-radius);
+  background: var(--bg-white);
+  box-shadow: var(--card-shadow);
+  border: 1px solid var(--card-border);
+  padding: 1.25rem var(--space-5);
+}
+
+// Matches the shared Card component shell
+.skeletonCard {
+  border-radius: var(--card-border-radius);
+  background: var(--card-background, var(--bg-white));
+  box-shadow: var(--card-shadow);
+  border: 1px solid var(--card-border);
+  padding: var(--card-padding, 1rem);
+  display: flex;
+  flex-direction: column;
+  min-height: 10rem;
+}
+
+.bar {
+  background-color: var(--gray-100);
+  border-radius: 2px;
+  animation: pulse 1.5s ease-in-out infinite;
+
+  &:not(:last-child) {
+    margin-bottom: var(--space-2);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
+.barTitle {
+  width: 50%;
+  height: 18px;
+}
+
+.barCardHeading {
+  width: 70%;
+  height: 20px;
+  margin-bottom: var(--space-3);
+}
+
+.barFull {
+  width: 100%;
+  height: 12px;
+}
+
+.barMedium {
+  width: 75%;
+  height: 12px;
+}
+
+.barShort {
+  width: 40%;
+  height: 10px;
+}
+
+// Button-shaped, pinned to the card bottom like CardFooter
+.barButton {
+  width: 5rem;
+  height: 2rem;
+  border-radius: var(--card-border-radius);
+  margin-top: auto;
+}

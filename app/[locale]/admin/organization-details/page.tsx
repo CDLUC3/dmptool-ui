@@ -1,13 +1,20 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
-import PageHeader from "@/components/PageHeader";
-import { ContentContainer, LayoutWithPanel, SidebarPanel } from "@/components/Container";
-import { CheckboxGroupComponent, FormInput, RadioGroupComponent } from "@/components/Form";
-import { Breadcrumb, Breadcrumbs, Button, Checkbox, DropZone, FileTrigger, Link, Radio } from "react-aria-components";
-
+import Link from "next/link";
 import { useTranslations } from "next-intl";
-import styles from "./organizationDetails.module.scss";
+import { useRouter } from "next/navigation";
+import {
+  Breadcrumb,
+  Breadcrumbs,
+  Button,
+  Checkbox,
+  DropZone,
+  FileTrigger,
+  Radio
+} from "react-aria-components";
+
+// GraphQL
 import { useMutation, useQuery } from "@apollo/client/react";
 import {
   AffiliationByIdDocument,
@@ -18,14 +25,29 @@ import {
   MeDocument,
   UpdateAffiliationDocument,
 } from "@/generated/graphql";
-import { useRouter } from "next/navigation";
+import { S3UploadResponse } from "@/app/types";
+
+// Components
+import PageHeader from "@/components/PageHeader";
+import {
+  ContentContainer,
+  LayoutWithPanel,
+  SidebarPanel
+} from "@/components/Container";
+import {
+  CheckboxGroupComponent,
+  FormInput,
+  RadioGroupComponent
+} from "@/components/Form";
 import Loading from "@/components/Loading";
+import ErrorMessages from "@/components/ErrorMessages";
+
+// Utils and other
 import { FUNDREF_BASE_URL } from "@/lib/constants";
 import { useToast } from "@/context/ToastContext";
 import { isValidEmail, logECS, routePath, scrollToTop } from "@/utils/index";
-import ErrorMessages from "@/components/ErrorMessages";
-import { S3UploadResponse } from "@/app/types";
 import { uploadFileToS3 } from "@/app/[locale]/admin/organization-details/actions/s3Uploader";
+import styles from "./organizationDetails.module.scss";
 
 interface OrganizationDetailsPageErrors {
   general: string;
@@ -143,7 +165,7 @@ const OrganizationDetailsPage: React.FC = () => {
   const OrganizationDetails = useTranslations("OrganizationDetails");
 
   // Run me query to get user's info to determine if they are a SuperAdmin
-  const { data: meData } = useQuery(MeDocument);
+  const { data: meData, loading: meLoading } = useQuery(MeDocument);
   const isSuperAdmin: boolean = meData?.me?.role === "SUPERADMIN";
   const affiliationId: number | null | undefined = meData?.me?.affiliation?.id;
 
@@ -154,11 +176,12 @@ const OrganizationDetailsPage: React.FC = () => {
   });
 
   // Initialize GraphQL queries and mutations
-  const { data, loading, error } = useQuery(AffiliationByIdDocument, {
+  const { data: affiliationData, loading: affiliationLoading, error: affiliationError } = useQuery(AffiliationByIdDocument, {
     variables: { affiliationId: Number(affiliationId) },
     notifyOnNetworkStatusChange: true,
     skip: affiliationId === undefined || affiliationId === null,
   });
+
   const [updateAffiliationMutation] = useMutation(UpdateAffiliationDocument);
   const [generatePresignedURLMutation] = useMutation(GenerateLogoUploadUrlDocument);
 
@@ -170,9 +193,9 @@ const OrganizationDetailsPage: React.FC = () => {
     // If the name had at least 2 words, use the first letter of each word. If not use the first 5 letters of the name
     return nameParts.length > 1
       ? nameParts
-          .slice(0, 4)
-          .map((word) => word[0].toUpperCase())
-          .join("")
+        .slice(0, 4)
+        .map((word) => word[0].toUpperCase())
+        .join("")
       : name.replace(" ", "").slice(0, 4).toUpperCase();
   };
 
@@ -210,8 +233,10 @@ const OrganizationDetailsPage: React.FC = () => {
   // Add another AffiliationLink
   const handleAddLink = () => {
     if (organizationLinks.length < 5) {
-      // Either calculate next order number off of last orderNumber, if present, or just use the row.length to increment
-      const nextNum = organizationLinks?.length === 0 ? 1 : organizationLinks.length + 1;
+      // Either calculate next order number off of the max existing orderNumber
+      const nextNum = organizationLinks.length === 0
+        ? 1
+        : Math.max(...organizationLinks.map(l => l.order)) + 1;
 
       const newLink: OrganizationLink = {
         order: nextNum, // Is the position called out to the screen reader
@@ -340,37 +365,38 @@ const OrganizationDetailsPage: React.FC = () => {
     return null;
   };
 
-   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-   const handleDrop = async (e: any) => {
-     if (e.items && e.items.length > 0) {
-       if (e.items[0].name && e.items[0].type) {
-         const file: File = await e.items[0].getFile();
-         await handleFileSelect(file);
-       } else {
-         setErrors((prevErrors) => [...prevErrors, OrganizationDetails("messages.errors.logoFileSelect.select")]);
-       }
-     }
-   };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handleDrop = async (e: any) => {
+    if (e.items && e.items.length > 0) {
+      if (e.items[0].name && e.items[0].type) {
+        const file: File = await e.items[0].getFile();
+        await handleFileSelect(file);
+      } else {
+        setErrors((prevErrors) => [...prevErrors, OrganizationDetails("messages.errors.logoFileSelect.select")]);
+      }
+    }
+  };
 
-   // Process a file upload
-   const handleFileSelect = async (file: File) => {
-     if (file && file.name && file.type) {
-       const validationError = validateFile(file);
-       if (validationError === null) {
-         setUploadFile(file);
-         setLogoName(file.name);
-       } else {
-         setErrors((prevErrors) => [...prevErrors, validationError]);
-       }
-     } else {
-       setErrors((prevErrors) => [...prevErrors, OrganizationDetails("messages.errors.logoFileSelect.select")]);
-     }
-   };
+  // Process a file upload
+  const handleFileSelect = async (file: File) => {
+    if (file && file.name && file.type) {
+      const validationError = validateFile(file);
+      if (validationError === null) {
+        setUploadFile(file);
+        setLogoName(file.name);
+      } else {
+        setErrors((prevErrors) => [...prevErrors, validationError]);
+      }
+    } else {
+      setErrors((prevErrors) => [...prevErrors, OrganizationDetails("messages.errors.logoFileSelect.select")]);
+    }
+  };
 
   // Clear the logo
   const handleLogoRemoval = () => {
     setLogoUrl("");
     setLogoName("");
+    setUploadFile(undefined);
   };
 
   // Clear all errors
@@ -480,15 +506,11 @@ const OrganizationDetailsPage: React.FC = () => {
       subHeaderLinks: "",
     };
 
-    // Make sure all the required fields have values and set errors for any that don't
     if (!organization.displayName || organization.displayName.trim().length <= 2) {
       errs.displayName = OrganizationDetails("messages.errors.displayName");
     }
     if (!organization.displayAbbreviation || organization.displayAbbreviation.trim().length <= 2) {
       errs.displayAbbreviation = OrganizationDetails("messages.errors.displayAbbr");
-    }
-    if (!organization.displayDomain || organization.displayDomain.trim().length <= 2) {
-      errs.displayDomain = OrganizationDetails("messages.errors.displayDomain");
     }
     if (!organization.contactName || organization.contactName.trim().length <= 2) {
       errs.contactName = OrganizationDetails("messages.errors.contactName");
@@ -496,28 +518,30 @@ const OrganizationDetailsPage: React.FC = () => {
     if (!organization.contactEmail || !isValidEmail(organization.contactEmail)) {
       errs.contactEmail = OrganizationDetails("messages.errors.contactEmail");
     }
-
     if (isSuperAdmin && (!organization.types || organization.types.length === 0)) {
       errs.types = OrganizationDetails("messages.errors.types");
     }
 
-    for (const link of organizationLinks) {
-      if (!link.url || link.url.trim().length === 0 || !URL.canParse(link.url)) {
-        setLinkErrors((prev) => [...prev, link.order]);
-      }
+    // Validates Organization Links - checks for missing URL, empty URL, or invalid URL format. It collects the order values
+    // into invalidLinkOrders array, so the UI can highlight exactly which rows are invalid
+    const invalidLinkOrders: number[] = organizationLinks
+      .filter((link) => !link.url || link.url.trim().length === 0 || !URL.canParse(link.url))
+      .map((link) => link.order);
+
+    if (invalidLinkOrders.length > 0) {
+      errs.subHeaderLinks = OrganizationDetails("messages.errors.linkURL");
     }
 
-    const errVals: string[] = Object.values(errs).filter(Boolean);
-    const linkErrVals: number[] = Object.values(linkErrors).filter(Boolean);
-    if (errVals.length > 0 || linkErrVals.length > 0) {
-      setFieldErrors((prevErrors: OrganizationDetailsPageErrors) => {
-        return { ...prevErrors, ...errs };
-      });
-      // Update state with the top level error message
+    const isValid = Object.values(errs).every((v) => !v) && invalidLinkOrders.length === 0;
+
+    // Apply state once, based on the local, synchronous result
+    setFieldErrors((prev) => ({ ...prev, ...errs }));
+    setLinkErrors(invalidLinkOrders);
+    if (!isValid) {
       setErrors([OrganizationDetails("messages.errors.organizationDetailsSave")]);
     }
 
-    return errVals.length === 0 && linkErrVals.length === 0;
+    return isValid;
   };
 
   // Show Success Message
@@ -528,87 +552,111 @@ const OrganizationDetailsPage: React.FC = () => {
     scrollToTop(topRef);
   };
 
-  // Submit the form
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
+  // Shared function to submit the Affiliation update, with optional form validation
+  const submitAffiliationUpdate = async (validateForm: boolean) => {
     // Prevent double submission
     if (isSubmitting) return;
 
     clearErrors();
     setIsSubmitting(true);
 
-    if (isFormValid()) {
-      // Update profile
-      const [errors, success] = await updateAffiliation();
-      if (!success) {
-        if (errors) {
-          setFieldErrors({
-            general: errors.general || "",
-            displayName: errors.displayName || "",
-            displayAbbreviation: errors.displayAbbreviation || "",
-            displayDomain: errors.displayDomain || "",
-            contactEmail: errors.contactEmail || "",
-            contactName: errors.contactName || "",
-            types: errors.types || "",
-            managed: errors.managed || "",
-            funder: errors.funder || "",
-            fundrefId: errors.fundrefId || "",
-            rorId: errors.rorId || "",
-            ssoEntityId: errors.ssoEntityId || "",
-            ssoEmailDomains: errors.ssoEmailDomains || "",
-            apiTarget: errors.apiTarget || "",
-            subHeaderLinks: errors.subHeaderLinks || "",
-          });
-        }
-        setErrors([errors?.general || OrganizationDetails("messages.errors.organizationDetailsSave")]);
-      } else {
-        // Show success message
-        showSuccessToast();
-        setHasUnsavedChanges(false);
-      }
+    if (validateForm && !isFormValid()) {
+      setIsSubmitting(false);
+      return;
     }
+
+    // Update profile
+    const [errors, success] = await updateAffiliation();
+    if (!success) {
+      if (errors) {
+        setFieldErrors({
+          general: errors.general || "",
+          displayName: errors.displayName || "",
+          displayAbbreviation: errors.displayAbbreviation || "",
+          displayDomain: errors.displayDomain || "",
+          contactEmail: errors.contactEmail || "",
+          contactName: errors.contactName || "",
+          types: errors.types || "",
+          managed: errors.managed || "",
+          funder: errors.funder || "",
+          fundrefId: errors.fundrefId || "",
+          rorId: errors.rorId || "",
+          ssoEntityId: errors.ssoEntityId || "",
+          ssoEmailDomains: errors.ssoEmailDomains || "",
+          apiTarget: errors.apiTarget || "",
+          subHeaderLinks: errors.subHeaderLinks || "",
+        });
+      }
+      setErrors([errors?.general || OrganizationDetails("messages.errors.organizationDetailsSave")]);
+    } else {
+      // Show success message
+      showSuccessToast();
+      setHasUnsavedChanges(false);
+    }
+
     setIsSubmitting(false);
+  };
+
+  // Submit organization details section
+  const handleOrganizationDetailsSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await submitAffiliationUpdate(true);
+  };
+
+  // Submit branding section
+  const handleBrandingSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await submitAffiliationUpdate(false);
+  };
+
+  // Submit identifiers section
+  const handleIdentifiersSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await submitAffiliationUpdate(false);
   };
 
   useEffect(() => {
     // When data from backend changes, set organization data in state
-    if (data && data.affiliationById) {
+    if (affiliationData && affiliationData.affiliationById) {
       // Abbreviation is a required field, so use what the admin entered, what ROR provided, or generate one
       const abbreviation: string =
-        data.affiliationById.displayAbbreviation ||
-        data.affiliationById?.acronyms?.[0] ||
-        generateAcronym(data.affiliationById.name);
+        affiliationData.affiliationById.displayAbbreviation ||
+        affiliationData.affiliationById?.acronyms?.[0] ||
+        generateAcronym(affiliationData.affiliationById.name);
+
+      const displayDomain = affiliationData.affiliationById.displayDomain;
+      const acronyms = affiliationData.affiliationById.acronyms || [];
+      const fullName = affiliationData.affiliationById.displayName;
 
       setOrganization({
-        id: data.affiliationById.id,
-        uri: data.affiliationById.uri,
-        provenance: data.affiliationById.provenance,
-        managed: data.affiliationById.managed,
-        funder: data.affiliationById.funder,
-        name: data.affiliationById.name,
-        acronyms: data.affiliationById.acronyms || [],
-        homepage: data.affiliationById.homepage,
-        displayName: data.affiliationById.displayName,
+        id: affiliationData.affiliationById.id,
+        uri: affiliationData.affiliationById.uri,
+        provenance: affiliationData.affiliationById.provenance,
+        managed: affiliationData.affiliationById.managed,
+        funder: affiliationData.affiliationById.funder,
+        name: affiliationData.affiliationById.name,
+        acronyms,
+        homepage: affiliationData.affiliationById.homepage,
+        displayName: fullName,
         displayAbbreviation: abbreviation,
-        displayDomain: data.affiliationById.displayDomain,
-        contactName: data.affiliationById.contactName,
-        contactEmail: data.affiliationById.contactEmail,
-        types: data.affiliationById.types,
-        logoName: data.affiliationById.logoName,
-        logoURI: data.affiliationById.logoURI,
-        fundrefId: data.affiliationById.fundrefId,
-        rorId: data.affiliationById.provenance === "ROR" ? data.affiliationById.uri : undefined,
-        ssoEntityId: data.affiliationById.ssoEntityId,
-        ssoEmailDomains: data.affiliationById.ssoEmailDomains,
-        apiTarget: data.affiliationById.apiTarget,
+        displayDomain,
+        contactName: affiliationData.affiliationById.contactName,
+        contactEmail: affiliationData.affiliationById.contactEmail,
+        types: affiliationData.affiliationById.types,
+        logoName: affiliationData.affiliationById.logoName,
+        logoURI: affiliationData.affiliationById.logoURI,
+        fundrefId: affiliationData.affiliationById.fundrefId,
+        rorId: affiliationData.affiliationById.provenance === "ROR" ? affiliationData.affiliationById.uri : undefined,
+        ssoEntityId: affiliationData.affiliationById.ssoEntityId,
+        ssoEmailDomains: affiliationData.affiliationById.ssoEmailDomains,
+        apiTarget: affiliationData.affiliationById.apiTarget,
       });
 
       // Set the affiliation types
-      setSelectedTypes(data.affiliationById?.types?.map((type) => type.toString().toUpperCase()) || []);
+      setSelectedTypes(affiliationData.affiliationById?.types?.map((type) => type.toString().toUpperCase()) || []);
 
       // Process any Links
-      const links: AffiliationLink[] = data.affiliationById.subHeaderLinks?.filter(Boolean) || [];
+      const links: AffiliationLink[] = affiliationData.affiliationById.subHeaderLinks?.filter(Boolean) || [];
 
       setOrganizationLinks(
         links.map((link: AffiliationLink, index: number): OrganizationLink => {
@@ -616,16 +664,16 @@ const OrganizationDetailsPage: React.FC = () => {
         }),
       );
 
-      const logoParts = data.affiliationById.logoName?.split("/");
+      const logoParts = affiliationData.affiliationById.logoName?.split("/");
       if (Array.isArray(logoParts) && logoParts.length > 0) {
-        const url = data.affiliationById.logoURI;
+        const url = affiliationData.affiliationById.logoURI;
         if (url) {
           setLogoName(logoParts[logoParts.length - 1]);
           setLogoUrl(url);
         }
       }
     }
-  }, [data]);
+  }, [affiliationData]);
 
   // Converts the Uploaded file into a resolvable URL so we can display the preview before saving
   useEffect(() => {
@@ -656,7 +704,7 @@ const OrganizationDetailsPage: React.FC = () => {
     };
   }, [hasUnsavedChanges]);
 
-  if (loading) {
+  if (affiliationLoading || meLoading) {
     return (
       <Loading
         variant="page"
@@ -665,11 +713,11 @@ const OrganizationDetailsPage: React.FC = () => {
     );
   }
 
-  if (error) {
-    if (error.message.toLowerCase() === "forbidden") {
+  if (affiliationError) {
+    if (affiliationError.message.toLowerCase() === "forbidden") {
       router.push("/not-found");
     } else {
-      return <div>{error.message}</div>;
+      return <div>{affiliationError.message}</div>;
     }
   }
 
@@ -691,22 +739,23 @@ const OrganizationDetailsPage: React.FC = () => {
         className="page-organization-details-header"
       />
 
-      <LayoutWithPanel className={"page-organization-details"}>
+      <LayoutWithPanel className={`${styles.pageOrganizationDetails} page-organization-details`}>
         <ContentContainer>
+          <div ref={topRef} />
           <ErrorMessages
             errors={errors}
             ref={errorRef}
           />
+          {/* Edit organization details section */}
+          <div className="sectionHeader">
+            <h2>{OrganizationDetails("sections.organizationDetails.title")}</h2>
+          </div>
           <form
-            onSubmit={handleSubmit}
+            onSubmit={handleOrganizationDetailsSubmit}
             noValidate
           >
-            {/* Edit organization details section */}
-            <div className={styles.sectionHeader}>
-              <h2>{OrganizationDetails("sections.organizationDetails.title")}</h2>
-            </div>
-            <div className={styles.sectionContainer}>
-              <div className={styles.sectionContent}>
+            <div className="sectionContainer">
+              <div className="sectionContent">
                 <FormInput
                   name="organizationName"
                   type="text"
@@ -719,12 +768,40 @@ const OrganizationDetailsPage: React.FC = () => {
                   }
                   value={organization.displayName}
                   onChange={(e) => updateOrganizationContent("displayName", e.target.value)}
+                  isRequired={true}
                   isInvalid={fieldErrors.displayName.length > 0}
                   errorMessage={
                     fieldErrors.displayName.length > 0
                       ? fieldErrors.displayName
                       : OrganizationDetails("messages.errors.displayName")
                   }
+                />
+
+                <FormInput
+                  name="organizationDomain"
+                  type="url"
+                  label={OrganizationDetails("fields.organizationDomain.label")}
+                  placeholder={OrganizationDetails("fields.organizationDomain.placeholder")}
+                  helpMessage={
+                    organization.rorId && organization.homepage
+                      ? OrganizationDetails.rich("fields.organizationDomain.helpMessage", {
+                        homepage: organization.homepage,
+                        link: (chunks: React.ReactNode) => (
+                          <a
+                            href={organization.homepage as string}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            {chunks}
+                          </a>
+                        ),
+                      })
+                      : OrganizationDetails("fields.organizationDomain.helpMessageNonRor")
+                  }
+                  value={organization.displayDomain || ""}
+                  onChange={(e) => updateOrganizationContent("displayDomain", e.target.value)}
+                  isInvalid={fieldErrors.displayDomain.length > 0}
+                  errorMessage={fieldErrors.displayDomain}
                 />
 
                 <FormInput
@@ -735,7 +812,7 @@ const OrganizationDetailsPage: React.FC = () => {
                   placeholder={OrganizationDetails("fields.organizationAbbr.placeholder")}
                   helpMessage={
                     organization.rorId
-                      ? `${OrganizationDetails("fields.organizationAbbr.helpMessage")} ${organization.name}`
+                      ? `${OrganizationDetails("fields.organizationAbbr.helpMessage")} ${organization.displayAbbreviation}`
                       : OrganizationDetails("fields.organizationAbbr.helpMessageNonRor")
                   }
                   value={organization.displayAbbreviation}
@@ -747,22 +824,6 @@ const OrganizationDetailsPage: React.FC = () => {
                       : OrganizationDetails("messages.errors.displayAbbr")
                   }
                   isRequired={true}
-                />
-
-                <FormInput
-                  name="organizationDomain"
-                  type="url"
-                  label={OrganizationDetails("fields.organizationDomain.label")}
-                  placeholder={OrganizationDetails("fields.organizationDomain.placeholder")}
-                  helpMessage={
-                    organization.rorId
-                      ? `${OrganizationDetails("fields.organizationDomain.helpMessage")} ${organization.name}`
-                      : OrganizationDetails("fields.organizationDomain.helpMessageNonRor")
-                  }
-                  value={organization.displayDomain || ""}
-                  onChange={(e) => updateOrganizationContent("displayDomain", e.target.value)}
-                  isInvalid={fieldErrors.displayDomain.length > 0}
-                  errorMessage={fieldErrors.displayDomain}
                 />
 
                 {/* Administrator contact */}
@@ -799,95 +860,65 @@ const OrganizationDetailsPage: React.FC = () => {
                 />
 
                 {/* Organization Links section */}
-                <div className={styles.sectionHeader}>
-                  <h3>{OrganizationDetails("fields.affiliationLinks.title")}</h3>
-                </div>
-                <div className={styles.organizationLinks}>
-                  {organizationLinks.map((link: OrganizationLink) => (
-                    <div
-                      key={`link-${link.order}`}
-                      className={styles.linkRow}
-                      role="group"
-                    >
-                      {/* Let screen reader know which row they are on */}
-                      <span
-                        id={`row-label-${link.order}`}
-                        className="hidden-accessibly"
+                <fieldset className={styles.organizationLinksGroup}>
+                  <legend className={styles.organizationLinksLegend}>
+                    {OrganizationDetails("fields.affiliationLinks.title")}
+                  </legend>
+                  <div className={styles.organizationLinks}>
+                    {organizationLinks.map((link: OrganizationLink) => (
+                      <div
+                        key={`link-${link.order}`}
+                        className={styles.linkRow}
+                        role="group"
                       >
-                        {OrganizationDetails("messages.linkRowInfo", { number: link.order })}
-                      </span>
-
-                      <FormInput
-                        id={`order-${link.order}`}
-                        name="orderNumber"
-                        type="text"
-                        disabled={true}
-                        isRequired={true}
-                        label={OrganizationDetails("fields.affiliationLinks.order.label")}
-                        value={link.order} // Plus one because its being read to screen readers
-                        placeholder={OrganizationDetails("fields.affiliationLinks.order.placeholder")}
-                        ariaLabel={!link.order ? undefined : "Order"}
-                        className="hidden-accessibly"
-                      />
-
-                      <FormInput
-                        id={`url-${link.order}`}
-                        name={`url-${link.order}`}
-                        type="url"
-                        isRequired={true}
-                        label={OrganizationDetails("fields.affiliationLinks.url.label")}
-                        value={link.url || ""}
-                        placeholder={OrganizationDetails("fields.affiliationLinks.url.placeholder")}
-                        ariaLabel={!link.order ? undefined : "URL"}
-                        onChange={(e) => handleLinkChange(link.order, "url", e.target.value)}
-                        isInvalid={linkErrors?.includes(link.order)}
-                        errorMessage={
-                          linkErrors?.includes(link.order) ? OrganizationDetails("messages.errors.linkURL") : ""
-                        }
-                      />
-
-                      <FormInput
-                        id={`text-${link.order}`}
-                        name={`text-${link.order}`}
-                        type="text"
-                        label={OrganizationDetails("fields.affiliationLinks.text.label")}
-                        value={link.text || ""}
-                        placeholder={OrganizationDetails("fields.affiliationLinks.text.placeholder")}
-                        ariaLabel={!link.order ? undefined : "Text"}
-                        onChange={(e) => handleLinkChange(link.order, "text", e.target.value)}
-                      />
-
-                      <div className={styles.remove}>
-                        <button
+                        <div className={styles.cell}>
+                          <FormInput
+                            id={`url-${link.order}`}
+                            name={`url-${link.order}`}
+                            type="url"
+                            isRequired={true}
+                            label={OrganizationDetails("fields.affiliationLinks.url.label")}
+                            value={link.url || ""}
+                            placeholder={OrganizationDetails("fields.affiliationLinks.url.placeholder")}
+                            ariaLabel={!link.order ? undefined : "URL"}
+                            onChange={(e) => handleLinkChange(link.order, "url", e.target.value)}
+                            isInvalid={linkErrors?.includes(link.order)}
+                            errorMessage={
+                              linkErrors?.includes(link.order) ? OrganizationDetails("messages.errors.linkURL") : ""
+                            }
+                          />
+                        </div>
+                        <div className={styles.cell}>
+                          <FormInput
+                            id={`text-${link.order}`}
+                            name={`text-${link.order}`}
+                            type="text"
+                            label={OrganizationDetails("fields.affiliationLinks.text.label")}
+                            value={link.text || ""}
+                            placeholder={OrganizationDetails("fields.affiliationLinks.text.placeholder")}
+                            ariaLabel={!link.order ? undefined : "Text"}
+                            onChange={(e) => handleLinkChange(link.order, "text", e.target.value)}
+                          />
+                        </div>
+                        <Button
                           type="button"
                           onClick={() => handleRemoveLink(link.order || 0)}
                           aria-label={OrganizationDetails("buttons.deleteLink", { count: link.order })}
                           className={`${styles.deleteButton} react-aria-Button secondary`}
                         >
                           {Global("buttons.remove")}
-                        </button>
-                        {/**Screen readers will announce when a new row was added */}
-                        <p
-                          aria-live="polite"
-                          className="hidden-accessibly"
-                        >
-                          {organizationLinks.length > 0
-                            ? OrganizationDetails("messages.success.addingLink", {
-                                number: organizationLinks.length,
-                              })
-                            : ""}
-                        </p>
+                        </Button>
                       </div>
-                    </div>
-                  ))}
-                  <button
-                    type="button"
-                    onClick={handleAddLink}
-                    aria-live="polite"
-                  >
-                    {OrganizationDetails("buttons.addLink")}
-                  </button>
-                </div>
+                    ))}
+                    <Button
+                      type="button"
+                      onClick={handleAddLink}
+                      aria-live="polite"
+                    >
+                      {organizationLinks.length === 0 ? OrganizationDetails("buttons.addLink") : OrganizationDetails('buttons.addAnotherLink')}
+                    </Button>
+                  </div>
+                </fieldset>
 
                 {!isSuperAdmin ? (
                   <div className={styles.organizationTypeRow}>
@@ -909,7 +940,7 @@ const OrganizationDetailsPage: React.FC = () => {
                           ?.join(", ") || OrganizationDetails("fields.organizationType.types.other")}
                       </span>
                       <Link
-                        href="/contact"
+                        href={routePath("app.contact")}
                         className={`react-aria-Link ${styles.requestChangeLink}`}
                       >
                         {OrganizationDetails("actions.requestChange")}
@@ -928,7 +959,7 @@ const OrganizationDetailsPage: React.FC = () => {
                         fieldErrors.types.length > 0 ? fieldErrors.types : OrganizationDetails("messages.errors.types")
                       }
                     >
-                      <div className={styles.organizationTypeCheckboxGroup}>
+                      <div className="checkbox-group-two-column">
                         {affiliationCheckboxTypes &&
                           affiliationCheckboxTypes.map((checkbox, index) => (
                             <Checkbox
@@ -936,7 +967,8 @@ const OrganizationDetailsPage: React.FC = () => {
                               key={checkbox.value}
                               aria-label="checkbox"
                               id={`organizationType-${index}`}
-                              isSelected={organization.types?.includes(checkbox.value) || false}
+                              className="react-aria-Checkbox"
+                              isSelected={selectedTypes.includes(checkbox.value)}
                               onChange={(e) => handleCheckboxChange(checkbox.value, e)}
                             >
                               <div className="checkbox">
@@ -966,7 +998,7 @@ const OrganizationDetailsPage: React.FC = () => {
                 {isSuperAdmin && (
                   <div id="superadmin-details">
                     <RadioGroupComponent
-                      name="radioGroup"
+                      name="orgManagedRadioGroup"
                       value={organization?.managed ? "yes" : "no"}
                       radioGroupLabel={OrganizationDetails("fields.managed.label")}
                       description={OrganizationDetails("fields.managed.description")}
@@ -984,12 +1016,12 @@ const OrganizationDetailsPage: React.FC = () => {
                     </RadioGroupComponent>
 
                     <RadioGroupComponent
-                      name="radioGroup"
+                      name="orgFunderRadioGroup"
                       value={organization?.funder ? "yes" : "no"}
                       radioGroupLabel={OrganizationDetails("fields.funder.label")}
                       description={OrganizationDetails("fields.funder.description")}
                       onChange={(e) => handleRadioChange("funder", e)}
-                      isInvalid={fieldErrors.managed.length > 0}
+                      isInvalid={fieldErrors.funder.length > 0}
                       errorMessage={fieldErrors.funder}
                     >
                       <div>
@@ -1014,37 +1046,49 @@ const OrganizationDetailsPage: React.FC = () => {
                     />
                   </div>
                 )}
+
+                <div className={styles.saveButton}>
+                  <Button
+                    type="submit"
+                    className="submit-button react-aria-Button"
+                  >
+                    {Global("buttons.save")}
+                  </Button>
+                </div>
               </div>
             </div>
+          </form>
 
-            {/* Branding section */}
-            <div className={styles.sectionHeader}>
-              <h2>{OrganizationDetails("sections.branding.title")}</h2>
-            </div>
-            <div className={styles.sectionContainer}>
-              <div className={styles.sectionContent}>
+          {/* Branding section */}
+          <div className="sectionHeader">
+            <h2>{OrganizationDetails("sections.branding.title")}</h2>
+          </div>
+          <form
+            onSubmit={handleBrandingSubmit}
+            noValidate
+          >
+            <div className="sectionContainer">
+              <div className="sectionContent">
                 <div className={styles.logoSection}>
                   <div className={styles.logoRow}>
                     {/* If a preview exists, show the logo and file name */}
                     {logoUrl && logoName ? (
-                      <div className={styles.logoPreviewContainer}>
-                        <div className={styles.previewImageWrapper}>
-                          <img
-                            src={logoUrl}
-                            alt="Logo preview"
-                            className={styles.logoPreview}
-                          />
-                        </div>
+                      <>
+                        <img
+                          src={logoUrl}
+                          alt="Logo preview"
+                          className={styles.logoPreview}
+                        />
                         <div className={styles.previewDetails}>
-                          <span className={styles.fileName}>{logoName}</span>
-                          <button
-                            className={styles.removeButton}
+                          <div className={styles.fileName}>{logoName}</div>
+                          <Button
+                            type="button"
                             onClick={() => handleLogoRemoval()}
                           >
                             {OrganizationDetails("buttons.removeLogo")}
-                          </button>
+                          </Button>
                         </div>
-                      </div>
+                      </>
                     ) : (
                       <div className={styles.logoUpload}>
                         <div className={styles.uploadArea}>
@@ -1093,7 +1137,10 @@ const OrganizationDetailsPage: React.FC = () => {
                                   }
                                 }}
                               >
-                                <Button className={styles.browseButton}>
+                                <Button
+                                  type="button"
+                                  className={styles.browseButton}
+                                >
                                   {OrganizationDetails("upload.browseButton")}
                                 </Button>
                               </FileTrigger>
@@ -1104,15 +1151,29 @@ const OrganizationDetailsPage: React.FC = () => {
                     )}
                   </div>
                 </div>
+
+                <div className={styles.saveButton}>
+                  <Button
+                    type="submit"
+                    className="submit-button react-aria-Button"
+                  >
+                    {Global("buttons.save")}
+                  </Button>
+                </div>
               </div>
             </div>
+          </form>
 
-            {/* Identifiers section */}
-            <div className={styles.sectionHeader}>
-              <h2>{OrganizationDetails("sections.identifiers.title")}</h2>
-            </div>
-            <div className={styles.sectionContainer}>
-              <div className={styles.sectionContent}>
+          {/* Identifiers section */}
+          <div className="sectionHeader">
+            <h2>{OrganizationDetails("sections.identifiers.title")}</h2>
+          </div>
+          <form
+            onSubmit={handleIdentifiersSubmit}
+            noValidate
+          >
+            <div className="sectionContainer">
+              <div className="sectionContent">
                 <div className={styles.identifierField}>
                   <div className={styles.content}>
                     <FormInput
@@ -1140,14 +1201,6 @@ const OrganizationDetailsPage: React.FC = () => {
                       errorMessage={fieldErrors.fundrefId}
                       onChange={(e) => updateOrganizationContent("fundrefId", e.target.value)}
                     />
-                    {!isSuperAdmin && (
-                      <Button
-                        className="react-aria-Button react-aria-Button--secondary"
-                        aria-label={`${OrganizationDetails("actions.requestChange")} ${OrganizationDetails("fields.fundRef.label")}`}
-                      >
-                        {OrganizationDetails("actions.requestChange")}
-                      </Button>
-                    )}
                   </div>
                 </div>
 
@@ -1178,14 +1231,6 @@ const OrganizationDetailsPage: React.FC = () => {
                       errorMessage={fieldErrors.rorId}
                       onChange={(e) => updateOrganizationContent("rorId", e.target.value)}
                     />
-                    {!isSuperAdmin && (
-                      <Button
-                        className="react-aria-Button react-aria-Button--secondary"
-                        aria-label={`${OrganizationDetails("actions.requestChange")} ${OrganizationDetails("fields.ror.label")}`}
-                      >
-                        {OrganizationDetails("actions.requestChange")}
-                      </Button>
-                    )}
                   </div>
                 </div>
 
@@ -1201,14 +1246,6 @@ const OrganizationDetailsPage: React.FC = () => {
                       disabled={!isSuperAdmin}
                       onChange={(e) => updateOrganizationContent("ssoEntityId", e.target.value)}
                     />
-                    {!isSuperAdmin && (
-                      <Button
-                        className="react-aria-Button react-aria-Button--secondary"
-                        aria-label={`${OrganizationDetails("actions.requestChange")} ${OrganizationDetails("fields.shibboleth.label")}`}
-                      >
-                        {OrganizationDetails("actions.requestChange")}
-                      </Button>
-                    )}
                   </div>
                 </div>
 
@@ -1224,27 +1261,27 @@ const OrganizationDetailsPage: React.FC = () => {
                       helpMessage={OrganizationDetails("fields.domains.helpMessage")}
                       onChange={(e) => handleEmailDomainUpdate(e.target.value)}
                     />
-                    {!isSuperAdmin && (
-                      <Button
-                        className="react-aria-Button react-aria-Button--secondary"
-                        aria-label={`${OrganizationDetails("actions.requestChange")} ${OrganizationDetails("fields.domains.label")}`}
-                      >
-                        {OrganizationDetails("actions.requestChange")}
-                      </Button>
-                    )}
                   </div>
                 </div>
-              </div>
-            </div>
 
-            {/* Save button */}
-            <div className={styles.saveButton}>
-              <button
-                type="submit"
-                className="submit-button react-aria-Button"
-              >
-                {Global("buttons.save")}
-              </button>
+                <p>{OrganizationDetails.rich("fields.identifiersMessage", {
+                  link: (chunks: React.ReactNode) => (
+                    <Link
+                      href={routePath("app.contact")}
+                    >
+                      {chunks}
+                    </Link>
+                  )
+                })}</p>
+                <div className={styles.saveButton}>
+                  <Button
+                    type="submit"
+                    className="submit-button react-aria-Button"
+                  >
+                    {Global("buttons.save")}
+                  </Button>
+                </div>
+              </div>
             </div>
           </form>
 
@@ -1255,14 +1292,14 @@ const OrganizationDetailsPage: React.FC = () => {
           >
             {announcement}
           </p>
-        </ContentContainer>
+        </ContentContainer >
 
         <SidebarPanel>
           <div>{/* TODO: Add sidebar content */}</div>
         </SidebarPanel>
-      </LayoutWithPanel>
+      </LayoutWithPanel >
     </>
   );
-};;
+};
 
 export default OrganizationDetailsPage;

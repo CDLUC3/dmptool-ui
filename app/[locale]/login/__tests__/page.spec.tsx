@@ -46,8 +46,7 @@ const mockFetchCsrfToken = fetchCsrfToken as jest.Mock;
 // Mock fetch globally
 global.fetch = jest.fn() as jest.MockedFunction<typeof fetch>;
 
-const serverEndpoint = process.env.NEXT_PUBLIC_SERVER_ENDPOINT as string;
-const signInUrl = `${serverEndpoint}/apollo-signin`;
+const signInUrl = `${process.env.NEXT_PUBLIC_SERVER_ENDPOINT}/apollo-signin`;
 
 describe('LoginPage', () => {
   const doSteps = async () => {
@@ -109,6 +108,23 @@ describe('LoginPage', () => {
     // Ensure that email field is read-only on this step
     const emailField = screen.getByTestId("emailInput");
     expect(emailField).toHaveAttribute('readonly');
+  });
+
+  it("should show reset password link on the password step", async () => {
+    render(<LoginPage />);
+
+    fireEvent.change(screen.getByTestId("emailInput"), {
+      target: { value: "test@test.com" }
+    });
+
+    fireEvent.click(screen.getByTestId("actionContinue"));
+
+    await waitFor(() => {
+      expect(screen.getByRole("link", { name: "resetPassword" })).toBeInTheDocument();
+    });
+
+    // TODO: enable when reset password flow is implemented
+    // expect(screen.getByRole("link", { name: "resetPassword" })).toHaveAttribute("href", expect.not.stringContaining("#"));
   });
 
   it("should redirect to home on successful login", async () => {
@@ -262,7 +278,12 @@ describe('LoginPage', () => {
   });
 
   it('should handle fetch error', async () => {
-    jest.spyOn(global, 'fetch').mockRejectedValue(new Error('Network error'));
+    jest.spyOn(global, 'fetch').mockImplementation((url) => {
+      if (url === signInUrl) {
+        return Promise.reject(new Error('Network error'));
+      }
+      return Promise.reject(new Error('Unknown URL'));
+    });
 
     render(<LoginPage />);
 

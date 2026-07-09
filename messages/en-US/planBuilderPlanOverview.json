@@ -39,7 +39,8 @@
     },
     "funding": {
       "title": "Funding for this plan",
-      "edit": "Adjust for this plan"
+      "edit": "Adjust for this plan",
+      "noFunderSelected": "No funder selected"
     },
     "members": {
       "title": "Plan members for this plan",

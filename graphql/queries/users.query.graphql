@@ -28,6 +28,7 @@ query Me{
       feedbackEnabled
       feedbackMessage
     }
+    email
   }
 }
 
@@ -47,6 +48,7 @@ query Users($term: String, $role: UserRole, $affiliationId: String, $paginationO
         dmpId
         project {
           id
+          isTestProject
         }
       }
       id
@@ -55,6 +57,8 @@ query Users($term: String, $role: UserRole, $affiliationId: String, $paginationO
         displayName
         uri
       }
+      ssoId
+      orcid
     }
     hasNextPage
     currentOffset

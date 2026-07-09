@@ -1,57 +1,30 @@
-.sectionHeader {
-    margin-top: 0;
-    margin-bottom: var(--space-4);
+@use '@/styles/responsive.scss' as r;
 
-    h3 {
-        margin: 0;
-        font-size: var(--fs-lg);
-        font-weight: 600;
-        color: var(--text-color);
-        padding: 0;
-    }
-}
-
-.sectionContainer {
-    margin-top: 0;
-    margin-bottom: var(--space-6);
-}
-
-.sectionContent {
-    padding: var(--space-5) var(--space-6);
-    margin-bottom: var(--space-4);
-    border-radius: var(--card-border-radius);
-    background: var(--bg-white);
-    box-shadow: var(--card-shadow);
-    border: 1px solid var(--card-border);
+.pageOrganizationDetails {
+  overflow: visible; //this is to override overflow:auto in the layout container, which was causing a double scrollbar
+  margin-bottom: 0;
 }
 
 .organizationTypeRow {
-    margin-top: var(--space-4);
+  margin: var(--space-5) 0;
 
-    .organizationTypeCheckboxGroup {
+  .label {
+    display: block;
+    margin-bottom: var(--space-2);
+    font-weight: 600;
+  }
+
+  .content {
       display: flex;
-      flex-wrap: wrap;
-      width: 100%;
-      gap: 10px;
-    }
+      align-items: center;
+      gap: var(--space-2);
+  }
 
-    .label {
-        display: block;
-        margin-bottom: var(--space-2);
-        font-weight: 600;
-    }
-
-    .content {
-        display: flex;
-        align-items: center;
-        gap: var(--space-2);
-    }
-
-    .requestChangeLink {
-        font-size: var(--fs-small);
-        color: var(--blue-600);
-        text-decoration: underline;
-    }
+  .requestChangeLink {
+      font-size: var(--fs-small);
+      color: var(--blue-600);
+      text-decoration: underline;
+  }
 }
 
 .urlDescription {
@@ -111,8 +84,6 @@
 }
 
 .organizationLinks {
-  margin-bottom: var(--space-2);
-
   .linkRow {
     display: flex;
     flex-wrap: wrap;
@@ -123,22 +94,35 @@
     padding-bottom: 1rem;
     margin-bottom: 1rem;
 
-    @media (min-width: 768px) {
+    @include r.device(md) {
       grid-template-columns: 1fr 1fr;
       gap: var(--space-6);
     }
-
-
-    @media (min-width: 1024px) {
+    
+    @include r.device(lg) {
       gap: var(--space-8);
       flex-wrap: nowrap;
     }
+  }
 
-    .cell {
-      padding: 10px 0px;
-      flex: 1 1;
+
+.cell {
+  padding: 10px 0px;
+  flex: 1;
+
+  :global(.react-aria-TextField) {
+    margin-bottom: 0rem;
+    label{
+      font-weight: 400;
     }
   }
+
+  label.react-aria-Checkbox{
+    white-space: nowrap;
+    font-weight: 400;
+  }
+
+}
 
   .addUrlButton {
     background-color: var(--blue-600);
@@ -167,6 +151,21 @@
   }
 }
 
+.organizationLinksGroup {
+    margin: var(--space-8) 0 var(--space-8);
+    padding: 0;
+    border-radius: var(--border-radius);
+    background: var(--slate-50);
+    border: 1px solid var(--border-color);
+    padding: var(--space-4);
+}
+
+.organizationLinksLegend {
+    padding: 0;
+    font-size: var(--fs-base);
+    font-weight: 600;
+}
+
 .logoSection {
     margin-top: var(--space-4);
     padding: var(--space-4);
@@ -178,34 +177,25 @@
 .logoRow {
     display: flex;
     flex-direction: column;
+    align-items: center;
     gap: var(--space-4);
 }
 
-.previewContent {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+.logoPreviewContainer {
+  text-align: center;
 }
 
-.previewPlaceholder {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: var(--space-2);
-    color: var(--slate-400);
-    text-align: center;
-    padding: var(--space-3);
+.logoPreview {
+  max-width: 300px;
+}
 
-    svg {
-        color: var(--slate-300);
-    }
 
-    span {
-        font-size: var(--fs-small);
-        font-weight: 500;
-    }
+.previewDetails {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
 }
 
 .uploadButton {
@@ -339,7 +329,6 @@
 }
 
 .fileName {
-    flex: 1;
     font-weight: 500;
     color: var(--slate-700);
     overflow: hidden;
@@ -384,9 +373,11 @@
         width: 100%;
         max-width: 100%;
 
-        :global(.react-aria-TextField) {
+        @include r.device(md) {
+          :global(.react-aria-TextField) {
             width: 60% !important;
             max-width: 400px !important;
+          }
         }
     }
 
@@ -421,4 +412,24 @@
     border-radius: var(--border-radius);
     box-shadow: var(--card-shadow);
     z-index: 1000;
+}
+
+.deleteButton {
+  align-self: center;
+  margin-top: var(--space-4);
+}
+
+.organizationTypeOption {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  width: 100%;
+  padding: var(--space-3);
+  border: 1px solid var(--card-border);
+  border-radius: var(--border-radius);
+  background: var(--bg-white);
+}
+
+.organizationTypeOptionLabel {
+  line-height: 1.35;
 }

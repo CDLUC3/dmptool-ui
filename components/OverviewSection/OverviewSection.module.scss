@@ -1,12 +1,8 @@
-@use '../../styles/responsive' as r;
-
 .overviewSection {
     border-radius: 0;
-    padding: var(--space-2) 0;
+    padding: var(--space-2) var(--space-4);
     background-color: var(--color-background-subtle);
     border-bottom: 1px solid var(--gray-100);
-    gap: var(--space-3);
-    align-items: flex-start;
 
     h2 {
         margin: 0;
@@ -17,12 +13,15 @@
 .overviewSectionContent {
     display: flex;
     flex-direction: column;
-    gap: var(--space-0);
+    gap: var(--space-1);
 }
 
 .overviewSectionTitle {
-    font-size: var(--fs-h4);
-    margin: 0 0 var(--space-2) 0;
+    font-size: var(--fs-small);
+    font-weight: var(--fw-medium);
+    color: var(--slate-700);
+    margin: 0;
+    line-height: var(--lh-normal);
 }
 
 .overviewSectionText {
@@ -30,12 +29,20 @@
     font-weight: 400;
     margin: 0;
 
-    /* Support for nested elements like spans, strong tags, etc. */
     p {
         margin: 0;
     }
 
-    strong {
-        font-weight: 600;
+    > p:first-child {
+        font-weight: var(--fw-semibold);
+        color: var(--text-black);
     }
+
+    strong {
+        font-weight: var(--fw-semibold);
+    }
+}
+
+.overviewSectionActions {
+    margin-top: var(--space-1);
 }
