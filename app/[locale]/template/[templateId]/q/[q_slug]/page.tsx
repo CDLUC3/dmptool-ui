@@ -52,7 +52,6 @@ import QuestionOptionsComponent
   from '@/components/Form/QuestionOptionsComponent';
 import QuestionPreview from '@/components/QuestionPreview';
 import {
-  FormInput,
   RadioGroupComponent,
   RangeComponent,
   TypeAheadSearch,
@@ -683,16 +682,17 @@ const QuestionEdit = () => {
                   </Text>
                 </TextField>
 
-                <FormInput
+                <FormTextArea
                   name="question_text"
-                  type="text"
                   isRequired={true}
                   label={t('labels.questionText')}
                   value={question?.questionText ? question.questionText : ''}
-                  onChange={(e) => handleQuestionTextChange(e.target.value)}
+                  onChange={handleQuestionTextChange}
                   helpMessage={t('helpText.questionText')}
                   isInvalid={!question?.questionText}
                   errorMessage={t('messages.errors.questionTextRequired')}
+                  richText={false}
+                  textAreaClasses={styles.questionFormField}
                 />
 
                 {/**Question type fields here */}
