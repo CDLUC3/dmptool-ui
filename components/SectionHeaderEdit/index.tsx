@@ -133,7 +133,7 @@ const SectionHeaderEdit: React.FC<SectionHeaderEditProps> = ({
         <div className={styles.orderButtons}>
           {onMoveUp && (
             <Button
-              className={`${styles.btnDefault} ${styles.orderButton}`}
+              className={`order-button ${styles.orderButton}`}
               onPress={onMoveUp}
               aria-label={Sections("buttons.moveUp", { title })}
             >
@@ -143,7 +143,7 @@ const SectionHeaderEdit: React.FC<SectionHeaderEditProps> = ({
 
           {onMoveDown && (
             <Button
-              className={`${styles.btnDefault} ${styles.orderButton}`}
+              className={`order-button ${styles.orderButton}`}
               onPress={onMoveDown}
               aria-label={Sections("buttons.moveDown", { title })}
             >

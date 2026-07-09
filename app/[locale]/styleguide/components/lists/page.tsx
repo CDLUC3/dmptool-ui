@@ -2,8 +2,10 @@
 
 import React from "react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { ContentContainer, LayoutContainer } from "@/components/Container";
 import { Button } from "react-aria-components";
+import { TransitionLink } from "@/components/Form";
 import TemplateList from "@/components/TemplateList";
 import ProjectListItem from "@/components/ProjectListItem";
 import TemplateSelectListItem from "@/components/TemplateSelectListItem";
@@ -25,6 +27,10 @@ import {
 } from "../../shared/components";
 
 export default function ListsDataCardsPage() {
+  const Global = useTranslations("Global");
+  const ProjectsListPage = useTranslations("ProjectsListPage");
+  const OrganizationProjects = useTranslations("OrganizationProjects");
+
   // State for interactive examples
   const [selectedTemplate, setSelectedTemplate] = React.useState<number | null>(null);
   const [_expandedProject, _setExpandedProject] = React.useState<string | null>(null);
@@ -43,6 +49,7 @@ export default function ListsDataCardsPage() {
       publishDate: "2024-01-10",
       visibility: "public",
       hasAdditionalGuidance: true,
+      bestPractices: true,
       defaultExpanded: false,
     },
     {
@@ -296,6 +303,9 @@ export default function ListsDataCardsPage() {
                   <a href="#project-list-item">Project List Item</a>
                 </li>
                 <li>
+                  <a href="#projects-empty-state">Projects Empty State</a>
+                </li>
+                <li>
                   <a href="#template-select-list">Template Select List</a>
                 </li>
                 <li>
@@ -493,10 +503,125 @@ const partialProject = {
           </SGComponentExample>
         </section>
 
+        {/* Projects empty state */}
+        <section id="projects-empty-state">
+          <h2>Projects Empty State</h2>
+          <p>
+            Shown on the Plan Dashboard and Organization Projects list when the user has no projects. Uses global{" "}
+            <code>.empty-state</code> styles from <code>styles/_elements.scss</code>. Search with no matches uses a
+            separate plain message instead.
+          </p>
+
+          <SGComponentExample>
+            <SGComponentExampleHeader
+              title="Plan Dashboard (no projects)"
+              description="Used on /projects when totalCount is zero. Demo button uses a page anchor; production links to projects.create."
+            />
+            <SGComponentExampleContent>
+              <SGComponentExampleDemo>
+                <div
+                  className="empty-state"
+                  role="status"
+                  aria-labelledby="styleguide-projects-empty-heading"
+                >
+                  <h2 id="styleguide-projects-empty-heading" className="empty-state-heading">
+                    {ProjectsListPage("messages.info.noProjectsHeading")}
+                  </h2>
+                  <p className="empty-state-description">
+                    {ProjectsListPage("messages.info.noProjectsDescription")}
+                  </p>
+                  <TransitionLink
+                    href="#projects-empty-state"
+                    className="button-link button--primary"
+                  >
+                    {Global("buttons.createNewPlan")}
+                  </TransitionLink>
+                </div>
+              </SGComponentExampleDemo>
+            </SGComponentExampleContent>
+          </SGComponentExample>
+
+          <SGComponentExample>
+            <SGComponentExampleHeader
+              title="Organization Projects (no projects)"
+              description="Used on /admin/projects when totalCount is zero"
+            />
+            <SGComponentExampleContent>
+              <SGComponentExampleDemo>
+                <div
+                  className="empty-state"
+                  role="status"
+                  aria-labelledby="styleguide-organization-projects-empty-heading"
+                >
+                  <h2 id="styleguide-organization-projects-empty-heading" className="empty-state-heading">
+                    {OrganizationProjects("messages.info.noProjectsHeading")}
+                  </h2>
+                  <p className="empty-state-description">
+                    {OrganizationProjects("messages.info.noProjectsDescription")}
+                  </p>
+                  <TransitionLink
+                    href="#projects-empty-state"
+                    className="button-link button--primary"
+                  >
+                    {Global("buttons.createNewPlan")}
+                  </TransitionLink>
+                </div>
+              </SGComponentExampleDemo>
+            </SGComponentExampleContent>
+          </SGComponentExample>
+
+          <SGComponentExample>
+            <SGComponentExampleHeader
+              title="Search with no results"
+              description="Plain message when a search returns nothing (not the empty-state block)"
+            />
+            <SGComponentExampleContent>
+              <SGComponentExampleDemo>
+                <p>{Global("messaging.noItemsFound")}</p>
+              </SGComponentExampleDemo>
+
+              <h4>Usage</h4>
+              <SGCodeBlock>{`// Empty dashboard — app/[locale]/projects/page.tsx
+<div
+  className="empty-state"
+  role="status"
+  aria-labelledby="projects-empty-heading"
+>
+  <h2 id="projects-empty-heading" className="empty-state-heading">
+    {Project('messages.info.noProjectsHeading')}
+  </h2>
+  <p className="empty-state-description">
+    {Project('messages.info.noProjectsDescription')}
+  </p>
+  <TransitionLink
+    href={routePath('projects.create')}
+    className="button-link button--primary"
+  >
+    {Global('buttons.createNewPlan')}
+  </TransitionLink>
+</div>
+
+// Project list (when items exist)
+<div className="template-list" role="list">
+  {projects.map(...)}
+</div>
+
+// Search miss — same page, different branch
+<p>{Global('messaging.noItemsFound')}</p>`}</SGCodeBlock>
+            </SGComponentExampleContent>
+          </SGComponentExample>
+        </section>
+
         {/* Template Select List */}
         <section id="template-select-list">
           <h2>Template Select List Item</h2>
           <p>Individual template item component with selection capabilities and rich metadata display.</p>
+          <p>
+            Templates flagged as a DMP Tool best practice show a gold badge in the top-left corner. The
+            &ldquo;Best practice&rdquo; label is a button that opens a short explanation on click. The first
+            example below is a best practice template and also has additional organisation guidance, showing how
+            both indicators appear together.
+          </p>
 
           <SGComponentExample>
             <SGComponentExampleHeader title="Template Selection Items" />
@@ -531,7 +656,8 @@ const template = {
   lastUpdated: "2024-01-15",
   publishStatus: "Published",
   visibility: "public",
-  hasAdditionalGuidance: true
+  hasAdditionalGuidance: true,
+  bestPractices: true // shows the gold "Best practice" badge
 };
 
 <TemplateSelectListItem
@@ -548,6 +674,10 @@ const template = {
                 </li>
                 <li>
                   <strong>Guidance indicators:</strong> Visual indicators for additional guidance
+                </li>
+                <li>
+                  <strong>Best practice badge:</strong> Gold corner badge with a click-to-open explanation for
+                  DMP Tool best practice templates
                 </li>
                 <li>
                   <strong>Selection states:</strong> Clear selection and action buttons

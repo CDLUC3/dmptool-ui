@@ -102,22 +102,10 @@
     gap: var(--space-1);
   }
 
+  // Shared interactive styles live in styles/form/_order-button.scss
   .orderButton {
-    padding: var(--space-1);
-    background: none;
-    color: var(--gray-600);
     margin: 0;
-    cursor: pointer;
     font-size: var(--fs-lg);
-    transition: color 0.2s ease;
-
-    &:focus,
-    &:hover {
-      background: none;
-      color: var(--text-color);
-      outline: 2px solid var(--blue-500);
-      outline-offset: 2px;
-    }
   }
 
   // Organization question styling

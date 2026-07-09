@@ -4,7 +4,7 @@
     "emailAddress": "Endereço de e-mail",
     "singleSignOn": "Para ativar o Logon Único (SSO), use o seu endereço institucional. Você será redirecionado para o único sinal da sua instituição na plataforma.",
     "password": "Palavra-passe",
-    "forgotPassword": "Esqueceu a seunha?",
+    "resetPassword": "Redefinir palavra-passe",
     "continue": "Continuar",
     "login": "Entrar",
     "signupText": "Criar uma conta gratuita de DMP Tool",

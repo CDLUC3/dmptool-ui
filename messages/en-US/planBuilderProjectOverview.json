@@ -10,6 +10,7 @@
     "dates": "Dates",
     "collaborators": "Collaborators",
     "funding": "Funding",
+    "noFunderSelected": "No funder selected",
     "grantId": "Grant ID",
     "edit": "Edit",
     "editProject": "Edit project details",
@@ -84,6 +85,10 @@
       "createProject": "Create project"
     },
     "messages": {
+      "info": {
+        "noProjectsHeading": "Your projects will appear here",
+        "noProjectsDescription": "Create a data management plan to get started. You can manage all your DMPs and research projects from this dashboard."
+      },
       "errors": {
         "errorRetrievingProjects": "Something went wrong with retrieving projects. Please try again later."
       }
