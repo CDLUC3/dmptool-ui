@@ -10,6 +10,7 @@
     "dates": "Datas",
     "collaborators": "Colaboradores",
     "funding": "Financiamento",
+    "noFunderSelected": "Nenhum financiador selecionado",
     "grantId": "ID do Financiamento",
     "edit": "Alterar",
     "editProject": "Editar Detalhes do Projeto",

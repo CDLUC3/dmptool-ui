@@ -103,6 +103,23 @@ describe("ProjectListItem", () => {
     expect(screen.getByText(/Dr. Erik Lindström/i)).toBeInTheDocument(); // This should still be in collapsed metadata
   });
 
+  it("shows noFunderSelected when funding is empty", () => {
+    render(
+      <ProjectListItem
+        item={{ ...mockProjectItem, funding: "" }}
+      />,
+    );
+
+    const funderMetadata = screen.getByText("noFunderSelected");
+    expect(funderMetadata).toBeInTheDocument();
+    expect(funderMetadata).not.toHaveAttribute("aria-label");
+
+    fireEvent.click(screen.getByRole("button", { name: /buttons.linkExpand/i }));
+
+    expect(screen.getAllByText("noFunderSelected")).toHaveLength(2);
+    expect(screen.getByRole("heading", { name: "fundings" })).toBeInTheDocument();
+  });
+
   it("shows view button instead of update when isReadOnly", () => {
     render(<ProjectListItem item={mockProjectItem} isReadOnly={true} />);
 

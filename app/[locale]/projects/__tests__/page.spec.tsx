@@ -946,6 +946,50 @@ describe("ProjectsListPage", () => {
     expect(clearFilterBtn).not.toBeInTheDocument();
   });
 
+  it("should show noFunderSelected when project has no fundings", async () => {
+    const noFundingMock = {
+      request: {
+        query: MyProjectsDocument,
+        variables: {
+          paginationOptions: {
+            limit: 3,
+          },
+        },
+      },
+      result: {
+        data: {
+          myProjects: {
+            totalCount: 1,
+            nextCursor: null,
+            items: [
+              {
+                title: "Project Without Funding",
+                id: 99,
+                startDate: "2025-01-01",
+                endDate: "2027-12-31",
+                fundings: [],
+                members: [],
+                errors: null,
+              },
+            ],
+          },
+        },
+      },
+    };
+
+    await act(async () => {
+      render(
+        <MockedProvider mocks={[noFundingMock]}>
+          <ProjectsListPage />
+        </MockedProvider>,
+      );
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText("ProjectOverview.noFunderSelected")).toBeInTheDocument();
+    });
+  });
+
   it("should pass axe accessibility test", async () => {
     const { container } = render(
       <MockedProvider

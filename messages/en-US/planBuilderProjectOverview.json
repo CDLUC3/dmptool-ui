@@ -10,6 +10,7 @@
     "dates": "Dates",
     "collaborators": "Collaborators",
     "funding": "Funding",
+    "noFunderSelected": "No funder selected",
     "grantId": "Grant ID",
     "edit": "Edit",
     "editProject": "Edit project details",

@@ -26,6 +26,9 @@
 - Added `UpdateAffiliation` and `AffiliationById` queries [#203]
 
 ## Updated
+- Updated `ProjectListItem`, `ProjectOverviewPage`, and `PlanOverviewPage` to display a localized "No funder selected" message when project or plan funding is empty
+- Updated `OverviewSection` styling on project and plan overview pages: section headings use a smaller muted label style, primary values are bold, and edit links display below the content using default blue link styling
+- Added `noFunderSelected` translation keys in `en-US` and `pt-BR` message files
 - Fixed some bugs on the Organization Details page, and cleaned up the layout and removed Identifiers "Request Change" buttons [#293][#280][#296]
 - Updated "Publish" modal. Added "Required" and "Recommended" checklist sections, and added a requirement that the plan not be in test mode [#91]
 - Updated `PlanOverviewPage` to disable `request feedback` link when there is feedback is not enabled and there are no feedback emails [#285]

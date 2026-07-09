@@ -702,6 +702,39 @@ describe('PlanOverviewPage', () => {
     });
   });
 
+  it('should display funding.noFunderSelected when plan has no fundings', async () => {
+    const planQueryReturn = {
+      data: {
+        plan: {
+          ...mockPlanData.plan,
+          fundings: [],
+        },
+      },
+      loading: false,
+      error: null,
+      refetch: jest.fn(),
+    };
+
+    mockUseQuery.mockImplementation((document) => {
+      if (document === PlanDocument) {
+        return planQueryReturn;
+      }
+
+      return {
+        data: null,
+        loading: false,
+        error: undefined,
+        /* eslint-disable @typescript-eslint/no-explicit-any */
+      } as any;
+    });
+
+    render(<PlanOverviewPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('funding.noFunderSelected')).toBeInTheDocument();
+    });
+  });
+
   it('should display related works counts if \'hasPublishedPlan\' prop has a value', async () => {
     const updatedMockPlanData = {
       ...mockPlanData.plan,
