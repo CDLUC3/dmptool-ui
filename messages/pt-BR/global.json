@@ -852,6 +852,7 @@
     },
     "messaging": {
       "loading": "Carregando",
+      "loadingList": "Carregando lista, aguarde...",
       "loadingPage": "Carregando página...",
       "submitting": "Enviando...",
       "submittingSROnly": "Enviando solicitação de feedback...",
