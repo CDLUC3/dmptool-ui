@@ -10,6 +10,7 @@
     "dates": "Datas",
     "collaborators": "Colaboradores",
     "funding": "Financiamento",
+    "noFunderSelected": "Nenhum financiador selecionado",
     "grantId": "ID do Financiamento",
     "edit": "Alterar",
     "editProject": "Editar Detalhes do Projeto",
@@ -83,6 +84,10 @@
       "createProject": "Criar projeto"
     },
     "messages": {
+      "info": {
+        "noProjectsHeading": "Seus projetos aparecerão aqui",
+        "noProjectsDescription": "Crie um plano de gerenciamento de dados para começar. Você pode gerenciar todos os seus DMPs e projetos de pesquisa neste painel."
+      },
       "errors": {
         "errorRetrievingProjects": "Algo deu errado do nosso lado. Por favor, tente novamente mais tarde."
       }

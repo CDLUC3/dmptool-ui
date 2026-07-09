@@ -772,7 +772,7 @@ const PlanOverviewPage: React.FC = () => {
 
         <ContentContainer>
           <div className={"container"}>
-            <div className={styles.planOverview}>
+            <div className="project-overview">
               <OverviewSection
                 heading={t("funding.title")}
                 headingId="funding-title"
@@ -782,7 +782,7 @@ const PlanOverviewPage: React.FC = () => {
                 disabled={isReadOnly}
                 hoverMessage={t('messages.readOnlyLinkMessage')}
               >
-                <p>{planData.funderName}</p>
+                <p>{planData.funderName || t("funding.noFunderSelected")}</p>
               </OverviewSection>
 
               <OverviewSection

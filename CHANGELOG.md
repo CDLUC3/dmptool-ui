@@ -1,6 +1,11 @@
 ## Added
 - Added a gold "Best practice" badge with click-to-open explanation popover to `TemplateSelectListItem` for DMP Tool best practice templates [#72]
 - Added unit tests for the best practice badge, popover interaction, and accessibility behaviour in `TemplateSelectListItem` [#72]
+- Added new `SkeletonListLoading` component that renders card-style skeleton placeholders for list views (e.g. project lists, template selection, project members). Also supports a `grid` layout for responsive 2/3 column card grids (e.g. section and question type selection).
+- Added `papaparse` package so that it's `unparse` method can handle things like quoting and escaping, type coercion, trailing newlines, etc [#238]
+- Added new `/contact` page for users to message us [#297]
+- Added empty states to the Plan Dashboard (/projects) and Organization Projects (/admin/projects) when no projects exist
+- Documented the projects empty state pattern in the style guide (/styleguide/components/lists)
 - Added `UpdateUserInfo` and `ArchiveUser` mutations and `Plans`, `UserProjects`, and `User` queries [#281]
 - Added new, shared `LayoutSplitPanel` so that we can have one section with a right sidebar, and another section extending the full width [#281]
 - Added new route `admin.users.projects` [#281]
@@ -20,9 +25,14 @@
 - Added `UpdateAffiliation` and `AffiliationById` queries [#203]
 
 ## Updated
+- Updated the "Forgot Password" to "Reset password" [#79]
 - Updated `PlanCreate` page to show a loading spinner during the initial template fetch so the empty state does not flash before results load [#72]
 - Updated `SelectExistingTemplate` to pass `bestPractices` from template data into `TemplateSelectListItem` [#72]
 - Updated the styleguide template select list examples and documentation to demonstrate the best practice badge alongside additional guidance [#72]
+- Updated `ProjectListItem`, `ProjectOverviewPage`, and `PlanOverviewPage` to display a localized "No funder selected" message when project or plan funding is empty
+- Updated `OverviewSection` styling on project and plan overview pages: section headings use a smaller muted label style, primary values are bold, and edit links display below the content using default blue link styling
+- Added `noFunderSelected` translation keys in `en-US` and `pt-BR` message files
+- Fixed some bugs on the Organization Details page, and cleaned up the layout and removed Identifiers "Request Change" buttons [#293][#280][#296]
 - Updated "Publish" modal. Added "Required" and "Recommended" checklist sections, and added a requirement that the plan not be in test mode [#91]
 - Updated `PlanOverviewPage` to disable `request feedback` link when there is feedback is not enabled and there are no feedback emails [#285]
 - Updated the `ProjectListItem` component to allow for `isReadOnly` mode [#281]
@@ -70,6 +80,7 @@
 - Updated `RepoSelectorForAnswer` to wait to query `Re3byUrIsDocument` until we have `preferredReposURIs` because preferred repos don't display even though they eventually do to trigger the display of the "preferred repositories" checkbox [#118]
 
 ## Fixed
+- Fixed section &  question reorder arrow buttons turning white on hover. Added a shared `order-button` style so arrows use link-blue colors and remain visible [#76]
 - Updated the `project` graphql query to include `email` and `created` field so we can display info for invited project collaborators who haven't accepted invite [#287]
 - Fixed `type` errors resulting from deprecated `errorPolicy` in unit tests [#252]
 - Fixed issue with Feedback Notification headers displaying for any collaborator on the Plan Overview, Section and Question pages. It should only display to Org Admins and Super Admins. Added shared isOrgAdmin hook for pages. [#249]
@@ -738,8 +749,6 @@
 ===============================================================================================================
 ### Updated
 
-=======
-
 - Updated `/graphql` files to include new backend error objects [#308]
 - Updated `/account/profile/page.tsx` to display the new backend field level errors [#308]
 - Updated `/template/[templateid]/page.tsx` to display the new backend field level errors [#308]
@@ -836,8 +845,6 @@
 - Removed use of NEXT_PUBLIC_GRAPHQL_ENDPOINT env variable, since it was a duplicate of NEXT_PUBLIC_SERVER_ENDPOINT [#171]
 
 ### Added
-
-=======
 
 - Made some updates related to authentication [#142]
 - Updated middleware to redirect to /login if both access token and refresh token is missing
