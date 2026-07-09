@@ -1,7 +1,6 @@
-## Updated
-- Updated the "Forgot Password" to "Reset password" [#79]
-
 ## Added
+- Added a gold "Best practice" badge with click-to-open explanation popover to `TemplateSelectListItem` for DMP Tool best practice templates [#72]
+- Added unit tests for the best practice badge, popover interaction, and accessibility behaviour in `TemplateSelectListItem` [#72]
 - Added new `SkeletonListLoading` component that renders card-style skeleton placeholders for list views (e.g. project lists, template selection, project members). Also supports a `grid` layout for responsive 2/3 column card grids (e.g. section and question type selection).
 - Added `papaparse` package so that it's `unparse` method can handle things like quoting and escaping, type coercion, trailing newlines, etc [#238]
 - Added new `/contact` page for users to message us [#297]
@@ -26,6 +25,10 @@
 - Added `UpdateAffiliation` and `AffiliationById` queries [#203]
 
 ## Updated
+- Updated the "Forgot Password" to "Reset password" [#79]
+- Updated `PlanCreate` page to show a loading spinner during the initial template fetch so the empty state does not flash before results load [#72]
+- Updated `SelectExistingTemplate` to pass `bestPractices` from template data into `TemplateSelectListItem` [#72]
+- Updated the styleguide template select list examples and documentation to demonstrate the best practice badge alongside additional guidance [#72]
 - Updated `ProjectListItem`, `ProjectOverviewPage`, and `PlanOverviewPage` to display a localized "No funder selected" message when project or plan funding is empty
 - Updated `OverviewSection` styling on project and plan overview pages: section headings use a smaller muted label style, primary values are bold, and edit links display below the content using default blue link styling
 - Added `noFunderSelected` translation keys in `en-US` and `pt-BR` message files
