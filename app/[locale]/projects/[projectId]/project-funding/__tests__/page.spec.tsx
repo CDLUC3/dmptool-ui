@@ -98,6 +98,19 @@ describe('ProjectsCreateProjectFunding', () => {
     expect(screen.getByText('buttons.continue')).toBeInTheDocument();
   });
 
+  it('should select "no" by default', async () => {
+    await act(async () => {
+      render(
+        <MockedProvider mocks={withoutAPIMocks}>
+          <ProjectsCreateProjectFunding />
+        </MockedProvider>
+      );
+    });
+
+    expect(screen.getByLabelText('form.radioNoLabel')).toBeChecked();
+    expect(screen.getByLabelText('form.radioYesLabel')).not.toBeChecked();
+  });
+
   it('should handle funding "yes" selected (no API)', async () => {
     await act(async () => {
       render(
