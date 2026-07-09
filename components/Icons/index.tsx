@@ -10,14 +10,14 @@ interface IconProps extends React.SVGProps<SVGSVGElement> {
   height?: string | number;
 }
 
-export function DmpIcon({ 
-  icon, 
+export function DmpIcon({
+  icon,
   classes = '',
   fill = "#5f6368",
   width = "24px",
   height = "24px",
   ...rest
- }: IconProps) {
+}: IconProps) {
   return (
     <svg
       data-testid="dmpIconSvg"
@@ -25,6 +25,7 @@ export function DmpIcon({
       width={width}
       height={height}
       fill={fill}
+      aria-hidden="true" // hide from screen readers, as the icon is decorative and not informative
       {...rest}
     >
       <use

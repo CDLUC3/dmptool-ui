@@ -447,6 +447,7 @@ export interface PlanOverviewInterface {
   orgId?: string;
   feedbackStatus?: string;
   completedAllRequiredQuestions?: boolean;
+  isTestProject?: boolean;
 }
 
 export interface ActionResponse {

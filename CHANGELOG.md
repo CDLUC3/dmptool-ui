@@ -1,4 +1,7 @@
 ## Added
+- Added new `SkeletonListLoading` component that renders card-style skeleton placeholders for list views (e.g. project lists, template selection, project members). Also supports a `grid` layout for responsive 2/3 column card grids (e.g. section and question type selection).
+- Added `papaparse` package so that it's `unparse` method can handle things like quoting and escaping, type coercion, trailing newlines, etc [#238]
+- Added new `/contact` page for users to message us [#297]
 - Added empty states to the Plan Dashboard (/projects) and Organization Projects (/admin/projects) when no projects exist
 - Documented the projects empty state pattern in the style guide (/styleguide/components/lists)
 - Added `UpdateUserInfo` and `ArchiveUser` mutations and `Plans`, `UserProjects`, and `User` queries [#281]
@@ -20,6 +23,8 @@
 - Added `UpdateAffiliation` and `AffiliationById` queries [#203]
 
 ## Updated
+- Fixed some bugs on the Organization Details page, and cleaned up the layout and removed Identifiers "Request Change" buttons [#293][#280][#296]
+- Updated "Publish" modal. Added "Required" and "Recommended" checklist sections, and added a requirement that the plan not be in test mode [#91]
 - Updated `PlanOverviewPage` to disable `request feedback` link when there is feedback is not enabled and there are no feedback emails [#285]
 - Updated the `ProjectListItem` component to allow for `isReadOnly` mode [#281]
 - Hooked up `admin/users` page with real data, and updated search features and table [#240]
@@ -734,8 +739,6 @@
 ===============================================================================================================
 ### Updated
 
-=======
-
 - Updated `/graphql` files to include new backend error objects [#308]
 - Updated `/account/profile/page.tsx` to display the new backend field level errors [#308]
 - Updated `/template/[templateid]/page.tsx` to display the new backend field level errors [#308]
@@ -832,8 +835,6 @@
 - Removed use of NEXT_PUBLIC_GRAPHQL_ENDPOINT env variable, since it was a duplicate of NEXT_PUBLIC_SERVER_ENDPOINT [#171]
 
 ### Added
-
-=======
 
 - Made some updates related to authentication [#142]
 - Updated middleware to redirect to /login if both access token and refresh token is missing
