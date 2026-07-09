@@ -39,7 +39,7 @@ export type StandardField = {
     selectedUnit: 'bytes' | 'kb' | 'mb' | 'gb' | 'tb' | 'pb';
     availableUnits: {
       label: string;
-      value: 'bytes' | 'kb' | 'mb' | 'gb' | 'tb' | 'pb';
+      value: string;
       selected: boolean;
     }[];
   };

@@ -137,6 +137,9 @@ const ResearchOutputAnswerComponent: React.FC<ResearchOutputAnswerComponentProps
 
     setRows(prevRows => {
       const newRows = [...prevRows];
+
+console.log(updateFn, newRows, editingRowIndex);
+
       const updatedEditingRows = typeof updateFn === 'function'
         ? updateFn([newRows[editingRowIndex]])
         : updateFn;

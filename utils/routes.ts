@@ -45,6 +45,7 @@ const routes = {
   // Home route
   'app.home': '/',
   "app.login": '/login',
+  "app.contact": '/contact',
 
   // Project routes
   'projects.index': '/projects',

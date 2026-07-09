@@ -1,4 +1,6 @@
 ## Added
+- Added `papaparse` package so that it's `unparse` method can handle things like quoting and escaping, type coercion, trailing newlines, etc [#238]
+- Added new `/contact` page for users to message us [#297]
 - Added `UpdateUserInfo` and `ArchiveUser` mutations and `Plans`, `UserProjects`, and `User` queries [#281]
 - Added new, shared `LayoutSplitPanel` so that we can have one section with a right sidebar, and another section extending the full width [#281]
 - Added new route `admin.users.projects` [#281]
@@ -18,8 +20,10 @@
 - Added `UpdateAffiliation` and `AffiliationById` queries [#203]
 
 ## Updated
-- Updated `researchOutputTransformations`, `useResearchOutputTable` to include the `commonStandardId` property on all research output table columns
+- Updated ResearchOutputTable question and answer components to use the new `commonStandardId` property
+- Updated the ResearchOutputTable question to include the Anticipated Release Date and Anticipated File Size columns in the JSON but continue to NOT display to the admin when editing the question.
 - Upgraded `@dmptool/types` package to `v4.0.0`
+- Fixed some bugs on the Organization Details page, and cleaned up the layout and removed Identifiers "Request Change" buttons [#293][#280][#296]
 - Updated "Publish" modal. Added "Required" and "Recommended" checklist sections, and added a requirement that the plan not be in test mode [#91]
 - Updated `PlanOverviewPage` to disable `request feedback` link when there is feedback is not enabled and there are no feedback emails [#285]
 - Updated the `ProjectListItem` component to allow for `isReadOnly` mode [#281]

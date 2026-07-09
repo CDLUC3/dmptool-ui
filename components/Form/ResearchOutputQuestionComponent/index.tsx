@@ -94,7 +94,7 @@ const ResearchOutputComponent: React.FC<ResearchOutputComponentProps> = ({
         </p>
         <div className={styles.fieldsList}>
           {standardFields.map((field) => {
-            // Required fields will always have their checkbox checked and disabled to 
+            // Required fields will always have their checkbox checked and disabled to
             // prevent changes, and a tooltip explaining why it's disabled
             const isDisabled = field.required;
             const tooltipId = `tooltip-${field.id}`;

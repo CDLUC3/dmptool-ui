@@ -5,8 +5,10 @@ import {
   AnyTableColumnQuestionType,
   RepositorySearchAnswerType,
   DefaultResearchOutputCustomColumn,
-  ResearchOutputTableColumnsEnum
-} from '@dmptool/types';
+  ResearchOutputTableColumnsEnum,
+  DefaultResearchOutputReleaseDateColumn,
+  DefaultResearchOutputByteSizeColumn,
+} from "@dmptool/types";
 import {
   RESEARCH_OUTPUT_QUESTION_TYPE,
   RO_TITLE_ID,
@@ -17,8 +19,8 @@ import {
   RO_METADATA_STANDARD_SELECTOR_ID,
   RO_LICENSES_ID,
   RO_ACCESS_LEVELS_ID,
-} from '@/lib/constants';
-import { getDefaultAnswerForType } from '@/utils/researchOutputTable';
+} from "@/lib/constants";
+import { getDefaultAnswerForColumn } from '@/utils/researchOutputTable';
 import {
   AnyParsedQuestion,
   StandardField,
@@ -73,14 +75,14 @@ const standardKeys = new Set([
 
 // Create a mapping from field IDs to default columns
 const DEFAULT_COLUMNS_MAP: Record<string, ResearchOutputColumn | undefined> = {
-  title: DefaultResearchOutputTableQuestion.columns.find(col => col.heading === 'Title'),
-  description: DefaultResearchOutputTableQuestion.columns.find(col => col.heading === 'Description'),
-  outputType: DefaultResearchOutputTableQuestion.columns.find(col => col.heading === 'Type'),
-  dataFlags: DefaultResearchOutputTableQuestion.columns.find(col => col.heading === 'Data Flags'),
-  accessLevels: DefaultResearchOutputTableQuestion.columns.find(col => col.heading === 'Access Level'),
-  repositories: DefaultResearchOutputTableQuestion.columns.find(col => col.heading === 'Repository(ies)'),
-  metadataStandards: DefaultResearchOutputTableQuestion.columns.find(col => col.heading === 'Metadata Standard(s)'),
-  licenses: DefaultResearchOutputTableQuestion.columns.find(col => col.heading === 'License'),
+  title: DefaultResearchOutputTableQuestion.columns.find((col) => col.heading === "Title"),
+  description: DefaultResearchOutputTableQuestion.columns.find((col) => col.heading === "Description"),
+  outputType: DefaultResearchOutputTableQuestion.columns.find((col) => col.heading === "Type"),
+  dataFlags: DefaultResearchOutputTableQuestion.columns.find((col) => col.heading === "Data Flags"),
+  accessLevels: DefaultResearchOutputTableQuestion.columns.find((col) => col.heading === "Access Level"),
+  repositories: DefaultResearchOutputTableQuestion.columns.find((col) => col.heading === "Repository(ies)"),
+  metadataStandards: DefaultResearchOutputTableQuestion.columns.find((col) => col.heading === "Metadata Standard(s)"),
+  licenses: DefaultResearchOutputTableQuestion.columns.find((col) => col.heading === "License"),
 };
 
 /**
@@ -92,12 +94,11 @@ export const createEmptyResearchOutputRow = (
 ): ResearchOutputTable => {
   return {
     columns: [
-      ...columns.map(col => {
-        const schemaVersion = col.content?.meta?.schemaVersion || CURRENT_SCHEMA_VERSION;
-        const baseAnswer = getDefaultAnswerForType(col.content.type, schemaVersion);
+      ...columns.map((col) => {
+        const baseAnswer = getDefaultAnswerForColumn(col.commonStandardId);
 
         // Type guard: only access defaultValue if it exists on this type
-        if (col.content?.attributes && 'defaultValue' in col.content.attributes) {
+        if (col.content?.attributes && "defaultValue" in col.content.attributes) {
           const defaultValue = col.content?.attributes?.defaultValue;
           return { ...baseAnswer, answer: defaultValue ?? baseAnswer.answer };
         }
@@ -105,9 +106,9 @@ export const createEmptyResearchOutputRow = (
         /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
         return baseAnswer as any;
       }),
-      getDefaultAnswerForType("date", CURRENT_SCHEMA_VERSION),
-      getDefaultAnswerForType("numberWithContext", CURRENT_SCHEMA_VERSION)
-    ]
+      getDefaultAnswerForColumn(ResearchOutputTableColumnsEnum.enum.issued),
+      getDefaultAnswerForColumn(ResearchOutputTableColumnsEnum.enum.byte_size),
+    ],
   };
 };
 
@@ -433,6 +434,15 @@ export const stateToJSON = (
       }
     }
   });
+
+  // The Answer JSON always includes the Anticipated Release Date and Byte Size so we need to include it here in
+  // the question JSON otherwise the 2 never line up column-wise
+  if (!columns.some(col => col.commonStandardId === ResearchOutputTableColumnsEnum.enum.issued)) {
+    columns.push(DefaultResearchOutputReleaseDateColumn);
+  }
+  if (!columns.some((col) => col.commonStandardId === ResearchOutputTableColumnsEnum.enum.byte_size)) {
+    columns.push(DefaultResearchOutputByteSizeColumn);
+  }
 
   // Add additional (custom) fields
   additionalFields.forEach(customField => {

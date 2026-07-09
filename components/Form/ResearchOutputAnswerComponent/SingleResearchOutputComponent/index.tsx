@@ -12,8 +12,9 @@ import {
   ResearchOutputTableQuestionType,
   AnyTableColumnAnswerType,
   LicenseSearchAnswerType,
-  MetadataStandardSearchAnswerType
-} from '@dmptool/types';
+  MetadataStandardSearchAnswerType,
+  ResearchOutputTableColumnsEnum,
+} from "@dmptool/types";
 
 //GraphQL
 import { useQuery } from '@apollo/client/react';
@@ -42,7 +43,6 @@ import { useScrollToElement } from '../hooks/useScrollToElement';
 
 // Utils and other
 import {
-  RADIOBUTTONS_QUESTION_TYPE,
   CHECKBOXES_QUESTION_TYPE,
   SELECTBOX_QUESTION_TYPE,
   TEXT_FIELD_QUESTION_TYPE,
@@ -214,15 +214,6 @@ const SingleResearchOutputComponent = ({
     setErrors({});
   };
 
-  function parseByteSizeAnswer(answer: string) {
-    if (typeof answer !== 'string') return { value: '', context: 'kb' };
-    const match = answer.match(/^(\d+)\s*(\w+)$/);
-    if (match) {
-      return { value: match[1], context: match[2] };
-    }
-    return { value: '', context: 'kb' };
-  }
-
   // Handle Save/Update button click
   const handleOnSave = async () => {
 
@@ -257,7 +248,7 @@ const SingleResearchOutputComponent = ({
 
   // Handle cell change - change to any field in the answer row
   /*eslnt-disable @typescript-eslint/no-explicit-any */
-  const handleCellChange = (colIndex: number, value: ValueType) => {
+  const handleCellChange = (commonStandardId: string, colIndex: number, value: ValueType) => {
 
     // Clear error for this field
     clearFieldError(colIndex);
@@ -272,13 +263,10 @@ const SingleResearchOutputComponent = ({
       updatedRow.columns = [...updatedRow.columns];
       updatedRow.columns[colIndex] = { ...updatedRow.columns[colIndex] };
 
-      const colType =
-        colIndex < columns.length ? columns[colIndex]?.content?.type : null;
-
       let newValue = value;
 
       // Type guard for repository search
-      if (colType === REPOSITORY_SEARCH_ID && Array.isArray(value)) {
+      if (commonStandardId === ResearchOutputTableColumnsEnum.enum.host && Array.isArray(value)) {
         // Handle empty array (all repos removed)
         if (value.length === 0) {
           newValue = [];
@@ -314,7 +302,7 @@ const SingleResearchOutputComponent = ({
       }
 
       // Type guard for metadata standard search
-      if (colType === METADATA_STANDARD_SEARCH_ID && Array.isArray(value)) {
+      if (commonStandardId === ResearchOutputTableColumnsEnum.enum.metadata && Array.isArray(value)) {
         // Handle empty array (all standards removed)
         if (value.length === 0) {
           newValue = [];
@@ -336,7 +324,7 @@ const SingleResearchOutputComponent = ({
       }
 
       // Add license handling
-      if (colType === LICENSE_SEARCH_ID && Array.isArray(value)) {
+      if (commonStandardId === ResearchOutputTableColumnsEnum.enum.license_ref && Array.isArray(value)) {
         if (value.length === 0) {
           newValue = [];
         } else {
@@ -354,25 +342,8 @@ const SingleResearchOutputComponent = ({
         }
       }
 
-      // Handle byte size (file size with unit)
-      if (
-        colIndex === columns.length + 1 &&
-        value &&
-        typeof value === "object" &&
-        'value' in value &&
-        'context' in value
-      ) {
-        newValue =
-          value.value !== undefined && value.value !== 0
-            ? `${value.value} ${value.context}`
-            : "";
-      }
-
       // Don't stringify complex types
-      if (colType === REPOSITORY_SEARCH_ID ||
-        colType === METADATA_STANDARD_SEARCH_ID ||
-        colType === CHECKBOXES_QUESTION_TYPE ||
-        colType === LICENSE_SEARCH_ID) {
+      if (['host', 'metadata', 'data_flags', 'license_ref', 'byte_size'].includes(commonStandardId)) {
         // Store complex types as-is
         /* eslint-disable @typescript-eslint/no-explicit-any */
         updatedRow.columns[colIndex].answer = newValue as any;
@@ -405,13 +376,6 @@ const SingleResearchOutputComponent = ({
   }, [rows]);
 
   const currentRow = rows && rows[0];
-  const releaseDateColIndex = columns.length;
-  const byteSizeColIndex = columns.length + 1;
-
-  const byteSizeAnswer = currentRow?.columns[byteSizeColIndex]?.answer || '';
-  const { value: byteSizeValue, context: byteSizeUnit } = parseByteSizeAnswer(
-    typeof byteSizeAnswer === 'string' ? byteSizeAnswer : ''
-  );
 
   return (
     <div className="research-output-form">
@@ -425,12 +389,15 @@ const SingleResearchOutputComponent = ({
         const name = col.heading.replace(/\s+/g, '_').toLowerCase();
         const fieldError = errors[`col-${colIndex}`];
         const translatedLabel = getTranslatedLabel(col);
-        switch (col.content.type) {
-          case TEXT_FIELD_QUESTION_TYPE:
+
+        switch (col.commonStandardId) {
+          case ResearchOutputTableColumnsEnum.enum.title:
             return (
               <div
                 key={col.heading}
-                ref={(el) => { fieldRefs.current[`col-${colIndex}`] = el; }}
+                ref={(el) => {
+                  fieldRefs.current[`col-${colIndex}`] = el;
+                }}
               >
                 <FormInput
                   type="text"
@@ -438,25 +405,27 @@ const SingleResearchOutputComponent = ({
                   label={translatedLabel}
                   name={name}
                   isRequired={col.required}
-                  defaultValue={col?.content?.attributes?.defaultValue || ''}
+                  defaultValue={col?.content?.attributes?.defaultValue || ""}
                   isInvalid={!!fieldError}
                   errorMessage={fieldError ?? ""}
                   helpMessage={col?.content?.attributes?.help || col?.help}
                   maxLength={col.content.attributes?.maxLength}
                   minLength={col.content.attributes?.minLength}
-                  onChange={e => {
-                    handleCellChange(colIndex, e.target.value)
+                  onChange={(e) => {
+                    handleCellChange(col.commonStandardId, colIndex, e.target.value);
                   }}
                   disabled={isDisabled}
                 />
               </div>
             );
 
-          case TEXT_AREA_QUESTION_TYPE:
+          case ResearchOutputTableColumnsEnum.enum.description:
             return (
               <div
                 key={col.heading}
-                ref={(el) => { fieldRefs.current[`col-${colIndex}`] = el; }}
+                ref={(el) => {
+                  fieldRefs.current[`col-${colIndex}`] = el;
+                }}
               >
                 <FormTextArea
                   name={name}
@@ -472,14 +441,14 @@ const SingleResearchOutputComponent = ({
                       textAreaFirstUpdate.current[colIndex] = true;
                       return;
                     }
-                    handleCellChange(colIndex, newContent);
+                    handleCellChange(col.commonStandardId, colIndex, newContent);
                   }}
                   disabled={isDisabled}
                 />
               </div>
             );
-          case SELECTBOX_QUESTION_TYPE:
-            const isOutputTypeField = col.heading === 'Output Type';
+          case ResearchOutputTableColumnsEnum.enum.type:
+            const isOutputTypeField = col.heading === "Output Type";
             const hasNoOptions = !col.content.options || col.content.options.length === 0;
 
             let tooltipSelectItems: TooltipSelectOption[] = [];
@@ -496,11 +465,11 @@ const SingleResearchOutputComponent = ({
                 id: option.value,
                 name: option.label,
                 label: option.label,
-                tooltip: option.description || undefined
+                tooltip: option.description || undefined,
               }));
             } else {
               const options = col.content.options || [];
-              formSelectItems = options.map(option => ({
+              formSelectItems = options.map((option) => ({
                 id: option.value,
                 name: option.label,
               }));
@@ -509,7 +478,9 @@ const SingleResearchOutputComponent = ({
             return (
               <div
                 key={col.heading}
-                ref={(el) => { fieldRefs.current[`col-${colIndex}`] = el; }}
+                ref={(el) => {
+                  fieldRefs.current[`col-${colIndex}`] = el;
+                }}
               >
                 {isOutputTypeField && !hasNoOptions ? (
                   <TooltipSelect
@@ -522,7 +493,7 @@ const SingleResearchOutputComponent = ({
                     errorMessage={fieldError}
                     helpMessage={col.content.attributes?.help || col?.help}
                     onSelectionChange={(val: Key | null) => {
-                      if (val !== null) handleCellChange(colIndex, val);
+                      if (val !== null) handleCellChange(col.commonStandardId, colIndex, val);
                     }}
                   />
                 ) : (
@@ -536,29 +507,31 @@ const SingleResearchOutputComponent = ({
                     isInvalid={!!fieldError}
                     errorMessage={fieldError}
                     helpMessage={col.content.attributes?.help || col?.help}
-                    onChange={val => handleCellChange(colIndex, val)}
+                    onChange={(val) => handleCellChange(col.commonStandardId, colIndex, val)}
                   />
                 )}
               </div>
             );
 
-          case RADIOBUTTONS_QUESTION_TYPE:
-            const isAccessLevelsField = col.heading === 'Initial Access Levels';
+          case ResearchOutputTableColumnsEnum.enum.data_access:
+            const isAccessLevelsField = col.heading === "Initial Access Levels";
             const hasNoRadioOptions = !col.content.options || col.content.options.length === 0;
 
             let selectRadioItems: { id: string; name: string }[] = [];
             if (isAccessLevelsField && hasNoRadioOptions) {
               const options = defaultAccessLevels;
-              selectRadioItems = options.map(option => ({
+              selectRadioItems = options.map((option) => ({
                 id: option.value,
-                name: option.label
+                name: option.label,
               }));
             }
 
             return (
               <div
                 key={col.heading}
-                ref={(el) => { fieldRefs.current[`col-${colIndex}`] = el; }}
+                ref={(el) => {
+                  fieldRefs.current[`col-${colIndex}`] = el;
+                }}
               >
                 <FormSelect
                   label={translatedLabel}
@@ -570,49 +543,45 @@ const SingleResearchOutputComponent = ({
                   isInvalid={!!fieldError}
                   errorMessage={fieldError}
                   helpMessage={col.content.attributes?.help || col?.help}
-                  onChange={val => handleCellChange(colIndex, val)}
+                  onChange={(val) => handleCellChange(col.commonStandardId, colIndex, val)}
                   isDisabled={isDisabled}
                 />
               </div>
             );
 
-          case CHECKBOXES_QUESTION_TYPE: {
+          case ResearchOutputTableColumnsEnum.enum.data_flags: {
             const isDataFlags = col.heading === "Data Flags";
             let colHelp = col.help;
 
             let allOptions: { value: string; label: string; selected?: boolean }[] = [];
 
             if (isDataFlags) {
-              colHelp = Global('helpText.dataFlags');
+              colHelp = Global("helpText.dataFlags");
 
               allOptions =
-                'options' in col.content && Array.isArray(col.content.options)
-                  ? col.content.options.map(opt => ({
-                    ...opt,
-                    label: opt.value === 'sensitive'
-                      ? Global('labels.mayContainSensitiveData')
-                      : opt.value === 'personal'
-                        ? Global('labels.mayContainPersonalData')
-                        : opt.label
-                  }))
+                "options" in col.content && Array.isArray(col.content.options)
+                  ? col.content.options.map((opt) => ({
+                      ...opt,
+                      label:
+                        opt.value === "sensitive"
+                          ? Global("labels.mayContainSensitiveData")
+                          : opt.value === "personal"
+                            ? Global("labels.mayContainPersonalData")
+                            : opt.label,
+                    }))
                   : [];
             } else {
-              allOptions =
-                'options' in col.content && Array.isArray(col.content.options)
-                  ? col.content.options
-                  : [];
+              allOptions = "options" in col.content && Array.isArray(col.content.options) ? col.content.options : [];
             }
 
             // Filter to only show checked options if this is Data Flags
-            const options = isDataFlags
-              ? allOptions.filter(opt => opt.selected === true)
-              : allOptions;
+            const options = isDataFlags ? allOptions.filter((opt) => opt.selected === true) : allOptions;
 
             // Type guard to ensure value is a string array for checkboxes
             const selectedValues: string[] = Array.isArray(value)
-              ? value.filter((v): v is string => typeof v === 'string')
-              : typeof value === 'string' && value.length > 0
-                ? [value]   // normalize legacy single-string answer to array
+              ? value.filter((v): v is string => typeof v === "string")
+              : typeof value === "string" && value.length > 0
+                ? [value] // normalize legacy single-string answer to array
                 : [];
 
             return (
@@ -620,23 +589,31 @@ const SingleResearchOutputComponent = ({
                 <div
                   key={col.heading}
                   className={styles.checkboxGroupContainer}
-                  ref={(el) => { fieldRefs.current[`col-${colIndex}`] = el; }}
+                  ref={(el) => {
+                    fieldRefs.current[`col-${colIndex}`] = el;
+                  }}
                 >
                   <CheckboxGroupComponent
                     name={name}
                     value={selectedValues}
                     isRequired={col.required}
                     onChange={(values: string[]) => {
-                      handleCellChange(colIndex, values);
+                      handleCellChange(col.commonStandardId, colIndex, values);
                     }}
                     checkboxGroupLabel={translatedLabel}
                     checkboxGroupDescription={colHelp}
                     isDisabled={isDisabled}
                   >
-                    {options.map(opt => (
-                      <Checkbox key={opt.value} value={opt.value}>
+                    {options.map((opt) => (
+                      <Checkbox
+                        key={opt.value}
+                        value={opt.value}
+                      >
                         <div className="checkbox">
-                          <svg viewBox="0 0 18 18" aria-hidden="true">
+                          <svg
+                            viewBox="0 0 18 18"
+                            aria-hidden="true"
+                          >
                             <polyline points="1 9 7 14 15 4" />
                           </svg>
                         </div>
@@ -649,8 +626,9 @@ const SingleResearchOutputComponent = ({
             );
           }
 
-          case REPOSITORY_SEARCH_ID:
-            const colRepoPreferences = 'preferences' in col && Array.isArray(col.preferences) ? col.preferences : undefined;
+          case ResearchOutputTableColumnsEnum.enum.host:
+            const colRepoPreferences =
+              "preferences" in col && Array.isArray(col.preferences) ? col.preferences : undefined;
             const repoHelpText = col?.content?.attributes?.help || col?.help;
 
             // Check if we have an explicit answer (even if empty) vs no answer at all
@@ -665,11 +643,10 @@ const SingleResearchOutputComponent = ({
               repositoryKeywords?: string[];
               repositoryType?: string[];
             };
-            const repoValue = (Array.isArray(value) && value.length > 0 &&
-              typeof value[0] === 'object' &&
-              'repositoryId' in value[0])
-              ? value as RepoAnswer[]
-              : [];
+            const repoValue =
+              Array.isArray(value) && value.length > 0 && typeof value[0] === "object" && "repositoryId" in value[0]
+                ? (value as RepoAnswer[])
+                : [];
 
             // Build a preferences array of URIs
             let preferredRepoURIs: string[] = [];
@@ -680,43 +657,43 @@ const SingleResearchOutputComponent = ({
             }
 
             const existingRepos = hasExplicitRepoAnswer
-              ? (repoValue.length > 0
+              ? repoValue.length > 0
                 ? repoValue.map((repo) => {
-                  return {
-                    id: repo.repositoryId,
-                    uri: repo.repositoryId,
-                    name: repo.repositoryName,
-                    website: repo.repositoryWebsite || '',
-                    description: repo.repositoryDescription || '',
-                    keywords: repo.repositoryKeywords || [],
-                    repositoryType: repo.repositoryType || []
-                  };
-                })
-                : [])  // User explicitly removed all items - show empty
-              : ((colRepoPreferences && colRepoPreferences.length > 0)
+                    return {
+                      id: repo.repositoryId,
+                      uri: repo.repositoryId,
+                      name: repo.repositoryName,
+                      website: repo.repositoryWebsite || "",
+                      description: repo.repositoryDescription || "",
+                      keywords: repo.repositoryKeywords || [],
+                      repositoryType: repo.repositoryType || [],
+                    };
+                  })
+                : [] // User explicitly removed all items - show empty
+              : colRepoPreferences && colRepoPreferences.length > 0
                 ? colRepoPreferences.map((pref) => {
-                  const typedPref = pref as RepoPreference;
-                  return {
-                    id: typedPref.value,
-                    uri: typedPref.value,
-                    name: typedPref.label,
-                    website: typedPref.website || '',
-                    description: typedPref.description || '',
-                    keywords: typedPref.keywords || [],
-                    repositoryType: typedPref.repositoryType || []
-                  };
-                })
-                : []);  // No answer yet - show preferences
+                    const typedPref = pref as RepoPreference;
+                    return {
+                      id: typedPref.value,
+                      uri: typedPref.value,
+                      name: typedPref.label,
+                      website: typedPref.website || "",
+                      description: typedPref.description || "",
+                      keywords: typedPref.keywords || [],
+                      repositoryType: typedPref.repositoryType || [],
+                    };
+                  })
+                : []; // No answer yet - show preferences
 
             return (
               <div
                 key={col.heading}
-                ref={(el) => { fieldRefs.current[`col-${colIndex}`] = el; }}
+                ref={(el) => {
+                  fieldRefs.current[`col-${colIndex}`] = el;
+                }}
               >
                 <h3 className={`${styles.customHeading} h2`}>{translatedLabel}</h3>
-                {repoHelpText && (
-                  <p className={styles.helpText}>{repoHelpText}</p>
-                )}
+                {repoHelpText && <p className={styles.helpText}>{repoHelpText}</p>}
 
                 <RepoSelectorForAnswer
                   value={existingRepos}
@@ -724,21 +701,22 @@ const SingleResearchOutputComponent = ({
                   onRepositoriesChange={(repos) => {
                     // Transform RepositoryInterface[] to the answer format
                     // Save all repository data to preserve it across selections
-                    const repoAnswers = repos.map(repo => ({
+                    const repoAnswers = repos.map((repo) => ({
                       repositoryId: repo.uri,
                       repositoryName: repo.name,
                       repositoryWebsite: repo.website,
                       repositoryDescription: repo.description,
                       repositoryKeywords: repo.keywords,
-                      repositoryType: repo.repositoryType
+                      repositoryType: repo.repositoryType,
                     }));
-                    handleCellChange(colIndex, repoAnswers);
+                    handleCellChange(col.commonStandardId, colIndex, repoAnswers);
                   }}
                 />
               </div>
             );
-          case METADATA_STANDARD_SEARCH_ID:
-            const colStdPreferences = 'preferences' in col && Array.isArray(col.preferences) ? col.preferences : undefined;
+          case ResearchOutputTableColumnsEnum.enum.metadata:
+            const colStdPreferences =
+              "preferences" in col && Array.isArray(col.preferences) ? col.preferences : undefined;
             const stdHelpText = col?.content?.attributes?.help || col?.help;
 
             // Check if we have an explicit answer (even if empty) vs no answer at all
@@ -746,11 +724,13 @@ const SingleResearchOutputComponent = ({
 
             // Type guard for metadata standard answer
             type MetadataStdAnswer = { metadataStandardId: string; metadataStandardName: string };
-            const metadataValue = (Array.isArray(value) && value.length > 0 &&
-              typeof value[0] === 'object' &&
-              'metadataStandardId' in value[0])
-              ? value as MetadataStdAnswer[]
-              : [];
+            const metadataValue =
+              Array.isArray(value) &&
+              value.length > 0 &&
+              typeof value[0] === "object" &&
+              "metadataStandardId" in value[0]
+                ? (value as MetadataStdAnswer[])
+                : [];
 
             let preferredMetaDataURIs: string[] = [];
             if (colStdPreferences && Array.isArray(colStdPreferences)) {
@@ -760,64 +740,63 @@ const SingleResearchOutputComponent = ({
             }
 
             const existingMetaDataStandards = hasExplicitStdAnswer
-              ? (metadataValue.length > 0
+              ? metadataValue.length > 0
                 ? metadataValue
-                  .filter((std): std is MetadataStdAnswer =>
-                    !!std.metadataStandardId && !!std.metadataStandardName
-                  )
-                  .map((std) => ({
-                    id: std.metadataStandardId,
-                    name: std.metadataStandardName,
-                    uri: std.metadataStandardId
-                  }))
-                : [])  // User explicitly removed all items - show empty
-              : ((colStdPreferences && colStdPreferences.length > 0)
+                    .filter((std): std is MetadataStdAnswer => !!std.metadataStandardId && !!std.metadataStandardName)
+                    .map((std) => ({
+                      id: std.metadataStandardId,
+                      name: std.metadataStandardName,
+                      uri: std.metadataStandardId,
+                    }))
+                : [] // User explicitly removed all items - show empty
+              : colStdPreferences && colStdPreferences.length > 0
                 ? colStdPreferences
-                  .filter((pref: { value?: string; label?: string }): pref is { value: string; label: string } =>
-                    !!pref.value && !!pref.label
-                  )
-                  .map((pref) => ({
-                    id: pref.value,
-                    name: pref.label,
-                    uri: pref.value
-                  }))
-                : []);  // No answer yet - show preferences
+                    .filter(
+                      (pref: { value?: string; label?: string }): pref is { value: string; label: string } =>
+                        !!pref.value && !!pref.label,
+                    )
+                    .map((pref) => ({
+                      id: pref.value,
+                      name: pref.label,
+                      uri: pref.value,
+                    }))
+                : []; // No answer yet - show preferences
 
             return (
               <div
                 key={col.heading}
-                ref={(el) => { fieldRefs.current[`col-${colIndex}`] = el; }}
+                ref={(el) => {
+                  fieldRefs.current[`col-${colIndex}`] = el;
+                }}
               >
                 <h3 className={`${styles.customHeading} h2`}>{translatedLabel}</h3>
-                {stdHelpText && (
-                  <p className={styles.helpText}>{stdHelpText}</p>
-                )}
+                {stdHelpText && <p className={styles.helpText}>{stdHelpText}</p>}
                 <MetaDataStandardsForAnswer
                   value={existingMetaDataStandards}
                   preferredMetaDataURIs={preferredMetaDataURIs}
                   onMetaDataStandardsChange={(stds) => {
                     // Transform to the answer format (assuming MetaDataStandardsForAnswer returns a similar interface)
-                    const stdAnswers = stds.map(std => ({
+                    const stdAnswers = stds.map((std) => ({
                       metadataStandardId: String(std.uri || std.id),
-                      metadataStandardName: std.name
+                      metadataStandardName: std.name,
                     }));
-                    handleCellChange(colIndex, stdAnswers);
+                    handleCellChange(col.commonStandardId, colIndex, stdAnswers);
                   }}
                 />
               </div>
-            )
+            );
 
-          case LICENSE_SEARCH_ID:
-            const licenseAnswer = value as LicenseSearchAnswerType['answer'];
-            const colLicensesPreferences = 'preferences' in col ? col.preferences : undefined;
+          case ResearchOutputTableColumnsEnum.enum.license_ref:
+            const licenseAnswer = value as LicenseSearchAnswerType["answer"];
+            const colLicensesPreferences = "preferences" in col ? col.preferences : undefined;
 
             // Use preferences if available, otherwise fall back to recommended licenses
             let licensesItems: { id: string; name: string }[] = [];
 
             if (colLicensesPreferences && colLicensesPreferences.length > 0) {
-              licensesItems = colLicensesPreferences.map(option => ({
+              licensesItems = colLicensesPreferences.map((option) => ({
                 id: option.value,
-                name: option.label
+                name: option.label,
               }));
             } else if (recommendedLicensesData?.recommendedLicenses) {
               // Fall back to recommended licenses
@@ -825,19 +804,19 @@ const SingleResearchOutputComponent = ({
                 .filter((license): license is NonNullable<typeof license> => license !== null)
                 .map((license) => ({
                   id: license.uri,
-                  name: license.name
+                  name: license.name,
                 }));
             }
 
             const selectedLicense =
-              licenseAnswer.length > 0 && licenseAnswer[0]?.licenseId
-                ? licenseAnswer[0].licenseId
-                : '';
+              licenseAnswer.length > 0 && licenseAnswer[0]?.licenseId ? licenseAnswer[0].licenseId : "";
 
             return (
               <div
                 key={col.heading}
-                ref={(el) => { fieldRefs.current[`col-${colIndex}`] = el; }}
+                ref={(el) => {
+                  fieldRefs.current[`col-${colIndex}`] = el;
+                }}
               >
                 <FormSelect
                   label={translatedLabel}
@@ -847,87 +826,98 @@ const SingleResearchOutputComponent = ({
                   errorMessage={fieldError}
                   name={name}
                   selectedKey={selectedLicense}
-                  items={(licensesItems.length > 0 ? licensesItems : [])}
+                  items={licensesItems.length > 0 ? licensesItems : []}
                   helpMessage={col.content.attributes?.help || col?.help}
-                  onChange={val => {
-                    const selected = licensesItems?.find(item => item.id === val);
-                    const licenseObj = selected
-                      ? { licenseId: selected.id, licenseName: selected.name }
-                      : null;
-                    handleCellChange(colIndex, licenseObj ? [licenseObj] : []);
+                  onChange={(val) => {
+                    const selected = licensesItems?.find((item) => item.id === val);
+                    const licenseObj = selected ? { licenseId: selected.id, licenseName: selected.name } : null;
+                    handleCellChange(col.commonStandardId, colIndex, licenseObj ? [licenseObj] : []);
                   }}
                   isDisabled={isDisabled}
                 />
               </div>
             );
+
+          case ResearchOutputTableColumnsEnum.enum.issued: {
+            return (
+              <div
+                key={col.heading}
+                ref={(el) => {
+                  fieldRefs.current[`col-${colIndex}`] = el;
+                }}
+              >
+                <DateComponent
+                  name="startDate"
+                  value={getCalendarDateValue(typeof value === "string" ? value : "")}
+                  onChange={(newDate) => {
+                    const dateString = newDate ? newDate.toString() : "";
+                    handleCellChange(col.commonStandardId, colIndex, dateString);
+                  }}
+                  label={Global("labels.anticipatedReleaseDate")}
+                  isDisabled={isDisabled}
+                />
+              </div>
+            );
+          }
+
+          case ResearchOutputTableColumnsEnum.enum.byte_size: {
+            const byteSizeValue = value as { value: number | undefined, context: string };
+
+            return (
+              <div
+                key={col.heading}
+                ref={(el) => {
+                  fieldRefs.current[`col-${colIndex}`] = el;
+                }}
+                className={styles.fileSizeRow}
+              >
+                <FormInput
+                  label={Global("labels.anticipatedFileSize")}
+                  name="research_output_file_size"
+                  type="number"
+                  isRequired={false}
+                  value={byteSizeValue.value}
+                  min={0}
+                  onChange={(e) => {
+                    handleCellChange(col.commonStandardId, colIndex, {
+                      value: e.target.value === "" ? 0 : Number(e.target.value),
+                      context: byteSizeValue.context,
+                    });
+                  }}
+                  maxLength={10}
+                  disabled={isDisabled}
+                />
+
+                <FormSelect
+                  name="research_output_file_size_unit"
+                  ariaLabel={Global("labels.fileSizeUnit")}
+                  isRequired={false}
+                  label={Global("labels.unit")}
+                  items={[
+                    { id: "bytes", name: "bytes" },
+                    { id: "kb", name: "KB" },
+                    { id: "mb", name: "MB" },
+                    { id: "gb", name: "GB" },
+                    { id: "tb", name: "TB" },
+                    { id: "pb", name: "PB" },
+                  ]}
+                  selectClasses={styles.fileSizeSelect}
+                  selectedKey={byteSizeValue.context}
+                  onChange={(val) => {
+                    handleCellChange(col.commonStandardId, colIndex, {
+                      value: byteSizeValue.value ? Number(byteSizeValue.value) : 0,
+                      context: val,
+                    });
+                  }}
+                  isDisabled={isDisabled}
+                >
+                  {(item) => <ListBoxItem key={item.id}>{item.name}</ListBoxItem>}
+                </FormSelect>
+              </div>
+            );
+          }
         }
       })}
-
-      {/* Always include Anticipated Release Date - not configurable */}
-      <div key="anticipated-release-date">
-        <DateComponent
-          name="startDate"
-          value={getCalendarDateValue(
-            typeof currentRow?.columns[releaseDateColIndex]?.answer === 'string'
-              ? currentRow?.columns[releaseDateColIndex]?.answer
-              : ''
-          )}
-          onChange={(newDate) => {
-            const dateString = newDate ? newDate.toString() : '';
-            handleCellChange(releaseDateColIndex, dateString);
-          }}
-          label={Global('labels.anticipatedReleaseDate')}
-          isDisabled={isDisabled}
-        />
-      </div>
-
-
-      {/* Always include Byte Size - not configurable */}
-      <div key="byte-size" className={styles.fileSizeRow}>
-        <FormInput
-          label={Global('labels.anticipatedFileSize')}
-          name="research_output_file_size"
-          type="number"
-          isRequired={false}
-          value={byteSizeValue}
-          min={0}
-          onChange={(e) => {
-            handleCellChange(byteSizeColIndex, {
-              value: e.target.value === '' ? 0 : Number(e.target.value),
-              context: byteSizeUnit
-            });
-
-          }}
-          maxLength={10}
-          disabled={isDisabled}
-        />
-
-        <FormSelect
-          name="research_output_file_size_unit"
-          ariaLabel={Global('labels.fileSizeUnit')}
-          isRequired={false}
-          label={Global('labels.unit')}
-          items={[
-            { id: 'bytes', name: 'bytes' },
-            { id: 'kb', name: 'KB' },
-            { id: 'mb', name: 'MB' },
-            { id: 'gb', name: 'GB' },
-            { id: 'tb', name: 'TB' },
-            { id: 'pb', name: 'PB' }
-          ]}
-          selectClasses={styles.fileSizeSelect}
-          selectedKey={byteSizeUnit}
-          onChange={(val) => {
-            handleCellChange(byteSizeColIndex, {
-              value: byteSizeValue === '' ? 0 : Number(byteSizeValue),
-              context: val
-            });
-          }}
-          isDisabled={isDisabled}
-        >
-          {(item) => <ListBoxItem key={item.id}>{item.name}</ListBoxItem>}
-        </FormSelect>
-      </div>
 
       {/* Show Save/Update and Cancel buttons if showButtons is true */}
       {showButtons && (

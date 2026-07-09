@@ -13,9 +13,15 @@ COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
 
-# Set environment variables
+# Declare build-time arguments (passed via --build-arg in buildspec.yaml)
+# NEXT_PUBLIC_* vars are baked into the JS bundle at build time by Next.js.
+# They are NOT available at container runtime — do not set these in ECS task definitions.
+ARG NEXT_PUBLIC_SERVER_ENDPOINT
+ARG NEXT_PUBLIC_BASE_URL
+ARG NEXT_PUBLIC_HELPDESK_EMAIL_ADDRESS
 ENV NEXT_PUBLIC_SERVER_ENDPOINT=$NEXT_PUBLIC_SERVER_ENDPOINT
 ENV NEXT_PUBLIC_BASE_URL=$NEXT_PUBLIC_BASE_URL
+ENV NEXT_PUBLIC_HELPDESK_EMAIL_ADDRESS=$NEXT_PUBLIC_HELPDESK_EMAIL_ADDRESS
 
 # Build the application
 RUN npm run build
