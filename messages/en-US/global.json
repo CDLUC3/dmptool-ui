@@ -327,7 +327,8 @@
       "description": "Below is a list of users registered for your organization",
       "buttons": {
         "createUserLabel": "Create User",
-        "searchLabel": "Search"
+        "searchLabel": "Search",
+        "download": "Download as CSV"
       },
       "tools": {
         "searchLabel": "Search by name or email",
@@ -338,7 +339,15 @@
         "label": "User List",
         "noResults": "No users found"
       },
-      "manageUser": "Manage user {name}"
+      "manageUser": "Manage user {name}",
+      "downloadWarning": "This export may contain sensitive user information. Please ensure the downloaded file is stored securely and only shared with authorized individuals.",
+      "headings": {
+        "confirmDownload": "Export user data"
+      },
+      "messages": {
+        "disabledDownloadMessage": "You must select an organization to download the user list.",
+        "noUsersToExport": "There are no users to export for the selected organization."
+      }
     },
     "userProfile": {
       "title": "{name} profile",
@@ -461,7 +470,7 @@
       "organizationDomain": {
         "label": "Organization domain name",
         "placeholder": "Enter organization domain name (e.g. example.com)",
-        "helpMessage": "Displayed along with your organization's name when users search. Research organization registry (ROR) homepage:",
+        "helpMessage": "Displayed along with your organization's name when users search. Research organization registry (ROR) homepage: <link>{homepage}</link>",
         "helpMessageNonRor": "The website domain of your organization. For example 'example.edu' not 'library.example.edu'. This will be used to help users find your organization when searching and will be displayed along with your organization's name in search results."
       },
       "organizationType": {
@@ -527,14 +536,16 @@
       "apiTarget": {
         "label": "API URL",
         "description": "If the affiliation is a funder, providing this will enable the project search workflow (relies on application code to be in place)."
-      }
+      },
+      "identifiersMessage": "If you need to make a change to one of these fields, please <link>contact us</link>."
     },
     "actions": {
       "requestChange": "Request Change"
     },
     "buttons": {
       "save": "Save",
-      "addLink": "Add another link",
+      "addLink": "Add link",
+      "addAnotherLink": "Add another link",
       "deleteLink": "Remove",
       "removeLogo": "Remove logo"
     },
@@ -602,6 +613,10 @@
     "title": "Organization Projects",
     "intro": "Manage DMSP projects and plans across your organization",
     "messages": {
+      "info": {
+        "noProjectsHeading": "Organization projects will appear here",
+        "noProjectsDescription": "When researchers in your organization create data management plans, they will be listed here."
+      },
       "errors": {
         "errorRetrievingProjects": "Something went wrong with retrieving projects. Please try again later."
       }
@@ -942,7 +957,9 @@
       "markAsRead": "Mark as read",
       "markAsUnread": "Mark as unread",
       "archive": "Archive",
-      "archiving": "Archiving..."
+      "archiving": "Archiving...",
+      "submit": "Submit",
+      "submitting": "Submitting..."
     },
     "labels": {
       "required": "required",
@@ -1002,6 +1019,7 @@
     },
     "messaging": {
       "loading": "Loading",
+      "loadingList": "Loading list, please wait...",
       "loadingPage": "Loading page...",
       "submitting": "Submitting...",
       "submittingSROnly": "Submitting feedback request...",
@@ -1016,7 +1034,11 @@
       "sectionIsExpanded": "Section is expanded",
       "sectionIsCollapsed": "Section is collapsed",
       "continueAnyway": "Continue anyway",
+      "exportingProgress": "Exporting progress: {percent}% complete",
       "error": "Something went wrong. Please try again.",
+      "exportComplete": "Export complete",
+      "exportFailed": "Export failed",
+      "exportingLabel": "Exporting...",
       "errors": {
         "invalidQuestionType": "Invalid question type found.",
         "questionUnexpectedFormat": "Unexpected format for question.json.",
@@ -1084,6 +1106,32 @@
     "ariaLabels": {
       "editMember": "Edit {name}'s details",
       "orcidProfile": "ORCID profile for {name}"
+    }
+  },
+  "Contact": {
+    "title": "Contact us",
+    "contactDescription": "DMP Tool is provided by the University of California Curation Center (UC3). You can find out more about us on our <link>website</link>.",
+    "contactDescriptionLoggedIn": "If you would like to contact us about the DMP Tool, please fill out the form below.",
+    "contactDescriptionLoggedOut": "If you would like to learn more about the DMP Tool, would like to become a participating organization, or are having difficulty accessing your account, please email our helpdesk: dmptool [at] ucop [dot] edu.",
+    "form": {
+      "labels": {
+        "name": "Name",
+        "email": "Email",
+        "subject": "Subject",
+        "message": "Message"
+      }
+    },
+    "messages": {
+      "success": {
+        "messageSent": "Your message has been sent successfully."
+      },
+      "errors": {
+        "invalidEmail": "Invalid email address",
+        "invalidName": "Name field must be at least 2 characters long",
+        "invalidSubject": "Subject field must be at least 2 characters long",
+        "invalidMessage": "Message field must be at least 2 characters long",
+        "formSubmittalFailed": "Form submission failed. Please try again later."
+      }
     }
   }
 }
