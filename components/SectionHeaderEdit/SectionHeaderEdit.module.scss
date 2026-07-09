@@ -55,7 +55,6 @@
 }
 
 .editButton,
-.orderButton,
 .expandButton {
   background: none;
   border: none;
@@ -89,16 +88,10 @@
   }
 }
 
+// shared interactive styles live in styles/form/_order-button.scss
 .orderButton {
-  padding: var(--space-1);
-  color: var(--gray-600);
-
-  &:focus,
-  &:hover {
-    background: transparent !important;
-    color: var(--text-color);
-    outline: 2px solid var(--blue-500);
-    outline-offset: 2px;
+  @include device(md) {
+    margin-left: var(--space-2);
   }
 }
 
