@@ -25,6 +25,7 @@
 - Added `UpdateAffiliation` and `AffiliationById` queries [#203]
 
 ## Updated
+- Defaulted the project creation funding question to "No - Skip for now" so users without awarded funding can continue more quickly [#70]
 - Updated the "Forgot Password" to "Reset password" [#79]
 - Updated `PlanCreate` page to show a loading spinner during the initial template fetch so the empty state does not flash before results load [#72]
 - Updated `SelectExistingTemplate` to pass `bestPractices` from template data into `TemplateSelectListItem` [#72]
