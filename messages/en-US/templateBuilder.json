@@ -159,7 +159,8 @@
     },
     "links": {
       "editQuestion": "Edit question",
-      "addQuestion": "Add question"
+      "addQuestion": "Add question",
+      "customizeQuestion": "Customize question"
     },
     "buttons": {
       "moveUp": "Move question up {name}",
@@ -398,7 +399,11 @@
   },
   "TemplateSelectListItem": {
     "messages": {
-      "additionalGuidance": "Your research organization has additional guidance"
+      "additionalGuidance": "Your research organization has additional guidance",
+      "bestPracticeLabel": "Best practice",
+      "bestPracticeLabelLong": "DMP Tool best practice template",
+      "bestPracticeTooltip": "DMP Tool recommends this template. We think it meets best practices for data management plans.",
+      "bestPracticeInfoAria": "About best practice templates"
     }
   },
   "QuestionEdit": {
