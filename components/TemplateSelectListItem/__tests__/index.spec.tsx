@@ -1,5 +1,5 @@
 import React, { ReactNode } from 'react';
-import { act, fireEvent, render, screen } from '@/utils/test-utils';
+import { act, fireEvent, render, screen, waitFor } from '@/utils/test-utils';
 import { axe, toHaveNoViolations } from 'jest-axe';
 import { RichTranslationValues } from 'next-intl';
 import TemplateSelectListItem from '../index';
@@ -110,5 +110,138 @@ describe('TemplateSelectListItem', () => {
     );
     const results = await axe(container);
     expect(results).toHaveNoViolations();
+  });
+
+  it('should render the best practice indicator when bestPractices is true', async () => {
+    await act(async () => {
+      render(
+        <TemplateSelectListItem
+          item={{ ...props.item, bestPractices: true }}
+          onSelect={props.onSelect}
+        />
+      );
+    });
+
+    expect(screen.getByText('messages.bestPracticeLabel')).toBeInTheDocument();
+    // The explanation lives in a popover and is not rendered until opened.
+    expect(screen.queryByText('messages.bestPracticeTooltip')).not.toBeInTheDocument();
+  });
+
+  it('should open the best practice explanation popover on click', async () => {
+    await act(async () => {
+      render(
+        <TemplateSelectListItem
+          item={{ ...props.item, bestPractices: true }}
+          onSelect={props.onSelect}
+        />
+      );
+    });
+
+    const trigger = screen.getByRole('button', { name: 'messages.bestPracticeLabel' });
+    await act(async () => {
+      fireEvent.click(trigger);
+    });
+
+    expect(await screen.findByText('messages.bestPracticeTooltip')).toBeInTheDocument();
+  });
+
+  it('should expose the best practice explanation as a labelled dialog', async () => {
+    await act(async () => {
+      render(
+        <TemplateSelectListItem
+          item={{ ...props.item, bestPractices: true }}
+          onSelect={props.onSelect}
+        />
+      );
+    });
+
+    const trigger = screen.getByRole('button', { name: 'messages.bestPracticeLabel' });
+    await act(async () => {
+      fireEvent.click(trigger);
+    });
+
+    // Popover content is a dialog named by the info aria label.
+    const dialog = await screen.findByRole('dialog', {
+      name: 'messages.bestPracticeInfoAria',
+    });
+    expect(dialog).toBeInTheDocument();
+  });
+
+  it('should close the best practice popover when the trigger is toggled', async () => {
+    await act(async () => {
+      render(
+        <TemplateSelectListItem
+          item={{ ...props.item, bestPractices: true }}
+          onSelect={props.onSelect}
+        />
+      );
+    });
+
+    const trigger = screen.getByRole('button', { name: 'messages.bestPracticeLabel' });
+
+    // Open
+    await act(async () => {
+      fireEvent.click(trigger);
+    });
+    expect(await screen.findByText('messages.bestPracticeTooltip')).toBeInTheDocument();
+
+    // Toggle closed
+    await act(async () => {
+      fireEvent.click(trigger);
+    });
+    await waitFor(() => {
+      expect(screen.queryByText('messages.bestPracticeTooltip')).not.toBeInTheDocument();
+    });
+  });
+
+  it('should close the best practice popover when Escape is pressed', async () => {
+    await act(async () => {
+      render(
+        <TemplateSelectListItem
+          item={{ ...props.item, bestPractices: true }}
+          onSelect={props.onSelect}
+        />
+      );
+    });
+
+    const trigger = screen.getByRole('button', { name: 'messages.bestPracticeLabel' });
+    await act(async () => {
+      fireEvent.click(trigger);
+    });
+    const dialog = await screen.findByRole('dialog');
+
+    await act(async () => {
+      fireEvent.keyDown(dialog, { key: 'Escape', code: 'Escape' });
+    });
+    await waitFor(() => {
+      expect(screen.queryByText('messages.bestPracticeTooltip')).not.toBeInTheDocument();
+    });
+  });
+
+  it('should not render the best practice indicator when bestPractices is false', async () => {
+    await act(async () => {
+      render(
+        <TemplateSelectListItem
+          item={{ ...props.item, bestPractices: false }}
+          onSelect={props.onSelect}
+        />
+      );
+    });
+
+    expect(screen.queryByText('messages.bestPracticeLabel')).not.toBeInTheDocument();
+  });
+
+  it('should render both the guidance footer and best practice badge when both apply', async () => {
+    await act(async () => {
+      render(
+        <TemplateSelectListItem
+          item={{ ...props.item, hasAdditionalGuidance: true, bestPractices: true }}
+          onSelect={props.onSelect}
+        />
+      );
+    });
+
+    expect(screen.getByText('messages.additionalGuidance')).toBeInTheDocument();
+    expect(screen.getByText('messages.bestPracticeLabel')).toBeInTheDocument();
   });
 });

@@ -46,6 +46,7 @@ query Plan($planId: Int!) {
         }
         accessLevel
       }
+      isTestProject
     }
     members {
       isPrimaryContact

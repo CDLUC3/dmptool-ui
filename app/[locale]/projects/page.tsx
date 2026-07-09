@@ -308,6 +308,13 @@ const ProjectsListPage: React.FC = () => {
     return <Loading message={Global('messaging.loading')} />;
   }
 
+  // Empty list once GraphQL has responded; totalCount may be omitted (null) when there are no items.
+  const showEmptyProjectsState =
+    Boolean(projectData?.myProjects) &&
+    !searchButtonClicked &&
+    projects.length === 0 &&
+    (totalCount === 0 || totalCount == null);
+
   return (
     <>
       <PageHeader
@@ -388,44 +395,57 @@ const ProjectsListPage: React.FC = () => {
                 </div>
               )}
             </div>
+          ) : showEmptyProjectsState ? (
+            <div
+              className="empty-state"
+              role="status"
+              aria-labelledby="projects-empty-heading"
+            >
+              <h2 id="projects-empty-heading" className="empty-state-heading">
+                {Project('messages.info.noProjectsHeading')}
+              </h2>
+              <p className="empty-state-description">
+                {Project('messages.info.noProjectsDescription')}
+              </p>
+              <TransitionLink
+                href={routePath('projects.create')}
+                className="button-link button--primary"
+              >
+                {Global('buttons.createNewPlan')}
+              </TransitionLink>
+            </div>
+          ) : searchTerm && searchButtonClicked ? (
+            <p>{Global('messaging.noItemsFound')}</p>
           ) : (
-            <>
-              <div className='template-list' role="list">
-                {searchTerm && searchButtonClicked ? (
-                  <p>{Global('messaging.noItemsFound')}</p>
-                ) : (
-                  <>
-                    {projects.map((project, index) => (
-                      <div
-                        key={`project-${project.link}-${index}`}
-                        data-index={index}
-                      >
-                        <ProjectListItem item={project} />
-                      </div>
-                    ))}
-                    {totalCount != null && totalCount > projects.length && (
-                      <div className={styles.loadBtnContainer}>
-                        <Button
-                          type="button"
-                          data-testid="load-more-btn"
-                          onPress={handleLoadMore}
-                          aria-label="load more"
-                          isDisabled={!nextCursor}
-                        >
-                          {Global('buttons.loadMore')}
-                        </Button>
-                        <div className={styles.remainingText}>
-                          {Global('messaging.numDisplaying', { num: projects.length, total: totalCount || '' })}
-                        </div>
-                        {isSearchFetch && (
-                          <Button onPress={resetSearch} className={`${styles.searchMatchText} link`}> {Global('links.clearFilter')}</Button>
-                        )}
-                      </div>
-                    )}
-                  </>
-                )}
-              </div>
-            </>
+            <div className='template-list' role="list">
+              {projects.map((project, index) => (
+                <div
+                  key={`project-${project.link}-${index}`}
+                  data-index={index}
+                >
+                  <ProjectListItem item={project} />
+                </div>
+              ))}
+              {totalCount != null && totalCount > projects.length && (
+                <div className={styles.loadBtnContainer}>
+                  <Button
+                    type="button"
+                    data-testid="load-more-btn"
+                    onPress={handleLoadMore}
+                    aria-label="load more"
+                    isDisabled={!nextCursor}
+                  >
+                    {Global('buttons.loadMore')}
+                  </Button>
+                  <div className={styles.remainingText}>
+                    {Global('messaging.numDisplaying', { num: projects.length, total: totalCount || '' })}
+                  </div>
+                  {isSearchFetch && (
+                    <Button onPress={resetSearch} className={`${styles.searchMatchText} link`}> {Global('links.clearFilter')}</Button>
+                  )}
+                </div>
+              )}
+            </div>
           )}
         </ContentContainer>
       </LayoutContainer >

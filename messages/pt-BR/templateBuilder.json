@@ -159,7 +159,8 @@
     },
     "links": {
       "editQuestion": "Editar pergunta",
-      "addQuestion": "Adicionar pergunta"
+      "addQuestion": "Adicionar pergunta",
+      "customizeQuestion": "Personalizar pergunta"
     },
     "buttons": {
       "moveUp": "Mover pergunta para cima {name}",
@@ -398,7 +399,11 @@
   },
   "TemplateSelectListItem": {
     "messages": {
-      "additionalGuidance": "Sua organização de pesquisa tem orientação adicional."
+      "additionalGuidance": "Sua organização de pesquisa tem orientação adicional.",
+      "bestPracticeLabel": "Melhores práticas",
+      "bestPracticeLabelLong": "Modelo de melhores práticas da Ferramenta DMP",
+      "bestPracticeTooltip": "A Ferramenta DMP recomenda este modelo. Consideramos que ele atende às melhores práticas para planos de gestão de dados.",
+      "bestPracticeInfoAria": "Sobre os modelos de melhores práticas"
     }
   },
   "QuestionEdit": {

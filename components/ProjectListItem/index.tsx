@@ -19,6 +19,7 @@ function ProjectListItem({ item, isReadOnly }: { item: ProjectItemProps; isReadO
   const validMembers = item.members?.filter((member) => member.name && member.name.trim()) || [];
   const firstMember = validMembers[0];
   const othersCount = validMembers.length - 1;
+  const hasFunding = Boolean(item.funding?.trim());
 
   return (
     <div
@@ -62,29 +63,23 @@ function ProjectListItem({ item, isReadOnly }: { item: ProjectItemProps; isReadO
             )}
 
             {/* Consolidated metadata row: funder, collaborators, last updated */}
-            {(item.funding || validMembers.length > 0 || item.modified) && (
-              <div
-                className={styles.metadataRow}
-                role="group"
-                aria-label="Project metadata"
-              >
+            <div
+              className={styles.metadataRow}
+              role="group"
+              aria-label="Project metadata"
+            >
                 {/* Funder info */}
-                {item.funding && item.funding.trim() && (
-                  <span
-                    className={styles.metadataItem}
-                    aria-label="Funder"
-                  >
-                    <span className={styles.srOnly}>Funder: </span>
-                    {(() => {
-                      const funders = item.funding.split(",");
-                      if (funders.length > 1) {
-                        const additionalCount = funders.length - 1;
-                        return `${funders[0].trim()} & ${additionalCount} more`;
-                      }
-                      return item.funding;
-                    })()}
-                  </span>
-                )}
+                <span className={styles.metadataItem}>
+                  <span className={styles.srOnly}>Funder: </span>
+                  {hasFunding ? (() => {
+                    const funders = item.funding!.split(",");
+                    if (funders.length > 1) {
+                      const additionalCount = funders.length - 1;
+                      return `${funders[0].trim()} & ${additionalCount} more`;
+                    }
+                    return item.funding;
+                  })() : t("noFunderSelected")}
+                </span>
 
                 {/* Collaborators info */}
                 {validMembers.length > 0 && (
@@ -109,7 +104,6 @@ function ProjectListItem({ item, isReadOnly }: { item: ProjectItemProps; isReadO
                   </span>
                 )}
               </div>
-            )}
           </section>
         </div>
 
@@ -158,21 +152,23 @@ function ProjectListItem({ item, isReadOnly }: { item: ProjectItemProps; isReadO
               </div>
 
               {/* Funders Section */}
-              {item.funding && (
-                <div className={styles.detailSection}>
-                  <h4 className={styles.sectionTitle}>{t("fundings")}</h4>
-                  <ul className={styles.fundersList}>
-                    {item.funding.split(",").map((funder, index) => (
-                      <li
-                        key={index}
-                        className={styles.contentText}
-                      >
-                        {funder.trim()} {item.grantId && index === 0 && `(${item.grantId})`}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
+              <div className={styles.detailSection}>
+                <h4 className={styles.sectionTitle}>{t("fundings")}</h4>
+                <ul className={styles.fundersList}>
+                  {hasFunding ? item.funding!.split(",").map((funder, index) => (
+                    <li
+                      key={index}
+                      className={styles.contentText}
+                    >
+                      {funder.trim()} {item.grantId && index === 0 && `(${item.grantId})`}
+                    </li>
+                  )) : (
+                    <li className={styles.contentText}>
+                      {t("noFunderSelected")}
+                    </li>
+                  )}
+                </ul>
+              </div>
 
               {/* Project Members Section */}
               {validMembers.length > 0 && (
