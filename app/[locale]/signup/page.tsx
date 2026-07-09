@@ -319,6 +319,7 @@ const SignUpPage: React.FC = () => {
                 type="password"
                 label={t('password')}
                 ariaLabel={t('password')}
+                passwordToggleLabel={t('password')}
                 isRequired
                 onChange={(e) => setPassword(e.target.value)}
                 data-testid="pass"
@@ -329,6 +330,7 @@ const SignUpPage: React.FC = () => {
                 type="password"
                 label={t('passwordConfirm')}
                 ariaLabel={t('passwordConfirm')}
+                passwordToggleLabel={t('passwordConfirm')}
                 isRequired
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 isInvalid={!!fieldErrors.confirmPassword}

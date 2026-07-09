@@ -210,6 +210,25 @@ describe('FormInput', () => {
       expect(screen.getByText('passwordIsHidden')).toBeInTheDocument();
     });
 
+    it('should include field context in the password toggle label when provided', () => {
+      render(
+        <FormInput
+          name="confirmPassword"
+          type="password"
+          label="Confirm password"
+          passwordToggleLabel="Confirm password"
+        />
+      );
+
+      const toggle = screen.getByTestId('password-toggle');
+      expect(toggle).toHaveAttribute('aria-label', 'showPasswordFor');
+      expect(screen.getByTitle('showPasswordFor')).toBeInTheDocument();
+
+      fireEvent.click(toggle);
+      expect(toggle).toHaveAttribute('aria-label', 'hidePasswordFor');
+      expect(screen.getByTitle('hidePasswordFor')).toBeInTheDocument();
+    });
+
     it('should not render the toggle when showPasswordToggle is false', () => {
       render(
         <FormInput

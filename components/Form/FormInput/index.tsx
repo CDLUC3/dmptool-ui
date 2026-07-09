@@ -37,6 +37,8 @@ interface InputProps {
   pattern?: string;
   /** Defaults to true when type="password". */
   showPasswordToggle?: boolean;
+  /** Adds field context to the password toggle aria-label. */
+  passwordToggleLabel?: string;
   /** Defaults to false. */
   defaultPasswordVisible?: boolean;
 }
@@ -67,6 +69,7 @@ const FormInput = React.forwardRef<HTMLInputElement, InputProps & React.InputHTM
   maxLength = undefined,
   pattern,
   showPasswordToggle = undefined,
+  passwordToggleLabel,
   defaultPasswordVisible = false,
   ...rest
 }, ref) => {
@@ -77,11 +80,15 @@ const FormInput = React.forwardRef<HTMLInputElement, InputProps & React.InputHTM
   const hasPasswordToggle = isPassword && (showPasswordToggle ?? true);
   const [passwordVisible, setPasswordVisible] = useState(defaultPasswordVisible);
   const effectiveType = isPassword && passwordVisible ? 'text' : type;
+  const passwordToggleAriaLabel = passwordToggleLabel
+    ? t(passwordVisible ? 'hidePasswordFor' : 'showPasswordFor', { field: passwordToggleLabel })
+    : t(passwordVisible ? 'hidePassword' : 'showPassword');
+  const inputId = id ?? name;
 
   const inputElement = (
     <Input
       ref={ref}
-      id={id}
+      id={inputId}
       name={name}
       type={effectiveType}
       className={inputClasses}
@@ -110,7 +117,7 @@ const FormInput = React.forwardRef<HTMLInputElement, InputProps & React.InputHTM
         isInvalid={isInvalid}
         data-testid="field-wrapper"
       >
-        <Label htmlFor={id} className={labelClasses}>
+        <Label htmlFor={inputId} className={labelClasses}>
           {label}
           {showRequired && <span className="is-required" aria-hidden="true"> ({t('required')})</span>}
           {isRecommended && <span className="is-recommended" aria-hidden="true"> ({t('recommended')})</span>}
@@ -127,14 +134,15 @@ const FormInput = React.forwardRef<HTMLInputElement, InputProps & React.InputHTM
             <Button
               type="button"
               className={`${styles.passwordToggle} link react-aria-Button`}
-              aria-label={passwordVisible ? t('hidePassword') : t('showPassword')}
+              aria-label={passwordToggleAriaLabel}
+              aria-controls={inputId}
               onPress={() => setPasswordVisible((visible) => !visible)}
               data-testid="password-toggle"
             >
               {/* title on inner span — react-aria Button strips it from the element */}
               <span
                 className={styles.toggleLabel}
-                title={passwordVisible ? t('hidePassword') : t('showPassword')}
+                title={passwordToggleAriaLabel}
               >
                 <span aria-hidden={passwordVisible}>{t('show')}</span>
                 <span aria-hidden={!passwordVisible}>{t('hide')}</span>

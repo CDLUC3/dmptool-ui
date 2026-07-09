@@ -832,6 +832,8 @@
       "hide": "Ocultar",
       "showPassword": "Mostrar senha",
       "hidePassword": "Ocultar senha",
+      "showPasswordFor": "Mostrar senha para {field}",
+      "hidePasswordFor": "Ocultar senha para {field}",
       "passwordIsVisible": "Sua senha está visível",
       "passwordIsHidden": "Sua senha está oculta"
     },
