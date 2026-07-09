@@ -1,6 +1,5 @@
 'use client';
 
-import React from 'react';
 import classNames from 'classnames';
 import { useTranslations } from 'next-intl';
 import {
@@ -34,8 +33,7 @@ export default function EmailAddressRow({
 
   const t = useTranslations('UserProfile');
 
-  const handleMakePrimary = (e: React.MouseEvent<HTMLButtonElement>, email: string) => {
-    e.preventDefault();
+  const handleMakePrimary = (email: string) => {
     if (makePrimaryEmail) {
       makePrimaryEmail(email);
     }
@@ -49,13 +47,12 @@ export default function EmailAddressRow({
       <div className={styles.emailContent}>
         <p className={styles.emailAddress}>{email}</p>
         {isAlias && (
-          <button
-            type="button"
-            onClick={e => handleMakePrimary(e, email)}
+          <Button
+            onPress={() => handleMakePrimary(email)}
             className={styles.emailLink}
           >
             {t('linkMakePrimary')}
-          </button>
+          </Button>
         )}
         {deleteDisabled && (
           <p className={styles.deleteDisabledMessage}>{t('primaryEmailCannotBeDeleted')}</p>
@@ -106,6 +103,6 @@ export default function EmailAddressRow({
         </DialogTrigger>
       )}
 
-    </ div >
+    </div>
   );
 }
