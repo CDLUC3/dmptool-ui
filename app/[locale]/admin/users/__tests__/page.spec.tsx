@@ -5,17 +5,17 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { axe, toHaveNoViolations } from 'jest-axe';
 import { MockedProvider } from "@apollo/client/testing/react";
-import { MeDocument, UsersDocument, UserRole } from '@/generated/graphql';
+import { MeDocument, UsersDocument, UserRole, UsersQuery } from '@/generated/graphql';
+import { logECS, handleApolloError } from '@/utils/index';
 import OrgUserAccountsPage from '../page';
+import { EXPORT_PAGE_SIZE } from '../page';
 
 expect.extend(toHaveNoViolations);
 
-// --- Mocks ---
+type UsersPageItems = NonNullable<NonNullable<UsersQuery['users']>['items']>;
+type UsersPageItem = UsersPageItems[number]; // single item, not the array
 
-jest.mock('@/components/PageHeader', () => ({
-  __esModule: true,
-  default: ({ title }: { title: string }) => <div data-testid="mock-page-header">{title}</div>,
-}));
+// --- Mocks ---
 
 jest.mock('@/components/Loading', () => ({
   __esModule: true,
@@ -63,11 +63,9 @@ jest.mock('next-intl', () => ({
   useTranslations: (ns: string) => (key: string) => `${ns}.${key}`,
 }));
 
-jest.mock('@/utils/index', () => ({
-  logECS: jest.fn(),
-}));
 
 jest.mock('@/utils/index', () => ({
+  ...jest.requireActual('@/utils/index'),
   extractErrors: jest.fn().mockReturnValue([]),
   handleApolloError: jest.fn(),
   isValidEmail: (v: string) => v.includes('@'),
@@ -75,6 +73,9 @@ jest.mock('@/utils/index', () => ({
   routePath: (name: string) => `/${name}`,
   logECS: jest.fn(),
 }));
+
+// Cast the mocked function to type for TypeScript
+const mockedHandleApolloError = handleApolloError as jest.MockedFunction<typeof handleApolloError>;
 
 jest.mock('@/hooks/useFormatDate', () => ({
   useFormatDate: () => (date: string) => date,
@@ -100,16 +101,57 @@ const makeUser = (overrides = {}) => ({
   ...overrides,
 });
 
+let userIdCounter = 1;
+
+export const makeTestUser = (overrides?: Partial<UsersPageItem>): UsersPageItem => ({
+  id: userIdCounter++,
+  givenName: 'Alice',
+  surName: 'Smith',
+  email: 'alice@example.com',
+  active: true,
+  role: UserRole.Researcher,
+  created: '2024-01-01T00:00:00.000Z',
+  last_sign_in: null,
+  plans: [],
+  affiliation: null,
+  ssoId: null,
+  orcid: null,
+  ...overrides,
+});
+
 const makeMeMock = (role: UserRole) => ({
   request: { query: MeDocument },
-  result: { data: { me: { id: 1, role } } },
+  result: {
+    data: {
+      me: {
+        id: 1,
+        givenName: 'Test',
+        surName: 'User',
+        languageId: 'en-US',
+        role,
+        emails: [],
+        errors: null,
+        affiliation: {
+          id: 'org-1',
+          name: 'Test Org',
+          displayName: 'Test Org',
+          searchName: 'test org',
+          uri: 'http://example.com/orgs/1',
+          acronyms: [],
+          feedbackEmails: [],
+          feedbackEnabled: false,
+          feedbackMessage: null,
+        },
+      },
+    },
+  },
 });
 
 const makeUsersMock = (items = [makeUser()], variables = {}) => ({
   request: {
     query: UsersDocument,
     variables: {
-      paginationOptions: { offset: 0, limit: 5, type: 'OFFSET', sortDir: 'DESC', sortField: undefined },
+      paginationOptions: { offset: 0, limit: 10, type: 'OFFSET', sortDir: 'DESC', sortField: undefined },
       term: '',
       ...variables,
     },
@@ -123,11 +165,46 @@ const makeUsersMock = (items = [makeUser()], variables = {}) => ({
         hasPreviousPage: false,
         currentOffset: 0,
         nextCursor: null,
-        limit: 5,
+        limit: 10,
+        __typename: 'UserSearchResults'
       },
     },
   },
 });
+
+export const makeExportMock = (
+  items: UsersPageItem[],
+  overrides?: Partial<{ term: string; role: string; affiliationId: string }>
+) => ({
+  request: {
+    query: UsersDocument,
+    variables: {
+      term: overrides?.term ?? '',
+      ...(overrides?.role ? { role: overrides.role } : {}),
+      ...(overrides?.affiliationId ? { affiliationId: overrides.affiliationId } : {}),
+      paginationOptions: {
+        offset: 0,
+        limit: EXPORT_PAGE_SIZE,
+        type: "OFFSET",
+      },
+    },
+  },
+  result: {
+    data: {
+      users: {
+        items,
+        hasNextPage: false,
+        hasPreviousPage: false,
+        totalCount: items.length,
+        currentOffset: 0,
+        nextCursor: null,
+        limit: EXPORT_PAGE_SIZE,
+        __typename: 'UserSearchResults',
+      },
+    },
+  },
+});
+
 
 // --- Helper ---
 
@@ -141,6 +218,14 @@ const renderPage = (mocks: any[]) =>
 // --- Tests ---
 
 describe('Admin - User Accounts Dashboard', () => {
+  beforeEach(() => {
+    window.scrollTo = jest.fn();
+    jest.clearAllMocks();
+    mockedHandleApolloError.mockReturnValue({
+      wasRealError: true,
+      message: 'Network error',
+    });
+  });
 
   describe('initial render', () => {
     it('shows loading state before data arrives', () => {
@@ -150,11 +235,11 @@ describe('Admin - User Accounts Dashboard', () => {
 
     it('renders the search controls', async () => {
       renderPage([makeMeMock(UserRole.Researcher), makeUsersMock()]);
-      await waitFor(() => expect(screen.getByTestId('mock-table')).toBeInTheDocument());
 
-      expect(screen.getByLabelText(/Admin.users.tools.searchLabel/i)).toBeInTheDocument();
-      expect(screen.getByText('Admin.users.buttons.searchLabel')).toBeInTheDocument();
+      expect(await screen.findByLabelText(/Admin.users.tools.searchLabel/i)).toBeInTheDocument();
+      expect(await screen.findByText('Admin.users.buttons.searchLabel')).toBeInTheDocument();
     });
+
 
     it('renders user rows after data loads', async () => {
       renderPage([makeMeMock(UserRole.Researcher), makeUsersMock()]);
@@ -188,12 +273,22 @@ describe('Admin - User Accounts Dashboard', () => {
   });
 
   describe('search', () => {
+    beforeEach(() => {
+      global.URL.createObjectURL = jest.fn(() => 'blob:mock-url');
+      global.URL.revokeObjectURL = jest.fn();
+      HTMLAnchorElement.prototype.click = jest.fn();
+    });
+
+    afterEach(() => {
+      jest.clearAllMocks();
+    });
+
     it('triggers a new query when search button is pressed', async () => {
       const searchMock = {
         request: {
           query: UsersDocument,
           variables: {
-            paginationOptions: { offset: 0, limit: 5, type: 'OFFSET', sortDir: 'DESC', sortField: undefined },
+            paginationOptions: { offset: 0, limit: 10, type: 'OFFSET', sortDir: 'DESC', sortField: undefined },
             term: 'alice',
           },
         },
@@ -206,16 +301,17 @@ describe('Admin - User Accounts Dashboard', () => {
               hasPreviousPage: false,
               currentOffset: 0,
               nextCursor: null,
-              limit: 5,
+              limit: 10,
             },
           },
         },
       };
 
       renderPage([makeMeMock(UserRole.Admin), makeUsersMock(), searchMock]);
-      await waitFor(() => expect(screen.getByTestId('mock-table')).toBeInTheDocument());
 
-      await userEvent.type(screen.getByRole('searchbox'), 'alice');
+      // Wait for the search input itself, not a proxy for it
+      const searchInput = await screen.findByTestId('search-input');
+      await userEvent.type(searchInput, 'alice');
       await userEvent.click(screen.getByText('Admin.users.buttons.searchLabel'));
 
       await waitFor(() => expect(screen.getByText('alice@example.com')).toBeInTheDocument());
@@ -240,22 +336,34 @@ describe('Admin - User Accounts Dashboard', () => {
         Array.from({ length: 5 }, (_, i) => makeUser({ id: i + 1, email: `user${i}@example.com` }))
       );
 
-      renderPage([makeMeMock(UserRole.Admin), { ...manyUsersMock, result: { data: { users: { ...manyUsersMock.result.data.users, totalCount: 10, hasNextPage: true } } } }]);
-      await waitFor(() => expect(screen.getByTestId('mock-pagination')).toBeInTheDocument());
+      renderPage([
+        makeMeMock(UserRole.Admin),
+        {
+          ...manyUsersMock,
+          result: {
+            data: {
+              users: {
+                ...manyUsersMock.result.data.users,
+                totalCount: 15, // 15 users / 10 per page = 2 pages
+                hasNextPage: true,
+              },
+            },
+          },
+        },
+      ]);
 
+      await waitFor(() => expect(screen.getByTestId('mock-pagination')).toBeInTheDocument());
       await waitFor(() => expect(screen.getByText('Page 1 of 2')).toBeInTheDocument());
     });
   });
 
   describe('error handling', () => {
     it('displays error message when query fails', async () => {
-      const { logECS } = require('@/utils/index');
-
       const errorMock = {
         request: {
           query: UsersDocument,
           variables: {
-            paginationOptions: { offset: 0, limit: 5, type: 'OFFSET', sortDir: 'DESC', sortField: undefined },
+            paginationOptions: { offset: 0, limit: 10, type: 'OFFSET', sortDir: 'DESC', sortField: undefined },
             term: '',
           },
         },
@@ -268,11 +376,129 @@ describe('Admin - User Accounts Dashboard', () => {
         expect(screen.getByText('Network error')).toBeInTheDocument();
       });
 
-      expect(logECS).toHaveBeenCalledWith('error', 'OrgUserAccountsPage', expect.objectContaining({
+      expect(logECS).toHaveBeenCalledWith('error', 'OrgUserAccountsPage.fetchUsers - fetchUsers', expect.objectContaining({
         error: expect.anything(),
       }));
     });
   });
+
+  describe('CSV download', () => {
+    beforeEach(() => {
+      global.URL.createObjectURL = jest.fn(() => 'blob:mock-url');
+      global.URL.revokeObjectURL = jest.fn();
+      HTMLAnchorElement.prototype.click = jest.fn();
+    });
+
+    afterEach(() => {
+      jest.clearAllMocks();
+    });
+    it('opens the confirmation modal when Download is clicked (org/non-superadmin)', async () => {
+      renderPage([makeMeMock(UserRole.Admin), makeUsersMock()]);
+      await waitFor(() => expect(screen.getByTestId('mock-table')).toBeInTheDocument());
+
+      await userEvent.click(screen.getByText('Admin.users.buttons.download'));
+
+      expect(screen.getByText('Admin.users.headings.confirmDownload')).toBeInTheDocument();
+      expect(screen.getByText('Admin.users.downloadWarning')).toBeInTheDocument();
+    });
+
+    it('triggers the export query and builds a CSV when confirmed', async () => {
+      const exportMock = makeExportMock([
+        makeTestUser({ email: 'alice@example.com' }),
+      ]);
+      renderPage([makeMeMock(UserRole.Admin), makeUsersMock(), exportMock]);
+      await waitFor(() => expect(screen.getByTestId('mock-table')).toBeInTheDocument());
+
+      await userEvent.click(screen.getByText('Admin.users.buttons.download'));
+      await userEvent.click(screen.getByText('Global.buttons.continue'));
+
+      await waitFor(() => expect(global.URL.createObjectURL).toHaveBeenCalled());
+    });
+
+    it('shows an error when there are no users to export', async () => {
+      const exportMock = makeExportMock([]);
+      renderPage([makeMeMock(UserRole.Admin), makeUsersMock(), exportMock]);
+      await waitFor(() => expect(screen.getByTestId('mock-table')).toBeInTheDocument());
+
+      await userEvent.click(screen.getByText('Admin.users.buttons.download'));
+      await userEvent.click(screen.getByText('Global.buttons.continue'));
+
+      await waitFor(() =>
+        expect(screen.getByTestId('mock-errors')).toHaveTextContent('Admin.users.messages.noUsersToExport')
+      );
+    });
+
+    it('shows a generic error message when the export query fails', async () => {
+      const errorExportMock = {
+        request: {
+          query: UsersDocument,
+          variables: {
+            term: '',
+            paginationOptions: { offset: 0, limit: 100, type: "OFFSET" },
+          },
+        },
+        error: new Error('Export failed'),
+      };
+
+
+      renderPage([makeMeMock(UserRole.Admin), makeUsersMock(), errorExportMock]);
+      await waitFor(() => expect(screen.getByTestId('mock-table')).toBeInTheDocument());
+
+      await userEvent.click(screen.getByText('Admin.users.buttons.download'));
+      await userEvent.click(screen.getByText('Global.buttons.continue'));
+
+      await waitFor(() =>
+        expect(screen.getByTestId('mock-errors')).toHaveTextContent('Network error')
+      );
+    });
+
+    it('cancel closes the modal without exporting', async () => {
+      renderPage([makeMeMock(UserRole.Admin), makeUsersMock()]);
+      await waitFor(() => expect(screen.getByTestId('mock-table')).toBeInTheDocument());
+
+      await userEvent.click(screen.getByText('Admin.users.buttons.download'));
+      expect(screen.getByText('Admin.users.headings.confirmDownload')).toBeInTheDocument();
+
+      await userEvent.click(screen.getByText('Global.buttons.cancel'));
+
+      await waitFor(() =>
+        expect(screen.queryByText('Admin.users.headings.confirmDownload')).not.toBeInTheDocument()
+      );
+      expect(global.URL.createObjectURL).not.toHaveBeenCalled();
+    });
+
+    describe('superadmin without organization selected', () => {
+      beforeEach(() => {
+        global.URL.createObjectURL = jest.fn(() => 'blob:mock-url');
+        global.URL.revokeObjectURL = jest.fn();
+        HTMLAnchorElement.prototype.click = jest.fn();
+      });
+
+      afterEach(() => {
+        jest.clearAllMocks();
+      });
+      it('disables download and shows explanatory popover instead of the confirm modal', async () => {
+        renderPage([makeMeMock(UserRole.Superadmin), makeUsersMock()]);
+
+        // Wait specifically for superadmin-gated UI (organization select) to mount,
+        // not just the table, since they depend on different async queries.
+        await screen.findByLabelText(/Admin.users.tools.organizationLabel/i);
+
+        const downloadButton = screen.getByText('Admin.users.buttons.download');
+        expect(downloadButton).toHaveAttribute('aria-disabled', 'true');
+
+        await userEvent.click(downloadButton);
+
+        expect(
+          screen.getByText('Admin.users.messages.disabledDownloadMessage')
+        ).toBeInTheDocument();
+        expect(
+          screen.queryByText('Admin.users.headings.confirmDownload')
+        ).not.toBeInTheDocument();
+      });
+    });
+  });
+
 
   describe('accessibility', () => {
     it('passes axe accessibility checks', async () => {

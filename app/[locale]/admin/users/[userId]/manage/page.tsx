@@ -184,8 +184,8 @@ function OrgUserProfilePage(): React.ReactElement {
 
   // GraphQL queries and mutations
   // Run queries
-  const { data: languageData } = useQuery(LanguagesDocument);
-  const { data: meData } = useQuery(MeDocument);
+  const { data: languageData, loading: languageLoading } = useQuery(LanguagesDocument);
+  const { data: meData, loading: meLoading } = useQuery(MeDocument);
   const { data: userData, loading: userLoading } = useQuery(UserDocument, {
     variables: { userId: Number(userId) },
   });
@@ -670,7 +670,7 @@ when affiliation/institution is changed */
   const isReadOnly = meData?.me?.role !== UserRole.Superadmin;
 
   // This is to show the loading spinner for initial load or when user data is being fetched
-  const isPageLoading = userLoading || isInitialLoad;
+  const isPageLoading = userLoading || meLoading || languageLoading || isInitialLoad;
 
   // Derive the available roles based on the current user's role and current user's role
   const availableRoles = RoleOptions.filter(option => {

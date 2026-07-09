@@ -1,5 +1,5 @@
 import React from "react";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { useMutation, useQuery } from "@apollo/client/react";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/context/ToastContext";
@@ -143,7 +143,7 @@ describe("OrganizationDetailsPage", () => {
     render(<OrganizationDetailsPage />);
 
     const form = document.querySelector("form");
-    const submitButton = screen.getByRole("button", { name: "buttons.save" });
+    const submitButton = within(form as HTMLElement).getByRole("button", { name: "buttons.save" });
 
     expect(form).toHaveAttribute("novalidate");
     expect(submitButton).toHaveAttribute("type", "submit");
@@ -158,7 +158,10 @@ describe("OrganizationDetailsPage", () => {
       expect(document.querySelectorAll('input[name^="url-"]')).toHaveLength(1);
     });
 
-    const addButton = screen.getByRole("button", { name: "buttons.addLink" });
+    const forms = document.querySelectorAll("form");
+    const orgDetailsForm = forms[0]; // Organization Details is the first form
+    const addButton = within(orgDetailsForm as HTMLElement).getByRole("button", { name: "buttons.addAnotherLink" });
+
     for (let i = 0; i < 10; i++) {
       fireEvent.click(addButton);
     }
@@ -209,7 +212,9 @@ describe("OrganizationDetailsPage", () => {
       expect(document.querySelector('input[name="organizationName"]')).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByRole("button", { name: "buttons.save" }));
+    const forms = document.querySelectorAll("form");
+    const orgDetailsForm = forms[0]; // Organization Details is the first form
+    fireEvent.click(within(orgDetailsForm as HTMLElement).getByRole("button", { name: "buttons.save" }));
 
     await waitFor(() => {
       expect(updateMutationMock).toHaveBeenCalledTimes(1);
@@ -231,7 +236,10 @@ describe("OrganizationDetailsPage", () => {
       return input as HTMLInputElement;
     });
     fireEvent.change(emailInput, { target: { value: "not-an-email" } });
-    fireEvent.click(screen.getByRole("button", { name: "buttons.save" }));
+
+    const forms = document.querySelectorAll("form");
+    const orgDetailsForm = forms[0]; // Organization Details is the first form
+    fireEvent.click(within(orgDetailsForm as HTMLElement).getByRole("button", { name: "buttons.save" }));
 
     await waitFor(() => {
       expect(updateMutationMock).not.toHaveBeenCalled();
