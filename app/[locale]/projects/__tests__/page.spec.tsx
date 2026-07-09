@@ -1,5 +1,5 @@
 import React from "react";
-import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { MockedProvider } from "@apollo/client/testing/react";
 import { MyProjectsDocument } from "@/generated/graphql";
 import { axe, toHaveNoViolations } from "jest-axe";
@@ -545,6 +545,73 @@ const mocks = [
   },
 ];
 
+const emptyProjectsMocks = [
+  {
+    request: {
+      query: MyProjectsDocument,
+      variables: {
+        paginationOptions: {
+          limit: 3,
+        },
+      },
+    },
+    result: {
+      data: {
+        myProjects: {
+          items: [],
+          nextCursor: null,
+          totalCount: 0,
+        },
+      },
+    },
+  },
+];
+
+const emptyProjectsNullTotalCountMocks = [
+  {
+    request: {
+      query: MyProjectsDocument,
+      variables: {
+        paginationOptions: {
+          limit: 3,
+        },
+      },
+    },
+    result: {
+      data: {
+        myProjects: {
+          items: [],
+          nextCursor: null,
+          totalCount: null,
+        },
+      },
+    },
+  },
+];
+
+const delayedEmptyProjectsMocks = [
+  {
+    request: {
+      query: MyProjectsDocument,
+      variables: {
+        paginationOptions: {
+          limit: 3,
+        },
+      },
+    },
+    result: {
+      data: {
+        myProjects: {
+          items: [],
+          nextCursor: null,
+          totalCount: 0,
+        },
+      },
+    },
+    delay: 500,
+  },
+];
+
 describe("ProjectsListPage", () => {
   beforeEach(() => {
     HTMLElement.prototype.scrollIntoView = mockScrollIntoView;
@@ -763,6 +830,51 @@ describe("ProjectsListPage", () => {
     });
   });
 
+  it("should display empty state with CTA when user has no projects", async () => {
+    await act(async () => {
+      render(
+        <MockedProvider mocks={emptyProjectsMocks}>
+          <ProjectsListPage />
+        </MockedProvider>,
+      );
+    });
+
+    await waitFor(() => {
+      const emptyState = screen.getByRole("status");
+      expect(within(emptyState).getByText("ProjectsListPage.messages.info.noProjectsHeading")).toBeInTheDocument();
+      expect(within(emptyState).getByText("ProjectsListPage.messages.info.noProjectsDescription")).toBeInTheDocument();
+      expect(within(emptyState).getByRole("link", { name: "Global.buttons.createNewPlan" })).toBeInTheDocument();
+      expect(screen.queryByText("Global.buttons.linkExpand")).not.toBeInTheDocument();
+    });
+  });
+
+  it("should display empty state when totalCount is null and there are no projects", async () => {
+    await act(async () => {
+      render(
+        <MockedProvider mocks={emptyProjectsNullTotalCountMocks}>
+          <ProjectsListPage />
+        </MockedProvider>,
+      );
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText("ProjectsListPage.messages.info.noProjectsHeading")).toBeInTheDocument();
+    });
+  });
+
+  it("should not display empty state while projects are loading", async () => {
+    await act(async () => {
+      render(
+        <MockedProvider mocks={delayedEmptyProjectsMocks}>
+          <ProjectsListPage />
+        </MockedProvider>,
+      );
+    });
+
+    expect(screen.getByTestId("loading-component")).toBeInTheDocument();
+    expect(screen.queryByText("ProjectsListPage.messages.info.noProjectsHeading")).not.toBeInTheDocument();
+  });
+
   it("should display no items found message when search yields no results", async () => {
     await act(async () => {
       render(
@@ -784,6 +896,8 @@ describe("ProjectsListPage", () => {
 
     await waitFor(() => {
       expect(screen.getByText("Global.messaging.noItemsFound")).toBeInTheDocument();
+      expect(screen.queryByRole("status")).not.toBeInTheDocument();
+      expect(screen.queryByText("ProjectsListPage.messages.info.noProjectsHeading")).not.toBeInTheDocument();
     });
   });
 

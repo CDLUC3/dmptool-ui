@@ -2,6 +2,8 @@
 - Added new `SkeletonListLoading` component that renders card-style skeleton placeholders for list views (e.g. project lists, template selection, project members). Also supports a `grid` layout for responsive 2/3 column card grids (e.g. section and question type selection).
 - Added `papaparse` package so that it's `unparse` method can handle things like quoting and escaping, type coercion, trailing newlines, etc [#238]
 - Added new `/contact` page for users to message us [#297]
+- Added empty states to the Plan Dashboard (/projects) and Organization Projects (/admin/projects) when no projects exist
+- Documented the projects empty state pattern in the style guide (/styleguide/components/lists)
 - Added `UpdateUserInfo` and `ArchiveUser` mutations and `Plans`, `UserProjects`, and `User` queries [#281]
 - Added new, shared `LayoutSplitPanel` so that we can have one section with a right sidebar, and another section extending the full width [#281]
 - Added new route `admin.users.projects` [#281]
@@ -737,8 +739,6 @@
 ===============================================================================================================
 ### Updated
 
-=======
-
 - Updated `/graphql` files to include new backend error objects [#308]
 - Updated `/account/profile/page.tsx` to display the new backend field level errors [#308]
 - Updated `/template/[templateid]/page.tsx` to display the new backend field level errors [#308]
@@ -835,8 +835,6 @@
 - Removed use of NEXT_PUBLIC_GRAPHQL_ENDPOINT env variable, since it was a duplicate of NEXT_PUBLIC_SERVER_ENDPOINT [#171]
 
 ### Added
-
-=======
 
 - Made some updates related to authentication [#142]
 - Updated middleware to redirect to /login if both access token and refresh token is missing
