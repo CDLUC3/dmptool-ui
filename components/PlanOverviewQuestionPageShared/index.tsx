@@ -18,7 +18,7 @@ import {
   Popover,
 } from "react-aria-components";
 
-// GraphQL 
+// GraphQL
 import { useQuery } from '@apollo/client/react';
 import {
   MeDocument,
@@ -704,7 +704,7 @@ export const PlanOverviewQuestionPageShared: React.FC<{ config: QuestionPageConf
       ...prev,
       numberRange: {
         ...prev.numberRange,
-        [key]: value === '' ? null : Number(value) // Convert empty string to null  
+        [key]: value === '' ? null : Number(value) // Convert empty string to null
       }
     }));
     setHasUnsavedChanges(true);
@@ -1005,11 +1005,7 @@ export const PlanOverviewQuestionPageShared: React.FC<{ config: QuestionPageConf
       case RESEARCH_OUTPUT_QUESTION_TYPE:
         // Extract column headings from parsed question columns
         const columnHeadings = parsed?.type === RESEARCH_OUTPUT_QUESTION_TYPE
-          ? [
-            ...parsed.columns.map(col => col.heading),
-            'Anticipated Release Date',
-            'Anticipated file size'
-          ]
+          ? parsed.columns.map(col => col.heading)
           : [];
 
         // Use the most current data available: overrideRows > ref > state
@@ -1452,8 +1448,8 @@ export const PlanOverviewQuestionPageShared: React.FC<{ config: QuestionPageConf
     },
     textAreaProps: {
       content:
-        // Check if answerId does not exist (meaning answer has not yet been created) and 
-        // question allows sample text as default and sample text exists, then use sample text. 
+        // Check if answerId does not exist (meaning answer has not yet been created) and
+        // question allows sample text as default and sample text exists, then use sample text.
         // Otherwise use formData which could be existing answer or user input
         !answerData?.answerByVersionedQuestionId?.id &&
           !formData.textAreaContent &&
