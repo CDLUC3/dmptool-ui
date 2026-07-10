@@ -1,3 +1,7 @@
+## Updated
+- Simplified the page title on template question edit screens. The header is now a static "Edit Question" label rather than "Edit: {question title}", making long or HTML-formatted question text less likely to clutter the page header [#78]
+- Changed the template question text field from a single-line input to a textarea so longer question text is easier to edit [#78]
+
 ## Added
 - Added show/hide password toggle to `FormInput`, enabled by default for password fields [#80]
 - Migrated login and signup pages to use `FormInput` for consistency with other auth forms [#80]

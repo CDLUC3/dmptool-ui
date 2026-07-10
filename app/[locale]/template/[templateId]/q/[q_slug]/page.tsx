@@ -52,7 +52,6 @@ import QuestionOptionsComponent
   from '@/components/Form/QuestionOptionsComponent';
 import QuestionPreview from '@/components/QuestionPreview';
 import {
-  FormInput,
   RadioGroupComponent,
   RangeComponent,
   TypeAheadSearch,
@@ -625,7 +624,7 @@ const QuestionEdit = () => {
   return (
     <>
       <PageHeader
-        title={t('title', { title: selectedQuestion?.question?.questionText ?? '' })}
+        title={t('title')}
         description=""
         showBackButton={false}
         breadcrumbs={
@@ -637,7 +636,7 @@ const QuestionEdit = () => {
           </Breadcrumbs>
         }
         actions={null}
-        className=""
+        className="mb-3"
       />
 
       {/* Live region for announcements - visually hidden but read by screen readers */}
@@ -683,16 +682,17 @@ const QuestionEdit = () => {
                   </Text>
                 </TextField>
 
-                <FormInput
+                <FormTextArea
                   name="question_text"
-                  type="text"
                   isRequired={true}
                   label={t('labels.questionText')}
                   value={question?.questionText ? question.questionText : ''}
-                  onChange={(e) => handleQuestionTextChange(e.target.value)}
+                  onChange={handleQuestionTextChange}
                   helpMessage={t('helpText.questionText')}
                   isInvalid={!question?.questionText}
                   errorMessage={t('messages.errors.questionTextRequired')}
+                  richText={false}
+                  textAreaClasses={styles.questionFormField}
                 />
 
                 {/**Question type fields here */}

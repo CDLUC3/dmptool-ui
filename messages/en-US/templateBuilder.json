@@ -407,7 +407,7 @@
     }
   },
   "QuestionEdit": {
-    "title": "Edit: {title}",
+    "title": "Edit Question",
     "buttons": {
       "changeType": "Change type",
       "previewQuestion": "Preview question",
