@@ -1,4 +1,7 @@
 ## Added
+- Added show/hide password toggle to `FormInput`, enabled by default for password fields [#80]
+- Migrated login and signup pages to use `FormInput` for consistency with other auth forms [#80]
+- Added password field examples to the styleguide form-elements page [#80]
 - Added a gold "Best practice" badge with click-to-open explanation popover to `TemplateSelectListItem` for DMP Tool best practice templates [#72]
 - Added unit tests for the best practice badge, popover interaction, and accessibility behaviour in `TemplateSelectListItem` [#72]
 - Added new `SkeletonListLoading` component that renders card-style skeleton placeholders for list views (e.g. project lists, template selection, project members). Also supports a `grid` layout for responsive 2/3 column card grids (e.g. section and question type selection).
@@ -35,6 +38,7 @@
 - Added `noFunderSelected` translation keys in `en-US` and `pt-BR` message files
 - Fixed some bugs on the Organization Details page, and cleaned up the layout and removed Identifiers "Request Change" buttons [#293][#280][#296]
 - Updated "Publish" modal. Added "Required" and "Recommended" checklist sections, and added a requirement that the plan not be in test mode [#91]
+- Fixed flaky admin users search test by waiting for the search input to render after `MeDocument` resolves before typing
 - Updated `PlanOverviewPage` to disable `request feedback` link when there is feedback is not enabled and there are no feedback emails [#285]
 - Updated the `ProjectListItem` component to allow for `isReadOnly` mode [#281]
 - Hooked up `admin/users` page with real data, and updated search features and table [#240]

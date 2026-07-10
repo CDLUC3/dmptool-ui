@@ -93,6 +93,9 @@ export default function FormElementsPage() {
                   <a href="#text-input">Text Input</a>
                 </li>
                 <li>
+                  <a href="#password-input">Password Input</a>
+                </li>
+                <li>
                   <a href="#textarea">Text Area</a>
                 </li>
                 <li>
@@ -247,6 +250,118 @@ export default function FormElementsPage() {
                 Built using React Aria&apos;s <code>TextField</code>, <code>Input</code>, <code>Label</code>, and{" "}
                 <code>FieldError</code> components for comprehensive form validation and accessibility.
               </p>
+            </SGComponentExampleContent>
+          </SGComponentExample>
+        </section>
+
+        {/* Password Input */}
+        <section id="password-input">
+          <h2>Password Input</h2>
+          <p>
+            Password fields use <code>FormInput</code> with a Show/Hide link beside the input. The toggle is on by
+            default when <code>type=&quot;password&quot;</code>.
+          </p>
+
+          <SGComponentExample>
+            <SGComponentExampleHeader title="Password Input Variants" />
+            <SGComponentExampleContent>
+              <SGComponentExampleDemo>
+                <h4>Standard (hidden by default)</h4>
+                <FormInput
+                  name="password-standard"
+                  type="password"
+                  label="Password"
+                  placeholder="Enter your password"
+                  isRequired
+                />
+
+                <h4>Visible by default</h4>
+                <FormInput
+                  name="password-visible"
+                  type="password"
+                  label="Password"
+                  placeholder="Enter your password"
+                  defaultPasswordVisible={true}
+                  isRequired
+                />
+
+                <h4>No toggle</h4>
+                <FormInput
+                  name="password-no-toggle"
+                  type="password"
+                  label="Password"
+                  placeholder="Enter your password"
+                  showPasswordToggle={false}
+                  isRequired
+                />
+              </SGComponentExampleDemo>
+
+              <h4>Usage</h4>
+              <SGCodeBlock>{`import { FormInput } from '@/components/Form';
+
+// Standard — toggle on, password hidden
+<FormInput
+  name="password"
+  type="password"
+  label="Password"
+  isRequired
+/>
+
+// Visible by default
+<FormInput
+  name="password"
+  type="password"
+  label="Password"
+  defaultPasswordVisible={true}
+  isRequired
+/>
+
+// No Show/Hide toggle
+<FormInput
+  name="password"
+  type="password"
+  label="Password"
+  showPasswordToggle={false}
+  isRequired
+/>`}</SGCodeBlock>
+
+              <h4>Props</h4>
+              <SGPropsTable>
+                <thead>
+                  <tr>
+                    <th>Prop</th>
+                    <th>Type</th>
+                    <th>Default</th>
+                    <th>Description</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>
+                      <code>showPasswordToggle</code>
+                    </td>
+                    <td>
+                      <code>boolean</code>
+                    </td>
+                    <td>
+                      <code>true</code> when <code>type=&quot;password&quot;</code>
+                    </td>
+                    <td>Render the Show/Hide link beside the field</td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <code>defaultPasswordVisible</code>
+                    </td>
+                    <td>
+                      <code>boolean</code>
+                    </td>
+                    <td>
+                      <code>false</code>
+                    </td>
+                    <td>Start with the password shown as plain text</td>
+                  </tr>
+                </tbody>
+              </SGPropsTable>
             </SGComponentExampleContent>
           </SGComponentExample>
         </section>

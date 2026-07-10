@@ -309,7 +309,7 @@ describe('Admin - User Accounts Dashboard', () => {
 
       renderPage([makeMeMock(UserRole.Admin), makeUsersMock(), searchMock]);
 
-      // Wait for the search input itself, not a proxy for it
+      // Search controls render only after MeDocument resolves; wait for the input itself.
       const searchInput = await screen.findByTestId('search-input');
       await userEvent.type(searchInput, 'alice');
       await userEvent.click(screen.getByText('Admin.users.buttons.searchLabel'));
