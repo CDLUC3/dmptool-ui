@@ -43,6 +43,12 @@ describe("Loading Component", () => {
     expect(screen.queryByText("Loading")).not.toBeInTheDocument();
   });
 
+  it("applies the loading message class when a message is provided", () => {
+    render(<Loading message="Loading" />);
+
+    expect(screen.getByText("Loading")).toHaveClass("loading-message");
+  });
+
   it("applies different variants", () => {
     const { rerender } = render(<Loading variant="inline" />);
     expect(screen.getByRole("status")).toHaveClass("loading-inline");
@@ -73,6 +79,12 @@ describe("Loading Component", () => {
 
     expect(screen.queryByTestId("spinner")).not.toBeInTheDocument();
     expect(screen.getByText("Loading")).toBeInTheDocument();
+  });
+
+  it("does not render an empty loading message", () => {
+    render(<Loading />);
+
+    expect(screen.getByRole("status").querySelector(".loading-message")).not.toBeInTheDocument();
   });
 
   it("does not render when isActive is false", () => {

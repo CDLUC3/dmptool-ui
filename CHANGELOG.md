@@ -1,4 +1,11 @@
+## Updated
+- Simplified the page title on template question edit screens. The header is now a static "Edit Question" label rather than "Edit: {question title}", making long or HTML-formatted question text less likely to clutter the page header [#78]
+- Changed the template question text field from a single-line input to a textarea so longer question text is easier to edit [#78]
+
 ## Added
+- Added show/hide password toggle to `FormInput`, enabled by default for password fields [#80]
+- Migrated login and signup pages to use `FormInput` for consistency with other auth forms [#80]
+- Added password field examples to the styleguide form-elements page [#80]
 - Added a gold "Best practice" badge with click-to-open explanation popover to `TemplateSelectListItem` for DMP Tool best practice templates [#72]
 - Added unit tests for the best practice badge, popover interaction, and accessibility behaviour in `TemplateSelectListItem` [#72]
 - Added new `SkeletonListLoading` component that renders card-style skeleton placeholders for list views (e.g. project lists, template selection, project members). Also supports a `grid` layout for responsive 2/3 column card grids (e.g. section and question type selection).
@@ -26,6 +33,7 @@
 
 ## Updated
 - Updated `EmailAddressRow` and `UpdateEmailAddress` so the non-removable primary email no longer shows a disabled trash icon, and instead displays a "Primary" lock badge with a note explaining how to change it. Added a shared `icon-lock` icon and `primaryEmailCannotBeDeleted`/`primaryBadge` translations [#56]
+- Defaulted the project creation funding question to "No - Skip for now" so users without awarded funding can continue more quickly [#70]
 - Updated the "Forgot Password" to "Reset password" [#79]
 - Updated `PlanCreate` page to show a loading spinner during the initial template fetch so the empty state does not flash before results load [#72]
 - Updated `SelectExistingTemplate` to pass `bestPractices` from template data into `TemplateSelectListItem` [#72]
@@ -35,6 +43,7 @@
 - Added `noFunderSelected` translation keys in `en-US` and `pt-BR` message files
 - Fixed some bugs on the Organization Details page, and cleaned up the layout and removed Identifiers "Request Change" buttons [#293][#280][#296]
 - Updated "Publish" modal. Added "Required" and "Recommended" checklist sections, and added a requirement that the plan not be in test mode [#91]
+- Fixed flaky admin users search test by waiting for the search input to render after `MeDocument` resolves before typing
 - Updated `PlanOverviewPage` to disable `request feedback` link when there is feedback is not enabled and there are no feedback emails [#285]
 - Updated the `ProjectListItem` component to allow for `isReadOnly` mode [#281]
 - Hooked up `admin/users` page with real data, and updated search features and table [#240]
@@ -81,6 +90,7 @@
 - Updated `RepoSelectorForAnswer` to wait to query `Re3byUrIsDocument` until we have `preferredReposURIs` because preferred repos don't display even though they eventually do to trigger the display of the "preferred repositories" checkbox [#118]
 
 ## Fixed
+- Fixed loading state not appearing immediately by removing the delayed fadeIn animation from the Loading component
 - Fixed section &  question reorder arrow buttons turning white on hover. Added a shared `order-button` style so arrows use link-blue colors and remain visible [#76]
 - Updated the `project` graphql query to include `email` and `created` field so we can display info for invited project collaborators who haven't accepted invite [#287]
 - Fixed `type` errors resulting from deprecated `errorPolicy` in unit tests [#252]

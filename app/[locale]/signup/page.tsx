@@ -6,13 +6,8 @@ import { useTranslations } from "next-intl";
 import {
   Button,
   Checkbox,
-  FieldError,
   Form,
-  Input,
-  Label,
   Link,
-  Text,
-  TextField,
 } from "react-aria-components";
 import { useCsrf } from '@/context/CsrfContext';
 import logECS from '@/utils/clientLogger';
@@ -26,6 +21,7 @@ import {
   ToolbarContainer,
 } from '@/components/Container';
 import ErrorMessages from '@/components/ErrorMessages';
+import { FormInput } from '@/components/Form';
 import { TypeAheadWithOther, useAffiliationSearch } from '@/components/Form/TypeAheadWithOther';
 
 import styles from './signup.module.scss';
@@ -250,47 +246,38 @@ const SignUpPage: React.FC = () => {
           <ErrorMessages errors={errors} ref={errorRef} />
 
           {(step === "email") && (
-            <TextField
+            <FormInput
               name="email"
               type="email"
-              aria-label={t('emailAddress')}
+              label={t('emailAddress')}
+              ariaLabel={t('emailAddress')}
               value={email}
-              onChange={setEmail}
+              onChange={(e) => setEmail(e.target.value)}
               isRequired
-            >
-              <Label>{t('emailAddress')}</Label>
-              <Input />
-              <Text slot="description" className={styles.help}> {t('emailHelp')} </Text>
-              <FieldError />
-            </TextField>
+              helpMessage={t('emailHelp')}
+            />
           )}
 
           {(step === "profile") && (
             <>
               <div className="two-item-row">
-                <TextField
+                <FormInput
                   name="first_name"
                   type="text"
-                  aria-label={t('firstName')}
+                  label={t('firstName')}
+                  ariaLabel={t('firstName')}
                   isRequired
-                  onChange={setFirstName}
-                >
-                  <Label>{t('firstName')}</Label>
-                  <Input />
-                  <FieldError />
-                </TextField>
+                  onChange={(e) => setFirstName(e.target.value)}
+                />
 
-                <TextField
+                <FormInput
                   name="last_name"
                   type="text"
-                  aria-label={t('lastName')}
+                  label={t('lastName')}
+                  ariaLabel={t('lastName')}
                   isRequired
-                  onChange={setLastName}
-                >
-                  <Label>{t('lastName')}</Label>
-                  <Input />
-                  <FieldError />
-                </TextField>
+                  onChange={(e) => setLastName(e.target.value)}
+                />
               </div>
 
               <TypeAheadWithOther
@@ -306,61 +293,50 @@ const SignUpPage: React.FC = () => {
                 onSearch={handleSearch}
               />
               {otherField && (
-                <TextField
+                <FormInput
                   name="otherAffiliation"
                   id="fieldInstitution"
-                  onChange={setOtherAffiliation}
-                >
-                  <Label>{t('institutionOther')}</Label>
-                  <Input
-                    data-testid="otherAffiliation"
-                    placeholder={t('institutionOtherPlaceholder')}
-                  />
-                  <FieldError />
-                </TextField>
+                  label={t('institutionOther')}
+                  onChange={(e) => setOtherAffiliation(e.target.value)}
+                  placeholder={t('institutionOtherPlaceholder')}
+                  data-testid="otherAffiliation"
+                />
               )}
 
-              <TextField
+              <FormInput
                 name="email"
                 type="email"
-                aria-label={t('emailAddress')}
-                onChange={setEmail}
+                label={t('emailAddress')}
+                ariaLabel={t('emailAddress')}
+                onChange={(e) => setEmail(e.target.value)}
                 value={email}
                 isRequired
-                isDisabled={true}
-              >
-                <Label>{t('emailAddress')}</Label>
-                <Input />
-                <FieldError />
-              </TextField>
+                disabled={true}
+              />
 
-              <TextField
+              <FormInput
                 name="password"
                 type="password"
-                aria-label={t('password')}
+                label={t('password')}
+                ariaLabel={t('password')}
+                passwordToggleLabel={t('password')}
                 isRequired
-                onChange={setPassword}
-              >
-                <Label>{t('password')}</Label>
-                <Input data-testid="pass" />
-                <FieldError />
-              </TextField>
+                onChange={(e) => setPassword(e.target.value)}
+                data-testid="pass"
+              />
 
-              <TextField
+              <FormInput
                 name="confirmPassword"
                 type="password"
-                aria-label={t('passwordConfirm')}
+                label={t('passwordConfirm')}
+                ariaLabel={t('passwordConfirm')}
+                passwordToggleLabel={t('passwordConfirm')}
                 isRequired
-                onChange={setConfirmPassword}
-              >
-                <Label>{t('passwordConfirm')}</Label>
-                <Input data-testid="confirmpass" />
-                {fieldErrors.confirmPassword ? (
-                  <FieldError data-testid="passMissMatch">{fieldErrors.confirmPassword}</FieldError>
-                ) : (
-                  <FieldError />
-                )}
-              </TextField>
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                isInvalid={!!fieldErrors.confirmPassword}
+                errorMessage={fieldErrors.confirmPassword}
+                data-testid="confirmpass"
+              />
 
               <Checkbox
                 isSelected={termsAccepted}

@@ -610,7 +610,7 @@ const CustomQuestionEdit = () => {
   return (
     <>
       <PageHeader
-        title={t('title', { title: selectedQuestion?.customQuestion?.questionText ?? '' })}
+        title={t('title')}
         description=""
         showBackButton={false}
         breadcrumbs={

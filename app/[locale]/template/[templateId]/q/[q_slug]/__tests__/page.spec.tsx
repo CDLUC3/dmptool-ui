@@ -394,6 +394,8 @@ describe("QuestionEditPage", () => {
     expect(questionTypeLabel).toBeInTheDocument();
     const questionTextLabel = screen.getByText(/labels.questionText/i);
     expect(questionTextLabel).toBeInTheDocument();
+    const questionTextField = screen.getByRole('textbox', { name: /labels.questionText/i });
+    expect(questionTextField.tagName).toBe('TEXTAREA');
     const questionRequirementTextLabel = screen.getByText(/labels.requirementText/i);
     expect(questionRequirementTextLabel).toBeInTheDocument();
     const questionGuidanceTextLabel = screen.getByText(/labels.guidanceText/i);
