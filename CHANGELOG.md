@@ -32,6 +32,7 @@
 - Added `UpdateAffiliation` and `AffiliationById` queries [#203]
 
 ## Updated
+- Updated `EmailAddressRow` and `UpdateEmailAddress` so the non-removable primary email no longer shows a disabled trash icon, and instead displays a "Primary" lock badge with a note explaining how to change it. Added a shared `icon-lock` icon and `primaryEmailCannotBeDeleted`/`primaryBadge` translations [#56]
 - Defaulted the project creation funding question to "No - Skip for now" so users without awarded funding can continue more quickly [#70]
 - Updated the "Forgot Password" to "Reset password" [#79]
 - Updated `PlanCreate` page to show a loading spinner during the initial template fetch so the empty state does not flash before results load [#72]
