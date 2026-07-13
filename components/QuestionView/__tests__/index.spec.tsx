@@ -691,12 +691,13 @@ describe("QuestionView", () => {
         path="/template/123"
       />
     );
-    expect(screen.getByTestId('card-body').textContent).toContain('+');
-    expect(screen.getByTestId('card-body').textContent).toContain('-');
-    expect(screen.getByDisplayValue('$0.00')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /increase/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /decrease/i })).not.toBeInTheDocument();
+    expect(screen.getByText('$')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('0')).toBeInTheDocument();
 
     const groups = screen.queryAllByRole('button');
-    expect(groups).toHaveLength(2);
+    expect(groups).toHaveLength(0);
   });
 
 

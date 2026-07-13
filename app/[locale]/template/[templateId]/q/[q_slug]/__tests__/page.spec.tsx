@@ -1332,7 +1332,7 @@ describe("QuestionEditPage", () => {
         attributes: {
           denomination: "USD",
           min: 0,
-          max: 10000000,
+          max: 100000000,
           step: 0.01
         },
         meta: {

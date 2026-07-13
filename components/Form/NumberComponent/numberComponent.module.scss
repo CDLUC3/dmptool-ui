@@ -20,3 +20,55 @@
   color: var(--text-color) !important;
   border: 1px solid var(--border-color) !important;
 }
+
+.numberFieldWithAffix {
+  display: flex;
+  width: fit-content;
+  align-items: stretch;
+  border-radius: 4px;
+
+  &[data-focus-within] {
+    outline: 1px solid var(--focus-ring-color);
+
+    .currencyPrefix,
+    .currencySuffix,
+    .numberInputWithPrefix,
+    .numberInputWithSuffix {
+      border-color: var(--focus-ring-color);
+    }
+  }
+}
+
+.currencyPrefix,
+.currencySuffix {
+  display: flex;
+  align-items: center;
+  padding: 0.429rem 0.75rem;
+  background: var(--field-background);
+  border: 1px solid var(--border-color);
+  color: var(--text-color-placeholder);
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1;
+  user-select: none;
+}
+
+.currencyPrefix {
+  border-right: none;
+  border-radius: 4px 0 0 4px;
+}
+
+.currencySuffix {
+  border-left: none;
+  border-radius: 0 4px 4px 0;
+}
+
+.numberInputWithPrefix {
+  border-radius: 0 4px 4px 0 !important;
+  margin: 0 !important;
+}
+
+.numberInputWithSuffix {
+  border-radius: 4px 0 0 4px !important;
+  margin: 0 !important;
+}

@@ -791,7 +791,7 @@ describe("QuestionAdd", () => {
     await waitFor(() => {
       expect(mockOnSave).toHaveBeenCalledWith({
         questionText: 'New Question',
-        json: "{\"type\":\"currency\",\"attributes\":{\"max\":10000000,\"min\":0,\"step\":0.01,\"denomination\":\"GBP\"},\"meta\":{\"schemaVersion\":\"1.0\"},\"showCommentField\":false}",
+        json: "{\"type\":\"currency\",\"attributes\":{\"max\":100000000,\"min\":0,\"step\":0.01,\"denomination\":\"GBP\"},\"meta\":{\"schemaVersion\":\"1.0\"},\"showCommentField\":false}",
         requirementText: '',
         displayOrder: 5,
         guidanceText: '',
