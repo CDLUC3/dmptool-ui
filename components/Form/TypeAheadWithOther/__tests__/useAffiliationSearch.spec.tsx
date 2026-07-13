@@ -3,6 +3,11 @@ import { useAffiliationSearch } from '@/components/Form/TypeAheadWithOther';
 import { useLazyQuery } from '@apollo/client/react';
 import { AffiliationsDocument } from '@/generated/graphql';
 
+jest.mock('@/utils/clientLogger', () => ({
+  __esModule: true,
+  default: jest.fn(),
+}));
+
 // Mock debounce to run immediately instead of waiting 300ms
 jest.mock('@/hooks/debounce', () => ({
   /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -211,5 +216,73 @@ describe('useAffiliationSearch', () => {
     });
 
     expect(result.current.suggestions).toEqual([]);
+  });
+
+  it('should ignore aborted searches without setting an error', async () => {
+    mockFetchAffiliations.mockRejectedValueOnce(
+      new DOMException('The operation was aborted.', 'AbortError')
+    );
+
+    const { result } = renderHook(() => useAffiliationSearch());
+
+    await act(async () => {
+      result.current.handleSearch('Test');
+    });
+
+    expect(result.current.searchError).toBe('');
+    expect(result.current.isSearching).toBe(false);
+  });
+
+  it('should set a clear search error when a real fetch failure occurs', async () => {
+    mockFetchAffiliations.mockRejectedValueOnce(new Error('Network request failed'));
+
+    const { result } = renderHook(() => useAffiliationSearch());
+
+    await act(async () => {
+      result.current.handleSearch('Test');
+    });
+
+    expect(result.current.searchError).toBe('Network request failed');
+    expect(result.current.suggestions).toEqual([]);
+    expect(result.current.isSearching).toBe(false);
+  });
+
+  it('should ignore stale search results when a newer search has started', async () => {
+    let resolveFirst!: (value: unknown) => void;
+    mockFetchAffiliations
+      .mockImplementationOnce(
+        () => new Promise((resolve) => { resolveFirst = resolve; })
+      )
+      .mockResolvedValueOnce({
+        data: {
+          affiliations: {
+            items: [{ id: 2, displayName: 'Newer Org', uri: 'http://new.example.com' }],
+          },
+        },
+      });
+
+    const { result } = renderHook(() => useAffiliationSearch());
+
+    act(() => {
+      result.current.handleSearch('Old');
+    });
+
+    await act(async () => {
+      result.current.handleSearch('New');
+    });
+
+    await act(async () => {
+      resolveFirst({
+        data: {
+          affiliations: {
+            items: [{ id: 1, displayName: 'Stale Org', uri: 'http://stale.example.com' }],
+          },
+        },
+      });
+    });
+
+    expect(result.current.suggestions).toEqual([
+      { id: '2', displayName: 'Newer Org', uri: 'http://new.example.com' },
+    ]);
   });
 });

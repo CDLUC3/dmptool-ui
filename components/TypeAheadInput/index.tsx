@@ -52,6 +52,7 @@ const TypeAheadInput = ({
   const [currentListItemFocused, setCurrentListItemFocused] = useState(-1);
   const [open, setOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const isFocusedRef = useRef(false);
   const listRef = useRef<HTMLUListElement | null>(null);
   const listItemRefs = useRef<(HTMLLIElement | null)[]>([]);
 
@@ -72,6 +73,7 @@ const TypeAheadInput = ({
   };
 
   const handleInputFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+    isFocusedRef.current = true;
     setOpen(true);
     if (clearOnFocus) {
       setInputValue('');
@@ -81,6 +83,10 @@ const TypeAheadInput = ({
 
     const end = e.currentTarget.value.length;
     e.currentTarget.setSelectionRange(end, end);
+  }
+
+  const handleInputBlur = () => {
+    isFocusedRef.current = false;
   }
 
   const selectOption = (li: HTMLLIElement) => {
@@ -147,10 +153,10 @@ const TypeAheadInput = ({
   }
 
   useEffect(() => {
-    if (onSearch) {
-      onSearch(inputValue);
+    if (!isFocusedRef.current) {
+      setInputValue(value ?? "");
     }
-  }, [inputValue]);
+  }, [value]);
 
   useEffect(() => {
     // Function to handle click outside the input and list
@@ -196,6 +202,7 @@ const TypeAheadInput = ({
           className={classNames('react-aria-Input', styles.searchInput)}
           onChange={handleUpdate}
           onFocus={handleInputFocus}
+          onBlur={handleInputBlur}
           onKeyDown={handleKeyboardEvents}
           placeholder={placeholder ? placeholder : 'Type to search...'}
           ref={inputRef}

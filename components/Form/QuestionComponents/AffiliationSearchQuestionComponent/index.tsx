@@ -16,7 +16,7 @@ const AffiliationSearchQuestionComponent: React.FC<AffiliationSearchQuestionProp
   handleOtherAffiliationChange
 }) => {
   const Signup = useTranslations('SignupPage');
-  const { suggestions, handleSearch, isSearching } = useAffiliationSearch();
+  const { suggestions, handleSearch, isSearching, searchError } = useAffiliationSearch();
 
   return (
     <>
@@ -25,7 +25,7 @@ const AffiliationSearchQuestionComponent: React.FC<AffiliationSearchQuestionProp
         fieldName="institution"
         setOtherField={setOtherField}
         isRequired={true}
-        error=""
+        error={searchError ?? ''}
         helpText={parsedQuestion?.attributes?.help || Signup('institutionHelp')}
         updateFormData={handleAffiliationChange}
         value={affiliationData?.affiliationName || ''}

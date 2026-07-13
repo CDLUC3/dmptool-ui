@@ -7,7 +7,9 @@ import logECS from "@/utils/clientLogger";
 export const isAbortError = (error: unknown): boolean => {
   return (
     error instanceof Error &&
-    (error.name === 'AbortError' || error.message.includes('AbortError'))
+    (error.name === 'AbortError' ||
+      error.message.includes('AbortError') ||
+      error.message.toLowerCase().includes('aborted'))
   );
 };
 

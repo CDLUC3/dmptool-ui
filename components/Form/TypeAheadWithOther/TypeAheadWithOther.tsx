@@ -63,6 +63,7 @@ const TypeAheadWithOther = ({
   const [currentListItemFocused, setCurrentListItemFocused] = useState(-1);
   const [open, setOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const isFocusedRef = useRef(false);
   const listRef = useRef<HTMLUListElement | null>(null);
   const listItemRefs = useRef<(HTMLLIElement | null)[]>([]);
 
@@ -84,6 +85,7 @@ const TypeAheadWithOther = ({
   };
 
   const handleInputFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+    isFocusedRef.current = true;
     setOpen(true);
     if (clearOnFocus) {
       setOtherField(false);
@@ -94,6 +96,10 @@ const TypeAheadWithOther = ({
 
     const end = e.currentTarget.value.length;
     e.currentTarget.setSelectionRange(end, end);
+  }
+
+  const handleInputBlur = () => {
+    isFocusedRef.current = false;
   }
 
   const selectOption = (li: HTMLLIElement) => {
@@ -163,14 +169,9 @@ const TypeAheadWithOther = ({
   }
 
   useEffect(() => {
-    if (onSearch) {
-      onSearch(inputValue);
+    if (!isFocusedRef.current) {
+      setInputValue(value ?? "");
     }
-  }, [inputValue]);
-
-  // Sync inputValue with the value prop when it changes
-  useEffect(() => {
-    setInputValue(value ?? "");
   }, [value]);
 
   useEffect(() => {
@@ -217,6 +218,7 @@ const TypeAheadWithOther = ({
           className={classNames('react-aria-Input', styles.searchInput)}
           onChange={handleUpdate}
           onFocus={handleInputFocus}
+          onBlur={handleInputBlur}
           onKeyDown={handleKeyboardEvents}
           placeholder={placeholder ? placeholder : 'Type to search...'}
           ref={inputRef}

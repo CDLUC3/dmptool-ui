@@ -65,7 +65,7 @@ const ProfilePage: React.FC = () => {
     languageId: "",
     languageName: "",
   });
-  const { suggestions, handleSearch, isSearching } = useAffiliationSearch();
+  const { suggestions, handleSearch, isSearching, searchError } = useAffiliationSearch();
   const [isEditing, setIsEditing] = useState(false);
   // Errors returned from request
   const [errors, setErrors] = useState<UserErrors>({});
@@ -241,11 +241,11 @@ const ProfilePage: React.FC = () => {
   when affiliation/institution is changed */
   const updateAffiliationFormData = async (id: string, value: string) => {
     clearActiveFieldError("affiliationId");
-    return setFormData({
-      ...formData,
+    return setFormData((prev) => ({
+      ...prev,
       affiliationName: value,
       affiliationId: id,
-    });
+    }));
   };
 
   useEffect(() => {
@@ -457,7 +457,7 @@ const ProfilePage: React.FC = () => {
                             fieldName="institution"
                             setOtherField={setOtherField}
                             isRequired={true}
-                            error={errors['affiliationId'] ?? ''}
+                            error={errors['affiliationId'] ?? searchError ?? ''}
                             helpText={t('helpTextSearchForInstitution')}
                             updateFormData={updateAffiliationFormData}
                             value={formData.affiliationName}

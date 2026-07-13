@@ -156,7 +156,7 @@ function OrgUserProfilePage(): React.ReactElement {
 
   // States for search
   const [searchTerm, setSearchTerm] = useState<string>('');
-  const { suggestions, handleSearch, isSearching } = useAffiliationSearch();
+  const { suggestions, handleSearch, isSearching, searchError } = useAffiliationSearch();
 
   // States for pagination
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -773,7 +773,7 @@ when affiliation/institution is changed */
                         setOtherField={setOtherField}
                         isRequiredVisualOnly={true}
                         isDisabled={isReadOnly}
-                        error={fieldErrors.affiliationId ?? ''}
+                        error={fieldErrors.affiliationId ?? searchError ?? ''}
                         helpText={t('messages.helpText.institution')}
                         updateFormData={updateAffiliationFormData}
                         value={userProfileFormData.affiliationName}
