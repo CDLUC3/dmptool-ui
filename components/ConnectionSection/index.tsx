@@ -88,9 +88,14 @@ const ConnectionSection = ({
                 className={styles.connectedLink}
                 target="_blank"
                 rel="noopener noreferrer"
+                aria-label={`${resolvedIdentifier}, ${tGlobal('opensInNewTab')}`}
               >
-                {orcidUrl}
-                <span className="sr-only">{tGlobal('opensInNewTab')}</span>
+                <span className={styles.connectedLinkShort} aria-hidden="true">
+                  {resolvedIdentifier}
+                </span>
+                <span className={styles.connectedLinkFull} aria-hidden="true">
+                  {orcidUrl}
+                </span>
               </a>
             ) : (
               <span className={styles.connectedIdentifier}>{resolvedIdentifier}</span>

@@ -81,11 +81,12 @@ describe('ConnectionSection', () => {
       render(<ConnectionSection type="orcid" {...connectedProps} />);
 
       const link = screen.getByRole('link', {
-        name: /https:\/\/orcid\.org\/0000-0001-2345-6789/
+        name: '0000-0001-2345-6789, opensInNewTab'
       });
       expect(link).toHaveAttribute('href', 'https://orcid.org/0000-0001-2345-6789');
       expect(link).toHaveAttribute('target', '_blank');
-      expect(screen.getByText('opensInNewTab')).toHaveClass('sr-only');
+      expect(link).toHaveTextContent('0000-0001-2345-6789');
+      expect(link).toHaveTextContent('https://orcid.org/0000-0001-2345-6789');
     });
 
     it('should group the connected row with an accessible label', () => {
