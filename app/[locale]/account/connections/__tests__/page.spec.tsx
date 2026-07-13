@@ -5,6 +5,10 @@ import ConnectionsPage from '../page';
 
 expect.extend(toHaveNoViolations);
 
+jest.mock('@/context/ToastContext', () => ({
+  useToast: jest.fn(() => ({ add: jest.fn() }))
+}));
+
 jest.mock('@/components/PageHeader', () => {
   const mockPageHeader = jest.fn(({ children }: { children: ReactNode, title: string }) => (
     <div data-testid="mock-page-wrapper">{children}</div>
@@ -17,8 +21,7 @@ jest.mock('@/components/PageHeader', () => {
 jest.mock('next-intl', () => {
   const t = (key: string) => key;
   t.markup = (key: string, values: Record<string, (chunks: string) => string>) => {
-    // Simulate interpolation of the `link` function
-    const chunks = key; // Simplified, in real case you'd simulate how the lib works
+    const chunks = key;
     const interpolated = Object.entries(values).reduce((acc, [name, fn]) => {
       return acc.replace(`{${name}}`, fn(chunks));
     }, key);
@@ -38,7 +41,7 @@ describe('Connections page', () => {
     jest.restoreAllMocks();
   })
 
-  it('should render connections page', async () => {
+  it('should render connections page with connect buttons by default', async () => {
 
     await act(async () => {
       render(
@@ -47,11 +50,13 @@ describe('Connections page', () => {
       );
     });
 
-    const heading4Elements = screen.getAllByRole('heading', { level: 2 });
-    expect(heading4Elements.length).toBe(3);
+    const heading2Elements = screen.getAllByRole('heading', { level: 2 });
+    expect(heading2Elements.length).toBe(3);
 
-    const buttons = screen.getAllByRole('button');
-    expect(buttons.length).toBe(2);
+    const connectButtons = screen.getAllByRole('button', {
+      name: /orcidConnection\.btnText|ssoConnection\.btnText/
+    });
+    expect(connectButtons.length).toBe(2);
   });
 
   it('should pass axe accessibility test', async () => {

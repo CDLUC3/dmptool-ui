@@ -1,3 +1,73 @@
 .connectionSection {
   padding: 10px 0;
 }
+
+.connectedRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin: 12px 0;
+  padding: 16px;
+  border: 1px solid var(--gray-100);
+  border-radius: 8px;
+  background: var(--gray-50);
+}
+
+.connectedLogo {
+  flex-shrink: 0;
+}
+
+.connectedDetails {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  flex: 1;
+}
+
+.connectedLink,
+.connectedIdentifier {
+  display: block;
+  margin: 0;
+  padding: 0;
+  font-weight: 700;
+  line-height: 1.4;
+  word-break: break-all;
+}
+
+.connectedLink {
+  color: inherit;
+  text-decoration: underline;
+
+  &:hover {
+    color: var(--blue-900);
+  }
+}
+
+.connectedBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  color: var(--gray-500);
+  font-size: var(--fs-small);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.connectedBadgeIcon {
+  fill: var(--gray-500);
+}
+
+.connectedActions {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.disconnectButton {
+  padding: 4px 12px;
+  font-size: var(--fs-small);
+}

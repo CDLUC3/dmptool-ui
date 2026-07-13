@@ -1,65 +1,27 @@
-import React, { ReactNode } from 'react';
+import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import ConnectionSection from '..';
 
-// Mock the external components and modules
-jest.mock('../../ButtonWithImage', () => {
-  return function DummyButtonWithImage({ buttonText }: { buttonText: string }) {
-    return <button data-testid="button-with-image">{buttonText}</button>;
-  };
-});
-
-jest.mock('../../TooltipWithDialog', () => {
-  return function DummyTooltipWithDialog({
-    children,
-    text,
-    onPressAction
-  }: {
-    children: ReactNode;
-    text: string;
-    /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-    onPressAction: (e: any, close: () => void) => void;
-  }) {
-    const mockClose = jest.fn();
-    return (
-      <div
-        data-testid="tooltip-with-dialog"
-        onClick={(e) => onPressAction(e, mockClose)}
-      >
-        {text}
-        {children}
-      </div>
-    );
-  };
-});
-
-jest.mock('../../ModalOverlayComponent', () => ({
-  ModalOverlayComponent: function DummyModalOverlay({
-    heading,
-    content,
-    onPressAction
-  }: {
-    heading: string;
-    content: string;
-    /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-    onPressAction: (e: any, close: () => void) => void;
-  }) {
-    const mockClose = jest.fn();
-    return (
-      <div data-testid="modal-overlay">
-        <h3>{heading}</h3>
-        <p>{content}</p>
-        <button
-          data-testid="modal-delete-button"
-          onClick={(e) => onPressAction(e, mockClose)}
-        >
-          Delete
-        </button>
-      </div>
-    );
-  }
+jest.mock('next-intl', () => ({
+  useTranslations: jest.fn(() => (key: string) => key)
 }));
+
+jest.mock('../../ButtonWithImage', () => {
+  return function DummyButtonWithImage({
+    buttonText,
+    onPress
+  }: {
+    buttonText: string;
+    onPress?: () => void;
+  }) {
+    return (
+      <button data-testid="button-with-image" onClick={onPress}>
+        {buttonText}
+      </button>
+    );
+  };
+});
 
 jest.mock('@/components/Icons', () => ({
   DmpIcon: function DummyDmpIcon({ icon }: { icon: string }) {
@@ -67,19 +29,8 @@ jest.mock('@/components/Icons', () => ({
   }
 }));
 
-jest.mock('../connection-types.json', () => ({
-  orcidconnected: {
-    tooltipText: 'Test Tooltip Text',
-    content: 'Test Modal Content for deletion confirmation'
-  }
-}));
-
-// Mock console.error to avoid noise in test output
-const mockConsoleError = jest.spyOn(console, 'error').mockImplementation(() => { });
-
 describe('ConnectionSection', () => {
-  const mockProps = {
-    type: 'orcidconnected',
+  const baseProps = {
     title: 'Test Title',
     content: 'Test Content',
     btnUrl: 'https://example.com',
@@ -88,87 +39,157 @@ describe('ConnectionSection', () => {
   };
 
   beforeEach(() => {
-    localStorage.clear();
     jest.clearAllMocks();
   });
 
-  afterAll(() => {
-    mockConsoleError.mockRestore();
-  });
+  describe('not connected', () => {
+    it('should render the connect button', () => {
+      render(<ConnectionSection type="orcid" {...baseProps} />);
 
-  it('should render TooltipWithDialog when type is orcidconnected', () => {
-    render(<ConnectionSection {...mockProps} />);
+      expect(screen.getByTestId('button-with-image')).toBeInTheDocument();
+      expect(screen.getByText('Connect')).toBeInTheDocument();
+      expect(screen.getByText('Test Title')).toBeInTheDocument();
+      expect(screen.getByText('Test Content')).toBeInTheDocument();
+    });
 
-    expect(screen.getByTestId('tooltip-with-dialog')).toBeInTheDocument();
-    expect(screen.getByText('Test Title')).toBeInTheDocument();
-    expect(screen.getByText('Test Content')).toBeInTheDocument();
-    expect(screen.getByText('0000-0001-2345-6789')).toBeInTheDocument();
-  });
+    it('should call onConnect when the connect button is pressed', () => {
+      const onConnect = jest.fn();
+      render(<ConnectionSection type="orcid" {...baseProps} onConnect={onConnect} />);
 
-  it('should render ButtonWithImage when type is not orcidconnected', () => {
-    const nonOrcidProps = { ...mockProps, type: 'other' };
-    render(<ConnectionSection {...nonOrcidProps} />);
+      fireEvent.click(screen.getByTestId('button-with-image'));
+      expect(onConnect).toHaveBeenCalledTimes(1);
+    });
 
-    expect(screen.queryByTestId('tooltip-with-dialog')).not.toBeInTheDocument();
-    expect(screen.getByTestId('button-with-image')).toBeInTheDocument();
-    expect(screen.getByText('Connect')).toBeInTheDocument();
-  });
+    it('should not render the connected row or disconnect button', () => {
+      render(<ConnectionSection type="orcid" {...baseProps} />);
 
-  it('should call handleDelete when tooltip is clicked', async () => {
-    render(<ConnectionSection {...mockProps} />);
-
-    const tooltip = screen.getByTestId('tooltip-with-dialog');
-    fireEvent.click(tooltip);
-
-    // Since handleDelete is async, we should wait for any async operations
-    await waitFor(() => {
-      // The function should complete without throwing errors
-      expect(mockConsoleError).not.toHaveBeenCalled();
+      expect(screen.queryByRole('link')).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole('button', { name: 'orcidConnectionConnected.disconnectAria' })
+      ).not.toBeInTheDocument();
     });
   });
 
-  it('should render modal overlay with correct content when orcidconnected', () => {
-    render(<ConnectionSection {...mockProps} />);
+  describe('connected (orcid)', () => {
+    const connectedProps = {
+      ...baseProps,
+      isConnected: true,
+      connectedIdentifier: '0000-0001-2345-6789'
+    };
 
-    expect(screen.getByTestId('modal-overlay')).toBeInTheDocument();
-    expect(screen.getByText('Confirm deletion')).toBeInTheDocument();
-    expect(screen.getByText('Test Modal Content for deletion confirmation')).toBeInTheDocument();
-  });
+    it('should render the ORCID iD as a link to the ORCID record', () => {
+      render(<ConnectionSection type="orcid" {...connectedProps} />);
 
-  it('should call handleDelete when modal delete button is clicked', async () => {
-    render(<ConnectionSection {...mockProps} />);
+      const link = screen.getByRole('link', {
+        name: /https:\/\/orcid\.org\/0000-0001-2345-6789/
+      });
+      expect(link).toHaveAttribute('href', 'https://orcid.org/0000-0001-2345-6789');
+      expect(link).toHaveAttribute('target', '_blank');
+      expect(screen.getByText('opensInNewTab')).toHaveClass('sr-only');
+    });
 
-    const deleteButton = screen.getByTestId('modal-delete-button');
-    fireEvent.click(deleteButton);
+    it('should group the connected row with an accessible label', () => {
+      render(<ConnectionSection type="orcid" {...connectedProps} />);
 
-    await waitFor(() => {
-      expect(mockConsoleError).not.toHaveBeenCalled();
+      expect(screen.getByRole('group', { name: 'Test Title' })).toBeInTheDocument();
+    });
+
+    it('should render the connected badge and not the connect button', () => {
+      render(<ConnectionSection type="orcid" {...connectedProps} />);
+
+      expect(screen.getByText('orcidConnectionConnected.connectedBadge')).toBeInTheDocument();
+      expect(screen.queryByTestId('button-with-image')).not.toBeInTheDocument();
+    });
+
+    it('should render a labeled disconnect button', () => {
+      render(<ConnectionSection type="orcid" {...connectedProps} />);
+
+      const disconnectButton = screen.getByRole('button', {
+        name: 'orcidConnectionConnected.disconnectAria'
+      });
+      expect(disconnectButton).toBeInTheDocument();
+      expect(disconnectButton).toHaveClass('danger');
+    });
+
+    it('should open the confirmation dialog when disconnect is pressed', async () => {
+      render(<ConnectionSection type="orcid" {...connectedProps} />);
+
+      fireEvent.click(
+        screen.getByRole('button', { name: 'orcidConnectionConnected.disconnectAria' })
+      );
+
+      await waitFor(() => {
+        expect(screen.getByRole('alertdialog')).toBeInTheDocument();
+      });
+      expect(
+        screen.getByText('orcidConnectionConnected.disconnectConfirmMessage')
+      ).toBeInTheDocument();
+    });
+
+    it('should call onDisconnect when the confirm button is pressed', async () => {
+      const onDisconnect = jest.fn();
+      render(
+        <ConnectionSection type="orcid" {...connectedProps} onDisconnect={onDisconnect} />
+      );
+
+      fireEvent.click(
+        screen.getByRole('button', { name: 'orcidConnectionConnected.disconnectAria' })
+      );
+      await waitFor(() => {
+        expect(screen.getByRole('alertdialog')).toBeInTheDocument();
+      });
+
+      const dialog = screen.getByRole('alertdialog');
+      const confirmButton = Array.from(dialog.querySelectorAll('button')).find(
+        (btn) => btn.classList.contains('danger')
+      );
+      expect(confirmButton).toBeDefined();
+      fireEvent.click(confirmButton!);
+
+      await waitFor(() => {
+        expect(onDisconnect).toHaveBeenCalledTimes(1);
+        expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+      });
+    });
+
+    it('should close the dialog without calling onDisconnect when cancel is pressed', async () => {
+      const onDisconnect = jest.fn();
+      render(
+        <ConnectionSection type="orcid" {...connectedProps} onDisconnect={onDisconnect} />
+      );
+
+      fireEvent.click(
+        screen.getByRole('button', { name: 'orcidConnectionConnected.disconnectAria' })
+      );
+      await waitFor(() => {
+        expect(screen.getByRole('alertdialog')).toBeInTheDocument();
+      });
+
+      fireEvent.click(screen.getByRole('button', { name: 'btnCancel' }));
+
+      await waitFor(() => {
+        expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+      });
+      expect(onDisconnect).not.toHaveBeenCalled();
     });
   });
 
-  it('should load tooltip text and content from connection data', () => {
-    render(<ConnectionSection {...mockProps} />);
+  describe('connected (sso)', () => {
+    it('should render the institution name as plain text (not a link)', () => {
+      render(
+        <ConnectionSection
+          type="sso"
+          {...baseProps}
+          isConnected={true}
+          connectedIdentifier="Example University"
+        />
+      );
 
-    // The tooltip text and content should be loaded from the mocked JSON
-    expect(screen.getByTestId('tooltip-with-dialog')).toBeInTheDocument();
-    expect(screen.getByText('Test Modal Content for deletion confirmation')).toBeInTheDocument();
-  });
-
-  it('should handle missing connection data gracefully', () => {
-    const propsWithMissingType = { ...mockProps, type: 'nonexistent' };
-    render(<ConnectionSection {...propsWithMissingType} />);
-
-    // Should render ButtonWithImage since it's not orcidconnected
-    expect(screen.getByTestId('button-with-image')).toBeInTheDocument();
-    expect(screen.queryByTestId('tooltip-with-dialog')).not.toBeInTheDocument();
-  });
-
-  it('should handle missing connection data gracefully', () => {
-    const propsWithMissingType = { ...mockProps, type: 'nonexistent' };
-    render(<ConnectionSection {...propsWithMissingType} />);
-
-    // Should render ButtonWithImage since it's not orcidconnected
-    expect(screen.getByTestId('button-with-image')).toBeInTheDocument();
-    expect(screen.queryByTestId('tooltip-with-dialog')).not.toBeInTheDocument();
+      expect(screen.getByText('Example University')).toBeInTheDocument();
+      expect(screen.queryByRole('link')).not.toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: 'ssoConnectionConnected.disconnectAria' })
+      ).toBeInTheDocument();
+    });
   });
 });
