@@ -1,4 +1,5 @@
 ## Updated
+- Redesigned the connections page ORCID and SSO sections: connected accounts now show a status card with linked identifier and in-card disconnect action instead of a single clickable pill; connect/disconnect is faked locally until OAuth and backend mutations are wired [#81]
 - Simplified the page title on template question edit screens. The header is now a static "Edit Question" label rather than "Edit: {question title}", making long or HTML-formatted question text less likely to clutter the page header [#78]
 - Changed the template question text field from a single-line input to a textarea so longer question text is easier to edit [#78]
 
