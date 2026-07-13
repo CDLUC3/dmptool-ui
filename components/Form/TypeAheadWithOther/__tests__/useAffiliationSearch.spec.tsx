@@ -56,7 +56,31 @@ describe('useAffiliationSearch', () => {
     });
 
     expect(result.current.suggestions).toEqual([]);
+    expect(result.current.isSearching).toBe(false);
     expect(mockFetchAffiliations).not.toHaveBeenCalled();
+  });
+
+  it('should set isSearching to true while a fetch is in flight and false when it resolves', async () => {
+    let resolveFetch!: (value: unknown) => void;
+    mockFetchAffiliations.mockImplementationOnce(
+      () => new Promise((resolve) => { resolveFetch = resolve; })
+    );
+
+    const { result } = renderHook(() => useAffiliationSearch());
+
+    expect(result.current.isSearching).toBe(false);
+
+    act(() => {
+      result.current.handleSearch('Test');
+    });
+
+    expect(result.current.isSearching).toBe(true);
+
+    await act(async () => {
+      resolveFetch({ data: { affiliations: { items: [] } } });
+    });
+
+    expect(result.current.isSearching).toBe(false);
   });
 
   it('should call fetchAffiliations and set suggestions when data is returned', async () => {

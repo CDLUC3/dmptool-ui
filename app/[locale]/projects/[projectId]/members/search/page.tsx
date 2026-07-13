@@ -57,7 +57,7 @@ const ProjectsProjectMembersSearch = () => {
   const t = useTranslations('ProjectsProjectMembersSearch');
 
   // For TypeAhead component
-  const { suggestions, handleSearch: handleAffiliationSearch } = useAffiliationSearch();
+  const { suggestions, handleSearch: handleAffiliationSearch, isSearching: isAffiliationSearching } = useAffiliationSearch();
 
   const [otherField, setOtherField] = useState(false);
 
@@ -314,6 +314,7 @@ const ProjectsProjectMembersSearch = () => {
                 value={projectMember.affiliationName}
                 suggestions={suggestions}
                 onSearch={handleAffiliationSearch}
+                isLoading={isAffiliationSearching}
               />
               {otherField && (
                 <div className={`${styles.formRow} ${styles.oneItemRow}`}>

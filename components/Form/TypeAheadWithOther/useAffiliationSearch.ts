@@ -10,6 +10,7 @@ import { SuggestionInterface } from '@/app/types';
 
 export function useAffiliationSearch() {
   const [suggestions, setSuggestions] = useState<SuggestionInterface[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
   const [fetchAffiliations] = useLazyQuery(AffiliationsDocument);
 
 
@@ -17,26 +18,32 @@ export function useAffiliationSearch() {
     debounce(async (term: string) => {
       if (!term) {
         setSuggestions([]);
+        setIsSearching(false);
         return;
       }
 
-      const { data } = await fetchAffiliations({
-        variables: { name: term.toLowerCase() },
-      });
+      setIsSearching(true);
+      try {
+        const { data } = await fetchAffiliations({
+          variables: { name: term.toLowerCase() },
+        });
 
-      if (data?.affiliations?.items) {
-        const affiliations = data.affiliations.items
-          .filter((item): item is NonNullable<typeof item> => item !== null)
-          .map((item) => ({
-            id: item.id != null ? String(item.id) : '',
-            displayName: item.displayName,
-            uri: item.uri,
-          }));
-        setSuggestions(affiliations);
+        if (data?.affiliations?.items) {
+          const affiliations = data.affiliations.items
+            .filter((item): item is NonNullable<typeof item> => item !== null)
+            .map((item) => ({
+              id: item.id != null ? String(item.id) : '',
+              displayName: item.displayName,
+              uri: item.uri,
+            }));
+          setSuggestions(affiliations);
+        }
+      } finally {
+        setIsSearching(false);
       }
     }, 300),
     []
   );
 
-  return { suggestions, handleSearch };
+  return { suggestions, handleSearch, isSearching };
 }

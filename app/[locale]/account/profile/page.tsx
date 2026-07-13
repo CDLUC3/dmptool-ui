@@ -65,7 +65,7 @@ const ProfilePage: React.FC = () => {
     languageId: "",
     languageName: "",
   });
-  const { suggestions, handleSearch } = useAffiliationSearch();
+  const { suggestions, handleSearch, isSearching } = useAffiliationSearch();
   const [isEditing, setIsEditing] = useState(false);
   // Errors returned from request
   const [errors, setErrors] = useState<UserErrors>({});
@@ -463,6 +463,7 @@ const ProfilePage: React.FC = () => {
                             value={formData.affiliationName}
                             suggestions={suggestions}
                             onSearch={handleSearch}
+                            isLoading={isSearching}
                           />
                           {otherField && (
                             <div className={`${styles.formRow} ${styles.oneItemRow}`}>

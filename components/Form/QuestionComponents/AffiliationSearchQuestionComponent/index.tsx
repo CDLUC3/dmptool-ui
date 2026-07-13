@@ -16,7 +16,7 @@ const AffiliationSearchQuestionComponent: React.FC<AffiliationSearchQuestionProp
   handleOtherAffiliationChange
 }) => {
   const Signup = useTranslations('SignupPage');
-  const { suggestions, handleSearch } = useAffiliationSearch();
+  const { suggestions, handleSearch, isSearching } = useAffiliationSearch();
 
   return (
     <>
@@ -32,6 +32,7 @@ const AffiliationSearchQuestionComponent: React.FC<AffiliationSearchQuestionProp
         suggestions={suggestions}
         onSearch={handleSearch}
         isDisabled={isDisabled}
+        isLoading={isSearching}
       />
       {otherField && (
         <div className="form-row">
