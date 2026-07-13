@@ -1,4 +1,6 @@
 ## Updated
+- Fixed `TypeAheadWithOther` clearing the institution name when the field is focused, so profile (and other) edits keep the existing value with the caret at the end [#80]
+- Updated shared typeahead functionality and styling for better accessibility [#80]
 - Simplified the page title on template question edit screens. The header is now a static "Edit Question" label rather than "Edit: {question title}", making long or HTML-formatted question text less likely to clutter the page header [#78]
 - Changed the template question text field from a single-line input to a textarea so longer question text is easier to edit [#78]
 
