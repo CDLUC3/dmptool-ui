@@ -80,6 +80,9 @@ const mockFetchCsrfToken = fetchCsrfToken as jest.Mock;
 // Mock fetch globally
 global.fetch = jest.fn() as jest.MockedFunction<typeof fetch>;
 
+const serverEndpoint = process.env.NEXT_PUBLIC_SERVER_ENDPOINT as string;
+const signUpUrl = `${serverEndpoint}/apollo-signup`;
+
 describe('SignUpPage', () => {
   const signupData = {
     givenName: "John",
@@ -228,7 +231,7 @@ describe('SignUpPage', () => {
 
   it("makes the backend call on final signin", async () => {
     jest.spyOn(global, 'fetch').mockImplementation((url) => {
-      if (url === 'http://localhost:4000/apollo-signup') {
+      if (url === signUpUrl) {
         return Promise.resolve({
           ok: true,
           status: 200,
@@ -250,7 +253,7 @@ describe('SignUpPage', () => {
 
     await waitFor(() => {
       // expect(mockUseRouter().push).toHaveBeenCalledWith('/');
-      expect(global.fetch).toHaveBeenCalledWith('http://localhost:4000/apollo-signup', {
+      expect(global.fetch).toHaveBeenCalledWith(signUpUrl, {
         method: 'POST',
         credentials: 'include',
         headers: {

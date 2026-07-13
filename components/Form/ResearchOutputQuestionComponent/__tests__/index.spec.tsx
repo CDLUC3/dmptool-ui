@@ -14,6 +14,7 @@ import rawAdditionalFields from '../__mocks__/mockAdditionalFields.json';
 
 const mockAdditionalFields: AdditionalFieldsType[] = rawAdditionalFields.map(field => ({
   ...field,
+  commonStandardId: "custom",
   content: {
     ...field.content,
     type: field.content.type as "text", // Typecast to literal

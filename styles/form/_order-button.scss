@@ -1,0 +1,34 @@
+// Styles for section/question reorder arrow buttons.
+.react-aria-Button.order-button,
+button.order-button {
+  background: none !important;
+  border: none !important;
+  padding: var(--space-1) !important;
+  margin: 0;
+  color: var(--gray-600);
+  border-radius: 50%;
+  cursor: pointer;
+  font-weight: normal;
+  transition: color 0.2s ease;
+
+  &:hover,
+  &[data-hovered] {
+    background: transparent !important;
+    color: var(--link-color) !important;
+  }
+
+  &:focus,
+  &:focus-visible,
+  &[data-focus-visible] {
+    background: transparent !important;
+    color: var(--link-color) !important;
+    outline: 2px solid var(--blue-500);
+    outline-offset: 2px;
+  }
+
+  &:active,
+  &[data-pressed] {
+    background: transparent !important;
+    color: var(--link-color-pressed) !important;
+  }
+}

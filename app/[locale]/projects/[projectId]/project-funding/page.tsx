@@ -36,7 +36,7 @@ const ProjectsCreateProjectFunding = () => {
 
   const { projectId } = params;
 
-  const [hasFunding, setHasFunding] = useState("yes");
+  const [hasFunding, setHasFunding] = useState("no");
   const [formSubmitted, setFormSubmitted] = useState(false);
 
   // localization keys
