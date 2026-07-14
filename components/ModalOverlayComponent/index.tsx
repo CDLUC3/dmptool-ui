@@ -1,5 +1,6 @@
 'use client';
 
+import React, { useId } from 'react';
 import {
   Button,
   Dialog,
@@ -8,6 +9,7 @@ import {
   ModalOverlay,
   PressEvent
 } from 'react-aria-components';
+import styles from './modalOverlayComponent.module.scss';
 
 interface ModalOverlayProps {
   heading: string;
@@ -15,7 +17,7 @@ interface ModalOverlayProps {
   isOpen?: boolean;
   btnSecondaryText?: string;
   btnPrimaryText?: string;
-  onPressAction: (e: PressEvent, close: () => void) => void; // Allow passing arguments
+  onPressAction: (e: PressEvent, close: () => void) => void;
 }
 
 export const ModalOverlayComponent = ({
@@ -26,18 +28,28 @@ export const ModalOverlayComponent = ({
   btnPrimaryText,
   onPressAction
 }: ModalOverlayProps) => {
+  const titleId = useId();
+  const descriptionId = useId();
 
   return (
-    <ModalOverlay isOpen={isOpen}>
+    <ModalOverlay isOpen={isOpen} isDismissable>
       <Modal>
-        <Dialog aria-label={heading}>
+        <Dialog
+          role="alertdialog"
+          aria-labelledby={titleId}
+          aria-describedby={descriptionId}
+        >
           {({ close }) => (
             <>
-              <Heading>{heading}</Heading>
-              <p>{content}</p>
-              <div>
-                <Button onPress={close}>{btnSecondaryText || 'Cancel'}</Button>
-                <Button onPress={e => onPressAction(e, close)}>{btnPrimaryText || 'Delete'}</Button>
+              <Heading slot="title" id={titleId}>{heading}</Heading>
+              <p id={descriptionId}>{content}</p>
+              <div className={styles.dialogActions}>
+                <Button className="secondary" autoFocus onPress={close}>
+                  {btnSecondaryText || 'Cancel'}
+                </Button>
+                <Button className="danger" onPress={e => onPressAction(e, close)}>
+                  {btnPrimaryText || 'Delete'}
+                </Button>
               </div>
             </>
           )}
