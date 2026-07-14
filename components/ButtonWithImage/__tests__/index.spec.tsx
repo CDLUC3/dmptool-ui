@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import ButtonWithImage from '..';
 
 
@@ -20,6 +20,16 @@ describe('ButtonWithImage', () => {
     expect(image).toHaveAttribute('src', expectedImageUrl);
     expect(image).toHaveAttribute('width', '20');
     expect(image).toHaveAttribute('height', '20');
+  });
+
+  it('should call onPress when provided instead of navigating', () => {
+    const onPress = jest.fn();
+    render(
+      <ButtonWithImage imageUrl={mockImageUrl} buttonText={mockButtonText} onPress={onPress} />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /click me/i }));
+    expect(onPress).toHaveBeenCalledTimes(1);
   });
 
   it('should apply the correct styles', () => {

@@ -22,6 +22,7 @@ describe('TypeAheadInput', () => {
 
   beforeEach(() => {
     jest.useFakeTimers();
+    HTMLElement.prototype.scrollIntoView = jest.fn();
   });
 
 
@@ -154,15 +155,24 @@ describe('TypeAheadInput', () => {
       expect(screen.getByText('Test University')).toBeInTheDocument();
     });
 
-    // Test arrow down
-    fireEvent.keyDown(input, { key: 'ArrowDown' });
-    await waitFor(() => {
-      expect(screen.getByText('Test University')).toHaveFocus();
-    })
+    act(() => {
+      input.focus();
+    });
 
-    // Test arrow up
-    fireEvent.keyDown(screen.getByText('Test University'), { key: 'ArrowUp' });
+    // Test arrow down: focus stays on the input, the first suggestion is highlighted
+    fireEvent.keyDown(input, { key: 'ArrowDown' });
+    const firstSuggestion = screen.getByText('Test University');
+    await waitFor(() => {
+      expect(firstSuggestion).toHaveAttribute('aria-selected', 'true');
+    });
     expect(input).toHaveFocus();
+    expect(input).toHaveAttribute('aria-activedescendant', firstSuggestion.id);
+
+    // Test arrow up past the first suggestion: highlight is cleared
+    fireEvent.keyDown(input, { key: 'ArrowUp' });
+    expect(input).toHaveFocus();
+    expect(input).not.toHaveAttribute('aria-activedescendant');
+    expect(firstSuggestion).toHaveAttribute('aria-selected', 'false');
   });
 
   it('should correctly handle use of \'Enter\' key for selecting an item from the dropdown', async () => {
@@ -196,16 +206,18 @@ describe('TypeAheadInput', () => {
 
     const listItem = await screen.findByText('Test University');
 
-    expect(listItem).toHaveFocus();
-    Object.defineProperty(listItem, 'innerText', { value: 'Test University' });
+    expect(listItem).toHaveAttribute('aria-selected', 'true');
+    expect(input).toHaveAttribute('aria-activedescendant', listItem.id);
 
-    listItem.focus();
-    fireEvent.keyDown(listItem, { key: 'Enter', code: 'Enter' });
+    fireEvent.keyDown(input, { key: 'Enter', code: 'Enter' });
 
     expect(input).toHaveValue('Test University');
+    expect(input).not.toHaveAttribute('aria-activedescendant');
   });
 
-  it('should clear out input value when user clicks into it', async () => {
+  it('should preserve the input value and place the cursor at the end on focus', () => {
+    const mockUpdateFormData = jest.fn();
+
     render(
       <TypeAheadInput
         label="Institution"
@@ -213,7 +225,7 @@ describe('TypeAheadInput', () => {
         fieldName="test"
         required={false}
         error=""
-        updateFormData={() => true}
+        updateFormData={mockUpdateFormData}
         value="text"
         suggestions={mocksAffiliations}
         onSearch={mockOnSearch}
@@ -223,17 +235,40 @@ describe('TypeAheadInput', () => {
     const input = screen.getByLabelText('Institution');
 
     act(() => {
-      fireEvent.change(input, { target: { value: 'Test' } });
-      jest.advanceTimersByTime(1000);
+      input.focus();
     });
 
-    await waitFor(() => {
-      expect(screen.getByText('Test University')).toBeInTheDocument();
-    });
+    expect(input).toHaveValue('text');
+    expect(input).toHaveFocus();
+    expect(input).toHaveProperty('selectionStart', 'text'.length);
+    expect(input).toHaveProperty('selectionEnd', 'text'.length);
+    expect(mockUpdateFormData).not.toHaveBeenCalled();
+  });
 
-    fireEvent.click(input);
+  it('should clear the input and form data on focus when clearOnFocus is enabled', () => {
+    const mockUpdateFormData = jest.fn();
+
+    render(
+      <TypeAheadInput
+        label="Institution"
+        helpText="Search for an institution"
+        fieldName="test"
+        required={false}
+        error=""
+        updateFormData={mockUpdateFormData}
+        value="text"
+        suggestions={mocksAffiliations}
+        onSearch={mockOnSearch}
+        clearOnFocus
+      />
+    );
+
+    const input = screen.getByLabelText('Institution');
+
+    fireEvent.focus(input);
 
     expect(input).toHaveValue('');
+    expect(mockUpdateFormData).toHaveBeenCalledWith('', '');
   });
 
   it('should reset search when user clicks outside of the input and dropdown', async () => {
@@ -281,7 +316,7 @@ describe('TypeAheadInput', () => {
     })
   })
 
-  it('should focus input when typing alphanumeric key while list item is focused', async () => {
+  it('should close the suggestions list when Escape is pressed', async () => {
     render(
       <TypeAheadInput
         label="Institution"
@@ -303,23 +338,16 @@ describe('TypeAheadInput', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByText('Test University')).toBeInTheDocument();
+      expect(screen.getByRole('combobox')).toHaveAttribute('aria-expanded', 'true');
     });
 
-    fireEvent.keyDown(input, { key: 'ArrowDown' });
+    fireEvent.keyDown(input, { key: 'Escape' });
 
-    const listItem = await screen.findByText('Test University');
-
-    expect(listItem).toHaveFocus();
-
-    // Type an alphanumeric key while list item is focused
-    fireEvent.keyDown(listItem, { key: 'a' });
-
-    // Verify input is focused
-    expect(input).toHaveFocus();
+    expect(screen.getByRole('combobox')).toHaveAttribute('aria-expanded', 'false');
+    expect(input).not.toHaveAttribute('aria-activedescendant');
   });
 
-  it('should stay focused on last item if ArrowDown button continues to be clicked', async () => {
+  it('should stay highlighted on last item if ArrowDown button continues to be clicked', async () => {
     render(
       <TypeAheadInput
         label="Institution"
@@ -348,21 +376,20 @@ describe('TypeAheadInput', () => {
 
     const listItem = await screen.findByText('Test University');
 
-    expect(listItem).toHaveFocus();
+    expect(listItem).toHaveAttribute('aria-selected', 'true');
 
     fireEvent.keyDown(input, { key: 'ArrowDown' });
 
     const listItem2 = await screen.findByText('Test Institution');
 
-    expect(listItem2).toHaveFocus();
+    expect(listItem2).toHaveAttribute('aria-selected', 'true');
     fireEvent.keyDown(input, { key: 'ArrowDown' });
 
-    const listItem2StillInFocus = await screen.findByText('Test Institution');
-
-    expect(listItem2StillInFocus).toHaveFocus();
+    expect(listItem2).toHaveAttribute('aria-selected', 'true');
+    expect(input).toHaveAttribute('aria-activedescendant', listItem2.id);
   });
 
-  it('should focus on correct item if user clicks ArrowDown twice and then ArrowUp', async () => {
+  it('should highlight the correct item if user clicks ArrowDown twice and then ArrowUp', async () => {
     render(
       <TypeAheadInput
         label="Institution"
@@ -394,6 +421,7 @@ describe('TypeAheadInput', () => {
 
     const listItem = await screen.findByText('Test University');
 
-    expect(listItem).toHaveFocus();
+    expect(listItem).toHaveAttribute('aria-selected', 'true');
+    expect(input).toHaveAttribute('aria-activedescendant', listItem.id);
   });
 });

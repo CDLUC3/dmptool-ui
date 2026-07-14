@@ -197,18 +197,37 @@
     "orcidConnection": {
       "title": "ORCID iD",
       "content": "O ORCID fornece um identificador persistente — um ORCID iD — que distingue você de outros usuários. Saiba mais em <link>ORCID.org</link>.",
-      "btnText": "Conecte seu ORCID iD"
+      "btnText": "Conecte seu ORCID iD",
+      "connectSuccess": "Seu ORCID iD foi conectado."
     },
     "orcidConnectionConnected": {
-      "title": "ORCID iD",
-      "content": "Você conectou com sucesso o seu ORCID iD. Saiba mais ou gerencie seu registro em <link>ORCID.org</link>.",
-      "btnText": "Ver ORCID iD"
+      "connectedBadge": "Conectado",
+      "disconnect": "Desconectar",
+      "disconnectAria": "Desconectar seu ORCID iD",
+      "disconnectConfirmTitle": "Confirmar desconexão",
+      "disconnectConfirmMessage": "Tem certeza de que deseja desconectar seu ORCID iD? Você pode reconectar a qualquer momento.",
+      "disconnectSuccess": "Seu ORCID iD foi desconectado."
     },
     "ssoConnection": {
       "title": "Cadastro único",
       "content": "Conecte sua conta para poder entrar na Ferramenta DMP através de sua instituição.",
-      "btnText": "Conectar credenciais institucionais"
+      "btnText": "Conectar credenciais institucionais",
+      "connectSuccess": "Suas credenciais institucionais foram conectadas."
     },
+    "ssoConnectionConnected": {
+      "connectedBadge": "Conectado",
+      "disconnect": "Desconectar",
+      "disconnectAria": "Desconectar suas credenciais institucionais",
+      "disconnectConfirmTitle": "Confirmar desconexão",
+      "disconnectConfirmMessage": "Tem certeza de que deseja desconectar suas credenciais institucionais? Você pode reconectar a qualquer momento.",
+      "disconnectSuccess": "Suas credenciais institucionais foram desconectadas."
+    },
+    "btnCancel": "Cancelar",
+    "previewStatesHeading": "Visualização de estados",
+    "previewOrcidNotConnected": "ORCID — Não conectado",
+    "previewOrcidConnected": "ORCID — Conectado",
+    "previewSsoNotConnected": "Cadastro único — Não conectado",
+    "previewSsoConnected": "Cadastro único — Conectado",
     "headingRelatedActions": "Ações relacionadas",
     "linkUpdatePassword": "Atualizar senha",
     "linkUpdateConnections": "Atualizar conexão?",
@@ -891,7 +910,8 @@
         "questionUnexpectedFormat": "Formato inesperado para question.json.",
         "questionJSONFParseFailed": "JSON.parse falhou.",
         "requiredField": "{field} é obrigatório",
-        "errorParsingData": "Error parsing data"
+        "errorParsingData": "Error parsing data",
+        "institutionSuggestionsLoadError": "Não foi possível carregar as sugestões de instituição. Tente novamente."
       },
       "numDisplaying": "Mostrando {num} de {total}",
       "unsavedChangesWarning": "Você tem alterações não salvas. Tem certeza que deseja sair desta página?"

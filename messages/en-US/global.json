@@ -197,18 +197,37 @@
     "orcidConnection": {
       "title": "ORCID iD",
       "content": "ORCID provides a persistent identifier — an ORCID iD — that distinguishes you from other users. Learn more at <link>ORCID.org</link>.",
-      "btnText": "Connect your ORCID iD"
+      "btnText": "Connect your ORCID iD",
+      "connectSuccess": "Your ORCID iD has been connected."
     },
     "orcidConnectionConnected": {
-      "title": "ORCID iD",
-      "content": "You've successfully connected your ORCID iD. Learn more or manage your record at <link>ORCID.org</link>.",
-      "btnText": "View ORCID iD"
+      "connectedBadge": "Connected",
+      "disconnect": "Disconnect",
+      "disconnectAria": "Disconnect your ORCID iD",
+      "disconnectConfirmTitle": "Confirm disconnection",
+      "disconnectConfirmMessage": "Are you sure you want to disconnect your ORCID iD? You can reconnect at any time.",
+      "disconnectSuccess": "Your ORCID iD has been disconnected."
     },
     "ssoConnection": {
       "title": "Single Sign On",
       "content": "Connect your account so that you can log into DMP Tool via your institution.",
-      "btnText": "Connect institutional credentials"
+      "btnText": "Connect institutional credentials",
+      "connectSuccess": "Your institutional credentials have been connected."
     },
+    "ssoConnectionConnected": {
+      "connectedBadge": "Connected",
+      "disconnect": "Disconnect",
+      "disconnectAria": "Disconnect your institutional credentials",
+      "disconnectConfirmTitle": "Confirm disconnection",
+      "disconnectConfirmMessage": "Are you sure you want to disconnect your institutional credentials? You can reconnect at any time.",
+      "disconnectSuccess": "Your institutional credentials have been disconnected."
+    },
+    "btnCancel": "Cancel",
+    "previewStatesHeading": "State previews",
+    "previewOrcidNotConnected": "ORCID — Not connected",
+    "previewOrcidConnected": "ORCID — Connected",
+    "previewSsoNotConnected": "Single Sign On — Not connected",
+    "previewSsoConnected": "Single Sign On — Connected",
     "headingRelatedActions": "Related actions",
     "linkUpdatePassword": "Update password",
     "linkUpdateConnections": "Update connections",
@@ -1061,7 +1080,8 @@
         "errorParsingData": "Error parsing data",
         "positiveNumberOnly": "{field} must be a positive integer",
         "byteSizeWithoutContext": "{field} must be a valid unit size",
-        "invalidDateFormat": "{field} must be a valid date"
+        "invalidDateFormat": "{field} must be a valid date",
+        "institutionSuggestionsLoadError": "Could not load institution suggestions. Please try again."
       },
       "numDisplaying": "Showing {num} of {total}",
       "unsavedChangesWarning": "You have unsaved changes. Are you sure you want to leave this page?"

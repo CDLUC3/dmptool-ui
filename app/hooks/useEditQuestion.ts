@@ -9,8 +9,6 @@ export const getOverrides = (questionType: string | null | undefined) => {
       return { maxLength: null, rows: 20 };
     case "number":
       return { min: 0, max: 10000000, step: 1 };
-    case "currency":
-      return { min: 0, max: 10000000, step: 0.01 };
     case "url":
       return { maxLength: 2048, minLength: 2, pattern: "https?://.+" };
     default:
