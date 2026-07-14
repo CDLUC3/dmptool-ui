@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react';
+import React, { useState } from 'react';
 import ConnectionSection from '@/components/ConnectionSection';
 import PageHeader from '@/components/PageHeader';
 import {
@@ -11,35 +11,43 @@ import {
 import { Breadcrumb, Breadcrumbs } from "react-aria-components";
 import Link from "next/link";
 import { useTranslations } from 'next-intl';
-import styles from "@/app/[locale]/account/profile/profile.module.scss";
+import { useToast } from '@/context/ToastContext';
+import profileStyles from "@/app/[locale]/account/profile/profile.module.scss";
 
-// const REDIRECT_URI = process.env.NEXT_PUBLIC_ORCID_DEV_CALLBACK;
-// const ORCID_CLIENT_ID = process.env.NEXT_PUBLIC_ORCID_CLIENT_ID;
+// Fake connect/disconnect until OAuth and disconnect mutations are wired.
+const FAKE_ORCID_ID = '0000-0001-2345-6789';
+const FAKE_SSO_INSTITUTION = 'Example University';
 
 const ConnectionsPage: React.FC = () => {
   const t = useTranslations('UserConnections');
+  const toast = useToast();
+  const [isOrcidConnected, setIsOrcidConnected] = useState(false);
+  const [isSsoConnected, setIsSsoConnected] = useState(false);
 
-  // Sandbox Uri
-  //const orcidUri = `https://sandbox.orcid.org/oauth/authorize?client_id=${orcidClientId}&response_type=code&scope=/read-limited&redirect_uri=${redirectURI}`;
+  const orcidContent = t.markup('orcidConnection.content', {
+    link: (chunks) =>
+      `<a href="https://orcid.org/" target="_blank" rel="noopener noreferrer">${chunks}</a>`
+  });
 
+  const handleOrcidConnect = () => {
+    setIsOrcidConnected(true);
+    toast.add(t('orcidConnection.connectSuccess'), { type: 'success' });
+  };
 
-  //Production Uri
-  //const orcidUri = `https://orcid.org/oauth/authorize?client_id=${ORCID_CLIENT_ID}&response_type=code&scope=/authenticate&redirect_uri=${REDIRECT_URI}`;
+  const handleOrcidDisconnect = async () => {
+    setIsOrcidConnected(false);
+    toast.add(t('orcidConnectionConnected.disconnectSuccess'), { type: 'success' });
+  };
 
-  // Fake flag to indicate if ORCID is connected
-  //const isOrcidConnected = true;
+  const handleSsoConnect = () => {
+    setIsSsoConnected(true);
+    toast.add(t('ssoConnection.connectSuccess'), { type: 'success' });
+  };
 
-
-
-  // const orcidContentString = t.markup(
-  //   isOrcidConnected
-  //     ? 'orcidConnectionConnected.content'
-  //     : 'orcidConnection.content',
-  //   {
-  //     link: (chunks) =>
-  //       `<a href="https://orcid.org/" target="_blank" rel="noopener noreferrer">${chunks}</a>`
-  //   }
-  // );
+  const handleSsoDisconnect = async () => {
+    setIsSsoConnected(false);
+    toast.add(t('ssoConnectionConnected.disconnectSuccess'), { type: 'success' });
+  };
 
   return (
     <>
@@ -61,30 +69,35 @@ const ConnectionsPage: React.FC = () => {
         <ContentContainer>
           <div className="sectionContainer">
             <div className="sectionContent">
-
               <ConnectionSection
-                type='orcidconnected'
-                title={t('orcidConnectionConnected.title')}
-                content={'orcidConnectionConnected.content'}
-                btnUrl='/users/auth/orcid/test'
-                btnImageUrl='/images/orcid.svg'
-                btnText={t('orcidConnectionConnected.btnText')}
+                type="orcid"
+                isConnected={isOrcidConnected}
+                connectedIdentifier={FAKE_ORCID_ID}
+                title={t('orcidConnection.title')}
+                content={orcidContent}
+                btnImageUrl="/images/orcid.svg"
+                btnText={t('orcidConnection.btnText')}
+                onConnect={handleOrcidConnect}
+                onDisconnect={handleOrcidDisconnect}
               />
 
               <ConnectionSection
-                type='sso'
+                type="sso"
+                isConnected={isSsoConnected}
+                connectedIdentifier={FAKE_SSO_INSTITUTION}
                 title={t('ssoConnection.title')}
                 content={t('ssoConnection.content')}
-                btnUrl=''
                 btnText={t('ssoConnection.btnText')}
+                onConnect={handleSsoConnect}
+                onDisconnect={handleSsoDisconnect}
               />
             </div>
           </div>
         </ContentContainer>
 
-        <SidebarPanel className={styles.layoutSidebarPanel}>
+        <SidebarPanel className={profileStyles.layoutSidebarPanel}>
           <h2>{t('headingRelatedActions')}</h2>
-          <ul className={styles.relatedItems}>
+          <ul className={profileStyles.relatedItems}>
             <li><Link href="/account/profile">{t('breadcrumbProfile')}</Link></li>
             <li><Link href="/account/update-password">{t('linkUpdatePassword')}</Link></li>
             <li><Link href="/account/notifications">{t('linkManageNotifications')}</Link></li>

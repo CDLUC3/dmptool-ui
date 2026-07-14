@@ -1,4 +1,4 @@
-import { OPTIONS_QUESTION_TYPES } from '@/lib/constants';
+import { CURRENCY_DEFAULT_MAX, CURRENCY_DEFAULT_MIN, CURRENCY_DEFAULT_STEP, OPTIONS_QUESTION_TYPES } from '@/lib/constants';
 
 // Configure what overrides you want to apply to the question type json objects
 export const getOverrides = (questionType: string | null | undefined) => {
@@ -10,7 +10,11 @@ export const getOverrides = (questionType: string | null | undefined) => {
     case "number":
       return { min: 0, max: 10000000, step: 1 };
     case "currency":
-      return { min: 0, max: 10000000, step: 0.01 };
+      return {
+        min: CURRENCY_DEFAULT_MIN,
+        max: CURRENCY_DEFAULT_MAX,
+        step: CURRENCY_DEFAULT_STEP,
+      };
     case "url":
       return { maxLength: 2048, minLength: 2, pattern: "https?://.+" };
     default:
