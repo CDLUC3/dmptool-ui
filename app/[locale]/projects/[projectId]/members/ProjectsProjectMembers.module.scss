@@ -57,9 +57,16 @@
   font-weight: inherit;
   text-decoration: none;
 
+  &:link,
+  &:visited,
+  &:active,
   &:hover,
   &:focus-visible {
     color: var(--heading-color);
+  }
+
+  &:hover,
+  &:focus-visible {
     text-decoration: underline;
     text-underline-offset: 2px;
   }

@@ -205,6 +205,35 @@ describe('ProjectsProjectMembers', () => {
     expect(mockRouter.push).toHaveBeenCalledWith('/en-US/projects/1/members/1/edit');
   });
 
+  it('should not render edit controls for members without an id', () => {
+    mockUseQuery.mockReturnValue({
+      data: {
+        project: {
+          members: [
+            {
+              id: null,
+              givenName: 'Test',
+              surName: 'Researcher',
+              orcid: null,
+              memberRoles: [{ id: 1, label: 'Project Administrator', description: '' }],
+              affiliation: { displayName: 'California Digital Library (cdlib.org)' },
+            },
+          ],
+          readOnly: false,
+        },
+      },
+      loading: false,
+      error: undefined,
+      refetch: jest.fn(),
+    } as any);
+
+    render(<ProjectsProjectMembers />);
+
+    expect(screen.getByRole('heading', { level: 3, name: 'Test Researcher' })).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /ariaLabels\.editMember/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /ariaLabels\.editMember/i })).not.toBeInTheDocument();
+  });
+
   it('should pass axe accessibility test', async () => {
 
     const { container } = render(

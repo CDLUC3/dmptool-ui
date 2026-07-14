@@ -70,8 +70,7 @@ const ProjectsProjectMembers = () => {
   };
 
   const handleEdit = (memberId: number | null): void => {
-
-    // Handle editing member
+    if (memberId == null) return;
     router.push(routePath('projects.members.edit', { projectId, memberId: String(memberId) }));
   };
 
@@ -152,16 +151,19 @@ const ProjectsProjectMembers = () => {
               <p>{ProjectMembers('messages.noMembers')}</p>
             ) : (
               <ul className={styles.membersList} role="list">
-                {projectMembers.map((member) => (
+                {projectMembers.map((member, index) => {
+                  const canEditMember = !isReadOnly && member.id != null;
+
+                  return (
                   <li
-                    key={member.id}
+                    key={member.id ?? `member-${index}`}
                     className={styles.membersListItem}
                   >
                     <div className={styles.memberCardHeader}>
                       <div className={styles.memberInfo}>
                         <div className={styles.memberNameRow}>
                           <h3 className={styles.memberNameHeading}>
-                            {!isReadOnly && member.id !== null ? (
+                            {canEditMember ? (
                               <Link
                                 href={routePath('projects.members.edit', {
                                   projectId,
@@ -192,7 +194,7 @@ const ProjectsProjectMembers = () => {
                         </div>
                         <p className={styles.affiliation}>{member.affiliation}</p>
                       </div>
-                      {!isReadOnly && (
+                      {canEditMember && (
                         <div className={styles.memberActions}>
                           <Button
                             onPress={() => handleEdit(member.id)}
@@ -213,7 +215,8 @@ const ProjectsProjectMembers = () => {
                       </ul>
                     </div>
                   </li>
-                ))}
+                  );
+                })}
               </ul>
             )}
           </section>
