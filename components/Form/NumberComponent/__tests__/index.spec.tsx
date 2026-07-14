@@ -62,6 +62,62 @@ describe('NumberComponent', () => {
     expect(screen.getByPlaceholderText('Enter number')).toBeInTheDocument();
   });
 
+  it('should not render stepper buttons when showSteppers is false', () => {
+    render(
+      <NumberComponent
+        label="Qty"
+        value={5}
+        showSteppers={false}
+      />
+    );
+    expect(screen.getByRole('textbox')).toHaveValue('5');
+    expect(screen.queryByRole('button', { name: /increase/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /decrease/i })).not.toBeInTheDocument();
+  });
+
+  it('should render prefix badge when prefix prop is set', () => {
+    render(
+      <NumberComponent
+        label="Budget"
+        value={100}
+        prefix="$"
+        affixAriaLabel="Amount in US dollars"
+        showSteppers={false}
+      />
+    );
+    expect(screen.getByText('$')).toBeInTheDocument();
+    expect(screen.getByRole('textbox')).toHaveValue('100');
+    expect(screen.getByText('Amount in US dollars')).toHaveClass('hidden-accessibly');
+  });
+
+  it('should use aria-label when label is empty and affixAriaLabel is set', () => {
+    render(
+      <NumberComponent
+        label=""
+        value={100}
+        prefix="$"
+        affixAriaLabel="Amount in US dollars"
+        showSteppers={false}
+      />
+    );
+    expect(screen.getByRole('textbox', { name: 'Amount in US dollars' })).toBeInTheDocument();
+  });
+
+  it('should render a suffix after the input', () => {
+    render(
+      <NumberComponent
+        label="Budget"
+        value={100}
+        suffix="€"
+        affixAriaLabel="Amount in euros"
+        showSteppers={false}
+      />
+    );
+
+    const input = screen.getByRole('textbox');
+    expect(input.nextSibling).toHaveTextContent('€');
+  });
+
   it('should disable input and buttons when disabled prop is true', () => {
     render(
       <NumberComponent
