@@ -463,6 +463,40 @@
     "definitions": {
       "type": "Type",
       "repository": "Repository"
+    },
+    "tabs": {
+      "editQuestion": "Edit question",
+      "options": "Options",
+      "logic": "Display Logic"
+    },
+    "tabPanel": {
+      "noTriggerQuestionsAvailable": "There are no questions available to use as a trigger for display logic.",
+      "headings": {
+        "options": "Options",
+        "logic": "Display Logic"
+      },
+      "descriptions": {
+        "displayLogic": "Configure display logic to show or hide this question based on how users answered previous multiple choice or checkbox questions. Add one or more conditions to determine when this question appears."
+      },
+      "buttons": {
+        "addDisplayLogic": "Add display logic",
+        "removeDisplayLogic": "Remove all display logic",
+        "addCondition": "Add condition"
+      },
+      "options": {
+        "any": "Any",
+        "all": "All",
+        "show": "Show",
+        "hide": "Hide",
+        "selectQuestion": "Select a question"
+      },
+      "labels": {
+        "displayLogicAction": "Show/Hide",
+        "displayLogicMatchType": "Any/All",
+        "thisQuestionIf": "this field if",
+        "ofTheFollowingMatch": "of the following conditions are met",
+        "triggerQuestion": "The answer to this question"
+      }
     }
   },
   "QuestionOptionsComponent": {

@@ -64,3 +64,11 @@
   padding: var(--space-4);
   margin-bottom: var(--space-4);
 }
+
+/* Display Logic Tab Styles */
+.showHideLogic {
+  display: flex;
+  flex-direction: row;
+  gap: var(--space-4);
+  margin-top: var(--space-4);
+}
