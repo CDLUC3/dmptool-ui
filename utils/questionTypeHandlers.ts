@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { QuestionFormatInterface } from "@/app/types";
+import { CURRENCY_DEFAULT_DENOMINATION, CURRENCY_DEFAULT_MAX, CURRENCY_DEFAULT_MIN, CURRENCY_DEFAULT_STEP } from "@/lib/constants";
 import {
   AnyQuestionType,
   CURRENT_SCHEMA_VERSION,
@@ -325,10 +326,10 @@ export const questionTypeHandlers: Record<string, QuestionTypeHandler> = {
         ...json.attributes,
         label: input?.attributes?.label,
         help: input?.attributes?.help,
-        max: input?.attributes?.max ?? 10000000, // Optional maximum value
-        min: input?.attributes?.min ?? 0,
-        step: input?.attributes?.step ?? 1,
-        denomination: input?.attributes?.denomination ?? "USD",
+        max: input?.attributes?.max ?? CURRENCY_DEFAULT_MAX,
+        min: input?.attributes?.min ?? CURRENCY_DEFAULT_MIN,
+        step: input?.attributes?.step ?? CURRENCY_DEFAULT_STEP,
+        denomination: input?.attributes?.denomination ?? CURRENCY_DEFAULT_DENOMINATION,
       },
       meta: {
         ...json.meta,

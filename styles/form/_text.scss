@@ -152,6 +152,15 @@ select {
     max-width: 6rem;
     flex: 1;
   }
+
+  &[data-variant="currency"] {
+    .react-aria-Group .react-aria-Input,
+    > .react-aria-Input {
+      min-width: 10rem;
+      max-width: 14rem;
+      margin: 0;
+    }
+  }
 }
 
 .react-aria-DateField {

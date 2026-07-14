@@ -1073,14 +1073,12 @@ describe('PlanOverviewQuestionPage render of questions', () => {
     expect(screen.queryByRole('button', { name: 'page.viewSampleAnswer' })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'buttons.commentWithNumber' })).toBeInTheDocument();
 
-    // Should see increment and decrement buttons
-    const decreaseButton = screen.getAllByLabelText('Decrease');
-    const increaseButton = screen.getAllByLabelText('Increase');
-    expect(decreaseButton.length).toBe(1);
-    expect(increaseButton.length).toBe(1);
+    // Currency fields do not show stepper buttons by default
+    expect(screen.queryByLabelText('Decrease')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Increase')).not.toBeInTheDocument();
     const input = screen.getByRole('textbox');
     expect(input).toBeInTheDocument();
-    expect(input).toHaveValue('$1.00');
+    expect(input).toHaveValue('1');
   })
 
   it('should load correct question content for numberRange question', async () => {
@@ -2057,7 +2055,7 @@ describe('Call to updateAnswerAction', () => {
     const currencyInput = within(numberGroup).getByRole('textbox');
 
     await userEvent.clear(currencyInput);
-    await userEvent.type(currencyInput, '15.00');
+    await userEvent.type(currencyInput, '15');
     await userEvent.tab(); // 👈 React Aria Component NumberField requires this to be able to register an input change
 
     // Click "Save" button
