@@ -1,7 +1,3 @@
-## Updated
-- Simplified the page title on template question edit screens. The header is now a static "Edit Question" label rather than "Edit: {question title}", making long or HTML-formatted question text less likely to clutter the page header [#78]
-- Changed the template question text field from a single-line input to a textarea so longer question text is easier to edit [#78]
-
 ## Added
 - Added show/hide password toggle to `FormInput`, enabled by default for password fields [#80]
 - Migrated login and signup pages to use `FormInput` for consistency with other auth forms [#80]
@@ -32,6 +28,9 @@
 - Added `UpdateAffiliation` and `AffiliationById` queries [#203]
 
 ## Updated
+- Improved currency fields by disabling steppers by default and adding configurable denominations, symbol placement, minor units, locale-aware formatting and parsing, value limits, accessibility support, styleguide examples, and tests
+- Simplified the page title on template question edit screens. The header is now a static "Edit Question" label rather than "Edit: {question title}", making long or HTML-formatted question text less likely to clutter the page header [#78]
+- Changed the template question text field from a single-line input to a textarea so longer question text is easier to edit [#78]
 - Updated `EmailAddressRow` and `UpdateEmailAddress` so the non-removable primary email no longer shows a disabled trash icon, and instead displays a "Primary" lock badge with a note explaining how to change it. Added a shared `icon-lock` icon and `primaryEmailCannotBeDeleted`/`primaryBadge` translations [#56]
 - Defaulted the project creation funding question to "No - Skip for now" so users without awarded funding can continue more quickly [#70]
 - Updated the "Forgot Password" to "Reset password" [#79]

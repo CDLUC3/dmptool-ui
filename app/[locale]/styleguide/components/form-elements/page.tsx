@@ -2,7 +2,9 @@
 
 import React from "react";
 import Link from "next/link";
+import type { CurrencyQuestionType } from "@dmptool/types";
 import { ContentContainer, LayoutContainer } from "@/components/Container";
+import { CurrencyQuestionComponent } from "@/components/Form/QuestionComponents";
 
 // Import our custom Form components
 import {
@@ -47,6 +49,14 @@ export default function FormElementsPage() {
     "<p>This is <strong>rich text</strong> with <em>formatting</em>.</p>",
   );
   const [numberValue, setNumberValue] = React.useState<number>(100);
+  const [currencyValue, setCurrencyValue] = React.useState<number | null>(250000);
+  const [currencyStepperValue, setCurrencyStepperValue] = React.useState<number | null>(250000);
+  const [currencyMaximumValue, setCurrencyMaximumValue] = React.useState<number | null>(100_000_000);
+  const [currencyMinorUnitValue, setCurrencyMinorUnitValue] = React.useState<number | null>(250000);
+  const [sterlingValue, setSterlingValue] = React.useState<number | null>(250000);
+  const [euroValue, setEuroValue] = React.useState<number | null>(250000);
+  const [polishZlotyValue, setPolishZlotyValue] = React.useState<number | null>(250000);
+  const [brazilianRealValue, setBrazilianRealValue] = React.useState<number | null>(250000);
   const [dateValue, setDateValue] = React.useState<string | null>(null);
   const [rangeStart, setRangeStart] = React.useState<string>("Minimum Value");
   const [rangeEnd, setRangeEnd] = React.useState<string>("Maximum Value");
@@ -64,6 +74,50 @@ export default function FormElementsPage() {
     { id: "ca", name: "Canada" },
     { id: "au", name: "Australia" },
   ];
+
+  const currencyQuestion: CurrencyQuestionType = {
+    type: "currency",
+    meta: { schemaVersion: "1.0" },
+    attributes: {
+      denomination: "USD",
+      min: 0,
+      max: 100_000_000,
+      step: 100,
+    },
+  };
+
+  const sterlingQuestion: CurrencyQuestionType = {
+    ...currencyQuestion,
+    attributes: {
+      ...currencyQuestion.attributes,
+      denomination: "GBP",
+    },
+  };
+
+  const euroQuestion: CurrencyQuestionType = {
+    ...currencyQuestion,
+    attributes: {
+      ...currencyQuestion.attributes,
+      denomination: "EUR",
+    },
+  };
+
+  const polishZlotyQuestion: CurrencyQuestionType = {
+    ...currencyQuestion,
+    attributes: {
+      ...currencyQuestion.attributes,
+      denomination: "PLN",
+    },
+  };
+
+  const brazilianRealQuestion: CurrencyQuestionType = {
+    ...currencyQuestion,
+    attributes: {
+      ...currencyQuestion.attributes,
+      denomination: "BRL",
+    },
+  };
+
   return (
     <LayoutContainer>
       <ContentContainer>
@@ -479,6 +533,160 @@ export default function FormElementsPage() {
   maxValue={1000000}
   step={10}
   onChange={setBudgetValue}
+/>`}</SGCodeBlock>
+            </SGComponentExampleContent>
+          </SGComponentExample>
+
+          <SGComponentExample>
+            <SGComponentExampleHeader title="Currency Field States" />
+            <SGComponentExampleContent>
+              <p>
+                Currency fields use the shared number API with a wider input, an external currency prefix,
+                and optional steppers. Steppers are off by default so manually entered values remain precise.
+              </p>
+
+              <SGComponentExampleDemo>
+                <div className="form-row">
+                  <CurrencyQuestionComponent
+                    parsedQuestion={currencyQuestion}
+                    inputCurrencyValue={currencyValue}
+                    currencyLabel="Default USD field"
+                    placeholder="Enter an amount"
+                    handleCurrencyChange={setCurrencyValue}
+                  />
+                  <p>
+                    <small>Current value: {currencyValue ?? "No value"}</small>
+                  </p>
+                </div>
+
+                <div className="form-row">
+                  <CurrencyQuestionComponent
+                    parsedQuestion={currencyQuestion}
+                    inputCurrencyValue={currencyStepperValue}
+                    currencyLabel="USD field with optional $100 steppers"
+                    placeholder="Enter an amount"
+                    handleCurrencyChange={setCurrencyStepperValue}
+                    showSteppers
+                  />
+                  <p>
+                    <small>Current value: {currencyStepperValue ?? "No value"}</small>
+                  </p>
+                </div>
+
+                <div className="form-row">
+                  <CurrencyQuestionComponent
+                    parsedQuestion={currencyQuestion}
+                    inputCurrencyValue={currencyMaximumValue}
+                    currencyLabel="Maximum value (decrement to leave boundary)"
+                    handleCurrencyChange={setCurrencyMaximumValue}
+                    showSteppers
+                  />
+                  <p>
+                    <small>Current value: {currencyMaximumValue ?? "No value"}</small>
+                  </p>
+                </div>
+
+                <div className="form-row">
+                  <CurrencyQuestionComponent
+                    parsedQuestion={currencyQuestion}
+                    inputCurrencyValue={currencyMinorUnitValue}
+                    currencyLabel="Minor units enabled"
+                    handleCurrencyChange={setCurrencyMinorUnitValue}
+                    showMinorUnits
+                  />
+                  <p>
+                    <small>Current value: {currencyMinorUnitValue ?? "No value"}</small>
+                  </p>
+                </div>
+
+                <div className="form-row">
+                  <CurrencyQuestionComponent
+                    parsedQuestion={currencyQuestion}
+                    inputCurrencyValue={250000}
+                    currencyLabel="Disabled currency field"
+                    handleCurrencyChange={() => undefined}
+                    isDisabled
+                  />
+                </div>
+
+                <div className="form-row">
+                  <CurrencyQuestionComponent
+                    parsedQuestion={sterlingQuestion}
+                    inputCurrencyValue={sterlingValue}
+                    currencyLabel="Alternate denomination (GBP)"
+                    handleCurrencyChange={setSterlingValue}
+                  />
+                  <p>
+                    <small>Current value: {sterlingValue ?? "No value"}</small>
+                  </p>
+                </div>
+
+                <div className="form-row">
+                  <CurrencyQuestionComponent
+                    parsedQuestion={euroQuestion}
+                    inputCurrencyValue={euroValue}
+                    currencyLabel="Euro with German formatting (250.000,00 €)"
+                    handleCurrencyChange={setEuroValue}
+                    locale="de-DE"
+                    symbolPosition="suffix"
+                    showMinorUnits
+                  />
+                  <p>
+                    <small>Current value: {euroValue ?? "No value"}</small>
+                  </p>
+                </div>
+
+                <div className="form-row">
+                  <CurrencyQuestionComponent
+                    parsedQuestion={polishZlotyQuestion}
+                    inputCurrencyValue={polishZlotyValue}
+                    currencyLabel="Polish złoty (PLN) with 100-unit steppers"
+                    handleCurrencyChange={setPolishZlotyValue}
+                    locale="pl-PL"
+                    symbolPosition="suffix"
+                    showSteppers
+                  />
+                  <p>
+                    <small>Current value: {polishZlotyValue ?? "No value"}</small>
+                  </p>
+                </div>
+
+                <div className="form-row">
+                  <CurrencyQuestionComponent
+                    parsedQuestion={brazilianRealQuestion}
+                    inputCurrencyValue={brazilianRealValue}
+                    currencyLabel="Brazilian real (BRL, pt-BR)"
+                    handleCurrencyChange={setBrazilianRealValue}
+                    locale="pt-BR"
+                    showMinorUnits
+                  />
+                  <p>
+                    <small>Current value: {brazilianRealValue ?? "No value"}</small>
+                  </p>
+                </div>
+              </SGComponentExampleDemo>
+
+              <h4>Currency API</h4>
+              <SGCodeBlock>{`const currencyQuestion = {
+  type: 'currency',
+  meta: { schemaVersion: '1.0' },
+  attributes: {
+    denomination: 'USD',
+    min: 0,
+    max: 100_000_000,
+    step: 100,
+  },
+};
+
+<CurrencyQuestionComponent
+  parsedQuestion={currencyQuestion}
+  inputCurrencyValue={currencyValue}
+  currencyLabel="Budget"
+  handleCurrencyChange={setCurrencyValue}
+  showSteppers={false} // optional; defaults to false
+  showMinorUnits={false} // optional; defaults to false
+  symbolPosition="prefix" // optional; prefix or suffix
+  locale="en-US" // optional; use pt-BR for Brazilian formatting
 />`}</SGCodeBlock>
             </SGComponentExampleContent>
           </SGComponentExample>
