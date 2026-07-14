@@ -8,6 +8,10 @@ jest.mock('@/utils/clientLogger', () => ({
   default: jest.fn(),
 }));
 
+jest.mock('next-intl', () => ({
+  useTranslations: () => (key: string) => key,
+}));
+
 // Mock debounce to run immediately instead of waiting 300ms
 jest.mock('@/hooks/debounce', () => ({
   /* eslint-disable @typescript-eslint/no-explicit-any */

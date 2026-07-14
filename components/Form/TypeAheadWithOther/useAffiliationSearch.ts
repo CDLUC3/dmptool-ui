@@ -1,4 +1,5 @@
 import { useCallback, useRef, useState } from "react";
+import { useTranslations } from 'next-intl';
 
 // GraphQL
 import { useLazyQuery } from '@apollo/client/react';
@@ -9,9 +10,8 @@ import { debounce } from '@/hooks/debounce';
 import { SuggestionInterface } from '@/app/types';
 import { handleApolloError } from '@/utils/apolloErrorHandler';
 
-const SEARCH_ERROR_MESSAGE = 'Could not load institution suggestions. Please try again.';
-
 export function useAffiliationSearch() {
+  const t = useTranslations('Global');
   const [suggestions, setSuggestions] = useState<SuggestionInterface[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [searchError, setSearchError] = useState('');
@@ -65,7 +65,7 @@ export function useAffiliationSearch() {
         const { wasRealError, message } = handleApolloError(error, 'useAffiliationSearch.fetchAffiliations');
         if (wasRealError) {
           setSuggestions([]);
-          setSearchError(message || SEARCH_ERROR_MESSAGE);
+          setSearchError(message || t('messaging.errors.institutionSuggestionsLoadError'));
         }
       } finally {
         if (searchId === latestSearchIdRef.current) {
@@ -73,7 +73,7 @@ export function useAffiliationSearch() {
         }
       }
     }, 300),
-    [fetchAffiliations]
+    [fetchAffiliations, t]
   );
 
   return { suggestions, handleSearch, isSearching, searchError };
