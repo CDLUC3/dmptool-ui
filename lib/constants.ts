@@ -8,6 +8,7 @@ export const DATE_RANGE_QUESTION_TYPE = "dateRange";
 export const EMAIL_QUESTION_TYPE = "email";
 export const NUMBER_QUESTION_TYPE = "number";
 export const NUMBER_RANGE_QUESTION_TYPE = "numberRange";
+export const NUMBER_WITH_CONTEXT_QUESTION_TYPE = "numberWithContext";
 export const OPTIONS_QUESTION_TYPES = ["radioButtons", "checkBoxes", "multiselectBox", "selectBox"];
 export const RANGE_QUESTION_TYPE = ["dateRange", "numberRange"];
 export const RADIOBUTTONS_QUESTION_TYPE = "radioButtons";

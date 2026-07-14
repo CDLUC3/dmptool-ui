@@ -1058,7 +1058,10 @@
         "questionUnexpectedFormat": "Unexpected format for question.json.",
         "questionJSONFParseFailed": "JSON.parse failed.",
         "requiredField": "{field} is required",
-        "errorParsingData": "Error parsing data"
+        "errorParsingData": "Error parsing data",
+        "positiveNumberOnly": "{field} must be a positive integer",
+        "byteSizeWithoutContext": "{field} must be a valid unit size",
+        "invalidDateFormat": "{field} must be a valid date"
       },
       "numDisplaying": "Showing {num} of {total}",
       "unsavedChangesWarning": "You have unsaved changes. Are you sure you want to leave this page?"

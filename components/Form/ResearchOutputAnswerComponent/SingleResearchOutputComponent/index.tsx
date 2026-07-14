@@ -49,12 +49,16 @@ import {
   TEXT_AREA_QUESTION_TYPE,
   REPOSITORY_SEARCH_ID,
   METADATA_STANDARD_SEARCH_ID,
+  NUMBER_WITH_CONTEXT_QUESTION_TYPE,
+  DATE_QUESTION_TYPE,
   LICENSE_SEARCH_ID,
+  RADIOBUTTONS_QUESTION_TYPE,
 } from '@/lib/constants';
 import { defaultAccessLevels } from '@/utils/researchOutputTable';
 import { getCalendarDateValue } from '@/utils/dateUtils';
 import { TooltipSelectOption } from '../../TooltipSelect';
 import styles from '../researchOutputAnswer.module.scss';
+import { isValidDate } from "rxjs/internal/util/isDate";
 
 type ResearchOutputAnswerComponentProps = {
   columns: ResearchOutputTableQuestionType['columns'];
@@ -142,7 +146,7 @@ const SingleResearchOutputComponent = ({
         if (!value || (typeof value === 'string' && !value.trim())) {
           error = Global('messaging.errors.requiredField', { field: col.heading });
         }
-      } else if (col.content.type === SELECTBOX_QUESTION_TYPE) {
+      } else if ([SELECTBOX_QUESTION_TYPE, RADIOBUTTONS_QUESTION_TYPE].includes(col.content.type)) {
         if (!value || value === '') {
           error = Global('messaging.errors.requiredField', { field: col.heading });
         }
@@ -158,6 +162,38 @@ const SingleResearchOutputComponent = ({
         if (!Array.isArray(value) || value.length === 0) {
           error = Global('messaging.errors.requiredField', { field: col.heading });
         }
+      } else if (col.content.type === NUMBER_WITH_CONTEXT_QUESTION_TYPE) {
+        if (!value
+          || typeof value !== 'object'
+          || !('value' in value) || value.value <= 0
+          || !('context' in value) || !value.context.trim()) {
+          error = Global('messaging.errors.requiredField', { field: col.heading });
+        }
+      } else if (col.content.type === DATE_QUESTION_TYPE) {
+        if (!value || !isValidDate(value)) {
+          error = Global('messaging.errors.requiredField', { field: col.heading });
+        }
+      }
+    }
+
+    // If it is the file size column, make sure the number is a positive integer
+    if (col.commonStandardId === ResearchOutputTableColumnsEnum.enum.byte_size) {
+      if (value && typeof value === 'object' && ('value' in value) && ('context' in value)) {
+        // Only allow positive integers
+        if (typeof value.value !== 'number' || value.value < 0 || !Number.isInteger(value.value)) {
+          error = Global("messaging.errors.positiveNumberOnly", { field: col.heading });
+        } else {
+          // If a number was supplied, a unit must have been selected
+          if (value.value > 0 && (typeof value.context !== 'string' || !value.context.trim())) {
+            error = Global('messaging.errors.byteSizeWithoutContext', { field: col.heading });
+          }
+        }
+      }
+    }
+    // If it is the release date column, make sure the date is reasonable
+    if (col.commonStandardId === ResearchOutputTableColumnsEnum.enum.issued) {
+      if (value && typeof value === 'string' && !isValidDate(new Date(value))) {
+        error = Global('messaging.errors.invalidDateFormat', { field: col.heading });
       }
     }
 
