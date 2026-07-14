@@ -19,6 +19,7 @@ import PageHeader from "@/components/PageHeader";
 import { ContentContainer, LayoutContainer, } from "@/components/Container";
 import { OrcidIcon } from '@/components/Icons/orcid/';
 import ErrorMessages from '@/components/ErrorMessages';
+import SkeletonListLoading from '@/components/SkeletonListLoading';
 
 import { routePath } from '@/utils/routes';
 import styles from './ProjectsProjectMembers.module.scss';
@@ -29,7 +30,7 @@ interface ProjectMemberInterface {
   fullName: string;
   affiliation: string;
   orcid: string;
-  role: string;
+  roles: string[];
 }
 
 const ProjectsProjectMembers = () => {
@@ -42,6 +43,7 @@ const ProjectsProjectMembers = () => {
 
   // Localization keys
   const ProjectMembers = useTranslations('ProjectsProjectMembers');
+  const MemberListItem = useTranslations('ProjectMemberListItem');
   const Global = useTranslations('Global');
 
   const [projectMembers, setProjectMembers] = useState<ProjectMemberInterface[]>();
@@ -81,7 +83,7 @@ const ProjectsProjectMembers = () => {
         fullName: `${member?.givenName} ${member?.surName}`,
         affiliation: member?.affiliation?.displayName ?? '',
         orcid: member?.orcid ?? '',
-        role: (member?.memberRoles && member.memberRoles.length > 0) ? member?.memberRoles?.map((role) => role.label).join(', ') : '',
+        roles: member?.memberRoles?.map((role) => role.label) ?? [],
       }))
       setProjectMembers(projectMemberData);
       setIsReadOnly(data.project.readOnly ?? false);
@@ -96,7 +98,16 @@ const ProjectsProjectMembers = () => {
   }, [queryError])
 
   if (loading) {
-    return <div>{Global('messaging.loading')}...</div>;
+    return (
+      <LayoutContainer>
+        <ContentContainer className="layout-content-container-full">
+          <SkeletonListLoading
+            count={3}
+            ariaLabel={Global('messaging.loadingList')}
+          />
+        </ContentContainer>
+      </LayoutContainer>
+    );
   }
 
 
@@ -132,58 +143,78 @@ const ProjectsProjectMembers = () => {
       <LayoutContainer>
         <ContentContainer className="layout-content-container-full">
           <section
-            aria-label="Project members list"
-            role="region"
+            aria-labelledby="project-members-heading"
           >
+            <h2 id="project-members-heading" className="sr-only">
+              {ProjectMembers('title')}
+            </h2>
             {(!projectMembers || projectMembers?.length === 0) ? (
               <p>{ProjectMembers('messages.noMembers')}</p>
             ) : (
-              <div className={styles.membersList} role="list">
+              <ul className={styles.membersList} role="list">
                 {projectMembers.map((member) => (
-                  <div
+                  <li
                     key={member.id}
                     className={styles.membersListItem}
-                    role="listitem"
-                    aria-label={`Project member: ${member.fullName}`}
                   >
-                    <div className={styles.memberInfo}>
-                      <h2 className={styles.memberNameHeading}>
-                        {member.fullName}
-                      </h2>
-                      <p className={styles.affiliation}>{member.affiliation}</p>
-                      {member.orcid && member.orcid !== '' && (
-                        <p className={styles.orcid}>
-                          <span aria-hidden="true">
-                            <OrcidIcon icon="orcid" classes={styles.orcidLogo} />
-                          </span>
-                          <a
-                            href={orcidToUrl(member.orcid)}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            aria-label={`ORCID profile for ${member.fullName}`}
-                          >
-                            {member.orcid}
-                          </a>
-                        </p>
-                      )}
-                    </div>
-                    <div className={styles.memberRole}>
-                      <p className={styles.role}>{member.role}</p>
-                    </div>
-                    <div className={styles.memberActions}>
+                    <div className={styles.memberCardHeader}>
+                      <div className={styles.memberInfo}>
+                        <div className={styles.memberNameRow}>
+                          <h3 className={styles.memberNameHeading}>
+                            {!isReadOnly && member.id !== null ? (
+                              <Link
+                                href={routePath('projects.members.edit', {
+                                  projectId,
+                                  memberId: String(member.id),
+                                })}
+                                className={styles.memberNameLink}
+                                aria-label={MemberListItem('ariaLabels.editMember', { name: member.fullName })}
+                              >
+                                {member.fullName}
+                              </Link>
+                            ) : (
+                              member.fullName
+                            )}
+                          </h3>
+                          {member.orcid && member.orcid !== '' && (
+                            <a
+                              href={orcidToUrl(member.orcid)}
+                              className={styles.orcidLink}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              aria-label={MemberListItem('ariaLabels.orcidProfile', { name: member.fullName })}
+                            >
+                              <span aria-hidden="true">
+                                <OrcidIcon icon="orcid" classes={styles.orcidLogo} />
+                              </span>
+                            </a>
+                          )}
+                        </div>
+                        <p className={styles.affiliation}>{member.affiliation}</p>
+                      </div>
                       {!isReadOnly && (
-                        <Button
-                          onPress={() => handleEdit(member.id)}
-                          className="primary"
-                          aria-label={`Edit ${member.fullName}'s details`}
-                        >
-                          {Global('buttons.edit')}
-                        </Button>
+                        <div className={styles.memberActions}>
+                          <Button
+                            onPress={() => handleEdit(member.id)}
+                            className="secondary"
+                            aria-label={MemberListItem('ariaLabels.editMember', { name: member.fullName })}
+                          >
+                            {Global('buttons.edit')}
+                          </Button>
+                        </div>
                       )}
                     </div>
-                  </div>
+                    <div className={styles.memberRoles}>
+                      <p className="sr-only">{ProjectMembers('headings.roles')}</p>
+                      <ul className={styles.rolesList} role="list">
+                        {member.roles.map((role) => (
+                          <li key={role}>{role}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  </li>
                 ))}
-              </div>
+              </ul>
             )}
           </section>
 
@@ -195,7 +226,7 @@ const ProjectsProjectMembers = () => {
               <h2 id="collaborators-heading">{ProjectMembers('headings.h2AllowCollaborators')}</h2>
               <p>
                 {ProjectMembers.rich('para.para1AllowCollaborators', {
-                  shareWithPeople: (chunks) => <Link href={`/projects/${projectId}/share`}>{chunks}</Link>
+                  shareWithPeople: (chunks) => <Link href={collaborationRoute}>{chunks}</Link>
                 })}
               </p>
 

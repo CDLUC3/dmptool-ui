@@ -1,58 +1,121 @@
 @use '@/styles/responsive' as r;
 
-.membersListItem {
-  display: grid;
-  gap: 1rem;
-  align-items: center;
-  padding: 1rem 0;
-  margin-bottom: 1rem;
+.membersList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
 
-  @include r.device(xl) {
-    grid-template-columns: 3fr 2fr 2fr 1fr;
+.membersListItem {
+  padding: var(--card-padding);
+  background: var(--bg-white);
+  border: var(--card-border);
+  border-radius: var(--card-border-radius);
+  box-shadow: var(--card-shadow);
+}
+
+.memberCardHeader {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-4);
+  align-items: start;
+
+  @include r.device(sm) {
+    grid-template-columns: minmax(0, 1fr) auto;
   }
 }
 
 .memberInfo {
-  h3 {
-    margin: 0 0 0.5rem 0;
-    font-size: 1.1rem;
-  }
+  min-width: 0;
 
   p {
-    margin: 0.25rem 0;
     color: var(--text-secondary);
     font-size: var(--fs-small);
-  }
-
-  .orcid {
-    font-size: var(--fs-small);
-    span{
-      margin-right: 0.5rem;
-    }
-    a {
-      color: var(--text-secondary);
-      text-decoration: underline;
-      text-underline-offset: 4px;
-      font-size: var(--fs-small);
-      &:hover {
-        text-decoration: underline;
-      }
-    }
   }
 }
 
-.memberRole {
-  .role {
-    margin: 0;
+.memberNameRow {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  margin-bottom: 0.125rem;
+}
+
+.memberNameHeading {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: var(--fw-semibold);
+  color: var(--heading-color);
+}
+
+.memberNameLink {
+  color: var(--heading-color);
+  font-weight: inherit;
+  text-decoration: none;
+
+  &:hover,
+  &:focus-visible {
+    color: var(--heading-color);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+}
+
+.orcidLink {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  line-height: 0;
+  transform: translateY(-1px);
+
+  &:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+}
+
+.orcidLogo {
+  width: 1rem;
+  height: 1rem;
+}
+
+.affiliation {
+  margin: 0;
+}
+
+.memberRoles {
+  margin-top: var(--space-3);
+}
+
+.rolesList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  padding: 0;
+  margin: 0;
+  list-style: none;
+
+  li {
+    padding: 0.125rem 0.5rem;
     color: var(--text-secondary);
+    font-size: var(--fs-small);
+    background: var(--bg-white);
+    border: 1px solid var(--gray-100);
+    border-radius: 999px;
   }
 }
 
 .memberActions {
   display: flex;
   gap: 0.5rem;
-  @include r.device(xl) {
-    justify-content: flex-end; // Aligns buttons to the right
+
+  @include r.device(sm) {
+    justify-content: flex-end;
   }
 }
 
@@ -72,8 +135,4 @@
     margin: 0 0 1.5rem 0;
     color: var(--text-secondary);
   }
-}
-
-.memberNameHeading {
-  margin-top: 0;
 }

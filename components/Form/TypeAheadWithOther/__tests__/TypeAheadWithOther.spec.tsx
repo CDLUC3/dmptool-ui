@@ -281,7 +281,7 @@ describe('TypeAheadWithOther', () => {
 
     // Check last call to updateFormData
     const lastCall = mockUpdateFormData.mock.calls.at(-1);
-    expect(lastCall).toEqual(['', 'Other (organization not listed)']);
+    expect(lastCall).toEqual(['other', 'Other (organization not listed)']);
 
     expect(mockSetOtherField).toHaveBeenCalledWith(true);
     expect(input).toHaveValue('Other (organization not listed)');

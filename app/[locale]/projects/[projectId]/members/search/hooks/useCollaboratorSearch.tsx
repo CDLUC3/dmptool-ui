@@ -8,6 +8,7 @@ import { useTranslations } from 'next-intl';
 import { useLazyQuery } from '@apollo/client/react';
 
 // Utils
+import { extractOrcid } from '@/lib/identifierUtils';
 import { handleApolloError } from '@/utils/apolloErrorHandler';
 
 
@@ -29,7 +30,7 @@ export const useCollaboratorSearch = () => {
     loading: false,
   });
 
-  const [fetchCollaborator, { data, loading }] = useLazyQuery(FindCollaboratorDocument,);
+  const [fetchCollaborator, { data, loading, error: queryError }] = useLazyQuery(FindCollaboratorDocument,);
 
   // Set search state on input change
   const handleSearchInput = (value: string) => {
@@ -55,11 +56,30 @@ export const useCollaboratorSearch = () => {
       return;
     }
 
-    setSearchState((prev) => ({ ...prev, isSearching: true, errors: [], loading: true }));
-    await fetchCollaborator({ variables: { term: trimmed.toLowerCase() } })
-      .catch((err) => {
-        handleApolloError(err, 'useCollaboratorSearch.handleMemberSearch');
-      })
+    setSearchState((prev) => ({
+      ...prev,
+      results: [],
+      isSearching: true,
+      errors: [],
+      loading: true,
+    }));
+
+    try {
+      await fetchCollaborator({ variables: { term: trimmed.toLowerCase() } });
+    } catch (err) {
+      const { wasRealError } = handleApolloError(err, 'useCollaboratorSearch.handleMemberSearch');
+      if (!wasRealError) {
+        return;
+      }
+
+      setSearchState((prev) => ({
+        ...prev,
+        results: [],
+        isSearching: false,
+        loading: false,
+        errors: [t('messaging.errors.searchLookupFailed')],
+      }));
+    }
   };
 
   const clearSearch = () => {
@@ -74,6 +94,22 @@ export const useCollaboratorSearch = () => {
 
   // Update search results when data changes
   useEffect(() => {
+    if (queryError) {
+      const { wasRealError } = handleApolloError(queryError, 'useCollaboratorSearch.handleMemberSearch');
+      if (!wasRealError) {
+        return;
+      }
+
+      setSearchState((prev) => ({
+        ...prev,
+        results: [],
+        isSearching: false,
+        loading: false,
+        errors: [t('messaging.errors.searchLookupFailed')],
+      }));
+      return;
+    }
+
     if (!data?.findCollaborator) return;
     const items = (data.findCollaborator.items || []).filter(
       (i): i is CollaboratorSearchResult => i !== null
@@ -90,13 +126,16 @@ export const useCollaboratorSearch = () => {
     } else {
       setSearchState((prev) => ({
         ...prev,
-        results: items,
+        results: items.map((item) => ({
+          ...item,
+          orcid: item.orcid?.trim() || extractOrcid(prev.term) || item.orcid,
+        })),
         isSearching: true,
         loading: false,
         errors: [],
       }));
     }
-  }, [data, loading, t]);
+  }, [data, loading, queryError, t]);
 
   return {
     ...searchState,

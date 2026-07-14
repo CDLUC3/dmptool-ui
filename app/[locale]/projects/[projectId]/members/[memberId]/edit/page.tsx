@@ -10,20 +10,21 @@ import {
   Button,
   Form,
   Link,
-  Dialog,
   DialogTrigger,
-  Modal,
-  ModalOverlay,
 } from "react-aria-components";
 
 // Components
 import PageHeader from "@/components/PageHeader";
 import {
   ContentContainer,
-  LayoutContainer
+  LayoutContainer,
 } from "@/components/Container";
 import { FormInput } from "@/components/Form";
+import { TypeAheadWithOther } from '@/components/Form/TypeAheadWithOther';
 import ErrorMessages from '@/components/ErrorMessages';
+import Loading from '@/components/Loading';
+import { ModalOverlayComponent } from '@/components/ModalOverlayComponent';
+import TransitionButton from '@/components/TransitionButton';
 import ProjectRoles from '../../ProjectRoles';
 
 // GraphQL
@@ -38,6 +39,7 @@ import {
 // Hooks
 import { useScrollToTop } from '@/hooks/scrollToTop';
 import { useProjectMemberData } from "@/hooks/projectMemberData";
+import { useAffiliationSearch } from '@/components/Form/TypeAheadWithOther/useAffiliationSearch';
 
 //Utils and other
 import logECS from '@/utils/clientLogger';
@@ -59,8 +61,7 @@ type Action = { type: 'SET_ROLES'; payload: MemberRole[] };
 const reducer = (state: State, action: Action): State => {
   switch (action.type) {
     case 'SET_ROLES':
-      const sortedRoles = action.payload.sort((a, b) => a.displayOrder - b.displayOrder);
-      return { ...state, roles: sortedRoles };
+      return { ...state, roles: action.payload };
     default:
       return state;
   }
@@ -85,9 +86,8 @@ const ProjectsProjectMembersEdit: React.FC = () => {
   const { scrollToTop } = useScrollToTop();
 
   const [errorMessages, setErrorMessages] = useState<string[]>([]);
+  const [otherField, setOtherField] = useState(false);
 
-  // State for remove project member modal
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
   // Field errors
@@ -109,9 +109,15 @@ const ProjectsProjectMembersEdit: React.FC = () => {
   // localization keys
   const Global = useTranslations('Global');
   const t = useTranslations('ProjectsProjectMembersEdit');
+  const MemberSearch = useTranslations('ProjectsProjectMembersSearch');
 
   // Get Member Roles
-  const { data: memberRoles, loading: memberRolesLoading, error: memberRolesError } = useQuery(MemberRolesDocument);
+  const {
+    data: memberRoles,
+    loading: memberRolesLoading,
+    error: memberRolesError,
+    refetch: refetchMemberRoles,
+  } = useQuery(MemberRolesDocument);
 
   // Hooks for project member data
   const {
@@ -123,13 +129,19 @@ const ProjectsProjectMembersEdit: React.FC = () => {
     queryError
   } = useProjectMemberData(Number(memberId));
 
+  const {
+    suggestions,
+    handleSearch: handleAffiliationSearch,
+    isSearching: isAffiliationSearching,
+    searchError: affiliationSearchError,
+  } = useAffiliationSearch();
 
-  const isLoading = loading || memberRolesLoading;
-  const isError = queryError || memberRolesError;
+  const isLoading = loading;
+  const isError = queryError;
 
 
   // Initialize project member mutations
-  const [updateProjectMemberMutation] = useMutation(UpdateProjectMemberDocument);
+  const [updateProjectMemberMutation, { loading: isUpdating }] = useMutation(UpdateProjectMemberDocument);
   const [removeProjectMemberMutation] = useMutation(RemoveProjectMemberDocument);
 
   // Show Success Message for updating member
@@ -147,7 +159,26 @@ const ProjectsProjectMembersEdit: React.FC = () => {
   // Handle changes to role checkbox selection
   const handleCheckboxChange = (values: string[]) => {
     setCheckboxRoles(values); // Set the selected role IDs
+    setFieldErrors(prev => ({ ...prev, projectRoles: '' }));
   }
+
+  const updateAffiliationFormData = (id: string, value: string) => {
+    setProjectMemberData({
+      ...projectMemberData,
+      affiliationId: id,
+      affiliationName: value,
+      otherAffiliationName: id === 'other' ? projectMemberData.otherAffiliationName : '',
+    });
+    setFieldErrors(prev => ({ ...prev, affiliationId: '' }));
+  };
+
+  const handleOtherAffiliationInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setProjectMemberData({
+      ...projectMemberData,
+      otherAffiliationName: event.target.value,
+    });
+    setFieldErrors(prev => ({ ...prev, affiliationId: '' }));
+  };
 
   const clearAllFieldErrors = () => {
     setFieldErrors({
@@ -254,25 +285,36 @@ const ProjectsProjectMembersEdit: React.FC = () => {
     let error = '';
     switch (name) {
       case 'givenName':
-        if (!value || value.length <= 2) {
-          error = t('form.errors.firstName');
+        if (!value || !value.toString().trim()) {
+          error = MemberSearch('messaging.errors.givenNameRequired');
         }
         break;
       case 'surName':
-        if (!value || value.length <= 2) {
-          error = t('form.errors.lastName');
+        if (!value || !value.toString().trim()) {
+          error = MemberSearch('messaging.errors.surNameRequired');
+        }
+        break;
+      case 'affiliationName':
+        if (!value || !value.toString().trim()) {
+          error = MemberSearch('messaging.errors.affiliationRequired');
         }
         break;
       case 'email':
-        if (!value || !emailRegex.test(value as string)) {
-          error = t('form.errors.email');
+        if (value && !emailRegex.test(value as string)) {
+          error = MemberSearch('messaging.errors.invalidEmail');
+        }
+        break;
+      case 'projectRoles':
+        if (!value || value.length === 0) {
+          error = MemberSearch('messaging.errors.projectRolesRequired');
         }
         break;
     }
 
+    const errorField = name === 'affiliationName' ? 'affiliationId' : name;
     setFieldErrors(prevErrors => ({
       ...prevErrors,
-      [name]: error
+      [errorField]: error
     }));
     return error;
   }
@@ -282,12 +324,17 @@ const ProjectsProjectMembersEdit: React.FC = () => {
     // Initialize a flag for form validity
     let isValid = true;
 
-    // Iterate over formData to validate each field
-    Object.keys(projectMemberData).forEach((key) => {
-      const name = key as keyof ProjectMemberFormInterface;
-      const value = projectMemberData[name];
+    const fieldsToValidate: [keyof ProjectMemberFormInterface | 'projectRoles', string | string[] | undefined][] = [
+      ['givenName', projectMemberData.givenName],
+      ['surName', projectMemberData.surName],
+      ['affiliationName', projectMemberData.affiliationId === 'other'
+        ? projectMemberData.otherAffiliationName
+        : projectMemberData.affiliationName],
+      ['email', projectMemberData.email],
+      ['projectRoles', checkboxRoles],
+    ];
 
-      // Call validateField to update errors for each field
+    fieldsToValidate.forEach(([name, value]) => {
       const error = validateField(name, value);
       if (error) {
         isValid = false;
@@ -342,7 +389,12 @@ const ProjectsProjectMembersEdit: React.FC = () => {
   }, [memberRoles]);
 
   if (isLoading) {
-    return <div>{Global('messaging.loading')}...</div>;
+    return (
+      <Loading
+        variant="page"
+        message={Global('messaging.loading')}
+      />
+    );
   }
 
   if (isError) {
@@ -378,7 +430,8 @@ const ProjectsProjectMembersEdit: React.FC = () => {
                 <FormInput
                   name="givenName"
                   type="text"
-                  label={t('form.labels.firstName')}
+                  isRequiredVisualOnly={true}
+                  label={MemberSearch('labels.givenName')}
                   value={projectMemberData.givenName}
                   onChange={(e) => {
                     setProjectMemberData({ ...projectMemberData, givenName: e.target.value });
@@ -392,7 +445,8 @@ const ProjectsProjectMembersEdit: React.FC = () => {
                 <FormInput
                   name="surName"
                   type="text"
-                  label={t('form.labels.lastName')}
+                  isRequiredVisualOnly={true}
+                  label={MemberSearch('labels.surName')}
                   value={projectMemberData.surName}
                   onChange={(e) => {
                     setProjectMemberData({ ...projectMemberData, surName: e.target.value });
@@ -403,24 +457,34 @@ const ProjectsProjectMembersEdit: React.FC = () => {
                   errorMessage={fieldErrors.surName}
                 />
 
-                <FormInput
-                  name="affiliation"
-                  type="text"
-                  label={t('form.labels.affiliation')}
-                  value={projectMemberData.affiliationId}
-                  onChange={(e) => {
-                    setProjectMemberData({ ...projectMemberData, affiliationId: e.target.value });
-                    // Clear the error for this field when user changes it
-                    setFieldErrors(prev => ({ ...prev, affiliationId: '' }));
-                  }}
-                  isInvalid={fieldErrors.affiliationId.length !== 0}
-                  errorMessage={fieldErrors.affiliationId || t('form.errors.affiliation')}
+                <TypeAheadWithOther
+                  label={MemberSearch('labels.affiliation')}
+                  fieldName="affiliation"
+                  setOtherField={setOtherField}
+                  isRequiredVisualOnly={true}
+                  error={fieldErrors.affiliationId || affiliationSearchError}
+                  updateFormData={updateAffiliationFormData}
+                  value={projectMemberData.affiliationName}
+                  suggestions={suggestions}
+                  onSearch={handleAffiliationSearch}
+                  isLoading={isAffiliationSearching}
                 />
+                {otherField && (
+                  <FormInput
+                    name="otherAffiliationName"
+                    type="text"
+                    label={MemberSearch('labels.otherAffiliationName')}
+                    value={projectMemberData.otherAffiliationName ?? ''}
+                    onChange={handleOtherAffiliationInputChange}
+                  />
+                )}
 
                 <FormInput
                   name="email"
                   type="email"
-                  label={t('form.labels.emailAddress')}
+                  isRequired={false}
+                  isRecommended={true}
+                  label={MemberSearch('labels.email')}
                   value={projectMemberData.email}
                   onChange={(e) => {
                     setProjectMemberData({ ...projectMemberData, email: e.target.value });
@@ -428,13 +492,20 @@ const ProjectsProjectMembersEdit: React.FC = () => {
                     setFieldErrors(prev => ({ ...prev, email: '' }));
                   }}
                   isInvalid={fieldErrors.email.length > 0 || Boolean(projectMemberData.email && !emailRegex.test(projectMemberData.email))}
-                  errorMessage={fieldErrors.email || t('form.errors.email')}
+                  errorMessage={
+                    fieldErrors.email
+                    || (projectMemberData.email && !emailRegex.test(projectMemberData.email)
+                      ? MemberSearch('messaging.errors.invalidEmail')
+                      : '')
+                  }
                 />
 
                 <FormInput
                   name="orcid"
                   type="text"
-                  label={t('form.labels.orcid')}
+                  isRequired={false}
+                  isRecommended={true}
+                  label={MemberSearch('labels.orcid')}
                   value={projectMemberData.orcid}
                   onChange={(e) => {
                     setProjectMemberData({ ...projectMemberData, orcid: e.target.value });
@@ -452,10 +523,21 @@ const ProjectsProjectMembersEdit: React.FC = () => {
                     isInvalid={(!!fieldErrors.projectRoles)}
                     errorMessage={fieldErrors.projectRoles}
                     memberRoles={state.roles}
+                    isLoading={memberRolesLoading}
+                    hasLoadError={Boolean(memberRolesError)}
+                    onRetry={() => void refetchMemberRoles()}
                   />
                 </div>
 
-                <Button type="submit">{Global('buttons.saveChanges')}</Button>
+                <TransitionButton
+                  type="submit"
+                  isDisabled={isUpdating}
+                  loadingLabel={Global('messaging.saving')}
+                  loadingVariant="inline"
+                  showLoading={false}
+                >
+                  {Global('buttons.saveChanges')}
+                </TransitionButton>
               </div>
             </Form>
           </div>
@@ -466,43 +548,24 @@ const ProjectsProjectMembersEdit: React.FC = () => {
             <p>
               {t('paragraphs.removeMember')}
             </p>
-            <DialogTrigger isOpen={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
+            <DialogTrigger>
               <Button
-                className="secondary"
+                className="danger"
                 isDisabled={isDeleting}
               >
                 {isDeleting ? `${t('buttons.removing')}...` : t('buttons.removeMember')}
               </Button>
-              <ModalOverlay>
-                <Modal>
-                  <Dialog>
-                    {({ close }) => (
-                      <>
-                        <h3>{t('headings.removeProjectMember')}</h3>
-                        <p>{t('paragraphs.modalInfo')}</p>
-                        <div className={styles.deleteConfirmButtons}>
-                          <Button
-                            className="secondary"
-                            aria-label={t('form.labels.removeMemberFromProject')}
-                            autoFocus
-                            onPress={close}>
-                            {Global('buttons.cancel')}
-                          </Button>
-                          <Button
-                            className="primary"
-                            onPress={() => {
-                              handleRemoveMember();
-                              close();
-                            }}
-                          >
-                            {Global('buttons.delete')}
-                          </Button>
-                        </div>
-                      </>
-                    )}
-                  </Dialog>
-                </Modal>
-              </ModalOverlay>
+              <ModalOverlayComponent
+                heading={t('headings.removeProjectMember')}
+                content={t('paragraphs.modalInfo')}
+                btnSecondaryText={Global('buttons.cancel')}
+                btnPrimaryText={isDeleting ? `${t('buttons.removing')}...` : t('buttons.removeMember')}
+                isPrimaryDisabled={isDeleting}
+                onPressAction={async (_event, close) => {
+                  await handleRemoveMember();
+                  close();
+                }}
+              />
             </DialogTrigger>
           </section>
         </ContentContainer>

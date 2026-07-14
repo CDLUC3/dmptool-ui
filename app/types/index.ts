@@ -398,6 +398,8 @@ export interface ProjectMemberFormInterface {
   givenName: string;
   surName: string;
   affiliationId: string;
+  affiliationName?: string;
+  otherAffiliationName?: string;
   email: string;
   orcid: string;
 }

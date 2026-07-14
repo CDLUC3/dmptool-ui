@@ -972,7 +972,7 @@
     },
     "ariaLabels": {
       "editMember": "Editar detalhes de {name}",
-      "orcidProfile": "Perfil ORCID para {name}"
+      "orcidProfile": "Ver o perfil ORCID de {name} (abre em uma nova aba)"
     }
   }
 }

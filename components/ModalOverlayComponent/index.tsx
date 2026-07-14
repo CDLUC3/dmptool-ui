@@ -17,6 +17,7 @@ interface ModalOverlayProps {
   isOpen?: boolean;
   btnSecondaryText?: string;
   btnPrimaryText?: string;
+  isPrimaryDisabled?: boolean;
   onPressAction: (e: PressEvent, close: () => void) => void;
 }
 
@@ -26,6 +27,7 @@ export const ModalOverlayComponent = ({
   isOpen,
   btnSecondaryText,
   btnPrimaryText,
+  isPrimaryDisabled = false,
   onPressAction
 }: ModalOverlayProps) => {
   const titleId = useId();
@@ -47,7 +49,11 @@ export const ModalOverlayComponent = ({
                 <Button className="secondary" autoFocus onPress={close}>
                   {btnSecondaryText || 'Cancel'}
                 </Button>
-                <Button className="danger" onPress={e => onPressAction(e, close)}>
+                <Button
+                  className="danger"
+                  isDisabled={isPrimaryDisabled}
+                  onPress={e => onPressAction(e, close)}
+                >
                   {btnPrimaryText || 'Delete'}
                 </Button>
               </div>
