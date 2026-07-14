@@ -26,6 +26,11 @@
     top: 0;
     background-color: white;
     border-bottom: 1px solid #999;
+
+    &[aria-selected="true"] {
+      background-color: var(--highlight-background);
+      color: var(--highlight-foreground);
+    }
   }
   
   .autocompleteResults > li {
@@ -35,11 +40,13 @@
   }
   
   .autocompleteResults > li:hover {
-    background: hsl(212, 10%, 60%);
+    background: var(--highlight-hover);
   }
   
-  .autocompleteResults > li:focus {
-    background: hsl(212, 10%, 70%);
+  .autocompleteResults > li:focus,
+  .autocompleteResults > li[aria-selected="true"] {
+    background: var(--highlight-background);
+    color: var(--highlight-foreground);
   }
 
   .helpText {
@@ -77,9 +84,11 @@
 
   .autocompleteItem {
 
-    &:focus {
+    &:focus,
+    &[aria-selected="true"] {
       outline: none;
-      background: hsl(212, 10%, 70%);
+      background: var(--highlight-background);
+      color: var(--highlight-foreground);
     }
   }
 

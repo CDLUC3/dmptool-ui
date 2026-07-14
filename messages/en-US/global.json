@@ -1077,7 +1077,8 @@
         "questionUnexpectedFormat": "Unexpected format for question.json.",
         "questionJSONFParseFailed": "JSON.parse failed.",
         "requiredField": "{field} is required",
-        "errorParsingData": "Error parsing data"
+        "errorParsingData": "Error parsing data",
+        "institutionSuggestionsLoadError": "Could not load institution suggestions. Please try again."
       },
       "numDisplaying": "Showing {num} of {total}",
       "unsavedChangesWarning": "You have unsaved changes. Are you sure you want to leave this page?"
