@@ -28,6 +28,15 @@
 - Added `UpdateAffiliation` and `AffiliationById` queries [#203]
 
 ## Updated
+- Redesigned the project members list as accessible cards with linked member names, inline ORCID profile links, role badges, skeleton loading, and consistent heading/link labelling [#96]
+- Updated the project member Edit page to use “project member” wording (not “collaborator”), show affiliation display names, align required/recommended labels with Add, and no longer require email to save [#96]
+- Updated Add and Edit project member flows to share labels, validation messages, and role ordering (alphabetical with “No role assigned” last); roles are now required before saving [#96]
+- Fixed the CRediT Taxonomy “Learn more” link on Add and Edit project member pages by splitting the translation so Crowdin does not break the link markup [#96]
+- Improved the Add project member ORCID lookup flow with explicit person selection, clearer search results, error handling, and ORCID field population (including fallback when the API omits ORCID) [#96]
+- Updated `TypeAheadWithOther` so selecting “Other” sets `affiliationId` to `other`, and aligned “Other” affiliation validation on Add and Edit [#96]
+- Updated the project members collaborators section inline link to use `routePath` for the collaboration page [#96]
+- Added `extractOrcid` helper and updated `orcidToUrl` to normalise ORCID values from URLs or IDs [#96]
+- Updated `ModalOverlayComponent` to support disabling the primary action button (used for remove member confirmation) [#96]
 - Fixed `TypeAheadWithOther` clearing the institution name when the field is focused, so profile (and other) edits keep the existing value with the caret at the end [#80]
 - Updated shared typeahead functionality and styling for better accessibility [#80]
 - Simplified the page title on template question edit screens. The header is now a static "Edit Question" label rather than "Edit: {question title}", making long or HTML-formatted question text less likely to clutter the page header [#78]
