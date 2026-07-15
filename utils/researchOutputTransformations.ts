@@ -6,8 +6,6 @@ import {
   RepositorySearchAnswerType,
   DefaultResearchOutputCustomColumn,
   ResearchOutputTableColumnsEnum,
-  DefaultResearchOutputReleaseDateColumn,
-  DefaultResearchOutputByteSizeColumn,
 } from "@dmptool/types";
 import {
   RESEARCH_OUTPUT_QUESTION_TYPE,
@@ -79,6 +77,8 @@ const standardKeys = new Set([
   "Anticipated File Size",
 ]);
 
+console.log(DefaultResearchOutputTableQuestion.columns.map(col => col.heading).join(', '));
+
 // Create a mapping from field IDs to default columns
 const DEFAULT_COLUMNS_MAP: Record<string, ResearchOutputColumn | undefined> = {
   title: DefaultResearchOutputTableQuestion.columns.find((col) => col.heading === "Title"),
@@ -90,7 +90,7 @@ const DEFAULT_COLUMNS_MAP: Record<string, ResearchOutputColumn | undefined> = {
   metadataStandards: DefaultResearchOutputTableQuestion.columns.find((col) => col.heading === "Metadata Standard(s)"),
   licenses: DefaultResearchOutputTableQuestion.columns.find((col) => col.heading === "License"),
   releaseDate: DefaultResearchOutputTableQuestion.columns.find((col) => col.heading === "Anticipated Release Date"),
-  fileSize: DefaultResearchOutputTableQuestion.columns.find((col) => col.heading === "Anticipated File Size"),
+  fileSize: DefaultResearchOutputTableQuestion.columns.find((col) => col.heading === "Byte Size"),
 };
 
 /**
@@ -440,12 +440,14 @@ export const stateToJSON = (
       }
 
       case RO_RELEASE_DATE: {
-        columns.push(DefaultResearchOutputReleaseDateColumn);
+        const overrides = field.helpText ? { attributes: { help: field.helpText } } : {};
+        columns.push(buildColumnFromDefault('releaseDate', field, overrides));
         break;
       }
 
       case RO_FILE_SIZE: {
-        columns.push(DefaultResearchOutputByteSizeColumn);
+        const overrides = field.helpText ? { attributes: { help: field.helpText } } : {};
+        columns.push(buildColumnFromDefault('fileSize', field, overrides));
         break;
       }
     }
