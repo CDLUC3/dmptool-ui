@@ -481,7 +481,8 @@
       "buttons": {
         "addDisplayLogic": "Add display logic",
         "removeDisplayLogic": "Remove all display logic",
-        "addCondition": "Add condition"
+        "addCondition": "Add condition",
+        "removeCondition": "Delete condition"
       },
       "options": {
         "any": "Any",
@@ -495,7 +496,9 @@
         "displayLogicMatchType": "Any/All",
         "thisQuestionIf": "this field if",
         "ofTheFollowingMatch": "of the following conditions are met",
-        "triggerQuestion": "The answer to this question"
+        "triggerQuestion": "The answer to this question",
+        "conditionOption": "condition option",
+        "conditionOperator": "Condition operator"
       }
     }
   },

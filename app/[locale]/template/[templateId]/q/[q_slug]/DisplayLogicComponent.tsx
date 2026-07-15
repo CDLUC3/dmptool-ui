@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   Button,
   Dialog,
@@ -57,10 +57,19 @@ const DisplayLogicComponent = ({
   displayLogic,
   onChange,
 }: DisplayLogicComponentProps) => {
+
+  console.log("***Trigger Questions***", triggerQuestions);
+  console.log("***Display Logic***", displayLogic);
+  // Localization
   const t = useTranslations('QuestionEdit');
   const Global = useTranslations('Global');
+
+  // States
   const [isRemoveAllOpen, setRemoveAllOpen] = useState(false);
 
+
+  // The selected trigger question is derived from the `displayLogic` prop, 
+  // so we can memoize it to avoid unnecessary recalculations.
   const selectedTriggerQuestion = useMemo(
     () =>
       triggerQuestions.find((q) => q.id === displayLogic?.triggerQuestionId) ??
@@ -68,6 +77,8 @@ const DisplayLogicComponent = ({
     [triggerQuestions, displayLogic?.triggerQuestionId]
   );
 
+  // The trigger question and option items are derived from the `triggerQuestions` prop, 
+  // so we can memoize them to avoid unnecessary recalculations.
   const triggerQuestionItems = useMemo(
     () =>
       triggerQuestions.map((q) => ({
@@ -77,6 +88,7 @@ const DisplayLogicComponent = ({
     [triggerQuestions]
   );
 
+  // The option items are derived from the `selectedTriggerQuestion`
   const optionItems = useMemo(
     () =>
       selectedTriggerQuestion
@@ -88,11 +100,30 @@ const DisplayLogicComponent = ({
     [selectedTriggerQuestion]
   );
 
+  // Helper function to update the display logic state with partial updates until the user confirms by saving
   const updateLogic = (partial: Partial<DisplayLogic>) => {
     if (!displayLogic) return;
     onChange({ ...displayLogic, ...partial });
   };
 
+  // Auto-add a first condition whenever a trigger question is selected
+  // and there are no conditions yet. Runs on every render where the
+  // dependencies change, not just once on mount — and it's above the
+  // early return so it's called unconditionally on every render.
+  useEffect(() => {
+    if (!displayLogic || !selectedTriggerQuestion) return;
+    if (displayLogic.conditions.length > 0) return;
+
+    const firstOption = selectedTriggerQuestion.options[0];
+    const newCondition: DisplayLogicCondition = {
+      id: makeConditionId(),
+      operator: 'is',
+      optionValue: firstOption ? firstOption.value : '',
+    };
+    updateLogic({ conditions: [newCondition] });
+  }, [selectedTriggerQuestion, displayLogic]);
+
+  // When user clicks on "Add Display Logic", we initialize a new display logic object with default values.
   const handleAddDisplayLogic = () => {
     onChange({
       action: 'show',
@@ -102,6 +133,7 @@ const DisplayLogicComponent = ({
     });
   };
 
+  // When user selects a different trigger question, we update the display logic state accordingly.
   const handleTriggerQuestionChange = (value: string) => {
     const newTriggerId = value ? Number(value) : null;
     // Changing the trigger question invalidates any existing conditions,
@@ -109,6 +141,7 @@ const DisplayLogicComponent = ({
     updateLogic({ triggerQuestionId: newTriggerId, conditions: [] });
   };
 
+  // When user clicks on "Add Condition", we add a new condition to the display logic.
   const handleAddCondition = () => {
     if (!displayLogic || !selectedTriggerQuestion) return;
     const firstOption = selectedTriggerQuestion.options[0];
@@ -120,6 +153,7 @@ const DisplayLogicComponent = ({
     updateLogic({ conditions: [...displayLogic.conditions, newCondition] });
   };
 
+  // When user clicks on the "X" button for a condition, we remove that condition from the display logic.
   const handleRemoveCondition = (conditionId: string) => {
     if (!displayLogic) return;
     updateLogic({
@@ -127,6 +161,7 @@ const DisplayLogicComponent = ({
     });
   };
 
+  // When user changes the operator or option value for a condition, we update that condition in the display logic.
   const handleConditionChange = (
     conditionId: string,
     field: 'operator' | 'optionValue',
@@ -140,10 +175,12 @@ const DisplayLogicComponent = ({
     });
   };
 
+  // When user confirms the removal of all display logic, we reset the display logic state to null.
   const handleRemoveAll = () => {
     onChange(null);
     setRemoveAllOpen(false);
   };
+
 
   // Initial state — just the description + "Add Display Logic" button.
   if (!displayLogic) {
@@ -207,51 +244,55 @@ const DisplayLogicComponent = ({
         </p>
       )}
 
-      {selectedTriggerQuestion && (
-        <div className={styles.conditionsWrapper}>
+      {selectedTriggerQuestion && displayLogic.conditions && (
+        <>
+
           {displayLogic.conditions.map((condition) => (
-            <div key={condition.id} className={styles.conditionRow}>
-              <FormSelect
-                name={`operator-${condition.id}`}
-                label={t('tabPanel.labels.conditionOperator')}
-                hideLabelVisually
-                items={OPERATOR_ITEMS}
-                selectedKey={condition.operator}
-                onChange={(value) =>
-                  handleConditionChange(condition.id, 'operator', value)
-                }
-              />
+            <div className={styles.conditionsWrapper}>
+              <div key={condition.id} className={styles.conditionRow}>
+                <FormSelect
+                  name={`operator-${condition.id}`}
+                  label={t('tabPanel.labels.conditionOperator')}
+                  selectClasses={styles.conditionOperatorSelect}
+                  hideLabelVisually
+                  items={OPERATOR_ITEMS}
+                  selectedKey={condition.operator}
+                  onChange={(value) =>
+                    handleConditionChange(condition.id, 'operator', value)
+                  }
+                />
 
-              <FormSelect
-                name={`option-${condition.id}`}
-                label={t('tabPanel.labels.conditionOption')}
-                hideLabelVisually
-                items={optionItems}
-                selectedKey={condition.optionValue}
-                onChange={(value) =>
-                  handleConditionChange(condition.id, 'optionValue', value)
-                }
-              />
-
+                <FormSelect
+                  name={`option-${condition.id}`}
+                  label={t('tabPanel.labels.conditionOption')}
+                  selectClasses={styles.conditionOperatorSelect}
+                  hideLabelVisually
+                  items={optionItems}
+                  selectedKey={condition.optionValue}
+                  onChange={(value) =>
+                    handleConditionChange(condition.id, 'optionValue', value)
+                  }
+                />
+              </div>
               <Button
-                className={`react-aria-Button ${styles.removeConditionButton}`}
+                className={`react-aria-Button link ${styles.removeConditionButton}`}
                 type="button"
                 aria-label={t('tabPanel.buttons.removeCondition')}
                 onPress={() => handleRemoveCondition(condition.id)}
               >
-                ✕
+                {t('tabPanel.buttons.removeCondition')}
               </Button>
             </div>
           ))}
 
           <Button
-            className="react-aria-Button"
+            className="react-aria-Button link"
             type="button"
             onPress={handleAddCondition}
           >
             {t('tabPanel.buttons.addCondition')}
           </Button>
-        </div>
+        </>
       )}
 
       <div className={styles.removeAllWrapper}>
