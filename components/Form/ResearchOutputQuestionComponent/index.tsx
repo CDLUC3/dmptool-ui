@@ -18,6 +18,7 @@ import {
 } from '@/app/types';
 import { DefaultResearchOutputTypesQuery, LicensesQuery } from '@/generated/graphql';
 import styles from './researchOutput.module.scss';
+import FileSize from "@/components/QuestionAdd/FileSize";
 
 interface ResearchOutputComponentProps {
   standardFields: StandardField[];
@@ -93,6 +94,9 @@ const ResearchOutputComponent: React.FC<ResearchOutputComponentProps> = ({
           {QuestionAdd('researchOutput.description')}
         </p>
         <div className={styles.fieldsList}>
+
+          {standardFields.map(sf => sf.commonStandardId).join(', ')}
+
           {standardFields.map((field) => {
             // Required fields will always have their checkbox checked and disabled to
             // prevent changes, and a tooltip explaining why it's disabled
@@ -100,34 +104,40 @@ const ResearchOutputComponent: React.FC<ResearchOutputComponentProps> = ({
             const tooltipId = `tooltip-${field.id}`;
 
             return (
-              <div key={field.id} className={styles.fieldRowWrapper}>
+              <div
+                key={field.id}
+                className={styles.fieldRowWrapper}
+              >
                 <div className={styles.fieldRow}>
                   <div className={isDisabled ? styles.tooltipWrapper : undefined}>
-
                     <Checkbox
                       isSelected={field.enabled}
                       isDisabled={isDisabled}
                       data-testid={`checkbox-${field.id}`}
                       aria-describedby={isDisabled ? tooltipId : undefined}
-                      className={
-                        `react-aria-Checkbox ${(field.required)
-                          ? styles.disabledCheckbox
-                          : ''
-                        }`
-                      }
-
+                      className={`react-aria-Checkbox ${field.required ? styles.disabledCheckbox : ""}`}
                       onChange={(isSelected) => onStandardFieldChange(field.id, isSelected)}
                     >
                       <div className="checkbox">
-                        <svg viewBox="0 0 18 18" aria-hidden="true">
+                        <svg
+                          viewBox="0 0 18 18"
+                          aria-hidden="true"
+                        >
                           <polyline points="1 9 7 14 15 4" />
                         </svg>
                       </div>
                       <span>{field.label}</span>
                     </Checkbox>
-                    {isDisabled && <span id={tooltipId} className={styles.tooltipText}>{QuestionAdd('researchOutput.tooltip.requiredFields')}</span>}
+                    {isDisabled && (
+                      <span
+                        id={tooltipId}
+                        className={styles.tooltipText}
+                      >
+                        {QuestionAdd("researchOutput.tooltip.requiredFields")}
+                      </span>
+                    )}
                   </div>
-                  {field.id !== 'title' && (
+                  {field.id !== "title" && (
                     <Button
                       type="button"
                       className={`buttonLink link`}
@@ -136,55 +146,67 @@ const ResearchOutputComponent: React.FC<ResearchOutputComponentProps> = ({
                       onPress={() => onCustomizeField(field.id)}
                     >
                       {expandedFields.includes(field.id)
-                        ? Global('buttons.close')
+                        ? Global("buttons.close")
                         : nonCustomizableFieldIds.includes(field.id)
-                          ? Global('links.expand')
-                          : Global('buttons.customize')}
+                          ? Global("links.expand")
+                          : Global("buttons.customize")}
                     </Button>
                   )}
-
                 </div>
 
                 {/* Expanded panel OUTSIDE the .fieldRow flex container */}
                 {expandedFields.includes(field.id) && (
-                  <div id={`panel-${field.id}`} className={styles.fieldPanel}>
+                  <div
+                    id={`panel-${field.id}`}
+                    className={styles.fieldPanel}
+                  >
                     {/** Description */}
-                    {field.id === 'description' && (
+                    {field.id === "description" && (
                       <FormInput
                         name="descriptionHelpText"
                         type="text"
                         isRequired={false}
-                        label={QuestionAdd('labels.helpText', { fieldName: QuestionAdd('researchOutput.labels.description') })}
-                        value={field.helpText || ''}
-                        onChange={(e) => onUpdateStandardFieldProperty('description', 'helpText', e.currentTarget.value)}
-                        helpMessage={QuestionAdd('researchOutput.helpText')}
+                        label={QuestionAdd("labels.helpText", {
+                          fieldName: QuestionAdd("researchOutput.labels.description"),
+                        })}
+                        value={field.helpText || ""}
+                        onChange={(e) =>
+                          onUpdateStandardFieldProperty("description", "helpText", e.currentTarget.value)
+                        }
+                        helpMessage={QuestionAdd("researchOutput.helpText")}
                         maxLength={300}
                       />
                     )}
 
                     {/** Data Flags Configuration */}
-                    {field.id === 'dataFlags' && field.content && field.content.type === 'checkBoxes' && (
-                      <div style={{ marginBottom: '1.5rem' }}>
+                    {field.id === "dataFlags" && field.content && field.content.type === "checkBoxes" && (
+                      <div style={{ marginBottom: "1.5rem" }}>
                         <fieldset>
-                          <legend>{QuestionAdd('researchOutput.legends.dataFlag')}</legend>
+                          <legend>{QuestionAdd("researchOutput.legends.dataFlag")}</legend>
                           <div className={styles.dataFlagsConfig}>
                             {field.content.options.map((option, index) => (
-                              <div key={`${option.value}-${index}`} style={{ marginBottom: '0.5rem' }}>
+                              <div
+                                key={`${option.value}-${index}`}
+                                style={{ marginBottom: "0.5rem" }}
+                              >
                                 <Checkbox
                                   isSelected={option.selected}
                                   onChange={(isSelected) => {
-                                    if (field.content?.type === 'checkBoxes') {
+                                    if (field.content?.type === "checkBoxes") {
                                       const updatedOptions = [...field.content.options];
                                       updatedOptions[index] = { ...option, selected: isSelected };
-                                      onUpdateStandardFieldProperty('dataFlags', 'content', {
+                                      onUpdateStandardFieldProperty("dataFlags", "content", {
                                         ...field.content,
-                                        options: updatedOptions
+                                        options: updatedOptions,
                                       });
                                     }
                                   }}
                                 >
                                   <div className="checkbox">
-                                    <svg viewBox="0 0 18 18" aria-hidden="true">
+                                    <svg
+                                      viewBox="0 0 18 18"
+                                      aria-hidden="true"
+                                    >
                                       <polyline points="1 9 7 14 15 4" />
                                     </svg>
                                   </div>
@@ -197,9 +219,8 @@ const ResearchOutputComponent: React.FC<ResearchOutputComponentProps> = ({
                       </div>
                     )}
 
-
                     {/** Output Type Configuration */}
-                    {field.id === 'outputType' && (
+                    {field.id === "outputType" && (
                       <>
                         <OutputTypeField
                           field={field}
@@ -214,17 +235,19 @@ const ResearchOutputComponent: React.FC<ResearchOutputComponentProps> = ({
                           name="outputTypeHelpText"
                           type="text"
                           isRequired={false}
-                          label={QuestionAdd('labels.helpText', { fieldName: field.label })}
-                          value={field.helpText || ''}
-                          onChange={(e) => onUpdateStandardFieldProperty('outputType', 'helpText', e.currentTarget.value)}
-                          helpMessage={QuestionAdd('researchOutput.helpText')}
+                          label={QuestionAdd("labels.helpText", { fieldName: field.label })}
+                          value={field.helpText || ""}
+                          onChange={(e) =>
+                            onUpdateStandardFieldProperty("outputType", "helpText", e.currentTarget.value)
+                          }
+                          helpMessage={QuestionAdd("researchOutput.helpText")}
                           maxLength={300}
                         />
                       </>
                     )}
 
                     {/** Repository Selector */}
-                    {field.id === 'repoSelector' && (
+                    {field.id === "repoSelector" && (
                       <>
                         <RepositorySelectionSystem
                           field={field}
@@ -236,17 +259,19 @@ const ResearchOutputComponent: React.FC<ResearchOutputComponentProps> = ({
                           name="repositoriesHelpText"
                           type="text"
                           isRequired={false}
-                          label={QuestionAdd('labels.helpText', { fieldName: field.label })}
-                          value={field.helpText || ''}
-                          onChange={(e) => onUpdateStandardFieldProperty('repoSelector', 'helpText', e.currentTarget.value)}
-                          helpMessage={QuestionAdd('researchOutput.helpText')}
+                          label={QuestionAdd("labels.helpText", { fieldName: field.label })}
+                          value={field.helpText || ""}
+                          onChange={(e) =>
+                            onUpdateStandardFieldProperty("repoSelector", "helpText", e.currentTarget.value)
+                          }
+                          helpMessage={QuestionAdd("researchOutput.helpText")}
                           maxLength={300}
                         />
                       </>
                     )}
 
                     {/** Metadata Standards */}
-                    {field.id === 'metadataStandards' && hasMetaDataConfig(field) && (
+                    {field.id === "metadataStandards" && hasMetaDataConfig(field) && (
                       <>
                         <MetaDataStandards
                           field={field}
@@ -258,17 +283,19 @@ const ResearchOutputComponent: React.FC<ResearchOutputComponentProps> = ({
                           name="metadataStandardsHelpText"
                           type="text"
                           isRequired={false}
-                          label={QuestionAdd('labels.helpText', { fieldName: field.label })}
-                          value={field.helpText || ''}
-                          onChange={(e) => onUpdateStandardFieldProperty('metadataStandards', 'helpText', e.currentTarget.value)}
-                          helpMessage={QuestionAdd('researchOutput.helpText')}
+                          label={QuestionAdd("labels.helpText", { fieldName: field.label })}
+                          value={field.helpText || ""}
+                          onChange={(e) =>
+                            onUpdateStandardFieldProperty("metadataStandards", "helpText", e.currentTarget.value)
+                          }
+                          helpMessage={QuestionAdd("researchOutput.helpText")}
                           maxLength={300}
                         />
                       </>
                     )}
 
                     {/**License configurations */}
-                    {field.id === 'licenses' && (
+                    {field.id === "licenses" && (
                       <>
                         <LicenseField
                           field={field}
@@ -283,37 +310,70 @@ const ResearchOutputComponent: React.FC<ResearchOutputComponentProps> = ({
                           name="licensesHelpText"
                           type="text"
                           isRequired={false}
-                          label={QuestionAdd('labels.helpText', { fieldName: field.label })}
-                          value={field.helpText || ''}
-                          onChange={(e) => onUpdateStandardFieldProperty('licenses', 'helpText', e.currentTarget.value)}
-                          helpMessage={QuestionAdd('researchOutput.helpText')}
+                          label={QuestionAdd("labels.helpText", { fieldName: field.label })}
+                          value={field.helpText || ""}
+                          onChange={(e) => onUpdateStandardFieldProperty("licenses", "helpText", e.currentTarget.value)}
+                          helpMessage={QuestionAdd("researchOutput.helpText")}
                           maxLength={300}
                         />
                       </>
                     )}
 
                     {/**Access level configurations */}
-                    {field.id === 'accessLevels' && (
+                    {field.id === "accessLevels" && (
                       <>
-                        <InitialAccessLevel
-                          field={field}
-                        />
+                        <InitialAccessLevel field={field} />
 
                         <FormInput
                           name="accessLevelsHelpText"
                           type="text"
                           isRequired={false}
-                          label={QuestionAdd('labels.helpText', { fieldName: field.label })}
-                          value={field.helpText || ''}
-                          onChange={(e) => onUpdateStandardFieldProperty('accessLevels', 'helpText', e.currentTarget.value)}
-                          helpMessage={QuestionAdd('researchOutput.helpText')}
+                          label={QuestionAdd("labels.helpText", { fieldName: field.label })}
+                          value={field.helpText || ""}
+                          onChange={(e) =>
+                            onUpdateStandardFieldProperty("accessLevels", "helpText", e.currentTarget.value)
+                          }
+                          helpMessage={QuestionAdd("researchOutput.helpText")}
                           maxLength={300}
+                        />
+                      </>
+                    )}
+
+                    {/**Anticipated release date configurations */}
+                    {field.id === "releaseDate" && (
+                      <>
+                        <FormInput
+                          name="releaseDateHelpText"
+                          type="text"
+                          isRequired={false}
+                          label={QuestionAdd("labels.helpText", { fieldName: field.label })}
+                          value={field.helpText || ""}
+                          onChange={(e) =>
+                            onUpdateStandardFieldProperty("releaseDate", "helpText", e.currentTarget.value)
+                          }
+                          helpMessage={QuestionAdd("researchOutput.helpText")}
+                        />
+                      </>
+                    )}
+
+                    {/**Anticipated file size configurations */}
+                    {field.id === "fileSize" && (
+                      <>
+                        <FileSize field={field} />
+
+                        <FormInput
+                          name="fileSizeHelpText"
+                          type="text"
+                          isRequired={false}
+                          label={QuestionAdd("labels.helpText", { fieldName: field.label })}
+                          value={field.helpText || ""}
+                          onChange={(e) => onUpdateStandardFieldProperty("fileSize", "helpText", e.currentTarget.value)}
+                          helpMessage={QuestionAdd("researchOutput.helpText")}
                         />
                       </>
                     )}
                   </div>
                 )}
-
               </div>
             );
           })}

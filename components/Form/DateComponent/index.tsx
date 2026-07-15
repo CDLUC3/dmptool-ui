@@ -11,7 +11,7 @@ import {
   Calendar,
   Heading,
   CalendarGrid,
-  CalendarCell,
+  CalendarCell, Text,
 } from "react-aria-components";
 import { parseDate, DateValue } from "@internationalized/date";
 import { DmpIcon } from "@/components/Icons";
@@ -26,6 +26,7 @@ interface DateComponentProps {
   label: string;
   minValue?: DateValue | string;
   maxValue?: DateValue | string;
+  helpMessage?: string;
   isDisabled?: boolean;
 }
 
@@ -43,6 +44,7 @@ const DateComponent: React.FC<DateComponentProps> = ({
   label,
   minValue,
   maxValue,
+  helpMessage = "",
   isDisabled = false,
 }) => (
   <DatePicker
@@ -56,9 +58,7 @@ const DateComponent: React.FC<DateComponentProps> = ({
   >
     <Label>{label}</Label>
     <Group>
-      <DateInput>
-        {(segment) => <DateSegment segment={segment} />}
-      </DateInput>
+      <DateInput>{(segment) => <DateSegment segment={segment} />}</DateInput>
       <Button>
         <DmpIcon
           icon="solid-down_arrow"
@@ -84,12 +84,18 @@ const DateComponent: React.FC<DateComponentProps> = ({
               />
             </Button>
           </header>
-          <CalendarGrid>
-            {(date) => <CalendarCell date={date} />}
-          </CalendarGrid>
+          <CalendarGrid>{(date) => <CalendarCell date={date} />}</CalendarGrid>
         </Calendar>
       </Dialog>
     </Popover>
+    {helpMessage && (
+      <Text
+        slot="description"
+        className="help-text"
+      >
+        {helpMessage}
+      </Text>
+    )}
   </DatePicker>
 );
 

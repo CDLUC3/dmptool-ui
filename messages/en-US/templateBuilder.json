@@ -604,7 +604,7 @@
         "licenses": "Licenses",
         "initialAccessLevels": "Initial Access Levels",
         "releaseDate": "Anticipated Release Date",
-        "byteSize": "Anticipated Size",
+        "byteSize": "Anticipated File Size",
         "useCustomList": "Use custom list",
         "useDefaults": "Use defaults"
       },
@@ -719,6 +719,11 @@
         },
         "buttons": {
           "addAccessLevel": "Add access level"
+        }
+      },
+      "fileSize": {
+        "legends": {
+          "default": "Default file size units"
         }
       },
       "licenses": {

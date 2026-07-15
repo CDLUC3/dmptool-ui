@@ -31,6 +31,8 @@ import {
   RO_DESCRIPTION_ID,
   RO_LICENSES_ID,
   RO_ACCESS_LEVELS_ID,
+  RO_RELEASE_DATE,
+  RO_FILE_SIZE,
 } from "@/lib/constants";
 
 import { jsonToState, stateToJSON } from '@/utils/researchOutputTransformations';
@@ -45,6 +47,8 @@ const standardKeys = new Set([
   'researchOutput.metadataStandards',
   'researchOutput.licenses',
   'researchOutput.accessLevels',
+  'researchOutput.releaseDate',
+  'researchOutput.fileSize',
   'Data Flags',
   'Title',
   'Description',
@@ -53,6 +57,8 @@ const standardKeys = new Set([
   'Metadata Standards',
   'Licenses',
   'Initial Access Levels',
+  'Anticipated Release Date',
+  'Anticipated File Size'
 ]);
 
 // Custom hook for research output table
@@ -186,6 +192,39 @@ export const useResearchOutputTable = ({ setHasUnsavedChanges, announce, initial
           selectedDefaults: [] as string[],
           customLevels: [] as AccessLevelInterface[],
         },
+      },
+      {
+        id: RO_RELEASE_DATE,
+        commonStandardId: ResearchOutputTableColumnsEnum.enum.issued,
+        label: QuestionAdd("researchOutput.labels.releaseDate"),
+        languageTranslationKey: "labels.releaseDate",
+        enabled: false,
+        defaultValue: "",
+        helpText: "",
+      },
+      {
+        id: RO_FILE_SIZE,
+        commonStandardId: ResearchOutputTableColumnsEnum.enum.byte_size,
+        label: QuestionAdd("researchOutput.labels.byteSize"),
+        languageTranslationKey: "labels.byteSize",
+        enabled: false,
+        defaultValue: "",
+        helpText: "",
+        byteSizeConfig: {
+          selectedUnit: "bytes",
+          availableUnits: [
+            { label: "bytes", value: "bytes", selected: false },
+            { label: "KB", value: "kb", selected: false },
+            { label: "MB", value: "mb", selected: false },
+            { label: "GB", value: "gb", selected: false },
+            { label: "TB", value: "tb", selected: false },
+            { label: "PB", value: "pb", selected: false },
+          ],
+        },
+        byteSizeFieldConfig: {
+          enabled: false,
+          maxByteSize: Number.MAX_SAFE_INTEGER,
+        }
       },
     ],
     [QuestionAdd],

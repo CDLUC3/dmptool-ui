@@ -167,6 +167,10 @@ export interface AccessLevelInterface {
   selected: boolean;
 }
 
+export interface FileSizeFieldProps {
+  field: StandardField;
+}
+
 export interface OutputTypeFieldConfigProps {
   field: StandardField;
   newOutputType: OutputTypeInterface;

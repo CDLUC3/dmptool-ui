@@ -885,6 +885,7 @@ const SingleResearchOutputComponent = ({
                 <DateComponent
                   name="startDate"
                   value={getCalendarDateValue(typeof value === "string" ? value : "")}
+                  helpMessage={col.content.attributes?.help || col?.help}
                   onChange={(newDate) => {
                     const dateString = newDate ? newDate.toString() : "";
                     handleCellChange(col.commonStandardId, colIndex, dateString);
@@ -898,7 +899,6 @@ const SingleResearchOutputComponent = ({
 
           case ResearchOutputTableColumnsEnum.enum.byte_size: {
             const byteSizeValue = value as { value: number | undefined, context: string };
-
             return (
               <div
                 key={col.heading}
@@ -910,10 +910,10 @@ const SingleResearchOutputComponent = ({
                 <FormInput
                   label={Global("labels.anticipatedFileSize")}
                   name="research_output_file_size"
+                  helpMessage={col.content.attributes?.help || col?.help}
                   type="number"
                   isRequired={false}
                   value={byteSizeValue.value}
-                  min={0}
                   onChange={(e) => {
                     handleCellChange(col.commonStandardId, colIndex, {
                       value: e.target.value === "" ? 0 : Number(e.target.value),

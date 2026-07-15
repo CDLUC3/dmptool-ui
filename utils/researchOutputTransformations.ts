@@ -19,6 +19,8 @@ import {
   RO_METADATA_STANDARD_SELECTOR_ID,
   RO_LICENSES_ID,
   RO_ACCESS_LEVELS_ID,
+  RO_RELEASE_DATE,
+  RO_FILE_SIZE,
 } from "@/lib/constants";
 import { getDefaultAnswerForColumn } from '@/utils/researchOutputTable';
 import {
@@ -55,22 +57,26 @@ type RepositoryItem = RepositorySearchAnswerType['answer'][number];
 
 // Standard field identifiers that we recognize
 const standardKeys = new Set([
-  'researchOutput.title',
-  'researchOutput.description',
-  'researchOutput.outputType',
-  'researchOutput.dataFlags',
-  'researchOutput.repositories',
-  'researchOutput.metadataStandards',
-  'researchOutput.licenses',
-  'researchOutput.accessLevels',
-  'Data Flags',
-  'Title',
-  'Description',
-  'Output Type',
-  'Repositories',
-  'Metadata Standards',
-  'Licenses',
-  'Initial Access Levels',
+  "researchOutput.title",
+  "researchOutput.description",
+  "researchOutput.outputType",
+  "researchOutput.dataFlags",
+  "researchOutput.repositories",
+  "researchOutput.metadataStandards",
+  "researchOutput.licenses",
+  "researchOutput.accessLevels",
+  "researchOutput.releaseDate",
+  "researchOutput.fileSize",
+  "Data Flags",
+  "Title",
+  "Description",
+  "Output Type",
+  "Repositories",
+  "Metadata Standards",
+  "Licenses",
+  "Initial Access Levels",
+  "Anticipated Release Date",
+  "Anticipated File Size",
 ]);
 
 // Create a mapping from field IDs to default columns
@@ -83,6 +89,8 @@ const DEFAULT_COLUMNS_MAP: Record<string, ResearchOutputColumn | undefined> = {
   repositories: DefaultResearchOutputTableQuestion.columns.find((col) => col.heading === "Repository(ies)"),
   metadataStandards: DefaultResearchOutputTableQuestion.columns.find((col) => col.heading === "Metadata Standard(s)"),
   licenses: DefaultResearchOutputTableQuestion.columns.find((col) => col.heading === "License"),
+  releaseDate: DefaultResearchOutputTableQuestion.columns.find((col) => col.heading === "Anticipated Release Date"),
+  fileSize: DefaultResearchOutputTableQuestion.columns.find((col) => col.heading === "Anticipated File Size"),
 };
 
 /**
@@ -430,17 +438,18 @@ export const stateToJSON = (
         }));
         break;
       }
+
+      case RO_RELEASE_DATE: {
+        columns.push(DefaultResearchOutputReleaseDateColumn);
+        break;
+      }
+
+      case RO_FILE_SIZE: {
+        columns.push(DefaultResearchOutputByteSizeColumn);
+        break;
+      }
     }
   });
-
-  // The Answer JSON always includes the Anticipated Release Date and Byte Size so we need to include it here in
-  // the question JSON otherwise the 2 never line up column-wise
-  if (!columns.some(col => col.commonStandardId === ResearchOutputTableColumnsEnum.enum.issued)) {
-    columns.push(DefaultResearchOutputReleaseDateColumn);
-  }
-  if (!columns.some((col) => col.commonStandardId === ResearchOutputTableColumnsEnum.enum.byte_size)) {
-    columns.push(DefaultResearchOutputByteSizeColumn);
-  }
 
   // Add additional (custom) fields
   additionalFields.forEach(customField => {
@@ -638,6 +647,26 @@ export const jsonToState = (
         break;
       }
 
+      case RO_RELEASE_DATE: {
+        const col = findColumn(['releaseDate']);
+        if (col) {
+          updated.enabled = col.enabled;
+          updated.helpText = getHelpText(col.content.attributes);
+          updated.required = col.required;
+        }
+        break;
+      }
+
+      case RO_FILE_SIZE: {
+        const col = findColumn(["fileSize"]);
+        if (col) {
+          updated.enabled = col.enabled;
+          updated.helpText = getHelpText(col.content.attributes);
+          updated.required = col.required;
+        }
+        break;
+      }
+
       case RO_TITLE_ID:
       case RO_DESCRIPTION_ID: {
         const col = findColumn([
@@ -713,6 +742,10 @@ export const jsonToState = (
             return "metadataStandards";
           case ResearchOutputTableColumnsEnum.enum.license_ref:
             return "licenses";
+          case ResearchOutputTableColumnsEnum.enum.issued:
+            return "releaseDate";
+          case ResearchOutputTableColumnsEnum.enum.byte_size:
+            return "fileSize";
           case ResearchOutputTableColumnsEnum.enum.title:
           case ResearchOutputTableColumnsEnum.enum.description:
             return col.commonStandardId;
