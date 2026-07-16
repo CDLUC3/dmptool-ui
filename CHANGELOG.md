@@ -1,4 +1,5 @@
 ## Added
+- Added an override for the `systeminformation` dependency
 - Added show/hide password toggle to `FormInput`, enabled by default for password fields [#80]
 - Migrated login and signup pages to use `FormInput` for consistency with other auth forms [#80]
 - Added password field examples to the styleguide form-elements page [#80]
@@ -28,6 +29,7 @@
 - Added `UpdateAffiliation` and `AffiliationById` queries [#203]
 
 ## Updated
+- Fixed issue with local reference to `@dmptool/types`
 - Updated ResearchOutputTable question and answer components to use the new `commonStandardId` property
 - Updated the ResearchOutputTable question to include the Anticipated Release Date and Anticipated File Size columns in the JSON but continue to NOT display to the admin when editing the question.
 - Upgraded `@dmptool/types` package to `v4.0.0`
