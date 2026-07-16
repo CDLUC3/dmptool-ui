@@ -4,7 +4,12 @@ import userEvent from '@testing-library/user-event';
 import { NextIntlClientProvider } from 'next-intl';
 import SingleResearchOutputComponent from '../index';
 import { ResearchOutputTable } from '@/app/types';
-import { DefaultResearchOutputTableQuestion } from '@dmptool/types';
+import {
+  DefaultResearchOutputTableQuestion,
+  ResearchOutputLicenseColumnType,
+  ResearchOutputMetadataStandardColumnType,
+  ResearchOutputRepositoryColumnType,
+} from "@dmptool/types";
 import { RecommendedLicensesDocument, DefaultResearchOutputTypesDocument } from '@/generated/graphql';
 // Mock Apollo Client's useQuery hook
 jest.mock('@apollo/client/react', () => ({
@@ -303,148 +308,180 @@ const renderWithProviders = (component: React.ReactElement) => {
 };
 
 // Mock columns
-const mockColumns: typeof DefaultResearchOutputTableQuestion['columns'] = [
+const mockColumns: (typeof DefaultResearchOutputTableQuestion)["columns"] = [
   {
-    heading: 'Title',
-    help: 'Enter the title of this research output',
+    heading: "Title",
+    commonStandardId: "title",
+    help: "Enter the title of this research output",
     required: true,
     enabled: true,
     content: {
-      type: 'text',
-      meta: { schemaVersion: '1.0' },
+      type: "text",
+      meta: { schemaVersion: "1.0" },
       attributes: {
         maxLength: 500,
-        labelTranslationKey: 'labels.title',
+        labelTranslationKey: "labels.title",
       },
     },
   },
   {
-    heading: 'Description',
-    help: 'Enter a brief description',
+    heading: "Description",
+    commonStandardId: "description",
+    help: "Enter a brief description",
     required: true,
     enabled: true,
     content: {
-      type: 'textArea',
-      meta: { schemaVersion: '1.0' },
+      type: "textArea",
+      meta: { schemaVersion: "1.0" },
       attributes: {
         cols: 20,
         rows: 2,
         asRichText: true,
         maxLength: 10000,
-        labelTranslationKey: 'labels.description',
+        labelTranslationKey: "labels.description",
       },
     },
   },
   {
-    heading: 'Output Type',
-    help: 'Select the type',
+    heading: "Output Type",
+    commonStandardId: "type",
+    help: "Select the type",
     required: true,
     enabled: true,
     content: {
-      type: 'selectBox',
-      meta: { schemaVersion: '1.0' },
+      type: "selectBox",
+      meta: { schemaVersion: "1.0" },
       options: [],
       attributes: {
-        labelTranslationKey: 'labels.outputType',
+        labelTranslationKey: "labels.outputType",
         multiple: false,
       },
     },
   },
   {
-    heading: 'Data Flags',
-    help: 'Mark statements that are true',
+    heading: "Data Flags",
+    commonStandardId: "data_flags",
+    help: "Mark statements that are true",
     required: false,
     enabled: true,
     content: {
-      type: 'checkBoxes',
-      meta: { schemaVersion: '1.0' },
+      type: "checkBoxes",
+      meta: { schemaVersion: "1.0" },
       options: [
-        { label: 'May contain sensitive data?', value: 'sensitive', selected: true },
-        { label: 'May contain personal data?', value: 'personal', selected: true },
+        { label: "May contain sensitive data?", value: "sensitive", selected: true },
+        { label: "May contain personal data?", value: "personal", selected: true },
       ],
       attributes: {
-        labelTranslationKey: 'labels.dataFlags',
+        labelTranslationKey: "labels.dataFlags",
       },
     },
   },
   {
-    heading: 'Repositories',
-    help: 'Select repositories',
+    heading: "Repositories",
+    commonStandardId: "host",
+    help: "Select repositories",
     required: false,
     enabled: true,
     content: {
-      type: 'repositorySearch',
-      meta: { schemaVersion: '1.0' },
+      type: "repositorySearch",
+      meta: { schemaVersion: "1.0" },
       graphQL: {
-        query: 'query Repositories...',
-        queryId: 'useRepositoriesQuery',
+        query: "query Repositories...",
+        queryId: "useRepositoriesQuery",
         variables: [],
-        answerField: 'uri',
+        answerField: "uri",
         displayFields: [],
-        responseField: 'repositories.items',
+        responseField: "repositories.items",
       },
       attributes: {
-        labelTranslationKey: 'labels.repositories',
+        labelTranslationKey: "labels.repositories",
       },
     },
   },
   {
-    heading: 'Metadata Standards',
-    help: 'Select metadata standards',
+    heading: "Metadata Standards",
+    commonStandardId: "metadata",
+    help: "Select metadata standards",
     required: false,
     enabled: true,
     content: {
-      type: 'metadataStandardSearch',
-      meta: { schemaVersion: '1.0' },
+      type: "metadataStandardSearch",
+      meta: { schemaVersion: "1.0" },
       graphQL: {
-        query: 'query MetadataStandards...',
-        queryId: 'useMetadataStandardsQuery',
+        query: "query MetadataStandards...",
+        queryId: "useMetadataStandardsQuery",
         variables: [],
-        answerField: 'uri',
+        answerField: "uri",
         displayFields: [],
-        responseField: 'metadataStandards.items',
+        responseField: "metadataStandards.items",
       },
       attributes: {
-        labelTranslationKey: 'labels.metadataStandards',
+        labelTranslationKey: "labels.metadataStandards",
       },
     },
   },
   {
-    heading: 'Licenses',
-    help: 'Select license',
+    heading: "Licenses",
+    commonStandardId: "license_ref",
+    help: "Select license",
     required: false,
     enabled: true,
     content: {
-      type: 'licenseSearch',
-      meta: { schemaVersion: '1.0' },
+      type: "licenseSearch",
+      meta: { schemaVersion: "1.0" },
       graphQL: {
-        query: 'query Licenses...',
-        queryId: 'useLicensesQuery',
+        query: "query Licenses...",
+        queryId: "useLicensesQuery",
         variables: [],
-        answerField: 'uri',
+        answerField: "uri",
         displayFields: [],
-        responseField: 'licenses',
+        responseField: "licenses",
       },
       attributes: {
-        labelTranslationKey: 'labels.licenses',
+        labelTranslationKey: "labels.licenses",
       },
     },
   },
   {
-    heading: 'Initial Access Levels',
-    help: 'Select access level',
+    heading: "Initial Access Levels",
+    commonStandardId: "data_access",
+    help: "Select access level",
     required: false,
     enabled: true,
     content: {
-      type: 'radioButtons',
-      meta: { schemaVersion: '1.0' },
+      type: "radioButtons",
+      meta: { schemaVersion: "1.0" },
       options: [],
       attributes: {
-        labelTranslationKey: 'labels.initialAccessLevels',
+        labelTranslationKey: "labels.initialAccessLevels",
       },
     },
   },
-] as any as typeof DefaultResearchOutputTableQuestion['columns'];
+  {
+    heading: "Anticipated Release Date",
+    commonStandardId: "issued",
+    help: "",
+    required: false,
+    enabled: false,
+    content: {
+      type: "date",
+      meta: { schemaVersion: "1.0" },
+      attributes: {}
+    }
+  },
+  {
+    heading: "Anticipated File Size",
+    commonStandardId: "byte_size",
+    help: "",
+    required: false,
+    enabled: false,
+    content: {
+      type: "numberWithContext",
+      meta: { schemaVersion: "1.0" },
+      attributes: {}
+    }
+  }
+] as any as (typeof DefaultResearchOutputTableQuestion)["columns"];
 
 const createMockRow = (
   title: string = '',
@@ -456,23 +493,24 @@ const createMockRow = (
   licenses: any[] = [],
   accessLevel: string = '',
   releaseDate: string = '',
-  byteSize: string = ''
+  byteSize: { value: number, context: string } = { value: 0, context: 'kb' }
 ): ResearchOutputTable => ({
   columns: [
-    { type: 'text', meta: { schemaVersion: '1.0' }, answer: title },
-    { type: 'textArea', meta: { schemaVersion: '1.0' }, answer: description },
-    { type: 'selectBox', meta: { schemaVersion: '1.0' }, answer: outputType },
-    { type: 'checkBoxes', meta: { schemaVersion: '1.0' }, answer: dataFlags },
-    { type: 'repositorySearch', meta: { schemaVersion: '1.0' }, answer: repositories },
+    { type: 'text', meta: { schemaVersion: '1.0' }, answer: title, commonStandardId: 'title' },
+    { type: 'textArea', meta: { schemaVersion: '1.0' }, answer: description, commonStandardId: 'description' },
+    { type: 'selectBox', meta: { schemaVersion: '1.0' }, answer: outputType, commonStandardId: 'type' },
+    { type: 'checkBoxes', meta: { schemaVersion: '1.0' }, answer: dataFlags, commonStandardId: 'data_flags' },
+    { type: 'repositorySearch', meta: { schemaVersion: '1.0' }, answer: repositories, commonStandardId: 'host' },
     {
       type: 'metadataStandardSearch',
       meta: { schemaVersion: '1.0' },
       answer: metadataStandards,
+      commonStandardId: 'metadata',
     },
-    { type: 'licenseSearch', meta: { schemaVersion: '1.0' }, answer: licenses },
-    { type: 'radioButtons', meta: { schemaVersion: '1.0' }, answer: accessLevel },
-    { type: 'text', meta: { schemaVersion: '1.0' }, answer: releaseDate },
-    { type: 'text', meta: { schemaVersion: '1.0' }, answer: byteSize },
+    { type: 'licenseSearch', meta: { schemaVersion: '1.0' }, answer: licenses, commonStandardId: 'license_ref' },
+    { type: 'radioButtons', meta: { schemaVersion: '1.0' }, answer: accessLevel, commonStandardId: 'data_access' },
+    { type: 'date', meta: { schemaVersion: '1.0' }, answer: releaseDate, commonStandardId: 'issued' },
+    { type: 'numberWithContext', meta: { schemaVersion: '1.0' }, answer: byteSize, commonStandardId: 'byte_size' },
   ],
 });
 
@@ -526,7 +564,7 @@ describe('SingleResearchOutputComponent', () => {
         [{ licenseId: 'https://spdx.org/licenses/CC0-1.0.json', licenseName: 'CC0-1.0' }],
         'open',
         '2025-12-31',
-        '100 mb'
+        { value: 100, context: 'mb' }
       );
 
       renderWithProviders(
@@ -838,7 +876,7 @@ describe('SingleResearchOutputComponent', () => {
       await user.type(fileSizeInput, '100');
 
       // Then change the unit
-      const unitSelect = screen.getByLabelText('labels.fileSizeUnit');
+      const unitSelect = screen.getByLabelText("labels.fileSizeUnit");
       await user.selectOptions(unitSelect, 'mb');
 
       expect(unitSelect).toHaveValue('mb');
@@ -1136,27 +1174,39 @@ describe('SingleResearchOutputComponent', () => {
   describe('Column Preferences', () => {
     it('should use repository preferences when provided', () => {
       const columnsWithPreferences = [...mockColumns];
+
+      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
       columnsWithPreferences[4] = {
         ...columnsWithPreferences[4],
         preferences: [
-          { value: 'https://zenodo.org', label: 'Zenodo' },
-          { value: 'https://figshare.com', label: 'Figshare' },
+          { value: "https://zenodo.org", label: "Zenodo" },
+          { value: "https://figshare.com", label: "Figshare" },
         ],
-      };
+      } as ResearchOutputRepositoryColumnType;
 
       // Create a row where repository answer is undefined/null, not an empty array
       const mockRow: ResearchOutputTable = {
         columns: [
-          { type: 'text', meta: { schemaVersion: '1.0' }, answer: '' },
-          { type: 'textArea', meta: { schemaVersion: '1.0' }, answer: '' },
-          { type: 'selectBox', meta: { schemaVersion: '1.0' }, answer: '' },
-          { type: 'checkBoxes', meta: { schemaVersion: '1.0' }, answer: [] },
-          { type: 'repositorySearch', meta: { schemaVersion: '1.0' }, answer: undefined as any }, // Not an array!
-          { type: 'metadataStandardSearch', meta: { schemaVersion: '1.0' }, answer: [] },
-          { type: 'licenseSearch', meta: { schemaVersion: '1.0' }, answer: [] },
-          { type: 'radioButtons', meta: { schemaVersion: '1.0' }, answer: '' },
-          { type: 'text', meta: { schemaVersion: '1.0' }, answer: '' },
-          { type: 'text', meta: { schemaVersion: '1.0' }, answer: '' },
+          { type: "text", meta: { schemaVersion: "1.0" }, answer: "", commonStandardId: "title" },
+          { type: "textArea", meta: { schemaVersion: "1.0" }, answer: "", commonStandardId: "description" },
+          { type: "selectBox", meta: { schemaVersion: "1.0" }, answer: "", commonStandardId: "type" },
+          { type: "checkBoxes", meta: { schemaVersion: "1.0" }, answer: [], commonStandardId: "data_flags" },
+          {
+            type: "repositorySearch",
+            meta: { schemaVersion: "1.0" },
+            answer: undefined as any,
+            commonStandardId: "host",
+          }, // Not an array!
+          { type: "metadataStandardSearch", meta: { schemaVersion: "1.0" }, answer: [], commonStandardId: "metadata" },
+          { type: "licenseSearch", meta: { schemaVersion: "1.0" }, answer: [], commonStandardId: "license_ref" },
+          { type: "radioButtons", meta: { schemaVersion: "1.0" }, answer: "", commonStandardId: "data_access" },
+          { type: "date", meta: { schemaVersion: "1.0" }, answer: "", commonStandardId: "issued" },
+          {
+            type: "numberWithContext",
+            meta: { schemaVersion: "1.0" },
+            answer: { value: 0, context: "" },
+            commonStandardId: "byte_size",
+          },
         ],
       };
 
@@ -1165,37 +1215,48 @@ describe('SingleResearchOutputComponent', () => {
           columns={columnsWithPreferences as any}
           rows={[mockRow]}
           setRows={mockSetRows}
-        />
+        />,
       );
 
-      const repoValue = screen.getByTestId('repo-value');
-      expect(repoValue.textContent).toContain('Zenodo');
-      expect(repoValue.textContent).toContain('Figshare');
+      const repoValue = screen.getByTestId("repo-value");
+      expect(repoValue.textContent).toContain("Zenodo");
+      expect(repoValue.textContent).toContain("Figshare");
     });
 
     it('should use metadata standard preferences when provided', () => {
       const columnsWithPreferences = [...mockColumns];
+      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
       columnsWithPreferences[5] = {
         ...columnsWithPreferences[5],
         preferences: [
-          { value: 'https://dublincore.org', label: 'Dublin Core' },
-          { value: 'https://datacite.org', label: 'DataCite' },
+          { value: "https://dublincore.org", label: "Dublin Core" },
+          { value: "https://datacite.org", label: "DataCite" },
         ],
-      };
+      } as ResearchOutputMetadataStandardColumnType;
 
       // Create a row where metadata standard answer is undefined/null, not an empty array
       const mockRow: ResearchOutputTable = {
         columns: [
-          { type: 'text', meta: { schemaVersion: '1.0' }, answer: '' },
-          { type: 'textArea', meta: { schemaVersion: '1.0' }, answer: '' },
-          { type: 'selectBox', meta: { schemaVersion: '1.0' }, answer: '' },
-          { type: 'checkBoxes', meta: { schemaVersion: '1.0' }, answer: [] },
-          { type: 'repositorySearch', meta: { schemaVersion: '1.0' }, answer: [] },
-          { type: 'metadataStandardSearch', meta: { schemaVersion: '1.0' }, answer: undefined as any }, // Not an array!
-          { type: 'licenseSearch', meta: { schemaVersion: '1.0' }, answer: [] },
-          { type: 'radioButtons', meta: { schemaVersion: '1.0' }, answer: '' },
-          { type: 'text', meta: { schemaVersion: '1.0' }, answer: '' },
-          { type: 'text', meta: { schemaVersion: '1.0' }, answer: '' },
+          { type: "text", meta: { schemaVersion: "1.0" }, answer: "", commonStandardId: "title" },
+          { type: "textArea", meta: { schemaVersion: "1.0" }, answer: "", commonStandardId: "description" },
+          { type: "selectBox", meta: { schemaVersion: "1.0" }, answer: "", commonStandardId: "type" },
+          { type: "checkBoxes", meta: { schemaVersion: "1.0" }, answer: [], commonStandardId: "data_flags" },
+          { type: "repositorySearch", meta: { schemaVersion: "1.0" }, answer: [], commonStandardId: "host" },
+          {
+            type: "metadataStandardSearch",
+            meta: { schemaVersion: "1.0" },
+            answer: undefined as any,
+            commonStandardId: "metadata",
+          }, // Not an array!
+          { type: "licenseSearch", meta: { schemaVersion: "1.0" }, answer: [], commonStandardId: "license_ref" },
+          { type: "radioButtons", meta: { schemaVersion: "1.0" }, answer: "", commonStandardId: "data_access" },
+          { type: "date", meta: { schemaVersion: "1.0" }, answer: "", commonStandardId: "issued" },
+          {
+            type: "numberWithContext",
+            meta: { schemaVersion: "1.0" },
+            answer: { value: 0, context: "" },
+            commonStandardId: "byte_size",
+          },
         ],
       };
 
@@ -1204,23 +1265,24 @@ describe('SingleResearchOutputComponent', () => {
           columns={columnsWithPreferences as any}
           rows={[mockRow]}
           setRows={mockSetRows}
-        />
+        />,
       );
 
-      const metadataValue = screen.getByTestId('metadata-value');
-      expect(metadataValue.textContent).toContain('Dublin Core');
-      expect(metadataValue.textContent).toContain('DataCite');
+      const metadataValue = screen.getByTestId("metadata-value");
+      expect(metadataValue.textContent).toContain("Dublin Core");
+      expect(metadataValue.textContent).toContain("DataCite");
     });
 
     it('should use license preferences over recommended licenses', () => {
       const columnsWithPreferences = [...mockColumns];
+      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
       columnsWithPreferences[6] = {
         ...columnsWithPreferences[6],
         preferences: [
-          { value: 'https://spdx.org/licenses/GPL-3.0.json', label: 'GPL-3.0' },
-          { value: 'https://spdx.org/licenses/Apache-2.0.json', label: 'Apache-2.0' },
+          { value: "https://spdx.org/licenses/GPL-3.0.json", label: "GPL-3.0" },
+          { value: "https://spdx.org/licenses/Apache-2.0.json", label: "Apache-2.0" },
         ],
-      };
+      } as ResearchOutputLicenseColumnType;
 
       const mockRow = createMockRow();
 
@@ -1229,21 +1291,21 @@ describe('SingleResearchOutputComponent', () => {
           columns={columnsWithPreferences as any}
           rows={[mockRow]}
           setRows={mockSetRows}
-        />
+        />,
       );
 
-      const licenseSelect = screen.getByLabelText('labels.licenses');
+      const licenseSelect = screen.getByLabelText("labels.licenses");
 
-      expect(within(licenseSelect).getByText('GPL-3.0')).toBeInTheDocument();
-      expect(within(licenseSelect).getByText('Apache-2.0')).toBeInTheDocument();
+      expect(within(licenseSelect).getByText("GPL-3.0")).toBeInTheDocument();
+      expect(within(licenseSelect).getByText("Apache-2.0")).toBeInTheDocument();
       // Should not show recommended licenses
-      expect(within(licenseSelect).queryByText('CC0-1.0')).not.toBeInTheDocument();
+      expect(within(licenseSelect).queryByText("CC0-1.0")).not.toBeInTheDocument();
     });
   });
 
   describe('Byte Size Parsing', () => {
     it('should parse existing byte size answer correctly', () => {
-      const mockRow = createMockRow('', '', '', [], [], [], [], '', '', '100 mb');
+      const mockRow = createMockRow('', '', '', [], [], [], [], '', '', { value: 100, context: 'mb' });
 
       renderWithProviders(
         <SingleResearchOutputComponent
@@ -1274,7 +1336,7 @@ describe('SingleResearchOutputComponent', () => {
       const fileSizeInput = screen.getByLabelText('labels.anticipatedFileSize');
       const unitSelect = screen.getByLabelText('labels.fileSizeUnit');
 
-      expect(fileSizeInput).toHaveValue(null);
+      expect(fileSizeInput).toHaveValue(0);
       expect(unitSelect).toHaveValue('kb'); // Default
     });
   });

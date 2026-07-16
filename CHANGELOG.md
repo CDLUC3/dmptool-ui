@@ -28,6 +28,9 @@
 - Added `UpdateAffiliation` and `AffiliationById` queries [#203]
 
 ## Updated
+- Updated ResearchOutputTable question and answer components to use the new `commonStandardId` property
+- Updated the ResearchOutputTable question to include the Anticipated Release Date and Anticipated File Size columns in the JSON but continue to NOT display to the admin when editing the question.
+- Upgraded `@dmptool/types` package to `v4.0.0`
 - Fixed `TypeAheadWithOther` clearing the institution name when the field is focused, so profile (and other) edits keep the existing value with the caret at the end [#80]
 - Updated shared typeahead functionality and styling for better accessibility [#80]
 - Simplified the page title on template question edit screens. The header is now a static "Edit Question" label rather than "Edit: {question title}", making long or HTML-formatted question text less likely to clutter the page header [#78]

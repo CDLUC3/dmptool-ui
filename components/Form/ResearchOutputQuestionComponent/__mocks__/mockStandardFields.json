@@ -1,12 +1,14 @@
 [
   {
     "id": "title",
+    "commonStandardId": "title",
     "label": "Title",
     "enabled": true,
     "required": true
   },
   {
     "id": "description",
+    "commonStandardId": "description",
     "label": "Description",
     "enabled": false,
     "placeholder": "",
@@ -17,6 +19,7 @@
   },
   {
     "id": "outputType",
+    "commonStandardId": "type",
     "label": "Output Type",
     "enabled": true,
     "helpText": "",
@@ -29,6 +32,7 @@
   },
   {
     "id": "dataFlags",
+    "commonStandardId": "data_flags",
     "label": "Data Flags",
     "enabled": false,
     "helpText": "",
@@ -40,6 +44,7 @@
   },
   {
     "id": "repoSelector",
+    "commonStandardId": "host",
     "label": "Repositories",
     "enabled": false,
     "placeholder": "",
@@ -52,6 +57,7 @@
   },
   {
     "id": "metadataStandards",
+    "commonStandardId": "metadata",
     "label": "Metadata Standards",
     "enabled": false,
     "helpText": "",
@@ -62,6 +68,7 @@
   },
   {
     "id": "licenses",
+    "commonStandardId": "license_ref",
     "label": "Licenses",
     "enabled": false,
     "defaultValue": "",
@@ -74,6 +81,7 @@
   },
   {
     "id": "accessLevels",
+    "commonStandardId": "data_access",
     "label": "Initial Access Levels",
     "enabled": false,
     "defaultValue": "",
