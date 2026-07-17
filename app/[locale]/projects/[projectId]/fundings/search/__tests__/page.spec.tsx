@@ -328,6 +328,10 @@ describe("ProjectsProjectFundingSearch", () => {
 
     // NOTE: Search-field is the testid provided by the fundersearch component
     expect(screen.getByTestId('search-field')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('loading-component')).not.toBeInTheDocument();
+    });
   });
 
   it("should show a short-list of Popular Funders", async () => {
@@ -766,7 +770,7 @@ describe("ProjectsProjectFundingSearch", () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText("popularTitle")).toBeInTheDocument();
+      expect(screen.getByText("Popular Funder 1")).toBeInTheDocument();
     });
 
     const results = await axe(container);
