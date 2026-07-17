@@ -29,6 +29,7 @@
 - Added `UpdateAffiliation` and `AffiliationById` queries [#203]
 
 ## Updated
+- Made some updates to the Edit Project Member page to accommodate Other Affiliation [#96]
 - Redesigned the project members list as accessible cards with linked member names, inline ORCID profile links, role badges, skeleton loading, and consistent heading/link labelling [#96]
 - Updated the project member Edit page to use “project member” wording (not “collaborator”), show affiliation display names, align required/recommended labels with Add, and no longer require email to save [#96]
 - Updated Add and Edit project member flows to share labels, validation messages, and role ordering (alphabetical with “No role assigned” last); roles are now required before saving [#96]

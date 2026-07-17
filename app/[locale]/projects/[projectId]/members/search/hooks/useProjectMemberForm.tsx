@@ -204,6 +204,7 @@ export const useProjectMemberForm = (projectId: string) => {
         );
         const errs = extractErrors(normalized, [
           'general',
+          'affiliation',
           'affiliationId',
           'email',
           'givenName',

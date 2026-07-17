@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useReducer, useState } from 'react';
+import { useCallback, useEffect, useRef, useReducer, useState } from 'react';
 import { useQuery, useMutation } from '@apollo/client/react';
 import { useParams, useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
@@ -163,6 +163,7 @@ const ProjectsProjectMembersEdit: React.FC = () => {
   }
 
   const updateAffiliationFormData = (id: string, value: string) => {
+    resetErrors();
     setProjectMemberData({
       ...projectMemberData,
       affiliationId: id,
@@ -248,16 +249,17 @@ const ProjectsProjectMembersEdit: React.FC = () => {
   // update the project member
   const updateProjectMember = async (): Promise<[ProjectMemberErrors, boolean]> => {
     try {
-      // The deployed UpdateProjectMemberInput does not expose affiliationName yet.
-      // Keeping it in the variables prepares this flow for the backend schema update.
-      const affiliationName = projectMemberData.affiliationId === 'other'
+      const isOtherAffiliation = projectMemberData.affiliationId === 'other';
+      const affiliationName = isOtherAffiliation
         ? projectMemberData.otherAffiliationName?.trim()
         : undefined;
+
       const input = {
         projectMemberId: Number(memberId),
         givenName: projectMemberData.givenName,
         surName: projectMemberData.surName,
-        affiliationId: projectMemberData.affiliationId,
+        // Don't send the affiliationId if isOtherAffiliation is true, as the backend will handle it as a free-text affiliation
+        affiliationId: isOtherAffiliation ? '' : projectMemberData.affiliationId,
         email: projectMemberData.email,
         orcid: projectMemberData.orcid,
         memberRoleIds: checkboxRoles.filter((id) => id !== undefined).map(Number),
@@ -351,13 +353,17 @@ const ProjectsProjectMembersEdit: React.FC = () => {
     return isValid;
   };
 
+  const resetErrors = useCallback(() => {
+    setErrorMessages([]);
+    clearAllFieldErrors();
+  }, [clearAllFieldErrors]);
+
   // Handle form submit
   const handleFormSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     // Clear previous error messages
-    clearAllFieldErrors();
-    setErrorMessages([]);
+    resetErrors();
 
     if (isFormValid()) {
       // Create new section
