@@ -416,7 +416,7 @@
     },
     "descriptions": {
       "sampleText": "Provide an example or template of expected answer (optional but recommended)",
-      "sampleTextAsDefault": "Have this answer entered into the DMP by default",
+      "sampleTextAsDefault": "Use this sample text as the default answer in the DMP",
       "previewText": "See how this question will look to users.",
       "bestPracticePara1": "Keep the Question short so it can be used as a heading in the final DMP.",
       "bestPracticePara2": "Use the Requirements to add more detailed instructions to the question, making sure to include all instructions for what needs to be answered in the question.",
@@ -493,7 +493,7 @@
     "title": "Add new question",
     "descriptions": {
       "sampleText": "Provide an example or template of expected answer (optional but recommended)",
-      "sampleTextAsDefault": "Have this answer entered into the DMP by default",
+      "sampleTextAsDefault": "Use this sample text as the default answer in the DMP",
       "previewText": "See how this question will look to users.",
       "bestPracticePara1": "Keep the Question short so it can be used as a heading in the final DMP.",
       "bestPracticePara2": "Use the Requirements to add more detailed instructions to the question, making sure to include all instructions for what needs to be answered in the question.",
