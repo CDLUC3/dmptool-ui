@@ -29,6 +29,7 @@
 - Added `UpdateAffiliation` and `AffiliationById` queries [#203]
 
 ## Updated
+- Moved the "use sample text as default" checkbox directly under the Sample Text field on template question add and edit screens, and clarified its label [#77]
 - Fixed issue with local reference to `@dmptool/types`
 - Updated ResearchOutputTable question and answer components to use the new `commonStandardId` property
 - Updated the ResearchOutputTable question to include the Anticipated Release Date and Anticipated File Size columns in the JSON but continue to NOT display to the admin when editing the question.
