@@ -29,6 +29,7 @@
 - Added `UpdateAffiliation` and `AffiliationById` queries [#203]
 
 ## Updated
+- Redesigned the template question answer-choice editor with responsive choice cards, accessible reordering and removal controls, clearer validation, and localized English and Portuguese labels
 - Fixed issue with local reference to `@dmptool/types`
 - Updated ResearchOutputTable question and answer components to use the new `commonStandardId` property
 - Updated the ResearchOutputTable question to include the Anticipated Release Date and Anticipated File Size columns in the JSON but continue to NOT display to the admin when editing the question.

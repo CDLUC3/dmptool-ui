@@ -425,7 +425,7 @@
     },
     "helpText": {
       "textField": "Alterar o tipo de questão, por exemplo, de campo de texto para botões de rádio, pode resultar na perda de alguns dados.",
-      "questionOptions": "Por favor, insira as opções de resposta para o {questionType}",
+      "questionOptions": "Opções de resposta",
       "questionText": "Mantenha a pergunta concisa e clara. Use os requisitos ou orientações para fornecer explicações adicionais.",
       "requirementText": "Use isto para instruções específicas sobre o que os pesquisadores devem incluir em sua resposta, tais como as propriedades dos seus dados que deveriam listar.",
       "guidanceText": "Permita que os pesquisadores saibam como fornecer melhor respostas aos requisitos, tais como políticas para considerar de sua organização ou quais fatores considerar.",
@@ -466,26 +466,39 @@
     }
   },
   "QuestionOptionsComponent": {
+    "headings": {
+      "removeChoice": "Remover opção {number}?"
+    },
     "labels": {
-      "order": "Ordem",
-      "text": "Texto",
-      "default": "Padrão"
+      "choiceNumber": "Opção {number}",
+      "default": "Selecionada por padrão",
+      "reorder": "Reordenar opção {number}"
     },
     "buttons": {
-      "addRow": "Adicionar linha",
-      "deleteRow": "Excluir linha {count}"
+      "addRow": "Adicionar opção",
+      "deleteRow": "Remover opção {count}",
+      "cancel": "Cancelar",
+      "confirmRemove": "Remover opção",
+      "setDefault": "Definir opção {number} como padrão",
+      "clearDefault": "Desmarcar opção {number} como padrão",
+      "moveUp": "Mover opção {number} para cima",
+      "moveDown": "Mover opção {number} para baixo"
     },
     "messages": {
-      "successAddingRow": "Linha {number} adicionada",
-      "rowInfo": "Linha {number}"
+      "rowInfo": "Opção {number}",
+      "choiceRequired": "Insira o texto da opção {number}.",
+      "choiceErrors": "Cada opção de resposta deve incluir texto.",
+      "confirmRemove": "Tem certeza de que deseja remover a opção {number}?",
+      "instructions": "Adicione as opções que os redatores do plano podem selecionar. Cada opção requer texto. Use as setas para alterar a ordem de exibição."
     },
     "announcements": {
-      "rowDefault": "Linha com ID {id} definida como padrão.",
-      "rowRemoved": "Linha com ID {id} removida.",
-      "rowAdded": "Linha {nextNum} adicionada."
+      "rowDefault": "Opção {number} definida como padrão.",
+      "rowDefaultCleared": "A opção {number} não está mais definida como padrão.",
+      "rowRemoved": "Opção {number} removida.",
+      "rowAdded": "Opção {nextNum} adicionada.",
+      "rowMoved": "Opção movida da posição {from} para {to}."
     },
     "placeholder": {
-      "orderNumber": "Insira o pedido #",
       "text": "Digite o texto"
     }
   },
@@ -536,7 +549,7 @@
     },
     "helpText": {
       "textField": "Alterar o tipo de questão, por exemplo, de campo de texto para botões de rádio, pode resultar na perda de alguns dados.",
-      "questionOptions": "Por favor, insira as opções de resposta para o {questionName}",
+      "questionOptions": "Opções de resposta",
       "questionText": "Mantenha a pergunta concisa e clara. Use os requisitos ou orientações para fornecer explicações adicionais.",
       "requirementText": "Use isto para instruções específicas sobre o que os pesquisadores precisam incluir em sua resposta, tais como as propriedades dos seus dados que devem listar.",
       "guidanceText": "Permita que os pesquisadores saibam como fornecer melhor respostas aos requisitos, tais como políticas para considerar de sua organização ou quais fatores considerar.",
