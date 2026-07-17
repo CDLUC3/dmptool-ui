@@ -139,6 +139,7 @@
 }
 
 .optionsCheckbox {
+  align-items: center;
   margin-bottom: 0;
 
   .checkBox {
@@ -182,7 +183,7 @@
 
   .default {
     grid-column: 2;
-    padding-top: 1.875rem;
+    padding-top: 1.75rem;
   }
 
   .actions {
