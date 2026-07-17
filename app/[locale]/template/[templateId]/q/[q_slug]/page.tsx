@@ -95,6 +95,13 @@ import {
   isOptionsType,
   getOverrides,
 } from '@/app/hooks/useEditQuestion';
+import { MOCK_QUESTIONS_DATA } from './__mocks__/mockTriggerQuestions';
+import { toSaveInput, fromFetched } from './displayLogicMapper';
+import {
+  fetchQuestionDisplayLogicAction,
+  saveQuestionDisplayLogicAction,
+  removeQuestionDisplayLogicAction
+} from './actions/displayLogicMockAction';
 import styles from './questionEdit.module.scss';
 
 const QuestionEdit = () => {
@@ -114,6 +121,7 @@ const QuestionEdit = () => {
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState<boolean>(false);
   // Form state
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [isSavingLogic, setIsSavingLogic] = useState<boolean>(false);
 
   // State for managing form inputs
   const [question, setQuestion] = useState<Question>();
@@ -142,6 +150,10 @@ const QuestionEdit = () => {
 
   // Set URLs
   const TEMPLATE_URL = routePath('template.show', { templateId });
+
+  // This is to turn on Mock data
+  const useMockLogic = searchParams.get('mockLogic') === '1';
+
 
   // Helper function to make announcements
   const announce = (message: string) => {
@@ -199,18 +211,17 @@ const QuestionEdit = () => {
     data: questionsData,
     error: questionsError
   } = useQuery(QuestionsDocument, {
-    variables: {
-      sectionId: selectedQuestion?.question?.sectionId ?? 0
-    },
-    skip: !selectedQuestion?.question?.sectionId, // Skip if sectionId is not available yet
+    variables: { sectionId: selectedQuestion?.question?.sectionId ?? 0 },
+    skip: !selectedQuestion?.question?.sectionId || useMockLogic, // don't bother querying if mocking
   });
+
 
   // Candidate questions this question's display logic can trigger off of:
   // prior multiple-choice/checkbox questions in the same section.
   const { triggerQuestions } = useTriggerQuestions(
-    questionsData?.questions,
+    useMockLogic ? MOCK_QUESTIONS_DATA : questionsData?.questions,
     Number(questionId),
-    question?.displayOrder ? Number(question.displayOrder) : undefined
+    useMockLogic ? 99 : (question?.displayOrder ? Number(question.displayOrder) : undefined)
   );
 
   // Update rows state and question.json when options change
@@ -321,6 +332,34 @@ const QuestionEdit = () => {
   const handleDisplayLogicChange = (logic: DisplayLogic | null) => {
     setDisplayLogic(logic);
     setHasUnsavedChanges(true);
+  };
+
+  const handleSaveDisplayLogic = async () => {
+    if (!question) return;
+    setIsSavingLogic(true);
+
+    try {
+      if (displayLogic) {
+        const input = toSaveInput(Number(questionId), displayLogic);
+        const response = await saveQuestionDisplayLogicAction(input);
+        if (!response.success) {
+          setErrors(response.errors ?? []);
+          return;
+        }
+        // Re-sync local state with the "persisted" record so group/condition
+        // ids reflect what was actually saved, same as a real mutation
+        // response would.
+        setDisplayLogic(fromFetched(response.data ?? null));
+      } else {
+        await removeQuestionDisplayLogicAction({ questionId: Number(questionId) });
+      }
+      setHasUnsavedChanges(false);
+      toastState.add(t('messages.success.displayLogicUpdated'), { type: 'success' });
+    } catch {
+      announce(QuestionAdd('researchOutput.announcements.errorOccurred') || 'An error occurred.');
+    } finally {
+      setIsSavingLogic(false);
+    }
   };
 
   // Prepare input for the questionTypeHandler. For options questions, we update the 
@@ -529,18 +568,6 @@ const QuestionEdit = () => {
 
         setHasOptions(isOptionsQuestion);
 
-        // Hydrate display logic from the loaded question, if present.
-        // ASSUMPTION: selectedQuestion.question.displayLogic is a JSON
-        // string on the Question type — add it to your GraphQL schema/
-        // QuestionDocument query if it isn't there yet.
-        if ('displayLogic' in q && q.displayLogic) {
-          try {
-            setDisplayLogic(JSON.parse(q.displayLogic as unknown as string));
-          } catch {
-            setDisplayLogic(null);
-          }
-        }
-
         if (questionType === TYPEAHEAD_QUESTION_TYPE) {
           setTypeaheadSearchLabel(parsed?.attributes?.label ?? '');
           setTypeAheadHelpText(parsed?.attributes?.help ?? '');
@@ -564,7 +591,7 @@ const QuestionEdit = () => {
         setErrors(prev => [...prev, 'Error parsing question data']);
       }
     }
-  }, [selectedQuestion]);
+  }, [selectedQuestion, questionId]);
 
   useEffect(() => {
     if (questionType) {
@@ -670,6 +697,23 @@ const QuestionEdit = () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
     };
   }, [hasUnsavedChanges]);
+
+  // Hydrate display logic from the mock store. Swap this for reading
+  // selectedQuestion.question.displayLogic directly (still via fromFetched)
+  // once QuestionDocument selects the real nested field — the shape
+  // returned is intentionally identical either way.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const fetched = await fetchQuestionDisplayLogicAction(Number(questionId));
+      if (!cancelled) {
+        setDisplayLogic(fromFetched(fetched));
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [questionId]);
 
   if (loading) {
     return <Loading message={Global('messaging.loading')} />;
@@ -944,12 +988,21 @@ const QuestionEdit = () => {
 
             {/** Tab: Display Logic Tab */}
             <TabPanel id="logic">
+              {useMockLogic && (
+                <p style={{ background: '#fef3c7', padding: '0.5rem 1rem', borderRadius: '0.375rem' }}>
+                  Using mock trigger questions for testing (?mockLogic=1)
+                </p>
+              )}
+
               <h2>{t('tabPanel.headings.logic')}</h2>
               <DisplayLogicComponent
                 triggerQuestions={triggerQuestions}
                 displayLogic={displayLogic}
                 onChange={handleDisplayLogicChange}
+                onSave={handleSaveDisplayLogic}
+                isSaving={isSavingLogic}
               />
+
             </TabPanel>
           </Tabs>
 

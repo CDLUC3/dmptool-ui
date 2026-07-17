@@ -9,24 +9,24 @@ export type DisplayLogicOperator = 'is' | 'is_not';
 
 export interface DisplayLogicCondition {
   id: string;
-  operator: DisplayLogicOperator;
-  // The `value` of the trigger question's option this condition checks
-  // against (matches QuestionOption.value from your existing types).
+  operator: 'is' | 'is_not';
   optionValue: string;
 }
 
-export interface DisplayLogic {
-  action: DisplayLogicAction;
-  matchType: DisplayLogicMatchType;
-  triggerQuestionId: number | null;
+export interface DisplayLogicGroup {
+  id: string;
+  triggerQuestionId: number;
   conditions: DisplayLogicCondition[];
 }
 
-// A trimmed-down shape of a "candidate trigger question" — i.e. a prior
-// multiple-choice/checkbox question in the same section/template that this
-// question's display logic can be based on.
+export interface DisplayLogic {
+  action: 'show' | 'hide';
+  matchType: 'any' | 'all'; // combines the groups below
+  groups: DisplayLogicGroup[];
+}
+
 export interface TriggerQuestionOption {
   id: number;
   questionText: string;
-  options: { value: string; label: string }[];
+  options: { label: string; value: string }[];
 }

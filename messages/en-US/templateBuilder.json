@@ -450,7 +450,8 @@
       "success": {
         "questionUpdated": "Question was successfully updated",
         "questionRemoved": "Question was successfully removed",
-        "successDeletingQuestion": "Question deleted successfully"
+        "successDeletingQuestion": "Question deleted successfully",
+        "displayLogicUpdated": "Display logic saved successfully"
       }
     },
     "headings": {
@@ -482,7 +483,9 @@
         "addDisplayLogic": "Add display logic",
         "removeDisplayLogic": "Remove all display logic",
         "addCondition": "Add condition",
-        "removeCondition": "Delete condition"
+        "removeCondition": "Delete condition",
+        "saveDisplayLogic": "Save display logic",
+        "addTriggerQuestion": "Add a trigger question"
       },
       "options": {
         "any": "Any",
@@ -494,7 +497,7 @@
       "labels": {
         "displayLogicAction": "Show/Hide",
         "displayLogicMatchType": "Any/All",
-        "thisQuestionIf": "this field if",
+        "thisQuestionIf": "this question if",
         "ofTheFollowingMatch": "of the following conditions are met",
         "triggerQuestion": "The answer to this question",
         "conditionOption": "condition option",

@@ -1,12 +1,19 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   Button,
   Dialog,
   DialogTrigger,
+  Label,
+  SelectValue,
   Modal,
   ModalOverlay,
+  Popover,
+  Collection,
+  ListBox,
+  ListBoxItem,
+  Select
 } from 'react-aria-components';
 import { useTranslations } from 'next-intl';
 
@@ -14,188 +21,173 @@ import { FormSelect, TransitionButton } from '@/components/Form';
 import {
   DisplayLogic,
   DisplayLogicCondition,
+  DisplayLogicGroup,
   TriggerQuestionOption,
 } from '@/app/types/displayLogic';
 
 import styles from './displayLogic.module.scss';
 
 interface DisplayLogicComponentProps {
-  triggerQuestions: TriggerQuestionOption[];
+  triggerQuestions: TriggerQuestionOption[]; // all applicable: options-type, before this question
   displayLogic: DisplayLogic | null;
   onChange: (logic: DisplayLogic | null) => void;
+  onSave: () => Promise<void>;
+  isSaving?: boolean;
 }
 
 const MAX_OPTION_LABEL_LENGTH = 40;
-
 const truncateLabel = (label: string) =>
   label.length > MAX_OPTION_LABEL_LENGTH
     ? `${label.slice(0, MAX_OPTION_LABEL_LENGTH - 1)}…`
     : label;
 
-const makeConditionId = () =>
-  `cond-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+const makeId = (prefix: string) =>
+  `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
-// FormSelect only accepts a static `items` array of { id, name } — it
-// doesn't support <option> children like a native select.
 const ACTION_ITEMS = [
   { id: 'show', name: 'Show' },
   { id: 'hide', name: 'Hide' },
 ];
-
 const MATCH_TYPE_ITEMS = [
   { id: 'any', name: 'Any' },
   { id: 'all', name: 'All' },
 ];
-
 const OPERATOR_ITEMS = [
   { id: 'is', name: 'Is selected' },
   { id: 'is_not', name: 'Is NOT selected' },
 ];
 
+const makeGroup = (triggerQuestionId: number, tq: TriggerQuestionOption): DisplayLogicGroup => {
+  const firstOption = tq.options[0];
+  return {
+    id: makeId('group'),
+    triggerQuestionId,
+    conditions: [
+      { id: makeId('cond'), operator: 'is', optionValue: firstOption?.value ?? '' },
+    ],
+  };
+};
+
 const DisplayLogicComponent = ({
   triggerQuestions,
   displayLogic,
   onChange,
+  onSave,
+  isSaving = false,
 }: DisplayLogicComponentProps) => {
-
-  console.log("***Trigger Questions***", triggerQuestions);
-  console.log("***Display Logic***", displayLogic);
-  // Localization
   const t = useTranslations('QuestionEdit');
   const Global = useTranslations('Global');
-
-  // States
   const [isRemoveAllOpen, setRemoveAllOpen] = useState(false);
 
-
-  // The selected trigger question is derived from the `displayLogic` prop, 
-  // so we can memoize it to avoid unnecessary recalculations.
-  const selectedTriggerQuestion = useMemo(
-    () =>
-      triggerQuestions.find((q) => q.id === displayLogic?.triggerQuestionId) ??
-      null,
-    [triggerQuestions, displayLogic?.triggerQuestionId]
-  );
-
-  // The trigger question and option items are derived from the `triggerQuestions` prop, 
-  // so we can memoize them to avoid unnecessary recalculations.
-  const triggerQuestionItems = useMemo(
-    () =>
-      triggerQuestions.map((q) => ({
-        id: q.id.toString(),
-        name: q.questionText,
-      })),
+  const triggerQuestionMap = useMemo(
+    () => new Map(triggerQuestions.map((q) => [q.id, q])),
     [triggerQuestions]
   );
 
-  // The option items are derived from the `selectedTriggerQuestion`
-  const optionItems = useMemo(
-    () =>
-      selectedTriggerQuestion
-        ? selectedTriggerQuestion.options.map((opt) => ({
-          id: opt.value,
-          name: truncateLabel(opt.label),
-        }))
-        : [],
-    [selectedTriggerQuestion]
-  );
+  // Questions not already used by another group — so the same trigger
+  // question can't be picked twice, and so the "add trigger question"
+  // control disappears once every applicable question is in use.
+  const availableTriggerQuestions = (excludeGroupId?: string) => {
+    const usedIds = new Set(
+      (displayLogic?.groups ?? [])
+        .filter((g) => g.id !== excludeGroupId)
+        .map((g) => g.triggerQuestionId)
+    );
 
-  // Helper function to update the display logic state with partial updates until the user confirms by saving
+    return triggerQuestions.filter((q) => !usedIds.has(q.id));
+  };
+
   const updateLogic = (partial: Partial<DisplayLogic>) => {
     if (!displayLogic) return;
     onChange({ ...displayLogic, ...partial });
   };
 
-  // Auto-add a first condition whenever a trigger question is selected
-  // and there are no conditions yet. Runs on every render where the
-  // dependencies change, not just once on mount — and it's above the
-  // early return so it's called unconditionally on every render.
-  useEffect(() => {
-    if (!displayLogic || !selectedTriggerQuestion) return;
-    if (displayLogic.conditions.length > 0) return;
-
-    const firstOption = selectedTriggerQuestion.options[0];
-    const newCondition: DisplayLogicCondition = {
-      id: makeConditionId(),
-      operator: 'is',
-      optionValue: firstOption ? firstOption.value : '',
-    };
-    updateLogic({ conditions: [newCondition] });
-  }, [selectedTriggerQuestion, displayLogic]);
-
-  // When user clicks on "Add Display Logic", we initialize a new display logic object with default values.
-  const handleAddDisplayLogic = () => {
-    onChange({
-      action: 'show',
-      matchType: 'any',
-      triggerQuestionId: null,
-      conditions: [],
-    });
-  };
-
-  // When user selects a different trigger question, we update the display logic state accordingly.
-  const handleTriggerQuestionChange = (value: string) => {
-    const newTriggerId = value ? Number(value) : null;
-    // Changing the trigger question invalidates any existing conditions,
-    // since they reference option values that belong to the old question.
-    updateLogic({ triggerQuestionId: newTriggerId, conditions: [] });
-  };
-
-  // When user clicks on "Add Condition", we add a new condition to the display logic.
-  const handleAddCondition = () => {
-    if (!displayLogic || !selectedTriggerQuestion) return;
-    const firstOption = selectedTriggerQuestion.options[0];
-    const newCondition: DisplayLogicCondition = {
-      id: makeConditionId(),
-      operator: 'is',
-      optionValue: firstOption ? firstOption.value : '',
-    };
-    updateLogic({ conditions: [...displayLogic.conditions, newCondition] });
-  };
-
-  // When user clicks on the "X" button for a condition, we remove that condition from the display logic.
-  const handleRemoveCondition = (conditionId: string) => {
+  const updateGroup = (groupId: string, partial: Partial<DisplayLogicGroup>) => {
     if (!displayLogic) return;
     updateLogic({
-      conditions: displayLogic.conditions.filter((c) => c.id !== conditionId),
+      groups: displayLogic.groups.map((g) => (g.id === groupId ? { ...g, ...partial } : g)),
     });
   };
 
-  // When user changes the operator or option value for a condition, we update that condition in the display logic.
+  const handleAddDisplayLogic = () => {
+    onChange({ action: 'show', matchType: 'any', groups: [] });
+  };
+
+  // Adds a new trigger-question box, defaulting to the first
+  // not-yet-used applicable question.
+  const handleAddTriggerQuestion = () => {
+    if (!displayLogic) return;
+    const next = availableTriggerQuestions()[0];
+    if (!next) return;
+    updateLogic({ groups: [...displayLogic.groups, makeGroup(next.id, next)] });
+  };
+
+  const handleTriggerQuestionChange = (groupId: string, value: string) => {
+    const tq = triggerQuestionMap.get(Number(value));
+    if (!tq) return;
+    // Changing the trigger question invalidates that group's conditions,
+    // since they reference option values on the old question.
+    updateGroup(groupId, { triggerQuestionId: tq.id, conditions: makeGroup(tq.id, tq).conditions });
+  };
+
+  const handleRemoveGroup = (groupId: string) => {
+    if (!displayLogic) return;
+    updateLogic({ groups: displayLogic.groups.filter((g) => g.id !== groupId) });
+  };
+
+  const handleAddCondition = (group: DisplayLogicGroup, tq: TriggerQuestionOption) => {
+    const firstOption = tq.options[0];
+    updateGroup(group.id, {
+      conditions: [
+        ...group.conditions,
+        { id: makeId('cond'), operator: 'is', optionValue: firstOption?.value ?? '' },
+      ],
+    });
+  };
+
+  const handleRemoveCondition = (group: DisplayLogicGroup, conditionId: string) => {
+    updateGroup(group.id, { conditions: group.conditions.filter((c) => c.id !== conditionId) });
+  };
+
   const handleConditionChange = (
+    group: DisplayLogicGroup,
     conditionId: string,
     field: 'operator' | 'optionValue',
     value: string
   ) => {
-    if (!displayLogic) return;
-    updateLogic({
-      conditions: displayLogic.conditions.map((c) =>
+    updateGroup(group.id, {
+      conditions: group.conditions.map((c) =>
         c.id === conditionId ? { ...c, [field]: value } : c
       ),
     });
   };
 
-  // When user confirms the removal of all display logic, we reset the display logic state to null.
   const handleRemoveAll = () => {
     onChange(null);
     setRemoveAllOpen(false);
   };
 
-
-  // Initial state — just the description + "Add Display Logic" button.
   if (!displayLogic) {
     return (
       <div className={styles.displayLogicWrapper}>
         <p>{t('tabPanel.descriptions.displayLogic')}</p>
-        <Button
-          className={`react-aria-Button ${styles.addLogicButton}`}
-          onPress={handleAddDisplayLogic}
-        >
-          {t('tabPanel.buttons.addDisplayLogic')}
-        </Button>
+        {triggerQuestions.length === 0 ? (
+          <p className={styles.emptyStateText}>
+            {t('tabPanel.helpText.noTriggerQuestionsAvailable')}
+          </p>
+        ) : (
+          <Button
+            className={`react-aria-Button ${styles.addLogicButton}`}
+            onPress={handleAddDisplayLogic}
+          >
+            {t('tabPanel.buttons.addDisplayLogic')}
+          </Button>
+        )}
       </div>
     );
   }
+
+  const canAddMoreTriggerQuestions = availableTriggerQuestions().length > 0;
 
   return (
     <div className={styles.displayLogicWrapper}>
@@ -210,11 +202,7 @@ const DisplayLogicComponent = ({
           selectedKey={displayLogic.action}
           onChange={(value) => updateLogic({ action: value as 'show' | 'hide' })}
         />
-
-        <span className={styles.sentenceText}>
-          {t('tabPanel.labels.thisQuestionIf')}
-        </span>
-
+        <span className={styles.sentenceText}>{t('tabPanel.labels.thisQuestionIf')}</span>
         <FormSelect
           name="displayLogicMatchType"
           label={t('tabPanel.labels.displayLogicMatchType')}
@@ -223,32 +211,43 @@ const DisplayLogicComponent = ({
           selectedKey={displayLogic.matchType}
           onChange={(value) => updateLogic({ matchType: value as 'any' | 'all' })}
         />
-
-        <span className={styles.sentenceText}>
-          {t('tabPanel.labels.ofTheFollowingMatch')}
-        </span>
+        <span className={styles.sentenceText}>{t('tabPanel.labels.ofTheFollowingMatch')}</span>
       </div>
 
-      <FormSelect
-        name="triggerQuestion"
-        label={t('tabPanel.labels.triggerQuestion')}
-        items={triggerQuestionItems}
-        placeholder={t('tabPanel.options.selectQuestion')}
-        selectedKey={displayLogic.triggerQuestionId?.toString()}
-        onChange={handleTriggerQuestionChange}
-      />
+      {/* One box per trigger question the user has added */}
+      {displayLogic.groups.map((group) => {
+        const tq = triggerQuestionMap.get(group.triggerQuestionId);
+        if (!tq) return null;
 
-      {triggerQuestions.length === 0 && (
-        <p className={styles.emptyStateText}>
-          {t('tabPanel.helpText.noTriggerQuestionsAvailable')}
-        </p>
-      )}
+        const groupTriggerItems = availableTriggerQuestions(group.id).map(q => ({
+          id: q.id.toString(),
+          name: q.questionText,
+        }));
 
-      {selectedTriggerQuestion && displayLogic.conditions && (
-        <>
+        const optionItems = tq.options.map((opt) => ({
+          id: opt.value,
+          name: truncateLabel(opt.label),
+        }));
 
-          {displayLogic.conditions.map((condition) => (
-            <div className={styles.conditionsWrapper}>
+        return (
+          <div key={group.id} className={styles.conditionsWrapper}>
+            <Button
+              className={`react-aria-Button link ${styles.removeGroupButton}`}
+              type="button"
+              onPress={() => handleRemoveGroup(group.id)}
+            >
+              {Global('buttons.delete')}
+            </Button>
+
+            <FormSelect
+              name={`triggerQuestion-${group.id}`}
+              label={t('tabPanel.labels.triggerQuestion')}
+              items={groupTriggerItems}
+              selectedKey={group.triggerQuestionId.toString()}
+              onChange={(value) => handleTriggerQuestionChange(group.id, value)}
+            />
+
+            {group.conditions.map((condition) => (
               <div key={condition.id} className={styles.conditionRow}>
                 <FormSelect
                   name={`operator-${condition.id}`}
@@ -257,11 +256,8 @@ const DisplayLogicComponent = ({
                   hideLabelVisually
                   items={OPERATOR_ITEMS}
                   selectedKey={condition.operator}
-                  onChange={(value) =>
-                    handleConditionChange(condition.id, 'operator', value)
-                  }
+                  onChange={(value) => handleConditionChange(group, condition.id, 'operator', value)}
                 />
-
                 <FormSelect
                   name={`option-${condition.id}`}
                   label={t('tabPanel.labels.conditionOption')}
@@ -269,33 +265,47 @@ const DisplayLogicComponent = ({
                   hideLabelVisually
                   items={optionItems}
                   selectedKey={condition.optionValue}
-                  onChange={(value) =>
-                    handleConditionChange(condition.id, 'optionValue', value)
-                  }
+                  onChange={(value) => handleConditionChange(group, condition.id, 'optionValue', value)}
                 />
+                <Button
+                  className={`react-aria-Button ${styles.removeConditionButton}`}
+                  type="button"
+                  aria-label={t('tabPanel.buttons.removeCondition')}
+                  onPress={() => handleRemoveCondition(group, condition.id)}
+                >
+                  <span aria-hidden="true">&times;</span>
+                </Button>
               </div>
-              <Button
-                className={`react-aria-Button link ${styles.removeConditionButton}`}
-                type="button"
-                aria-label={t('tabPanel.buttons.removeCondition')}
-                onPress={() => handleRemoveCondition(condition.id)}
-              >
-                {t('tabPanel.buttons.removeCondition')}
-              </Button>
-            </div>
-          ))}
+            ))}
 
-          <Button
-            className="react-aria-Button link"
-            type="button"
-            onPress={handleAddCondition}
-          >
-            {t('tabPanel.buttons.addCondition')}
-          </Button>
-        </>
+            <Button
+              className="react-aria-Button link"
+              type="button"
+              onPress={() => handleAddCondition(group, tq)}
+            >
+              {t('tabPanel.buttons.addCondition')}
+            </Button>
+          </div>
+        );
+      })}
+
+      {canAddMoreTriggerQuestions && (
+        <Button className="react-aria-Button link" type="button" onPress={handleAddTriggerQuestion}>
+          {t('tabPanel.buttons.addTriggerQuestion')}
+        </Button>
       )}
 
-      <div className={styles.removeAllWrapper}>
+      <div className={styles.actionButtonsWrapper}>
+        <TransitionButton
+          type="button"
+          onPress={onSave}
+          isDisabled={displayLogic.groups.length === 0 || isSaving}
+          loadingLabel={Global('buttons.saving')}
+          showLoading={isSaving}
+        >
+          {t('tabPanel.buttons.saveDisplayLogic')}
+        </TransitionButton>
+
         <DialogTrigger isOpen={isRemoveAllOpen} onOpenChange={setRemoveAllOpen}>
           <Button className="danger" type="button">
             {t('tabPanel.buttons.removeDisplayLogic')}
@@ -308,11 +318,7 @@ const DisplayLogicComponent = ({
                     <h3>{t('tabPanel.headings.confirmRemoveAllDisplayLogic')}</h3>
                     <p>{t('tabPanel.descriptions.removeAllDisplayLogicWarning')}</p>
                     <div className={styles.removeAllConfirmButtons}>
-                      <Button
-                        className="react-aria-Button"
-                        autoFocus
-                        onPress={close}
-                      >
+                      <Button className="react-aria-Button" autoFocus onPress={close}>
                         {Global('buttons.cancel')}
                       </Button>
                       <TransitionButton
