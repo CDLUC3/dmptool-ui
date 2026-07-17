@@ -248,17 +248,25 @@ const ProjectsProjectMembersEdit: React.FC = () => {
   // update the project member
   const updateProjectMember = async (): Promise<[ProjectMemberErrors, boolean]> => {
     try {
+      // The deployed UpdateProjectMemberInput does not expose affiliationName yet.
+      // Keeping it in the variables prepares this flow for the backend schema update.
+      const affiliationName = projectMemberData.affiliationId === 'other'
+        ? projectMemberData.otherAffiliationName?.trim()
+        : undefined;
+      const input = {
+        projectMemberId: Number(memberId),
+        givenName: projectMemberData.givenName,
+        surName: projectMemberData.surName,
+        affiliationId: projectMemberData.affiliationId,
+        email: projectMemberData.email,
+        orcid: projectMemberData.orcid,
+        memberRoleIds: checkboxRoles.filter((id) => id !== undefined).map(Number),
+        ...(affiliationName ? { affiliationName } : {}),
+      };
+
       const response = await updateProjectMemberMutation({
         variables: {
-          input: {
-            projectMemberId: Number(memberId),
-            givenName: projectMemberData.givenName,
-            surName: projectMemberData.surName,
-            affiliationId: projectMemberData.affiliationId,
-            email: projectMemberData.email,
-            orcid: projectMemberData.orcid,
-            memberRoleIds: checkboxRoles.filter((id) => id !== undefined).map(Number)
-          }
+          input
         }
       });
 

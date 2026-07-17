@@ -372,6 +372,41 @@ describe("ProjectsProjectMembersEdit", () => {
     });
   });
 
+  it("should submit the custom affiliation name when Other is selected", async () => {
+    (useProjectMemberData as jest.Mock).mockReturnValue({
+      projectMemberData: {
+        givenName: 'Test',
+        surName: 'User',
+        affiliationId: 'other',
+        affiliationName: 'Other',
+        otherAffiliationName: 'Custom Research Institute',
+        email: 'test@example.com',
+        orcid: '',
+      },
+      checkboxRoles: ['1'],
+      setCheckboxRoles: jest.fn(),
+      loading: false,
+      setProjectMemberData: jest.fn(),
+      data: null,
+      queryError: null,
+    });
+    mockUpdateProjectMemberFn.mockResolvedValueOnce({ data: mockResponse });
+
+    render(<ProjectsProjectMembersEdit />);
+    fireEvent.click(screen.getByRole('button', { name: /buttons.saveChanges/i }));
+
+    await waitFor(() => {
+      expect(mockUpdateProjectMemberFn).toHaveBeenCalledWith(expect.objectContaining({
+        variables: {
+          input: expect.objectContaining({
+            affiliationId: 'other',
+            affiliationName: 'Custom Research Institute',
+          }),
+        },
+      }));
+    });
+  });
+
   it("should disable the save button while updating", () => {
     mockUseMutation.mockImplementation((document) => {
       if (document === UpdateProjectMemberDocument) {
