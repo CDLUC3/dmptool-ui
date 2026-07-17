@@ -6,6 +6,7 @@ import { LicenseFieldProps } from '@/app/types';
 import { LicensesQuery } from '@/generated/graphql';
 
 import mockLicensesData from '../__mocks__/mockLicensesData.json';
+import { ResearchOutputTableColumnsEnum } from "@dmptool/types";
 expect.extend(toHaveNoViolations);
 
 const mockLicensesQuery = mockLicensesData as LicensesQuery;
@@ -41,6 +42,7 @@ describe('LicenseField', () => {
   const defaultProps: LicenseFieldProps = {
     field: {
       id: 'licenses',
+      commonStandardId: ResearchOutputTableColumnsEnum.enum.license_ref,
       label: 'Licenses',
       enabled: true,
       licensesConfig: {

@@ -85,6 +85,7 @@ const renderWithProviders = (component: React.ReactElement) => {
 const mockColumns: typeof DefaultResearchOutputTableQuestion['columns'] = [
   {
     heading: 'Title',
+    commonStandardId: 'title',
     help: 'Enter the title of this research output',
     required: true,
     enabled: true,
@@ -99,6 +100,7 @@ const mockColumns: typeof DefaultResearchOutputTableQuestion['columns'] = [
   },
   {
     heading: 'Description',
+    commonStandardId: 'description',
     help: 'Enter a brief description of this research output',
     required: true,
     enabled: true,
@@ -118,6 +120,7 @@ const mockColumns: typeof DefaultResearchOutputTableQuestion['columns'] = [
   },
   {
     heading: 'Output Type',
+    commonStandardId: 'type',
     help: 'Select the type of this research output',
     required: true,
     enabled: true,
@@ -139,6 +142,7 @@ const mockColumns: typeof DefaultResearchOutputTableQuestion['columns'] = [
   },
   {
     heading: 'Data Flags',
+    commonStandardId: 'data_flags',
     help: 'Mark all of the statements that are true about the dataset',
     required: false,
     enabled: true,
@@ -156,6 +160,7 @@ const mockColumns: typeof DefaultResearchOutputTableQuestion['columns'] = [
   },
   {
     heading: 'Repositories',
+    commonStandardId: 'host',
     help: 'Select repository(ies) you would prefer users to deposit in',
     required: false,
     enabled: true,
@@ -185,6 +190,7 @@ const mockColumns: typeof DefaultResearchOutputTableQuestion['columns'] = [
   },
   {
     heading: 'Metadata Standards',
+    commonStandardId: 'metadata',
     help: 'Select metadata standard(s) you would prefer users to use',
     required: false,
     enabled: true,
@@ -214,6 +220,7 @@ const mockColumns: typeof DefaultResearchOutputTableQuestion['columns'] = [
   },
   {
     heading: 'Licenses',
+    commonStandardId: 'license_ref',
     help: 'Select the license you will apply to the research output',
     required: false,
     enabled: true,
@@ -241,6 +248,7 @@ const mockColumns: typeof DefaultResearchOutputTableQuestion['columns'] = [
   },
   {
     heading: 'Initial Access Levels',
+    commonStandardId: 'data_access',
     help: 'Select the access level for this research output',
     required: false,
     enabled: true,
@@ -261,6 +269,7 @@ const mockColumns: typeof DefaultResearchOutputTableQuestion['columns'] = [
   },
   {
     heading: 'Custom field label',
+    commonStandardId: 'custom',
     help: 'Enter the title of this research output',
     required: true,
     enabled: true,
@@ -279,80 +288,91 @@ const mockColumns: typeof DefaultResearchOutputTableQuestion['columns'] = [
 const createMockRow = (
   title: string,
   outputType: string,
-  repositories: RepositorySearchAnswerType['answer'] = [],
-  description: string = '',
-  metadataStandards: MetadataStandardSearchAnswerType['answer'] = [],
-  licenses: LicenseSearchAnswerType['answer'] = [],
+  repositories: RepositorySearchAnswerType["answer"] = [],
+  description: string = "",
+  metadataStandards: MetadataStandardSearchAnswerType["answer"] = [],
+  licenses: LicenseSearchAnswerType["answer"] = [],
   dataFlags: string[] = [],
-  accessLevel: string = '',
-  customField: string = ''
+  accessLevel: string = "",
+  customField: string = "",
 ): ResearchOutputTable => ({
   columns: [
     // Title
     {
-      type: 'text',
-      meta: { schemaVersion: '1.0' },
+      type: "text",
+      commonStandardId: "title",
+      meta: { schemaVersion: "1.0" },
       answer: title,
     },
     // Description
     {
-      type: 'textArea',
-      meta: { schemaVersion: '1.0' },
+      type: "textArea",
+      commonStandardId: "description",
+      meta: { schemaVersion: "1.0" },
       answer: description,
     },
     // Output Type (selectBox)
     {
-      type: 'selectBox',
-      meta: { schemaVersion: '1.0' },
+      type: "selectBox",
+      commonStandardId: "type",
+      meta: { schemaVersion: "1.0" },
       answer: outputType,
     },
     // Data Flags (checkBoxes)
     {
-      type: 'checkBoxes',
-      meta: { schemaVersion: '1.0' },
+      type: "checkBoxes",
+      commonStandardId: "data_flags",
+      meta: { schemaVersion: "1.0" },
       answer: dataFlags,
     },
     // Repositories (repositorySearch)
     {
-      type: 'repositorySearch',
-      meta: { schemaVersion: '1.0' },
+      type: "repositorySearch",
+      commonStandardId: "host",
+      meta: { schemaVersion: "1.0" },
       answer: repositories,
     },
     // Metadata Standards (metadataStandardSearch)
     {
-      type: 'metadataStandardSearch',
-      meta: { schemaVersion: '1.0' },
+      type: "metadataStandardSearch",
+      commonStandardId: "metadata",
+      meta: { schemaVersion: "1.0" },
       answer: metadataStandards,
     },
     // Licenses (licenseSearch)
     {
-      type: 'licenseSearch',
-      meta: { schemaVersion: '1.0' },
+      type: "licenseSearch",
+      commonStandardId: "license_ref",
+      meta: { schemaVersion: "1.0" },
       answer: licenses,
     },
     // Initial Access Levels (radioButtons)
     {
-      type: 'radioButtons',
-      meta: { schemaVersion: '1.0' },
+      type: "radioButtons",
+      commonStandardId: "data_access",
+      meta: { schemaVersion: "1.0" },
       answer: accessLevel,
     },
     // Custom field (text)
     {
-      type: 'text',
-      meta: { schemaVersion: '1.0' },
+      type: "text",
+      commonStandardId: "custom",
+      meta: { schemaVersion: "1.0" },
       answer: customField,
     },
     // Date metadata (text)
     {
-      type: 'text',
-      meta: { schemaVersion: '1.0' },
-      answer: '2025-12-16',
+      type: "date",
+      commonStandardId: "issued",
+      meta: { schemaVersion: "1.0" },
+      answer: "2025-12-16",
     },
     // Size metadata (text)
     {
-      type: 'text',
-      meta: { schemaVersion: '1.0' },
-      answer: '2 kb',
+      type: "numberWithContext",
+      commonStandardId: "byte_size",
+      meta: { schemaVersion: "1.0" },
+      answer: { value: 2, context: "kb" },
     },
   ],
 });

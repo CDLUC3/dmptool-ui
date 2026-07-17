@@ -1,4 +1,5 @@
 ## Added
+- Added an override for the `systeminformation` dependency
 - Added show/hide password toggle to `FormInput`, enabled by default for password fields [#80]
 - Migrated login and signup pages to use `FormInput` for consistency with other auth forms [#80]
 - Added password field examples to the styleguide form-elements page [#80]
@@ -37,6 +38,10 @@
 - Updated the project members collaborators section inline link to use `routePath` for the collaboration page [#96]
 - Added `extractOrcid` helper and updated `orcidToUrl` to normalise ORCID values from URLs or IDs [#96]
 - Updated `ModalOverlayComponent` to support disabling the primary action button (used for remove member confirmation) [#96]
+- Fixed issue with local reference to `@dmptool/types`
+- Updated ResearchOutputTable question and answer components to use the new `commonStandardId` property
+- Updated the ResearchOutputTable question to include the Anticipated Release Date and Anticipated File Size columns in the JSON but continue to NOT display to the admin when editing the question.
+- Upgraded `@dmptool/types` package to `v4.0.0`
 - Fixed `TypeAheadWithOther` clearing the institution name when the field is focused, so profile (and other) edits keep the existing value with the caret at the end [#80]
 - Updated shared typeahead functionality and styling for better accessibility [#80]
 - Simplified the page title on template question edit screens. The header is now a static "Edit Question" label rather than "Edit: {question title}", making long or HTML-formatted question text less likely to clutter the page header [#78]

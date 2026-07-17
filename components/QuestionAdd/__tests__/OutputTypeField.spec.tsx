@@ -8,6 +8,7 @@ import {
 } from '@/app/types';
 import { DefaultResearchOutputTypesQuery } from '@/generated/graphql';
 import mockDefaultResearchOutputTypesData from '../__mocks__/mockDefaultResearchOutputTypes.json';
+import { ResearchOutputTableColumnsEnum } from "@dmptool/types";
 
 expect.extend(toHaveNoViolations);
 
@@ -19,6 +20,7 @@ describe('OutputTypeField', () => {
   const defaultProps: OutputTypeFieldProps = {
     field: {
       id: 'outputTypes',
+      commonStandardId: ResearchOutputTableColumnsEnum.enum.type,
       label: 'Output Types',
       enabled: true,
       outputTypeConfig: {

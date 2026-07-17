@@ -14,6 +14,7 @@ import { useParams, useRouter } from 'next/navigation';
 
 import MetaDataStandardsSelector from '../MetaDataStandards';
 import mockMetaDataStandards from '../__mocks__/mockMetaDataStandards.json';
+import { ResearchOutputTableColumnsEnum } from "@dmptool/types";
 
 expect.extend(toHaveNoViolations);
 
@@ -47,12 +48,13 @@ jest.mock('@apollo/client/react', () => ({
 
 // ---- Test data ----
 const mockField = {
-  id: 'test-id',
-  label: 'Test Label',
+  id: "test-id",
+  commonStandardId: ResearchOutputTableColumnsEnum.enum.metadata,
+  label: "Test Label",
   enabled: true,
   metaDataConfig: {
     hasCustomStandards: true,
-    customStandards: []
+    customStandards: [],
   },
 };
 

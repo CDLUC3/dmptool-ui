@@ -1078,6 +1078,9 @@
         "questionJSONFParseFailed": "JSON.parse failed.",
         "requiredField": "{field} is required",
         "errorParsingData": "Error parsing data",
+        "positiveNumberOnly": "{field} must be a positive integer",
+        "byteSizeWithoutContext": "{field} must be a valid unit size",
+        "invalidDateFormat": "{field} must be a valid date",
         "institutionSuggestionsLoadError": "Could not load institution suggestions. Please try again."
       },
       "numDisplaying": "Showing {num} of {total}",

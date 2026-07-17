@@ -23,6 +23,7 @@ export type MetaDataConfig = {
 
 export type StandardField = {
   id: string;
+  commonStandardId: string;
   label: string;
   languageTranslationKey?: string;
   enabled: boolean;
@@ -38,7 +39,7 @@ export type StandardField = {
     selectedUnit: 'bytes' | 'kb' | 'mb' | 'gb' | 'tb' | 'pb';
     availableUnits: {
       label: string;
-      value: 'bytes' | 'kb' | 'mb' | 'gb' | 'tb' | 'pb';
+      value: string;
       selected: boolean;
     }[];
   };
@@ -164,6 +165,10 @@ export interface AccessLevelInterface {
   value: string;
   description?: string;
   selected: boolean;
+}
+
+export interface FileSizeFieldProps {
+  field: StandardField;
 }
 
 export interface OutputTypeFieldConfigProps {

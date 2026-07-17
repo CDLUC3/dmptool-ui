@@ -31,9 +31,12 @@ import {
   RO_DESCRIPTION_ID,
   RO_LICENSES_ID,
   RO_ACCESS_LEVELS_ID,
-} from '@/lib/constants';
+  RO_RELEASE_DATE,
+  RO_FILE_SIZE,
+} from "@/lib/constants";
 
 import { jsonToState, stateToJSON } from '@/utils/researchOutputTransformations';
+import { ResearchOutputTableColumnsEnum } from "@dmptool/types";
 
 const standardKeys = new Set([
   'researchOutput.title',
@@ -44,6 +47,8 @@ const standardKeys = new Set([
   'researchOutput.metadataStandards',
   'researchOutput.licenses',
   'researchOutput.accessLevels',
+  'researchOutput.releaseDate',
+  'researchOutput.fileSize',
   'Data Flags',
   'Title',
   'Description',
@@ -52,6 +57,8 @@ const standardKeys = new Set([
   'Metadata Standards',
   'Licenses',
   'Initial Access Levels',
+  'Anticipated Release Date',
+  'Anticipated File Size'
 ]);
 
 // Custom hook for research output table
@@ -69,115 +76,159 @@ export const useResearchOutputTable = ({ setHasUnsavedChanges, announce, initial
   const QuestionAdd = useTranslations('QuestionAdd');
 
   // Memoize to prevent recreation on every render
-  const initialStandardFields = useMemo<StandardField[]>(() => [
-    {
-      id: RO_TITLE_ID,
-      label: QuestionAdd('researchOutput.labels.title'),
-      languageTranslationKey: 'labels.title',
-      enabled: true,
-      required: true
-    },
-    {
-      id: RO_DESCRIPTION_ID,
-      label: QuestionAdd('researchOutput.labels.description'),
-      languageTranslationKey: 'labels.description',
-      enabled: false,
-      placeholder: '',
-      helpText: '',
-      maxLength: '',
-      required: false,
-      value: ''
-    },
-    {
-      id: RO_OUTPUT_TYPE_ID,
-      label: QuestionAdd('researchOutput.labels.outputType'),
-      languageTranslationKey: 'labels.outputType',
-      enabled: false,
-      helpText: '',
-      required: false,
-      outputTypeConfig: {
-        mode: 'defaults' as 'defaults' | 'mine',
-        selectedDefaults: [] as string[],
-        customTypes: [] as OutputTypeInterface[],
-      }
-    },
-    {
-      id: RO_DATA_FLAGS_ID,
-      label: QuestionAdd('researchOutput.labels.dataFlags'),
-      languageTranslationKey: 'labels.dataFlags',
-      enabled: false,
-      required: false,
-      heading: 'Data Flags',
-      helpText: QuestionAdd('helpText.dataFlags'),
-      content: {
-        type: 'checkBoxes',
-        meta: { schemaVersion: '1.0' },
-        attributes: {},
-        options: [
-          {
-            label: QuestionAdd('labels.mayContainSensitiveData'),
-            value: 'sensitive',
-            checked: false
-          },
-          {
-            label: QuestionAdd('labels.mayContainPersonalData'),
-            value: 'personal',
-            checked: false
-          }
-        ]
-      }
-    },
-    {
-      id: RO_REPO_SELECTOR_ID,
-      label: QuestionAdd('researchOutput.labels.repositories'),
-      languageTranslationKey: 'labels.repositories',
-      enabled: false,
-      placeholder: '',
-      helpText: '',
-      value: '',
-      repoConfig: {
-        hasCustomRepos: false,
-        customRepos: [] as RepositoryInterface[],
-      }
-    },
-    {
-      id: RO_METADATA_STANDARD_SELECTOR_ID,
-      label: QuestionAdd('researchOutput.labels.metadataStandards'),
-      languageTranslationKey: 'labels.metadataStandards',
-      enabled: false,
-      helpText: '',
-      metaDataConfig: {
-        hasCustomStandards: false,
-        customStandards: [] as MetaDataStandardInterface[],
-      }
-    },
-    {
-      id: RO_LICENSES_ID,
-      label: QuestionAdd('researchOutput.labels.licenses'),
-      languageTranslationKey: 'labels.licenses',
-      enabled: false,
-      defaultValue: '',
-      helpText: '',
-      licensesConfig: {
-        mode: 'defaults' as 'defaults' | 'addToDefaults',
-        selectedDefaults: [] as string[],
-        customTypes: [] as { name: string; uri: string }[]
-      }
-    },
-    {
-      id: RO_ACCESS_LEVELS_ID,
-      label: QuestionAdd('researchOutput.labels.initialAccessLevels'),
-      languageTranslationKey: 'labels.initialAccessLevels',
-      enabled: false,
-      defaultValue: '',
-      helpText: '',
-      accessLevelsConfig: {
-        mode: 'defaults' as 'defaults' | 'mine',
-        selectedDefaults: [] as string[],
-        customLevels: [] as AccessLevelInterface[],
-      }
-    },
-  ], [QuestionAdd]);
+  const initialStandardFields = useMemo<StandardField[]>(
+    () => [
+      {
+        id: RO_TITLE_ID,
+        commonStandardId: ResearchOutputTableColumnsEnum.enum.title,
+        label: QuestionAdd("researchOutput.labels.title"),
+        languageTranslationKey: "labels.title",
+        enabled: true,
+        required: true,
+      },
+      {
+        id: RO_DESCRIPTION_ID,
+        commonStandardId: ResearchOutputTableColumnsEnum.enum.description,
+        label: QuestionAdd("researchOutput.labels.description"),
+        languageTranslationKey: "labels.description",
+        enabled: false,
+        placeholder: "",
+        helpText: "",
+        maxLength: "",
+        required: false,
+        value: "",
+      },
+      {
+        id: RO_OUTPUT_TYPE_ID,
+        commonStandardId: ResearchOutputTableColumnsEnum.enum.type,
+        label: QuestionAdd("researchOutput.labels.outputType"),
+        languageTranslationKey: "labels.outputType",
+        enabled: false,
+        helpText: "",
+        required: false,
+        outputTypeConfig: {
+          mode: "defaults" as "defaults" | "mine",
+          selectedDefaults: [] as string[],
+          customTypes: [] as OutputTypeInterface[],
+        },
+      },
+      {
+        id: RO_DATA_FLAGS_ID,
+        commonStandardId: ResearchOutputTableColumnsEnum.enum.data_flags,
+        label: QuestionAdd("researchOutput.labels.dataFlags"),
+        languageTranslationKey: "labels.dataFlags",
+        enabled: false,
+        required: false,
+        heading: "Data Flags",
+        helpText: QuestionAdd("helpText.dataFlags"),
+        content: {
+          type: "checkBoxes",
+          meta: { schemaVersion: "1.0" },
+          attributes: {},
+          options: [
+            {
+              label: QuestionAdd("labels.mayContainSensitiveData"),
+              value: "sensitive",
+              checked: false,
+            },
+            {
+              label: QuestionAdd("labels.mayContainPersonalData"),
+              value: "personal",
+              checked: false,
+            },
+          ],
+        },
+      },
+      {
+        id: RO_REPO_SELECTOR_ID,
+        commonStandardId: ResearchOutputTableColumnsEnum.enum.host,
+        label: QuestionAdd("researchOutput.labels.repositories"),
+        languageTranslationKey: "labels.repositories",
+        enabled: false,
+        placeholder: "",
+        helpText: "",
+        value: "",
+        repoConfig: {
+          hasCustomRepos: false,
+          customRepos: [] as RepositoryInterface[],
+        },
+      },
+      {
+        id: RO_METADATA_STANDARD_SELECTOR_ID,
+        commonStandardId: ResearchOutputTableColumnsEnum.enum.metadata,
+        label: QuestionAdd("researchOutput.labels.metadataStandards"),
+        languageTranslationKey: "labels.metadataStandards",
+        enabled: false,
+        helpText: "",
+        metaDataConfig: {
+          hasCustomStandards: false,
+          customStandards: [] as MetaDataStandardInterface[],
+        },
+      },
+      {
+        id: RO_LICENSES_ID,
+        commonStandardId: ResearchOutputTableColumnsEnum.enum.license_ref,
+        label: QuestionAdd("researchOutput.labels.licenses"),
+        languageTranslationKey: "labels.licenses",
+        enabled: false,
+        defaultValue: "",
+        helpText: "",
+        licensesConfig: {
+          mode: "defaults" as "defaults" | "addToDefaults",
+          selectedDefaults: [] as string[],
+          customTypes: [] as { name: string; uri: string }[],
+        },
+      },
+      {
+        id: RO_ACCESS_LEVELS_ID,
+        commonStandardId: ResearchOutputTableColumnsEnum.enum.data_access,
+        label: QuestionAdd("researchOutput.labels.initialAccessLevels"),
+        languageTranslationKey: "labels.initialAccessLevels",
+        enabled: false,
+        defaultValue: "",
+        helpText: "",
+        accessLevelsConfig: {
+          mode: "defaults" as "defaults" | "mine",
+          selectedDefaults: [] as string[],
+          customLevels: [] as AccessLevelInterface[],
+        },
+      },
+      {
+        id: RO_RELEASE_DATE,
+        commonStandardId: ResearchOutputTableColumnsEnum.enum.issued,
+        label: QuestionAdd("researchOutput.labels.releaseDate"),
+        languageTranslationKey: "labels.releaseDate",
+        enabled: false,
+        defaultValue: "",
+        helpText: "",
+      },
+      {
+        id: RO_FILE_SIZE,
+        commonStandardId: ResearchOutputTableColumnsEnum.enum.byte_size,
+        label: QuestionAdd("researchOutput.labels.byteSize"),
+        languageTranslationKey: "labels.byteSize",
+        enabled: false,
+        defaultValue: "",
+        helpText: "",
+        byteSizeConfig: {
+          selectedUnit: "bytes",
+          availableUnits: [
+            { label: "bytes", value: "bytes", selected: false },
+            { label: "KB", value: "kb", selected: false },
+            { label: "MB", value: "mb", selected: false },
+            { label: "GB", value: "gb", selected: false },
+            { label: "TB", value: "tb", selected: false },
+            { label: "PB", value: "pb", selected: false },
+          ],
+        },
+        byteSizeFieldConfig: {
+          enabled: false,
+          maxByteSize: Number.MAX_SAFE_INTEGER,
+        }
+      },
+    ],
+    [QuestionAdd],
+  );
 
   // States for Research Output table question type
   // Which fields cannot be customized
@@ -298,6 +349,7 @@ export const useResearchOutputTable = ({ setHasUnsavedChanges, announce, initial
             'metaDataConfig',
             'licensesConfig',
             'accessLevelsConfig',
+            'byteSizeConfig',
             'content',
             'defaultValue',
             'required',
@@ -524,6 +576,7 @@ export const useResearchOutputTable = ({ setHasUnsavedChanges, announce, initial
     const newId = `custom_field_${Date.now()}`;
     const newField: AdditionalFieldsType = {
       id: newId,
+      commonStandardId: ResearchOutputTableColumnsEnum.enum.custom,
       heading: 'Custom Field',
       help: '',
       enabled: true,

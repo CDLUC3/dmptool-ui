@@ -37,4 +37,7 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# Local package files
+*.tgz
+
 tmp.js
