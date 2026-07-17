@@ -244,6 +244,7 @@
     }
   },
   "ProjectsProjectFunding": {
+    "loading": "Carregando fontes de financiamento...",
     "buttons": {
       "addFundingSource": "Adicionar nova fonte de financiamento"
     },
