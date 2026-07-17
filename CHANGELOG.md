@@ -97,6 +97,7 @@
 - Updated `RepoSelectorForAnswer` to wait to query `Re3byUrIsDocument` until we have `preferredReposURIs` because preferred repos don't display even though they eventually do to trigger the display of the "preferred repositories" checkbox [#118]
 
 ## Fixed
+- Improved the project creation and project funding funder-search pages with clearer loading and fallback states, aligned lists and pagination controls, and improved accessibility [#71]
 - Fixed loading state not appearing immediately by removing the delayed fadeIn animation from the Loading component
 - Fixed section &  question reorder arrow buttons turning white on hover. Added a shared `order-button` style so arrows use link-blue colors and remain visible [#76]
 - Updated the `project` graphql query to include `email` and `created` field so we can display info for invited project collaborators who haven't accepted invite [#287]
