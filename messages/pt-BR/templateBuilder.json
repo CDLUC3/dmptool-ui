@@ -416,7 +416,7 @@
     },
     "descriptions": {
       "sampleText": "Forneça um exemplo ou modelo de resposta esperada (opcional, mas recomendado)",
-      "sampleTextAsDefault": "Peça que esta resposta entre no DMP por padrão",
+      "sampleTextAsDefault": "Usar este texto de exemplo como resposta padrão no DMP",
       "previewText": "Veja como esta pergunta ficará para os usuários.",
       "bestPracticePara1": "Mantenha a pergunta curta para que possa ser usada como um título no DMP final.",
       "bestPracticePara2": "Use os Requisitos para adicionar instruções mais detalhadas à pergunta, certificar-se de incluir todas as instruções para o que precisa ser respondido na pergunta.",
@@ -506,7 +506,7 @@
     "title": "Acrescentar nova questão",
     "descriptions": {
       "sampleText": "Forneça um exemplo ou modelo de resposta esperada (opcional, mas recomendado)",
-      "sampleTextAsDefault": "Peça que esta resposta entre no DMP por padrão",
+      "sampleTextAsDefault": "Usar este texto de exemplo como resposta padrão no DMP",
       "previewText": "Veja como esta pergunta ficará para os usuários.",
       "bestPracticePara1": "Mantenha a pergunta curta para que possa ser usada como um título no DMP final.",
       "bestPracticePara2": "Use os Requisitos para adicionar instruções mais detalhadas à pergunta, certificar-se de incluir todas as instruções para o que precisa ser respondido na pergunta.",

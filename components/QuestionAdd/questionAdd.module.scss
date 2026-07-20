@@ -403,3 +403,15 @@
 .commentCheckbox {
   margin-bottom: var(--space-6);
 }
+
+.sampleTextGroup {
+  margin-bottom: 2rem;
+
+  :global(.react-aria-TextField) {
+    margin-bottom: var(--space-2);
+  }
+
+  :global(.react-aria-Checkbox) {
+    margin-bottom: 0;
+  }
+}

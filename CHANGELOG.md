@@ -29,6 +29,7 @@
 - Added `UpdateAffiliation` and `AffiliationById` queries [#203]
 
 ## Updated
+- Moved the "use sample text as default" checkbox directly under the Sample Text field on template question add and edit screens, and clarified its label [#77]
 - Redesigned the template question answer-choice editor with responsive choice cards, accessible reordering and removal controls, clearer validation, and localized English and Portuguese labels
 - Fixed issue with local reference to `@dmptool/types`
 - Updated ResearchOutputTable question and answer components to use the new `commonStandardId` property
