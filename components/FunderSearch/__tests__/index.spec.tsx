@@ -102,6 +102,12 @@ const mocks = [
   },
 ];
 
+const delayedSearchMock = [
+  {
+    ...mocks[0],
+    delay: 500,
+  },
+];
 
 describe("FunderSearch", () => {
   beforeEach(() => {
@@ -210,6 +216,29 @@ describe("FunderSearch", () => {
         expect(screen.getByText(name)).toBeInTheDocument();
         expect(screen.getByText(uri)).toBeInTheDocument();
       }
+    });
+  });
+
+  it("should disable the search button while searching", async () => {
+    render(
+      <MockedProvider mocks={delayedSearchMock}>
+        <WrappedSearch />
+      </MockedProvider>
+    );
+
+    const searchInput = screen.getByTestId('search-field')
+      .querySelector('input')!;
+    fireEvent.change(searchInput, { target: { value: "nih" } });
+
+    const searchBtn = screen.getByTestId('search-btn');
+    fireEvent.click(searchBtn);
+
+    expect(searchBtn).toHaveTextContent('buttons.search');
+    expect(searchBtn).toHaveAccessibleName('buttons.search');
+    expect(searchBtn).toBeDisabled();
+
+    await waitFor(() => {
+      expect(searchBtn).not.toBeDisabled();
     });
   });
 

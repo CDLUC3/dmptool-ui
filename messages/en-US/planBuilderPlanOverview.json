@@ -250,6 +250,7 @@
     }
   },
   "ProjectsProjectFunding": {
+    "loading": "Loading funding sources...",
     "buttons": {
       "addFundingSource": "Add a funding source"
     },
