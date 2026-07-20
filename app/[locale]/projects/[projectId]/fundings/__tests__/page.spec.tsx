@@ -147,7 +147,7 @@ describe('ProjectsProjectFunding', () => {
     jest.clearAllMocks();
   });
 
-  it('should render the page header with title and description', () => {
+  it('should render the page header with title and description', async () => {
     render(
       <MockedProvider mocks={mocks}>
         <ProjectsProjectFunding />
@@ -162,9 +162,13 @@ describe('ProjectsProjectFunding', () => {
     expect(screen.getByText('breadcrumbs.projects')).toBeInTheDocument();
     expect(screen.getByText('breadcrumbs.projectOverview')).toBeInTheDocument();
     expect(screen.getByText('breadcrumbs.projectFunding')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('loading-component')).not.toBeInTheDocument();
+    });
   });
 
-  it('should render breadcrumbs correctly', () => {
+  it('should render breadcrumbs correctly', async () => {
     render(
       <MockedProvider mocks={mocks}>
         <ProjectsProjectFunding />
@@ -174,6 +178,25 @@ describe('ProjectsProjectFunding', () => {
     expect(screen.getByText('breadcrumbs.home')).toBeInTheDocument();
     expect(screen.getByText('breadcrumbs.projectOverview')).toBeInTheDocument();
     expect(screen.getByText('breadcrumbs.projectFunding')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('loading-component')).not.toBeInTheDocument();
+    });
+  });
+
+  it('should show a loading state while funding sources are fetched', async () => {
+    render(
+      <MockedProvider mocks={mocks}>
+        <ProjectsProjectFunding />
+      </MockedProvider>
+    );
+
+    expect(screen.getByText('loading')).toBeInTheDocument();
+    expect(screen.getByTestId('loading-component')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('loading-component')).not.toBeInTheDocument();
+    });
   });
 
   it('should render the "Add funding" button and handles click', async () => {
@@ -183,7 +206,7 @@ describe('ProjectsProjectFunding', () => {
       </MockedProvider>
     );
 
-    const addButton = screen.getByRole('button', { name: 'Add funding' });
+    const addButton = await screen.findByRole('button', { name: 'Add funding' });
     expect(addButton).toBeInTheDocument();
 
     fireEvent.click(addButton);
