@@ -1724,6 +1724,8 @@ export type Mutation = {
   updateMetadataStandard?: Maybe<MetadataStandard>;
   /** Change the current user's password */
   updatePassword?: Maybe<User>;
+  /** Update a plan */
+  updatePlan?: Maybe<Plan>;
   /** Update multiple Plan Fundings passing in an array of projectFundingIds */
   updatePlanFunding?: Maybe<Array<Maybe<PlanFunding>>>;
   /** Chnage a Member's accessLevel on a Plan */
@@ -2362,6 +2364,11 @@ export type MutationUpdatePasswordArgs = {
   email: Scalars['String']['input'];
   newPassword: Scalars['String']['input'];
   oldPassword: Scalars['String']['input'];
+};
+
+
+export type MutationUpdatePlanArgs = {
+  input?: InputMaybe<UpdatePlanInput>;
 };
 
 
@@ -3473,6 +3480,8 @@ export type Query = {
   planMembers?: Maybe<Array<Maybe<PlanMember>>>;
   /** Get all plans for the research project with pagination support */
   plans?: Maybe<PaginatedPlanResults>;
+  /** Get all of the plans for a specific Project */
+  plansByProjectId?: Maybe<Array<Maybe<Plan>>>;
   /** Returns a list of the top 20 funders ranked by popularity (nbr of plans) for the past year */
   popularFunders?: Maybe<Array<Maybe<FunderPopularityResult>>>;
   /** Get a specific project */
@@ -3808,6 +3817,11 @@ export type QueryPlansArgs = {
   paginationOptions?: InputMaybe<PaginationOptions>;
   term?: InputMaybe<Scalars['String']['input']>;
   userId: Scalars['Int']['input'];
+};
+
+
+export type QueryPlansByProjectIdArgs = {
+  projectId: Scalars['Int']['input'];
 };
 
 
@@ -5149,6 +5163,23 @@ export type UpdateMetadataStandardInput = {
   researchDomainIds?: InputMaybe<Array<Scalars['Int']['input']>>;
   /** The taxonomy URL (do not make this up! should resolve to an HTML/JSON representation of the object) */
   uri?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type UpdatePlanInput = {
+  /** Alternate identifiers for the plan */
+  alternateIdentifiers?: InputMaybe<Array<Scalars['String']['input']>>;
+  /** Whether or not the plan is featured on the public plans page */
+  featured?: InputMaybe<Scalars['Boolean']['input']>;
+  /** The Plan id */
+  id?: InputMaybe<Scalars['Int']['input']>;
+  /** The language of the plan */
+  languageId?: InputMaybe<Scalars['String']['input']>;
+  /** The status of the plan */
+  status?: InputMaybe<PlanStatus>;
+  /** The title of the plan */
+  title?: InputMaybe<Scalars['String']['input']>;
+  /** The visibility of the plan */
+  visibility?: InputMaybe<PlanVisibility>;
 };
 
 export type UpdateProjectFundingInput = {

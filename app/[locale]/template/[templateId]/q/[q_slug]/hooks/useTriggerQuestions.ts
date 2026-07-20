@@ -4,10 +4,7 @@ import { isOptionsType } from '@/app/hooks/useEditQuestion';
 import { getParsedQuestionJSON } from '@/components/hooks/getParsedQuestionJSON';
 import { TriggerQuestionOption } from '@/app/types/displayLogic';
 
-// Loosely matches the shape QuestionsDocument returns: nullable fields,
-// and the array itself may contain null entries (GraphQL nullable list
-// items). Add `json` to QuestionsDocument's selection set for this to be
-// populated — it isn't currently being queried.
+// Loosely matches the shape that QuestionsDocument returns
 interface RawTriggerQuestion {
   id?: number | null;
   questionText?: string | null;
@@ -16,18 +13,11 @@ interface RawTriggerQuestion {
 }
 
 /**
- * Derives the list of questions this question's Display Logic can trigger
- * off of: questions earlier in the same section that are multiple
- * choice / checkbox type.
+ * Trigger questions are a list of questions this question's Display Logic can trigger
+ * off of: questions displayed earlier in the same section that are option-type 
+ * questions(["radioButtons", "checkBoxes", "multiselectBox", "selectBox"];)
  *
- * Takes the already-fetched list of section questions (e.g. from
- * QuestionsDocument, queried once in the page) rather than querying
- * itself — the page owns data fetching, this hook owns shaping it into
- * what the Display Logic UI needs.
- *
- * NOTE: requires `json` to be selected in the QuestionsDocument query —
- * it's used here to determine question type and options, but isn't
- * currently part of that query's selection set.
+ * Takes the alist of section questions from QuestionsDocument query.
  *
  * @param questions - all questions in the current section (unfiltered)
  * @param currentQuestionId - excluded from the list
@@ -39,13 +29,15 @@ export function useTriggerQuestions(
   currentQuestionId: number,
   currentDisplayOrder: number | undefined
 ) {
+
+  // Derive the list of questions that can be used as triggers for this question's Display Logic
   const triggerQuestions: TriggerQuestionOption[] = useMemo(() => {
     if (!questions) return [];
 
     return questions
-      .filter((q): q is RawTriggerQuestion => q !== null && q.id != null)
-      .filter((q) => q.id !== currentQuestionId)
-      .filter((q) =>
+      .filter((q): q is RawTriggerQuestion => q !== null && q.id != null) // Filters out nulls and questions with no id
+      .filter((q) => q.id !== currentQuestionId) // Exclude the current question itself
+      .filter((q) => // Only include questions with a lower displayOrder than the current question
         currentDisplayOrder === undefined || q.displayOrder == null
           ? true
           : q.displayOrder < currentDisplayOrder
@@ -60,14 +52,18 @@ export function useTriggerQuestions(
           return null;
         }
 
-        return {
+        const triggerQuestion: TriggerQuestionOption = {
           id: q.id as number,
           questionText: q.questionText ?? '',
+          questionType: parsed.type, // 'radioButtons' | 'checkBoxes' | 'selectBox' | 'multiselectBox'
+          isMultiValue: (parsed.type === 'checkBoxes') || (parsed.type === 'multiselectBox'),
           options: parsed.options.map((opt: { value?: string; label?: string }) => ({
             value: opt.value ?? opt.label ?? '',
             label: opt.label ?? opt.value ?? '',
           })),
-        } as TriggerQuestionOption;
+        }
+
+        return triggerQuestion;
       })
       .filter((q): q is TriggerQuestionOption => q !== null);
   }, [questions, currentQuestionId, currentDisplayOrder]);

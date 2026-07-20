@@ -1,8 +1,3 @@
-// Display Logic types
-// ---------------------------------------------------------------------------
-// ASSUMPTION: these don't exist yet in @/app/types. Merge them in there,
-// or import this file directly — whichever fits your project layout better.
-
 export type DisplayLogicAction = 'show' | 'hide';
 export type DisplayLogicMatchType = 'any' | 'all';
 export type DisplayLogicOperator = 'is' | 'is_not';
@@ -21,12 +16,14 @@ export interface DisplayLogicGroup {
 
 export interface DisplayLogic {
   action: 'show' | 'hide';
-  matchType: 'any' | 'all'; // combines the groups below
+  matchType: 'any' | 'all';
   groups: DisplayLogicGroup[];
 }
 
 export interface TriggerQuestionOption {
   id: number;
   questionText: string;
-  options: { label: string; value: string }[];
+  questionType: string;       // e.g. 'radioButtons' | 'checkBoxes' | 'selectBox'
+  isMultiValue: boolean;      // true for checkbox-type questions
+  options: { value: string; label: string }[];
 }

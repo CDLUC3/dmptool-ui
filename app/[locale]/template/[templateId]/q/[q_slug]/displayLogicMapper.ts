@@ -1,14 +1,14 @@
-import { DisplayLogic } from '@/app/types/displayLogic';
+import { DisplayLogic, TriggerQuestionOption } from '@/app/types/displayLogic';
 
 
 export type BackendAction = 'SHOW_QUESTION' | 'HIDE_QUESTION';
 export type BackendMatchType = 'ANY' | 'ALL';
-export type BackendConditionType = 'EQUAL' | 'DOES_NOT_EQUAL';
+export type BackendConditionType = 'EQUAL' | 'DOES_NOT_EQUAL' | 'INCLUDES' | 'DOES_NOT_INCLUDE';
 
 export interface SaveQuestionConditionInput {
   conditionType: BackendConditionType;
-  target: string;
-  id?: number; // optional for save input; present in fetched data
+  conditionMatch: string;
+  id?: number;
 }
 
 export interface SaveQuestionConditionGroupInput {
@@ -23,60 +23,36 @@ export interface SaveQuestionDisplayLogicInput {
   groups: SaveQuestionConditionGroupInput[];
 }
 
-// What the query for an existing question's display logic returns —
-// same shape as the save input, plus the real DB ids.
-export interface FetchedQuestionDisplayLogic extends SaveQuestionDisplayLogicInput {
-  id: number;
-  groups: (SaveQuestionConditionGroupInput & {
-    id: number;
-    conditions: (SaveQuestionConditionInput & { id: number })[];
-  })[];
-}
 
-const OPERATOR_TO_CONDITION_TYPE: Record<string, BackendConditionType> = {
-  is: 'EQUAL',
-  is_not: 'DOES_NOT_EQUAL',
-};
-const CONDITION_TYPE_TO_OPERATOR: Record<BackendConditionType, 'is' | 'is_not'> = {
-  EQUAL: 'is',
-  DOES_NOT_EQUAL: 'is_not',
-};
+const OPERATOR_TO_CONDITION_TYPE = {
+  single: { is: 'EQUAL', is_not: 'DOES_NOT_EQUAL' },
+  multi: { is: 'INCLUDES', is_not: 'DOES_NOT_INCLUDE' },
+} as const;
 
-// UI state -> save payload for handleSaveDisplayLogic.
-export function toSaveInput(questionId: number, logic: DisplayLogic): SaveQuestionDisplayLogicInput {
+
+// Saves the display logic to the backend format, using the trigger questions to
+// determine whether to use single-value or multi-value operators for each group
+export function toSaveInput(
+  questionId: number,
+  logic: DisplayLogic,
+  triggerQuestions: TriggerQuestionOption[]   // new param
+): SaveQuestionDisplayLogicInput {
+  const tqMap = new Map(triggerQuestions.map((q) => [q.id, q]));
+
   return {
     questionId,
     action: logic.action === 'show' ? 'SHOW_QUESTION' : 'HIDE_QUESTION',
     matchType: logic.matchType === 'all' ? 'ALL' : 'ANY',
-    groups: logic.groups.map((g) => ({
-      triggerQuestionId: g.triggerQuestionId,
-      conditions: g.conditions.map((c) => ({
-        conditionType: OPERATOR_TO_CONDITION_TYPE[c.operator] ?? 'EQUAL',
-        target: c.optionValue,
-      })),
-    })),
-  };
-}
-
-// Fetched/persisted data -> UI state, for hydrating the DisplayLogicComponent
-// on load. DB ids are stringified into the local `id` fields the UI uses
-// for React keys and lookups; they're otherwise not round-tripped back to
-// the server (a save always replaces groups/conditions wholesale — see
-// resolvers/saveQuestionDisplayLogic.ts).
-export function fromFetched(fetched: FetchedQuestionDisplayLogic | null): DisplayLogic | null {
-  if (!fetched) return null;
-
-  return {
-    action: fetched.action === 'SHOW_QUESTION' ? 'show' : 'hide',
-    matchType: fetched.matchType === 'ALL' ? 'all' : 'any',
-    groups: fetched.groups.map((g) => ({
-      id: `group-${g.id}`,
-      triggerQuestionId: g.triggerQuestionId,
-      conditions: g.conditions.map((c) => ({
-        id: `cond-${c.id}`,
-        operator: (CONDITION_TYPE_TO_OPERATOR[c.conditionType] ?? 'is') as 'is' | 'is_not',
-        optionValue: c.target,
-      })),
-    })),
+    groups: logic.groups.map((g) => {
+      const isMulti = tqMap.get(g.triggerQuestionId)?.isMultiValue ?? false;
+      const ops = isMulti ? OPERATOR_TO_CONDITION_TYPE.multi : OPERATOR_TO_CONDITION_TYPE.single;
+      return {
+        triggerQuestionId: g.triggerQuestionId,
+        conditions: g.conditions.map((c) => ({
+          conditionType: ops[c.operator], // maps 'is'/'is_not' to the appropriate backend condition type based on whether the trigger question is multi-value
+          conditionMatch: c.optionValue // the value to match against
+        })),
+      };
+    }),
   };
 }

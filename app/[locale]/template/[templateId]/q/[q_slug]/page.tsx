@@ -54,14 +54,13 @@ import QuestionOptionsComponent
   from '@/components/Form/QuestionOptionsComponent';
 import QuestionPreview from '@/components/QuestionPreview';
 import {
-  FormSelect,
+  FormTextArea,
   RadioGroupComponent,
   RangeComponent,
   TypeAheadSearch,
   ResearchOutputComponent
 } from '@/components/Form';
 import DisplayLogicComponent from './DisplayLogicComponent';
-import FormTextArea from '@/components/Form/FormTextArea';
 import ErrorMessages from '@/components/ErrorMessages';
 import QuestionView from '@/components/QuestionView';
 import { getParsedQuestionJSON } from '@/components/hooks/getParsedQuestionJSON';
@@ -95,33 +94,33 @@ import {
   isOptionsType,
   getOverrides,
 } from '@/app/hooks/useEditQuestion';
-import { MOCK_QUESTIONS_DATA } from './__mocks__/mockTriggerQuestions';
-import { toSaveInput, fromFetched } from './displayLogicMapper';
 import {
-  fetchQuestionDisplayLogicAction,
-  saveQuestionDisplayLogicAction,
-  removeQuestionDisplayLogicAction
-} from './actions/displayLogicMockAction';
+  toSaveInput,
+} from './displayLogicMapper';
 import styles from './questionEdit.module.scss';
 
 const QuestionEdit = () => {
+  // hooks
   const params = useParams();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const toastState = useToast(); // Access the toast state from context
+  const toastState = useToast();
+
+  // params
   const templateId = String(params.templateId);
   const questionId = String(params.q_slug); //question id
   const questionTypeIdQueryParam = searchParams.get('questionType') || null;
 
   //For scrolling to error in page
   const errorRef = useRef<HTMLDivElement | null>(null);
-
+  // Track whether the component has hydrated to avoid running certain effects on the server
   const hasHydrated = useRef(false);
   // Track whether there are unsaved changes
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState<boolean>(false);
   // Form state
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [isSavingLogic, setIsSavingLogic] = useState<boolean>(false);
+  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
 
   // State for managing form inputs
   const [question, setQuestion] = useState<Question>();
@@ -136,6 +135,7 @@ const QuestionEdit = () => {
   const [typeaheadSearchLabel, setTypeaheadSearchLabel] = useState<string>('');
   const [parsedQuestionJSON, setParsedQuestionJSON] = useState<AnyParsedQuestion>();
   const [isConfirmOpen, setConfirmOpen] = useState(false);
+
   // Display logic tab state — null means "no logic configured yet",
   // which drives the empty state (description + Add Display Logic button).
   const [displayLogic, setDisplayLogic] = useState<DisplayLogic | null>(null);
@@ -150,10 +150,6 @@ const QuestionEdit = () => {
 
   // Set URLs
   const TEMPLATE_URL = routePath('template.show', { templateId });
-
-  // This is to turn on Mock data
-  const useMockLogic = searchParams.get('mockLogic') === '1';
-
 
   // Helper function to make announcements
   const announce = (message: string) => {
@@ -209,19 +205,20 @@ const QuestionEdit = () => {
   // Display Logic's trigger-question dropdown filters down from.
   const {
     data: questionsData,
+    loading: questionsLoading,
     error: questionsError
   } = useQuery(QuestionsDocument, {
     variables: { sectionId: selectedQuestion?.question?.sectionId ?? 0 },
-    skip: !selectedQuestion?.question?.sectionId || useMockLogic, // don't bother querying if mocking
+    skip: !selectedQuestion?.question?.sectionId
   });
 
 
   // Candidate questions this question's display logic can trigger off of:
   // prior multiple-choice/checkbox questions in the same section.
   const { triggerQuestions } = useTriggerQuestions(
-    useMockLogic ? MOCK_QUESTIONS_DATA : questionsData?.questions,
+    questionsData?.questions,
     Number(questionId),
-    useMockLogic ? 99 : (question?.displayOrder ? Number(question.displayOrder) : undefined)
+    (question?.displayOrder ? Number(question.displayOrder) : undefined)
   );
 
   // Update rows state and question.json when options change
@@ -334,29 +331,25 @@ const QuestionEdit = () => {
     setHasUnsavedChanges(true);
   };
 
+  // Handler for saving display logic changes (Display Logic tab)
   const handleSaveDisplayLogic = async () => {
     if (!question) return;
     setIsSavingLogic(true);
 
     try {
+      // Simulate a save until backend is implemented
       if (displayLogic) {
-        const input = toSaveInput(Number(questionId), displayLogic);
-        const response = await saveQuestionDisplayLogicAction(input);
-        if (!response.success) {
-          setErrors(response.errors ?? []);
-          return;
-        }
-        // Re-sync local state with the "persisted" record so group/condition
-        // ids reflect what was actually saved, same as a real mutation
-        // response would.
-        setDisplayLogic(fromFetched(response.data ?? null));
-      } else {
-        await removeQuestionDisplayLogicAction({ questionId: Number(questionId) });
+        toSaveInput(Number(questionId), displayLogic, triggerQuestions);
       }
+
       setHasUnsavedChanges(false);
       toastState.add(t('messages.success.displayLogicUpdated'), { type: 'success' });
     } catch {
-      announce(QuestionAdd('researchOutput.announcements.errorOccurred') || 'An error occurred.');
+      logECS('error', 'QuestionEdit.handleSaveDisplayLogic', {
+        error: 'Invalid question type in parsed JSON',
+        url: { path: routePath('template.q.slug', { templateId, q_slug: questionId }) }
+      });
+      setErrors(prev => [...prev, t('messages.error.errorSavingDisplayLogic')]);
     } finally {
       setIsSavingLogic(false);
     }
@@ -434,10 +427,6 @@ const QuestionEdit = () => {
         // Strip all tags from questionText before sending to backend
         const cleanedQuestionText = stripHtmlTags(question.questionText ?? '');
 
-        // Add mutation for question
-        // NOTE: `displayLogic` assumes updateQuestionAction/backend accepts
-        // a serialized displayLogic field — add it to your mutation input
-        // if it isn't there yet.
         const response = await updateQuestionAction({
           questionId: Number(questionId),
           displayOrder: Number(question.displayOrder),
@@ -448,7 +437,6 @@ const QuestionEdit = () => {
           sampleText: String(question.sampleText),
           useSampleTextAsDefault: question?.useSampleTextAsDefault || false,
           required: Boolean(question.required),
-          //displayLogic: displayLogic ? JSON.stringify(displayLogic) : null,
         });
 
         if (response.redirect) {
@@ -698,26 +686,18 @@ const QuestionEdit = () => {
     };
   }, [hasUnsavedChanges]);
 
-  // Hydrate display logic from the mock store. Swap this for reading
-  // selectedQuestion.question.displayLogic directly (still via fromFetched)
-  // once QuestionDocument selects the real nested field — the shape
-  // returned is intentionally identical either way.
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      const fetched = await fetchQuestionDisplayLogicAction(Number(questionId));
-      if (!cancelled) {
-        setDisplayLogic(fromFetched(fetched));
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [questionId]);
 
-  if (loading) {
+  useEffect(() => {
+    const stillLoading = loading || (!!selectedQuestion?.question?.sectionId && questionsLoading);
+    if (!stillLoading && !initialLoadComplete) {
+      setInitialLoadComplete(true);
+    }
+  }, [loading, questionsLoading, selectedQuestion, initialLoadComplete]);
+
+  if (!initialLoadComplete) {
     return <Loading message={Global('messaging.loading')} />;
   }
+
 
   return (
     <>
@@ -988,18 +968,12 @@ const QuestionEdit = () => {
 
             {/** Tab: Display Logic Tab */}
             <TabPanel id="logic">
-              {useMockLogic && (
-                <p style={{ background: '#fef3c7', padding: '0.5rem 1rem', borderRadius: '0.375rem' }}>
-                  Using mock trigger questions for testing (?mockLogic=1)
-                </p>
-              )}
-
               <h2>{t('tabPanel.headings.logic')}</h2>
               <DisplayLogicComponent
                 triggerQuestions={triggerQuestions}
                 displayLogic={displayLogic}
-                onChange={handleDisplayLogicChange}
-                onSave={handleSaveDisplayLogic}
+                onDisplayLogicChange={handleDisplayLogicChange}
+                onDisplayLogicSave={handleSaveDisplayLogic}
                 isSaving={isSavingLogic}
               />
 

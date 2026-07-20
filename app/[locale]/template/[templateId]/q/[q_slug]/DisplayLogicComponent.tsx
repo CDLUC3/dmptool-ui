@@ -1,62 +1,46 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Button,
   Dialog,
   DialogTrigger,
-  Label,
-  SelectValue,
   Modal,
   ModalOverlay,
-  Popover,
-  Collection,
-  ListBox,
-  ListBoxItem,
-  Select
 } from 'react-aria-components';
 import { useTranslations } from 'next-intl';
 
 import { FormSelect, TransitionButton } from '@/components/Form';
 import {
   DisplayLogic,
-  DisplayLogicCondition,
   DisplayLogicGroup,
   TriggerQuestionOption,
 } from '@/app/types/displayLogic';
 
 import styles from './displayLogic.module.scss';
+import { DmpIcon } from '@/components/Icons';
 
 interface DisplayLogicComponentProps {
   triggerQuestions: TriggerQuestionOption[]; // all applicable: options-type, before this question
   displayLogic: DisplayLogic | null;
-  onChange: (logic: DisplayLogic | null) => void;
-  onSave: () => Promise<void>;
+  onDisplayLogicChange: (logic: DisplayLogic | null) => void;
+  onDisplayLogicSave: () => Promise<void>;
   isSaving?: boolean;
 }
 
-const MAX_OPTION_LABEL_LENGTH = 40;
+const MAX_OPTION_LABEL_LENGTH = 60; // Max length for a select option label before truncating with ellipsis.
+
+// Shorten the length of the option to whatever the max option length is set to
 const truncateLabel = (label: string) =>
   label.length > MAX_OPTION_LABEL_LENGTH
     ? `${label.slice(0, MAX_OPTION_LABEL_LENGTH - 1)}…`
     : label;
 
+// Generates a unique ID for a new group or condition. This will probably not be needed once backend work is done.
 const makeId = (prefix: string) =>
   `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
-const ACTION_ITEMS = [
-  { id: 'show', name: 'Show' },
-  { id: 'hide', name: 'Hide' },
-];
-const MATCH_TYPE_ITEMS = [
-  { id: 'any', name: 'Any' },
-  { id: 'all', name: 'All' },
-];
-const OPERATOR_ITEMS = [
-  { id: 'is', name: 'Is selected' },
-  { id: 'is_not', name: 'Is NOT selected' },
-];
-
+// Creates a new DisplayLogicGroup with a single condition, defaulting to the first option of the trigger question.
 const makeGroup = (triggerQuestionId: number, tq: TriggerQuestionOption): DisplayLogicGroup => {
   const firstOption = tq.options[0];
   return {
@@ -68,17 +52,53 @@ const makeGroup = (triggerQuestionId: number, tq: TriggerQuestionOption): Displa
   };
 };
 
+
+/**
+ * Renders the "Display Logic" tab panel for conditionally showing/hiding a question
+ * based on how earlier questions were answered.
+ *
+ * Notes:
+ * - Each trigger question can only be used by one group at a time; both the trigger
+ *   question dropdown and "Add trigger question" button filter out ones already in use.
+ * - A trigger question is auto-added on first load if `displayLogic` starts with zero
+ *   groups (see `hasAutoAddedRef` — this only fires once, even if groups are later
+ *   removed back down to zero).
+ * - This is a controlled component: all `displayLogic` state lives in the parent;
+ *   `onDisplayLogicChange` must be wired up to actually persist changes.
+ */
 const DisplayLogicComponent = ({
   triggerQuestions,
   displayLogic,
-  onChange,
-  onSave,
+  onDisplayLogicChange,
+  onDisplayLogicSave,
   isSaving = false,
 }: DisplayLogicComponentProps) => {
+  // hooks
   const t = useTranslations('QuestionEdit');
   const Global = useTranslations('Global');
+
+  // Refs
+  const hasAutoAddedRef = useRef(false);
+
+  // State
   const [isRemoveAllOpen, setRemoveAllOpen] = useState(false);
 
+
+  const ACTION_ITEMS = [
+    { id: 'show', name: t('tabPanel.actionItemShow') },
+    { id: 'hide', name: t('tabPanel.actionItemHide') },
+  ];
+  const MATCH_TYPE_ITEMS = [
+    { id: 'any', name: t('tabPanel.matchTypeItemAny') },
+    { id: 'all', name: t('tabPanel.matchTypeItemAll') },
+  ];
+  const OPERATOR_ITEMS = [
+    { id: 'is', name: t('tabPanel.operatorItemIsSelected') },
+    { id: 'is_not', name: t('tabPanel.operatorItemIsNotSelected') },
+  ];
+
+
+  // Memoized map of trigger questions for quick lookup by ID
   const triggerQuestionMap = useMemo(
     () => new Map(triggerQuestions.map((q) => [q.id, q])),
     [triggerQuestions]
@@ -97,11 +117,13 @@ const DisplayLogicComponent = ({
     return triggerQuestions.filter((q) => !usedIds.has(q.id));
   };
 
+  // Update the display logic state with a partial update (e.g., changing action or matchType)
   const updateLogic = (partial: Partial<DisplayLogic>) => {
     if (!displayLogic) return;
-    onChange({ ...displayLogic, ...partial });
+    onDisplayLogicChange({ ...displayLogic, ...partial });
   };
 
+  // Update a single group with a partial update (e.g., changing trigger question or conditions)
   const updateGroup = (groupId: string, partial: Partial<DisplayLogicGroup>) => {
     if (!displayLogic) return;
     updateLogic({
@@ -109,8 +131,9 @@ const DisplayLogicComponent = ({
     });
   };
 
+  // Adds a new display logic block with default values (show, any, no groups)
   const handleAddDisplayLogic = () => {
-    onChange({ action: 'show', matchType: 'any', groups: [] });
+    onDisplayLogicChange({ action: 'show', matchType: 'any', groups: [] });
   };
 
   // Adds a new trigger-question box, defaulting to the first
@@ -122,6 +145,7 @@ const DisplayLogicComponent = ({
     updateLogic({ groups: [...displayLogic.groups, makeGroup(next.id, next)] });
   };
 
+  // Updates a group's trigger question, and resets that group's conditions to a single
   const handleTriggerQuestionChange = (groupId: string, value: string) => {
     const tq = triggerQuestionMap.get(Number(value));
     if (!tq) return;
@@ -130,11 +154,13 @@ const DisplayLogicComponent = ({
     updateGroup(groupId, { triggerQuestionId: tq.id, conditions: makeGroup(tq.id, tq).conditions });
   };
 
+  // Removes a group entirely (trigger question + conditions)
   const handleRemoveGroup = (groupId: string) => {
     if (!displayLogic) return;
     updateLogic({ groups: displayLogic.groups.filter((g) => g.id !== groupId) });
   };
 
+  // Adds a new condition to a group, defaulting to the first option of that group's trigger question
   const handleAddCondition = (group: DisplayLogicGroup, tq: TriggerQuestionOption) => {
     const firstOption = tq.options[0];
     updateGroup(group.id, {
@@ -145,10 +171,12 @@ const DisplayLogicComponent = ({
     });
   };
 
+  // Removes a condition from a group
   const handleRemoveCondition = (group: DisplayLogicGroup, conditionId: string) => {
     updateGroup(group.id, { conditions: group.conditions.filter((c) => c.id !== conditionId) });
   };
 
+  // Updates a single condition in a group (operator or option value)
   const handleConditionChange = (
     group: DisplayLogicGroup,
     conditionId: string,
@@ -162,11 +190,21 @@ const DisplayLogicComponent = ({
     });
   };
 
+  // Removes all display logic (all groups and conditions)
   const handleRemoveAll = () => {
-    onChange(null);
+    onDisplayLogicChange(null);
     setRemoveAllOpen(false);
   };
 
+  // When page first loads, automatically add a trigger question if there are any available.
+  useEffect(() => {
+    if (displayLogic && displayLogic.groups.length === 0 && !hasAutoAddedRef.current) {
+      hasAutoAddedRef.current = true;
+      handleAddTriggerQuestion();
+    }
+  }, [displayLogic]);
+
+  // If there's no display logic yet, show the "Add display logic" button (or a message if there are no trigger questions)
   if (!displayLogic) {
     return (
       <div className={styles.displayLogicWrapper}>
@@ -190,157 +228,185 @@ const DisplayLogicComponent = ({
   const canAddMoreTriggerQuestions = availableTriggerQuestions().length > 0;
 
   return (
-    <div className={styles.displayLogicWrapper}>
-      <p>{t('tabPanel.descriptions.displayLogic')}</p>
+    <div className={styles.tabPanelWrapper}>
+      <div className={styles.displayLogicWrapper}>
+        <p>{t('tabPanel.descriptions.displayLogic')}</p>
 
-      <div className={styles.logicSentence}>
-        <FormSelect
-          name="displayLogicAction"
-          label={t('tabPanel.labels.displayLogicAction')}
-          hideLabelVisually
-          items={ACTION_ITEMS}
-          selectedKey={displayLogic.action}
-          onChange={(value) => updateLogic({ action: value as 'show' | 'hide' })}
-        />
-        <span className={styles.sentenceText}>{t('tabPanel.labels.thisQuestionIf')}</span>
-        <FormSelect
-          name="displayLogicMatchType"
-          label={t('tabPanel.labels.displayLogicMatchType')}
-          hideLabelVisually
-          items={MATCH_TYPE_ITEMS}
-          selectedKey={displayLogic.matchType}
-          onChange={(value) => updateLogic({ matchType: value as 'any' | 'all' })}
-        />
-        <span className={styles.sentenceText}>{t('tabPanel.labels.ofTheFollowingMatch')}</span>
-      </div>
+        <div className={styles.logicSentenceWrapper}>
+          <FormSelect
+            name="displayLogicAction"
+            label={t('tabPanel.labels.displayLogicAction')}
+            hideLabelVisually
+            items={ACTION_ITEMS}
+            selectedKey={displayLogic.action}
+            onChange={(value) => updateLogic({ action: value as DisplayLogic['action'] })}
+          />
+          <span className={styles.sentenceText}>{t('tabPanel.labels.thisQuestionIf')}</span>
+          <FormSelect
+            name="displayLogicMatchType"
+            label={t('tabPanel.labels.displayLogicMatchType')}
+            hideLabelVisually
+            items={MATCH_TYPE_ITEMS}
+            selectedKey={displayLogic.matchType}
+            onChange={(value) => updateLogic({ matchType: value as DisplayLogic['matchType'] })}
+          />
+          <span className={styles.sentenceText}>{t('tabPanel.labels.ofTheFollowingMatch')}</span>
+        </div>
 
-      {/* One box per trigger question the user has added */}
-      {displayLogic.groups.map((group) => {
-        const tq = triggerQuestionMap.get(group.triggerQuestionId);
-        if (!tq) return null;
+        {/* One box per trigger question the user has added */}
+        {displayLogic.groups.map((group, index) => {
+          const tq = triggerQuestionMap.get(group.triggerQuestionId);
+          if (!tq) return null;
 
-        const groupTriggerItems = availableTriggerQuestions(group.id).map(q => ({
-          id: q.id.toString(),
-          name: q.questionText,
-        }));
+          const groupTriggerItems = availableTriggerQuestions(group.id).map(q => ({
+            id: q.id.toString(),
+            name: q.questionText,
+          }));
 
-        const optionItems = tq.options.map((opt) => ({
-          id: opt.value,
-          name: truncateLabel(opt.label),
-        }));
+          const optionItems = tq.options.map((opt) => ({
+            id: opt.value,
+            name: truncateLabel(opt.label),
+          }));
 
-        return (
-          <div key={group.id} className={styles.conditionsWrapper}>
-            <Button
-              className={`react-aria-Button link ${styles.removeGroupButton}`}
-              type="button"
-              onPress={() => handleRemoveGroup(group.id)}
-            >
-              {Global('buttons.delete')}
-            </Button>
-
-            <FormSelect
-              name={`triggerQuestion-${group.id}`}
-              label={t('tabPanel.labels.triggerQuestion')}
-              items={groupTriggerItems}
-              selectedKey={group.triggerQuestionId.toString()}
-              onChange={(value) => handleTriggerQuestionChange(group.id, value)}
-            />
-
-            {group.conditions.map((condition) => (
-              <div key={condition.id} className={styles.conditionRow}>
-                <FormSelect
-                  name={`operator-${condition.id}`}
-                  label={t('tabPanel.labels.conditionOperator')}
-                  selectClasses={styles.conditionOperatorSelect}
-                  hideLabelVisually
-                  items={OPERATOR_ITEMS}
-                  selectedKey={condition.operator}
-                  onChange={(value) => handleConditionChange(group, condition.id, 'operator', value)}
-                />
-                <FormSelect
-                  name={`option-${condition.id}`}
-                  label={t('tabPanel.labels.conditionOption')}
-                  selectClasses={styles.conditionOperatorSelect}
-                  hideLabelVisually
-                  items={optionItems}
-                  selectedKey={condition.optionValue}
-                  onChange={(value) => handleConditionChange(group, condition.id, 'optionValue', value)}
-                />
+          return (
+            <div key={group.id}>
+              {index > 0 && (
+                <div className={styles.groupJoiner} aria-hidden="true">
+                  {displayLogic.matchType === 'all' ? 'AND' : 'OR'}
+                </div>
+              )}
+              <div className={styles.conditionsWrapper}>
                 <Button
-                  className={`react-aria-Button ${styles.removeConditionButton}`}
+                  className={`react-aria-Button ${styles.removeGroupButton}`}
                   type="button"
-                  aria-label={t('tabPanel.buttons.removeCondition')}
-                  onPress={() => handleRemoveCondition(group, condition.id)}
+                  aria-label={t('tabPanel.buttons.removeGroupAriaLabel', { triggerQuestion: tq.questionText })}
+                  onPress={() => handleRemoveGroup(group.id)}
                 >
                   <span aria-hidden="true">&times;</span>
                 </Button>
-              </div>
-            ))}
 
-            <Button
-              className="react-aria-Button link"
-              type="button"
-              onPress={() => handleAddCondition(group, tq)}
-            >
-              {t('tabPanel.buttons.addCondition')}
-            </Button>
-          </div>
-        );
-      })}
+                <FormSelect
+                  name={`triggerQuestion-${group.id}`}
+                  label={t('tabPanel.labels.triggerQuestion')}
+                  items={groupTriggerItems}
+                  selectedKey={group.triggerQuestionId.toString()}
+                  onChange={(value) => handleTriggerQuestionChange(group.id, value)}
+                />
 
-      {canAddMoreTriggerQuestions && (
-        <Button className="react-aria-Button link" type="button" onPress={handleAddTriggerQuestion}>
-          {t('tabPanel.buttons.addTriggerQuestion')}
-        </Button>
-      )}
+                {group.conditions.map((condition) => {
+                  const selectedOption = tq.options.find((opt) => opt.value === condition.optionValue);
+                  const conditionLabel = t('tabPanel.buttons.removeConditionAriaLabel', {
+                    operator: OPERATOR_ITEMS.find((o) => o.id === condition.operator)?.name ?? '',
+                    option: selectedOption ? truncateLabel(selectedOption.label) : '',
+                  });
 
-      <div className={styles.actionButtonsWrapper}>
-        <TransitionButton
-          type="button"
-          onPress={onSave}
-          isDisabled={displayLogic.groups.length === 0 || isSaving}
-          loadingLabel={Global('buttons.saving')}
-          showLoading={isSaving}
-        >
-          {t('tabPanel.buttons.saveDisplayLogic')}
-        </TransitionButton>
-
-        <DialogTrigger isOpen={isRemoveAllOpen} onOpenChange={setRemoveAllOpen}>
-          <Button className="danger" type="button">
-            {t('tabPanel.buttons.removeDisplayLogic')}
-          </Button>
-          <ModalOverlay>
-            <Modal>
-              <Dialog>
-                {({ close }) => (
-                  <>
-                    <h3>{t('tabPanel.headings.confirmRemoveAllDisplayLogic')}</h3>
-                    <p>{t('tabPanel.descriptions.removeAllDisplayLogicWarning')}</p>
-                    <div className={styles.removeAllConfirmButtons}>
-                      <Button className="react-aria-Button" autoFocus onPress={close}>
-                        {Global('buttons.cancel')}
-                      </Button>
-                      <TransitionButton
-                        className="danger"
-                        onPress={async () => {
-                          handleRemoveAll();
-                          close();
-                        }}
-                        loadingLabel={Global('buttons.confirming')}
-                        showLoading={false}
+                  return (
+                    <div key={condition.id} className={styles.conditionRow}>
+                      <FormSelect
+                        name={`operator-${condition.id}`}
+                        label={t('tabPanel.labels.conditionOperator')}
+                        selectClasses={styles.conditionOperator}
+                        hideLabelVisually
+                        items={OPERATOR_ITEMS}
+                        selectedKey={condition.operator}
+                        onChange={(value) => handleConditionChange(group, condition.id, 'operator', value)}
+                      />
+                      <FormSelect
+                        name={`option-${condition.id}`}
+                        label={t('tabPanel.labels.conditionOption')}
+                        selectClasses={styles.conditionOption}
+                        hideLabelVisually
+                        items={optionItems}
+                        selectedKey={condition.optionValue}
+                        onChange={(value) => handleConditionChange(group, condition.id, 'optionValue', value)}
+                      />
+                      <Button
+                        className={`react-aria-Button ${styles.removeConditionButton}`}
+                        type="button"
+                        aria-label={conditionLabel}
+                        onPress={() => handleRemoveCondition(group, condition.id)}
                       >
-                        {Global('buttons.confirm')}
-                      </TransitionButton>
+                        <DmpIcon icon="trashcan" classes={styles.trashcanIcon} />
+                      </Button>
                     </div>
-                  </>
-                )}
-              </Dialog>
-            </Modal>
-          </ModalOverlay>
-        </DialogTrigger>
+                  )
+                })}
+
+                <Button
+                  className={`react-aria-Button link ${styles.addConditionButton}`}
+                  type="button"
+                  onPress={() => handleAddCondition(group, tq)}
+                >
+                  <span aria-hidden="true">+{' '}</span>
+                  {t('tabPanel.buttons.addCondition')}
+                </Button>
+              </div>
+            </div>
+          );
+        })}
+
+        {canAddMoreTriggerQuestions && (
+          <Button
+            className={`react-aria-Button link ${styles.addTriggerQuestionButton}`}
+            type="button"
+            onPress={handleAddTriggerQuestion}
+          >
+            {t('tabPanel.buttons.addTriggerQuestion')}
+          </Button>
+        )}
+
+        <div className={styles.saveButtonWrapper}>
+          <TransitionButton
+            type="button"
+            onPress={onDisplayLogicSave}
+            isDisabled={displayLogic.groups.length === 0 || isSaving}
+            loadingLabel={Global('buttons.saving')}
+            showLoading={isSaving}
+          >
+            {t('tabPanel.buttons.saveDisplayLogic')}
+          </TransitionButton>
+        </div>
       </div>
-    </div>
+      {
+        displayLogic.groups.length > 0 && (
+          <div className={styles.removeDisplayLogicSection}>
+            <DialogTrigger isOpen={isRemoveAllOpen} onOpenChange={setRemoveAllOpen}>
+              <Button className={`${styles.removeDisplayLogicButton} danger`} type="button">
+                {t('tabPanel.buttons.removeAllDisplayLogic')}
+              </Button>
+              <ModalOverlay>
+                <Modal>
+                  <Dialog>
+                    {({ close }) => (
+                      <>
+                        <h3>{t('tabPanel.headings.confirmClearDisplayLogic')}</h3>
+                        <p>{t('tabPanel.descriptions.clearDisplayLogicWarning')}</p>
+                        <div className={styles.removeAllConditionsDialogButtons}>
+                          <Button className="react-aria-Button" autoFocus onPress={close}>
+                            {Global('buttons.cancel')}
+                          </Button>
+                          <TransitionButton
+                            className="danger"
+                            onPress={async () => {
+                              handleRemoveAll();
+                              close();
+                            }}
+                            loadingLabel={Global('buttons.confirming')}
+                            showLoading={false}
+                          >
+                            {Global('buttons.confirm')}
+                          </TransitionButton>
+                        </div>
+                      </>
+                    )}
+                  </Dialog>
+                </Modal>
+              </ModalOverlay>
+            </DialogTrigger>
+          </div>
+        )
+      }
+    </div >
   );
 };
 

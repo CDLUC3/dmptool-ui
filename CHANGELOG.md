@@ -3,6 +3,7 @@
 - Changed the template question text field from a single-line input to a textarea so longer question text is easier to edit [#78]
 
 ## Added
+- Added `DisplayLogicComponent` for the `DisplayLogic` tab in `QuestionEdit`. Also, added `useTriggerQuestion` hook, and `displayLogicMapper` for use with the new component, and `displayLogic` types [#299]
 - Added show/hide password toggle to `FormInput`, enabled by default for password fields [#80]
 - Migrated login and signup pages to use `FormInput` for consistency with other auth forms [#80]
 - Added password field examples to the styleguide form-elements page [#80]
