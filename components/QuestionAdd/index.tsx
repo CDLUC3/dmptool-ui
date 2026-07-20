@@ -567,20 +567,18 @@ const QuestionAdd = ({
 
                 {/**Options question types*/}
                 {questionType && OPTIONS_QUESTION_TYPES.includes(questionType) && parsedQuestionJSON && (
-                  <>
+                  <div className={styles.optionsWrapper}>
                     <p className={styles.optionsDescription}>
                       {QuestionAdd('helpText.questionOptions', { questionName: questionName ?? '' })}
                     </p>
-                    <div className={styles.optionsWrapper}>
-                      <QuestionOptionsComponent
-                        rows={rows}
-                        setRows={updateRows}
-                        questionJSON={questionJSON}
-                        formSubmitted={formSubmitted}
-                        setFormSubmitted={setFormSubmitted}
-                      />
-                    </div>
-                  </>
+                    <QuestionOptionsComponent
+                      rows={rows}
+                      setRows={updateRows}
+                      questionJSON={questionJSON}
+                      formSubmitted={formSubmitted}
+                      setFormSubmitted={setFormSubmitted}
+                    />
+                  </div>
                 )}
 
                 {/**Date and Number range question types */}

@@ -1,6 +1,7 @@
 .optionsDescription {
-  font-size: var(--fs-sm);
-  font-weight:600;
+  margin: 0 0 var(--space-1);
+  font-size: var(--fs-base);
+  font-weight: 600;
 }
 
 .searchField {
@@ -60,9 +61,7 @@
 }
 
 .optionsWrapper {
-  border: 1px solid var(--border-color);
-  padding: var(--space-4);
-  margin-bottom: var(--space-4);
+  margin-bottom: var(--space-6);
 }
 
 .questionContainer {
