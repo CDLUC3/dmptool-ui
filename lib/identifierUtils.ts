@@ -7,8 +7,20 @@ export const rorToUrl = (ror: string): string => {
 };
 
 export const orcidToUrl = (orcid: string): string => {
-  return `https://orcid.org/${orcid}`;
+  const normalized = extractOrcid(orcid);
+  return `https://orcid.org/${normalized ?? orcid}`;
 };
+
+const ORCID_ID_PATTERN = /(\d{4}-\d{4}-\d{4}-\d{3}[\dX])/i;
+
+export function extractOrcid(text: string | null | undefined): string | null {
+  if (!text) {
+    return null;
+  }
+
+  const match = text.trim().match(ORCID_ID_PATTERN);
+  return match ? match[1].toUpperCase() : null;
+}
 
 export function extractDoi(text: string | null | undefined): string | null {
   if (!text) {

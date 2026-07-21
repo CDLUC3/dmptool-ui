@@ -282,7 +282,8 @@ const TypeAheadWithOther = ({
               id={optionId(0)}
               role="option"
               aria-selected={currentListItemFocused === 0}
-              data-value="other">
+              data-value="other"
+              data-id="other">
               {otherText}
             </li>
 

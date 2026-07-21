@@ -74,6 +74,20 @@ describe('ModalOverlayComponent', () => {
     expect(screen.getByText('Proceed')).toBeInTheDocument();
   });
 
+  it('disables the destructive action while processing', () => {
+    render(
+      <ModalOverlayComponent
+        heading="Test Heading"
+        content="Test Content"
+        isOpen={true}
+        isPrimaryDisabled={true}
+        onPressAction={jest.fn()}
+      />
+    );
+
+    expect(screen.getByRole('button', { name: 'Delete' })).toBeDisabled();
+  });
+
   it('renders as an alertdialog with secondary cancel and danger confirm buttons', async () => {
     render(
       <ModalOverlayComponent

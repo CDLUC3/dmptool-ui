@@ -1147,7 +1147,7 @@
     },
     "ariaLabels": {
       "editMember": "Edit {name}'s details",
-      "orcidProfile": "ORCID profile for {name}"
+      "orcidProfile": "View {name}'s ORCID profile (opens in a new tab)"
     }
   },
   "Contact": {

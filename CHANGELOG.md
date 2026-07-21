@@ -30,6 +30,16 @@
 - Added `UpdateAffiliation` and `AffiliationById` queries [#203]
 
 ## Updated
+- Made some updates to the Edit Project Member page to accommodate Other Affiliation [#96]
+- Redesigned the project members list as accessible cards with linked member names, inline ORCID profile links, role badges, skeleton loading, and consistent heading/link labelling [#96]
+- Updated the project member Edit page to use “project member” wording (not “collaborator”), show affiliation display names, align required/recommended labels with Add, and no longer require email to save [#96]
+- Updated Add and Edit project member flows to share labels, validation messages, and role ordering (alphabetical with “No role assigned” last); roles are now required before saving [#96]
+- Fixed the CRediT Taxonomy “Learn more” link on Add and Edit project member pages by splitting the translation so Crowdin does not break the link markup [#96]
+- Improved the Add project member ORCID lookup flow with explicit person selection, clearer search results, error handling, and ORCID field population (including fallback when the API omits ORCID) [#96]
+- Updated `TypeAheadWithOther` so selecting “Other” sets `affiliationId` to `other`, and aligned “Other” affiliation validation on Add and Edit [#96]
+- Updated the project members collaborators section inline link to use `routePath` for the collaboration page [#96]
+- Added `extractOrcid` helper and updated `orcidToUrl` to normalise ORCID values from URLs or IDs [#96]
+- Updated `ModalOverlayComponent` to support disabling the primary action button (used for remove member confirmation) [#96]
 - Moved the "use sample text as default" checkbox directly under the Sample Text field on template question add and edit screens, and clarified its label [#77]
 - Redesigned the template question answer-choice editor with responsive choice cards, accessible reordering and removal controls, clearer validation, and localized English and Portuguese labels
 - Fixed issue with local reference to `@dmptool/types`

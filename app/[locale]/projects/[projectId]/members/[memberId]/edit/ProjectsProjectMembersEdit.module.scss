@@ -1,3 +1,7 @@
+.memberRoles {
+  margin-bottom: var(--space-6);
+}
+
 .dangerZone {
   margin-top: 3rem;
   padding-top: 2rem;
@@ -5,7 +9,7 @@
   max-width: 40rem;
 
   h2 {
-    color: var(--color-danger);
+    color: var(--heading-color);
     font-size: 1.25rem;
     margin: 0 0 1rem 0;
   }
@@ -16,11 +20,11 @@
   }
 
   :global(.danger) {
-    background-color: var(--color-danger);
+    background-color: var(--red-400);
     color: white;
 
     &:hover {
-      background-color: var(--color-danger-hover);
+      background-color: var(--blue-900);
     }
   }
 }
