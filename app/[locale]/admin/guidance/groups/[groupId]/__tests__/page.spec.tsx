@@ -808,7 +808,11 @@ describe("GuidanceGroupIndexPage", () => {
 
     const sidebar = screen.getByTestId("sidebar-panel");
     const inSidebar = within(sidebar);
-    const publishBtn = inSidebar.getByRole("button", { name: "Global.buttons.publish" });
+    const publishBtn = await waitFor(() => {
+      const btn = inSidebar.getByRole("button", { name: "Global.buttons.publish" });
+      expect(btn).not.toHaveAttribute('aria-disabled', 'true');
+      return btn;
+    });
 
     await act(async () => {
       fireEvent.click(publishBtn);

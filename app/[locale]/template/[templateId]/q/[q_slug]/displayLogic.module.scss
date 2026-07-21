@@ -1,0 +1,198 @@
+@use '@/styles/responsive' as r;
+
+
+/** Logic sentence **/
+// Wraps the show/hide logic sentence
+.logicSentenceWrapper {
+  display: flex;
+  align-items: baseline;
+  flex-direction: column; // mobile: stacked
+  flex-wrap: wrap;
+  gap: 0.5rem;
+
+  > div {
+    display: inline-flex;
+    width: 100%; // mobile: full-width selects
+  }
+
+  @include r.device('sm') {
+    flex-direction: row;
+
+    > div {
+      width: auto; // desktop: back to natural inline width
+    }
+  }
+}
+
+.sentenceText {
+  font-size: 1rem;
+  white-space: nowrap;
+}
+/** End logic sentence **/
+
+/** Condition Group styles **/
+.conditionsWrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem;
+  padding-top: 2.5rem; // room for the remove link above the select
+  border: 1px solid var(--gray-300, #8f8f8f);
+  border-radius: 0.375rem;
+  background-color: var(--slate-100, #f1f5f9);
+}
+
+.conditionRow {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.5rem;
+
+  > div {
+    min-width: 0;
+    width: 100%;
+  }
+
+  @include r.device('sm') {
+    flex-direction: row;
+    align-items: center;
+
+    > div {
+      width: auto;
+    }
+  }
+}
+
+.conditionOperator{
+  margin-bottom: 0;
+  max-width: 100%;
+
+  @include r.device('sm') {
+    flex: 0 0 35%;
+    width: auto;
+  }
+}
+
+.conditionOption {
+  margin-bottom: 0;
+  max-width: 100%;
+
+  @include r.device('sm') {
+    flex: 1 0 0%;
+    width: auto;
+    min-width: 0;
+  }
+
+  // This allows the selected option text to truncate with ellipsis if it overflows one line.
+  // We only want to show additional text in the dropdown list, not in the select button itself.
+  :global(.react-aria-SelectValue) {
+    display: block;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    min-width: 0;
+  }
+}
+
+/** Buttons **/
+.addConditionButton,
+.addTriggerQuestionButton {
+  align-self: flex-start;
+  width: fit-content;
+}
+
+.removeConditionButton {
+  background: none !important; // don't want background on the trashcan icon button
+}
+
+.removeGroupButton {
+  position: absolute;
+  top: 0.75rem;
+  right: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center; // centers the × horizontally
+  width: 1.75rem;
+  height: 1.75rem;
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid var(--gray-300, #8f8f8f);
+  background: transparent;
+  color: var(--gray-600, #393939);
+  font-size: 1.1rem;
+  line-height: 1;
+
+  &:hover {
+    background: var(--gray-100, #e0e0e0);
+    border-color: var(--red-400, #D3273E);
+    color: var(--red-600, #731200);
+  }
+
+  @include r.device('sm') {
+    align-self: center; // desktop: back to inline vertical centering
+  }
+}
+
+.removeAllConditionsDialogButtons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.addLogicButton {
+  align-self: flex-start;
+  width: fit-content;
+  max-width: 100%;
+}
+
+.removeDisplayLogicButton {
+  display: flex;
+  margin: 0 auto;
+}
+/** End Buttons**/
+
+.emptyStateText {
+  font-style: italic;
+  color: var(--gray-500, #555555);
+}
+
+.saveButtonWrapper {
+  display: flex;
+  justify-content: flex-start;
+  margin: var(--space-4) 0 var(--space-8) 0;
+}
+
+.groupJoiner { // "and" or "or" text between condition groups
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.tabPanelWrapper {
+  display: flex;
+  flex-direction: column;
+}
+
+.displayLogicWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-width: 640px;
+}
+
+.removeDisplayLogicSection {
+  background: var(--gray-50, #ffffff);
+  border-top: 1px solid var(--gray-200, #afafaf);
+  padding-top: var(--space-8);
+}
+
+.trashcanIcon {
+  cursor: pointer;
+  fill: var(--blue-900);
+  background: none;
+}

@@ -399,7 +399,7 @@ describe("ProjectsProjectMembersEdit", () => {
       expect(mockUpdateProjectMemberFn).toHaveBeenCalledWith(expect.objectContaining({
         variables: {
           input: expect.objectContaining({
-            affiliationId: 'other',
+            affiliationId: '',
             affiliationName: 'Custom Research Institute',
           }),
         },

@@ -70,3 +70,11 @@
 .optionsWrapper {
   margin-bottom: var(--space-6);
 }
+
+/* Display Logic Tab Styles */
+.showHideLogic {
+  display: flex;
+  flex-direction: row;
+  gap: var(--space-4);
+  margin-top: var(--space-4);
+}

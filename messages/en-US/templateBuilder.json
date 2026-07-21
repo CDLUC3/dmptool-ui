@@ -445,12 +445,14 @@
         "questionTextRequired": "Question text field is required.",
         "questionUpdateError": "Error when updating question",
         "questionRemoveError": "Error when removing question",
-        "invalidQuestionType": "Invalid question type found"
+        "invalidQuestionType": "Invalid question type found",
+        "errorSavingDisplayLogic": "Error saving display logic"
       },
       "success": {
         "questionUpdated": "Question was successfully updated",
         "questionRemoved": "Question was successfully removed",
-        "successDeletingQuestion": "Question deleted successfully"
+        "successDeletingQuestion": "Question deleted successfully",
+        "displayLogicUpdated": "Display logic saved successfully"
       }
     },
     "headings": {
@@ -463,6 +465,55 @@
     "definitions": {
       "type": "Type",
       "repository": "Repository"
+    },
+    "tabs": {
+      "editQuestion": "Edit question",
+      "options": "Options",
+      "logic": "Display Logic"
+    },
+    "tabPanel": {
+      "noTriggerQuestionsAvailable": "There are no questions available to use as a trigger for display logic.",
+      "actionItemShow": "Show",
+      "actionItemHide": "Hide",
+      "matchTypeItemAny": "Any",
+      "matchTypeItemAll": "All",
+      "operatorItemIsSelected": "is selected",
+      "operatorItemIsNotSelected": "is NOT selected",
+      "headings": {
+        "options": "Options",
+        "logic": "Display Logic",
+        "confirmClearDisplayLogic": "Clear all display logic?"
+      },
+      "descriptions": {
+        "displayLogic": "Configure display logic to show or hide this question based on how users answered previous multiple choice or checkbox questions. Add one or more conditions to determine when this question appears.",
+        "clearDisplayLogicWarning": "This will clear all your saved conditions for this question. This action cannot be undone."
+      },
+      "buttons": {
+        "addDisplayLogic": "Add display logic",
+        "removeAllDisplayLogic": "Clear all display logic",
+        "addCondition": "Add condition",
+        "removeCondition": "Delete condition",
+        "removeConditionAriaLabel": "Remove condition: {operator} - {option}",
+        "removeGroupAriaLabel": "Remove condition group for \"{triggerQuestion}\"",
+        "saveDisplayLogic": "Save display logic",
+        "addTriggerQuestion": "Add another trigger question"
+      },
+      "options": {
+        "any": "Any",
+        "all": "All",
+        "show": "Show",
+        "hide": "Hide",
+        "selectQuestion": "Select a question"
+      },
+      "labels": {
+        "displayLogicAction": "Show/Hide",
+        "displayLogicMatchType": "Any/All",
+        "thisQuestionIf": "this question if",
+        "ofTheFollowingMatch": "of the following conditions are met",
+        "triggerQuestion": "The answer to this question",
+        "conditionOption": "condition option",
+        "conditionOperator": "Condition operator"
+      }
     }
   },
   "QuestionOptionsComponent": {
