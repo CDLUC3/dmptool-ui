@@ -29,6 +29,7 @@ import {
 // GraphQL
 import {
   QuestionDocument,
+  QuestionsDocument
 } from '@/generated/graphql';
 
 import {
@@ -45,6 +46,7 @@ import {
   RemoveQuestionErrors,
   UpdateQuestionErrors,
 } from '@/app/types';
+import { DisplayLogic } from '@/app/types/displayLogic';
 
 // Components
 import PageHeader from "@/components/PageHeader";
@@ -52,12 +54,13 @@ import QuestionOptionsComponent
   from '@/components/Form/QuestionOptionsComponent';
 import QuestionPreview from '@/components/QuestionPreview';
 import {
+  FormTextArea,
   RadioGroupComponent,
   RangeComponent,
   TypeAheadSearch,
   ResearchOutputComponent
 } from '@/components/Form';
-import FormTextArea from '@/components/Form/FormTextArea';
+import DisplayLogicComponent from './DisplayLogicComponent';
 import ErrorMessages from '@/components/ErrorMessages';
 import QuestionView from '@/components/QuestionView';
 import { getParsedQuestionJSON } from '@/components/hooks/getParsedQuestionJSON';
@@ -66,6 +69,7 @@ import Loading from '@/components/Loading';
 
 //Utils and Other
 import { useResearchOutputTable } from '@/app/hooks/useResearchOutputTable';
+import { useTriggerQuestions } from './hooks/useTriggerQuestions';
 import { useToast } from '@/context/ToastContext';
 import { routePath } from '@/utils/routes';
 import { stripHtmlTags } from '@/utils/general';
@@ -90,25 +94,33 @@ import {
   isOptionsType,
   getOverrides,
 } from '@/app/hooks/useEditQuestion';
+import {
+  toSaveInput,
+} from './displayLogicMapper';
 import styles from './questionEdit.module.scss';
 
 const QuestionEdit = () => {
+  // hooks
   const params = useParams();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const toastState = useToast(); // Access the toast state from context
+  const toastState = useToast();
+
+  // params
   const templateId = String(params.templateId);
   const questionId = String(params.q_slug); //question id
   const questionTypeIdQueryParam = searchParams.get('questionType') || null;
 
   //For scrolling to error in page
   const errorRef = useRef<HTMLDivElement | null>(null);
-
+  // Track whether the component has hydrated to avoid running certain effects on the server
   const hasHydrated = useRef(false);
   // Track whether there are unsaved changes
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState<boolean>(false);
   // Form state
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [isSavingLogic, setIsSavingLogic] = useState<boolean>(false);
+  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
 
   // State for managing form inputs
   const [question, setQuestion] = useState<Question>();
@@ -123,6 +135,10 @@ const QuestionEdit = () => {
   const [typeaheadSearchLabel, setTypeaheadSearchLabel] = useState<string>('');
   const [parsedQuestionJSON, setParsedQuestionJSON] = useState<AnyParsedQuestion>();
   const [isConfirmOpen, setConfirmOpen] = useState(false);
+
+  // Display logic tab state — null means "no logic configured yet",
+  // which drives the empty state (description + Add Display Logic button).
+  const [displayLogic, setDisplayLogic] = useState<DisplayLogic | null>(null);
 
   // Add state for live region announcements
   const [announcement, setAnnouncement] = useState('');
@@ -174,7 +190,7 @@ const QuestionEdit = () => {
     updateStandardFieldProperty
   } = useResearchOutputTable({ setHasUnsavedChanges, announce });
 
-  // Run selected question query
+  // GraphQL Queries
   const {
     data: selectedQuestion,
     loading,
@@ -184,6 +200,26 @@ const QuestionEdit = () => {
       questionId: Number(questionId)
     }
   });
+
+  // All questions in the same section as this one — the source list that
+  // Display Logic's trigger-question dropdown filters down from.
+  const {
+    data: questionsData,
+    loading: questionsLoading,
+    error: questionsError
+  } = useQuery(QuestionsDocument, {
+    variables: { sectionId: selectedQuestion?.question?.sectionId ?? 0 },
+    skip: !selectedQuestion?.question?.sectionId
+  });
+
+
+  // Candidate questions this question's display logic can trigger off of:
+  // prior multiple-choice/checkbox questions in the same section.
+  const { triggerQuestions } = useTriggerQuestions(
+    questionsData?.questions,
+    Number(questionId),
+    (question?.displayOrder ? Number(question.displayOrder) : undefined)
+  );
 
   // Update rows state and question.json when options change
   const updateRows = (newRows: QuestionOptions[]) => {
@@ -289,6 +325,36 @@ const QuestionEdit = () => {
     }
   };
 
+  // Handler for display logic changes (Display Logic tab)
+  const handleDisplayLogicChange = (logic: DisplayLogic | null) => {
+    setDisplayLogic(logic);
+    setHasUnsavedChanges(true);
+  };
+
+  // Handler for saving display logic changes (Display Logic tab)
+  const handleSaveDisplayLogic = async () => {
+    if (!question) return;
+    setIsSavingLogic(true);
+
+    try {
+      // Simulate a save until backend is implemented
+      if (displayLogic) {
+        toSaveInput(Number(questionId), displayLogic, triggerQuestions);
+      }
+
+      setHasUnsavedChanges(false);
+      toastState.add(t('messages.success.displayLogicUpdated'), { type: 'success' });
+    } catch {
+      logECS('error', 'QuestionEdit.handleSaveDisplayLogic', {
+        error: 'Invalid question type in parsed JSON',
+        url: { path: routePath('template.q.slug', { templateId, q_slug: questionId }) }
+      });
+      setErrors(prev => [...prev, t('messages.error.errorSavingDisplayLogic')]);
+    } finally {
+      setIsSavingLogic(false);
+    }
+  };
+
   // Prepare input for the questionTypeHandler. For options questions, we update the 
   // values with rows state. For non-options questions, we use the parsed JSON
   const getFormState = (question: Question, rowsOverride?: QuestionOptions[]) => {
@@ -361,7 +427,6 @@ const QuestionEdit = () => {
         // Strip all tags from questionText before sending to backend
         const cleanedQuestionText = stripHtmlTags(question.questionText ?? '');
 
-        // Add mutation for question
         const response = await updateQuestionAction({
           questionId: Number(questionId),
           displayOrder: Number(question.displayOrder),
@@ -371,7 +436,7 @@ const QuestionEdit = () => {
           guidanceText: String(question.guidanceText),
           sampleText: String(question.sampleText),
           useSampleTextAsDefault: question?.useSampleTextAsDefault || false,
-          required: Boolean(question.required)
+          required: Boolean(question.required),
         });
 
         if (response.redirect) {
@@ -447,8 +512,12 @@ const QuestionEdit = () => {
       allErrors.push(selectedQuestionQueryError.message);
     }
 
+    if (questionsError) {
+      allErrors.push(questionsError.message);
+    }
+
     setErrors(allErrors);
-  }, [selectedQuestionQueryError]);
+  }, [selectedQuestionQueryError, questionsError]);
 
   // Set question details in state when data is loaded
   useEffect(() => {
@@ -510,7 +579,7 @@ const QuestionEdit = () => {
         setErrors(prev => [...prev, 'Error parsing question data']);
       }
     }
-  }, [selectedQuestion]);
+  }, [selectedQuestion, questionId]);
 
   useEffect(() => {
     if (questionType) {
@@ -617,9 +686,18 @@ const QuestionEdit = () => {
     };
   }, [hasUnsavedChanges]);
 
-  if (loading) {
+
+  useEffect(() => {
+    const stillLoading = loading || (!!selectedQuestion?.question?.sectionId && questionsLoading);
+    if (!stillLoading && !initialLoadComplete) {
+      setInitialLoadComplete(true);
+    }
+  }, [loading, questionsLoading, selectedQuestion, initialLoadComplete]);
+
+  if (!initialLoadComplete) {
     return <Loading message={Global('messaging.loading')} />;
   }
+
 
   return (
     <>
@@ -654,11 +732,12 @@ const QuestionEdit = () => {
         <div className="main-content">
           <Tabs>
             <TabList aria-label="Question editing">
-              <Tab id="edit">{Global('tabs.editQuestion')}</Tab>
-              <Tab id="options">{Global('tabs.options')}</Tab>
-              <Tab id="logic">{Global('tabs.logic')}</Tab>
+              <Tab id="edit">{t('tabs.editQuestion')}</Tab>
+              <Tab id="options">{t('tabs.options')}</Tab>
+              <Tab id="logic">{t('tabs.logic')}</Tab>
             </TabList>
 
+            {/* Tab: Edit Question Tab */}
             <TabPanel id="edit">
               <Form onSubmit={handleUpdate}>
                 <TextField
@@ -879,14 +958,24 @@ const QuestionEdit = () => {
                   {Global('buttons.saveAndUpdate')}
                 </TransitionButton>
               </Form>
-
-
             </TabPanel>
+
+            {/** Tab: Options Tab */}
             <TabPanel id="options">
-              <h2>{Global('tabs.options')}</h2>
+              <h2>{t('tabPanel.headings.options')}</h2>
             </TabPanel>
+
+            {/** Tab: Display Logic Tab */}
             <TabPanel id="logic">
-              <h2>{Global('tabs.logic')}</h2>
+              <h2>{t('tabPanel.headings.logic')}</h2>
+              <DisplayLogicComponent
+                triggerQuestions={triggerQuestions}
+                displayLogic={displayLogic}
+                onDisplayLogicChange={handleDisplayLogicChange}
+                onDisplayLogicSave={handleSaveDisplayLogic}
+                isSaving={isSavingLogic}
+              />
+
             </TabPanel>
           </Tabs>
 

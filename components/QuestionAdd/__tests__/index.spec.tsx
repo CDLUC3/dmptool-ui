@@ -1696,33 +1696,32 @@ describe("Research Output Question Type", () => {
         breadcrumbs={<div>Breadcrumbs</div>}
       />);
 
-    // Find the panel
-    const outputTypeCheckbox = screen.getByTestId('checkbox-outputType');
-    await act(async () => { // open panel
-      fireEvent.click(outputTypeCheckbox);
+    // Select the button that controls the outputType panel directly, regardless of its label
+    const outputTypeToggle = document.querySelector('button[aria-controls="panel-outputType"]');
+    if (!outputTypeToggle) throw new Error('outputType toggle button not found');
+
+    await act(async () => {
+      fireEvent.click(outputTypeToggle);
     });
+
     const panel = document.getElementById('panel-outputType');
     if (!panel) throw new Error('panel-outputType not found');
 
-    // Find the hidden select element within the panel
     const hiddenSelect = within(panel).getByRole('combobox', { hidden: true });
 
     await act(async () => {
       fireEvent.change(hiddenSelect, { target: { value: 'mine' } });
     });
 
-    // Verify the mode changed by checking the button text
     await waitFor(() => {
-      const selectButton = within(panel!).getByTestId('select-button');
+      const selectButton = within(panel).getByTestId('select-button');
       expect(selectButton).toHaveTextContent('researchOutput.labels.useCustomList');
     });
 
-    // Verify custom fields section appears
     await waitFor(() => {
       expect(screen.getByText('researchOutput.outputType.legends.myOutputs')).toBeInTheDocument();
     });
 
-    // Verify all expected fields are present for custom output types
     expect(screen.getByLabelText('researchOutput.outputType.labels.enterOutputType')).toBeInTheDocument();
     expect(screen.getByLabelText('researchOutput.outputType.labels.typeDescription')).toBeInTheDocument();
     expect(screen.getByRole('button', {

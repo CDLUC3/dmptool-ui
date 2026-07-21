@@ -77,8 +77,6 @@ const standardKeys = new Set([
   "Anticipated File Size",
 ]);
 
-console.log(DefaultResearchOutputTableQuestion.columns.map(col => col.heading).join(', '));
-
 // Create a mapping from field IDs to default columns
 const DEFAULT_COLUMNS_MAP: Record<string, ResearchOutputColumn | undefined> = {
   title: DefaultResearchOutputTableQuestion.columns.find((col) => col.heading === "Title"),

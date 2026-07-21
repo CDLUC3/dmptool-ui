@@ -25,6 +25,7 @@ interface MySelectProps<T extends SelectItem>
   extends Omit<SelectProps<T>, 'children' | 'onChange'> {
   label?: string;
   ariaLabel?: string;
+  hideLabelVisually?: boolean;
   errorMessage?: string | ((validation: ValidationResult) => string);
   helpMessage?: string;
   description?: string;
@@ -43,6 +44,7 @@ export const FormSelect = forwardRef<HTMLButtonElement, MySelectProps<SelectItem
   const {
     label,
     ariaLabel,
+    hideLabelVisually,
     errorMessage,
     helpMessage,
     description,
@@ -80,7 +82,7 @@ export const FormSelect = forwardRef<HTMLButtonElement, MySelectProps<SelectItem
     >
       {(state) => (
         <>
-          <Label>
+          <Label className={hideLabelVisually ? 'hidden-accessibly' : ''}>
             {label}{showRequired && <span className="is-required" aria-hidden="true"> ({t('required')})</span>}
           </Label>
           {description && (
