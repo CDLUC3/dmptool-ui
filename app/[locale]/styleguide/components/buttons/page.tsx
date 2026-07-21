@@ -11,6 +11,8 @@ import AddQuestionButton from "@/components/AddQuestionButton";
 import AddSectionButton from "@/components/AddSectionButton";
 import ButtonWithImage from "@/components/ButtonWithImage";
 import ExpandButton from "@/components/ExpandButton";
+import ConnectionSection from "@/components/ConnectionSection";
+import { useTranslations } from "next-intl";
 
 import {
   SGComponentExample,
@@ -29,6 +31,13 @@ import "../../shared/styleguide.scss";
 export default function ButtonsPage() {
   // State for interactive examples
   const [expandedState, setExpandedState] = React.useState(false);
+  const [orcidConnectedState, setOrcidConnectedState] = React.useState(false);
+  const t = useTranslations("UserConnections");
+
+  const orcidContent = t.markup("orcidConnection.content", {
+    link: (chunks) =>
+      `<a href="https://orcid.org/" target="_blank" rel="noopener noreferrer">${chunks}</a>`,
+  });
 
   return (
     <LayoutContainer>
@@ -92,6 +101,9 @@ export default function ButtonsPage() {
                 </li>
                 <li>
                   <a href="#enhanced-buttons">Enhanced Buttons</a>
+                </li>
+                <li>
+                  <a href="#connection-sections">Connection Sections</a>
                 </li>
               </ul>
             </SGTocSection>
@@ -593,6 +605,113 @@ import ExpandButton from '@/components/ExpandButton';
   expandLabel="Show Details"
   collapseLabel="Hide Details"
 />`}</SGCodeBlock>
+            </SGComponentExampleContent>
+          </SGComponentExample>
+        </section>
+
+        {/* Connection Sections */}
+        <section id="connection-sections">
+          <h2>Connection Sections</h2>
+          <p>
+            Third-party account connections (ORCID, SSO). Not connected shows a branded connect button;
+            connected shows a status card with identifier and an in-card disconnect action.
+          </p>
+
+          <SGComponentExample>
+            <SGComponentExampleHeader title="Interactive ORCID connection" />
+            <SGComponentExampleContent>
+              <SGComponentExampleDemo>
+                <ConnectionSection
+                  type="orcid"
+                  isConnected={orcidConnectedState}
+                  connectedIdentifier="0000-0001-2345-6789"
+                  title={t("orcidConnection.title")}
+                  content={orcidContent}
+                  btnImageUrl="/images/orcid.svg"
+                  btnText={t("orcidConnection.btnText")}
+                  onConnect={() => setOrcidConnectedState(true)}
+                  onDisconnect={async () => setOrcidConnectedState(false)}
+                />
+                <p>
+                  <small>Connection state: {orcidConnectedState ? "Connected" : "Not connected"}</small>
+                </p>
+              </SGComponentExampleDemo>
+
+              <h4>Usage</h4>
+              <SGCodeBlock>{`import ConnectionSection from '@/components/ConnectionSection';
+
+const [isOrcidConnected, setIsOrcidConnected] = useState(false);
+
+<ConnectionSection
+  type="orcid"
+  isConnected={isOrcidConnected}
+  connectedIdentifier="0000-0001-2345-6789"
+  title={t('orcidConnection.title')}
+  content={orcidContent}
+  btnImageUrl="/images/orcid.svg"
+  btnText={t('orcidConnection.btnText')}
+  onConnect={() => setIsOrcidConnected(true)}
+  onDisconnect={async () => setIsOrcidConnected(false)}
+/>`}</SGCodeBlock>
+            </SGComponentExampleContent>
+          </SGComponentExample>
+
+          <SGComponentExample>
+            <SGComponentExampleHeader title="Connection states (static)" />
+            <SGComponentExampleContent>
+              <SGComponentExampleDemo>
+                <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
+                  <div>
+                    <p><strong>ORCID — Not connected</strong></p>
+                    <ConnectionSection
+                      type="orcid"
+                      title={t("orcidConnection.title")}
+                      content={orcidContent}
+                      btnImageUrl="/images/orcid.svg"
+                      btnText={t("orcidConnection.btnText")}
+                      onConnect={() => undefined}
+                    />
+                  </div>
+
+                  <div>
+                    <p><strong>ORCID — Connected</strong></p>
+                    <ConnectionSection
+                      type="orcid"
+                      isConnected={true}
+                      connectedIdentifier="0000-0001-2345-6789"
+                      title={t("orcidConnection.title")}
+                      content={orcidContent}
+                      btnImageUrl="/images/orcid.svg"
+                      btnText={t("orcidConnection.btnText")}
+                      onDisconnect={async () => undefined}
+                    />
+                  </div>
+
+                  <div>
+                    <p><strong>SSO — Not connected</strong></p>
+                    <ConnectionSection
+                      type="sso"
+                      title={t("ssoConnection.title")}
+                      content={t("ssoConnection.content")}
+                      btnText={t("ssoConnection.btnText")}
+                      onConnect={() => undefined}
+                    />
+                  </div>
+
+                  <div>
+                    <p><strong>SSO — Connected</strong></p>
+                    <ConnectionSection
+                      type="sso"
+                      isConnected={true}
+                      connectedIdentifier="Example University"
+                      title={t("ssoConnection.title")}
+                      content={t("ssoConnection.content")}
+                      btnText={t("ssoConnection.btnText")}
+                      onDisconnect={async () => undefined}
+                    />
+                  </div>
+                </div>
+              </SGComponentExampleDemo>
             </SGComponentExampleContent>
           </SGComponentExample>
         </section>

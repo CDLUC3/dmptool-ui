@@ -50,6 +50,11 @@ jest.mock("@/utils/index", () => ({
 
 const mockToastAdd = jest.fn();
 
+// If the helpdesk email is missing, define it here so the tests pass
+if (!process.env.NEXT_PUBLIC_HELPDESK_EMAIL_ADDRESS) {
+  process.env.NEXT_PUBLIC_HELPDESK_EMAIL_ADDRESS = 'test@example.com';
+}
+
 const mockMeData = {
   me: {
     givenName: "Jane",
@@ -98,20 +103,20 @@ const submitErrorMock = {
   error: new Error("Network error"),
 };
 
-// Helper to fill out and submit the required fields
-async function fillAndSubmit(user: ReturnType<typeof userEvent.setup>) {
-  // Wait for the me-query data to populate the pre-filled fields first
-  await screen.findByDisplayValue(formValues.email);
+  // Helper to fill out and submit the required fields
+  async function fillAndSubmit(user: ReturnType<typeof userEvent.setup>) {
+    // Wait for the me-query data to populate the pre-filled fields first
+    await screen.findByDisplayValue(formValues.email);
 
-  const subjectInput = screen.getByLabelText("form.labels.subject (required)");
-  const messageInput = screen.getByLabelText("form.labels.message (required)");
+    const subjectInput = screen.getByLabelText("form.labels.subject (required)");
+    const messageInput = screen.getByLabelText("form.labels.message (required)");
 
-  await user.type(subjectInput, formValues.subject);
-  await user.type(messageInput, formValues.message);
+    await user.type(subjectInput, formValues.subject);
+    await user.type(messageInput, formValues.message);
 
-  const submitButton = screen.getByRole("button", { name: "buttons.submit" });
-  await user.click(submitButton);
-}
+    const submitButton = screen.getByRole("button", { name: "buttons.submit" });
+    await user.click(submitButton);
+  }
 
 describe("ContactUsPage", () => {
   beforeEach(() => {

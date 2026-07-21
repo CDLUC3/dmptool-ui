@@ -3,6 +3,12 @@
   border-top: 1px solid var(--gray-100);
 }
 
+.fundingsLoading {
+  justify-content: flex-start;
+  min-height: 8rem;
+  padding-inline: 0;
+}
+
 .fundingResultsListItem {
   display: flex;
   justify-content: space-between;

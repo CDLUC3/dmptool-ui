@@ -30,120 +30,122 @@ jest.mock('@/components/Form/ResearchOutputDisplay/researchOutput.module.scss', 
 describe('ResearchOutputDisplay', () => {
   const mockStandardField: StandardField = {
     id: 'title',
+    commonStandardId: 'title',
     label: 'Title',
     enabled: true,
     helpText: 'Enter the title',
   };
 
   const mockDataFlagField: StandardField = {
-    id: 'dataFlags',
-    label: 'Data Flags',
+    id: "dataFlags",
+    commonStandardId: "data_flags",
+    label: "Data Flags",
     enabled: true,
     content: {
-      meta: { schemaVersion: '1.0' },
-      type: 'checkBoxes',
+      meta: { schemaVersion: "1.0" },
+      type: "checkBoxes",
       options: [
-        { label: 'Flag 1', value: 'flag1', selected: true },
-        { label: 'Flag 2', value: 'flag2', selected: false },
+        { label: "Flag 1", value: "flag1", selected: true },
+        { label: "Flag 2", value: "flag2", selected: false },
       ],
-      attributes: { labelTranslationKey: 'labels.dataFlags' },
+      attributes: { labelTranslationKey: "labels.dataFlags" },
       /* eslint-disable @typescript-eslint/no-explicit-any */
     } as any,
   };
 
   const mockOutputTypeField: StandardField = {
-    id: 'outputType',
-    label: 'Output Type',
+    id: "outputType",
+    commonStandardId: "type",
+    label: "Output Type",
     enabled: true,
     outputTypeConfig: {
-      mode: 'mine',
+      mode: "mine",
       selectedDefaults: [],
-      customTypes: [
-        { type: 'Type 1' },
-        { type: 'Type 2' },
-      ],
+      customTypes: [{ type: "Type 1" }, { type: "Type 2" }],
     },
-    helpText: 'Output type help',
+    helpText: "Output type help",
   };
 
   const mockOutputTypeDefaultField: StandardField = {
-    id: 'outputType',
-    label: 'Output Type',
+    id: "outputType",
+    commonStandardId: "type",
+    label: "Output Type",
     enabled: true,
     outputTypeConfig: {
-      mode: 'defaults',
-      selectedDefaults: ['DEFAULT_TYPE_1', 'DEFAULT_TYPE_2'],
+      mode: "defaults",
+      selectedDefaults: ["DEFAULT_TYPE_1", "DEFAULT_TYPE_2"],
       customTypes: [],
     },
-    helpText: 'Output type help',
+    helpText: "Output type help",
   };
 
   const mockRepoSelectorField: StandardField = {
-    id: 'repoSelector',
-    label: 'Repository',
+    id: "repoSelector",
+    commonStandardId: "host",
+    label: "Repository",
     enabled: true,
     repoConfig: {
       hasCustomRepos: true,
       customRepos: [
-        { id: 'repo1', name: 'Repository 1', uri: 'https://repo1.com' },
-        { id: 'repo2', name: 'Repository 2', uri: 'https://repo2.com' },
+        { id: "repo1", name: "Repository 1", uri: "https://repo1.com" },
+        { id: "repo2", name: "Repository 2", uri: "https://repo2.com" },
       ],
     },
-    helpText: 'Select repositories',
+    helpText: "Select repositories",
   };
 
   const mockMetadataField: StandardField = {
-    id: 'metadataStandards',
-    label: 'Metadata Standards',
+    id: "metadataStandards",
+    commonStandardId: "metadata",
+    label: "Metadata Standards",
     enabled: true,
     metaDataConfig: {
       hasCustomStandards: true,
-      customStandards: [
-        { id: 'standard1', name: 'Standard 1', uri: 'https://standard1.com' },
-      ],
+      customStandards: [{ id: "standard1", name: "Standard 1", uri: "https://standard1.com" }],
     },
-    helpText: 'Select standards',
+    helpText: "Select standards",
   };
 
   const mockLicensesField: StandardField = {
-    id: 'licenses',
-    label: 'Licenses',
+    id: "licenses",
+    commonStandardId: "license_ref",
+    label: "Licenses",
     enabled: true,
     licensesConfig: {
-      mode: 'addToDefaults',
-      customTypes: [
-        { name: 'Custom License', uri: 'https://custom-license.com' },
-      ],
-      selectedDefaults: ['MIT', 'Apache-2.0'],
+      mode: "addToDefaults",
+      customTypes: [{ name: "Custom License", uri: "https://custom-license.com" }],
+      selectedDefaults: ["MIT", "Apache-2.0"],
     },
-    helpText: 'Select licenses',
+    helpText: "Select licenses",
   };
 
   const mockAccessLevelsField: StandardField = {
-    id: 'accessLevels',
-    label: 'Access Levels',
+    id: "accessLevels",
+    commonStandardId: "data_access",
+    label: "Access Levels",
     enabled: true,
     accessLevelsConfig: {
-      mode: 'mine',
+      mode: "mine",
       customLevels: [
-        { value: 'public', label: 'Public', selected: true },
-        { value: 'private', label: 'Private', selected: false },
+        { value: "public", label: "Public", selected: true },
+        { value: "private", label: "Private", selected: false },
       ],
-      selectedDefaults: ['public', 'restricted'],
+      selectedDefaults: ["public", "restricted"],
     },
-    helpText: 'Select access levels',
+    helpText: "Select access levels",
   };
 
   const mockAdditionalField = {
-    id: 'additional1',
+    id: "additional1",
+    commonStandardId: "custom",
     enabled: true,
-    heading: 'Additional Field 1',
-    label: 'Additional Field 1',
+    heading: "Additional Field 1",
+    label: "Additional Field 1",
     content: {
       attributes: {
-        help: 'Additional field help text',
-        maxLength: '255',
-        defaultValue: 'Default value',
+        help: "Additional field help text",
+        maxLength: "255",
+        defaultValue: "Default value",
       },
     },
     /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -489,8 +491,9 @@ describe('ResearchOutputDisplay', () => {
 
     it('should handle field without help text', () => {
       const fieldWithoutHelpText: StandardField = {
-        id: 'description',
-        label: 'Description',
+        id: "description",
+        commonStandardId: "description",
+        label: "Description",
         enabled: true,
       };
       const props = {
@@ -503,8 +506,9 @@ describe('ResearchOutputDisplay', () => {
 
     it('should handle output type field without config', () => {
       const incompleteOutputTypeField: StandardField = {
-        id: 'outputType',
-        label: 'Output Type',
+        id: "outputType",
+        commonStandardId: "type",
+        label: "Output Type",
         enabled: true,
       };
       const props = {
@@ -517,10 +521,11 @@ describe('ResearchOutputDisplay', () => {
 
     it('should handle additional field without optional attributes', () => {
       const minimalAdditionalField = {
-        id: 'additional-minimal',
+        id: "additional-minimal",
+        commonStandardId: "custom",
         enabled: true,
-        heading: 'Minimal Field',
-        label: 'Minimal Field',
+        heading: "Minimal Field",
+        label: "Minimal Field",
         /* eslint-disable @typescript-eslint/no-explicit-any */
       } as any;
       const props = {

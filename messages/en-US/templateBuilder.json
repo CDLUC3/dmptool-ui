@@ -416,7 +416,7 @@
     },
     "descriptions": {
       "sampleText": "Provide an example or template of expected answer (optional but recommended)",
-      "sampleTextAsDefault": "Have this answer entered into the DMP by default",
+      "sampleTextAsDefault": "Use this sample text as the default answer in the DMP",
       "previewText": "See how this question will look to users.",
       "bestPracticePara1": "Keep the Question short so it can be used as a heading in the final DMP.",
       "bestPracticePara2": "Use the Requirements to add more detailed instructions to the question, making sure to include all instructions for what needs to be answered in the question.",
@@ -425,7 +425,7 @@
     },
     "helpText": {
       "textField": "Changing the question type, for example from Text Field to Radio Buttons, may result in some data being lost.",
-      "questionOptions": "Please enter answer choices for the {questionType}",
+      "questionOptions": "Answer choices",
       "questionText": "Keep the question text concise and clear. Use the requirements or guidance to provide additional explanation.",
       "requirementText": "Use this for specific instructions on what researchers are required to include in their answer, such as what properties of their data they should be listing.",
       "guidanceText": "Let researchers know how to best provide answers to the requirements, such as policies to consider from your organization or what factors to consider.",
@@ -517,26 +517,39 @@
     }
   },
   "QuestionOptionsComponent": {
+    "headings": {
+      "removeChoice": "Remove choice {number}?"
+    },
     "labels": {
-      "order": "Order",
-      "text": "Text",
-      "default": "Default"
+      "choiceNumber": "Choice {number}",
+      "default": "Selected by default",
+      "reorder": "Reorder choice {number}"
     },
     "buttons": {
-      "addRow": "Add row",
-      "deleteRow": "Delete row {count}"
+      "addRow": "Add choice",
+      "deleteRow": "Remove choice {count}",
+      "cancel": "Cancel",
+      "confirmRemove": "Remove choice",
+      "setDefault": "Set choice {number} as default",
+      "clearDefault": "Clear choice {number} as default",
+      "moveUp": "Move choice {number} up",
+      "moveDown": "Move choice {number} down"
     },
     "messages": {
-      "successAddingRow": "Row {number} added",
-      "rowInfo": "Row {number}"
+      "rowInfo": "Choice {number}",
+      "choiceRequired": "Enter text for choice {number}.",
+      "choiceErrors": "Each answer choice must include text.",
+      "confirmRemove": "Are you sure you want to remove choice {number}?",
+      "instructions": "Add the choices plan writers can select. Each choice requires text. Use the arrows to change their display order."
     },
     "announcements": {
-      "rowDefault": "Row with ID {id} set as default.",
-      "rowRemoved": "Row with ID {id} removed.",
-      "rowAdded": "Row {nextNum} added."
+      "rowDefault": "Choice {number} set as default.",
+      "rowDefaultCleared": "Choice {number} is no longer set as default.",
+      "rowRemoved": "Choice {number} removed.",
+      "rowAdded": "Choice {nextNum} added.",
+      "rowMoved": "Choice moved from position {from} to {to}."
     },
     "placeholder": {
-      "orderNumber": "Enter order #",
       "text": "Enter text"
     }
   },
@@ -544,7 +557,7 @@
     "title": "Add new question",
     "descriptions": {
       "sampleText": "Provide an example or template of expected answer (optional but recommended)",
-      "sampleTextAsDefault": "Have this answer entered into the DMP by default",
+      "sampleTextAsDefault": "Use this sample text as the default answer in the DMP",
       "previewText": "See how this question will look to users.",
       "bestPracticePara1": "Keep the Question short so it can be used as a heading in the final DMP.",
       "bestPracticePara2": "Use the Requirements to add more detailed instructions to the question, making sure to include all instructions for what needs to be answered in the question.",
@@ -587,7 +600,7 @@
     },
     "helpText": {
       "textField": "Changing the question type, for example from Text Field to Radio Buttons, may result in some data being lost.",
-      "questionOptions": "Please enter answer choices for the {questionName}",
+      "questionOptions": "Answer choices",
       "questionText": "Keep the question text concise and clear. Use the requirements or guidance to provide additional explanation.",
       "requirementText": "Use this for specific instructions on what researchers are required to include in their answer, such as what properties of their data they should be listing.",
       "guidanceText": "Let researchers know how to best provide answers to the requirements, such as policies to consider from your organization or what factors to consider.",
@@ -654,6 +667,8 @@
         "metadataStandards": "Metadata Standards",
         "licenses": "Licenses",
         "initialAccessLevels": "Initial Access Levels",
+        "releaseDate": "Anticipated Release Date",
+        "byteSize": "Anticipated File Size",
         "useCustomList": "Use custom list",
         "useDefaults": "Use defaults"
       },
@@ -768,6 +783,11 @@
         },
         "buttons": {
           "addAccessLevel": "Add access level"
+        }
+      },
+      "fileSize": {
+        "legends": {
+          "default": "Default file size units"
         }
       },
       "licenses": {

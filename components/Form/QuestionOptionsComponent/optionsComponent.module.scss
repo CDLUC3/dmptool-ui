@@ -1,97 +1,149 @@
-.optionsRow {
-  display: flex;
-  flex-direction: row;
-
-  .orderNumber {
-    max-width: 100px;
-  }
+/* Layout depends on available row width (main column + sidebar), not viewport. */
+.tableContainer {
+  container-type: inline-size;
+  container-name: question-options;
 }
 
-.deleteButton {
-  margin-bottom: 0rem;
+.instructions {
+  margin: 0 0 var(--space-4);
+  color: var(--gray-600);
+  font-size: var(--fs-base);
 }
 
-.formRow {
-  display: flex;
-  flex-direction: row;
-
-}
-
-.tableHeader {
-  font-weight: 700;
-  font-size: medium;
+.sectionError {
+  margin: calc(var(--space-2) * -1) 0 var(--space-4);
+  color: var(--brand-error);
+  font-size: var(--fs-small);
+  font-weight: 600;
 }
 
 .row {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-3);
   width: 100%;
-  gap: 10px;
-  border-bottom: 1px solid #eee;
-  padding-top: 0rem;
-  padding-bottom: 1rem;
-  margin-bottom: 1rem;
+  padding: var(--space-4);
+  margin-bottom: var(--space-3);
+  border: 1px solid var(--gray-100);
+  border-radius: 8px;
+  background: var(--gray-50);
+}
+
+.rowInvalid {
+  border-color: var(--brand-error);
 }
 
 .cell {
-  padding: 10px 0px;
-  flex: 1;
+  min-width: 0;
+  padding: 0;
 
   :global(.react-aria-TextField) {
-    margin-bottom: 0rem;
-    label{
+    margin-bottom: 0;
+    width: 100%;
+
+    label {
       font-weight: 400;
     }
-  }
 
-  label.react-aria-Checkbox{
-    white-space: nowrap;
-    font-weight: 400;
+    :global(.react-aria-Input) {
+      width: 100%;
+      max-width: 100%;
+    }
   }
-
 }
 
-.cellData {
-  border: 1px solid #ccc;
+.orderButtons {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.orderButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  min-width: 0;
+  margin: 0;
+  padding: 0 !important;
+  line-height: 1;
+
+  &[data-disabled] {
+    color: var(--gray-400);
+    cursor: not-allowed;
+    opacity: 0.45;
+  }
 }
 
 .text {
-  min-width: 200px;
-}
-
-.orderNumber {
-  max-width: 30px;
-}
-
-.dmpIcon {
-  fill: black;
-}
-
-.dmpIcon:hover {
-  fill: red;
-}
-
-.remove {
-  display: flex;
-  align-items: center;
-  padding-top: 0.75rem;
+  min-width: 0;
 }
 
 .default {
-  margin-left: 20px;
-  label{
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  label {
     font-weight: 400;
   }
 }
 
+.actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+
+  .deleteButton {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 3rem;
+    height: 3rem;
+    padding: 0 !important;
+    margin: 0;
+    border: 0 !important;
+    border-radius: 4px;
+    background: transparent !important;
+    cursor: pointer;
+
+    &:hover,
+    &[data-hovered] {
+      background: transparent !important;
+
+      .trashcanIcon {
+        fill: var(--red-500);
+      }
+    }
+
+    &:focus-visible,
+    &[data-focus-visible] {
+      outline: 2px solid var(--blue-900);
+      outline-offset: 2px;
+    }
+  }
+}
+
+.trashcanIcon {
+  fill: var(--blue-900);
+}
+
+.dialogActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+}
+
 .optionsCheckbox {
+  align-items: center;
   margin-bottom: 0;
 
-  label{
-    font-weight: 400;
-  }
   .checkBox {
-    margin-top: 10px;
+    margin-top: 0;
   }
 }
 
@@ -100,3 +152,42 @@
   font-weight: 400;
 }
 
+.addChoiceContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+  margin-top: var(--space-4);
+  border: 1px dashed #d1d1d1;
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.addButton {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+}
+
+/* Keep each choice compact when the editor itself has enough room. */
+@container question-options (min-width: 40rem) {
+  .row {
+    grid-template-columns: minmax(12rem, 1fr) auto auto;
+    column-gap: var(--space-4);
+    align-items: start;
+  }
+
+  .text {
+    grid-column: 1;
+  }
+
+  .default {
+    grid-column: 2;
+    padding-top: 1.75rem;
+  }
+
+  .actions {
+    grid-column: 3;
+    padding-top: 1rem;
+  }
+}

@@ -87,7 +87,7 @@ const SignUpPage: React.FC = () => {
   const [otherField, setOtherField] = useState<boolean>(false);
   const [otherAffiliation, setOtherAffiliation] = useState<string>("");
   const [termsAccepted, setTermsAccepted] = useState<boolean>(false);
-  const { suggestions, handleSearch } = useAffiliationSearch();
+  const { suggestions, handleSearch, isSearching, searchError } = useAffiliationSearch();
 
 
   const returnToEmail = () => {
@@ -288,9 +288,10 @@ const SignUpPage: React.FC = () => {
                 setOtherField={setOtherField}
                 helpText={t('institutionHelp')}
                 updateFormData={updateAffiliations}
-                error={fieldErrors?.affiliationId}
+                error={fieldErrors?.affiliationId ?? searchError ?? ''}
                 suggestions={suggestions}
                 onSearch={handleSearch}
+                isLoading={isSearching}
               />
               {otherField && (
                 <FormInput

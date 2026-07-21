@@ -4,8 +4,9 @@ import {
   ResearchOutputTableQuestionType,
   AnyTableColumnQuestionType,
   RepositorySearchAnswerType,
-  DefaultResearchOutputCustomColumn
-} from '@dmptool/types';
+  DefaultResearchOutputCustomColumn,
+  ResearchOutputTableColumnsEnum,
+} from "@dmptool/types";
 import {
   RESEARCH_OUTPUT_QUESTION_TYPE,
   RO_TITLE_ID,
@@ -16,8 +17,10 @@ import {
   RO_METADATA_STANDARD_SELECTOR_ID,
   RO_LICENSES_ID,
   RO_ACCESS_LEVELS_ID,
-} from '@/lib/constants';
-import { getDefaultAnswerForType } from '@/utils/researchOutputTable';
+  RO_RELEASE_DATE,
+  RO_FILE_SIZE,
+} from "@/lib/constants";
+import { getDefaultAnswerForColumn } from '@/utils/researchOutputTable';
 import {
   AnyParsedQuestion,
   StandardField,
@@ -36,6 +39,7 @@ type ResearchOutputState = {
 
 // Create a flexible column type for building columns dynamically
 type FlexibleResearchOutputColumn = {
+  commonStandardId: string;
   heading: string;
   required: boolean;
   enabled: boolean;
@@ -51,34 +55,40 @@ type RepositoryItem = RepositorySearchAnswerType['answer'][number];
 
 // Standard field identifiers that we recognize
 const standardKeys = new Set([
-  'researchOutput.title',
-  'researchOutput.description',
-  'researchOutput.outputType',
-  'researchOutput.dataFlags',
-  'researchOutput.repositories',
-  'researchOutput.metadataStandards',
-  'researchOutput.licenses',
-  'researchOutput.accessLevels',
-  'Data Flags',
-  'Title',
-  'Description',
-  'Output Type',
-  'Repositories',
-  'Metadata Standards',
-  'Licenses',
-  'Initial Access Levels',
+  "researchOutput.title",
+  "researchOutput.description",
+  "researchOutput.outputType",
+  "researchOutput.dataFlags",
+  "researchOutput.repositories",
+  "researchOutput.metadataStandards",
+  "researchOutput.licenses",
+  "researchOutput.accessLevels",
+  "researchOutput.releaseDate",
+  "researchOutput.fileSize",
+  "Data Flags",
+  "Title",
+  "Description",
+  "Output Type",
+  "Repositories",
+  "Metadata Standards",
+  "Licenses",
+  "Initial Access Levels",
+  "Anticipated Release Date",
+  "Anticipated File Size",
 ]);
 
 // Create a mapping from field IDs to default columns
 const DEFAULT_COLUMNS_MAP: Record<string, ResearchOutputColumn | undefined> = {
-  title: DefaultResearchOutputTableQuestion.columns.find(col => col.heading === 'Title'),
-  description: DefaultResearchOutputTableQuestion.columns.find(col => col.heading === 'Description'),
-  outputType: DefaultResearchOutputTableQuestion.columns.find(col => col.heading === 'Type'),
-  dataFlags: DefaultResearchOutputTableQuestion.columns.find(col => col.heading === 'Data Flags'),
-  accessLevels: DefaultResearchOutputTableQuestion.columns.find(col => col.heading === 'Access Level'),
-  repositories: DefaultResearchOutputTableQuestion.columns.find(col => col.heading === 'Repository(ies)'),
-  metadataStandards: DefaultResearchOutputTableQuestion.columns.find(col => col.heading === 'Metadata Standard(s)'),
-  licenses: DefaultResearchOutputTableQuestion.columns.find(col => col.heading === 'License'),
+  title: DefaultResearchOutputTableQuestion.columns.find((col) => col.heading === "Title"),
+  description: DefaultResearchOutputTableQuestion.columns.find((col) => col.heading === "Description"),
+  outputType: DefaultResearchOutputTableQuestion.columns.find((col) => col.heading === "Type"),
+  dataFlags: DefaultResearchOutputTableQuestion.columns.find((col) => col.heading === "Data Flags"),
+  accessLevels: DefaultResearchOutputTableQuestion.columns.find((col) => col.heading === "Access Level"),
+  repositories: DefaultResearchOutputTableQuestion.columns.find((col) => col.heading === "Repository(ies)"),
+  metadataStandards: DefaultResearchOutputTableQuestion.columns.find((col) => col.heading === "Metadata Standard(s)"),
+  licenses: DefaultResearchOutputTableQuestion.columns.find((col) => col.heading === "License"),
+  releaseDate: DefaultResearchOutputTableQuestion.columns.find((col) => col.heading === "Anticipated Release Date"),
+  fileSize: DefaultResearchOutputTableQuestion.columns.find((col) => col.heading === "Byte Size"),
 };
 
 /**
@@ -90,12 +100,11 @@ export const createEmptyResearchOutputRow = (
 ): ResearchOutputTable => {
   return {
     columns: [
-      ...columns.map(col => {
-        const schemaVersion = col.content?.meta?.schemaVersion || CURRENT_SCHEMA_VERSION;
-        const baseAnswer = getDefaultAnswerForType(col.content.type, schemaVersion);
+      ...columns.map((col) => {
+        const baseAnswer = getDefaultAnswerForColumn(col.commonStandardId);
 
         // Type guard: only access defaultValue if it exists on this type
-        if (col.content?.attributes && 'defaultValue' in col.content.attributes) {
+        if (col.content?.attributes && "defaultValue" in col.content.attributes) {
           const defaultValue = col.content?.attributes?.defaultValue;
           return { ...baseAnswer, answer: defaultValue ?? baseAnswer.answer };
         }
@@ -103,9 +112,7 @@ export const createEmptyResearchOutputRow = (
         /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
         return baseAnswer as any;
       }),
-      getDefaultAnswerForType("date", CURRENT_SCHEMA_VERSION),
-      getDefaultAnswerForType("numberWithContext", CURRENT_SCHEMA_VERSION)
-    ]
+    ],
   };
 };
 
@@ -193,6 +200,7 @@ const buildColumnFromDefault = (
   } as AnyTableColumnQuestionType;
 
   return {
+    commonStandardId: field.commonStandardId,
     heading: field.label || defaultColumn.heading,
     required: field.required ?? defaultColumn.required,
     enabled: field.enabled ?? defaultColumn.enabled ?? false,
@@ -278,19 +286,20 @@ export const stateToJSON = (
           : defaultColumn.content;
 
         columns.push({
+          commonStandardId: ResearchOutputTableColumnsEnum.enum.data_flags,
           heading: field.label || defaultColumn.heading,
           required: field.required ?? defaultColumn.required ?? false,
           enabled: field.enabled ?? false,
           help: defaultColumn.help,
           content: {
-            type: 'checkBoxes',
+            type: "checkBoxes",
             meta: baseContent.meta,
             attributes: {
               ...baseContent.attributes,
               ...(field.languageTranslationKey && { labelTranslationKey: field.languageTranslationKey }),
             },
-            options: baseContent.options
-          }
+            options: baseContent.options,
+          },
         });
         break;
       }
@@ -300,21 +309,22 @@ export const stateToJSON = (
         if (!defaultColumn || defaultColumn.content.type !== 'repositorySearch') break;
 
         const repoColumn: FlexibleResearchOutputColumn = {
-          heading: field.label || defaultColumn?.heading || '',
+          commonStandardId: ResearchOutputTableColumnsEnum.enum.host,
+          heading: field.label || defaultColumn?.heading || "",
           required: field.required ?? defaultColumn?.required ?? false,
           enabled: field.enabled ?? false,
           help: defaultColumn?.help,
           content: {
-            type: 'repositorySearch',
+            type: "repositorySearch",
             meta: defaultColumn.content.meta,
             graphQL: defaultColumn.content.graphQL,
             attributes: {
               ...defaultColumn.content.attributes,
               ...(field.languageTranslationKey && { labelTranslationKey: field.languageTranslationKey }),
               label: field.label || defaultColumn.heading,
-              help: field.helpText || defaultColumn.content.attributes?.help || '',
-            }
-          }
+              help: field.helpText || defaultColumn.content.attributes?.help || "",
+            },
+          },
         };
 
         if (field.repoConfig?.customRepos && field.repoConfig.customRepos.length > 0) {
@@ -334,7 +344,8 @@ export const stateToJSON = (
         const defaultColumn = DEFAULT_COLUMNS_MAP.metadataStandards;
         if (!defaultColumn || defaultColumn.content.type !== 'metadataStandardSearch') break;
         const metadataColumn: FlexibleResearchOutputColumn = {
-          heading: field.label || defaultColumn?.heading || '',
+          commonStandardId: ResearchOutputTableColumnsEnum.enum.metadata,
+          heading: field.label || defaultColumn?.heading || "",
           required: field.required ?? defaultColumn?.required ?? false,
           enabled: field.enabled ?? false,
           content: {
@@ -343,9 +354,9 @@ export const stateToJSON = (
               ...defaultColumn?.content?.attributes,
               ...(field.languageTranslationKey && { labelTranslationKey: field.languageTranslationKey }),
               label: field.label || defaultColumn?.heading,
-              help: field.helpText || defaultColumn?.content?.attributes?.help || ''
-            }
-          }
+              help: field.helpText || defaultColumn?.content?.attributes?.help || "",
+            },
+          },
         };
 
         if (hasMetaDataConfig(field) && field.metaDataConfig?.customStandards && field.metaDataConfig.customStandards.length > 0) {
@@ -363,20 +374,21 @@ export const stateToJSON = (
         if (!defaultColumn || defaultColumn.content.type !== 'licenseSearch') break;
 
         const licenseColumn: FlexibleResearchOutputColumn = {
+          commonStandardId: ResearchOutputTableColumnsEnum.enum.license_ref,
           heading: field.label || defaultColumn?.heading,
           required: field.required ?? defaultColumn?.required ?? false,
           enabled: field.enabled ?? false,
           content: {
-            type: 'licenseSearch',
+            type: "licenseSearch",
             meta: defaultColumn.content.meta,
             graphQL: defaultColumn.content.graphQL,
             attributes: {
               ...defaultColumn.content.attributes,
               ...(field.languageTranslationKey && { labelTranslationKey: field.languageTranslationKey }),
               label: field.label || defaultColumn.heading,
-              help: field.helpText || defaultColumn.content.attributes?.help || ''
-            }
-          }
+              help: field.helpText || defaultColumn.content.attributes?.help || "",
+            },
+          },
         };
 
         if (field.licensesConfig?.mode === 'addToDefaults' && field.licensesConfig?.customTypes && field.licensesConfig.customTypes.length > 0) {
@@ -424,6 +436,18 @@ export const stateToJSON = (
         }));
         break;
       }
+
+      case RO_RELEASE_DATE: {
+        const overrides = field.helpText ? { attributes: { help: field.helpText } } : {};
+        columns.push(buildColumnFromDefault('releaseDate', field, overrides));
+        break;
+      }
+
+      case RO_FILE_SIZE: {
+        const overrides = field.helpText ? { attributes: { help: field.helpText } } : {};
+        columns.push(buildColumnFromDefault('fileSize', field, overrides));
+        break;
+      }
     }
   });
 
@@ -450,6 +474,7 @@ export const stateToJSON = (
       } as AnyTableColumnQuestionType;
 
       columns.push({
+        commonStandardId: customField.commonStandardId,
         heading: customField.heading,  // Use heading instead of customLabel/label
         required: false,
         enabled: true,
@@ -622,6 +647,26 @@ export const jsonToState = (
         break;
       }
 
+      case RO_RELEASE_DATE: {
+        const col = findColumn(['releaseDate']);
+        if (col) {
+          updated.enabled = col.enabled;
+          updated.helpText = getHelpText(col.content.attributes);
+          updated.required = col.required;
+        }
+        break;
+      }
+
+      case RO_FILE_SIZE: {
+        const col = findColumn(["fileSize"]);
+        if (col) {
+          updated.enabled = col.enabled;
+          updated.helpText = getHelpText(col.content.attributes);
+          updated.required = col.required;
+        }
+        break;
+      }
+
       case RO_TITLE_ID:
       case RO_DESCRIPTION_ID: {
         const col = findColumn([
@@ -657,6 +702,7 @@ export const jsonToState = (
   const hydratedAdditionalFields = customCols.map((col: typeof DefaultResearchOutputTableQuestion['columns'][number], idx: number) => ({
     id: col.heading?.toLowerCase().replace(/\s+/g, '_') || `custom_field_${idx}`,
     heading: col.heading || `Custom Field ${idx + 1}`,
+    commonStandardId: ResearchOutputTableColumnsEnum.enum.custom,
     help: getHelpText(col.content?.attributes) || '',
     enabled: !!col.enabled,
     required: false,
@@ -683,18 +729,28 @@ export const jsonToState = (
     ...parsed.columns
       .filter((col) => col.enabled)
       .map((col) => {
-        const key = col?.heading;
-        switch (key) {
-          case 'researchOutput.title': return 'title';
-          case 'researchOutput.description': return 'description';
-          case 'researchOutput.outputType': return 'outputType';
-          case 'researchOutput.dataFlags': return 'dataFlags';
-          case 'researchOutput.repositories': return 'repoSelector';
-          case 'researchOutput.metadataStandards': return 'metadataStandards';
-          case 'researchOutput.licenses': return 'licenses';
-          case 'researchOutput.accessLevels': return 'accessLevels';
+        switch (col?.commonStandardId) {
+          case ResearchOutputTableColumnsEnum.enum.type:
+            return "outputType";
+          case ResearchOutputTableColumnsEnum.enum.data_flags:
+            return "dataFlags";
+          case ResearchOutputTableColumnsEnum.enum.data_access:
+            return "accessLevels";
+          case ResearchOutputTableColumnsEnum.enum.host:
+            return "repoSelector";
+          case ResearchOutputTableColumnsEnum.enum.metadata:
+            return "metadataStandards";
+          case ResearchOutputTableColumnsEnum.enum.license_ref:
+            return "licenses";
+          case ResearchOutputTableColumnsEnum.enum.issued:
+            return "releaseDate";
+          case ResearchOutputTableColumnsEnum.enum.byte_size:
+            return "fileSize";
+          case ResearchOutputTableColumnsEnum.enum.title:
+          case ResearchOutputTableColumnsEnum.enum.description:
+            return col.commonStandardId;
           default:
-            return col.heading?.toLowerCase().replace(/\s+/g, '_');
+            return col.heading?.toLowerCase()?.replace(/\s+/g, '_');
         }
       })
   ];

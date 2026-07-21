@@ -20,6 +20,7 @@ import {
   ContentContainer,
   LayoutContainer,
 } from "@/components/Container";
+import Loading from "@/components/Loading";
 
 // Utils and other
 import { useToast } from '@/context/ToastContext';
@@ -41,7 +42,7 @@ const ProjectsProjectFunding = () => {
   // returned from the backend from ProjectDocument query
   const [isReadOnly, setIsReadOnly] = useState<boolean>(false);
 
-  const { data: projectData } = useQuery(ProjectDocument, {
+  const { data: projectData, loading } = useQuery(ProjectDocument, {
     variables: {
       projectId: Number(projectId),
     },
@@ -89,7 +90,7 @@ const ProjectsProjectFunding = () => {
         }
         actions={
           <>
-            {!isReadOnly && (
+            {!loading && !isReadOnly && (
               <Button
                 onPress={handleAddFunding}
                 className="secondary"
@@ -105,7 +106,13 @@ const ProjectsProjectFunding = () => {
       <LayoutContainer>
         <ContentContainer>
           <section aria-label="Current fundings">
-            {projectData?.project?.fundings && projectData.project.fundings.map((funder, index) => (
+            {loading ? (
+              <Loading
+                variant="inline"
+                message={t('loading')}
+                className={styles.fundingsLoading}
+              />
+            ) : projectData?.project?.fundings && projectData.project.fundings.map((funder, index) => (
               <div
                 key={index}
                 className={styles.fundingResultsList}

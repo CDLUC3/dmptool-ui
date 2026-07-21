@@ -1332,7 +1332,7 @@ describe("QuestionEditPage", () => {
         attributes: {
           denomination: "USD",
           min: 0,
-          max: 10000000,
+          max: 100000000,
           step: 0.01
         },
         meta: {
@@ -1793,11 +1793,11 @@ describe('Options questions', () => {
     })
 
 
-    const allRows = screen.queryAllByLabelText('Text');
-    expect(allRows.length).toBe(3);
+    const allRows = screen.queryAllByLabelText(/labels.choiceNumber/);
+    expect(allRows.length).toBe(4);
 
     // Enter the label text for new radio button
-    fireEvent.change(allRows[2], { target: { value: 'Maybe' } });
+    fireEvent.change(allRows[3], { target: { value: 'Maybe' } });
 
     // Get the save button and save
     const saveButton = screen.getByText('buttons.saveAndUpdate');
@@ -1870,11 +1870,11 @@ describe('Options questions', () => {
       fireEvent.click(addButton);
     })
 
-    const allRows = screen.queryAllByLabelText('Text');
-    expect(allRows.length).toBe(3);
+    const allRows = screen.queryAllByLabelText(/labels.choiceNumber/);
+    expect(allRows.length).toBe(4);
 
     // Enter the label text for new radio button
-    fireEvent.change(allRows[2], { target: { value: 'Maybe' } });
+    fireEvent.change(allRows[3], { target: { value: 'Maybe' } });
 
     // Wait for state update
     await waitFor(() => {

@@ -35,10 +35,11 @@ const FunderSearch = ({
   moreTrigger,
 }: FunderSearchProps) => {
 
-  const trans = useTranslations('Global');
+  const t = useTranslations('Global');
   const [moreCounter, setMoreCounter] = useState<number>(0);
   const [searchTerm, setSearchTerm] = useState<string>("");
-  const [fetchAffiliations, { data }] = useLazyQuery(AffiliationFundersDocument, {});
+  const [isSearching, setIsSearching] = useState(false);
+  const [fetchAffiliations, { data, error }] = useLazyQuery(AffiliationFundersDocument, {});
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [newSearch, setNewSearch] = useState<boolean>(true);
 
@@ -48,8 +49,8 @@ const FunderSearch = ({
     // Don't perform any lookup if the search term is empty.
     if (!searchTerm.trim()) return;
     setNewSearch(true);
+    setIsSearching(true);
 
-    // Now perform the affiliation search with our search term
     fetchAffiliations({
       variables: {
         paginationOptions: {
@@ -66,8 +67,13 @@ const FunderSearch = ({
     if (data?.affiliations) {
       setNextCursor(data.affiliations.nextCursor ?? null);
       onResults(data.affiliations as FunderSearchResults, newSearch);
+      setIsSearching(false);
     }
   }, [data]);
+
+  useEffect(() => {
+    if (error) setIsSearching(false);
+  }, [error]);
 
   useEffect(() => {
     if (moreTrigger > moreCounter) {
@@ -95,18 +101,23 @@ const FunderSearch = ({
             data-testid="search-field"
             aria-label="Search funders"
           >
-            <Label>{trans('labels.funderSearch')}</Label>
+            <Label>{t('labels.funderSearch')}</Label>
             <Input
               aria-describedby="search-help"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder={trans('placeholders.funderSearch')}
+              placeholder={t('placeholders.funderSearch')}
             />
-            <Button data-testid="search-btn" type={"submit"}>
-              {trans('buttons.search')}
+            <Button
+              slot={null}
+              data-testid="search-btn"
+              type="submit"
+              isDisabled={isSearching}
+            >
+              {t('buttons.search')}
             </Button>
             <Text slot="description" className="help" id="search-help">
-              {trans('helpText.funderSearch')}
+              {t('helpText.funderSearch')}
             </Text>
           </SearchField>
         </section>

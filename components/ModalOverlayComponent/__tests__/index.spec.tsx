@@ -73,4 +73,28 @@ describe('ModalOverlayComponent', () => {
     expect(screen.getByText('Go Back')).toBeInTheDocument();
     expect(screen.getByText('Proceed')).toBeInTheDocument();
   });
+
+  it('renders as an alertdialog with secondary cancel and danger confirm buttons', async () => {
+    render(
+      <ModalOverlayComponent
+        heading="Test Heading"
+        isOpen={true}
+        content="Test Content"
+        onPressAction={jest.fn()}
+      />
+    );
+
+    await waitFor(() => {
+      expect(screen.getByRole('alertdialog')).toBeInTheDocument();
+    });
+
+    const dialog = screen.getByRole('alertdialog');
+    const title = screen.getByText('Test Heading');
+    const description = screen.getByText('Test Content');
+
+    expect(dialog).toHaveAttribute('aria-labelledby', title.id);
+    expect(dialog).toHaveAttribute('aria-describedby', description.id);
+    expect(screen.getByText('Cancel')).toHaveClass('secondary');
+    expect(screen.getByText('Delete')).toHaveClass('danger');
+  });
 });

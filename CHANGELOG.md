@@ -1,9 +1,6 @@
-## Updated
-- Simplified the page title on template question edit screens. The header is now a static "Edit Question" label rather than "Edit: {question title}", making long or HTML-formatted question text less likely to clutter the page header [#78]
-- Changed the template question text field from a single-line input to a textarea so longer question text is easier to edit [#78]
-
 ## Added
 - Added `DisplayLogicComponent` for the `DisplayLogic` tab in `QuestionEdit`. Also, added `useTriggerQuestion` hook, and `displayLogicMapper` for use with the new component, and `displayLogic` types [#299]
+- Added an override for the `systeminformation` dependency
 - Added show/hide password toggle to `FormInput`, enabled by default for password fields [#80]
 - Migrated login and signup pages to use `FormInput` for consistency with other auth forms [#80]
 - Added password field examples to the styleguide form-elements page [#80]
@@ -11,7 +8,7 @@
 - Added unit tests for the best practice badge, popover interaction, and accessibility behaviour in `TemplateSelectListItem` [#72]
 - Added new `SkeletonListLoading` component that renders card-style skeleton placeholders for list views (e.g. project lists, template selection, project members). Also supports a `grid` layout for responsive 2/3 column card grids (e.g. section and question type selection).
 - Added `papaparse` package so that it's `unparse` method can handle things like quoting and escaping, type coercion, trailing newlines, etc [#238]
-- Added new `/contact` page for users to message us [#297]
+- Added new `/contact` page for users to message us [#297]a
 - Added empty states to the Plan Dashboard (/projects) and Organization Projects (/admin/projects) when no projects exist
 - Documented the projects empty state pattern in the style guide (/styleguide/components/lists)
 - Added `UpdateUserInfo` and `ArchiveUser` mutations and `Plans`, `UserProjects`, and `User` queries [#281]
@@ -33,9 +30,21 @@
 - Added `UpdateAffiliation` and `AffiliationById` queries [#203]
 
 ## Updated
+- Moved the "use sample text as default" checkbox directly under the Sample Text field on template question add and edit screens, and clarified its label [#77]
+- Redesigned the template question answer-choice editor with responsive choice cards, accessible reordering and removal controls, clearer validation, and localized English and Portuguese labels
+- Fixed issue with local reference to `@dmptool/types`
+- Updated ResearchOutputTable question and answer components to use the new `commonStandardId` property
+- Updated the ResearchOutputTable question to include the Anticipated Release Date and Anticipated File Size columns in the JSON but continue to NOT display to the admin when editing the question.
+- Upgraded `@dmptool/types` package to `v4.0.0`
+- Fixed `TypeAheadWithOther` clearing the institution name when the field is focused, so profile (and other) edits keep the existing value with the caret at the end [#80]
+- Updated shared typeahead functionality and styling for better accessibility [#80]
+- Simplified the page title on template question edit screens. The header is now a static "Edit Question" label rather than "Edit: {question title}", making long or HTML-formatted question text less likely to clutter the page header [#78]
+- Changed the template question text field from a single-line input to a textarea so longer question text is easier to edit [#78]
+- Redesigned the connections page ORCID and SSO sections: connected accounts now show a status card with linked identifier and an in-card disconnect action instead of a single clickable pill. Connect/disconnect behaviour is currently faked locally until OAuth and backend mutations are wired [#81]
+- Improved currency fields by disabling steppers by default and adding configurable denominations, symbol placement, minor units, locale-aware formatting and parsing, value limits, accessibility support, style guide examples, and tests
 - Updated `EmailAddressRow` and `UpdateEmailAddress` so the non-removable primary email no longer shows a disabled trash icon, and instead displays a "Primary" lock badge with a note explaining how to change it. Added a shared `icon-lock` icon and `primaryEmailCannotBeDeleted`/`primaryBadge` translations [#56]
 - Defaulted the project creation funding question to "No - Skip for now" so users without awarded funding can continue more quickly [#70]
-- Updated the "Forgot Password" to "Reset password" [#79]
+- Updated "Forgot Password" to "Reset password" [#79]
 - Updated `PlanCreate` page to show a loading spinner during the initial template fetch so the empty state does not flash before results load [#72]
 - Updated `SelectExistingTemplate` to pass `bestPractices` from template data into `TemplateSelectListItem` [#72]
 - Updated the styleguide template select list examples and documentation to demonstrate the best practice badge alongside additional guidance [#72]
@@ -91,6 +100,7 @@
 - Updated `RepoSelectorForAnswer` to wait to query `Re3byUrIsDocument` until we have `preferredReposURIs` because preferred repos don't display even though they eventually do to trigger the display of the "preferred repositories" checkbox [#118]
 
 ## Fixed
+- Improved the project creation and project funding funder-search pages with clearer loading and fallback states, aligned lists and pagination controls, and improved accessibility [#71]
 - Fixed loading state not appearing immediately by removing the delayed fadeIn animation from the Loading component
 - Fixed section &  question reorder arrow buttons turning white on hover. Added a shared `order-button` style so arrows use link-blue colors and remain visible [#76]
 - Updated the `project` graphql query to include `email` and `created` field so we can display info for invited project collaborators who haven't accepted invite [#287]
