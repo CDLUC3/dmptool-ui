@@ -567,20 +567,18 @@ const QuestionAdd = ({
 
                 {/**Options question types*/}
                 {questionType && OPTIONS_QUESTION_TYPES.includes(questionType) && parsedQuestionJSON && (
-                  <>
+                  <div className={styles.optionsWrapper}>
                     <p className={styles.optionsDescription}>
                       {QuestionAdd('helpText.questionOptions', { questionName: questionName ?? '' })}
                     </p>
-                    <div className={styles.optionsWrapper}>
-                      <QuestionOptionsComponent
-                        rows={rows}
-                        setRows={updateRows}
-                        questionJSON={questionJSON}
-                        formSubmitted={formSubmitted}
-                        setFormSubmitted={setFormSubmitted}
-                      />
-                    </div>
-                  </>
+                    <QuestionOptionsComponent
+                      rows={rows}
+                      setRows={updateRows}
+                      questionJSON={questionJSON}
+                      formSubmitted={formSubmitted}
+                      setFormSubmitted={setFormSubmitted}
+                    />
+                  </div>
                 )}
 
                 {/**Date and Number range question types */}
@@ -641,31 +639,31 @@ const QuestionAdd = ({
                 />
 
                 {questionType === TEXT_AREA_QUESTION_TYPE && (
-                  <FormTextArea
-                    name="sample_text"
-                    isRequired={false}
-                    richText={true}
-                    description={QuestionAdd('descriptions.sampleText')}
-                    textAreaClasses={styles.questionFormField}
-                    label={QuestionAdd('labels.sampleText')}
-                    value={question?.sampleText ? question.sampleText : ''}
-                    onChange={(newValue) => handleInputChange('sampleText', newValue)}
-                    helpMessage={QuestionAdd('helpText.sampleText')}
-                  />
-                )}
+                  <div className={styles.sampleTextGroup}>
+                    <FormTextArea
+                      name="sample_text"
+                      isRequired={false}
+                      richText={true}
+                      description={QuestionAdd('descriptions.sampleText')}
+                      textAreaClasses={styles.questionFormField}
+                      label={QuestionAdd('labels.sampleText')}
+                      value={question?.sampleText ? question.sampleText : ''}
+                      onChange={(newValue) => handleInputChange('sampleText', newValue)}
+                      helpMessage={QuestionAdd('helpText.sampleText')}
+                    />
 
-                {questionType === TEXT_AREA_QUESTION_TYPE && (
-                  <Checkbox
-                    onChange={() => handleInputChange('useSampleTextAsDefault', !question?.useSampleTextAsDefault)}
-                    isSelected={question?.useSampleTextAsDefault || false}
-                  >
-                    <div className="checkbox">
-                      <svg viewBox="0 0 18 18" aria-hidden="true">
-                        <polyline points="1 9 7 14 15 4" />
-                      </svg>
-                    </div>
-                    {QuestionAdd('descriptions.sampleTextAsDefault')}
-                  </Checkbox>
+                    <Checkbox
+                      onChange={() => handleInputChange('useSampleTextAsDefault', !question?.useSampleTextAsDefault)}
+                      isSelected={question?.useSampleTextAsDefault || false}
+                    >
+                      <div className="checkbox">
+                        <svg viewBox="0 0 18 18" aria-hidden="true">
+                          <polyline points="1 9 7 14 15 4" />
+                        </svg>
+                      </div>
+                      {QuestionAdd('descriptions.sampleTextAsDefault')}
+                    </Checkbox>
+                  </div>
                 )}
 
                 {questionType === RESEARCH_OUTPUT_QUESTION_TYPE && (

@@ -879,10 +879,8 @@ describe("QuestionAdd", () => {
         />);
     });
 
-    // Radio button info with order, text and checkbox should be in document
-    expect(screen.getByLabelText(/labels.order/)).toBeInTheDocument();
-    expect(screen.getByLabelText(/labels.text/)).toBeInTheDocument();
-    expect(screen.getByLabelText(/labels.default/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/labels.choiceNumber/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/buttons.setDefault/)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'buttons.addRow' })).toBeInTheDocument();
   })
 
@@ -911,7 +909,7 @@ describe("QuestionAdd", () => {
     });
 
     await act(async () => {
-      fireEvent.change(screen.getByLabelText(/labels.text/), {
+      fireEvent.change(screen.getByLabelText(/labels.choiceNumber/), {
         target: { value: 'Yes' },
       });
     });
@@ -922,11 +920,11 @@ describe("QuestionAdd", () => {
     });
 
     // Wait for the new input to appear
-    const textInputs = await screen.findAllByLabelText(/labels.text/);
+    const textInputs = await screen.findAllByLabelText(/labels.choiceNumber/);
     fireEvent.change(textInputs[0], { target: { value: 'Option 1' } });
     fireEvent.change(textInputs[1], { target: { value: 'Option 2' } });
 
-    const defaultCheckboxes = screen.getAllByLabelText(/labels.default/);
+    const defaultCheckboxes = screen.getAllByLabelText(/buttons.setDefault/);
 
     // Simulate checking the first option as default
     fireEvent.click(defaultCheckboxes[0]);

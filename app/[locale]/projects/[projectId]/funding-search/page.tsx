@@ -29,6 +29,7 @@ import {
 } from "@/components/Container";
 import FunderSearch from '@/components/FunderSearch';
 import ErrorMessages from "@/components/ErrorMessages";
+import Loading from "@/components/Loading";
 
 // Utils and other
 import { FunderSearchResults } from '@/app/types';
@@ -39,8 +40,8 @@ import { TransitionButton } from '@/components/Form';
 
 
 const CreateProjectSearchFunder = () => {
-  const globalTrans = useTranslations('Global');
-  const trans = useTranslations('FunderSearch');
+  const Global = useTranslations('Global');
+  const t = useTranslations('FunderSearch');
   const router = useRouter();
   const params = useParams();
 
@@ -54,6 +55,7 @@ const CreateProjectSearchFunder = () => {
   const errorRef = useRef<HTMLDivElement>(null);
 
   const [popularFunders, setPopularFunders] = useState<FunderPopularityResult[]>([]);
+  const [popularFundersLoading, setPopularFundersLoading] = useState(true);
   const [popularFundersQuery] = useLazyQuery(PopularFundersDocument, {});
 
   useEffect(() => {
@@ -68,6 +70,9 @@ const CreateProjectSearchFunder = () => {
       })
       .catch((err) => {
         handleApolloError(err, 'createProjectSearchFunder.popularFundersQuery');
+      })
+      .finally(() => {
+        setPopularFundersLoading(false);
       });
   }, []);
 
@@ -160,13 +165,13 @@ const CreateProjectSearchFunder = () => {
   return (
     <>
       <PageHeader
-        title={trans('headerTitle')}
-        description={trans('headerDescription')}
+        title={t('headerTitle')}
+        description={t('headerDescription')}
         showBackButton={true}
         breadcrumbs={
           <Breadcrumbs>
-            <Breadcrumb><Link href="/">{globalTrans('breadcrumbs.home')}</Link></Breadcrumb>
-            <Breadcrumb><Link href="/projects">{globalTrans('breadcrumbs.projects')}</Link></Breadcrumb>
+            <Breadcrumb><Link href="/">{Global('breadcrumbs.home')}</Link></Breadcrumb>
+            <Breadcrumb><Link href="/projects">{Global('breadcrumbs.projects')}</Link></Breadcrumb>
           </Breadcrumbs>
         }
         className="page-project-create-project-funding"
@@ -180,54 +185,91 @@ const CreateProjectSearchFunder = () => {
             moreTrigger={moreCounter}
           />
 
-          {((popularFunders.length > 0) && !hasSearched) && (
-            <section aria-labelledby="popular-funders">
-              <h3>{trans('popularTitle')}</h3>
-              <div className={styles.popularFunders}>
-                {popularFunders.map((funder, index) => (
-                  <div
-                    key={index}
-                    className={styles.fundingResultsListItem}
-                    role="group"
-                    aria-label={`${trans('funder')}: ${funder.displayName}`}
-                  >
-                    <p className="funder-name">{funder.displayName}</p>
-                    <TransitionButton
-                      type="button"
-                      className="secondary select-button"
-                      data-funder-uri={funder.uri}
-                      loadingLabel={globalTrans('buttons.loading')}
-                      showLoading={true}
-                      onPress={() => handleSelectFunder(funder)}
-                      aria-label={`${globalTrans('buttons.select')} ${funder.displayName}`}
-                    >
-                      {globalTrans('buttons.select')}
-                    </TransitionButton>
+          {!hasSearched && (
+            <section
+              aria-labelledby="popular-funders"
+              className={styles.popularFundersSection}
+            >
+              <h3 id="popular-funders">{t('popularTitle')}</h3>
+              {popularFundersLoading ? (
+                <>
+                  <p className={styles.popularDescription}>
+                    {t('popularDescription')}
+                  </p>
+                  <Loading
+                    variant="inline"
+                    message={t('popularLoading')}
+                    className={styles.popularFundersLoading}
+                  />
+                </>
+              ) : popularFunders.length > 0 ? (
+                <>
+                  <p className={styles.popularDescription}>
+                    {t('popularDescription')}
+                  </p>
+                  <div className={styles.popularFunders}>
+                    {popularFunders.map((funder) => (
+                      <div
+                        key={funder.id}
+                        className={styles.fundingResultsListItem}
+                        role="group"
+                        aria-label={`${t('funder')}: ${funder.displayName}`}
+                      >
+                        <p className="funder-name">{funder.displayName}</p>
+                        <TransitionButton
+                          type="button"
+                          className="secondary select-button"
+                          data-funder-uri={funder.uri}
+                          loadingLabel={Global('buttons.loading')}
+                          showLoading={true}
+                          onPress={() => handleSelectFunder(funder)}
+                          aria-label={`${Global('buttons.select')} ${funder.displayName}`}
+                        >
+                          {Global('buttons.select')}
+                        </TransitionButton>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
+                </>
+              ) : (
+                <div
+                  className={styles.funderMessage}
+                  role="status"
+                  aria-labelledby="popular-funders-fallback"
+                >
+                  <p
+                    id="popular-funders-fallback"
+                    className={styles.funderMessageTitle}
+                  >
+                    {t('popularFallbackTitle')}
+                  </p>
+                  <p className={styles.funderMessageDescription}>
+                    {t('popularFallbackDescription')}
+                  </p>
+                </div>
+              )}
             </section>
           )}
 
           {funders.length > 0 && (
             <section aria-labelledby="funders-section">
-              <h3 id="funders-section">{trans('found', { count: totalCount })}</h3>
+              <h3 id="funders-section">{t('found', { count: totalCount })}</h3>
               <div className={styles.fundingResultsList}>
                 {funders.map((funder, index) => (
                   <div
                     key={index}
                     className={styles.fundingResultsListItem}
                     role="group"
-                    aria-label={`${trans('funder')}: ${funder.displayName}`}
+                    aria-label={`${t('funder')}: ${funder.displayName}`}
                   >
                     <p className="funder-name">{funder.displayName}</p>
                     <Button
                       className="secondary select-button"
                       data-funder-uri={funder.uri}
                       onPress={() => handleSelectFunder(funder)}
-                      aria-label={`${globalTrans('buttons.select')} ${funder.displayName}`}
+                      aria-label={`${Global('buttons.select')} ${funder.displayName}`}
                     >
-                      {globalTrans('buttons.select')}
+                      {Global('buttons.select')}
                     </Button>
                   </div>
                 ))}
@@ -237,12 +279,12 @@ const CreateProjectSearchFunder = () => {
                     <Button
                       data-testid="load-more-btn"
                       onPress={() => setMoreCounter(moreCounter + 1)}
-                      aria-label={globalTrans('buttons.loadMore')}
+                      aria-label={Global('buttons.loadMore')}
                     >
-                      {globalTrans('buttons.loadMore')}
+                      {Global('buttons.loadMore')}
                     </Button>
                     <p>
-                      {trans('showCount', {
+                      {t('showCount', {
                         count: funders.length,
                         total: totalCount,
                       })}
@@ -254,41 +296,51 @@ const CreateProjectSearchFunder = () => {
           )}
 
           {funders.length === 0 && hasSearched && (
-            <section>
-              <p>{trans('noResults')}</p>
+            <section className={styles.resultMessageSection}>
+              <div
+                className={styles.funderMessage}
+                role="status"
+                aria-labelledby="funders-empty"
+              >
+                <p id="funders-empty" className={styles.funderMessageTitle}>
+                  {t('noResults')}
+                </p>
+                <p className={styles.funderMessageDescription}>
+                  {t('noResultsDescription')}
+                </p>
+              </div>
             </section>
           )}
 
-          {/* Add Funder Manually (Always Visible After Search) */}
           {hasSearched && (
             <section aria-labelledby="manual-section" className="mt-8">
-              <h3 id="manual-section">{trans('addManuallyHeading')}</h3>
-              <p>{trans('addManuallyText')}</p>
+              <h3 id="manual-section">{t('addManuallyHeading')}</h3>
+              <p>{t('addManuallyText')}</p>
               <TransitionButton
                 type="button"
                 className="add-funder-button"
                 onPress={() => handleAddFunderManually()}
-                loadingLabel={globalTrans('buttons.loading')}
+                loadingLabel={Global('buttons.loading')}
                 showLoading={true}
-                aria-label={trans('addManuallyLabel')}
+                aria-label={t('addManuallyLabel')}
               >
-                {trans('addManuallyLabel')}
+                {t('addManuallyLabel')}
               </TransitionButton>
             </section>
           )}
 
           <section aria-labelledby="no-funder-section" className="mt-8">
-            <h3>{trans('noFunderHeading')}</h3>
-            <p>{trans('noFunderText')}</p>
+            <h3>{t('noFunderHeading')}</h3>
+            <p>{t('noFunderText')}</p>
             <TransitionButton
               type="button"
               className="no-funder-button"
               onPress={() => handleNoFundingSource()}
-              loadingLabel={globalTrans('buttons.loading')}
+              loadingLabel={Global('buttons.loading')}
               showLoading={true}
-              aria-label={trans('noFunderButtonLabel')}
+              aria-label={t('noFunderButtonLabel')}
             >
-              {trans('noFunderButtonLabel')}
+              {t('noFunderButtonLabel')}
             </TransitionButton>
           </section>
 

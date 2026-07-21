@@ -785,43 +785,42 @@ const QuestionEdit = () => {
                 />
 
                 {questionType === TEXT_AREA_QUESTION_TYPE && (
-                  <FormTextArea
-                    name="sample_text"
-                    isRequired={false}
-                    richText={true}
-                    description={t('descriptions.sampleText')}
-                    textAreaClasses={styles.questionFormField}
-                    label={t('labels.sampleText')}
-                    value={question?.sampleText ? question?.sampleText : ''}
-                    onChange={(newValue) => {
-                      setQuestion(prev => ({
-                        ...prev,
-                        sampleText: newValue
-                      }));
-                      setHasUnsavedChanges(true);
-                    }}
-                  />
-                )}
+                  <div className={styles.sampleTextGroup}>
+                    <FormTextArea
+                      name="sample_text"
+                      isRequired={false}
+                      richText={true}
+                      description={t('descriptions.sampleText')}
+                      textAreaClasses={styles.questionFormField}
+                      label={t('labels.sampleText')}
+                      value={question?.sampleText ? question?.sampleText : ''}
+                      onChange={(newValue) => {
+                        setQuestion(prev => ({
+                          ...prev,
+                          sampleText: newValue
+                        }));
+                        setHasUnsavedChanges(true);
+                      }}
+                    />
 
-                {questionType === TEXT_AREA_QUESTION_TYPE && (
-                  <Checkbox
-                    onChange={() => {
-                      setQuestion({
-                        ...question,
-                        useSampleTextAsDefault: !question?.useSampleTextAsDefault
-                      });
-                      setHasUnsavedChanges(true);
-                    }}
-                    isSelected={question?.useSampleTextAsDefault || false}
-                  >
-                    <div className="checkbox">
-                      <svg viewBox="0 0 18 18" aria-hidden="true">
-                        <polyline points="1 9 7 14 15 4" />
-                      </svg>
-                    </div>
-                    {t('descriptions.sampleTextAsDefault')}
-
-                  </Checkbox>
+                    <Checkbox
+                      onChange={() => {
+                        setQuestion({
+                          ...question,
+                          useSampleTextAsDefault: !question?.useSampleTextAsDefault
+                        });
+                        setHasUnsavedChanges(true);
+                      }}
+                      isSelected={question?.useSampleTextAsDefault || false}
+                    >
+                      <div className="checkbox">
+                        <svg viewBox="0 0 18 18" aria-hidden="true">
+                          <polyline points="1 9 7 14 15 4" />
+                        </svg>
+                      </div>
+                      {t('descriptions.sampleTextAsDefault')}
+                    </Checkbox>
+                  </div>
                 )}
 
                 {questionType === RESEARCH_OUTPUT_QUESTION_TYPE && (
