@@ -98,6 +98,7 @@
 - Fixed issue with Feedback Notification headers displaying for any collaborator on the Plan Overview, Section and Question pages. It should only display to Org Admins and Super Admins. Added shared isOrgAdmin hook for pages. [#249]
 
 ## Chore
+- Updated `js-yaml` to `v4.3.0` and `brace-expansion` to `v2.1.2` to address HIGH security vulnerabilities.
 - Updated `eslint` to `v9.39.4`, `prettier` to `v3.8.4`, `brace-expansion` to `v2.1.1`, `sanitize-html` to `v2.17.5`, `@apollo/client` to `v4.2.3`, `@dmptool/types` to `v3.1.7` and `dompurify` to `v3.4.11`. Also added override for `js-yaml` to `v4.2.0` due to vulnerability [#290]
 - Bump form-data from 4.0.5 to 4.0.6
 - Added Github Action workflows `versioning.yml` and `validation-version-label.yml` to automate versioning when merging from `development` into `stage`. [#271]
