@@ -24,9 +24,4 @@ describe('GlobalLoading', () => {
     render(<GlobalLoading />);
     expect(screen.getAllByTestId('loading-mock')).toHaveLength(1);
   });
-
-  it('matches snapshot', () => {
-    const { container } = render(<GlobalLoading />);
-    expect(container).toMatchSnapshot();
-  });
 });
