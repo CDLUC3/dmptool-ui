@@ -80,7 +80,7 @@
     "@types/sanitize-html": "2.16.1",
     "@typescript-eslint/eslint-plugin": "8.56.1",
     "@typescript-eslint/parser": "8.56.1",
-    "brace-expansion": "2.1.2",
+    "brace-expansion": "5.0.7",
     "cypress": "^15.15.0",
     "domexception": "4.0.0",
     "dotenv": "16.6.1",
