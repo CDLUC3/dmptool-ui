@@ -4,6 +4,7 @@ import Header from "../index";
 import "@testing-library/jest-dom";
 import { useAuthContext } from "@/context/AuthContext";
 import { useCsrf } from "@/context/CsrfContext";
+import logECS from '@/utils/clientLogger';
 
 jest.mock("@/context/AuthContext", () => ({
   useAuthContext: jest.fn(() => ({
@@ -21,6 +22,11 @@ jest.mock("next/navigation", () => ({
     push: mockPush,
   })),
   usePathname: jest.fn(() => "/"),
+}));
+
+jest.mock('@/utils/clientLogger', () => ({
+  __esModule: true,
+  default: jest.fn(),
 }));
 
 jest.mock("next-intl", () => ({
@@ -70,6 +76,7 @@ describe("Header", () => {
     (useAuthContext as jest.Mock).mockReturnValue({
       isAuthenticated: true,
       setIsAuthenticated: mockSetIsAuthenticated,
+      clearCache: jest.fn(),
       clearAuthData: jest.fn().mockResolvedValue(undefined),
     });
     (useCsrf as jest.Mock).mockReturnValue({
@@ -213,15 +220,11 @@ describe("Header", () => {
 
   it("should handle logout error gracefully", async () => {
     // Mock fetch to return error
-    global.fetch = jest.fn(() =>
-      Promise.resolve({
-        ok: false,
-        status: 500,
-      }),
-    ) as jest.Mock;
-
-    // Mock console.error to avoid noise in test output
-    const consoleSpy = jest.spyOn(console, "error").mockImplementation(() => { });
+    global.fetch = jest.fn().mockResolvedValueOnce({
+      ok: false,
+      status: 500,
+      json: async () => ({ message: 'Internal Server Error' }),
+    });
 
     render(<Header />);
 
@@ -229,13 +232,18 @@ describe("Header", () => {
     fireEvent.click(logoutButton);
 
     await waitFor(() => {
-      expect(consoleSpy).toHaveBeenCalledWith("Failed to logout");
+      expect(logECS).toHaveBeenCalledTimes(1);
     });
 
-    // Should not call setIsAuthenticated or router.push on error
-    expect(mockSetIsAuthenticated).not.toHaveBeenCalled();
-    expect(mockPush).not.toHaveBeenCalled();
+    expect(logECS).toHaveBeenCalledWith(
+      "error",
+      "handleLogout",
+      expect.objectContaining({
+        error: expect.any(Error),
+      })
+    );
 
-    consoleSpy.mockRestore();
+    // Should not call setIsAuthenticated or router.push on error
+    expect(mockSetIsAuthenticated).toHaveBeenCalledTimes(1);
   });
 });

@@ -30,6 +30,8 @@
 - Added `UpdateAffiliation` and `AffiliationById` queries [#203]
 
 ## Updated
+- Updated `Contact us` form so that the `message` field uses a `<textArea/>` type and updated website url to current `https://uc3.cdlib.org`. Also, updated `buildspec.yaml` to get `NEXT_PUBLIC_HELPDESK_EMAIL_ADDRESS` from existing `HELPDESK_EMAIL` env variable [#303]
+- Updated `Header` component to redirect to `/login` page when errors with logging out [#303]
 - Made some updates to the Edit Project Member page to accommodate Other Affiliation [#96]
 - Redesigned the project members list as accessible cards with linked member names, inline ORCID profile links, role badges, skeleton loading, and consistent heading/link labelling [#96]
 - Updated the project member Edit page to use “project member” wording (not “collaborator”), show affiliation display names, align required/recommended labels with Add, and no longer require email to save [#96]
