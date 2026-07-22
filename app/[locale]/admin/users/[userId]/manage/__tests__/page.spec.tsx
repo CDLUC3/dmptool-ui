@@ -9,7 +9,7 @@ import {
   ArchiveUserDocument,
   LanguagesDocument,
   MeDocument,
-  PlansDocument,
+  UserProjectsDocument,
   UpdateUserInfoDocument,
   UpdateUserRoleDocument,
   UserDocument,
@@ -193,9 +193,9 @@ const makeLanguagesMock = () => ({
   },
 });
 
-const makePlansMock = (items: any[] = []) => ({
+const makeUserProjectsMock = (items: any[] = []) => ({
   request: {
-    query: PlansDocument,
+    query: UserProjectsDocument,
     variables: {
       paginationOptions: { offset: 0, limit: 5, type: 'OFFSET', sortDir: 'DESC', sortField: undefined },
       term: '',
@@ -204,7 +204,7 @@ const makePlansMock = (items: any[] = []) => ({
   },
   result: {
     data: {
-      plans: {
+      userProjects: {
         items,
         totalCount: items.length,
         hasNextPage: false,
@@ -215,14 +215,14 @@ const makePlansMock = (items: any[] = []) => ({
   },
 });
 
-const makePlan = (overrides = {}) => ({
+const makeProject = (overrides = {}) => ({
   id: '10',
   title: 'Test Plan',
-  templateTitle: 'Template A',
-  templateOwnerAffiliationName: 'Some Org',
-  modified: '2024-06-01',
-  visibility: 'PUBLIC',
-  user: { givenName: 'Alice', surName: 'Smith' },
+  fundings: [],
+  members: [],
+  startDate: '2024-01-01',
+  endDate: '2024-12-31',
+  plans: [],
   errors: null,
   ...overrides,
 });
@@ -267,7 +267,7 @@ const defaultMocks = (role = UserRole.Superadmin, user = makeUser()) => [
   makeMeMock(role),
   makeUserMock(user),
   makeLanguagesMock(),
-  makePlansMock(),
+  makeUserProjectsMock(),
 ];
 
 const renderPage = (mocks: any[]) =>
@@ -295,12 +295,12 @@ describe('OrgUserProfilePage', () => {
       expect(screen.getByDisplayValue('Smith')).toBeInTheDocument();
     });
 
-    it('renders the plans table after data loads', async () => {
-      renderPage([...defaultMocks(), makePlansMock([makePlan()])]);
+    it('renders the projects table after data loads', async () => {
+      renderPage([...defaultMocks(), makeUserProjectsMock([makeProject()])]);
       await waitFor(() => expect(screen.getByTestId('mock-table')).toBeInTheDocument());
     });
 
-    it('shows no results message when plans list is empty', async () => {
+    it('shows no results message when projects list is empty', async () => {
       renderPage(defaultMocks());
       await waitFor(() =>
         expect(screen.getByText('Admin.userProfile.userPlansTable.noResults')).toBeInTheDocument()
@@ -488,11 +488,11 @@ describe('OrgUserProfilePage', () => {
     });
   });
 
-  describe('plans search', () => {
+  describe('userProjects search', () => {
     it('triggers a new query when search button is pressed', async () => {
       const searchMock = {
         request: {
-          query: PlansDocument,
+          query: UserProjectsDocument,
           variables: {
             paginationOptions: { offset: 0, limit: 5, type: 'OFFSET', sortDir: 'DESC', sortField: undefined },
             term: 'test',
@@ -501,8 +501,8 @@ describe('OrgUserProfilePage', () => {
         },
         result: {
           data: {
-            plans: {
-              items: [makePlan()],
+            userProjects: {
+              items: [makeProject()],
               totalCount: 1,
               hasNextPage: false,
               hasPreviousPage: false,

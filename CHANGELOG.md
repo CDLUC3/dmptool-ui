@@ -30,6 +30,7 @@
 - Added `UpdateAffiliation` and `AffiliationById` queries [#203]
 
 ## Updated
+- Updated the `OrgUserProfilePage` table to list all of the given user's projects, rather than plans. Updated table headers per ticket [#304]
 - Made some updates to the Edit Project Member page to accommodate Other Affiliation [#96]
 - Redesigned the project members list as accessible cards with linked member names, inline ORCID profile links, role badges, skeleton loading, and consistent heading/link labelling [#96]
 - Updated the project member Edit page to use “project member” wording (not “collaborator”), show affiliation display names, align required/recommended labels with Add, and no longer require email to save [#96]

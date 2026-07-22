@@ -46,7 +46,15 @@ query UserProjects($userId: Int!, $term: String, $paginationOptions: PaginationO
         general
         title
       }
+      plans {
+        id
+      }
     }
+    hasNextPage
+    hasPreviousPage
+    currentOffset
+    availableSortFields
+    limit
   }
 }
 
