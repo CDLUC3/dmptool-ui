@@ -68,9 +68,9 @@ const ProjectsProjectFunding = () => {
   }
 
   useEffect(() => {
-    // Update project values from data results
-    if (projectData?.project?.fundings && projectData.project.fundings.length > 0) {
-      setIsReadOnly(projectData.project?.readOnly ?? false);
+    // Update is readOnly state whenever projectData changes
+    if (projectData?.project) {
+      setIsReadOnly(projectData.project?.readOnly || false);
     }
   }, [projectData])
 
