@@ -436,9 +436,17 @@
         }
       },
       "userPlansTable": {
-        "label": "Plans",
-        "noResults": "No plans found for this user",
-        "searchPlans": "Search for plans"
+        "label": "Projects and Plans",
+        "noResults": "No projects found for this user",
+        "searchPlans": "Search for plans",
+        "projectLabel": "Project Titles",
+        "noOfPlans": "Number of plans",
+        "fundersLabel": "Funder(s)",
+        "organizationLabel": "Organization",
+        "membersLabel": "Members",
+        "startDateLabel": "Start date",
+        "endDateLabel": "End date",
+        "datesFromTo": "{startDate} to {endDate}"
       },
       "cannotFindInstitution": "I cannot find my institution in the list"
     }

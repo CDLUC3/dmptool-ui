@@ -20,7 +20,7 @@ import {
   ArchiveUserDocument,
   LanguagesDocument,
   MeDocument,
-  PlansDocument,
+  UserProjectsDocument,
   UpdateUserInfoDocument,
   UpdateUserRoleDocument,
   UserDocument,
@@ -85,28 +85,17 @@ interface UserProfileErrorInterface {
   otherAffiliationName: string;
   languageId: string;
 }
-
-interface PlanRow {
+interface ProjectRow {
   id: string | null | undefined;
   title: React.ReactNode;
-  template: string | null | undefined;
-  organization: string | null | undefined;
-  owner: string | null | undefined;
-  updated: string;
-  visibility: string | null | undefined;
+  plans: number;
+  funders: string | null | undefined;
+  members: string | null | undefined;
 }
 
 
 
 function OrgUserProfilePage(): React.ReactElement {
-  const initialColumns = useMemo<DmpTableColumnSet>(() => [
-    { id: 'title', name: 'Project Title', isRowHeader: true, allowsSorting: true, direction: "" as const },
-    { id: 'template', name: 'Template', isRowHeader: true, allowsSorting: true, direction: "" as const },
-    { id: 'organization', name: 'Organization', isRowHeader: true, allowsSorting: false, direction: "" as const },
-    { id: 'owner', name: 'Owner', isRowHeader: true, allowsSorting: false, direction: "" as const },
-    { id: 'updated', name: 'Updated', isRowHeader: true, allowsSorting: true, direction: "" as const },
-  ], []);
-
   const errorRef = useRef<HTMLDivElement | null>(null);
   const topRef = useRef<HTMLDivElement>(null);
   //To control display of showSuccess toast message
@@ -148,10 +137,9 @@ function OrgUserProfilePage(): React.ReactElement {
   });
 
   // States for plans table
-  const [columns, setColumns] = useState<DmpTableColumnSet>(initialColumns);
   const [sortField, setSortField] = useState<string | undefined>(undefined);
   const [sortDir, setSortDir] = useState<string>('DESC');
-  const [plans, setPlans] = useState<PlanRow[]>([]);
+  const [userProjects, setUserProjects] = useState<ProjectRow[]>([]);
   const [user, setUser] = useState<NonNullable<UserQuery['user']> | null>(null);
 
   // States for search
@@ -173,11 +161,21 @@ function OrgUserProfilePage(): React.ReactElement {
   // State for changing a user's role
   const [selectedRole, setSelectedRole] = useState<string>('');
 
-
-
   // Localization
   const t = useTranslations('Admin.userProfile');
   const Global = useTranslations('Global');
+
+  // Initial columns for the plans table
+  const initialColumns = useMemo<DmpTableColumnSet>(() => [
+    { id: 'title', name: t('userPlansTable.projectLabel'), isRowHeader: true, allowsSorting: true, direction: "" as const, noWrap: false, centered: false },
+    { id: 'plans', name: t('userPlansTable.noOfPlans'), isRowHeader: true, allowsSorting: false, direction: "" as const, noWrap: false, centered: true },
+    { id: 'funders', name: t('userPlansTable.fundersLabel'), isRowHeader: true, allowsSorting: false, direction: "" as const, noWrap: false, centered: false },
+    { id: 'members', name: t('userPlansTable.membersLabel'), isRowHeader: true, allowsSorting: false, direction: "" as const, noWrap: false, centered: false },
+    { id: 'startDate', name: t('userPlansTable.startDateLabel'), isRowHeader: true, allowsSorting: true, direction: "" as const, noWrap: true, centered: false },
+    { id: 'endDate', name: t('userPlansTable.endDateLabel'), isRowHeader: true, allowsSorting: true, direction: "" as const, noWrap: true, centered: false },
+  ], []);
+
+  const [columns, setColumns] = useState<DmpTableColumnSet>(initialColumns);
 
   // URL that directs users back to admin/users page after they archive a user. 
   const ADMIN_USERS_URL = routePath('admin.users');
@@ -204,15 +202,23 @@ function OrgUserProfilePage(): React.ReactElement {
     awaitRefetchQueries: true,
   });
 
-  // Initialize user plans query
-  const [fetchUserPlanData, { data: planData, loading: plansLoading, error: plansError }] = useLazyQuery(PlansDocument, {
+  // Initialize user projects query
+  const [fetchUserProjectsData, { data: userProjectsData, loading: userProjectsLoading, error: userProjectsError }] = useLazyQuery(UserProjectsDocument, {
     notifyOnNetworkStatusChange: true,
     fetchPolicy: 'no-cache',
   });
 
+  // This is needed because the GraphQL query returns different field names than the table columns, 
+  // so we need to map them for sorting purposes.
+  const SORT_FIELD_MAP: Record<string, string> = {
+    title: 'p.title',
+    startDate: 'p.startDate',
+    endDate: 'p.endDate',
+  };
 
-  // Fetch plans based on pagination page, filters and search term criteria
-  const fetchPlans = async ({
+
+  // Fetch projects based on pagination page, filters and search term criteria
+  const fetchProjects = async ({
     page,
     searchTerm = ''
   }: {
@@ -224,7 +230,7 @@ function OrgUserProfilePage(): React.ReactElement {
     }
 
     try {
-      await fetchUserPlanData({
+      await fetchUserProjectsData({
         variables: buildQueryVars(page ?? currentPage, searchTerm, sortField, sortDir)
       });
     } catch (err) {
@@ -232,7 +238,7 @@ function OrgUserProfilePage(): React.ReactElement {
     }
   };
 
-  // Builds the query variables for fetching user plans based on pagination, 
+  // Builds the query variables for fetching user projects based on pagination, 
   // search term, and sorting criteria
   const buildQueryVars = (
     page: number,
@@ -245,7 +251,7 @@ function OrgUserProfilePage(): React.ReactElement {
       limit: LIMIT,
       type: "OFFSET",
       sortDir: sortDir ?? "DESC",
-      sortField
+      sortField: sortField ? SORT_FIELD_MAP[sortField] : undefined,
     },
     term: searchTerm,
     userId: Number(userId),
@@ -376,7 +382,7 @@ when affiliation/institution is changed */
             setErrorMessages(errs);
             logECS("error", "OrgUserProfilePage.updateProfile", {
               errors: errs,
-              url: { path: routePath("admin.users.manage") },
+              url: { path: routePath("admin.users.manage", { userId }) },
             });
             return;
           }
@@ -386,7 +392,7 @@ when affiliation/institution is changed */
     } catch (error) {
       logECS("error", "OrgUserProfilePage.updateProfile", {
         errors: error,
-        url: { path: routePath("admin.users.manage") },
+        url: { path: routePath("admin.users.manage", { userId }) },
       });
       setErrorMessages([t("messages.errors.errorUpdatingProfile")]);
     }
@@ -414,7 +420,7 @@ when affiliation/institution is changed */
     setSearchTerm(term);
     // If the search term is cleared, fetch all users again to refresh the data.
     if (term === '') {
-      await fetchUserPlanData({ variables: buildQueryVars(1, '', sortField, sortDir) });
+      await fetchUserProjectsData({ variables: buildQueryVars(1, '', sortField, sortDir) });
     }
   }
 
@@ -423,7 +429,7 @@ when affiliation/institution is changed */
     setErrorMessages([]);
     setCurrentPage(1);
     try {
-      await fetchUserPlanData({ variables: buildQueryVars(1, searchTerm, sortField, sortDir) });
+      await fetchUserProjectsData({ variables: buildQueryVars(1, searchTerm, sortField, sortDir) });
     } catch (err) {
       logECS('error', 'OrgUserAccountsPage.handleSearchSubmit', {
         error: err,
@@ -433,10 +439,11 @@ when affiliation/institution is changed */
     }
   };
 
-  // Handle pagination page click - query plans when pagination page is changed
+  // Handle pagination page click - query projects when pagination page is changed
   const handlePageClick = async (page: number) => {
-    await fetchPlans({
-      page, searchTerm
+    await fetchProjects({
+      page,
+      searchTerm
     });
   };
 
@@ -517,7 +524,7 @@ when affiliation/institution is changed */
             setErrorMessages(errs);
             logECS("error", "OrgUserProfilePage.handleRoleChange", {
               errors: errs,
-              url: { path: routePath("admin.users.manage") },
+              url: { path: routePath("admin.users.manage", { userId }) },
             });
             return;
           }
@@ -528,7 +535,7 @@ when affiliation/institution is changed */
     } catch (err) {
       logECS("error", "OrgUserProfilePage.handleRoleChange", {
         errors: err,
-        url: { path: routePath("admin.users.manage") },
+        url: { path: routePath("admin.users.manage", { userId }) },
       });
       setErrorMessages([t("messages.errors.errorUpdatingUserRole")]);
     }
@@ -544,7 +551,7 @@ when affiliation/institution is changed */
       setSortField(newSortField);
       setSortDir(newSortDir);
       try {
-        await fetchUserPlanData({ variables: buildQueryVars(currentPage, searchTerm, newSortField, newSortDir) });
+        await fetchUserProjectsData({ variables: buildQueryVars(currentPage, '', newSortField, newSortDir) });
       } catch (err) {
         logECS('error', 'OrgUserAccountsPage.onSortChangeHandler', {
           error: err,
@@ -555,23 +562,27 @@ when affiliation/institution is changed */
     }
   };
 
-  // Transform the plan data from the GraphQL query into a format suitable for the table
-  const transformPlans = (data: typeof planData): PlanRow[] => {
-    return data?.plans?.items
-      ?.filter((plan): plan is NonNullable<typeof plan> => plan !== null)
-      .map((plan) => {
+  // Transform the project data from the GraphQL query into a format suitable for the table
+  const transformProjects = (data: typeof userProjectsData): ProjectRow[] => {
+    return data?.userProjects?.items
+      ?.filter((project): project is NonNullable<typeof project> => project !== null)
+      .map((project) => {
+        const funderNames = project?.fundings?.map(funder => funder.name).join(', ') ?? '';
+        const memberNames = project?.members?.map(member => member.name).join(', ') ?? '';
+        const startDate = formatDate(project?.startDate);
+        const endDate = formatDate(project?.endDate);
         return {
-          id: plan.id?.toString(),
+          id: project.id?.toString(),
           title: (
-            <Link href={routePath('admin.users.projects', { userId })}>
-              {plan.title}
+            <Link href={routePath('projects.show', { projectId: project.id?.toString() ?? '' })}>
+              {project.title}
             </Link>
           ),
-          template: plan.templateTitle ?? '',
-          organization: plan.templateOwnerAffiliationName ?? '',
-          owner: `${plan?.planCreator?.givenName} ${plan?.planCreator?.surName}`,
-          updated: formatDate(plan.modified) ?? '',
-          visibility: plan.visibility ?? '',
+          plans: project?.plans?.length ?? 0,
+          funders: funderNames,
+          members: memberNames,
+          startDate,
+          endDate
         };
       }) ?? [];
   };
@@ -602,21 +613,22 @@ when affiliation/institution is changed */
 
   // Load plans on mount
   useEffect(() => {
-    fetchPlans({ page: currentPage, searchTerm: '' });
+    fetchProjects({ page: currentPage, searchTerm: '' });
   }, []);
 
   // Update plans state when planData changes, and set pagination info
   useEffect(() => {
-    if (planData?.plans?.items) {
+    if (userProjectsData?.userProjects?.items) {
       setIsInitialLoad(false);
-      const totalCount = planData.plans.totalCount ?? 0;
+      const totalCount = userProjectsData.userProjects.totalCount ?? 0;
       setTotalPages(Math.ceil(totalCount / LIMIT));
-      setHasNextPage(planData.plans.hasNextPage ?? false);
-      setHasPreviousPage(planData.plans.hasPreviousPage ?? false);
-      const transformed = transformPlans(planData);
-      setPlans(transformed);
+      setHasNextPage(userProjectsData.userProjects.hasNextPage ?? false);
+      setHasPreviousPage(userProjectsData.userProjects.hasPreviousPage ?? false);
+      const transformed = transformProjects(userProjectsData);
+      setUserProjects(transformed);
     }
-  }, [planData]);
+  }, [userProjectsData]);
+
 
   // Update user profile form data when userData changes
   useEffect(() => {
@@ -656,14 +668,14 @@ when affiliation/institution is changed */
   }, [searchParams, currentLocale, pathname]);
 
   useEffect(() => {
-    if (plansError) {
-      logECS('error', 'OrgUserProfilePage.fetchPlans', {
-        error: plansError,
-        url: { path: routePath('admin.users.manage') },
+    if (userProjectsError) {
+      logECS('error', 'OrgUserProfilePage.fetchUserProjects', {
+        error: userProjectsError,
+        url: { path: routePath('admin.users.manage', { userId }) },
       });
       setErrorMessages([t('messages.errors.searchError')]);
     }
-  }, [plansError]);
+  }, [userProjectsError]);
 
 
   // Set whether page should be read-only based on the current user's role
@@ -878,10 +890,10 @@ when affiliation/institution is changed */
 
                           <Button
                             onPress={handleMergeSearchSubmit}
-                            isDisabled={plansLoading}
+                            isDisabled={userProjectsLoading}
                             className={styles.searchButton}
                           >
-                            {plansLoading ? Global('buttons.searching') : Global('buttons.search')}
+                            {userProjectsLoading ? Global('buttons.searching') : Global('buttons.search')}
                           </Button>
                         </>
                       </div>
@@ -963,7 +975,7 @@ when affiliation/institution is changed */
 
           {/**Plans table */}
           <FullWidthSection>
-            <h2>Plans</h2>
+            <h2>{t('userPlansTable.label')}</h2>
             <div className={styles.pageTools} role="search" ref={topRef} aria-label={t('userPlansTable.searchPlans')}>
               <>
                 <FormInput
@@ -978,11 +990,11 @@ when affiliation/institution is changed */
 
                 <Button
                   onPress={handleSearchSubmit}
-                  isDisabled={plansLoading}
+                  isDisabled={userProjectsLoading}
                   data-testid="plans-search-button"
                   className={styles.searchButton}
                 >
-                  {plansLoading ? Global('buttons.searching') : Global('buttons.search')}
+                  {userProjectsLoading ? Global('buttons.searching') : Global('buttons.search')}
                 </Button>
               </>
             </div>
@@ -992,13 +1004,13 @@ when affiliation/institution is changed */
                 label={t('userPlansTable.label')}
                 className={styles.userList}
                 columnData={columns}
-                rowData={plans}
+                rowData={userProjects}
                 onDmpSortChange={onSortChangeHandler}
               />
             }
 
             {/**Don't display pagination if there are no results. Just display the message with the table headings */}
-            {!plansLoading && plans && plans.length === 0 && !isInitialLoad ? (
+            {!userProjectsLoading && userProjects && userProjects.length === 0 && !isInitialLoad ? (
               <p>{t('userPlansTable.noResults')}</p>
             ) :
               <Pagination

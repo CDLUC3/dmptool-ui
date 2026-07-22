@@ -7,7 +7,6 @@
 //
 import React, { useEffect, useRef, useState } from 'react';
 import classNames from 'classnames';
-//import { useQuery } from '@apollo/client/react';
 
 import {
   Table,
@@ -21,8 +20,6 @@ import {
 } from 'react-aria-components';
 import { SortDescriptor } from '@react-types/shared';
 
-//import { DmpIcon } from '@/components/Icons';
-
 import styles from './table.module.scss';
 
 
@@ -35,6 +32,8 @@ export type DmpTableColumn = {
   isRowHeader?: boolean;
   allowsSorting?: boolean;
   direction?: SortDirection;
+  noWrap?: boolean;
+  centered?: boolean;
 }
 
 export type DmpTableColumnSet = Iterable<DmpTableColumn>;
@@ -217,7 +216,9 @@ export function DmpTable({
       <DmpTableHeader className={styles.dmpTableHeader} columns={columns}>
         {(col) => (
           <Column id={col.id} isRowHeader={col.isRowHeader} allowsSorting={col.allowsSorting}>
-            {col.name}
+            <span className={classNames({ [styles.noWrap]: col.noWrap })}>
+              {col.name}
+            </span>
             {col.allowsSorting && (
               <>
                 {!col.direction && (<span>⇅</span>)}
@@ -233,11 +234,16 @@ export function DmpTable({
         {(row) => {
           return (
             <DmpTableRow row={row} columns={columns}>
-              {(col: DmpTableColumn) => <Cell>{row[col.id]}</Cell>}
+              {(col: DmpTableColumn) =>
+                <Cell
+                  className={classNames({
+                    [styles.noWrap]: col.noWrap,
+                    [styles.centerAligned]: col.centered
+                  })}>{row[col.id]}</Cell>}
             </DmpTableRow>
           );
         }}
       </TableBody>
-    </Table>
+    </Table >
   );
 }
