@@ -167,12 +167,12 @@ function OrgUserProfilePage(): React.ReactElement {
 
   // Initial columns for the plans table
   const initialColumns = useMemo<DmpTableColumnSet>(() => [
-    { id: 'title', name: t('userPlansTable.projectLabel'), isRowHeader: true, allowsSorting: true, direction: "" as const },
-    { id: 'plans', name: t('userPlansTable.noOfPlans'), isRowHeader: true, allowsSorting: false, direction: "" as const },
-    { id: 'funders', name: t('userPlansTable.fundersLabel'), isRowHeader: true, allowsSorting: false, direction: "" as const },
-    { id: 'members', name: t('userPlansTable.membersLabel'), isRowHeader: true, allowsSorting: false, direction: "" as const },
-    { id: 'startDate', name: t('userPlansTable.startDateLabel'), isRowHeader: true, allowsSorting: true, direction: "" as const },
-    { id: 'endDate', name: t('userPlansTable.endDateLabel'), isRowHeader: true, allowsSorting: true, direction: "" as const },
+    { id: 'title', name: t('userPlansTable.projectLabel'), isRowHeader: true, allowsSorting: true, direction: "" as const, noWrap: false, centered: false },
+    { id: 'plans', name: t('userPlansTable.noOfPlans'), isRowHeader: true, allowsSorting: false, direction: "" as const, noWrap: false, centered: true },
+    { id: 'funders', name: t('userPlansTable.fundersLabel'), isRowHeader: true, allowsSorting: false, direction: "" as const, noWrap: false, centered: false },
+    { id: 'members', name: t('userPlansTable.membersLabel'), isRowHeader: true, allowsSorting: false, direction: "" as const, noWrap: false, centered: false },
+    { id: 'startDate', name: t('userPlansTable.startDateLabel'), isRowHeader: true, allowsSorting: true, direction: "" as const, noWrap: true, centered: false },
+    { id: 'endDate', name: t('userPlansTable.endDateLabel'), isRowHeader: true, allowsSorting: true, direction: "" as const, noWrap: true, centered: false },
   ], []);
 
   const [columns, setColumns] = useState<DmpTableColumnSet>(initialColumns);
@@ -208,6 +208,15 @@ function OrgUserProfilePage(): React.ReactElement {
     fetchPolicy: 'no-cache',
   });
 
+  // This is needed because the GraphQL query returns different field names than the table columns, 
+  // so we need to map them for sorting purposes.
+  const SORT_FIELD_MAP: Record<string, string> = {
+    title: 'p.title',
+    startDate: 'p.startDate',
+    endDate: 'p.endDate',
+  };
+
+
   // Fetch projects based on pagination page, filters and search term criteria
   const fetchProjects = async ({
     page,
@@ -242,7 +251,7 @@ function OrgUserProfilePage(): React.ReactElement {
       limit: LIMIT,
       type: "OFFSET",
       sortDir: sortDir ?? "DESC",
-      sortField
+      sortField: sortField ? SORT_FIELD_MAP[sortField] : undefined,
     },
     term: searchTerm,
     userId: Number(userId),
@@ -542,7 +551,7 @@ when affiliation/institution is changed */
       setSortField(newSortField);
       setSortDir(newSortDir);
       try {
-        await fetchUserProjectsData({ variables: buildQueryVars(currentPage, newSortField, newSortDir) });
+        await fetchUserProjectsData({ variables: buildQueryVars(currentPage, '', newSortField, newSortDir) });
       } catch (err) {
         logECS('error', 'OrgUserAccountsPage.onSortChangeHandler', {
           error: err,
