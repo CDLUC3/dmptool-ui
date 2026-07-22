@@ -975,7 +975,7 @@ when affiliation/institution is changed */
 
           {/**Plans table */}
           <FullWidthSection>
-            <h2>Plans</h2>
+            <h2>{t('userPlansTable.label')}</h2>
             <div className={styles.pageTools} role="search" ref={topRef} aria-label={t('userPlansTable.searchPlans')}>
               <>
                 <FormInput
