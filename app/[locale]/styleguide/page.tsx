@@ -82,6 +82,12 @@ export default function StyleGuidePage() {
           href: "/styleguide/components/layout",
         },
         {
+          title: "Plan Authoring",
+          description:
+            "Single-page plan authoring components with sticky section navigation, questions, guidance, and fixture states",
+          href: "/styleguide/components/plan-authoring",
+        },
+        {
           title: "Headers",
           description: "Page headers, sub-headers, and navigation components for page structure",
           href: "/styleguide/components/headers",

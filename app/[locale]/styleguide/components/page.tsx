@@ -49,6 +49,12 @@ export default function ComponentsPage() {
           description: "Container and ExpandableContentSection components for content organization",
           href: "/styleguide/components/layout",
         },
+        {
+          title: "Plan Authoring",
+          description:
+            "Single-page plan overview components with section navigation, questions, guidance, and fixture-driven states",
+          href: "/styleguide/components/plan-authoring",
+        },
       ],
     },
     {
