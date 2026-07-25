@@ -1,4 +1,7 @@
 ## Added
+- Added `login/forgot-password` and `login/reset-password` pages, and added a `PasswordRequirementList` component to assist users in knowing what the password requirements are[#242]
+- Added `SendPasswordResetEmail`, `ResetPassword` and `ValidatePasswordResetToken` mutations and query [#242]
+- Added `getPasswordRequirements` util [#242]
 - Added `DisplayLogicComponent` for the `DisplayLogic` tab in `QuestionEdit`. Also, added `useTriggerQuestion` hook, and `displayLogicMapper` for use with the new component, and `displayLogic` types [#299]
 - Added an override for the `systeminformation` dependency
 - Added show/hide password toggle to `FormInput`, enabled by default for password fields [#80]
@@ -30,6 +33,7 @@
 - Added `UpdateAffiliation` and `AffiliationById` queries [#203]
 
 ## Updated
+- Improvied accessibility for `FormInput` by making sure to include help text and error text to ariaDescribedBy, and updated `graphqlHelper.ts` so that it will redirect users to `/login` page when backend gives an early return with a `401 - isRevokedCallback` error [#242]
 - Updated the `OrgUserProfilePage` table to list all of the given user's projects, rather than plans. Updated table headers per ticket [#304]
 - Made some updates to the Edit Project Member page to accommodate Other Affiliation [#96]
 - Redesigned the project members list as accessible cards with linked member names, inline ORCID profile links, role badges, skeleton loading, and consistent heading/link labelling [#96]
