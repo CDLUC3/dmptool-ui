@@ -51,7 +51,3 @@ export const RoleOptions: { label: string; value: UserRole | '' }[] = [
   { label: 'Admin', value: UserRole.Admin },
   { label: 'User', value: UserRole.Researcher },
 ];
-
-const PASSWORD_SPECIAL_CHARS_REGEX = /[`!@#$%^&*_+\-=?~\s]/;
-const PASSWORD_BAD_SPECIAL_CHARS_REGEX = /[\(\)\{\}\[\]\|\\:;"'<>\,\.\/]/;
-

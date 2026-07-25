@@ -309,7 +309,7 @@ describe('SignUpPage', () => {
     fireEvent.click(signupBtn);
 
     await waitFor(() => {
-      expect(screen.getByText('passMissMatch')).toBeInTheDocument();
+      expect(screen.getByText('messaging.errors.passMissMatch')).toBeInTheDocument();
     });
   });
 

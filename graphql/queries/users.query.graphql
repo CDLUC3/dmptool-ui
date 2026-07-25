@@ -85,7 +85,3 @@ query User($userId: Int!) {
     orcid
   }
 }
-
-query ValidatePasswordResetToken($token: String!) {
-  validatePasswordResetToken(token: $token)
-}

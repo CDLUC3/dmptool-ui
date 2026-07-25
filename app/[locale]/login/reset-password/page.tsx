@@ -130,7 +130,6 @@ const ResetPassword: React.FC = () => {
   useEffect(() => {
     if (validatePasswordResetTokenLoading) return; // wait for it to resolve
 
-    console.log("***validatePasswordResetTokenData", validatePasswordResetTokenData);
     if (validatePasswordResetTokenError || !validatePasswordResetTokenData?.validatePasswordResetToken) {
       toastState.add(Global('messaging.somethingWentWrong'), { type: "error", timeout: 3000 });
       router.push(routePath('app.login'));

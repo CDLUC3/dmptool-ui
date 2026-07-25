@@ -14,7 +14,6 @@ export const isEmailListValid = (value: string): boolean => {
 };
 
 const PASSWORD_SPECIAL_CHARS_REGEX = /[`!@#$%^&*_+\-=?~\s]/;
-// eslint-disable-next-line no-useless-escape
 const PASSWORD_BAD_SPECIAL_CHARS_REGEX = /[\(\)\{\}\[\]\|\\:;"'<>\,\.\/]/;
 
 export type PasswordRequirement = {

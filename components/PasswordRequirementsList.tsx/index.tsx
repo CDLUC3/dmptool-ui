@@ -41,7 +41,6 @@ const PasswordRequirementsList: React.FC<PasswordRequirementsListProps> = ({ pas
         ))}
       </ul>
     </div>
-
   );
 };
 
