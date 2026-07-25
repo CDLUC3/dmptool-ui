@@ -150,7 +150,7 @@ const SignUpPage: React.FC = () => {
     if (password !== confirmPassword) {
       setFieldErrors({
         ...fieldErrors,
-        confirmPassword: t('passMissMatch'),
+        confirmPassword: globalT('messaging.errors.passMissMatch'),
       });
       hasErrors = true;
     }

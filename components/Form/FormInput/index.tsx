@@ -84,6 +84,16 @@ const FormInput = React.forwardRef<HTMLInputElement, InputProps & React.InputHTM
     ? t(passwordVisible ? 'hidePasswordFor' : 'showPasswordFor', { field: passwordToggleLabel })
     : t(passwordVisible ? 'hidePassword' : 'showPassword');
   const inputId = id ?? name;
+  const helpTextId = `${inputId}-help`;
+  const errorTextId = `${inputId}-error`;
+
+  // Combine aria-describedby IDs for help text, error message, and any additional IDs passed in via ariaDescribedBy prop.
+  // This way, input can be associated with multiple descriptive elements for accessibility.
+  const describedByIds = [
+    ariaDescribedBy,
+    helpMessage ? helpTextId : null,
+    isInvalid && errorMessage ? errorTextId : null,
+  ].filter(Boolean).join(' ') || undefined;
 
   const inputElement = (
     <Input
@@ -96,7 +106,7 @@ const FormInput = React.forwardRef<HTMLInputElement, InputProps & React.InputHTM
       onChange={onChange}
       value={value}
       disabled={disabled}
-      aria-describedby={ariaDescribedBy}
+      aria-describedby={describedByIds}
       aria-label={ariaLabel}
       minLength={minLength}
       maxLength={maxLength}
@@ -156,10 +166,10 @@ const FormInput = React.forwardRef<HTMLInputElement, InputProps & React.InputHTM
           inputElement
         )}
 
-        {isInvalid && <FieldError className='error-message'>{errorMessage}</FieldError>}
+        {isInvalid && <FieldError id={errorTextId} className='error-message'>{errorMessage}</FieldError>}
 
         {helpMessage && (
-          <Text slot="description" className='help-text'>
+          <Text id={helpTextId} slot="description" className='help-text'>
             {helpMessage}
           </Text>
         )}
