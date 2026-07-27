@@ -246,6 +246,7 @@ const ProjectOverviewPage: React.FC = () => {
               headingId="fundings-title"
               linkHref={routePath("projects.fundings.index", { projectId })}
               linkText={isReadOnly ? Global("buttons.view") : ProjectOverview("editFundingDetails")}
+              includeLink={!isReadOnly || project.fundings.length > 0}
               linkAriaLabel={isReadOnly ? ProjectOverview("viewFundingDetails") : ProjectOverview("editFundingDetails")}
             >
               {project.fundings.length > 0 ? (

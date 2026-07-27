@@ -294,9 +294,7 @@ describe('ProjectsProjectFunding', () => {
       });
     });
 
-    it('should not set isReadOnly when fundings array is empty even if project.readOnly is true', async () => {
-      // isReadOnly is only set in the effect when fundings.length > 0,
-      // so with no fundings the Add button should still appear (default isReadOnly = false)
+    it('should set isReadOnly to false when project.readOnly is false', async () => {
       render(
         <MockedProvider mocks={mocksReadOnlyNoFundings}>
           <ProjectsProjectFunding />
@@ -304,7 +302,7 @@ describe('ProjectsProjectFunding', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByRole('button', { name: 'Add funding' })).toBeInTheDocument();
+        expect(screen.queryByRole('button', { name: 'Add funding' })).not.toBeInTheDocument();
       });
     });
   });
