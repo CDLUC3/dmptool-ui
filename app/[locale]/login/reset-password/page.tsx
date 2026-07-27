@@ -44,8 +44,11 @@ const ResetPassword: React.FC = () => {
   const errorRef = useRef<HTMLDivElement>(null);
   const formRef = useRef<HTMLFormElement | null>(null);
   const resetToken = searchParams.get("token") || "";
+  if (!resetToken) {
+    // If no token is present, redirect to the login page
+    router.push(routePath('app.login'));
+  }
 
-  console.log("***resetToken", resetToken);
   //Localization
   const t = useTranslations('LoginPage.resetPassword');
   const Global = useTranslations('Global');
