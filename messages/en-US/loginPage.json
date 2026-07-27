@@ -8,6 +8,7 @@
     "continue": "Continue",
     "login": "Login",
     "signupText": "Create a free DMP Tool account instead",
-    "getHelpText": "Get Help"
+    "getHelpText": "Get Help",
+    "loginError": "Login failed. Please check your email and password and try again."
   }
 }
