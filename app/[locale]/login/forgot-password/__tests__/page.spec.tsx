@@ -1,4 +1,4 @@
-/**eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import ForgotPassword from "../page";
@@ -17,7 +17,7 @@ jest.mock("next/navigation", () => ({
 jest.mock("next-intl", () => ({
   useTranslations: () => {
     const t = (key: string) => key;
-
+    /**eslint-disable-next-line @typescript-eslint/no-explicit-any */
     t.rich = (_key: string, values: any) =>
       values.link("Need help?");
 
