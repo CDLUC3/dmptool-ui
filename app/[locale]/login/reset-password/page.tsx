@@ -23,12 +23,11 @@ import {
 } from '@/components/Container';
 import ErrorMessages from "@/components/ErrorMessages";
 import { FormInput } from '@/components/Form';
-import PasswordRequirementsList from "@/components/PasswordRequirementsList.tsx";
+import PasswordRequirementsList from "@/components/PasswordRequirementsList";
 import Loading from "@/components/Loading";
 
 // Utils and other
 import { useToast } from "@/context/ToastContext";
-import styles from './resetPassword.module.scss';
 import { routePath, isValidPassword } from "@/utils/index";
 
 type fieldErrorsMap = {
@@ -129,7 +128,7 @@ const ResetPassword: React.FC = () => {
     router.push(routePath('app.login'));
   }
 
-  // If the token is invalid, redirect to login page with an error message
+  // If the validation fails, redirect to login page with an error message
   useEffect(() => {
     if (validatePasswordResetTokenLoading) return; // wait for it to resolve
 
@@ -164,7 +163,6 @@ const ResetPassword: React.FC = () => {
 
             {/**Skip the browser's built-in validation and defer validation to the frontend by using the validationBehavior prop.*/}
             <Form
-              className={styles.ResetPasswordForm}
               onSubmit={handleResetPassword}
               ref={formRef}
               validationBehavior="aria"
@@ -200,7 +198,7 @@ const ResetPassword: React.FC = () => {
                 ariaDescribedBy="password-requirements"
               />
 
-              <div className={styles.formActions}>
+              <div>
                 <Button
                   type="submit"
                   isDisabled={isSubmitting}

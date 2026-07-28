@@ -33,6 +33,7 @@
 - Added `UpdateAffiliation` and `AffiliationById` queries [#203]
 
 ## Updated
+- Updated `signup` page to use the new `PasswordRequirementsList` component, and add some new unit tests [#242]
 - Improvied accessibility for `FormInput` by making sure to include help text and error text to ariaDescribedBy, and updated `graphqlHelper.ts` so that it will redirect users to `/login` page when backend gives an early return with a `401 - isRevokedCallback` error [#242]
 - Updated the `OrgUserProfilePage` table to list all of the given user's projects, rather than plans. Updated table headers per ticket [#304]
 - Made some updates to the Edit Project Member page to accommodate Other Affiliation [#96]
