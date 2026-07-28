@@ -27,7 +27,7 @@ import {
 } from '@/components/Container';
 import PageHeader from '@/components/PageHeader';
 import ErrorMessages from '@/components/ErrorMessages';
-import FormInput from '@/components/Form/FormInput';
+import { FormInput, FormTextArea } from '@/components/Form';
 import Loading from '@/components/Loading';
 
 // Utils and other
@@ -100,6 +100,16 @@ const ContactUsPage: React.FC = () => {
     });
   };
 
+  const clearAllFields = () => {
+    clearAllErrorMessages();
+    setContactFormData({
+      email: "",
+      name: "",
+      subject: "",
+      message: ""
+    });
+  }
+
   // Handle any changes to Contact form field values
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -107,6 +117,12 @@ const ContactUsPage: React.FC = () => {
     setIsSubmitting(false);
     setContactFormData({ ...contactFormData, [name]: value });
   };
+
+  const handleTextAreaChange = (value: string) => {
+    clearAllErrorMessages();
+    setIsSubmitting(false);
+    setContactFormData({ ...contactFormData, ['message']: value });
+  }
 
   // Client-side validation of required form fields
   const validateField = (name: string, value: string | string[] | undefined) => {
@@ -194,9 +210,8 @@ const ContactUsPage: React.FC = () => {
     event.preventDefault();
     setIsSubmitting(true);
 
-    // Clear previous error messages
-    clearAllErrorMessages();
-    setErrorMessages([]);
+    // Clear form fields and previous error messages
+    clearAllFields();
 
     if (isFormValid()) {
       await sendMessage();
@@ -215,7 +230,6 @@ const ContactUsPage: React.FC = () => {
       }));
     }
   }, [meData]);
-
 
   // Show Loading until we know if user is authenticated or not
   if (isAuthenticated === null) {
@@ -243,7 +257,7 @@ const ContactUsPage: React.FC = () => {
           <p>
             {t.rich('contactDescription', {
               link: (chunks) => (
-                <Link href="https://cdlib.org/" target="_blank" rel="noopener noreferrer">
+                <Link href="https://uc3.cdlib.org/" target="_blank" rel="noopener noreferrer">
                   {chunks}
                   <span className="hidden-accessibly">({Global('opensInNewTab')})</span>
                 </Link>
@@ -297,14 +311,13 @@ const ContactUsPage: React.FC = () => {
                     }
                   />
 
-                  <FormInput
+                  <FormTextArea
                     name="message"
-                    id="message"
-                    type="text"
                     label={t("form.labels.message")}
+                    richText={false}
                     value={contactFormData.message || ''}
+                    onChange={handleTextAreaChange}
                     isRequiredVisualOnly={true}
-                    onChange={handleInputChange}
                     isInvalid={fieldErrors.message.length > 0}
                     errorMessage={
                       fieldErrors.message.length > 0

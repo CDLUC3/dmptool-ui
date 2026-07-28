@@ -35,6 +35,8 @@
 ## Updated
 - Updated `signup` page to use the new `PasswordRequirementsList` component, and add some new unit tests [#242]
 - Improvied accessibility for `FormInput` by making sure to include help text and error text to ariaDescribedBy, and updated `graphqlHelper.ts` so that it will redirect users to `/login` page when backend gives an early return with a `401 - isRevokedCallback` error [#242]
+- Updated `Contact us` form so that the `message` field uses a `<textArea/>` type and updated website url to current `https://uc3.cdlib.org`. Also, updated `buildspec.yaml` to get `NEXT_PUBLIC_HELPDESK_EMAIL_ADDRESS` from existing `HELPDESK_EMAIL` env variable [#303]
+- Updated `Header` component to redirect to `/login` page when errors with logging out [#303]
 - Updated the `OrgUserProfilePage` table to list all of the given user's projects, rather than plans. Updated table headers per ticket [#304]
 - Made some updates to the Edit Project Member page to accommodate Other Affiliation [#96]
 - Redesigned the project members list as accessible cards with linked member names, inline ORCID profile links, role badges, skeleton loading, and consistent heading/link labelling [#96]
@@ -116,6 +118,7 @@
 - Updated `RepoSelectorForAnswer` to wait to query `Re3byUrIsDocument` until we have `preferredReposURIs` because preferred repos don't display even though they eventually do to trigger the display of the "preferred repositories" checkbox [#118]
 
 ## Fixed
+- Fixed the issue where "add Funder" button was displayed even when `readOnly` was set to true [#305]
 - Improved the project creation and project funding funder-search pages with clearer loading and fallback states, aligned lists and pagination controls, and improved accessibility [#71]
 - Fixed loading state not appearing immediately by removing the delayed fadeIn animation from the Loading component
 - Fixed section &  question reorder arrow buttons turning white on hover. Added a shared `order-button` style so arrows use link-blue colors and remain visible [#76]
@@ -124,6 +127,7 @@
 - Fixed issue with Feedback Notification headers displaying for any collaborator on the Plan Overview, Section and Question pages. It should only display to Org Admins and Super Admins. Added shared isOrgAdmin hook for pages. [#249]
 
 ## Chore
+- Updated `brace-expansion` to `v5.0.8` to address high vulnerability [#303]
 - Updated `sharp` override to `v0.35.0` and `dompurify` to `v3.4.12` to address vulnerabilities [#304]
 - Updated `js-yaml` to `v4.3.0` and `brace-expansion` to `v2.1.2` to address HIGH security vulnerabilities.
 - Updated `eslint` to `v9.39.4`, `prettier` to `v3.8.4`, `brace-expansion` to `v2.1.1`, `sanitize-html` to `v2.17.5`, `@apollo/client` to `v4.2.3`, `@dmptool/types` to `v3.1.7` and `dompurify` to `v3.4.11`. Also added override for `js-yaml` to `v4.2.0` due to vulnerability [#290]

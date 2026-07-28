@@ -87,6 +87,7 @@ const LoginPage: React.FC = () => {
         error: err,
         url: { path: '/apollo-signin' }
       });
+      setErrors([t('loginError')]);
     } finally {
       setLoading(false);
     }
