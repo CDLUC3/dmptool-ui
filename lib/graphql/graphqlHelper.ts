@@ -103,6 +103,40 @@ export const errorLink = new ErrorLink(({ error, operation, forward }) => {
       return; // Ignore abort errors silently
     }
 
+    // express-jwt (isRevokedCallback) rejects requests at the middleware layer,
+    // before Apollo Server runs — this produces a raw HTTP 401, not a GraphQL
+    // error with extensions.code, so it lands here rather than the branch above.
+    const statusCode = 'statusCode' in error ? (error as { statusCode?: number }).statusCode : undefined;
+
+    if (statusCode === 401) {
+      return new Observable(observer => {
+        (async () => {
+          try {
+            const result = await refreshAuthTokens();
+            if (result?.shouldRedirect) {
+              observer.error(new Error('Authentication failed - redirecting to login'));
+              navigateTo(result.redirectTo);
+            } else if (result?.response) {
+              forward(operation).subscribe({
+                next: observer.next.bind(observer),
+                error: observer.error.bind(observer),
+                complete: observer.complete.bind(observer),
+              });
+            } else {
+              logECS('error', 'Token refresh failed with unexpected result', { errorCode: 'UNAUTHENTICATED_401', result });
+              observer.error(new Error('Token refresh failed'));
+              navigateTo('/login');
+            }
+          } catch (refreshError) {
+            logECS('error', 'Token refresh failed', { error: refreshError });
+            observer.error(refreshError);
+            navigateTo('/login');
+          }
+        })();
+      });
+    }
+
+
     logECS('error', `[GraphQL Network Error]: ${error.message}`, { errorCode: 'NETWORK_ERROR' });
     const customNetworkError = error as CustomError;
     customNetworkError.customInfo = { errorMessage: 'There was a problem' };

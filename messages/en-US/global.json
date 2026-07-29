@@ -1094,7 +1094,8 @@
         "positiveNumberOnly": "{field} must be a positive integer",
         "byteSizeWithoutContext": "{field} must be a valid unit size",
         "invalidDateFormat": "{field} must be a valid date",
-        "institutionSuggestionsLoadError": "Could not load institution suggestions. Please try again."
+        "institutionSuggestionsLoadError": "Could not load institution suggestions. Please try again.",
+        "passMissMatch": "Passwords don't match"
       },
       "numDisplaying": "Showing {num} of {total}",
       "unsavedChangesWarning": "You have unsaved changes. Are you sure you want to leave this page?"
@@ -1137,6 +1138,16 @@
       "draft": "Draft",
       "unpublishedChanges": "Unpublished changes",
       "notStarted": "Not started"
+    },
+    "passwordRequirements": {
+      "description": "Create a password that:",
+      "minLength": "At least 8 characters",
+      "hasUppercase": "One uppercase letter",
+      "hasLowercase": "One lowercase letter",
+      "hasNumber": "One number",
+      "hasSpecialChar": "One special character (` ! @ # $ % ^ & * - _ = + ?)",
+      "metPrefix": "Requirement met:",
+      "unmetPrefix": "Requirement not yet met:"
     }
   },
   "OrganizationTemplates": {
