@@ -21,7 +21,8 @@ import {
   VersionedSectionSearchResult,
   VersionedSectionSearchResults,
   AddSectionDocument,
-  PublishedSectionsDocument
+  PublishedSectionsDocument,
+  TemplateDocument
 } from '@/generated/graphql';
 
 // Components
@@ -184,8 +185,12 @@ const SectionTypeSelectPage: React.FC = () => {
               templateId: Number(templateId),
               copyFromVersionedSectionId: section.id,
               name: section.name,
-            }
-          }
+            },
+          },
+          // Refetch the template query to update the UI after adding a section
+          refetchQueries: [
+            { query: TemplateDocument, variables: { templateId: Number(templateId) } }
+          ]
         });
 
         if (response.data?.addSection) {

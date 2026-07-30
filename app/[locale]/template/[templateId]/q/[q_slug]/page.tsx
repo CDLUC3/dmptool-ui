@@ -9,6 +9,7 @@ import {
   Breadcrumbs,
   Button,
   Checkbox,
+  CheckboxGroup,
   Dialog,
   DialogTrigger,
   Form,
@@ -17,6 +18,8 @@ import {
   Link,
   Modal,
   ModalOverlay,
+  OverlayArrow,
+  Popover,
   Radio,
   Tab,
   TabList,
@@ -28,6 +31,7 @@ import {
 
 // GraphQL
 import {
+  TagsDocument,
   QuestionDocument,
   QuestionsDocument
 } from '@/generated/graphql';
@@ -44,6 +48,7 @@ import {
   QuestionOptions,
   QuestionFormatInterface,
   RemoveQuestionErrors,
+  TagsInterface,
   UpdateQuestionErrors,
 } from '@/app/types';
 import { DisplayLogic } from '@/app/types/displayLogic';
@@ -66,6 +71,7 @@ import QuestionView from '@/components/QuestionView';
 import { getParsedQuestionJSON } from '@/components/hooks/getParsedQuestionJSON';
 import { TransitionButton } from "@/components/Form";
 import Loading from '@/components/Loading';
+import { DmpIcon } from "@/components/Icons";
 
 //Utils and Other
 import { useResearchOutputTable } from '@/app/hooks/useResearchOutputTable';
@@ -143,6 +149,12 @@ const QuestionEdit = () => {
   // Add state for live region announcements
   const [announcement, setAnnouncement] = useState('');
 
+  // List of tags available for selection, fetched from the backend
+  const [tags, setTags] = useState<TagsInterface[]>([]);
+
+  // Keep track of which checkboxes have been selected
+  const [selectedTags, setSelectedTags] = useState<TagsInterface[]>([]);
+
   // localization keys
   const Global = useTranslations('Global');
   const t = useTranslations('QuestionEdit');
@@ -211,6 +223,9 @@ const QuestionEdit = () => {
     variables: { sectionId: selectedQuestion?.question?.sectionId ?? 0 },
     skip: !selectedQuestion?.question?.sectionId
   });
+
+  // Query for all tags
+  const { data: tagsData } = useQuery(TagsDocument);
 
 
   // Candidate questions this question's display logic can trigger off of:
@@ -437,6 +452,7 @@ const QuestionEdit = () => {
           sampleText: String(question.sampleText),
           useSampleTextAsDefault: question?.useSampleTextAsDefault || false,
           required: Boolean(question.required),
+          tags: selectedTags
         });
 
         if (response.redirect) {
@@ -504,6 +520,16 @@ const QuestionEdit = () => {
     }
   };
 
+  // Handle changes to tag checkbox selection
+  const handleCheckboxChange = (tag: TagsInterface) => {
+    setSelectedTags(prevTags => prevTags.some(selectedTag => selectedTag.id === tag.id)
+      ? prevTags.filter(selectedTag => selectedTag.id !== tag.id)
+      : [...prevTags, tag]
+    );
+    setHasUnsavedChanges(true);
+  };
+
+
   // Saves any query errors to errors state
   useEffect(() => {
     const allErrors = [];
@@ -570,6 +596,15 @@ const QuestionEdit = () => {
               isSelected: option?.selected || option?.checked || false,
             }));
           setRows(optionRows);
+        }
+
+        // Set selected tags
+        if (q?.tags) {
+          const cleanedTags = q?.tags.filter(tag => tag !== null && tag !== undefined);
+          const cleanedData = cleanedTags.map(({ __typename, ...fields }) => fields);
+          setSelectedTags((prevTags) => {
+            return [...prevTags, ...cleanedData];
+          });
         }
       } catch (error) {
         logECS('error', 'Parsing error', {
@@ -670,6 +705,15 @@ const QuestionEdit = () => {
       setParsedQuestionJSON(parsed);
     }
   }, [question])
+
+  // Filter out null or undefined tags and set the cleaned tags to state
+  useEffect(() => {
+    if (tagsData?.tags) {
+      const cleanedTags = tagsData.tags.filter(tag => tag !== null && tag !== undefined);
+      const cleanedData = cleanedTags.map(({ __typename, ...fields }) => fields);
+      setTags(cleanedData);
+    }
+  }, [tagsData]);
 
   // Warn user of unsaved changes if they try to leave the page
   useEffect(() => {
@@ -948,6 +992,53 @@ const QuestionEdit = () => {
                     <Radio value="no">{Global('form.noLabel')}</Radio>
                   </div>
                 </RadioGroupComponent>
+
+                <CheckboxGroup
+                  name="sectionTags"
+                  defaultValue={selectedTags.map(tag => tag.name)}
+                >
+                  <Label>{t('labels.bestPracticeTags')}</Label>
+                  <span className="help">{t('helpText.bestPracticeTagsDesc')}</span>
+                  <div className="checkbox-group-two-column">
+                    {tags && tags.map(tag => {
+                      const id = (tag.id)?.toString();
+                      return (
+                        <Checkbox
+                          value={tag.name}
+                          key={tag.name}
+                          id={id}
+                          onChange={() => handleCheckboxChange(tag)}
+                        >
+                          <div className="checkbox">
+                            <svg viewBox="0 0 18 18" aria-hidden="true">
+                              <polyline points="1 9 7 14 15 4" />
+                            </svg>
+                          </div>
+                          <span className="checkbox-label" data-testid='checkboxLabel'>
+                            <div className="checkbox-wrapper">
+                              <div>{tag.name}</div>
+                              <DialogTrigger>
+                                <Button className="popover-btn" aria-label="Click for more info"><div className="icon info"><DmpIcon icon="info" /></div></Button>
+                                <Popover>
+                                  <OverlayArrow>
+                                    <svg width={12} height={12} viewBox="0 0 12 12">
+                                      <path d="M0 0 L6 6 L12 0" />
+                                    </svg>
+                                  </OverlayArrow>
+                                  <Dialog>
+                                    <div className="flex-col">
+                                      {tag.description}
+                                    </div>
+                                  </Dialog>
+                                </Popover>
+                              </DialogTrigger>
+                            </div>
+                          </span>
+                        </Checkbox>
+                      )
+                    })}
+                  </div>
+                </CheckboxGroup>
 
                 <TransitionButton
                   type="submit"

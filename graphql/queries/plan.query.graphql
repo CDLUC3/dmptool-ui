@@ -66,13 +66,6 @@ query Plan($planId: Int!) {
       versionedSectionId
       title
       totalQuestions
-      tags {
-        name
-        slug
-        id
-        slug
-        description
-      }
       sectionType
       customSectionId
       totalRequiredQuestions

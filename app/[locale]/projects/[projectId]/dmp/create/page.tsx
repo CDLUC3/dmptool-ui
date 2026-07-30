@@ -1,6 +1,13 @@
 'use client';
 
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type TransitionStartFunction
+} from 'react';
 import { useMutation, useQuery, useLazyQuery } from '@apollo/client/react';
 import { useParams, useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
@@ -255,7 +262,7 @@ const PlanCreate: React.FC = () => {
   };
 
   // When user selects a template, we create a plan and redirect
-  const onSelect = async (versionedTemplateId: number) => {
+  const onSelect = async (versionedTemplateId: number, startTransition: TransitionStartFunction) => {
     if (isSubmitting) return; // Prevent multiple submissions
 
     setIsSubmitting(true);
@@ -316,10 +323,10 @@ const PlanCreate: React.FC = () => {
       // errors returned by the AddPlanFundingMutation. This is because we already
       // created the plan at this point, and it will cause confusion if we now
       // deal with errors without redirecting to the newly created plan.
-      router.push(routePath('projects.dmp.show', {
-        projectId,
-        dmpId: newPlanId,  // newPlanId was set in the preceding promise
-      }));
+      startTransition(() => {
+        router.push(routePath('projects.dmp.show', { projectId, dmpId: newPlanId }));
+      });
+
     } catch (err) {
       logECS('error', 'addPlanMutation', {
         error: err,

@@ -69,7 +69,7 @@ function Header() {
       }
     } catch (err) {
       logECS("error", "handleLogout", {
-        error: new Error("Failed to logout"),
+        error: err
       });
       setIsAuthenticated(false);
       clearCache();
