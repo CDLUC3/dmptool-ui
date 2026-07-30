@@ -33,6 +33,7 @@
 - Removed the best practice checkbox group of tags from the add/edit Section pages, and added them to the add/edit Question pages [#274]
 - Updated the `TransitionButton` to use `startTransaction` so components using it can better control the loading gif and progress bar. Updated some of the pages to utilize this new `startTransaction` [#274]
 - Updated shared `QuestionAdd` to include a `showTags` boolean so that we can exclude it for custom pages for now [#274]
+- Made improvements on progress bar and transition buttons on some pages in the template and project flow [#274]
 - Updated `Contact us` form so that the `message` field uses a `<textArea/>` type and updated website url to current `https://uc3.cdlib.org`. Also, updated `buildspec.yaml` to get `NEXT_PUBLIC_HELPDESK_EMAIL_ADDRESS` from existing `HELPDESK_EMAIL` env variable [#303]
 - Updated `Header` component to redirect to `/login` page when errors with logging out [#303]
 - Updated the `OrgUserProfilePage` table to list all of the given user's projects, rather than plans. Updated table headers per ticket [#304]
