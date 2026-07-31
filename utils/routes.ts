@@ -47,6 +47,10 @@ const routes = {
   "app.login": '/login',
   "app.contact": '/contact',
 
+  // Login routes
+  'login.forgotPassword': '/login/forgot-password',
+  'login.resetPassword': '/login/reset-password',
+
   // Project routes
   'projects.index': '/projects',
   'projects.show': '/projects/:projectId',

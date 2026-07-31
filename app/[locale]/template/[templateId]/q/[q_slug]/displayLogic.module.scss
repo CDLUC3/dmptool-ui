@@ -41,6 +41,48 @@
   border: 1px solid var(--gray-300, #8f8f8f);
   border-radius: 0.375rem;
   background-color: var(--slate-100, #f1f5f9);
+
+  // Nested so this compiles to `.conditionsWrapper .removeConditionButton`,
+  // giving it specificity — beats the shared `.react-aria-Button`
+  // rule regardless of order of the CSS files.
+  .removeConditionButton {
+    background: none !important; // don't want background on the trashcan icon button
+  }
+
+  .removeGroupButton {
+    position: absolute;
+    top: 0.75rem;
+    right: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center; // centers the × horizontally
+    width: 1.75rem;
+    height: 1.75rem;
+    padding: 0;
+    border-radius: 50%;
+    border: 1px solid var(--gray-300, #8f8f8f);
+    background: transparent;
+    color: var(--gray-600, #393939);
+    font-size: 1.1rem;
+    line-height: 1;
+
+    &:hover {
+      background: var(--gray-100, #e0e0e0);
+      border-color: var(--red-400, #D3273E);
+      color: var(--red-600, #731200);
+    }
+
+    @include r.device('sm') {
+      align-self: center; // desktop: back to inline vertical centering
+    }
+  }
+
+  // "Add condition" button is rendered inside .conditionsWrapper, so it
+  // gets the same specificity treatment as the buttons above.
+  .addConditionButton {
+    align-self: flex-start;
+    width: fit-content;
+  }
 }
 
 .conditionRow {
@@ -95,63 +137,12 @@
   }
 }
 
-/** Buttons **/
-.addConditionButton,
-.addTriggerQuestionButton {
-  align-self: flex-start;
-  width: fit-content;
-}
-
-.removeConditionButton {
-  background: none !important; // don't want background on the trashcan icon button
-}
-
-.removeGroupButton {
-  position: absolute;
-  top: 0.75rem;
-  right: 1rem;
-  display: flex;
-  align-items: center;
-  justify-content: center; // centers the × horizontally
-  width: 1.75rem;
-  height: 1.75rem;
-  padding: 0;
-  border-radius: 50%;
-  border: 1px solid var(--gray-300, #8f8f8f);
-  background: transparent;
-  color: var(--gray-600, #393939);
-  font-size: 1.1rem;
-  line-height: 1;
-
-  &:hover {
-    background: var(--gray-100, #e0e0e0);
-    border-color: var(--red-400, #D3273E);
-    color: var(--red-600, #731200);
-  }
-
-  @include r.device('sm') {
-    align-self: center; // desktop: back to inline vertical centering
-  }
-}
-
 .removeAllConditionsDialogButtons {
   display: flex;
   justify-content: flex-end;
   gap: 0.75rem;
   margin-top: 1rem;
 }
-
-.addLogicButton {
-  align-self: flex-start;
-  width: fit-content;
-  max-width: 100%;
-}
-
-.removeDisplayLogicButton {
-  display: flex;
-  margin: 0 auto;
-}
-/** End Buttons**/
 
 .emptyStateText {
   font-style: italic;
@@ -178,18 +169,40 @@
   flex-direction: column;
 }
 
+/** Buttons that live directly in .displayLogicWrapper **/
 .displayLogicWrapper {
   display: flex;
   flex-direction: column;
   gap: 1rem;
   max-width: 640px;
+
+  // "Add trigger question" and "Add display logic" (empty-state) buttons
+  // are both direct children of .displayLogicWrapper in the component,
+  // so nesting here gives them (0,2,0) specificity the same way.
+  .addTriggerQuestionButton {
+    align-self: flex-start;
+    width: fit-content;
+  }
+
+  .addLogicButton {
+    align-self: flex-start;
+    width: fit-content;
+    max-width: 100%;
+  }
 }
 
 .removeDisplayLogicSection {
   background: var(--gray-50, #ffffff);
   border-top: 1px solid var(--gray-200, #afafaf);
   padding-top: var(--space-8);
+
+  // "Remove all display logic" trigger button lives inside this section.
+  .removeDisplayLogicButton {
+    display: flex;
+    margin: 0 auto;
+  }
 }
+/** End Buttons**/
 
 .trashcanIcon {
   cursor: pointer;

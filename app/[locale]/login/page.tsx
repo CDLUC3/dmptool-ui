@@ -20,6 +20,7 @@ import {
 import ErrorMessages from "@/components/ErrorMessages";
 import { FormInput } from '@/components/Form';
 import styles from './login.module.scss';
+import { routePath } from "@/utils/index";
 
 
 type LoginSteps =
@@ -132,8 +133,8 @@ const LoginPage: React.FC = () => {
   }, [step]);
 
   return (
-    <LayoutContainer className={styles.loginPage}>
-      <ContentContainer className={styles.loginContent}>
+    <LayoutContainer className="auth-container">
+      <ContentContainer className="auth-card">
         <h3>{t('pageTitle')}</h3>
 
         <Form
@@ -170,8 +171,8 @@ const LoginPage: React.FC = () => {
               onChange={(e) => setPassword(e.target.value)}
               isRequired
               helpMessage={(
-                <Link href="#" className={styles.resetPasswordLink}>
-                  {t('resetPassword')}
+                <Link href={routePath('login.forgotPassword')} className={styles.forgotPasswordLink}>
+                  {t('forgotPassword.title')}
                 </Link>
               )}
               data-testid="passInput"

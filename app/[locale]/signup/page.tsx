@@ -13,6 +13,7 @@ import { useCsrf } from '@/context/CsrfContext';
 import logECS from '@/utils/clientLogger';
 import { handleErrors } from '@/utils/errorHandler';
 import { useAuthContext } from '@/context/AuthContext';
+import { isValidPassword } from "@/utils/index";
 
 //Components
 import {
@@ -23,6 +24,7 @@ import {
 import ErrorMessages from '@/components/ErrorMessages';
 import { FormInput } from '@/components/Form';
 import { TypeAheadWithOther, useAffiliationSearch } from '@/components/Form/TypeAheadWithOther';
+import PasswordRequirementsList from "@/components/PasswordRequirementsList";
 
 import styles from './signup.module.scss';
 
@@ -150,7 +152,15 @@ const SignUpPage: React.FC = () => {
     if (password !== confirmPassword) {
       setFieldErrors({
         ...fieldErrors,
-        confirmPassword: t('passMissMatch'),
+        confirmPassword: globalT('messaging.errors.passMissMatch'),
+      });
+      hasErrors = true;
+    }
+
+    if (!isValidPassword(password)) {
+      setFieldErrors({
+        ...fieldErrors,
+        password: t('passwordRequirements'),
       });
       hasErrors = true;
     }
@@ -323,8 +333,12 @@ const SignUpPage: React.FC = () => {
                 passwordToggleLabel={t('password')}
                 isRequired
                 onChange={(e) => setPassword(e.target.value)}
+                isInvalid={!!fieldErrors.password}
+                errorMessage={fieldErrors.password}
                 data-testid="pass"
               />
+
+              <PasswordRequirementsList password={password} />
 
               <FormInput
                 name="confirmPassword"

@@ -309,7 +309,7 @@ describe('SignUpPage', () => {
     fireEvent.click(signupBtn);
 
     await waitFor(() => {
-      expect(screen.getByText('passMissMatch')).toBeInTheDocument();
+      expect(screen.getByText('messaging.errors.passMissMatch')).toBeInTheDocument();
     });
   });
 
@@ -359,6 +359,84 @@ describe('SignUpPage', () => {
     await waitFor(() => {
       expect(screen.getByText('institutionRequired')).toBeInTheDocument();
     });
+  });
+
+  it("should display error if password does not meet requirements", async () => {
+    render(<SignUpPage />);
+
+    // Step 1
+    fireEvent.change(screen.getByLabelText("emailAddress"), {
+      target: { value: signupData.email },
+    });
+    fireEvent.click(screen.getByTestId("continue"));
+
+    expect(screen.getByTestId("signup")).toBeInTheDocument();
+
+    // Step 2 — everything else valid, only the password is weak
+    fireEvent.change(screen.getByLabelText("firstName"), {
+      target: { value: signupData.givenName },
+    });
+    fireEvent.change(screen.getByLabelText("lastName"), {
+      target: { value: signupData.surName },
+    });
+
+    fireEvent.change(screen.getByTestId("institution"), {
+      target: { value: "InstitutionID" },
+    });
+
+    fireEvent.change(screen.getByTestId("otherinst"), {
+      target: { value: "Test" },
+    });
+
+    // Too short, no uppercase, no number, no special char
+    fireEvent.change(screen.getByTestId("pass"), {
+      target: { value: "weak" },
+    });
+    fireEvent.change(screen.getByTestId("confirmpass"), {
+      target: { value: "weak" },
+    });
+
+    const termsCheckbox = screen.getByLabelText("acceptTerms");
+    fireEvent.click(termsCheckbox);
+    expect(termsCheckbox).toBeChecked();
+
+    const signupBtn = screen.getByTestId("signup");
+    fireEvent.click(signupBtn);
+
+    await waitFor(() => {
+      expect(screen.getByText('passwordRequirements')).toBeInTheDocument();
+    });
+
+    // Validation should block the request entirely
+    expect(global.fetch).not.toHaveBeenCalled();
+  });
+
+  it("should update the password requirements list as the user types", () => {
+    render(<SignUpPage />);
+
+    // Step 1
+    fireEvent.change(screen.getByLabelText("emailAddress"), {
+      target: { value: signupData.email },
+    });
+    fireEvent.click(screen.getByTestId("continue"));
+
+    // Nothing typed yet — every requirement should be unmet
+    expect(screen.getByTestId("requirement-minLength")).toHaveClass('unmet');
+    expect(screen.getByTestId("requirement-hasUppercase")).toHaveClass('unmet');
+    expect(screen.getByTestId("requirement-hasLowercase")).toHaveClass('unmet');
+    expect(screen.getByTestId("requirement-hasNumber")).toHaveClass('unmet');
+    expect(screen.getByTestId("requirement-hasSpecialChar")).toHaveClass('unmet');
+
+    // Type a password that satisfies every rule
+    fireEvent.change(screen.getByTestId("pass"), {
+      target: { value: "Abcdefg1!" },
+    });
+
+    expect(screen.getByTestId("requirement-minLength")).toHaveClass('met');
+    expect(screen.getByTestId("requirement-hasUppercase")).toHaveClass('met');
+    expect(screen.getByTestId("requirement-hasLowercase")).toHaveClass('met');
+    expect(screen.getByTestId("requirement-hasNumber")).toHaveClass('met');
+    expect(screen.getByTestId("requirement-hasSpecialChar")).toHaveClass('met');
   });
 
   it('should handle 403 error by calling fetchCsrfToken', async () => {
