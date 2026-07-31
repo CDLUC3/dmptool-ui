@@ -1,4 +1,5 @@
 ## Added
+- Added `favicon` image from `CDN`. Added a new `.env` variable `CDN_DOMAIN`. We will need to add this variable to the `stage` and `production` servers 
 - Added `login/forgot-password` and `login/reset-password` pages, and added a `PasswordRequirementList` component to assist users in knowing what the password requirements are[#242]
 - Added `SendPasswordResetEmail`, `ResetPassword` and `ValidatePasswordResetToken` mutations and query [#242]
 - Added `getPasswordRequirements` util [#242]
@@ -37,6 +38,8 @@
 - Updated the `TransitionButton` to use `startTransaction` so components using it can better control the loading gif and progress bar. Updated some of the pages to utilize this new `startTransaction` [#274]
 - Updated shared `QuestionAdd` to include a `showTags` boolean so that we can exclude it for custom pages for now [#274]
 - Made improvements on progress bar and transition buttons on some pages in the template and project flow [#274]
+- Updated `layout.tsx` to use the CDL logo from the CDN. Added new `favicon.ico` as a fallback, and added a new `CDN_ENDPOINT` to match the parameter set in Cloud Formation template [#328]
+- Updated `login` and `signup` pages with `document.title`, and added `Pageheader` to `home` page [#328]
 - Updated `signup` page to use the new `PasswordRequirementsList` component, and add some new unit tests [#242]
 - Improvied accessibility for `FormInput` by making sure to include help text and error text to ariaDescribedBy, and updated `graphqlHelper.ts` so that it will redirect users to `/login` page when backend gives an early return with a `401 - isRevokedCallback` error [#242]
 - Updated `Contact us` form so that the `message` field uses a `<textArea/>` type and updated website url to current `https://uc3.cdlib.org`. Also, updated `buildspec.yaml` to get `NEXT_PUBLIC_HELPDESK_EMAIL_ADDRESS` from existing `HELPDESK_EMAIL` env variable [#303]
