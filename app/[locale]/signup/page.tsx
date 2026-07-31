@@ -237,6 +237,12 @@ const SignUpPage: React.FC = () => {
     }
   }, [invalid, errors]);
 
+  useEffect(() => {
+    const pageTitle = (step === "email") ? t('register') : t('createAccount');
+    document.title = `${pageTitle} | DMPTool`;
+    window.scrollTo(0, 0);
+  }, [step]);
+
   return (
     <LayoutContainer className={styles.signupPage}>
       <ContentContainer className={styles.signupContent}>

@@ -35,6 +35,7 @@
 
 ## Updated
 - Updated `layout.tsx` to use the CDL logo from the CDN. Added new `favicon.ico` as a fallback, and added a new `CDN_ENDPOINT` to match the parameter set in Cloud Formation template [#328]
+- Updated `login` and `signup` pages with `document.title`, and added `Pageheader` to `home` page [#328]
 - Updated `signup` page to use the new `PasswordRequirementsList` component, and add some new unit tests [#242]
 - Improvied accessibility for `FormInput` by making sure to include help text and error text to ariaDescribedBy, and updated `graphqlHelper.ts` so that it will redirect users to `/login` page when backend gives an early return with a `401 - isRevokedCallback` error [#242]
 - Updated `Contact us` form so that the `message` field uses a `<textArea/>` type and updated website url to current `https://uc3.cdlib.org`. Also, updated `buildspec.yaml` to get `NEXT_PUBLIC_HELPDESK_EMAIL_ADDRESS` from existing `HELPDESK_EMAIL` env variable [#303]
