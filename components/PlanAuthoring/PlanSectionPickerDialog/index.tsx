@@ -60,8 +60,7 @@ export default function PlanSectionPickerDialog({
       (section) => sectionKey(section.identity) === activeSectionKey
     );
     setHighlightedIndex(Math.max(currentIndex, 0));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, term]);
+  }, [isOpen, term, filtered, activeSectionKey]);
 
   // Keep the highlighted row visible while arrowing through a long list.
   useEffect(() => {

@@ -38,6 +38,11 @@ export default function PlanSectionNavigation({
             sections.length) *
             100
         );
+  const progressTrackStyle: React.CSSProperties & {
+    "--progress-percent": string;
+  } = {
+    "--progress-percent": `${progressPercent}%`,
+  };
 
   return (
     <nav
@@ -89,11 +94,7 @@ export default function PlanSectionNavigation({
       </div>
       <div
         className={styles.progressTrack}
-        style={
-          {
-            "--progress-percent": `${progressPercent}%`,
-          } as React.CSSProperties
-        }
+        style={progressTrackStyle}
       >
         {sections.map((section, index) => {
           const key = sectionKey(section.identity);
@@ -107,6 +108,11 @@ export default function PlanSectionNavigation({
             : isActive
               ? activeSectionProgress * 100
               : 0;
+          const segmentStyle: React.CSSProperties & {
+            "--segment-fill": string;
+          } = {
+            "--segment-fill": `${fillPercent}%`,
+          };
           return (
             <button
               key={key}
@@ -114,11 +120,7 @@ export default function PlanSectionNavigation({
               className={styles.progressSegment}
               data-active={isActive}
               data-complete={isComplete}
-              style={
-                {
-                  "--segment-fill": `${fillPercent}%`,
-                } as React.CSSProperties
-              }
+              style={segmentStyle}
               aria-label={t("sectionNav.goToSectionAria", {
                 index: index + 1,
                 title: section.title,

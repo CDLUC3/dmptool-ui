@@ -92,7 +92,7 @@ export default function PlanQuestionAnswer({
   const booleanQuestion: BooleanQuestionType = {
     type: "boolean",
     meta: QUESTION_META,
-    attributes: { value: Boolean(value) },
+    attributes: { label: t("answer.label"), value: Boolean(value) },
   };
 
   const radioQuestion: RadioButtonsQuestionType = {
