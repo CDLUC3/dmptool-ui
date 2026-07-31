@@ -3,10 +3,8 @@
 import React from "react";
 import Link from "next/link";
 import { ContentContainer, LayoutContainer } from "@/components/Container";
-import {
-  PlanAuthoring,
-  createPlanAuthoringDemoDataSource,
-} from "@/components/PlanAuthoring";
+import { PlanAuthoring } from "@/components/PlanAuthoring";
+import { createPlanAuthoringDemoDataSource } from "@/components/PlanAuthoring/demo";
 import "../../shared/styleguide.scss";
 
 const dataSource = createPlanAuthoringDemoDataSource({

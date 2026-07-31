@@ -1,4 +1,5 @@
 import {
+  collectLockedGuidanceOrgIds,
   computeProgress,
   questionKey,
   sectionKey,
@@ -63,5 +64,78 @@ describe("PlanAuthoring model helpers", () => {
       totalQuestions: 2,
       percentComplete: 50,
     });
+  });
+
+  it("collects unique locked guidance org ids", () => {
+    const sections: PlanSectionDefinition[] = [
+      {
+        identity: { kind: "base", versionedSectionId: 1 },
+        title: "One",
+        displayOrder: 1,
+        questions: [
+          {
+            identity: { kind: "base", versionedQuestionId: 1 },
+            sectionIdentity: { kind: "base", versionedSectionId: 1 },
+            title: "A",
+            required: true,
+            questionType: "text",
+            parsedJson: { type: "text" },
+            answerJson: null,
+            hasAnswer: false,
+            guidanceSources: [
+              {
+                id: "nih",
+                label: "NIH",
+                shortName: "NIH",
+                locked: true,
+                bodyHtml: "<p>Locked</p>",
+              },
+              {
+                id: "uci",
+                label: "UCI",
+                shortName: "UCI",
+                locked: false,
+                bodyHtml: "<p>Optional</p>",
+              },
+            ],
+            comments: [],
+            displayOrder: 1,
+          },
+          {
+            identity: { kind: "base", versionedQuestionId: 2 },
+            sectionIdentity: { kind: "base", versionedSectionId: 1 },
+            title: "B",
+            required: false,
+            questionType: "text",
+            parsedJson: { type: "text" },
+            answerJson: null,
+            hasAnswer: false,
+            guidanceSources: [
+              {
+                id: "nih",
+                label: "NIH",
+                shortName: "NIH",
+                locked: true,
+                bodyHtml: "<p>Locked again</p>",
+              },
+              {
+                id: "stanford",
+                label: "Stanford",
+                shortName: "SU",
+                locked: true,
+                bodyHtml: "<p>Also locked</p>",
+              },
+            ],
+            comments: [],
+            displayOrder: 2,
+          },
+        ],
+      },
+    ];
+
+    expect(collectLockedGuidanceOrgIds(sections).sort()).toEqual([
+      "nih",
+      "stanford",
+    ]);
   });
 });

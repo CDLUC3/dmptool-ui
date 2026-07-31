@@ -18,7 +18,6 @@ interface PlanQuestionProps {
   capabilities: PlanCapabilities;
   dataSource: PlanAuthoringDataSource;
   onCustomizeGuidance: () => void;
-  forceMode?: "view" | "editing";
   className?: string;
 }
 
@@ -27,7 +26,6 @@ export default function PlanQuestion({
   capabilities,
   dataSource,
   onCustomizeGuidance,
-  forceMode,
   className,
 }: PlanQuestionProps) {
   const t = useTranslations("PlanAuthoring");
@@ -42,7 +40,7 @@ export default function PlanQuestion({
   const shellRef = useRef<HTMLElement | null>(null);
   const [heightPx, setHeightPx] = useState<number | null>(null);
 
-  const mode = forceMode ?? controller.mode;
+  const mode = controller.mode;
 
   const onResizePointerDown = useCallback(
     (event: React.PointerEvent<HTMLDivElement>) => {

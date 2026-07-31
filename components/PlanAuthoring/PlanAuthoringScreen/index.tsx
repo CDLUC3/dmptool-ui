@@ -13,7 +13,11 @@ import {
 } from "@/components/Container";
 import type { PlanAuthoringDataSource } from "../dataSource";
 import type { PlanAuthoringModel } from "../model";
-import { sectionKey } from "../model";
+import {
+  collectLockedGuidanceOrgIds,
+  questionKey,
+  sectionKey,
+} from "../model";
 import { usePlanSectionNavigation } from "../usePlanSectionNavigation";
 import { useSectionPickerShortcut } from "../useSectionPickerShortcut";
 import PlanSectionNavigation from "../PlanSectionNavigation";
@@ -46,26 +50,16 @@ export default function PlanAuthoring({
     });
   }, [dataSource]);
 
-  // Cmd+K (mac) / Ctrl+K (windows, linux) toggles the section picker.
   useSectionPickerShortcut(
     useCallback(() => setPickerOpen((open) => !open), [])
   );
 
   const navigation = usePlanSectionNavigation({ sections: model.sections });
 
-  const lockedOrgIds = useMemo(() => {
-    const locked = new Set<string>();
-    model.sections.forEach((section) => {
-      section.questions.forEach((question) => {
-        question.guidanceSources.forEach((source) => {
-          if (source.locked) {
-            locked.add(source.id);
-          }
-        });
-      });
-    });
-    return Array.from(locked);
-  }, [model.sections]);
+  const lockedOrgIds = useMemo(
+    () => collectLockedGuidanceOrgIds(model.sections),
+    [model.sections]
+  );
 
   return (
     <div className={[styles.planAuthoring, className].filter(Boolean).join(" ")}>
@@ -196,11 +190,7 @@ export default function PlanAuthoring({
               >
                 {section.questions.map((question) => (
                   <PlanQuestion
-                    key={
-                      question.identity.kind === "base"
-                        ? `base-${question.identity.versionedQuestionId}`
-                        : `custom-${question.identity.customQuestionId}`
-                    }
+                    key={questionKey(question.identity)}
                     question={question}
                     capabilities={model.capabilities}
                     dataSource={dataSource}

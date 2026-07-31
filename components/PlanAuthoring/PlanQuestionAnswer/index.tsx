@@ -3,6 +3,12 @@
 import React, { useId } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "react-aria-components";
+import type {
+  BooleanQuestionType,
+  CheckboxesQuestionType,
+  RadioButtonsQuestionType,
+  SelectBoxQuestionType,
+} from "@dmptool/types";
 import {
   BOOLEAN_QUESTION_TYPE,
   CHECKBOXES_QUESTION_TYPE,
@@ -24,37 +30,10 @@ import TinyMCEEditor from "@/components/TinyMCEEditor";
 import SafeHtml from "@/components/SafeHtml";
 import type { PlanQuestionDefinition } from "../model";
 import { questionKey } from "../model";
+import { getAnswerValue, getOptions } from "../answerUtils";
 import styles from "./PlanQuestionAnswer.module.scss";
 
-type Option = { label: string; value: string };
-
-function getOptions(parsedJson: Record<string, unknown>): Option[] {
-  const options = parsedJson.options;
-  if (!Array.isArray(options)) {
-    return [];
-  }
-  return options
-    .map((option) => {
-      if (!option || typeof option !== "object") {
-        return null;
-      }
-      const record = option as Record<string, unknown>;
-      const label = String(record.label ?? record.text ?? "");
-      const value = String(record.value ?? record.label ?? record.text ?? "");
-      if (!label || !value) {
-        return null;
-      }
-      return { label, value };
-    })
-    .filter((option): option is Option => Boolean(option));
-}
-
-function getAnswerValue(answerJson: unknown): unknown {
-  if (!answerJson || typeof answerJson !== "object") {
-    return answerJson;
-  }
-  return (answerJson as { answer?: unknown }).answer;
-}
+const QUESTION_META = { schemaVersion: "1.0" } as const;
 
 interface PlanQuestionAnswerProps {
   question: PlanQuestionDefinition;
@@ -110,6 +89,49 @@ export default function PlanQuestionAnswer({
     });
   };
 
+  const booleanQuestion: BooleanQuestionType = {
+    type: "boolean",
+    meta: QUESTION_META,
+    attributes: { value: Boolean(value) },
+  };
+
+  const radioQuestion: RadioButtonsQuestionType = {
+    type: "radioButtons",
+    meta: QUESTION_META,
+    attributes: {},
+    options: options.map((option) => ({
+      label: option.label,
+      value: option.value,
+      selected: false,
+    })),
+  };
+
+  const checkboxesQuestion: CheckboxesQuestionType = {
+    type: "checkBoxes",
+    meta: QUESTION_META,
+    attributes: {},
+    options: options.map((option) => ({
+      label: option.label,
+      value: option.value,
+      selected: false,
+    })),
+  };
+
+  const selectboxQuestion: SelectBoxQuestionType = {
+    type: "selectBox",
+    meta: QUESTION_META,
+    attributes: { multiple: false },
+    options: options.map((option) => ({
+      label: option.label,
+      value: option.value,
+      selected: false,
+    })),
+  };
+
+  const checkboxValues = Array.isArray(value)
+    ? value.filter((item): item is string => typeof item === "string")
+    : [];
+
   return (
     <div className={[styles.answerEditor, className].filter(Boolean).join(" ")}>
       {question.questionType === TEXT_AREA_QUESTION_TYPE ? (
@@ -134,10 +156,7 @@ export default function PlanQuestionAnswer({
 
       {question.questionType === BOOLEAN_QUESTION_TYPE ? (
         <BooleanQuestionComponent
-          parsedQuestion={{
-            type: BOOLEAN_QUESTION_TYPE,
-            attributes: { value: Boolean(value) },
-          } as never}
+          parsedQuestion={booleanQuestion}
           selectedValue={value === true ? "yes" : "no"}
           handleRadioChange={(next) => emit(next === "yes")}
           isDisabled={disabled}
@@ -146,10 +165,7 @@ export default function PlanQuestionAnswer({
 
       {question.questionType === RADIOBUTTONS_QUESTION_TYPE ? (
         <RadioButtonsQuestionComponent
-          parsedQuestion={{
-            type: RADIOBUTTONS_QUESTION_TYPE,
-            options,
-          } as never}
+          parsedQuestion={radioQuestion}
           selectedRadioValue={typeof value === "string" ? value : ""}
           name={`${editorId}-radio`}
           handleRadioChange={(next) => emit(next)}
@@ -159,11 +175,8 @@ export default function PlanQuestionAnswer({
 
       {question.questionType === CHECKBOXES_QUESTION_TYPE ? (
         <CheckboxesQuestionComponent
-          parsedQuestion={{
-            type: CHECKBOXES_QUESTION_TYPE,
-            options,
-          } as never}
-          selectedCheckboxValues={Array.isArray(value) ? (value as string[]) : []}
+          parsedQuestion={checkboxesQuestion}
+          selectedCheckboxValues={checkboxValues}
           handleCheckboxGroupChange={(next) => emit(next)}
           isDisabled={disabled}
         />
@@ -171,10 +184,7 @@ export default function PlanQuestionAnswer({
 
       {question.questionType === SELECTBOX_QUESTION_TYPE ? (
         <SelectboxQuestionComponent
-          parsedQuestion={{
-            type: SELECTBOX_QUESTION_TYPE,
-            options,
-          } as never}
+          parsedQuestion={selectboxQuestion}
           selectedSelectValue={typeof value === "string" ? value : undefined}
           handleSelectChange={(next) => emit(next)}
           isDisabled={disabled}
@@ -194,7 +204,7 @@ export default function PlanQuestionAnswer({
         <DateComponent
           name={`${editorId}-date`}
           label={t("answer.dateLabel")}
-          value={typeof value === "string" ? (value as never) : null}
+          value={typeof value === "string" ? value : null}
           onChange={(next) => emit(next?.toString() ?? null)}
           isDisabled={disabled}
         />

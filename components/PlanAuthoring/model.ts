@@ -130,3 +130,19 @@ export function computeProgress(
 
   return { answeredQuestions, totalQuestions, percentComplete };
 }
+
+export function collectLockedGuidanceOrgIds(
+  sections: PlanSectionDefinition[]
+): string[] {
+  const locked = new Set<string>();
+  sections.forEach((section) => {
+    section.questions.forEach((question) => {
+      question.guidanceSources.forEach((source) => {
+        if (source.locked) {
+          locked.add(source.id);
+        }
+      });
+    });
+  });
+  return Array.from(locked);
+}
