@@ -29,8 +29,11 @@ const font_sans_serif = Poppins({
 
 export const metadata: Metadata = {
   icons: {
-    icon: `https://${process.env.CDN_ENDPOINT}/logos/ror.org/03yrm5c26/cdl.jpeg`
-  }
+    icon: {
+      url: `https://${process.env.CDN_ENDPOINT}/logos/ror.org/03yrm5c26/cdl.jpeg`,
+      type: 'image/jpeg',
+    },
+  },
 };
 
 export default async function LocaleLayout({
