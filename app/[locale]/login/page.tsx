@@ -134,7 +134,6 @@ const LoginPage: React.FC = () => {
 
   useEffect(() => {
     document.title = `${t('pageTitle')} | DMPTool`;
-    window.scrollTo(0, 0);
   }, []);
 
   return (

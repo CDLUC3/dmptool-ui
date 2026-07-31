@@ -240,7 +240,6 @@ const SignUpPage: React.FC = () => {
   useEffect(() => {
     const pageTitle = (step === "email") ? t('register') : t('createAccount');
     document.title = `${pageTitle} | DMPTool`;
-    window.scrollTo(0, 0);
   }, [step]);
 
   return (
