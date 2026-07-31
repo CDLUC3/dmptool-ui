@@ -132,6 +132,10 @@ const LoginPage: React.FC = () => {
     }
   }, [step]);
 
+  useEffect(() => {
+    document.title = `${t('pageTitle')} | DMPTool`;
+  }, []);
+
   return (
     <LayoutContainer className="auth-container">
       <ContentContainer className="auth-card">
