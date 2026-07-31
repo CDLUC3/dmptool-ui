@@ -74,6 +74,7 @@ export default function PlanQuestion({
       id={questionAnchorId(question.identity)}
       className={[styles.planQuestion, className].filter(Boolean).join(" ")}
       aria-labelledby={`${questionAnchorId(question.identity)}-title`}
+      data-resized={heightPx !== null}
       style={heightPx ? { height: `${heightPx}px` } : undefined}
     >
       <div className={styles.planQuestionBody}>

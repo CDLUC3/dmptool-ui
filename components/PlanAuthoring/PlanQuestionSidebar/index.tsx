@@ -2,6 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import { Button } from "react-aria-components";
+import { DmpIcon } from "@/components/Icons";
 import SafeHtml from "@/components/SafeHtml";
 import type { PlanComment, PlanGuidanceSource } from "../model";
 import PlanGuidanceTabs from "../PlanGuidanceTabs";
@@ -129,7 +130,15 @@ export default function PlanQuestionSidebar({
           }
         }}
       >
-        Comments
+        <span className={styles.commentsTabLabel}>
+          <DmpIcon
+            icon="chat"
+            width={16}
+            height={16}
+            fill="currentColor"
+          />
+          Comments
+        </span>
         {unreadCount ? (
           <span className={styles.commentsCount}>{unreadCount} new</span>
         ) : null}
