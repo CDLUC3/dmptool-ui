@@ -1,6 +1,7 @@
 'use client'
 
 import { useTranslations } from 'next-intl';
+import PageHeader from '@/components/PageHeader';
 import { ContentContainer, LayoutContainer } from '@/components/Container';
 import PageLinkCard, { PageLinkSection } from '@/components/PageLinkCard';
 import { routePath } from '@/utils/routes';
@@ -43,12 +44,18 @@ const Home = () => {
   ];
 
   return (
-    <LayoutContainer>
-      <ContentContainer>
-        <h1>{t('title')}</h1>
-        <PageLinkCard sections={sections} />
-      </ContentContainer>
-    </LayoutContainer>
+    <>
+      <PageHeader
+        title={t('title')}
+        showBackButton={false}
+        className="page-template-list"
+      />
+      <LayoutContainer>
+        <ContentContainer>
+          <PageLinkCard sections={sections} />
+        </ContentContainer>
+      </LayoutContainer>
+    </>
   )
 }
 
