@@ -1,3 +1,4 @@
+import { type TransitionStartFunction } from "react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import classNames from "classnames";
@@ -9,7 +10,7 @@ import { toTitleCase } from "@/utils/general";
 import { DmpIcon } from "@/components/Icons";
 
 interface TemplateSelectListItemProps {
-  onSelect?: (versionedTemplateId: number) => Promise<void>;
+  onSelect?: (versionedTemplateId: number, startTransition: TransitionStartFunction) => Promise<void>;
   item: {
     id?: number | null;
     link?: string | null;
@@ -136,9 +137,9 @@ function TemplateSelectListItem({ item, onSelect }: TemplateSelectListItemProps)
           {onSelect ? (
             <TransitionButton
               className="primary"
-              onPress={async () => {
+              onPress={async ({ startTransition }) => {
                 if (typeof item?.id === "number") {
-                  await onSelect(item.id);
+                  await onSelect(item.id, startTransition);
                 } else {
                   toastState.add("Invalid template", { type: "error" });
                 }

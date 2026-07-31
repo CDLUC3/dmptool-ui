@@ -1,6 +1,11 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import {
+  useEffect,
+  useRef,
+  useState,
+  type TransitionStartFunction
+} from 'react';
 import { useMutation, useQuery } from '@apollo/client/react';
 import { useTranslations } from 'next-intl';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
@@ -32,7 +37,8 @@ import {
   FormInput,
   FormTextArea,
   DateComponent,
-  RadioGroupComponent
+  RadioGroupComponent,
+  TransitionButton
 } from "@/components/Form";
 
 import ErrorMessages from '@/components/ErrorMessages';
@@ -226,9 +232,7 @@ const ProjectsProjectDetail = () => {
   }
 
   // Handle form submit
-  const handleFormSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-
+  const handleFormSubmit = async ({ startTransition }: { startTransition: TransitionStartFunction }) => {
     // Clear previous error messages
     clearAllFieldErrors();
     setErrors([]);
@@ -238,7 +242,6 @@ const ProjectsProjectDetail = () => {
       const [errors, success] = await updateProject();
 
       if (!success) {
-
         if (errors) {
           setFieldErrors({
             projectName: errors.title || '',
@@ -251,12 +254,16 @@ const ProjectsProjectDetail = () => {
         // Show success message
         showSuccessToast();
 
+        // router.push calls now run synchronously inside startTransition,
+        // so TransitionButton's isPending correctly tracks the real navigation.
         if (fromOverview) {
-          // If navigated from Project Overview, return user to the page
-          router.push(routePath('projects.show', { projectId }));
+          startTransition(() => {
+            router.push(routePath('projects.show', { projectId }));
+          });
         } else {
-          // Redirect to the DMP start page
-          router.push(routePath('projects.dmp.start', { projectId }))
+          startTransition(() => {
+            router.push(routePath('projects.dmp.start', { projectId }));
+          });
         }
       }
     }
@@ -328,7 +335,7 @@ const ProjectsProjectDetail = () => {
       <LayoutContainer>
         <ContentContainer>
           <ErrorMessages errors={errors} ref={errorRef} />
-          <Form onSubmit={handleFormSubmit} className="project-detail-form">
+          <Form onSubmit={(e) => e.preventDefault()} className="project-detail-form">
             <FormInput
               name="projectName"
               type="text"
@@ -412,12 +419,14 @@ const ProjectsProjectDetail = () => {
             </div>
 
             {!isReadOnly ? (
-              <Button
+              <TransitionButton
                 type="submit"
                 className="submit-button"
+                onPress={handleFormSubmit}
+                loadingLabel={Global('buttons.saving')}
               >
                 {Global('buttons.save')}
-              </Button>
+              </TransitionButton>
             ) : (
               <DialogTrigger>
                 <Button

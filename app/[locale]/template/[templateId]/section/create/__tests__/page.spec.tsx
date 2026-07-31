@@ -211,11 +211,6 @@ describe("CreateSectionPage", () => {
     expect(screen.getByText('helpText.sectionIntroduction')).toBeInTheDocument();
     expect(screen.getByText('helpText.sectionRequirements')).toBeInTheDocument();
     expect(screen.getByText('helpText.sectionGuidance')).toBeInTheDocument();
-
-    const tagsHeader = screen.getByText('labels.bestPracticeTags');
-    expect(tagsHeader).toBeInTheDocument();
-    const checkboxLabels = screen.getAllByTestId('checkboxLabel');
-    expect(checkboxLabels).toHaveLength(11);
   });
 
   it('should display error when no value is entered in section name field', async () => {
@@ -253,16 +248,6 @@ describe("CreateSectionPage", () => {
 
     const sectionNameInput = screen.getByRole('textbox', { name: /sectionName/i });
     fireEvent.change(sectionNameInput, { target: { value: 'Test Section' } });
-
-    // Test checkboxes
-    const dataDescriptionCheckbox = screen.getByRole('checkbox', { name: /data description/i });
-    fireEvent.click(dataDescriptionCheckbox);
-
-    expect(dataDescriptionCheckbox).toBeChecked();
-
-    // Test if I check the box again
-    const dataDescriptionCheckboxSecondTime = screen.getByRole('checkbox', { name: /data description/i });
-    fireEvent.click(dataDescriptionCheckboxSecondTime);
 
     const createButton = screen.getByRole('button', { name: /button.createSection/i });
     fireEvent.click(createButton);

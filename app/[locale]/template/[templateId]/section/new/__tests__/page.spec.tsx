@@ -1,9 +1,10 @@
-import React from "react";
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { act, fireEvent, render, screen, waitFor } from '@/utils/test-utils';
 import { useMutation, useLazyQuery } from '@apollo/client/react';
 import {
   AddSectionDocument,
   PublishedSectionsDocument,
+  TemplateDocument,
 } from '@/generated/graphql';
 import { axe, toHaveNoViolations } from 'jest-axe';
 import { useParams, useRouter } from 'next/navigation';
@@ -55,7 +56,6 @@ const setupMocks = () => {
 
   mockUseLazyQuery.mockImplementation((document) => {
     if (document === PublishedSectionsDocument) {
-      /* eslint-disable-next-line  @typescript-eslint/no-explicit-any */
       return stablePublishedSectionReturn as any;
     }
 
@@ -72,10 +72,8 @@ const setupMocks = () => {
 
   mockUseMutation.mockImplementation((document) => {
     if (document === AddSectionDocument) {
-      /* eslint-disable-next-line  @typescript-eslint/no-explicit-any */
       return [mockAddSectionFn, { loading: false, error: undefined }] as any;
     }
-    /* eslint-disable-next-line  @typescript-eslint/no-explicit-any */
     return [jest.fn(), { loading: false, error: undefined }] as any;
   });
 };
@@ -110,7 +108,6 @@ describe("SectionTypeSelectPage", () => {
 
     mockUseLazyQuery.mockImplementation((document) => {
       if (document === PublishedSectionsDocument) {
-        /* eslint-disable-next-line  @typescript-eslint/no-explicit-any */
         return stablePublishedSectionReturn as any;
       }
 
@@ -143,7 +140,6 @@ describe("SectionTypeSelectPage", () => {
 
     mockUseLazyQuery.mockImplementation((document) => {
       if (document === PublishedSectionsDocument) {
-        /* eslint-disable-next-line  @typescript-eslint/no-explicit-any */
         return stablePublishedSectionReturn as any;
       }
 
@@ -241,22 +237,16 @@ describe("SectionTypeSelectPage", () => {
 
     mockUseMutation.mockImplementation((document) => {
       if (document === AddSectionDocument) {
-        /* eslint-disable-next-line  @typescript-eslint/no-explicit-any */
         return [mockAddSection, { loading: false, error: undefined }] as any;
       }
-      /* eslint-disable-next-line  @typescript-eslint/no-explicit-any */
       return [jest.fn(), { loading: false, error: undefined }] as any;
     });
 
     await act(async () => {
-      render(
-        <SectionTypeSelectPage />
-      );
+      render(<SectionTypeSelectPage />);
     });
 
-    // Find the select button for a specific section (e.g., "Best Practice section I")
     const selectButtons = screen.getAllByRole('button', { name: 'buttons.select' });
-    // Adjust index if needed to target the correct section
     fireEvent.click(selectButtons[selectButtons.length - 1]);
 
     await waitFor(() => {
@@ -267,7 +257,10 @@ describe("SectionTypeSelectPage", () => {
             copyFromVersionedSectionId: 217,
             name: "Best Practice section I",
           }
-        }
+        },
+        refetchQueries: [
+          { query: TemplateDocument, variables: { templateId: 123 } }
+        ]
       });
     });
   });
@@ -286,7 +279,6 @@ describe("SectionTypeSelectPage", () => {
 
     mockUseLazyQuery.mockImplementation((document) => {
       if (document === PublishedSectionsDocument) {
-        /* eslint-disable-next-line  @typescript-eslint/no-explicit-any */
         return stablePublishedSectionReturn as any;
       }
 
@@ -433,10 +425,8 @@ describe("SectionTypeSelectPage", () => {
 
     mockUseMutation.mockImplementation((document) => {
       if (document === AddSectionDocument) {
-        /* eslint-disable-next-line  @typescript-eslint/no-explicit-any */
         return [mockAddSection, { loading: false, error: undefined }] as any;
       }
-      /* eslint-disable-next-line  @typescript-eslint/no-explicit-any */
       return [jest.fn(), { loading: false, error: undefined }] as any;
     });
 
@@ -472,10 +462,8 @@ describe("SectionTypeSelectPage", () => {
 
     mockUseMutation.mockImplementation((document) => {
       if (document === AddSectionDocument) {
-        /* eslint-disable-next-line  @typescript-eslint/no-explicit-any */
         return [mockAddSection, { loading: false, error: undefined }] as any;
       }
-      /* eslint-disable-next-line  @typescript-eslint/no-explicit-any */
       return [jest.fn(), { loading: false, error: undefined }] as any;
     });
 
@@ -506,10 +494,8 @@ describe("SectionTypeSelectPage", () => {
 
     mockUseMutation.mockImplementation((document) => {
       if (document === AddSectionDocument) {
-        /* eslint-disable-next-line  @typescript-eslint/no-explicit-any */
         return [mockAddSection, { loading: false, error: undefined }] as any;
       }
-      /* eslint-disable-next-line  @typescript-eslint/no-explicit-any */
       return [jest.fn(), { loading: false, error: undefined }] as any;
     });
 
@@ -535,10 +521,8 @@ describe("SectionTypeSelectPage", () => {
 
     mockUseMutation.mockImplementation((document) => {
       if (document === AddSectionDocument) {
-        /* eslint-disable-next-line  @typescript-eslint/no-explicit-any */
         return [mockAddSection, { loading: false, error: undefined }] as any;
       }
-      /* eslint-disable-next-line  @typescript-eslint/no-explicit-any */
       return [jest.fn(), { loading: false, error: undefined }] as any;
     });
 

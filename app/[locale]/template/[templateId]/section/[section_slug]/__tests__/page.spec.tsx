@@ -259,10 +259,6 @@ describe("SectionUpdatePage", () => {
     expect(sectionRequirementsLabel).toBeInTheDocument();
     const sectionGuidanceLabel = screen.getByLabelText(/sectionGuidance/i);
     expect(sectionGuidanceLabel).toBeInTheDocument();
-    const tagsHeader = screen.getByText('labels.bestPracticeTags');
-    expect(tagsHeader).toBeInTheDocument();
-    const checkboxLabels = screen.getAllByTestId('checkboxLabel');
-    expect(checkboxLabels).toHaveLength(11);
 
     // Check for the help text
     expect(screen.getByText('helpText.sectionIntroduction')).toBeInTheDocument();

@@ -429,7 +429,8 @@
       "questionText": "Keep the question text concise and clear. Use the requirements or guidance to provide additional explanation.",
       "requirementText": "Use this for specific instructions on what researchers are required to include in their answer, such as what properties of their data they should be listing.",
       "guidanceText": "Let researchers know how to best provide answers to the requirements, such as policies to consider from your organization or what factors to consider.",
-      "sampleText": "Plan creators will be able to copy the sample text into the field as a starting point, to speed up content entry."
+      "sampleText": "Plan creators will be able to copy the sample text into the field as a starting point, to speed up content entry.",
+      "bestPracticeTagsDesc": "Select one or more tags to associate global best practice guidance written by DMP Tool."
     },
     "labels": {
       "type": "Type",
@@ -437,7 +438,8 @@
       "requirementText": "Question requirements (optional but recommended)",
       "guidanceText": "Question guidance (optional but recommended)",
       "sampleText": "Sample text",
-      "comment": "Additional comment"
+      "comment": "Additional comment",
+      "bestPracticeTags": "Question Best Practices to include"
     },
     "messages": {
       "areYouSureYouWantToDelete": "Are you sure you want to delete this research output?",
@@ -589,7 +591,8 @@
       "displayAdditionalCommentField": "Display additional comment area",
       "additionalCommentBox": "Additional comment box",
       "showCommentField": "Show a comment field where plan writers can explain their answer",
-      "doNotShowCommentField": "Do not add a comment field"
+      "doNotShowCommentField": "Do not add a comment field",
+      "bestPracticeTags": "Question Best Practices to include"
     },
     "buttons": {
       "addRow": "Add Row",
@@ -607,7 +610,8 @@
       "sampleText": "Plan creators will be able to copy the sample text into the field as a starting point, to speed up content entry.",
       "dataFlags": "Mark all of the statements that are true about the dataset",
       "preferredRepositories": "These repositories were set by the template creator as preferred repositories to use.",
-      "preferredMetadataStandards": "These metadata standards were set by the template creator as preferred metadata standards to use."
+      "preferredMetadataStandards": "These metadata standards were set by the template creator as preferred metadata standards to use.",
+      "bestPracticeTagsDesc": "Select one or more tags to associate global best practice guidance written by DMP Tool."
     },
     "headings": {
       "bestPractice": "Best practice by DMP Tool",

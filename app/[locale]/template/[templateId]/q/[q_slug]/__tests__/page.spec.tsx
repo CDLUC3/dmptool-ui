@@ -491,7 +491,8 @@ describe("QuestionEditPage", () => {
         guidanceText: "This is the guidance text",
         sampleText: "This is sample text",
         useSampleTextAsDefault: false,
-        required: false
+        required: false,
+        tags: []
       })
     });
   });
@@ -628,7 +629,8 @@ describe("QuestionEditPage", () => {
         guidanceText: 'This is the guidance text',
         sampleText: 'This is sample text',
         useSampleTextAsDefault: false,
-        required: false
+        required: false,
+        tags: []
       },
       );
     });
@@ -1413,7 +1415,8 @@ describe("QuestionEditPage", () => {
           guidanceText: 'This is the guidance text',
           sampleText: 'This is sample text',
           useSampleTextAsDefault: false,
-          required: false
+          required: false,
+          tags: []
         },
         );
       });
@@ -1817,7 +1820,8 @@ describe('Options questions', () => {
         guidanceText: 'This is the guidance text',
         sampleText: 'This is sample text',
         useSampleTextAsDefault: false,
-        required: false
+        required: false,
+        tags: []
       },
       );
     });
