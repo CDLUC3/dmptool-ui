@@ -31,6 +31,7 @@ export default getRequestConfig(async ({ requestLocale }) => {
     const questionPreviewMsgs = (await import(`@/messages/${localeToLoad}/questionPreview.json`)).default;
     const questionViewMsgs = (await import(`@/messages/${localeToLoad}/questionView.json`)).default;
     const relatedWorksMsgs = (await import(`@/messages/${localeToLoad}/relatedWorks.json`)).default;
+    const planAuthoringMsgs = (await import(`@/messages/${localeToLoad}/planAuthoring.json`)).default;
 
     // Merge all message objects
     return {
@@ -44,6 +45,7 @@ export default getRequestConfig(async ({ requestLocale }) => {
       ...questionPreviewMsgs,
       ...questionViewMsgs,
       ...relatedWorksMsgs,
+      ...planAuthoringMsgs,
       errors: errorMessages,
     };
   };

@@ -1,11 +1,12 @@
 "use client";
 
 import React from "react";
+import { useTranslations } from "next-intl";
 import { Button } from "react-aria-components";
 import type { PlanSectionDefinition } from "../model";
 import { sectionKey } from "../model";
 import { useSectionPickerShortcutLabel } from "../useSectionPickerShortcut";
-import styles from "../PlanAuthoring.module.scss";
+import styles from "./PlanSectionNavigation.module.scss";
 
 interface PlanSectionNavigationProps {
   sections: PlanSectionDefinition[];
@@ -27,6 +28,7 @@ export default function PlanSectionNavigation({
   onSelectSection,
   className,
 }: PlanSectionNavigationProps) {
+  const t = useTranslations("PlanAuthoring");
   const shortcutLabel = useSectionPickerShortcutLabel();
   const progressPercent =
     sections.length === 0
@@ -40,30 +42,30 @@ export default function PlanSectionNavigation({
   return (
     <nav
       className={[styles.sectionNavigation, className].filter(Boolean).join(" ")}
-      aria-label="Plan sections"
+      aria-label={t("sectionNav.ariaLabel")}
     >
       <div className={styles.sectionNavigationRow}>
         <div className={styles.sectionNavigationMeta}>
           <p className={styles.sectionMetaLine}>
-            <span className={styles.eyebrow}>Section</span>
+            <span className={styles.eyebrow}>{t("sectionNav.section")}</span>
             <span className={styles.sectionCount}>
               <span className={styles.tabular}>
                 {Math.max(activeIndex, 0) + 1}
               </span>{" "}
-              of {sections.length}
+              {t("sectionNav.ofTotal", { total: sections.length })}
             </span>
           </p>
           <Button
             className={styles.sectionNameButton}
             onPress={onOpenPicker}
-            aria-label="Open section picker"
+            aria-label={t("sectionNav.openPickerAria")}
           >
             <span className={styles.sectionName}>
-              {activeSection?.title ?? "Select a section"}
+              {activeSection?.title ?? t("sectionNav.selectASection")}
             </span>
           </Button>
           <p className={styles.hint}>
-            Click section title to jump · {shortcutLabel}
+            {t("sectionNav.clickTitleHint", { shortcut: shortcutLabel })}
           </p>
         </div>
         <div
@@ -71,14 +73,18 @@ export default function PlanSectionNavigation({
           aria-live="polite"
         >
           {activeSection
-            ? `Current section ${activeIndex + 1} of ${sections.length}: ${activeSection.title}`
-            : "No section selected"}
+            ? t("sectionNav.currentSectionAria", {
+                index: activeIndex + 1,
+                total: sections.length,
+                title: activeSection.title,
+              })
+            : t("sectionNav.noSectionSelected")}
         </div>
         <Button
           className={styles.switchSectionButton}
           onPress={onOpenPicker}
         >
-          <span aria-hidden="true">⇅</span> Jump to section…
+          <span aria-hidden="true">⇅</span> {t("sectionNav.jumpToSection")}
         </Button>
       </div>
       <div
@@ -113,7 +119,10 @@ export default function PlanSectionNavigation({
                   "--segment-fill": `${fillPercent}%`,
                 } as React.CSSProperties
               }
-              aria-label={`Go to section ${index + 1}: ${section.title}`}
+              aria-label={t("sectionNav.goToSectionAria", {
+                index: index + 1,
+                title: section.title,
+              })}
               aria-current={isActive ? "true" : undefined}
               title={`${index + 1}. ${section.title}`}
               onClick={() => onSelectSection?.(section)}

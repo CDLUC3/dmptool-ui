@@ -1,8 +1,9 @@
 "use client";
 
 import React from "react";
+import { useTranslations } from "next-intl";
 import type { PlanQuestionSaveState } from "../model";
-import styles from "../PlanAuthoring.module.scss";
+import styles from "./PlanQuestionSaveStatus.module.scss";
 
 interface PlanQuestionSaveStatusProps {
   state: PlanQuestionSaveState;
@@ -10,19 +11,21 @@ interface PlanQuestionSaveStatusProps {
   className?: string;
 }
 
-const labels: Record<PlanQuestionSaveState, string> = {
-  clean: "",
-  dirty: "Unsaved changes",
-  saving: "Saving…",
-  saved: "Saved",
-  error: "Save failed",
-};
-
 export default function PlanQuestionSaveStatus({
   state,
   errorMessage,
   className,
 }: PlanQuestionSaveStatusProps) {
+  const t = useTranslations("PlanAuthoring");
+
+  const labels: Record<PlanQuestionSaveState, string> = {
+    clean: "",
+    dirty: t("saveStatus.unsavedChanges"),
+    saving: t("saveStatus.saving"),
+    saved: t("saveStatus.saved"),
+    error: t("saveStatus.saveFailed"),
+  };
+
   const text =
     state === "error" && errorMessage ? errorMessage : labels[state];
 

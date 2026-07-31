@@ -1,12 +1,13 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Button } from "react-aria-components";
 import { DmpIcon } from "@/components/Icons";
 import SafeHtml from "@/components/SafeHtml";
 import type { PlanQuestionDefinition } from "../model";
 import { questionAnchorId } from "../model";
-import styles from "../PlanAuthoring.module.scss";
+import styles from "./PlanQuestionHeader.module.scss";
 
 interface PlanQuestionHeaderProps {
   question: PlanQuestionDefinition;
@@ -17,6 +18,8 @@ export default function PlanQuestionHeader({
   question,
   className,
 }: PlanQuestionHeaderProps) {
+  const t = useTranslations("PlanAuthoring");
+  const Global = useTranslations("Global");
   const [expanded, setExpanded] = useState(false);
   const [overflowing, setOverflowing] = useState(false);
   const requirementRef = useRef<HTMLDivElement | null>(null);
@@ -48,7 +51,7 @@ export default function PlanQuestionHeader({
         {question.hasAnswer ? (
           <span
             className={styles.answeredIcon}
-            aria-label="Answered"
+            aria-label={t("question.answeredAria")}
           >
             <DmpIcon
               icon="check_circle"
@@ -62,7 +65,9 @@ export default function PlanQuestionHeader({
         </h3>
       </div>
       {question.required ? (
-        <span className={styles.requiredBadge}>Required by funder</span>
+        <span className={styles.requiredBadge}>
+          {t("question.requiredByFunder")}
+        </span>
       ) : null}
       {question.requirementHtml ? (
         <>
@@ -79,7 +84,7 @@ export default function PlanQuestionHeader({
               onPress={() => setExpanded((current) => !current)}
               aria-expanded={expanded}
             >
-              {expanded ? "Collapse" : "Expand"}
+              {expanded ? Global("links.collapse") : Global("links.expand")}
             </Button>
           ) : null}
         </>

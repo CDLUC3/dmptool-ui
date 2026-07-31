@@ -1,9 +1,10 @@
 "use client";
 
 import React from "react";
+import { useTranslations } from "next-intl";
 import { Button } from "react-aria-components";
 import type { PlanGuidanceSource } from "../model";
-import styles from "../PlanAuthoring.module.scss";
+import styles from "./PlanGuidanceTabs.module.scss";
 
 interface PlanGuidanceTabsProps {
   sources: PlanGuidanceSource[];
@@ -22,11 +23,13 @@ export default function PlanGuidanceTabs({
   canCustomize = false,
   className,
 }: PlanGuidanceTabsProps) {
+  const t = useTranslations("PlanAuthoring");
+
   return (
     <div
       className={[styles.guidanceTabs, className].filter(Boolean).join(" ")}
       role="tablist"
-      aria-label="Guidance sources"
+      aria-label={t("guidance.sourcesAria")}
     >
       {sources.map((source) => {
         const selected = source.id === selectedId;
@@ -47,7 +50,7 @@ export default function PlanGuidanceTabs({
           className={styles.customizePill}
           onPress={onCustomize}
         >
-          + Customize
+          {t("guidance.customize")}
         </Button>
       ) : null}
     </div>

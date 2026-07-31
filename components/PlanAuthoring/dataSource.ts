@@ -1,4 +1,4 @@
-import { createPlanAuthoringFixture } from "./fixtures";
+import { createPlanAuthoringDemo } from "./demoData";
 import {
   PlanAuthoringModel,
   PlanComment,
@@ -23,7 +23,7 @@ export interface PlanAuthoringDataSource {
   subscribe(listener: () => void): () => void;
 }
 
-export interface FixtureDataSourceOptions {
+export interface DemoDataSourceOptions {
   initialModel?: PlanAuthoringModel;
   failSaveOnce?: boolean;
   delayMs?: number;
@@ -35,12 +35,12 @@ function wait(ms: number): Promise<void> {
   });
 }
 
-export function createPlanAuthoringFixtureDataSource(
-  options: FixtureDataSourceOptions = {}
+export function createPlanAuthoringDemoDataSource(
+  options: DemoDataSourceOptions = {}
 ): PlanAuthoringDataSource {
   const delayMs = options.delayMs ?? 350;
   let model: PlanAuthoringModel = structuredClone(
-    options.initialModel ?? createPlanAuthoringFixture()
+    options.initialModel ?? createPlanAuthoringDemo()
   );
   let failSaveOnce = Boolean(options.failSaveOnce);
   const listeners = new Set<() => void>();

@@ -18,8 +18,8 @@ import {
   computeProgress,
 } from "./model";
 
-// Guidance bodies are WYSIWYG-authored in the admin, so fixtures deliberately
-// mix headings, links, bold/italic, lists, and blockquotes at varying lengths.
+// Guidance bodies are WYSIWYG-authored in the admin, so demo data deliberately
+// mixes headings, links, bold/italic, lists, and blockquotes at varying lengths.
 const NIH_GUIDANCE: PlanGuidanceSource = {
   id: "nih",
   label: "NIH Data Management and Sharing Policy",
@@ -168,7 +168,7 @@ function makeQuestion(
   };
 }
 
-export function createPlanAuthoringFixture(): PlanAuthoringModel {
+export function createPlanAuthoringDemo(): PlanAuthoringModel {
   const sections: PlanSectionDefinition[] = [
     {
       identity: { kind: "base", versionedSectionId: 1 },
@@ -1016,10 +1016,10 @@ export function createPlanAuthoringFixture(): PlanAuthoringModel {
   };
 }
 
-export function createLabQuestionFixture(
+export function createLabQuestionDemo(
   overrides: Partial<PlanQuestionDefinition> = {}
 ): PlanQuestionDefinition {
-  const base = createPlanAuthoringFixture().sections[0].questions[0];
+  const base = createPlanAuthoringDemo().sections[0].questions[0];
   return {
     ...base,
     ...overrides,
@@ -1031,7 +1031,7 @@ export function createLabQuestionFixture(
   };
 }
 
-export function createStressPlanAuthoringFixture(
+export function createStressPlanAuthoringDemo(
   options: { sectionCount?: number; questionsPerSection?: number } | number = {},
   questionsPerSectionArg?: number
 ): PlanAuthoringModel {
@@ -1041,7 +1041,7 @@ export function createStressPlanAuthoringFixture(
     typeof options === "number"
       ? (questionsPerSectionArg ?? 12)
       : (options.questionsPerSection ?? 12);
-  const seed = createPlanAuthoringFixture();
+  const seed = createPlanAuthoringDemo();
   const questionTypeCycle = [
     TEXT_AREA_QUESTION_TYPE,
     TEXT_FIELD_QUESTION_TYPE,
@@ -1128,7 +1128,7 @@ export function createStressPlanAuthoringFixture(
           sectionIndex < seed.sections.length
             ? `${seed.sections[sectionIndex % seed.sections.length].title} (${sectionIndex + 1})`
             : `Generated section ${sectionIndex + 1}`,
-        introductionHtml: `<p>Stress fixture section ${sectionIndex + 1}.</p>`,
+        introductionHtml: `<p>Stress demo section ${sectionIndex + 1}.</p>`,
         displayOrder: sectionIndex + 1,
         questions,
       };
@@ -1137,7 +1137,7 @@ export function createStressPlanAuthoringFixture(
 
   return {
     ...seed,
-    title: `${seed.title} · stress fixture`,
+    title: `${seed.title} · stress demo`,
     progress: computeProgress(sections),
     sections,
   };

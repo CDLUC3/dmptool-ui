@@ -52,7 +52,7 @@ export default function ComponentsPage() {
         {
           title: "Plan Authoring",
           description:
-            "Single-page plan overview components with section navigation, questions, guidance, and fixture-driven states",
+            "Single-page plan overview components with section navigation, questions, guidance, and demo-data states",
           href: "/styleguide/components/plan-authoring",
         },
       ],

@@ -17,13 +17,13 @@ import {
   sectionKey,
 } from "./model";
 import {
-  createLabQuestionFixture,
-  createPlanAuthoringFixture,
-  createStressPlanAuthoringFixture,
-} from "./fixtures";
+  createLabQuestionDemo,
+  createPlanAuthoringDemo,
+  createStressPlanAuthoringDemo,
+} from "./demoData";
 import {
   PlanAuthoringDataSource,
-  createPlanAuthoringFixtureDataSource,
+  createPlanAuthoringDemoDataSource,
 } from "./dataSource";
 
 export type {
@@ -47,10 +47,10 @@ export {
   questionKey,
   sectionAnchorId,
   sectionKey,
-  createLabQuestionFixture,
-  createPlanAuthoringFixture,
-  createStressPlanAuthoringFixture,
-  createPlanAuthoringFixtureDataSource,
+  createLabQuestionDemo,
+  createPlanAuthoringDemo,
+  createStressPlanAuthoringDemo,
+  createPlanAuthoringDemoDataSource,
 };
 
 export { default as PlanAuthoring } from "./PlanAuthoringScreen";

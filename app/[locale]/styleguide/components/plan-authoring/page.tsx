@@ -5,11 +5,11 @@ import Link from "next/link";
 import { ContentContainer, LayoutContainer } from "@/components/Container";
 import {
   PlanAuthoring,
-  createPlanAuthoringFixtureDataSource,
+  createPlanAuthoringDemoDataSource,
 } from "@/components/PlanAuthoring";
 import "../../shared/styleguide.scss";
 
-const dataSource = createPlanAuthoringFixtureDataSource({
+const dataSource = createPlanAuthoringDemoDataSource({
   failSaveOnce: true,
   delayMs: 450,
 });
@@ -31,7 +31,7 @@ export default function PlanAuthoringStyleGuidePage() {
 
         <h1>Plan Authoring</h1>
         <p className="lead">
-          Fixture-driven showcase of the single-page plan authoring UI. Saves,
+          Demo-data showcase of the single-page plan authoring UI. Saves,
           guidance load, comments, and customize guidance are simulated — the
           first Save on any question fails once, then succeeds.
         </p>

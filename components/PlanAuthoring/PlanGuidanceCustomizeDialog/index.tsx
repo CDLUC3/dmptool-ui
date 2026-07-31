@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import {
   Button,
   Dialog,
@@ -13,7 +14,7 @@ import {
 } from "react-aria-components";
 import { DmpIcon } from "@/components/Icons";
 import type { PlanGuidanceOrgOption } from "../model";
-import styles from "../PlanAuthoring.module.scss";
+import styles from "./PlanGuidanceCustomizeDialog.module.scss";
 
 interface PlanGuidanceCustomizeDialogProps {
   isOpen: boolean;
@@ -34,6 +35,8 @@ export default function PlanGuidanceCustomizeDialog({
   onSearch,
   onSave,
 }: PlanGuidanceCustomizeDialogProps) {
+  const t = useTranslations("PlanAuthoring");
+  const Global = useTranslations("Global");
   const [term, setTerm] = useState("");
   const [results, setResults] = useState<PlanGuidanceOrgOption[]>([]);
   const [draftIds, setDraftIds] = useState<string[]>(selectedOrgIds);
@@ -64,7 +67,7 @@ export default function PlanGuidanceCustomizeDialog({
               slot="title"
               className={styles.dialogTitle}
             >
-              Customize Best Practice
+              {t("customizeDialog.title")}
             </Heading>
             <Button
               className={styles.dialogCloseButton}
@@ -76,16 +79,14 @@ export default function PlanGuidanceCustomizeDialog({
                 height={16}
                 fill="currentColor"
               />
-              Close
+              {Global("buttons.close")}
             </Button>
           </div>
 
           <div className={styles.dialogBody}>
             <section className={styles.dialogSection}>
-              <h3>Currently displaying</h3>
-              <p>
-                These sources apply across the plan, not just this question.
-              </p>
+              <h3>{t("customizeDialog.currentlyDisplaying")}</h3>
+              <p>{t("customizeDialog.sourcesApplyAcrossPlan")}</p>
               <ul className={styles.selectedOrgs}>
                 {selectedOrgs.map((org) => {
                   const locked = lockedOrgIds.includes(org.id);
@@ -98,7 +99,7 @@ export default function PlanGuidanceCustomizeDialog({
                       {locked ? (
                         <span
                           className={styles.orgLocked}
-                          title="Required by your organization"
+                          title={t("customizeDialog.requiredByOrganization")}
                         >
                           <DmpIcon
                             icon="lock"
@@ -106,12 +107,16 @@ export default function PlanGuidanceCustomizeDialog({
                             height={13}
                             fill="currentColor"
                           />
-                          <span className="hidden-accessibly">Locked</span>
+                          <span className="hidden-accessibly">
+                            {t("customizeDialog.locked")}
+                          </span>
                         </span>
                       ) : (
                         <Button
                           className={styles.orgChipRemove}
-                          aria-label={`Remove ${org.label}`}
+                          aria-label={t("customizeDialog.removeOrgAria", {
+                            label: org.label,
+                          })}
                           onPress={() =>
                             setDraftIds((current) =>
                               current.filter((id) => id !== org.id)
@@ -133,18 +138,15 @@ export default function PlanGuidanceCustomizeDialog({
             </section>
 
             <section className={styles.dialogSection}>
-              <h3>Add more</h3>
-              <p>
-                Search by research organization, funder name, or related
-                keywords.
-              </p>
+              <h3>{t("customizeDialog.addMore")}</h3>
+              <p>{t("customizeDialog.searchHelp")}</p>
               <div className={styles.searchRow}>
                 <TextField className={styles.searchField}>
-                  <Label>Search by name</Label>
+                  <Label>{t("customizeDialog.searchByName")}</Label>
                   <Input
                     value={term}
                     onChange={(event) => setTerm(event.target.value)}
-                    placeholder="Enter name…"
+                    placeholder={t("customizeDialog.enterNamePlaceholder")}
                     onKeyDown={(event) => {
                       if (event.key === "Enter") {
                         event.preventDefault();
@@ -178,7 +180,9 @@ export default function PlanGuidanceCustomizeDialog({
                   }}
                   isDisabled={searching}
                 >
-                  {searching ? "Searching…" : "Search"}
+                  {searching
+                    ? Global("buttons.searching")
+                    : Global("buttons.search")}
                 </Button>
               </div>
               <ul className={styles.resultsList}>
@@ -199,7 +203,9 @@ export default function PlanGuidanceCustomizeDialog({
                   </li>
                 ))}
                 {!searching && results.length === 0 ? (
-                  <li className={styles.commentsEmpty}>No matching sources.</li>
+                  <li className={styles.emptyMessage}>
+                    {t("customizeDialog.noMatchingSources")}
+                  </li>
                 ) : null}
               </ul>
             </section>
@@ -210,7 +216,7 @@ export default function PlanGuidanceCustomizeDialog({
               className={styles.dialogSecondaryButton}
               onPress={() => onOpenChange(false)}
             >
-              Cancel
+              {Global("buttons.cancel")}
             </Button>
             <Button
               onPress={async () => {
@@ -224,7 +230,9 @@ export default function PlanGuidanceCustomizeDialog({
               }}
               isDisabled={saving}
             >
-              {saving ? "Saving…" : "Save guidance sources"}
+              {saving
+                ? Global("buttons.saving")
+                : t("customizeDialog.saveGuidanceSources")}
             </Button>
           </div>
         </Dialog>

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Button } from "react-aria-components";
 import OverviewSection from "@/components/OverviewSection";
 import {
@@ -20,7 +21,7 @@ import PlanSectionPickerDialog from "../PlanSectionPickerDialog";
 import PlanSection from "../PlanSection";
 import PlanQuestion from "../PlanQuestion";
 import PlanGuidanceCustomizeDialog from "../PlanGuidanceCustomizeDialog";
-import styles from "../PlanAuthoring.module.scss";
+import styles from "./PlanAuthoringScreen.module.scss";
 
 interface PlanAuthoringProps {
   dataSource: PlanAuthoringDataSource;
@@ -31,6 +32,8 @@ export default function PlanAuthoring({
   dataSource,
   className,
 }: PlanAuthoringProps) {
+  const t = useTranslations("PlanAuthoring");
+  const Global = useTranslations("Global");
   const [model, setModel] = useState<PlanAuthoringModel>(() =>
     dataSource.getModel()
   );
@@ -73,38 +76,40 @@ export default function PlanAuthoring({
               <div className={styles.planTitleBlock}>
                 <h1 className={styles.planTitle}>{model.title}</h1>
                 <p className={styles.planTemplateMeta}>
-                  This plan is based on the &ldquo;{model.templateName}&rdquo;
-                  provided by {model.funderName} — Version:{" "}
-                  {model.templateVersion}.
+                  {t("screen.basedOn", {
+                    template: model.templateName,
+                    funder: model.funderName,
+                    version: model.templateVersion,
+                  })}
                 </p>
               </div>
               <div className="project-overview">
                 <OverviewSection
-                  heading="Funding for this plan"
+                  heading={t("screen.fundingTitle")}
                   headingId="plan-authoring-funding"
                   linkHref="#"
-                  linkText="Adjust for this plan"
-                  linkAriaLabel="Adjust funding for this plan"
+                  linkText={t("screen.adjustForPlan")}
+                  linkAriaLabel={t("screen.adjustFundingAria")}
                   includeLink={false}
                 >
                   <p>{model.funderName}</p>
                 </OverviewSection>
                 <OverviewSection
-                  heading="Plan members for this plan"
+                  heading={t("screen.membersTitle")}
                   headingId="plan-authoring-members"
                   linkHref="#"
-                  linkText="Adjust for this plan"
-                  linkAriaLabel="Adjust members for this plan"
+                  linkText={t("screen.adjustForPlan")}
+                  linkAriaLabel={t("screen.adjustMembersAria")}
                   includeLink={false}
                 >
                   <p>{model.membersLabel}</p>
                 </OverviewSection>
                 <OverviewSection
-                  heading="Related works for this plan"
+                  heading={t("screen.relatedWorksTitle")}
                   headingId="plan-authoring-related-works"
                   linkHref="#"
-                  linkText="Adjust for this plan"
-                  linkAriaLabel="Adjust related works for this plan"
+                  linkText={t("screen.adjustForPlan")}
+                  linkAriaLabel={t("screen.adjustRelatedWorksAria")}
                   includeLink={false}
                 >
                   <p>{model.relatedWorksLabel}</p>
@@ -120,16 +125,16 @@ export default function PlanAuthoring({
                   className="react-aria-Button react-aria-Button--secondary"
                   isDisabled
                 >
-                  Preview
+                  {Global("buttons.preview")}
                 </Button>
                 <Button isDisabled={!model.capabilities.canPublish}>
-                  Publish
+                  {Global("buttons.publish")}
                 </Button>
               </div>
               <div className="side-panel-content">
                 <div className="panelRow mb-5">
                   <div>
-                    <h3>Template</h3>
+                    <h3>{t("screen.template")}</h3>
                     <p>
                       {model.templateName} · {model.templateVersion}
                     </p>
@@ -137,14 +142,18 @@ export default function PlanAuthoring({
                 </div>
                 <div className="panelRow mb-5">
                   <div>
-                    <h3>Affiliation</h3>
+                    <h3>{t("screen.affiliation")}</h3>
                     <p>{model.affiliationName}</p>
                   </div>
                 </div>
                 <div className="panelRow mb-5">
                   <div>
-                    <h3>Progress</h3>
-                    <p>{model.progress.percentComplete}% complete</p>
+                    <h3>{t("screen.progress")}</h3>
+                    <p>
+                      {t("screen.percentComplete", {
+                        percent: model.progress.percentComplete,
+                      })}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -154,15 +163,13 @@ export default function PlanAuthoring({
 
         <FullWidthSection className={styles.writePlanRegion}>
           <div className={styles.writePlanIntro}>
-            <h2>Write your plan</h2>
-            <p>
-              Work through each section below — answers save automatically. Use
-              Jump to section or the section title above to move between
-              sections.
-            </p>
+            <h2>{t("screen.writeYourPlan")}</h2>
+            <p>{t("screen.writePlanIntro")}</p>
             <p className={styles.progressSummary}>
-              {model.progress.answeredQuestions} of{" "}
-              {model.progress.totalQuestions} questions answered
+              {t("screen.questionsAnswered", {
+                answered: model.progress.answeredQuestions,
+                total: model.progress.totalQuestions,
+              })}
               <span>
                 {" "}
                 · {model.progress.percentComplete}%

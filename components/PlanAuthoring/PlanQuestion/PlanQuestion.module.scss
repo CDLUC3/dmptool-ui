@@ -1,0 +1,94 @@
+.planQuestion {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
+  scroll-margin-top: 6rem;
+  min-height: 0;
+}
+
+.planQuestionBody {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 20rem;
+  flex: 1;
+  min-height: 0;
+}
+
+.planQuestionMain {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+  padding: 1.5rem;
+}
+
+.questionActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: auto;
+  padding-top: 0.25rem;
+}
+
+.resizeHandle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  height: 22px;
+  cursor: ns-resize;
+  user-select: none;
+  touch-action: none;
+  background: #f7f7f8;
+  border-top: 1px solid var(--border-color-subtle);
+  color: var(--gray-600);
+  font-size: 0.6875rem;
+  font-weight: 500;
+
+  &:hover,
+  &:focus-visible {
+    background: rgba(100, 116, 139, 0.15);
+    color: var(--blue-900);
+    outline: none;
+  }
+}
+
+.resizeGrip {
+  width: 34px;
+  height: 4px;
+  border-radius: 999px;
+  background: #9aa0aa;
+}
+
+.resizeLabel {
+  letter-spacing: 0.02em;
+}
+
+@media (min-width: 1400px) {
+  .planQuestionBody {
+    grid-template-columns: minmax(0, 1fr) 30rem;
+  }
+}
+
+@media (max-width: 1023px) {
+  .planQuestionBody {
+    grid-template-columns: 1fr;
+  }
+
+  .resizeLabel {
+    display: none;
+  }
+}
+
+@media (max-width: 767px) {
+  .planQuestionMain {
+    padding: 1rem;
+  }
+}

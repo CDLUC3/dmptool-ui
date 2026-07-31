@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import type { PlanAuthoringDataSource } from "./dataSource";
 import type { PlanQuestionMode, PlanQuestionSaveState } from "./model";
 
@@ -29,6 +30,7 @@ export function usePlanQuestionController({
   canEdit,
   autosaveMs = 1200,
 }: UsePlanQuestionControllerArgs): UsePlanQuestionControllerResult {
+  const t = useTranslations("PlanAuthoring");
   const [mode, setMode] = useState<PlanQuestionMode>(
     canEdit ? "editing" : "view"
   );
@@ -84,7 +86,7 @@ export function usePlanQuestionController({
 
     if (!result.success) {
       setSaveState("error");
-      setErrorMessage(result.error ?? "Unable to save answer.");
+      setErrorMessage(result.error ?? t("saveStatus.unableToSave"));
       if (queuedRef.current) {
         queuedRef.current = false;
       }
@@ -99,7 +101,7 @@ export function usePlanQuestionController({
     }
 
     return true;
-  }, [canEdit, dataSource, questionKeyValue]);
+  }, [canEdit, dataSource, questionKeyValue, t]);
 
   const setDraftAnswer = useCallback(
     (answer: unknown) => {

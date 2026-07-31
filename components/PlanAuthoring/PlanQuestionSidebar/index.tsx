@@ -1,13 +1,14 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Button } from "react-aria-components";
 import { DmpIcon } from "@/components/Icons";
 import SafeHtml from "@/components/SafeHtml";
 import type { PlanComment, PlanGuidanceSource } from "../model";
 import PlanGuidanceTabs from "../PlanGuidanceTabs";
 import PlanComments from "../PlanComments";
-import styles from "../PlanAuthoring.module.scss";
+import styles from "./PlanQuestionSidebar.module.scss";
 
 interface PlanQuestionSidebarProps {
   sources: PlanGuidanceSource[];
@@ -32,6 +33,7 @@ export default function PlanQuestionSidebar({
   onCustomize,
   className,
 }: PlanQuestionSidebarProps) {
+  const t = useTranslations("PlanAuthoring");
   const [selectedId, setSelectedId] = useState<string | null>(
     sources[0]?.id ?? null
   );
@@ -63,7 +65,7 @@ export default function PlanQuestionSidebar({
   return (
     <aside
       className={[styles.questionSidebar, className].filter(Boolean).join(" ")}
-      aria-label="Question guidance and comments"
+      aria-label={t("sidebar.ariaLabel")}
     >
       <div className={styles.sidebarInner}>
         <PlanGuidanceTabs
@@ -87,10 +89,10 @@ export default function PlanQuestionSidebar({
 
         {activeTab === "guidance" ? (
           <div className={styles.guidancePanel}>
-            {loadingGuidance ? <p>Loading guidance…</p> : null}
+            {loadingGuidance ? <p>{t("sidebar.loadingGuidance")}</p> : null}
             {selectedSource ? (
               <>
-                <p className={styles.eyebrow}>Funder guidance</p>
+                <p className={styles.eyebrow}>{t("sidebar.funderGuidance")}</p>
                 <h4>{selectedSource.label}</h4>
                 <SafeHtml
                   html={selectedSource.bodyHtml}
@@ -98,7 +100,7 @@ export default function PlanQuestionSidebar({
                 />
               </>
             ) : (
-              <p>Select a guidance source.</p>
+              <p>{t("sidebar.selectGuidanceSource")}</p>
             )}
           </div>
         ) : (
@@ -106,7 +108,10 @@ export default function PlanQuestionSidebar({
             comments={loadedComments ?? comments}
             canAdd={canComment}
             loading={loadingComments}
-            onAdd={onAddComment}
+            onAdd={async (text) => {
+              await onAddComment(text);
+              setLoadedComments(await loadComments());
+            }}
           />
         )}
       </div>
@@ -137,10 +142,12 @@ export default function PlanQuestionSidebar({
             height={16}
             fill="currentColor"
           />
-          Comments
+          {t("sidebar.comments")}
         </span>
         {unreadCount ? (
-          <span className={styles.commentsCount}>{unreadCount} new</span>
+          <span className={styles.commentsCount}>
+            {t("sidebar.newCount", { count: unreadCount })}
+          </span>
         ) : null}
       </Button>
     </aside>

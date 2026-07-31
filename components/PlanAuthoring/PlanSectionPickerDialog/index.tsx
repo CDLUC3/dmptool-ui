@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import {
   Button,
   Dialog,
@@ -11,7 +12,7 @@ import {
 import type { PlanSectionDefinition } from "../model";
 import { sectionKey } from "../model";
 import { useSectionPickerShortcutLabel } from "../useSectionPickerShortcut";
-import styles from "../PlanAuthoring.module.scss";
+import styles from "./PlanSectionPickerDialog.module.scss";
 
 interface PlanSectionPickerDialogProps {
   isOpen: boolean;
@@ -28,6 +29,8 @@ export default function PlanSectionPickerDialog({
   activeSectionKey,
   onSelect,
 }: PlanSectionPickerDialogProps) {
+  const t = useTranslations("PlanAuthoring");
+  const Global = useTranslations("Global");
   const [term, setTerm] = useState("");
   const [highlightedIndex, setHighlightedIndex] = useState(0);
   const listRef = useRef<HTMLUListElement | null>(null);
@@ -128,7 +131,7 @@ export default function PlanSectionPickerDialog({
     >
       <Modal className={styles.pickerModal}>
         <Dialog
-          aria-label="Switch section"
+          aria-label={t("sectionPicker.switchSectionAria")}
           className={styles.picker}
         >
           <div className={styles.pickerSearchRow}>
@@ -143,8 +146,8 @@ export default function PlanSectionPickerDialog({
               value={term}
               onChange={(event) => setTerm(event.target.value)}
               onKeyDown={onSearchKeyDown}
-              placeholder="Search sections…"
-              aria-label="Search sections"
+              placeholder={t("sectionPicker.searchPlaceholder")}
+              aria-label={t("sectionPicker.searchAria")}
               aria-activedescendant={
                 filtered[highlightedIndex]
                   ? `picker-option-${sectionKey(filtered[highlightedIndex].identity)}`
@@ -154,7 +157,7 @@ export default function PlanSectionPickerDialog({
             />
             <Button
               className={styles.pickerCloseButton}
-              aria-label="Close"
+              aria-label={Global("buttons.close")}
               onPress={close}
             >
               ×
@@ -207,7 +210,9 @@ export default function PlanSectionPickerDialog({
                       {answered}/{total}
                     </span>
                     {isCurrent ? (
-                      <span className={styles.pickerCurrentBadge}>Current</span>
+                      <span className={styles.pickerCurrentBadge}>
+                        {t("sectionPicker.current")}
+                      </span>
                     ) : (
                       <span
                         className={styles.pickerEnterHint}
@@ -221,7 +226,9 @@ export default function PlanSectionPickerDialog({
               );
             })}
             {filtered.length === 0 ? (
-              <li className={styles.pickerEmpty}>No sections match.</li>
+              <li className={styles.pickerEmpty}>
+                {t("sectionPicker.noSectionsMatch")}
+              </li>
             ) : null}
           </ul>
 
@@ -229,9 +236,9 @@ export default function PlanSectionPickerDialog({
             className={styles.pickerFooter}
             aria-hidden="true"
           >
-            <span>↑↓ to navigate</span>
-            <span>↵ to jump</span>
-            <span>Esc to close</span>
+            <span>{t("sectionPicker.navigateHint")}</span>
+            <span>{t("sectionPicker.jumpHint")}</span>
+            <span>{t("sectionPicker.escHint")}</span>
             <span className={styles.pickerFooterShortcut}>{shortcutLabel}</span>
           </div>
         </Dialog>

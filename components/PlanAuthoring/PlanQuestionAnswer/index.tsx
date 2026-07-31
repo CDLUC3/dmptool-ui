@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useId } from "react";
+import { useTranslations } from "next-intl";
 import { Button } from "react-aria-components";
 import {
   BOOLEAN_QUESTION_TYPE,
@@ -23,7 +24,7 @@ import TinyMCEEditor from "@/components/TinyMCEEditor";
 import SafeHtml from "@/components/SafeHtml";
 import type { PlanQuestionDefinition } from "../model";
 import { questionKey } from "../model";
-import styles from "../PlanAuthoring.module.scss";
+import styles from "./PlanQuestionAnswer.module.scss";
 
 type Option = { label: string; value: string };
 
@@ -74,6 +75,7 @@ export default function PlanQuestionAnswer({
   onStartEditing,
   className,
 }: PlanQuestionAnswerProps) {
+  const t = useTranslations("PlanAuthoring");
   const reactId = useId();
   const editorId = `plan-editor-${questionKey(question.identity)}-${reactId}`;
   const options = getOptions(question.parsedJson);
@@ -85,7 +87,7 @@ export default function PlanQuestionAnswer({
         {question.questionType === TEXT_AREA_QUESTION_TYPE && typeof value === "string" ? (
           <SafeHtml html={value} />
         ) : value == null || value === "" ? (
-          <p>Not answered yet.</p>
+          <p>{t("answer.notAnsweredYet")}</p>
         ) : (
           <p>{Array.isArray(value) ? value.join(", ") : String(value)}</p>
         )}
@@ -94,7 +96,7 @@ export default function PlanQuestionAnswer({
             className="button-as-link"
             onPress={onStartEditing}
           >
-            Edit answer
+            {t("answer.editAnswer")}
           </Button>
         ) : null}
       </div>
@@ -123,7 +125,7 @@ export default function PlanQuestionAnswer({
         <FormInput
           name={`${editorId}-text`}
           type="text"
-          label="Answer"
+          label={t("answer.label")}
           value={typeof value === "string" ? value : ""}
           onChange={(event) => emit(event.target.value)}
           disabled={disabled}
@@ -181,7 +183,7 @@ export default function PlanQuestionAnswer({
 
       {question.questionType === NUMBER_QUESTION_TYPE ? (
         <NumberComponent
-          label="Number"
+          label={t("answer.numberLabel")}
           value={typeof value === "number" ? value : null}
           onChange={(next) => emit(next)}
           disabled={disabled}
@@ -191,7 +193,7 @@ export default function PlanQuestionAnswer({
       {question.questionType === DATE_QUESTION_TYPE ? (
         <DateComponent
           name={`${editorId}-date`}
-          label="Date"
+          label={t("answer.dateLabel")}
           value={typeof value === "string" ? (value as never) : null}
           onChange={(next) => emit(next?.toString() ?? null)}
           isDisabled={disabled}

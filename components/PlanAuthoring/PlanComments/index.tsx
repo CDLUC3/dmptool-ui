@@ -1,9 +1,10 @@
 "use client";
 
 import React, { useState } from "react";
+import { useTranslations } from "next-intl";
 import { Button, Form, TextArea } from "react-aria-components";
 import type { PlanComment } from "../model";
-import styles from "../PlanAuthoring.module.scss";
+import styles from "./PlanComments.module.scss";
 
 interface PlanCommentsProps {
   comments: PlanComment[];
@@ -20,19 +21,22 @@ export default function PlanComments({
   onAdd,
   className,
 }: PlanCommentsProps) {
+  const t = useTranslations("PlanAuthoring");
   const [text, setText] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   return (
     <div className={[styles.comments, className].filter(Boolean).join(" ")}>
-      {loading ? <p className={styles.commentsEmpty}>Loading comments…</p> : null}
+      {loading ? (
+        <p className={styles.commentsEmpty}>{t("comments.loading")}</p>
+      ) : null}
       {!loading && comments.length === 0 ? (
-        <p className={styles.commentsEmpty}>No comments yet.</p>
+        <p className={styles.commentsEmpty}>{t("comments.empty")}</p>
       ) : null}
       <div
         className={styles.commentsList}
         role="group"
-        aria-label="Comments"
+        aria-label={t("comments.listAria")}
         tabIndex={0}
       >
         {comments.map((comment) => (
@@ -43,7 +47,7 @@ export default function PlanComments({
             <h4>
               {comment.authorName}
               {comment.isFeedback ? (
-                <span className={styles.deEmphasize}> (admin)</span>
+                <span className={styles.deEmphasize}>{t("comments.admin")}</span>
               ) : null}
             </h4>
             <p className={styles.meta}>{comment.createdLabel}</p>
@@ -71,23 +75,23 @@ export default function PlanComments({
           <TextArea
             className={styles.commentTextarea}
             value={text}
-            onChange={setText}
+            onChange={(event) => setText(event.target.value)}
             rows={2}
-            placeholder="Add a comment…"
-            aria-label="Add a comment"
+            placeholder={t("comments.placeholder")}
+            aria-label={t("comments.addAria")}
           />
           <div className={styles.commentComposerActions}>
             <Button
               type="submit"
               isDisabled={submitting || !text.trim()}
             >
-              {submitting ? "Posting…" : "Comment"}
+              {submitting ? t("comments.posting") : t("comments.comment")}
             </Button>
           </div>
         </Form>
       ) : (
         <p className={styles.commentsEmpty}>
-          Save an answer before adding comments.
+          {t("comments.saveBeforeCommenting")}
         </p>
       )}
     </div>

@@ -84,7 +84,7 @@ export default function StyleGuidePage() {
         {
           title: "Plan Authoring",
           description:
-            "Single-page plan authoring components with sticky section navigation, questions, guidance, and fixture states",
+            "Single-page plan authoring components with sticky section navigation, questions, guidance, and demo-data states",
           href: "/styleguide/components/plan-authoring",
         },
         {

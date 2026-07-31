@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useCallback, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Button } from "react-aria-components";
 import type { PlanAuthoringDataSource } from "../dataSource";
 import type { PlanCapabilities, PlanQuestionDefinition } from "../model";
@@ -10,7 +11,7 @@ import PlanQuestionHeader from "../PlanQuestionHeader";
 import PlanQuestionAnswer from "../PlanQuestionAnswer";
 import PlanQuestionSaveStatus from "../PlanQuestionSaveStatus";
 import PlanQuestionSidebar from "../PlanQuestionSidebar";
-import styles from "../PlanAuthoring.module.scss";
+import styles from "./PlanQuestion.module.scss";
 
 interface PlanQuestionProps {
   question: PlanQuestionDefinition;
@@ -29,6 +30,8 @@ export default function PlanQuestion({
   forceMode,
   className,
 }: PlanQuestionProps) {
+  const t = useTranslations("PlanAuthoring");
+  const Global = useTranslations("Global");
   const key = questionKey(question.identity);
   const controller = usePlanQuestionController({
     questionKeyValue: key,
@@ -99,7 +102,7 @@ export default function PlanQuestion({
                   void controller.saveNow();
                 }}
               >
-                Save
+                {Global("buttons.save")}
               </Button>
             ) : null}
           </div>
@@ -122,8 +125,8 @@ export default function PlanQuestion({
         role="separator"
         tabIndex={0}
         aria-orientation="horizontal"
-        aria-label="Resize question — drag, or double-click to reset"
-        title="Drag to resize · double-click to reset"
+        aria-label={t("question.resizeAria")}
+        title={t("question.resizeHint")}
         onPointerDown={onResizePointerDown}
         onDoubleClick={() => setHeightPx(null)}
         onKeyDown={(event) => {
@@ -144,7 +147,7 @@ export default function PlanQuestion({
       >
         <span className={styles.resizeGrip} aria-hidden="true" />
         <span className={styles.resizeLabel}>
-          Drag to resize · double-click to reset
+          {t("question.resizeHint")}
         </span>
       </div>
     </article>
