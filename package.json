@@ -71,7 +71,7 @@
     "@types/jest-axe": "3.5.9",
     "@types/jsonwebtoken": "9.0.10",
     "@types/next": "9.0.0",
-    "@types/node": "24.12.4",
+    "@types/node": "24.13.3",
     "@types/nprogress": "0.2.3",
     "@types/papaparse": "^5.5.2",
     "@types/pino": "7.0.5",
