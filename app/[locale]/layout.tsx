@@ -18,6 +18,7 @@ import { CsrfProvider } from "@/context/CsrfContext";
 
 //Styles
 import '@fortawesome/fontawesome-svg-core/styles.css'
+import 'nprogress/nprogress.css';
 import "@/styles/globals.scss";
 
 const font_sans_serif = Poppins({

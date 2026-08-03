@@ -125,6 +125,7 @@
 - Updated `RepoSelectorForAnswer` to wait to query `Re3byUrIsDocument` until we have `preferredReposURIs` because preferred repos don't display even though they eventually do to trigger the display of the "preferred repositories" checkbox [#118]
 
 ## Fixed
+- Fixed breaking build due to the recent `next` version update to `16.2.12` where `Turbopack` has stricter rules, so we had to import `nprogress/nprogress.css` in `layout.tsx` rather than in `globals.scss` [#331]
 - Fixed Question Display Logic layout issue by updating the `DisplayLogicComponent` css to have more specificity, so that the order in which css is loaded will not break anything [#325]
 - Fixed the issue where "add Funder" button was displayed even when `readOnly` was set to true [#305]
 - Improved the project creation and project funding funder-search pages with clearer loading and fallback states, aligned lists and pagination controls, and improved accessibility [#71]
