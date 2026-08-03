@@ -490,6 +490,7 @@ const PlanCreate: React.FC = () => {
       userHasInteracted ||
       loading ||
       projectFundingsLoading ||
+      userLoading ||
       templatesMetaDataLoading
     ) {
       return null;
@@ -523,6 +524,7 @@ const PlanCreate: React.FC = () => {
     userHasInteracted,
     loading,
     projectFundingsLoading,
+    userLoading,
     templatesMetaDataLoading,
     userData
   ]);
