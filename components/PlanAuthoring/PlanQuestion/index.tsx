@@ -94,6 +94,9 @@ export default function PlanQuestion({
               state={controller.saveState}
               errorMessage={controller.errorMessage}
             />
+            {/* TODO(follow-up PR): for researchOutputTable, hide this Save
+                button while ResearchOutputAnswerComponent is in single-row
+                edit (onEditingStateChange), matching PlanOverviewQuestionPageShared. */}
             {capabilities.canEditAnswers ? (
               <Button
                 onPress={() => {
