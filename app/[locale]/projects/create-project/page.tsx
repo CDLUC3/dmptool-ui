@@ -7,7 +7,6 @@ import { useMutation } from '@apollo/client/react';
 import {
   Breadcrumb,
   Breadcrumbs,
-  Button,
   Form,
   Link,
   Radio,
@@ -28,7 +27,8 @@ import {
 } from "@/components/Container";
 import {
   FormInput,
-  RadioGroupComponent
+  RadioGroupComponent,
+  TransitionButton
 } from '@/components/Form';
 import ErrorMessages from '@/components/ErrorMessages';
 
@@ -264,12 +264,15 @@ const ProjectsCreateProject = () => {
               </div>
             </RadioGroupComponent>
 
-            <Button
+            <TransitionButton
               type="submit"
               className=""
+              loadingLabel={Global('buttons.loading')}
+              showLoading={false}
+              isDisabled={formSubmitted}
             >
               {Global('buttons.continue')}
-            </Button>
+            </TransitionButton>
           </Form>
         </ContentContainer>
       </LayoutContainer>

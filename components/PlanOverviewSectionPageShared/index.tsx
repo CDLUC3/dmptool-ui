@@ -142,11 +142,13 @@ export const PlanOverviewSectionPageShared: React.FC<{ config: SectionPageConfig
       planId,
       [questionsVariableKey]: Number(sectionId)
     },
+    fetchPolicy: 'cache-and-network',
     skip: !sectionId
   });
 
   const { data: planData, loading: planLoading } = useQuery(PlanDocument, {
     variables: { planId },
+    fetchPolicy: 'cache-and-network',
     skip: !planId
   });
 
@@ -175,7 +177,7 @@ export const PlanOverviewSectionPageShared: React.FC<{ config: SectionPageConfig
 
     return planData.plan.project.collaborators.some(
       (collaborator) =>
-        collaborator?.user?.id === myId &&
+        String(collaborator?.user?.id) === String(myId) && // Double-checking that the collaborator relationship is valid and has EDIT access
         collaborator?.accessLevel === "EDIT"
     );
   }, [me?.me?.id, planData?.plan?.project?.collaborators]);
@@ -427,6 +429,7 @@ export const PlanOverviewSectionPageShared: React.FC<{ config: SectionPageConfig
               onAddOrganization={addGuidanceOrganization}
               onRemoveOrganization={removeGuidanceOrganization}
               onClearError={clearError}
+              linkDisabled={isReadOnly || !isEditCollaborator}
             />
           </div>
         </SidebarPanel>

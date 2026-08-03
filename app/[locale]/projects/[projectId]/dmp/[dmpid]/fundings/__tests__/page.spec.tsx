@@ -406,16 +406,13 @@ describe('ProjectsProjectPlanAdjustFunding', () => {
       </MockedProvider>
     );
 
-    // MockedProvider is async, so need to wait for the data to be in
+    // Wait for BOTH queries to resolve, including the pre-selection of Funder B
     await waitFor(() => {
       expect(screen.getByRole('checkbox', { name: 'Project Funder C' })).toBeInTheDocument();
+      expect(screen.getByRole('checkbox', { name: 'Project Funder B' })).toBeChecked();
     });
 
-    await waitFor(() => {
-      const option = screen.getByRole('checkbox', { name: 'Project Funder C' });
-      expect(option).toBeInTheDocument();
-      fireEvent.click(option);
-    });
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Project Funder C' }));
 
     const saveButton = screen.getByRole('button', { name: 'buttons.save' });
     fireEvent.click(saveButton);

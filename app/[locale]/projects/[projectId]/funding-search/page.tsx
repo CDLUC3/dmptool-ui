@@ -35,6 +35,7 @@ import { FunderSearchResults } from '@/app/types';
 import { checkErrors } from '@/utils/errorHandler';
 import { handleApolloError } from '@/utils/apolloErrorHandler';
 import styles from './ProjectsCreateProjectFundingSearch.module.scss';
+import { TransitionButton } from '@/components/Form';
 
 
 const CreateProjectSearchFunder = () => {
@@ -70,15 +71,20 @@ const CreateProjectSearchFunder = () => {
       });
   }, []);
 
-  async function handleSelectFunder(funder: AffiliationSearch | FunderPopularityResult) {
+  function handleSelectFunder(funder: AffiliationSearch | FunderPopularityResult): Promise<void> {
     const projectId = params.projectId as string;
-    const input = {
-      projectId: Number(projectId),
-      affiliationId: funder.uri
-    }
 
-    addProjectFunding({ variables: { input } })
-      .then((result) => {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const result = await addProjectFunding({
+          variables: {
+            input: {
+              projectId: Number(projectId),
+              affiliationId: funder.uri
+            }
+          }
+        });
+
         const [hasErrors, errs] = checkErrors(
           result?.data?.addProjectFunding?.errors as ProjectFundingErrors,
           ['general']
@@ -86,36 +92,38 @@ const CreateProjectSearchFunder = () => {
 
         if (hasErrors) {
           setErrors([String(errs.general)]);
+          resolve(); // Stop loading on error
         } else {
+          // Never resolve — keep loading until page navigates away
           if (funder.apiTarget) {
-            router.push(routePath('projects.create.funding.check', {
-              projectId,
-            }));
+            router.push(routePath('projects.create.funding.check', { projectId }));
           } else {
-            router.push(routePath('projects.project.info', {
-              projectId,
-            }));
+            router.push(routePath('projects.project.info', { projectId }));
           }
         }
-      })
-      .catch((err) => {
-        handleApolloError(err, 'createProjectSearchFunder.popularFundersQuery');
-        setErrors([...errors, err.message])
-      });
+      } catch (err) {
+        handleApolloError(err, 'createProjectSearchFunder.handleSelectFunder');
+        setErrors(prev => [...prev, (err as Error).message]);
+        reject(err); // Stop loading on exception
+      }
+    });
+  }
+
+
+  async function handleAddFunderManually(): Promise<void> {
+    const projectId = params.projectId as string;
+    return new Promise(() => {
+      router.push(routePath('projects.fundings.add', {
+        projectId,
+      }));
+    })
   };
 
-  async function handleAddFunderManually() {
+  async function handleNoFundingSource(): Promise<void> {
     const projectId = params.projectId as string;
-    router.push(routePath('projects.fundings.add', {
-      projectId,
-    }));
-  };
-
-  async function handleNoFundingSource() {
-    const projectId = params.projectId as string;
-    router.push(routePath('projects.project.info', {
-      projectId,
-    }));
+    return new Promise(() => {
+      router.push(routePath('projects.project.info', { projectId }));
+    });
   }
 
   function onResults(results: FunderSearchResults, isNew: boolean) {
@@ -184,14 +192,17 @@ const CreateProjectSearchFunder = () => {
                     aria-label={`${trans('funder')}: ${funder.displayName}`}
                   >
                     <p className="funder-name">{funder.displayName}</p>
-                    <Button
+                    <TransitionButton
+                      type="button"
                       className="secondary select-button"
                       data-funder-uri={funder.uri}
+                      loadingLabel={globalTrans('buttons.loading')}
+                      showLoading={true}
                       onPress={() => handleSelectFunder(funder)}
                       aria-label={`${globalTrans('buttons.select')} ${funder.displayName}`}
                     >
                       {globalTrans('buttons.select')}
-                    </Button>
+                    </TransitionButton>
                   </div>
                 ))}
               </div>
@@ -253,26 +264,32 @@ const CreateProjectSearchFunder = () => {
             <section aria-labelledby="manual-section" className="mt-8">
               <h3 id="manual-section">{trans('addManuallyHeading')}</h3>
               <p>{trans('addManuallyText')}</p>
-              <Button
+              <TransitionButton
+                type="button"
                 className="add-funder-button"
                 onPress={() => handleAddFunderManually()}
+                loadingLabel={globalTrans('buttons.loading')}
+                showLoading={true}
                 aria-label={trans('addManuallyLabel')}
               >
                 {trans('addManuallyLabel')}
-              </Button>
+              </TransitionButton>
             </section>
           )}
 
           <section aria-labelledby="no-funder-section" className="mt-8">
             <h3>{trans('noFunderHeading')}</h3>
             <p>{trans('noFunderText')}</p>
-            <Button
+            <TransitionButton
+              type="button"
               className="no-funder-button"
               onPress={() => handleNoFundingSource()}
+              loadingLabel={globalTrans('buttons.loading')}
+              showLoading={true}
               aria-label={trans('noFunderButtonLabel')}
             >
               {trans('noFunderButtonLabel')}
-            </Button>
+            </TransitionButton>
           </section>
 
         </ContentContainer>

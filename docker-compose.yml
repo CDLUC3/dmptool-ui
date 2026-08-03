@@ -16,11 +16,12 @@ services:
       - .env.local
     environment:
       - SERVER_ENDPOINT=http://apollo-server:4000
+      - LOCALSTACK_ENDPOINT=http://localstack:4566
     volumes:
     - .:/app
     - /app/node_modules
     # this next line was needed to populate some missing modules in /app/node_modules when starting docker container
     # NextJS 16 is using Turbopack as the default bundler now for both development and production builds, but I am
     # specifying webpack here to avoid issues with some of the existing code that may not be compatible with Turbopack yet.
-    command: /bin/sh -c "npm install && npm run dev -- --webpack" 
+    command: /bin/sh -c "npm install && npm run dev -- --webpack"
 

@@ -1,0 +1,119 @@
+query AdminNotificationsUnread($paginationOptions: PaginationOptions) {
+  adminNotificationsUnread(paginationOptions: $paginationOptions) {
+    hasNextPage
+    currentOffset
+    hasPreviousPage
+    nextCursor
+    totalCount
+    items {
+      id
+      feedback {
+        id
+        messageToOrg
+      }
+      createdBy {
+        id
+        givenName
+        surName
+      }
+      plan {
+        id
+        title
+        project {
+          id
+        }
+      }
+      template {
+        id
+        name
+      }
+      templateCustomization {
+        id
+        templateName
+      }
+      notificationType
+      isRead
+      created
+    }
+  }
+}
+
+query AdminNotificationsRead($paginationOptions: PaginationOptions) {
+  adminNotificationsRead(paginationOptions: $paginationOptions) {
+    hasNextPage
+    currentOffset
+    hasPreviousPage
+    nextCursor
+    totalCount
+    items {
+      id
+      feedback {
+        id
+        messageToOrg
+      }
+      createdBy {
+        id
+        givenName
+        surName
+      }
+      plan {
+        id
+        title
+        project {
+          id
+        }
+      }
+      template {
+        id
+        name
+      }
+      templateCustomization {
+        id
+        templateName
+      }
+      notificationType
+      isRead
+      created
+    }
+  }
+}
+
+query AdminNotifications {
+  adminNotifications {
+    hasNextPage
+    currentOffset
+    hasPreviousPage
+    nextCursor
+    totalCount
+    items {
+      id
+      feedback {
+        id
+        messageToOrg
+      }
+      createdBy {
+        id
+        givenName
+        surName
+      }
+      plan {
+        id
+        title
+        project {
+          id
+        }
+      }
+      template {
+        id
+        name
+      }
+      templateCustomization {
+        id
+        templateName
+      }
+      notificationType
+      isRead
+      created
+    }
+  }
+}

@@ -29,7 +29,7 @@ interface InputProps {
   isRequiredVisualOnly?: boolean;
   isInvalid?: boolean;
   errorMessage?: string;
-  helpMessage?: string;
+  helpMessage?: string | React.ReactNode;
   minLength?: number;
   maxLength?: number;
   pattern?: string;

@@ -69,7 +69,9 @@ export const mockPlanData = {
         title: "Roles & Responsibilities",
         totalQuestions: 1,
         customSectionId: null,
-        sectionType: "BASE"
+        sectionType: "BASE",
+        totalRequiredQuestions: 1,
+        answeredRequiredQuestions: 1
       },
       {
         answeredQuestions: 2,
@@ -78,28 +80,36 @@ export const mockPlanData = {
         title: "Metadata",
         totalQuestions: 5,
         customSectionId: 1,
-        sectionType: "CUSTOM"
+        sectionType: "CUSTOM",
+        totalRequiredQuestions: 3,
+        answeredRequiredQuestions: 2
       },
       {
         answeredQuestions: 0,
         displayOrder: 3,
         versionedSectionId: 9,
         title: "Sharing/Copyright Issues",
-        totalQuestions: 0
+        totalQuestions: 0,
+        totalRequiredQuestions: 1,
+        answeredRequiredQuestions: 1
       },
       {
         answeredQuestions: 0,
         displayOrder: 4,
         versionedSectionId: 10,
         title: "Long Term Storage",
-        totalQuestions: 0
+        totalQuestions: 0,
+        totalRequiredQuestions: 0,
+        answeredRequiredQuestions: 0
       },
       {
         answeredQuestions: 0,
         displayOrder: 5,
         versionedSectionId: 11,
         title: "Research Products",
-        totalQuestions: 1
+        totalQuestions: 1,
+        totalRequiredQuestions: 1,
+        answeredRequiredQuestions: 0
       }
     ],
     planCreator: {

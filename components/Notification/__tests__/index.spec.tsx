@@ -105,6 +105,7 @@ describe('NotificationHeader', () => {
       await user.click(screen.getByRole('button', { name: 'Mark as done' }));
       await waitFor(() => {
         expect(onMarkAsDone).toHaveBeenCalledTimes(1);
+        expect(onMarkAsDone).toHaveBeenCalledWith(true); // Default sendEmail value is true
         expect(screen.queryByRole('heading', { level: 3 })).not.toBeInTheDocument();
       });
     });
@@ -154,6 +155,89 @@ describe('NotificationHeader', () => {
       renderSubmitting(false);
       await user.click(screen.getByRole('button', { name: 'Mark as done' }));
       expect(screen.getByRole('button', { name: 'Mark as done' })).not.toBeDisabled();
+    });
+  });
+
+  describe('emailPrompt', () => {
+    const user = userEvent.setup();
+
+    const emailPromptOverrides = {
+      emailPromptLabel: 'Send email to requestor?',
+      emailPromptYes: 'Yes',
+      emailPromptNo: 'No',
+    };
+
+    const renderWithEmailPrompt = (onMarkAsDone = jest.fn()) => {
+      return render(
+        <NotificationHeader
+          {...defaultProps}
+          actionButtonText="Mark as done"
+          modal={{ ...modalProps, ...emailPromptOverrides }}
+          onMarkAsDone={onMarkAsDone}
+        />
+      );
+    };
+
+    it('should not render email prompt when emailPromptLabel is not provided', async () => {
+      render(
+        <NotificationHeader
+          {...defaultProps}
+          actionButtonText="Mark as done"
+          modal={modalProps}
+          onMarkAsDone={jest.fn()}
+        />
+      );
+      await user.click(screen.getByRole('button', { name: 'Mark as done' }));
+      expect(screen.queryByRole('radio')).not.toBeInTheDocument();
+    });
+
+    it('should render email prompt radio buttons when emailPromptLabel is provided', async () => {
+      renderWithEmailPrompt();
+      await user.click(screen.getByRole('button', { name: 'Mark as done' }));
+      expect(screen.getByRole('radio', { name: 'Yes' })).toBeInTheDocument();
+      expect(screen.getByRole('radio', { name: 'No' })).toBeInTheDocument();
+    });
+
+    it('should default to Yes being selected', async () => {
+      renderWithEmailPrompt();
+      await user.click(screen.getByRole('button', { name: 'Mark as done' }));
+      expect(screen.getByRole('radio', { name: 'Yes' })).toBeChecked();
+      expect(screen.getByRole('radio', { name: 'No' })).not.toBeChecked();
+    });
+
+    it('should call onMarkAsDone with true when Yes is selected and confirmed', async () => {
+      const onMarkAsDone = jest.fn();
+      renderWithEmailPrompt(onMarkAsDone);
+      await user.click(screen.getByRole('button', { name: 'Mark as done' }));
+      // Yes is already selected by default, just confirm
+      await user.click(screen.getByRole('button', { name: 'Mark as done' }));
+      await waitFor(() => {
+        expect(onMarkAsDone).toHaveBeenCalledWith(true);
+      });
+    });
+
+    it('should call onMarkAsDone with false when No is selected and confirmed', async () => {
+      const onMarkAsDone = jest.fn();
+      renderWithEmailPrompt(onMarkAsDone);
+      await user.click(screen.getByRole('button', { name: 'Mark as done' }));
+      await user.click(screen.getByRole('radio', { name: 'No' }));
+      await user.click(screen.getByRole('button', { name: 'Mark as done' }));
+      await waitFor(() => {
+        expect(onMarkAsDone).toHaveBeenCalledWith(false);
+      });
+    });
+
+    it('should reset to Yes after modal is closed and reopened', async () => {
+      renderWithEmailPrompt();
+      // Open, switch to No, close
+      await user.click(screen.getByRole('button', { name: 'Mark as done' }));
+      await user.click(screen.getByRole('radio', { name: 'No' }));
+      await user.click(screen.getByRole('button', { name: 'Cancel' }));
+      // Reopen and check Yes is selected again
+      await user.click(screen.getByRole('button', { name: 'Mark as done' }));
+      await waitFor(() => {
+        expect(screen.getByRole('radio', { name: 'Yes' })).toBeChecked();
+      });
     });
   });
 });

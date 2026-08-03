@@ -106,7 +106,7 @@ const FeedbackOptions: React.FC = () => {
         variables: {
           input: {
             id: Number(affiliationData?.affiliationById?.id),
-            name: affiliationData?.affiliationById?.name ?? "",
+            displayName: affiliationData?.affiliationById?.displayName ?? "",
             feedbackEnabled: feedbackForm.feedbackEnabled === "on",
             feedbackMessage: feedbackForm.feedbackMessage,
             feedbackEmails: emails,

@@ -446,6 +446,7 @@ export interface PlanOverviewInterface {
   templatePublished?: string;
   orgId?: string;
   feedbackStatus?: string;
+  completedAllRequiredQuestions?: boolean;
 }
 
 export interface ActionResponse {
@@ -641,3 +642,9 @@ export interface ProjectDetailsFormInterface {
 }
 
 export type AccessLevelKey = 'edit' | 'comment' | 'own' | 'primary';
+
+export interface S3UploadResponse {
+  success: boolean;
+  key?: string;
+  error?: string;
+}

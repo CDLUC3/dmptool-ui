@@ -460,7 +460,7 @@ const PlanOverviewPage: React.FC = () => {
   }, [updateTitle, t, toastState]);
 
 
-  const markFeedbackAsDone = async () => {
+  const markFeedbackAsDone = async (sendEmail: boolean) => {
     setErrorMessages([]);
     setIsSubmitting(true);
 
@@ -468,7 +468,8 @@ const PlanOverviewPage: React.FC = () => {
       await completeFeedbackMutation({
         variables: {
           planId: Number(planId),
-          planFeedbackId: Number(feedbackData?.planFeedbackStatus?.id)
+          planFeedbackId: Number(feedbackData?.planFeedbackStatus?.id),
+          sendEmail
         }
       });
       // Success so try and refetch feedback status to update UI
@@ -529,6 +530,7 @@ const PlanOverviewPage: React.FC = () => {
         templateVersion: data?.plan?.versionedTemplate?.version ?? "",
         templatePublished: data?.plan?.versionedTemplate?.created ?? "",
         percentageAnswered: data?.plan?.progress?.percentComplete ?? 0,
+        completedAllRequiredQuestions: data?.plan?.versionedSections?.every((section) => section.answeredRequiredQuestions === section.totalRequiredQuestions) ?? false,
         orgId: data?.plan?.versionedTemplate?.owner?.uri ?? "",
         feedbackStatus: data?.plan?.feedbackStatus?.status ?? "NONE",
       });
@@ -602,7 +604,7 @@ const PlanOverviewPage: React.FC = () => {
     {
       id: 5,
       content: <>{t("publishModal.publish.checklistItem.requiredFields")}</>,
-      completed: false, // Mark as not completed
+      completed: planData.completedAllRequiredQuestions
     },
     {
       id: 6,
@@ -677,17 +679,15 @@ const PlanOverviewPage: React.FC = () => {
             modal={{
               title: t("feedbackNotification.confirmModal.title"),
               content: (
-                <>
-                  {t("feedbackNotification.confirmModal.description1")}
-                  <ul>
-                    <li>{t("feedbackNotification.confirmModal.description2")}</li>
-                    <li>{t("feedbackNotification.confirmModal.description3")}</li>
-                  </ul>
-
-                </>
+                <p>
+                  {t("feedbackNotification.confirmModal.description")}
+                </p>
               ),
               cancelButtonText: Global("buttons.close"),
               confirmButtonText: t("feedbackNotification.markAsDone"),
+              emailPromptLabel: t("feedbackNotification.confirmModal.emailPromptLabel"),
+              emailPromptYes: t("feedbackNotification.confirmModal.emailPromptYes"),
+              emailPromptNo: t("feedbackNotification.confirmModal.emailPromptNo"),
               isSubmitting,
               submittingText: Global('buttons.saving')
             }}

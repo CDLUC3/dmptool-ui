@@ -2,6 +2,18 @@
   margin-bottom: var(--spacing-4);
 }
 
+// .expandLink,
+// .collapseLink {
+//   color: #0070f3;
+//   text-decoration: none;
+//   font-weight: 500;
+//   cursor: pointer;
+
+//   &:hover {
+//     text-decoration: underline;
+//   }
+// }
+
 .expandLink,
 .collapseLink {
   color: #0070f3;
@@ -12,6 +24,17 @@
   &:hover {
     text-decoration: underline;
   }
+
+  &:focus {
+    outline: none;
+  }
+
+&:focus-visible {
+  outline: 2px solid #0070f3;
+  outline-offset: 2px;
+}
+
+
 }
 
 .extraContent {

@@ -30,4 +30,16 @@
   }
 }
 
+.definitionListItem {
+  display: flex;
+
+  dt {
+    font-weight: 700;
+    white-space: nowrap;
+}
+  dd {
+    margin-left: var(--space-3);
+  }
+}
+
 

@@ -10,6 +10,7 @@ interface AccessLevelRadioGroupProps {
   onChange: (value: string) => void;
   radioGroupLabel?: string;
   collaboratorName: string;
+  isDisabled?: boolean;
 }
 
 const AccessLevelRadioGroup: React.FC<AccessLevelRadioGroupProps> = ({
@@ -18,6 +19,7 @@ const AccessLevelRadioGroup: React.FC<AccessLevelRadioGroupProps> = ({
   onChange,
   radioGroupLabel = "",
   collaboratorName,
+  isDisabled = false
 }) => {
   // Localization
   const t = useTranslations('ProjectsProjectCollaboration');
@@ -28,6 +30,8 @@ const AccessLevelRadioGroup: React.FC<AccessLevelRadioGroupProps> = ({
         value={value}
         radioGroupLabel={radioGroupLabel}
         onChange={onChange}
+        isDisabled={isDisabled}
+
       >
         <div>
           <Radio value="edit" aria-label={t('canEditPlanFor', { name: collaboratorName })} data-testid={`edit-${collaboratorName}`}>{t('canEdit')}</Radio>

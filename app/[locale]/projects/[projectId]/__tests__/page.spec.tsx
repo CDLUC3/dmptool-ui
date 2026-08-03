@@ -1,11 +1,16 @@
 import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { useParams } from 'next/navigation';
 import { axe, toHaveNoViolations } from 'jest-axe';
 import { useQuery } from '@apollo/client/react';
 import ProjectOverviewPage from '../page';
 import { mockScrollIntoView, mockScrollTo } from "@/__mocks__/common";
-import { PlanDocument, ProjectDocument, RelatedWorksByProjectStatsDocument } from "@/generated/graphql";
+import {
+  MeDocument,
+  PlanDocument,
+  ProjectDocument,
+  RelatedWorksByProjectStatsDocument
+} from "@/generated/graphql";
 
 
 expect.extend(toHaveNoViolations);
@@ -116,17 +121,69 @@ const mockProjectData = {
       ],
       templateTitle: "NSF DMP Template",
     }
+  ],
+  readOnly: false,
+  collaborators: [
+    {
+      user: { id: 'default-user-id' },
+      accessLevel: 'EDIT'
+    }
   ]
 };
 
-const setupMocks = () => {
-  mockUseQuery.mockReturnValue({
-    data: { project: mockProjectData },
+const setupMocks = (meData: { me: { id: string } } | null = null, projectData: typeof mockProjectData | null = null) => {
+  // Create references OUTSIDE mockImplementation to prevent maximum update depth exceeded error
+  const projectQueryReturn = {
+    data: { project: projectData ?? mockProjectData },
     loading: false,
     error: undefined,
     refetch: jest.fn(),
-    /* eslint-disable @typescript-eslint/no-explicit-any */
-  } as any);
+  };
+
+  const meQueryReturn = {
+    data: meData ?? {
+      me: {
+        id: 'default-user-id',
+      },
+    },
+    loading: false,
+    error: null,
+    refetch: jest.fn(),
+  };
+
+  const relatedWorksStatsQueryReturn = {
+    data: {
+      relatedWorksByProjectStats: {
+        hasPublishedPlan: false,
+        pendingCount: 0,
+        acceptedCount: 0,
+      },
+    },
+    loading: false,
+    error: undefined,
+    refetch: jest.fn(),
+  };
+
+  mockUseQuery.mockImplementation((document) => {
+    if (document === ProjectDocument) {
+      return projectQueryReturn;
+    }
+
+    if (document === MeDocument) {
+      return meQueryReturn;
+    }
+
+    if (document === RelatedWorksByProjectStatsDocument) {
+      return relatedWorksStatsQueryReturn;
+    }
+
+    return {
+      data: null,
+      loading: false,
+      error: undefined,
+      /* eslint-disable @typescript-eslint/no-explicit-any */
+    } as any;
+  });
 };
 
 
@@ -306,3 +363,98 @@ describe('ProjectOverviewPage', () => {
     expect(results).toHaveNoViolations();
   });
 });
+
+describe('Read-only mode', () => {
+  beforeEach(() => {
+    setupMocks();
+    HTMLElement.prototype.scrollIntoView = mockScrollIntoView;
+    mockScrollTo();
+
+    const mockUseParams = useParams as jest.Mock;
+    // Mock the return value of useParams
+    mockUseParams.mockReturnValue({ projectId: '123' });
+  })
+
+  const readOnlyProjectData = {
+    ...mockProjectData,
+    readOnly: true,
+    collaborators: [{
+      user: { id: 'default-user-id' },
+      accessLevel: 'COMMENT'
+    }],
+  };
+
+  beforeEach(() => {
+    setupMocks(null, readOnlyProjectData);
+  });
+
+  it('should render disabled Upload and Create New buttons when isReadOnly', () => {
+    render(<ProjectOverviewPage />);
+
+    const uploadButton = screen.getByRole('button', { name: 'upload' });
+    const createNewButton = screen.getByRole('button', { name: 'createNew' });
+
+    expect(uploadButton).toHaveAttribute('aria-disabled', 'true');
+    expect(uploadButton).toHaveClass('disabled-button-look');
+    expect(createNewButton).toHaveAttribute('aria-disabled', 'true');
+    expect(createNewButton).toHaveClass('disabled-button-look');
+  });
+
+  it('should show popover message when disabled Upload button is clicked', async () => {
+    render(<ProjectOverviewPage />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'upload' }));
+
+    await waitFor(() => {
+      expect(screen.getByText('messages.readOnlyLinkMessage')).toBeInTheDocument();
+    });
+  });
+
+  it('should show popover message when disabled Create New button is clicked', async () => {
+    render(<ProjectOverviewPage />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'createNew' }));
+
+    await waitFor(() => {
+      expect(screen.getByText('messages.readOnlyLinkMessage')).toBeInTheDocument();
+    });
+  });
+
+  it('should show "view" on the plan card action when isReadOnly and user is not an edit collaborator', () => {
+    // beforeEach already sets a default-user-id that isn't in collaborators
+    render(<ProjectOverviewPage />);
+
+    const planActionLink = screen.getByRole('link', { name: 'updatePlan' });
+    expect(planActionLink).toHaveTextContent('view');
+  });
+
+  it('should show "update" on the plan card action when isReadOnly but user has EDIT collaborator access', async () => {
+    setupMocks(
+      { me: { id: 'default-user-id' } },
+      {
+        ...readOnlyProjectData,
+        collaborators: [{ user: { id: 'default-user-id' }, accessLevel: 'EDIT' }],
+      }
+    );
+
+    render(<ProjectOverviewPage />);
+
+    await waitFor(() => {
+      expect(screen.getByRole('link', { name: 'updatePlan' })).toHaveTextContent('update');
+    });
+  });
+
+  it('should render active Upload and Create New links when isReadOnly is false', () => {
+    // Override back to non-readonly project
+    setupMocks();
+
+    render(<ProjectOverviewPage />);
+
+    expect(screen.getByRole('link', { name: 'uploadPlan' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'createNewPlan' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'upload' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'createNew' })).not.toBeInTheDocument();
+  });
+});
+
+

@@ -71,12 +71,6 @@ describe('TemplateListPage', () => {
     <MockedProvider
       mocks={apolloMocks}
       cache={apolloCache}
-      //  link={ApolloLink.empty()}
-      defaultOptions={{
-        query: { fetchPolicy: 'no-cache', errorPolicy: 'all' },
-        watchQuery: { fetchPolicy: 'no-cache', errorPolicy: 'all' },
-        mutate: { errorPolicy: 'all' }
-      }}
     >
       <TemplateListPage />
     </MockedProvider>

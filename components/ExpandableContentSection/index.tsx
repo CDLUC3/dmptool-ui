@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
+import classNames from 'classnames';
 import { useTranslations } from 'next-intl';
 import styles from './ExpandableContentSection.module.scss';
 
@@ -10,6 +11,7 @@ export default function ExpandableContentSection({
   expandLabel,
   collapseLabel,
   summaryCharLimit,
+  linkClass,
   children
 }: {
   id: string;
@@ -17,6 +19,7 @@ export default function ExpandableContentSection({
   expandLabel?: string;
   collapseLabel?: string;
   summaryCharLimit?: number;
+  linkClass?: string;
   children: React.ReactNode;
 }) {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -134,7 +137,7 @@ export default function ExpandableContentSection({
             }}
             aria-expanded={isExpanded}
             aria-controls={contentId}
-            className={isExpanded ? styles.collapseLink : styles.expandLink}
+            className={classNames(linkClass, isExpanded ? styles.collapseLink : styles.expandLink)}
           >
             {isExpanded
               ? collapseLabel || Global('links.collapse')

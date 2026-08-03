@@ -109,6 +109,8 @@ export interface GuidancePanelProps {
   onClearError?: () => void;
   onAddOrganization?: (funder: AffiliationSearch) => void;
   onRemoveOrganization?: (orgId: string) => void;
+  // Disable link to customize guidance tabs when user cannot edit sections
+  linkDisabled?: boolean;
 }
 
 export interface VersionedGuidanceGroup {

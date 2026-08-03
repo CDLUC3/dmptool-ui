@@ -1,8 +1,6 @@
-import React from 'react';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { useParams, useRouter } from 'next/navigation';
 import { useQuery } from '@apollo/client/react';
-import { ProjectMembersDocument } from '@/generated/graphql';
 import ProjectsProjectMembers from '../page';
 import { axe, toHaveNoViolations } from 'jest-axe';
 import { mockScrollIntoView, mockScrollTo } from "@/__mocks__/common";
@@ -20,69 +18,62 @@ jest.mock('@apollo/client/react', () => ({
 }));
 
 
-const mockProjectMembersData = {
-  projectMembers: [
-    {
-      id: 1,
-      givenName: "Jacques",
-      surName: "Cousteau",
-      orcid: "0000-JACQ-0000-0000",
-      memberRoles: [
-        {
-          id: 2,
-          label: "Principal Investigator (PI)",
-          description: "An individual conducting a research and investigation process, specifically performing the experiments, or data/evidence collection."
-        },
-        {
-          id: 3,
-          label: "Project Administrator",
-          description: "An individual with management and coordination responsibility for the research activity planning and execution."
-        }
-      ],
-      affiliation: {
-        displayName: "University of California, Davis (ucdavis.edu)"
+const mockProjectMembersData = [
+  {
+    id: 1,
+    givenName: "Jacques",
+    surName: "Cousteau",
+    orcid: "0000-JACQ-0000-0000",
+    memberRoles: [
+      {
+        id: 2,
+        label: "Principal Investigator (PI)",
+        description: "An individual conducting a research and investigation process, specifically performing the experiments, or data/evidence collection."
       },
+      {
+        id: 3,
+        label: "Project Administrator",
+        description: "An individual with management and coordination responsibility for the research activity planning and execution."
+      }
+    ],
+    affiliation: {
+      displayName: "University of California, Davis (ucdavis.edu)"
     },
-    {
-      id: 2,
-      givenName: "Captain",
-      surName: "Nemo",
-      orcid: "0000-NEMO-0000-0000",
-      memberRoles: [
-        {
-          id: 2,
-          label: "Principal Investigator (PI)",
-          description: "An individual conducting a research and investigation process, specifically performing the experiments, or data/evidence collection."
-        }
-      ],
-      affiliation: {
-        displayName: "University of California, Davis (ucdavis.edu)"
-      },
-    }
-  ],
-  loading: false,
-}
+  },
+  {
+    id: 2,
+    givenName: "Captain",
+    surName: "Nemo",
+    orcid: "0000-NEMO-0000-0000",
+    memberRoles: [
+      {
+        id: 2,
+        label: "Principal Investigator (PI)",
+        description: "An individual conducting a research and investigation process, specifically performing the experiments, or data/evidence collection."
+      }
+    ],
+    affiliation: {
+      displayName: "University of California, Davis (ucdavis.edu)"
+    },
+  }
+];
 
 // Cast with jest.mocked utility
 const mockUseQuery = jest.mocked(useQuery);
 
 const setupMocks = () => {
-  mockUseQuery.mockImplementation((document) => {
-    if (document === ProjectMembersDocument) {
-      return {
-        data: mockProjectMembersData,
-        loading: false,
-        error: undefined,
-        refetch: jest.fn()
-        /* eslint-disable @typescript-eslint/no-explicit-any */
-      } as any;
-    }
-    return {
-      data: null,
-      loading: false,
-      error: undefined
-    };
-  });
+  mockUseQuery.mockReturnValue({
+    data: {
+      project: {
+        members: mockProjectMembersData,
+        readOnly: false,
+      },
+    },
+    loading: false,
+    error: undefined,
+    refetch: jest.fn()
+    /* eslint-disable @typescript-eslint/no-explicit-any */
+  } as any);
 };
 
 describe('ProjectsProjectMembers', () => {
@@ -103,22 +94,13 @@ describe('ProjectsProjectMembers', () => {
 
 
   it('should render loading state', () => {
-    mockUseQuery.mockImplementation((document) => {
-      if (document === ProjectMembersDocument) {
-        return {
-          data: null,
-          loading: true,
-          error: undefined,
-          refetch: jest.fn()
-          /* eslint-disable @typescript-eslint/no-explicit-any */
-        } as any;
-      }
-      return {
-        data: null,
-        loading: false,
-        error: undefined
-      };
-    });
+    mockUseQuery.mockReturnValue({
+      data: null,
+      loading: true,
+      error: undefined,
+      refetch: jest.fn()
+      /* eslint-disable @typescript-eslint/no-explicit-any */
+    } as any);
 
     render(<ProjectsProjectMembers />);
 
@@ -126,22 +108,13 @@ describe('ProjectsProjectMembers', () => {
   });
 
   it('should render error state', () => {
-    mockUseQuery.mockImplementation((document) => {
-      if (document === ProjectMembersDocument) {
-        return {
-          data: null,
-          loading: false,
-          error: true,
-          refetch: jest.fn()
-          /* eslint-disable @typescript-eslint/no-explicit-any */
-        } as any;
-      }
-      return {
-        data: null,
-        loading: false,
-        error: undefined
-      };
-    });
+    mockUseQuery.mockReturnValue({
+      data: null,
+      loading: false,
+      error: true,
+      refetch: jest.fn()
+      /* eslint-disable @typescript-eslint/no-explicit-any */
+    } as any);
 
     render(<ProjectsProjectMembers />);
 
@@ -149,22 +122,13 @@ describe('ProjectsProjectMembers', () => {
   });
 
   it('renders project members', () => {
-    mockUseQuery.mockImplementation((document) => {
-      if (document === ProjectMembersDocument) {
-        return {
-          data: mockProjectMembersData,
-          loading: false,
-          error: undefined,
-          refetch: jest.fn()
-          /* eslint-disable @typescript-eslint/no-explicit-any */
-        } as any;
-      }
-      return {
-        data: null,
-        loading: false,
-        error: undefined
-      };
-    });
+    mockUseQuery.mockReturnValue({
+      data: { project: { members: mockProjectMembersData, readOnly: false } },
+      loading: false,
+      error: undefined,
+      refetch: jest.fn()
+      /* eslint-disable @typescript-eslint/no-explicit-any */
+    } as any);
 
     render(<ProjectsProjectMembers />);
 
@@ -190,22 +154,13 @@ describe('ProjectsProjectMembers', () => {
   });
 
   it('should handle add member button click', () => {
-    mockUseQuery.mockImplementation((document) => {
-      if (document === ProjectMembersDocument) {
-        return {
-          data: { data: { projectMembers: [] } },
-          loading: false,
-          error: undefined,
-          refetch: jest.fn()
-          /* eslint-disable @typescript-eslint/no-explicit-any */
-        } as any;
-      }
-      return {
-        data: null,
-        loading: false,
-        error: undefined
-      };
-    });
+    mockUseQuery.mockReturnValue({
+      data: { project: { members: mockProjectMembersData, readOnly: false } },
+      loading: false,
+      error: undefined,
+      refetch: jest.fn()
+      /* eslint-disable @typescript-eslint/no-explicit-any */
+    } as any);
 
     render(<ProjectsProjectMembers />);
 
@@ -215,22 +170,13 @@ describe('ProjectsProjectMembers', () => {
   });
 
   it('should handle edit member button click', () => {
-    mockUseQuery.mockImplementation((document) => {
-      if (document === ProjectMembersDocument) {
-        return {
-          data: mockProjectMembersData,
-          loading: false,
-          error: undefined,
-          refetch: jest.fn()
-          /* eslint-disable @typescript-eslint/no-explicit-any */
-        } as any;
-      }
-      return {
-        data: null,
-        loading: false,
-        error: undefined
-      };
-    });
+    mockUseQuery.mockReturnValue({
+      data: { project: { members: mockProjectMembersData, readOnly: false } },
+      loading: false,
+      error: undefined,
+      refetch: jest.fn()
+      /* eslint-disable @typescript-eslint/no-explicit-any */
+    } as any);
 
     render(<ProjectsProjectMembers />);
 
@@ -248,6 +194,49 @@ describe('ProjectsProjectMembers', () => {
     await act(async () => {
       const results = await axe(container);
       expect(results).toHaveNoViolations();
+    });
+  });
+
+
+  describe('when isReadOnly is true', () => {
+    beforeEach(() => {
+      mockUseQuery.mockReturnValue({
+        data: { project: { members: mockProjectMembersData, readOnly: true } },
+        loading: false,
+        error: undefined,
+        refetch: jest.fn(),
+      } as any);
+    });
+
+    it('should not render the "Add members" button', () => {
+      render(<ProjectsProjectMembers />);
+      expect(screen.queryByRole('button', { name: /buttons.addMembers/i })).not.toBeInTheDocument();
+    });
+
+    it('should not render "Edit" buttons on member rows', () => {
+      render(<ProjectsProjectMembers />);
+      expect(screen.getByText('Jacques Cousteau')).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /edit/i })).not.toBeInTheDocument();
+    });
+
+    it('should still render all member names and details', () => {
+      render(<ProjectsProjectMembers />);
+      expect(screen.getByText('Jacques Cousteau')).toBeInTheDocument();
+      expect(screen.getByText('Captain Nemo')).toBeInTheDocument();
+      const affiliations = screen.getAllByText('University of California, Davis (ucdavis.edu)');
+      expect(affiliations).toHaveLength(2);
+      expect(screen.getByText('0000-JACQ-0000-0000')).toBeInTheDocument();
+      expect(screen.getByText('0000-NEMO-0000-0000')).toBeInTheDocument();
+    });
+
+    it('should not render the collaborators section', () => {
+      render(<ProjectsProjectMembers />);
+      expect(
+        screen.queryByRole('heading', { level: 2, name: 'headings.h2AllowCollaborators' })
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole('link', { name: /buttons.shareWithPeople/i })
+      ).not.toBeInTheDocument();
     });
   });
 });

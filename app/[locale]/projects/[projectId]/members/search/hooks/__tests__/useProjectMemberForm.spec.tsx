@@ -127,10 +127,6 @@ const createWrapper = (mocks: any[] = []) => {
   const Wrapper = ({ children }: WrapperProps) => (
     <MockedProvider
       mocks={mocks}
-      defaultOptions={{
-        watchQuery: { errorPolicy: 'ignore' },
-        query: { errorPolicy: 'ignore' },
-      }}
     >
       {children}
     </MockedProvider>

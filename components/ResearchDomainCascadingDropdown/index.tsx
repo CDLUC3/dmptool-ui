@@ -23,9 +23,10 @@ interface ResearchDomainInterface {
 interface CascadingDropdownProps {
   projectData: ProjectDetailsFormInterface;
   setProjectData: (data: ProjectDetailsFormInterface) => void;
+  isDisabled?: boolean;
 }
 
-const ResearchDomainCascadingDropdown: React.FC<CascadingDropdownProps> = ({ projectData, setProjectData }) => {
+const ResearchDomainCascadingDropdown: React.FC<CascadingDropdownProps> = ({ projectData, setProjectData, isDisabled = false }) => {
   const [selectedParent, setSelectedParent] = useState<string>('');
   const [selectedChild, setSelectedChild] = useState('');
   const [rDomains, setRDomains] = useState<ResearchDomainInterface[]>([]);
@@ -147,6 +148,7 @@ const ResearchDomainCascadingDropdown: React.FC<CascadingDropdownProps> = ({ pro
           onChange={selected => updateChildDropdown(selected as string)}
           selectedKey={selectedParent}
           placeholder={ProjectDetail('placeholder.selectDomain')}
+          isDisabled={isDisabled}
         >
           {rDomains.map((domain) => {
             return (
@@ -170,6 +172,7 @@ const ResearchDomainCascadingDropdown: React.FC<CascadingDropdownProps> = ({ pro
             aria-labelledby="child-label"
             placeholder={ProjectDetail('placeholder.selectSubDomain')}
             data-testid="subdomain-select"
+            isDisabled={isDisabled}
           >
             <option value="">
               {ProjectDetail('labels.childDomain', { name: selectedParentDomain?.description || '' })}

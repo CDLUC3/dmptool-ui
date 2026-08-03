@@ -10,17 +10,54 @@ mutation AddAffiliation($input: AffiliationInput!) {
 
 mutation UpdateAffiliation($input: AffiliationInput!) {
   updateAffiliation(input: $input) {
+    id
+    displayName
+    displayAbbreviation
+    displayDomain
+    homepage
+    acronyms
+    aliases
+    types
+    funder
+    managed
     feedbackEmails
     feedbackEnabled
     feedbackMessage
-    id
-    uri
-    name
-    displayName
+    contactName
+    contactEmail
+    subHeaderLinks {
+      id
+      url
+      text
+    }
+    ssoEntityId
+    ssoEmailDomains
+    apiTarget
     errors {
       general
+      displayName
+      displayAbbreviation
+      displayDomain
+      contactEmail
+      contactName
+      types
+      subHeaderLinks
+      ssoEntityId
+      ssoEmailDomains
+      fundrefId
+      rorId
       feedbackEmails
       feedbackMessage
+    }
+  }
+}
+
+mutation GenerateLogoUploadURL($affiliationURI: String!, $fileName: String!, $contentType: String!) {
+  generateLogoUploadURL(affiliationURI: $affiliationURI, fileName: $fileName, contentType: $contentType) {
+    url
+    fields
+    errors {
+      general
     }
   }
 }

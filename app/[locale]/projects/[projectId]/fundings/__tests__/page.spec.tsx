@@ -5,7 +5,7 @@ import '@testing-library/jest-dom';
 import { MockedProvider } from '@apollo/client/testing/react';
 import { axe, toHaveNoViolations } from 'jest-axe';
 
-import { ProjectFundingsDocument } from '@/generated/graphql';
+import { ProjectDocument } from '@/generated/graphql';
 
 import ProjectsProjectFunding from '../page';
 import { useToast } from '@/context/ToastContext';
@@ -25,43 +25,110 @@ const mockToast = {
 const mocks = [
   {
     request: {
-      query: ProjectFundingsDocument,
+      query: ProjectDocument,
       variables: {
         projectId: 123,
       },
     },
     result: {
       data: {
-        projectFundings: [
-          {
-            id: 1,
-            affiliation: {
-              displayName: "Test Funder 1",
-              name: "National Science Foundation",
-              uri: "https://funder-1",
+        project: {
+          fundings: [
+            {
+              id: 1,
+              affiliation: {
+                displayName: "Test Funder 1",
+                name: "National Science Foundation",
+                uri: "https://funder-1",
+              },
+              status: 'PLANNED',
+              grantId: 'https://awards.example.com/245t24g4tg',
+              funderOpportunityNumber: 'NSF-12345-ABC',
+              funderProjectNumber: '945tg9h4g045g'
             },
-            status: 'PLANNED',
-            grantId: 'https://awards.example.com/245t24g4tg',
-            funderOpportunityNumber: 'NSF-12345-ABC',
-            funderProjectNumber: '945tg9h4g045g'
-          },
-          {
-            id: 3,
-            status: "DENIED",
-            grantId: null,
-            funderOpportunityNumber: "NSF-123455678/wf34f",
-            funderProjectNumber: null,
-            affiliation: {
-              displayName: "National Science Foundation (nsf.gov)",
-              name: "National Science Foundation",
-              uri: "https://ror.org/021nxhr62"
+            {
+              id: 3,
+              status: "DENIED",
+              grantId: null,
+              funderOpportunityNumber: "NSF-123455678/wf34f",
+              funderProjectNumber: null,
+              affiliation: {
+                displayName: "National Science Foundation (nsf.gov)",
+                name: "National Science Foundation",
+                uri: "https://ror.org/021nxhr62"
+              }
             }
-          }
-        ],
+          ],
+          readOnly: false,
+        }
       },
-    }
+    },
+  }
+];
+
+const mocksWithReadOnly = [
+  {
+    request: {
+      query: ProjectDocument,
+      variables: {
+        projectId: 123,
+      },
+    },
+    result: {
+      data: {
+        project: {
+          fundings: [
+            {
+              id: 1,
+              affiliation: {
+                displayName: "Test Funder 1",
+                name: "National Science Foundation",
+                uri: "https://funder-1",
+              },
+              status: 'PLANNED',
+              grantId: 'https://awards.example.com/245t24g4tg',
+              funderOpportunityNumber: 'NSF-12345-ABC',
+              funderProjectNumber: '945tg9h4g045g'
+            },
+            {
+              id: 3,
+              status: "DENIED",
+              grantId: null,
+              funderOpportunityNumber: "NSF-123455678/wf34f",
+              funderProjectNumber: null,
+              affiliation: {
+                displayName: "National Science Foundation (nsf.gov)",
+                name: "National Science Foundation",
+                uri: "https://ror.org/021nxhr62"
+              }
+            }
+          ],
+          readOnly: true,
+        }
+      },
+    },
+  }
+];
+
+const mocksReadOnlyNoFundings = [
+  {
+    request: {
+      query: ProjectDocument,
+      variables: {
+        projectId: 123,
+      },
+    },
+    result: {
+      data: {
+        project: {
+          readOnly: true,
+          fundings: [],
+        },
+      },
+    },
   },
 ];
+
 
 
 describe('ProjectsProjectFunding', () => {
@@ -164,4 +231,59 @@ describe('ProjectsProjectFunding', () => {
     const results = await axe(container);
     expect(results).toHaveNoViolations();
   });
+
+  describe('when isReadOnly is true', () => {
+    it('should not render the "Add funding" button', async () => {
+      render(
+        <MockedProvider mocks={mocksWithReadOnly}>
+          <ProjectsProjectFunding />
+        </MockedProvider>
+      );
+
+      await waitFor(() => {
+        expect(screen.queryByRole('button', { name: 'Add funding' })).not.toBeInTheDocument();
+      });
+    });
+
+    it('should not render "Edit" buttons on funding rows', async () => {
+      render(
+        <MockedProvider mocks={mocksWithReadOnly}>
+          <ProjectsProjectFunding />
+        </MockedProvider>
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText('Test Funder 1')).toBeInTheDocument();
+      });
+
+      expect(screen.queryByRole('button', { name: /edit/i })).not.toBeInTheDocument();
+    });
+
+    it('should still render funder names when isReadOnly is true', async () => {
+      render(
+        <MockedProvider mocks={mocksWithReadOnly}>
+          <ProjectsProjectFunding />
+        </MockedProvider>
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText('Test Funder 1')).toBeInTheDocument();
+      });
+    });
+
+    it('should not set isReadOnly when fundings array is empty even if project.readOnly is true', async () => {
+      // isReadOnly is only set in the effect when fundings.length > 0,
+      // so with no fundings the Add button should still appear (default isReadOnly = false)
+      render(
+        <MockedProvider mocks={mocksReadOnlyNoFundings}>
+          <ProjectsProjectFunding />
+        </MockedProvider>
+      );
+
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: 'Add funding' })).toBeInTheDocument();
+      });
+    });
+  });
+
 });
