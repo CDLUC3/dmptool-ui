@@ -1,5 +1,4 @@
-import React from 'react';
-
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import "@testing-library/jest-dom";
 import { render, screen } from '@testing-library/react';
 
@@ -96,10 +95,11 @@ describe("PlanOverviewCustomSectionPage", () => {
     it("returns customSectionId (from sectionId) and planId", () => {
       const config = renderAndGetConfig();
 
-      const result = config.buildSectionVariables({
+      const args: Parameters<typeof config.buildSectionVariables>[0] = {
         sectionId: 123,
         planId: 456,
-      } as Parameters<typeof config.buildSectionVariables>[0]);
+      }
+      const result = config.buildSectionVariables(args);
 
       expect(result).toEqual({
         customSectionId: 123,
@@ -164,12 +164,13 @@ describe("PlanOverviewCustomSectionPage", () => {
     it("builds a link via routePath using the under-custom-section route with the right params", () => {
       const config = renderAndGetConfig();
 
-      const link = config.buildQuestionLink({
+      const args: Parameters<typeof config.buildQuestionLink>[0] = {
         projectId: 'proj-1',
         dmpId: 'dmp-1',
         sectionId: 1,
         question: { customQuestionId: 42 },
-      } as Parameters<typeof config.buildQuestionLink>[0]);
+      };
+      const link = config.buildQuestionLink(args);
 
       expect(mockedRoutePath).toHaveBeenCalledWith(
         'projects.dmp.customQuestion.underCustomSection',
@@ -186,12 +187,13 @@ describe("PlanOverviewCustomSectionPage", () => {
     it("stringifies a numeric customQuestionId into cqid", () => {
       const config = renderAndGetConfig();
 
-      config.buildQuestionLink({
+      const args: Parameters<typeof config.buildQuestionLink>[0] = {
         projectId: 'proj-1',
         dmpId: 'dmp-1',
         sectionId: 1,
         question: { customQuestionId: 99 },
-      } as Parameters<typeof config.buildQuestionLink>[0]);
+      };
+      config.buildQuestionLink(args);
 
       const paramsPassed = mockedRoutePath.mock.calls[0][1];
       expect(paramsPassed.cqid).toBe('99');
@@ -203,10 +205,11 @@ describe("PlanOverviewCustomSectionPage", () => {
     it("maps sectionId to both versionedSectionId and customSectionId, alongside planId", () => {
       const config = renderAndGetConfig();
 
-      const result = config.buildGuidanceMutationParams({
+      const args: Parameters<typeof config.buildGuidanceMutationParams>[0] = {
         planId: 9,
         sectionId: 9,
-      } as Parameters<typeof config.buildGuidanceMutationParams>[0]);
+      };
+      const result = config.buildGuidanceMutationParams(args);
 
       expect(result).toEqual({
         planId: 9,

@@ -10,7 +10,6 @@ import { axe, toHaveNoViolations } from 'jest-axe';
 
 import TemplateList, {
   TemplateListProps,
-  VisibleCount,
 } from '@/components/TemplateList';
 import { TemplateItemProps } from '@/app/types';
 
