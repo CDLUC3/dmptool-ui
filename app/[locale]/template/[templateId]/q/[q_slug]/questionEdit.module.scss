@@ -1,6 +1,7 @@
 .optionsDescription {
-  font-size: var(--fs-sm);
-  font-weight:600;
+  margin: 0 0 var(--space-1);
+  font-size: var(--fs-base);
+  font-weight: 600;
 }
 
 .searchField {
@@ -33,11 +34,6 @@
   width: fit-content;
 }
 
-.optionsWrapper {
-  padding: var(--space-0);
-  margin-bottom: var(--space-6);
-}
-
 .questionFormField {
   height: 100px
 }
@@ -59,8 +55,26 @@
   margin-bottom: var(--space-6);
 }
 
+.sampleTextGroup {
+  margin-bottom: 2rem;
+
+  :global(.react-aria-TextField) {
+    margin-bottom: var(--space-2);
+  }
+
+  :global(.react-aria-Checkbox) {
+    margin-bottom: 0;
+  }
+}
+
 .optionsWrapper {
-  border: 1px solid var(--border-color);
-  padding: var(--space-4);
-  margin-bottom: var(--space-4);
+  margin-bottom: var(--space-6);
+}
+
+/* Display Logic Tab Styles */
+.showHideLogic {
+  display: flex;
+  flex-direction: row;
+  gap: var(--space-4);
+  margin-top: var(--space-4);
 }

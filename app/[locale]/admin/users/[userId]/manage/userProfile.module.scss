@@ -1,0 +1,61 @@
+@use '@/styles/responsive.scss' as r;
+
+.userProfileFormContainer {
+  width: 69%;
+}
+
+.formSection {
+  margin-top: var(--space-8);
+}
+
+.pageTools {
+  display: flex;
+  flex-wrap: wrap;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  gap: var(--space-3);
+
+  > * {
+    width: 20%;
+    min-width: 200px; 
+  }
+
+  > button {
+    width: auto;
+    min-width: unset;
+  }
+}
+
+.searchInput {
+  margin-bottom: 0;
+}
+
+.searchButton {
+  margin-top: 1.2rem;
+  margin-right: var(--space-8);
+}
+
+.definitionListItem {
+  display: flex;
+
+  dt {
+    font-weight: 700;
+    white-space: nowrap;
+}
+  dd {
+    margin-left: var(--space-3);
+  }
+}
+
+.mergeResults {
+  margin-top: var(--space-4);
+  margin-bottom: var(--space-4);
+  width: 100%;
+}
+
+.buttonContainer{// Button container for two buttons
+  display: flex;
+  gap: 10px; // Space between buttons
+  align-items: flex-start;
+}

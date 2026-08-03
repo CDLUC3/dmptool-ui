@@ -1,7 +1,7 @@
 "use server";
 
 import { executeGraphQLMutation } from "@/utils/server/graphqlServerActionHandler";
-import { updateQuestionActionResponse } from "@/app/types";
+import { updateQuestionActionResponse, TagsInterface } from "@/app/types";
 import { UpdateQuestionDocument } from "@/generated/graphql";
 
 export async function updateQuestionAction({
@@ -13,7 +13,8 @@ export async function updateQuestionAction({
   guidanceText,
   sampleText,
   useSampleTextAsDefault,
-  required
+  required,
+  tags
 }: {
   questionId: number;
   displayOrder: number;
@@ -24,6 +25,7 @@ export async function updateQuestionAction({
   sampleText: string;
   useSampleTextAsDefault: boolean;
   required: boolean;
+  tags?: TagsInterface[];
 }): Promise<updateQuestionActionResponse> {
   // Execute the mutation using the shared handler
   return await executeGraphQLMutation({
@@ -38,7 +40,8 @@ export async function updateQuestionAction({
         guidanceText,
         sampleText,
         useSampleTextAsDefault,
-        required
+        required,
+        tags
       }
     },
     dataPath: "updateQuestion"

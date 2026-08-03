@@ -528,7 +528,6 @@ describe('PlanOverviewPage', () => {
     expect(within(sidebar).getByRole('link', { name: 'buttons.preview' })).toBeInTheDocument();
     expect(within(sidebar).getByRole('button', { name: 'buttons.publish' })).toBeInTheDocument();
     expect(within(sidebar).getByRole('heading', { name: 'status.feedback.title' })).toBeInTheDocument();
-    expect(within(sidebar).getByRole('link', { name: 'links.request' })).toBeInTheDocument();
     expect(within(sidebar).getByRole('heading', { name: 'status.title' })).toBeInTheDocument();
     expect(within(sidebar).getByText('Draft')).toBeInTheDocument();
     expect(within(sidebar).getByText('buttons.linkUpdate')).toBeInTheDocument();
@@ -703,6 +702,39 @@ describe('PlanOverviewPage', () => {
     });
   });
 
+  it('should display funding.noFunderSelected when plan has no fundings', async () => {
+    const planQueryReturn = {
+      data: {
+        plan: {
+          ...mockPlanData.plan,
+          fundings: [],
+        },
+      },
+      loading: false,
+      error: null,
+      refetch: jest.fn(),
+    };
+
+    mockUseQuery.mockImplementation((document) => {
+      if (document === PlanDocument) {
+        return planQueryReturn;
+      }
+
+      return {
+        data: null,
+        loading: false,
+        error: undefined,
+        /* eslint-disable @typescript-eslint/no-explicit-any */
+      } as any;
+    });
+
+    render(<PlanOverviewPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('funding.noFunderSelected')).toBeInTheDocument();
+    });
+  });
+
   it('should display related works counts if \'hasPublishedPlan\' prop has a value', async () => {
     const updatedMockPlanData = {
       ...mockPlanData.plan,
@@ -854,7 +886,7 @@ describe('PlanOverviewPage', () => {
     // Click the Publish button to open the modal
     const publishButton = screen.getByText(/buttons.publish/i);
     fireEvent.click(publishButton);
-    const checklist = screen.getByTestId('checklist');
+    const checklist = screen.getByTestId('recommended-checklist');
 
     await waitFor(() => {
       expect(within(checklist).getByText('publishModal.publish.checklistItem.percentageAnswered')).toBeInTheDocument();
@@ -961,7 +993,7 @@ describe('PlanOverviewPage', () => {
     });
   });
 
-  it('should have correct info in first page of Publish modal', async () => {
+  it('should have correct info in first page of Publish modal for required items', async () => {
     render(<PlanOverviewPage />);
 
     // Click the Publish button to open the modal
@@ -969,23 +1001,23 @@ describe('PlanOverviewPage', () => {
     fireEvent.click(publishButton);
 
     await waitFor(() => {
-      const checklist = screen.getByTestId('checklist');
-      expect(checklist).toBeInTheDocument();
-      expect(within(checklist).getByText('publishModal.publish.checklistItem.primaryContact')).toBeInTheDocument();
-      const linkPrimaryContact = within(checklist).getByRole('link', { name: 'Captain Nemo' });
+      const requiredChecklist = screen.getByTestId('required-checklist');
+      expect(requiredChecklist).toBeInTheDocument();
+      expect(within(requiredChecklist).getByText('publishModal.publish.checklistItem.primaryContact')).toBeInTheDocument();
+      const linkPrimaryContact = within(requiredChecklist).getByRole('link', { name: 'Captain Nemo' });
       expect(linkPrimaryContact).toBeInTheDocument();
-      expect(within(checklist).getByText(/publishModal\.publish\.checklistItem\.fundingText\s*\(/i)).toBeInTheDocument();
-      const linkFunding = within(checklist).getByRole('link', { name: 'publishModal.publish.checklistItem.funding' });
+
+      const recommendedChecklist = screen.getByTestId('recommended-checklist');
+      expect(within(recommendedChecklist).getByText(/publishModal\.publish\.checklistItem\.fundingText\s*\(/i)).toBeInTheDocument();
+      const linkFunding = within(recommendedChecklist).getByRole('link', { name: 'publishModal.publish.checklistItem.funding' });
       expect(linkFunding).toBeInTheDocument();
-      expect(within(checklist).getByText('publishModal.publish.checklistItem.orcidText')).toBeInTheDocument();
-      const linkOrcid = within(checklist).getByRole('link', { name: 'publishModal.publish.checklistItem.projectMembers' });
+      expect(within(recommendedChecklist).getByText('publishModal.publish.checklistItem.orcidText')).toBeInTheDocument();
+      const linkOrcid = within(recommendedChecklist).getByRole('link', { name: 'publishModal.publish.checklistItem.projectMembers' });
       expect(linkOrcid).toBeInTheDocument();
-      expect(within(checklist).getByText('publishModal.publish.checklistItem.complete')).toBeInTheDocument();
-      expect(within(checklist).getByText('publishModal.publish.checklistItem.percentageAnswered')).toBeInTheDocument();
-      expect(within(checklist).getByText('publishModal.publish.checklistItem.requiredFields')).toBeInTheDocument();
-      const requiredFields = screen.getByText((content) =>
-        content.includes('3') && content.includes('publishModal.publish.checklistInfo')
-      );
+      expect(within(recommendedChecklist).getByText('publishModal.publish.checklistItem.complete')).toBeInTheDocument();
+      expect(within(recommendedChecklist).getByText('publishModal.publish.checklistItem.percentageAnswered')).toBeInTheDocument();
+      expect(within(recommendedChecklist).getByText('publishModal.publish.checklistItem.requiredFields')).toBeInTheDocument();
+      const requiredFields = screen.getByText('publishModal.publish.checklistInfo');
       expect(requiredFields).toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'buttons.close' })).toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'publishModal.publish.buttonNext >' })).toBeInTheDocument();
@@ -1016,7 +1048,7 @@ describe('PlanOverviewPage', () => {
       expect(screen.getByText('publishModal.publish.visibilityOptions.private.label')).toBeInTheDocument();
       expect(screen.getByText('publishModal.publish.visibilityOptions.private.description')).toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'buttons.close' })).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: 'publishModal.publish.title' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'buttons.publish' })).toBeInTheDocument();
     });
   });
 
@@ -1089,7 +1121,7 @@ describe('PlanOverviewPage', () => {
     fireEvent.click(publicRadio);
 
     // Click the Publish button in the modal
-    const publishPlanButton = screen.getByRole('button', { name: 'publishModal.publish.title' });
+    const publishPlanButton = screen.getByRole('button', { name: 'buttons.publish' });
     fireEvent.click(publishPlanButton);
 
     await waitFor(() => {
@@ -1099,6 +1131,55 @@ describe('PlanOverviewPage', () => {
       });
     });
     expect(mockToast.add).toHaveBeenCalledWith('messages.success.successfullyPublished', { type: 'success' });
+  });
+
+  it('should not publish and should show modal error when required checklist items are incomplete', async () => {
+    const planQueryReturn = {
+      data: {
+        plan: {
+          ...mockPlanData.plan,
+          project: {
+            ...mockPlanData.plan.project,
+            isTestProject: true,
+          },
+          members: (mockPlanData.plan.members ?? []).map((member) => ({
+            ...member,
+            isPrimaryContact: false,
+          })),
+        },
+      },
+      loading: false,
+      error: null,
+      refetch: jest.fn(),
+    };
+
+    mockUseQuery.mockImplementation((document) => {
+      if (document === PlanDocument) return planQueryReturn;
+      if (document === MeDocument) return { data: adminMe, loading: false, error: null };
+      return { data: null, loading: false, error: undefined } as any;
+    });
+
+    render(<PlanOverviewPage />);
+
+    fireEvent.click(screen.getByText(/buttons.publish/i));
+
+    await waitFor(() => {
+      expect(screen.getByTestId('required-checklist')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'publishModal.publish.buttonNext >' }));
+
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: 'publishModal.publish.visibilityTitle' })).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'buttons.publish' }));
+
+    await waitFor(() => {
+      expect(publishPlanAction).not.toHaveBeenCalled();
+      expect(screen.getByText('messages.errors.requiredItemsIncomplete')).toBeInTheDocument();
+      expect(screen.getByTestId('required-checklist')).toBeInTheDocument();
+    });
   });
 
   it('should display error when publishPlanAction mutation returns field-level errors', async () => {
@@ -1136,7 +1217,7 @@ describe('PlanOverviewPage', () => {
     fireEvent.click(publicRadio);
 
     // Click the Publish button in the modal
-    const publishPlanButton = screen.getByRole('button', { name: 'publishModal.publish.title' });
+    const publishPlanButton = screen.getByRole('button', { name: 'buttons.publish' });
     fireEvent.click(publishPlanButton);
 
     await waitFor(() => {
@@ -1176,7 +1257,7 @@ describe('PlanOverviewPage', () => {
     fireEvent.click(publicRadio);
 
     // Click the Publish button in the modal
-    const publishPlanButton = screen.getByRole('button', { name: 'publishModal.publish.title' });
+    const publishPlanButton = screen.getByRole('button', { name: 'buttons.publish' });
     fireEvent.click(publishPlanButton);
 
     await waitFor(() => {
@@ -1806,7 +1887,17 @@ describe('PlanOverviewPage', () => {
       refetch: jest.fn(),
     };
     const meQueryReturn = {
-      data: { me: { id: meId, affiliation: { uri: 'mock-org-id' }, role: UserRole.Admin } },
+      data: {
+        me: {
+          id: meId,
+          affiliation: {
+            uri: 'mock-org-id',
+            feedbackEnabled: true,
+            feedbackEmails: ['feedback@example.com']
+          },
+          role: UserRole.Admin
+        }
+      },
       loading: false,
       error: null,
     };
@@ -1822,6 +1913,55 @@ describe('PlanOverviewPage', () => {
     const sidebar = screen.getByTestId('sidebar-panel');
     await waitFor(() => {
       expect(within(sidebar).getByRole('link', { name: 'links.request' })).toBeInTheDocument();
+    });
+  });
+
+  it('should render feedback as a disabled button when feedbackEnabled is false', async () => {
+    const meId = 42;
+
+    const planQueryReturn = {
+      data: {
+        plan: {
+          ...mockPlanData.plan,
+          project: {
+            collaborators: [{ accessLevel: 'PRIMARY', user: { id: meId } }],
+          },
+        },
+      },
+      loading: false,
+      error: null,
+      refetch: jest.fn(),
+    };
+    const meQueryReturn = {
+      data: {
+        me: {
+          id: meId,
+          affiliation: {
+            uri: 'mock-org-id',
+            feedbackEnabled: false,
+            feedbackEmails: [],
+          },
+          role: UserRole.Admin
+        }
+      },
+      loading: false,
+      error: null,
+    };
+
+    mockUseQuery.mockImplementation((document) => {
+      if (document === PlanDocument) return planQueryReturn;
+      if (document === MeDocument) return meQueryReturn;
+      return { data: null, loading: false, error: undefined } as any;
+    });
+
+    render(<PlanOverviewPage />);
+
+    const sidebar = screen.getByTestId('sidebar-panel');
+    await waitFor(() => {
+      expect(within(sidebar).queryByRole('link', { name: 'links.request' })).not.toBeInTheDocument();
+      const disabledButton = within(sidebar).getByRole('button', { name: 'links.request' });
+      expect(disabledButton).toBeInTheDocument();
+      expect(disabledButton).toHaveAttribute('aria-disabled', 'true');
     });
   });
 
@@ -1871,7 +2011,7 @@ describe('PlanOverviewPage', () => {
     });
   });
 
-  it('should show requiredFields checklist item as complete when all required questions are answered', async () => {
+  it('should show checklist item as complete when all required questions are answered', async () => {
     const allRequiredAnsweredPlan = {
       ...mockPlanData.plan,
       versionedSections: mockPlanData.plan.versionedSections.map((s) => ({
@@ -1898,9 +2038,7 @@ describe('PlanOverviewPage', () => {
 
     await waitFor(() => {
       // completedAllRequiredQuestions is true, so this item should not count as incomplete
-      const incompleteCount = screen.getByText((content) =>
-        content.includes('2') && content.includes('publishModal.publish.checklistInfo')
-      );
+      const incompleteCount = screen.getByText('publishModal.publish.checklistInfo');
       expect(incompleteCount).toBeInTheDocument();
     });
   });
@@ -1911,12 +2049,10 @@ describe('PlanOverviewPage', () => {
     fireEvent.click(screen.getByText(/buttons.publish/i));
 
     await waitFor(() => {
-      const checklist = screen.getByTestId('checklist');
+      const checklist = screen.getByTestId('recommended-checklist');
       within(checklist).getByText('publishModal.publish.checklistItem.requiredFields');
       // Incomplete count should reflect this item being in the error state
-      const incompleteCount = screen.getByText((content) =>
-        content.includes('3') && content.includes('publishModal.publish.checklistInfo')
-      );
+      const incompleteCount = screen.getByText('publishModal.publish.checklistInfo');
       expect(incompleteCount).toBeInTheDocument();
     });
   });

@@ -194,7 +194,7 @@ const UpdateEmailAddress: React.FC<UpdateEmailAddressProps> = ({
           <div className={styles.subSection}>
             <ErrorMessages errors={[errors?.general ? errors?.general : '']} />
 
-            <h3>{t('headingPrimaryEmail')}</h3>
+            <h3 className="mt-0 mb-2">{t('headingPrimaryEmail')}</h3>
             <p className={"my-1 pb-0"}>{t('primaryEmailDesc')}</p>
 
             {/* Render the primary email */}
@@ -203,9 +203,7 @@ const UpdateEmailAddress: React.FC<UpdateEmailAddressProps> = ({
                 key={emailObj.email}
                 email={emailObj.email}
                 isAlias={false}
-                additionalClassName="primaryEmail"
-                tooltip={true}
-                toolTipMessage="Primary email cannot be deleted."
+                deleteDisabled
               />
             ))}
             <div className="mt-2">
@@ -224,8 +222,8 @@ const UpdateEmailAddress: React.FC<UpdateEmailAddressProps> = ({
           </div>
           <div className={styles.subSection}>
 
-            <h3>{t('headingAliasEmailAddr')}</h3>
-            <p>{t('aliasEmailDesc')}</p>
+            <h3 className="mb-2">{t('headingAliasEmailAddr')}</h3>
+            <p className="mt-0">{t('aliasEmailDesc')}</p>
 
             {emailAddresses.filter(emailObj => !emailObj.isPrimary).map((emailObj) => (
               <EmailAddressRow

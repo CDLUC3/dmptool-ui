@@ -1,0 +1,53 @@
+// Toggle beside the input — keeps password-manager icons out of its way.
+.passwordField {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3, 0.75rem);
+  max-width: 600px;
+
+  input {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  input::-ms-reveal {
+    display: none;
+  }
+}
+
+.passwordToggle {
+  flex: 0 0 auto;
+  margin: 0;
+  padding: 4px 2px;
+  font-size: var(--fs-small, 0.875rem);
+  font-weight: var(--fw-normal, 400);
+  line-height: 1.2;
+}
+
+// Outrank global .react-aria-Button.link focus styles (they use !important).
+.passwordToggle.passwordToggle.passwordToggle {
+  &,
+  &:hover,
+  &:focus,
+  &:focus-visible,
+  &:active,
+  &[data-focus-visible],
+  &[data-pressed] {
+    border-radius: 0 !important;
+  }
+}
+
+// Both labels stacked so width stays fixed when toggling (incl. pt-BR etc.).
+.toggleLabel {
+  display: inline-grid;
+  justify-items: center;
+
+  > span {
+    grid-area: 1 / 1;
+    white-space: nowrap;
+  }
+
+  > span[aria-hidden='true'] {
+    visibility: hidden;
+  }
+}

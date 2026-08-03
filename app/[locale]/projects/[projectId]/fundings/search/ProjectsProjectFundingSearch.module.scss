@@ -1,19 +1,84 @@
-.fundingResultsList {
+.funderList {
   max-width: 60ch;
   border-top: 1px solid var(--gray-100);
+
+  .fundingResultsListItem {
+    padding: 1rem 0;
+    border-bottom: 1px solid var(--gray-100);
+  }
+}
+
+.funderSection {
+  margin-top: var(--space-6);
+
+  > h3 {
+    margin: 0 0 var(--space-3);
+    padding-bottom: 0;
+  }
+}
+
+.popularDescription {
+  max-width: 60ch;
+  margin: 0 0 var(--space-4);
+}
+
+.funderMessage {
+  max-width: 60ch;
+}
+
+.funderMessageTitle {
+  margin: 0 0 var(--space-2);
+  font-weight: var(--fw-semibold);
+}
+
+.funderMessageDescription {
+  margin: 0;
+}
+
+.manualSection {
+  margin-top: var(--space-6);
+
+  > h3 {
+    margin: 0 0 var(--space-2);
+    padding-bottom: 0;
+  }
+
+  > p {
+    margin: 0 0 var(--space-4);
+  }
+}
+
+.popularFundersLoading {
+  justify-content: flex-start;
+  min-height: 8rem;
+  padding-inline: 0;
 }
 
 .fundingResultsListItem {
   display: flex;
   justify-content: space-between;
-  padding: 1rem 0;
-  align-items: flex-start;
-  border-bottom: 1px solid var(--gray-100);
+  gap: 1rem;
+  align-items: center;
 
+  :global(.funder-name) {
+    min-width: 0;
+    flex: 1;
+    margin: 0;
+  }
+
+  :global(.select-button) {
+    flex-shrink: 0;
+  }
 }
 
 .fundingResultsListMore {
   display: flex;
-  margin-top: 2rem;
-  justify-content: center;
+  align-items: center;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+  max-width: 60ch;
+
+  p {
+    margin: 0;
+  }
 }

@@ -92,6 +92,7 @@ jest.mock('@/components/hooks/getParsedQuestionJSON', () => {
 
 // Mock the useTemplateQuery hook
 jest.mock("@/generated/graphql", () => ({
+  ...jest.requireActual("@/generated/graphql"),
   useQuestionQuery: jest.fn(),
   useLicensesQuery: jest.fn(),
   useDefaultResearchOutputTypesQuery: jest.fn(),
@@ -393,6 +394,8 @@ describe("QuestionEditPage", () => {
     expect(questionTypeLabel).toBeInTheDocument();
     const questionTextLabel = screen.getByText(/labels.questionText/i);
     expect(questionTextLabel).toBeInTheDocument();
+    const questionTextField = screen.getByRole('textbox', { name: /labels.questionText/i });
+    expect(questionTextField.tagName).toBe('TEXTAREA');
     const questionRequirementTextLabel = screen.getByText(/labels.requirementText/i);
     expect(questionRequirementTextLabel).toBeInTheDocument();
     const questionGuidanceTextLabel = screen.getByText(/labels.guidanceText/i);
@@ -488,7 +491,8 @@ describe("QuestionEditPage", () => {
         guidanceText: "This is the guidance text",
         sampleText: "This is sample text",
         useSampleTextAsDefault: false,
-        required: false
+        required: false,
+        tags: []
       })
     });
   });
@@ -625,7 +629,8 @@ describe("QuestionEditPage", () => {
         guidanceText: 'This is the guidance text',
         sampleText: 'This is sample text',
         useSampleTextAsDefault: false,
-        required: false
+        required: false,
+        tags: []
       },
       );
     });
@@ -1329,7 +1334,7 @@ describe("QuestionEditPage", () => {
         attributes: {
           denomination: "USD",
           min: 0,
-          max: 10000000,
+          max: 100000000,
           step: 0.01
         },
         meta: {
@@ -1410,7 +1415,8 @@ describe("QuestionEditPage", () => {
           guidanceText: 'This is the guidance text',
           sampleText: 'This is sample text',
           useSampleTextAsDefault: false,
-          required: false
+          required: false,
+          tags: []
         },
         );
       });
@@ -1790,11 +1796,11 @@ describe('Options questions', () => {
     })
 
 
-    const allRows = screen.queryAllByLabelText('Text');
-    expect(allRows.length).toBe(3);
+    const allRows = screen.queryAllByLabelText(/labels.choiceNumber/);
+    expect(allRows.length).toBe(4);
 
     // Enter the label text for new radio button
-    fireEvent.change(allRows[2], { target: { value: 'Maybe' } });
+    fireEvent.change(allRows[3], { target: { value: 'Maybe' } });
 
     // Get the save button and save
     const saveButton = screen.getByText('buttons.saveAndUpdate');
@@ -1814,7 +1820,8 @@ describe('Options questions', () => {
         guidanceText: 'This is the guidance text',
         sampleText: 'This is sample text',
         useSampleTextAsDefault: false,
-        required: false
+        required: false,
+        tags: []
       },
       );
     });
@@ -1867,11 +1874,11 @@ describe('Options questions', () => {
       fireEvent.click(addButton);
     })
 
-    const allRows = screen.queryAllByLabelText('Text');
-    expect(allRows.length).toBe(3);
+    const allRows = screen.queryAllByLabelText(/labels.choiceNumber/);
+    expect(allRows.length).toBe(4);
 
     // Enter the label text for new radio button
-    fireEvent.change(allRows[2], { target: { value: 'Maybe' } });
+    fireEvent.change(allRows[3], { target: { value: 'Maybe' } });
 
     // Wait for state update
     await waitFor(() => {

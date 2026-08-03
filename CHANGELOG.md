@@ -1,4 +1,25 @@
 ## Added
+- Added `favicon` image from `CDN`. Added a new `.env` variable `CDN_DOMAIN`. We will need to add this variable to the `stage` and `production` servers 
+- Added `login/forgot-password` and `login/reset-password` pages, and added a `PasswordRequirementList` component to assist users in knowing what the password requirements are[#242]
+- Added `SendPasswordResetEmail`, `ResetPassword` and `ValidatePasswordResetToken` mutations and query [#242]
+- Added `getPasswordRequirements` util [#242]
+- Added `DisplayLogicComponent` for the `DisplayLogic` tab in `QuestionEdit`. Also, added `useTriggerQuestion` hook, and `displayLogicMapper` for use with the new component, and `displayLogic` types [#299]
+- Added an override for the `systeminformation` dependency
+- Added show/hide password toggle to `FormInput`, enabled by default for password fields [#80]
+- Migrated login and signup pages to use `FormInput` for consistency with other auth forms [#80]
+- Added password field examples to the styleguide form-elements page [#80]
+- Added a gold "Best practice" badge with click-to-open explanation popover to `TemplateSelectListItem` for DMP Tool best practice templates [#72]
+- Added unit tests for the best practice badge, popover interaction, and accessibility behaviour in `TemplateSelectListItem` [#72]
+- Added new `SkeletonListLoading` component that renders card-style skeleton placeholders for list views (e.g. project lists, template selection, project members). Also supports a `grid` layout for responsive 2/3 column card grids (e.g. section and question type selection).
+- Added `papaparse` package so that it's `unparse` method can handle things like quoting and escaping, type coercion, trailing newlines, etc [#238]
+- Added new `/contact` page for users to message us [#297]a
+- Added empty states to the Plan Dashboard (/projects) and Organization Projects (/admin/projects) when no projects exist
+- Documented the projects empty state pattern in the style guide (/styleguide/components/lists)
+- Added `UpdateUserInfo` and `ArchiveUser` mutations and `Plans`, `UserProjects`, and `User` queries [#281]
+- Added new, shared `LayoutSplitPanel` so that we can have one section with a right sidebar, and another section extending the full width [#281]
+- Added new route `admin.users.projects` [#281]
+- Added a new `admin/users/[userId]/manage` page for Admins to edit a user's profile, and a new `admin/users/[userId]/projects` page to display a specified user's projects [#281]
+- Added `Users` graphql query and `admin.users.manage` route[#240]
 - Wired up the Organization details page
 - Made some minor tweaks to the Organization details css file
 - Added an `S3Uploader` hook to facilitate uploads of files to S3 on the server side
@@ -13,6 +34,54 @@
 - Added `UpdateAffiliation` and `AffiliationById` queries [#203]
 
 ## Updated
+- Removed the best practice checkbox group of tags from the add/edit Section pages, and added them to the add/edit Question pages [#274]
+- Updated the `TransitionButton` to use `startTransaction` so components using it can better control the loading gif and progress bar. Updated some of the pages to utilize this new `startTransaction` [#274]
+- Updated shared `QuestionAdd` to include a `showTags` boolean so that we can exclude it for custom pages for now [#274]
+- Made improvements on progress bar and transition buttons on some pages in the template and project flow [#274]
+- Updated `layout.tsx` to use the CDL logo from the CDN. Added new `favicon.ico` as a fallback, and added a new `CDN_ENDPOINT` to match the parameter set in Cloud Formation template [#328]
+- Updated `login` and `signup` pages with `document.title`, and added `Pageheader` to `home` page [#328]
+- Updated `signup` page to use the new `PasswordRequirementsList` component, and add some new unit tests [#242]
+- Improvied accessibility for `FormInput` by making sure to include help text and error text to ariaDescribedBy, and updated `graphqlHelper.ts` so that it will redirect users to `/login` page when backend gives an early return with a `401 - isRevokedCallback` error [#242]
+- Updated `Contact us` form so that the `message` field uses a `<textArea/>` type and updated website url to current `https://uc3.cdlib.org`. Also, updated `buildspec.yaml` to get `NEXT_PUBLIC_HELPDESK_EMAIL_ADDRESS` from existing `HELPDESK_EMAIL` env variable [#303]
+- Updated `Header` component to redirect to `/login` page when errors with logging out [#303]
+- Updated the `OrgUserProfilePage` table to list all of the given user's projects, rather than plans. Updated table headers per ticket [#304]
+- Made some updates to the Edit Project Member page to accommodate Other Affiliation [#96]
+- Redesigned the project members list as accessible cards with linked member names, inline ORCID profile links, role badges, skeleton loading, and consistent heading/link labelling [#96]
+- Updated the project member Edit page to use “project member” wording (not “collaborator”), show affiliation display names, align required/recommended labels with Add, and no longer require email to save [#96]
+- Updated Add and Edit project member flows to share labels, validation messages, and role ordering (alphabetical with “No role assigned” last); roles are now required before saving [#96]
+- Fixed the CRediT Taxonomy “Learn more” link on Add and Edit project member pages by splitting the translation so Crowdin does not break the link markup [#96]
+- Improved the Add project member ORCID lookup flow with explicit person selection, clearer search results, error handling, and ORCID field population (including fallback when the API omits ORCID) [#96]
+- Updated `TypeAheadWithOther` so selecting “Other” sets `affiliationId` to `other`, and aligned “Other” affiliation validation on Add and Edit [#96]
+- Updated the project members collaborators section inline link to use `routePath` for the collaboration page [#96]
+- Added `extractOrcid` helper and updated `orcidToUrl` to normalise ORCID values from URLs or IDs [#96]
+- Updated `ModalOverlayComponent` to support disabling the primary action button (used for remove member confirmation) [#96]
+- Moved the "use sample text as default" checkbox directly under the Sample Text field on template question add and edit screens, and clarified its label [#77]
+- Redesigned the template question answer-choice editor with responsive choice cards, accessible reordering and removal controls, clearer validation, and localized English and Portuguese labels
+- Fixed issue with local reference to `@dmptool/types`
+- Updated ResearchOutputTable question and answer components to use the new `commonStandardId` property
+- Updated the ResearchOutputTable question to include the Anticipated Release Date and Anticipated File Size columns in the JSON but continue to NOT display to the admin when editing the question.
+- Upgraded `@dmptool/types` package to `v4.0.0`
+- Fixed `TypeAheadWithOther` clearing the institution name when the field is focused, so profile (and other) edits keep the existing value with the caret at the end [#80]
+- Updated shared typeahead functionality and styling for better accessibility [#80]
+- Simplified the page title on template question edit screens. The header is now a static "Edit Question" label rather than "Edit: {question title}", making long or HTML-formatted question text less likely to clutter the page header [#78]
+- Changed the template question text field from a single-line input to a textarea so longer question text is easier to edit [#78]
+- Redesigned the connections page ORCID and SSO sections: connected accounts now show a status card with linked identifier and an in-card disconnect action instead of a single clickable pill. Connect/disconnect behaviour is currently faked locally until OAuth and backend mutations are wired [#81]
+- Improved currency fields by disabling steppers by default and adding configurable denominations, symbol placement, minor units, locale-aware formatting and parsing, value limits, accessibility support, style guide examples, and tests
+- Updated `EmailAddressRow` and `UpdateEmailAddress` so the non-removable primary email no longer shows a disabled trash icon, and instead displays a "Primary" lock badge with a note explaining how to change it. Added a shared `icon-lock` icon and `primaryEmailCannotBeDeleted`/`primaryBadge` translations [#56]
+- Defaulted the project creation funding question to "No - Skip for now" so users without awarded funding can continue more quickly [#70]
+- Updated "Forgot Password" to "Reset password" [#79]
+- Updated `PlanCreate` page to show a loading spinner during the initial template fetch so the empty state does not flash before results load [#72]
+- Updated `SelectExistingTemplate` to pass `bestPractices` from template data into `TemplateSelectListItem` [#72]
+- Updated the styleguide template select list examples and documentation to demonstrate the best practice badge alongside additional guidance [#72]
+- Updated `ProjectListItem`, `ProjectOverviewPage`, and `PlanOverviewPage` to display a localized "No funder selected" message when project or plan funding is empty
+- Updated `OverviewSection` styling on project and plan overview pages: section headings use a smaller muted label style, primary values are bold, and edit links display below the content using default blue link styling
+- Added `noFunderSelected` translation keys in `en-US` and `pt-BR` message files
+- Fixed some bugs on the Organization Details page, and cleaned up the layout and removed Identifiers "Request Change" buttons [#293][#280][#296]
+- Updated "Publish" modal. Added "Required" and "Recommended" checklist sections, and added a requirement that the plan not be in test mode [#91]
+- Fixed flaky admin users search test by waiting for the search input to render after `MeDocument` resolves before typing
+- Updated `PlanOverviewPage` to disable `request feedback` link when there is feedback is not enabled and there are no feedback emails [#285]
+- Updated the `ProjectListItem` component to allow for `isReadOnly` mode [#281]
+- Hooked up `admin/users` page with real data, and updated search features and table [#240]
 - Fixed bug in org logo upload logic
 - Update feedback options page, fundings add page to work with the Affiliation `displayName`
 - Updated the `FormInput` component to accept either a string or a `React.ReactNode` object in the `helpMessage` so we can include resolvable URLs
@@ -56,10 +125,22 @@
 - Updated `RepoSelectorForAnswer` to wait to query `Re3byUrIsDocument` until we have `preferredReposURIs` because preferred repos don't display even though they eventually do to trigger the display of the "preferred repositories" checkbox [#118]
 
 ## Fixed
+- Fixed breaking build due to the recent `next` version update to `16.2.12` where `Turbopack` has stricter rules, so we had to import `nprogress/nprogress.css` in `layout.tsx` rather than in `globals.scss` [#331]
+- Fixed Question Display Logic layout issue by updating the `DisplayLogicComponent` css to have more specificity, so that the order in which css is loaded will not break anything [#325]
+- Fixed the issue where "add Funder" button was displayed even when `readOnly` was set to true [#305]
+- Improved the project creation and project funding funder-search pages with clearer loading and fallback states, aligned lists and pagination controls, and improved accessibility [#71]
+- Fixed loading state not appearing immediately by removing the delayed fadeIn animation from the Loading component
+- Fixed section &  question reorder arrow buttons turning white on hover. Added a shared `order-button` style so arrows use link-blue colors and remain visible [#76]
+- Updated the `project` graphql query to include `email` and `created` field so we can display info for invited project collaborators who haven't accepted invite [#287]
 - Fixed `type` errors resulting from deprecated `errorPolicy` in unit tests [#252]
 - Fixed issue with Feedback Notification headers displaying for any collaborator on the Plan Overview, Section and Question pages. It should only display to Org Admins and Super Admins. Added shared isOrgAdmin hook for pages. [#249]
 
 ## Chore
+- Updated `@types/react` to `v18.3.31`, `react` to `v19.2.8`, `react-dom` to `v19.2.8`, `postcss` to `v8.5.25`, `qs` to `v6.15.3`, `@apollo/client` to `v4.2.9`, `@types/node` to `v24.13.3`, `systeminformation` to `v5.31.17`, `dompurify` to `v3.4.12`, `eslint` to `v9.39.5`, `sanitize-html` to `v2.17.6`, `next` to `v16.2.12`. Also updated `jest.config.ts` to accommodate the recent update in `sanitize-html` and its dependencies to be `ESM-only`, so we had to specify that `jest` transform them to `Common JS` [#331]
+- Updated `brace-expansion` to `v5.0.8` to address high vulnerability [#303]
+- Updated `sharp` override to `v0.35.0` and `dompurify` to `v3.4.12` to address vulnerabilities [#304]
+- Updated `js-yaml` to `v4.3.0` and `brace-expansion` to `v2.1.2` to address HIGH security vulnerabilities.
+- Updated `eslint` to `v9.39.4`, `prettier` to `v3.8.4`, `brace-expansion` to `v2.1.1`, `sanitize-html` to `v2.17.5`, `@apollo/client` to `v4.2.3`, `@dmptool/types` to `v3.1.7` and `dompurify` to `v3.4.11`. Also added override for `js-yaml` to `v4.2.0` due to vulnerability [#290]
 - Bump form-data from 4.0.5 to 4.0.6
 - Added Github Action workflows `versioning.yml` and `validation-version-label.yml` to automate versioning when merging from `development` into `stage`. [#271]
 - Addressed `shell-quote` vulnerability by running `npm audit fix` to update `package-lock.json` [#278]
@@ -730,8 +811,6 @@
 ===============================================================================================================
 ### Updated
 
-=======
-
 - Updated `/graphql` files to include new backend error objects [#308]
 - Updated `/account/profile/page.tsx` to display the new backend field level errors [#308]
 - Updated `/template/[templateid]/page.tsx` to display the new backend field level errors [#308]
@@ -828,8 +907,6 @@
 - Removed use of NEXT_PUBLIC_GRAPHQL_ENDPOINT env variable, since it was a duplicate of NEXT_PUBLIC_SERVER_ENDPOINT [#171]
 
 ### Added
-
-=======
 
 - Made some updates related to authentication [#142]
 - Updated middleware to redirect to /login if both access token and refresh token is missing

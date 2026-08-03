@@ -1,5 +1,5 @@
-import React from "react";
 import { fireEvent, render, screen, waitFor } from '@/utils/test-utils';
+import userEvent from '@testing-library/user-event';
 import { useParams, useRouter } from 'next/navigation';
 import { useToast } from '@/context/ToastContext';
 import logECS from '@/utils/clientLogger';
@@ -182,8 +182,8 @@ describe("ProjectsProjectMemberCreate", () => {
     fireEvent.click(roles[3]);
     fireEvent.click(roles[5]);
 
-    const saveButton = screen.getByRole('button', { name: /buttons.saveChanges/i });
-    fireEvent.click(saveButton);
+    const form = document.querySelector('form')!;
+    fireEvent.submit(form);
 
     await waitFor(() => {
       expect(mockRouter.push).toHaveBeenCalledWith('/en-US/projects/1/members');
@@ -214,12 +214,14 @@ describe("ProjectsProjectMemberCreate", () => {
     const roles = screen.getAllByTestId(/role-checkbox-/);
     expect(roles.length).toBe(15);
 
-    fireEvent.click(roles[0]);
-    fireEvent.click(roles[3]);
-    fireEvent.click(roles[5]);
+    const user = userEvent.setup();
 
-    const saveButton = screen.getByRole('button', { name: /buttons.saveChanges/i });
-    fireEvent.click(saveButton);
+    await user.click(roles[0]);
+    await user.click(roles[3]);
+    await user.click(roles[5]);
+
+    const form = document.querySelector('form')!;
+    fireEvent.submit(form);
 
     await waitFor(() => {
       expect(addProjectMemberAction).toHaveBeenCalledWith(expect.objectContaining({
@@ -253,8 +255,8 @@ describe("ProjectsProjectMemberCreate", () => {
     fireEvent.change(screen.getByRole('textbox', { name: /email/i }), { target: { value: 'john.doe@example.com' } });
     fireEvent.change(screen.getByRole('textbox', { name: /orcid/i }), { target: { value: '0000-0002-1825-0097' } });
 
-    const saveButton = screen.getByRole('button', { name: /buttons.saveChanges/i });
-    fireEvent.click(saveButton);
+    const form = document.querySelector('form')!;
+    fireEvent.submit(form);
 
     await waitFor(() => {
       expect(screen.getByText('messaging.errors.errorAddingMember')).toBeInTheDocument();
@@ -286,8 +288,8 @@ describe("ProjectsProjectMemberCreate", () => {
     fireEvent.change(screen.getByRole('textbox', { name: /email/i }), { target: { value: 'john.doe@example.com' } });
     fireEvent.change(screen.getByRole('textbox', { name: /orcid/i }), { target: { value: '0000-0002-1825-0097' } });
 
-    const saveButton = screen.getByRole('button', { name: /buttons.saveChanges/i });
-    fireEvent.click(saveButton);
+    const form = document.querySelector('form')!;
+    fireEvent.submit(form);
 
     await waitFor(() => {
       expect(screen.getByText('messaging.errors.errorAddingMember')).toBeInTheDocument();
@@ -319,8 +321,8 @@ describe("ProjectsProjectMemberCreate", () => {
     fireEvent.change(screen.getByRole('textbox', { name: /email/i }), { target: { value: '' } });
     fireEvent.change(screen.getByRole('textbox', { name: /orcid/i }), { target: { value: '0000-0002-1825-0097' } });
 
-    const saveButton = screen.getByRole('button', { name: /buttons.saveChanges/i });
-    fireEvent.click(saveButton);
+    const form = document.querySelector('form')!;
+    fireEvent.submit(form);
 
     await waitFor(() => {
       expect(screen.getByText('messaging.errors.errorAddingMember')).toBeInTheDocument();
@@ -370,8 +372,8 @@ describe("ProjectsProjectMemberCreate", () => {
     fireEvent.change(screen.getByRole('textbox', { name: /email/i }), { target: { value: 'john.doe@example.com' } });
     fireEvent.change(screen.getByRole('textbox', { name: /orcid/i }), { target: { value: '0000-0002-1825-0097' } });
 
-    const saveButton = screen.getByRole('button', { name: /buttons.saveChanges/i });
-    fireEvent.click(saveButton);
+    const form = document.querySelector('form')!;
+    fireEvent.submit(form);
 
     await waitFor(() => {
       expect(screen.getByText('Member already exists in the system')).toBeInTheDocument();
@@ -397,15 +399,17 @@ describe("ProjectsProjectMemberCreate", () => {
     fireEvent.change(screen.getByRole('textbox', { name: /email/i }), { target: { value: 'john.doe@example.com' } });
     fireEvent.change(screen.getByRole('textbox', { name: /orcid/i }), { target: { value: '0000-0002-1825-0097' } });
 
-
     const roles = screen.getAllByTestId(/role-checkbox-/);
     expect(roles.length).toBe(15);
 
     fireEvent.click(roles[0]);
 
-    const saveButton = screen.getByRole('button', { name: /buttons.saveChanges/i });
-    fireEvent.click(saveButton);
+    const form = document.querySelector('form')!;
+    fireEvent.submit(form);
 
+    await waitFor(() => {
+      expect(addProjectMemberAction).toHaveBeenCalled();
+    });
     await waitFor(() => {
       expect(screen.getByText('Failed to add member')).toBeInTheDocument();
       expect(logECS).toHaveBeenCalledWith(

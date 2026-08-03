@@ -94,6 +94,11 @@
     "notificationsDesc": "Este endereço de e-mail será usado para notificações DMP. <manage>Gerencie suas notificações</manage>.",
     "aliasEmailDesc": "Os endereços de e-mail do pseudônimo podem ser usados para ajudar outros a encontrar você, por exemplo, se eles quiserem compartilhar um DMP com você.",
     "linkMakePrimary": "Endereço de e-mail principal",
+    "primaryEmailCannotBeDeleted": "Para alterar seu e-mail principal, adicione outro endereço abaixo e defina-o como principal.",
+    "primaryBadge": "Principal",
+    "deleteEmailAria": "Excluir endereço de e-mail {email}",
+    "deleteEmailConfirmTitle": "Excluir endereço de e-mail?",
+    "deleteEmailConfirmMessage": "Tem certeza de que deseja excluir {email}? Esta ação não pode ser desfeita.",
     "helpTextForAddAlias": "Você receberá um e-mail para confirmar esta adição",
     "helpTextSelectYourLanguage": "Selecione seu idioma preferido",
     "helpTextSearchForInstitution": "Procurar sua instituição",
@@ -102,6 +107,7 @@
     "btnUpdating": "Atualizando",
     "btnUpdate": "Atualização",
     "btnAdd": "Adicionar",
+    "btnDelete": "Excluir",
     "linkUpdatePassword": "Atualizar senha",
     "linkUpdateConnections": "Atualizar conexão?",
     "linkManageNotifications": "Atualizar conexão?",
@@ -191,18 +197,37 @@
     "orcidConnection": {
       "title": "ORCID iD",
       "content": "O ORCID fornece um identificador persistente — um ORCID iD — que distingue você de outros usuários. Saiba mais em <link>ORCID.org</link>.",
-      "btnText": "Conecte seu ORCID iD"
+      "btnText": "Conecte seu ORCID iD",
+      "connectSuccess": "Seu ORCID iD foi conectado."
     },
     "orcidConnectionConnected": {
-      "title": "ORCID iD",
-      "content": "Você conectou com sucesso o seu ORCID iD. Saiba mais ou gerencie seu registro em <link>ORCID.org</link>.",
-      "btnText": "Ver ORCID iD"
+      "connectedBadge": "Conectado",
+      "disconnect": "Desconectar",
+      "disconnectAria": "Desconectar seu ORCID iD",
+      "disconnectConfirmTitle": "Confirmar desconexão",
+      "disconnectConfirmMessage": "Tem certeza de que deseja desconectar seu ORCID iD? Você pode reconectar a qualquer momento.",
+      "disconnectSuccess": "Seu ORCID iD foi desconectado."
     },
     "ssoConnection": {
       "title": "Cadastro único",
       "content": "Conecte sua conta para poder entrar na Ferramenta DMP através de sua instituição.",
-      "btnText": "Conectar credenciais institucionais"
+      "btnText": "Conectar credenciais institucionais",
+      "connectSuccess": "Suas credenciais institucionais foram conectadas."
     },
+    "ssoConnectionConnected": {
+      "connectedBadge": "Conectado",
+      "disconnect": "Desconectar",
+      "disconnectAria": "Desconectar suas credenciais institucionais",
+      "disconnectConfirmTitle": "Confirmar desconexão",
+      "disconnectConfirmMessage": "Tem certeza de que deseja desconectar suas credenciais institucionais? Você pode reconectar a qualquer momento.",
+      "disconnectSuccess": "Suas credenciais institucionais foram desconectadas."
+    },
+    "btnCancel": "Cancelar",
+    "previewStatesHeading": "Visualização de estados",
+    "previewOrcidNotConnected": "ORCID — Não conectado",
+    "previewOrcidConnected": "ORCID — Conectado",
+    "previewSsoNotConnected": "Cadastro único — Não conectado",
+    "previewSsoConnected": "Cadastro único — Conectado",
     "headingRelatedActions": "Ações relacionadas",
     "linkUpdatePassword": "Atualizar senha",
     "linkUpdateConnections": "Atualizar conexão?",
@@ -213,11 +238,16 @@
     "headerDescription": "Selecione o fundo para usar neste projeto. Este pode ser o financiador que você planeja aplicar ou de onde você já tem financiamento. Você poderá adicionar fundos adicionais mais tarde, se tiver mais de um.",
     "funder": "Finalizações",
     "popularTitle": "Financiadores mais populares",
+    "popularDescription": "Estes são os financiadores usados com mais frequência nos planos durante o último ano.",
+    "popularLoading": "Carregando financiadores populares...",
+    "popularFallbackTitle": "Procurando um financiador específico?",
+    "popularFallbackDescription": "Pesquise acima pelo nome do financiador ou por uma palavra-chave relacionada. Se ainda não estiver na lista, você poderá adicioná-lo manualmente.",
     "found": "Financiamentos {count} encontrados",
-    "noResults": "Nenhum resultado encontrado",
+    "noResults": "Nenhum financiador encontrado",
+    "noResultsDescription": "Tente outro nome ou uma palavra-chave relacionada. Se o financiador ainda não estiver na lista, você pode adicioná-lo manualmente abaixo.",
     "showCount": "Mostrando {count} de {total}",
     "addManuallyHeading": "Não está nesta lista.",
-    "addManuallyText": "Se o seu projeto não for exibido, você pode adicionar os detalhes manualmente.",
+    "addManuallyText": "Se o seu financiador não for exibido, você pode adicionar os detalhes manualmente.",
     "addManuallyLabel": "Adicionar professor manualmente",
     "noFunderHeading": "Ainda não tem um financiador?",
     "noFunderText": "Se você ainda não tem um fundo, você pode usar o link abaixo para prosseguir para a próxima etapa.",
@@ -460,6 +490,10 @@
     "title": "Projeto da organização",
     "intro": "Gerencie projetos e planos para DMSP em toda a sua organização",
     "messages": {
+      "info": {
+        "noProjectsHeading": "Os projetos da organização aparecerão aqui",
+        "noProjectsDescription": "Quando pesquisadores da sua organização criarem planos de gerenciamento de dados, eles serão listados aqui."
+      },
       "errors": {
         "errorRetrievingProjects": "Algo deu errado ao recuperar projetos. Por favor, tente novamente mais tarde."
       }
@@ -823,7 +857,15 @@
       "selectAnItem": "Selecionar um item",
       "mayContainSensitiveData": "Pode conter dados sensíveis?",
       "mayContainPersonalData": "Pode conter informações de identificação pessoal?",
-      "additionalComments": "Comentários adicionais"
+      "additionalComments": "Comentários adicionais",
+      "show": "Mostrar",
+      "hide": "Ocultar",
+      "showPassword": "Mostrar senha",
+      "hidePassword": "Ocultar senha",
+      "showPasswordFor": "Mostrar senha para {field}",
+      "hidePasswordFor": "Ocultar senha para {field}",
+      "passwordIsVisible": "Sua senha está visível",
+      "passwordIsHidden": "Sua senha está oculta"
     },
     "helpText": {
       "searchHelpText": "Pesquisar por organização de pesquisa, estação de campo ou laboratório, descrição de modelo, etc.",
@@ -852,6 +894,7 @@
     },
     "messaging": {
       "loading": "Carregando",
+      "loadingList": "Carregando lista, aguarde...",
       "loadingPage": "Carregando página...",
       "submitting": "Enviando...",
       "submittingSROnly": "Enviando solicitação de feedback...",
@@ -872,7 +915,8 @@
         "questionUnexpectedFormat": "Formato inesperado para question.json.",
         "questionJSONFParseFailed": "JSON.parse falhou.",
         "requiredField": "{field} é obrigatório",
-        "errorParsingData": "Error parsing data"
+        "errorParsingData": "Error parsing data",
+        "institutionSuggestionsLoadError": "Não foi possível carregar as sugestões de instituição. Tente novamente."
       },
       "numDisplaying": "Mostrando {num} de {total}",
       "unsavedChangesWarning": "Você tem alterações não salvas. Tem certeza que deseja sair desta página?"
@@ -933,7 +977,7 @@
     },
     "ariaLabels": {
       "editMember": "Editar detalhes de {name}",
-      "orcidProfile": "Perfil ORCID para {name}"
+      "orcidProfile": "Ver o perfil ORCID de {name} (abre em uma nova aba)"
     }
   }
 }

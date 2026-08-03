@@ -489,6 +489,7 @@ describe("QuestionAdd", () => {
         sampleText: "",
         useSampleTextAsDefault: false,
         required: true,
+        tags: []
       });
     });
   });
@@ -540,6 +541,7 @@ describe("QuestionAdd", () => {
         sampleText: "",
         useSampleTextAsDefault: false,
         required: false,
+        tags: []
       });
     });
   });
@@ -682,6 +684,7 @@ describe("QuestionAdd", () => {
         sampleText: "",
         useSampleTextAsDefault: false,
         required: false,
+        tags: []
       });
     });
   })
@@ -745,6 +748,7 @@ describe("QuestionAdd", () => {
         sampleText: '',
         required: false,
         useSampleTextAsDefault: false,
+        tags: []
       });
     });
   })
@@ -791,13 +795,14 @@ describe("QuestionAdd", () => {
     await waitFor(() => {
       expect(mockOnSave).toHaveBeenCalledWith({
         questionText: 'New Question',
-        json: "{\"type\":\"currency\",\"attributes\":{\"max\":10000000,\"min\":0,\"step\":0.01,\"denomination\":\"GBP\"},\"meta\":{\"schemaVersion\":\"1.0\"},\"showCommentField\":false}",
+        json: "{\"type\":\"currency\",\"attributes\":{\"max\":100000000,\"min\":0,\"step\":0.01,\"denomination\":\"GBP\"},\"meta\":{\"schemaVersion\":\"1.0\"},\"showCommentField\":false}",
         requirementText: '',
         displayOrder: 5,
         guidanceText: '',
         sampleText: '',
         useSampleTextAsDefault: false,
         required: false,
+        tags: []
       });
     });
   })
@@ -879,10 +884,8 @@ describe("QuestionAdd", () => {
         />);
     });
 
-    // Radio button info with order, text and checkbox should be in document
-    expect(screen.getByLabelText(/labels.order/)).toBeInTheDocument();
-    expect(screen.getByLabelText(/labels.text/)).toBeInTheDocument();
-    expect(screen.getByLabelText(/labels.default/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/labels.choiceNumber/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/buttons.setDefault/)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'buttons.addRow' })).toBeInTheDocument();
   })
 
@@ -911,7 +914,7 @@ describe("QuestionAdd", () => {
     });
 
     await act(async () => {
-      fireEvent.change(screen.getByLabelText(/labels.text/), {
+      fireEvent.change(screen.getByLabelText(/labels.choiceNumber/), {
         target: { value: 'Yes' },
       });
     });
@@ -922,11 +925,11 @@ describe("QuestionAdd", () => {
     });
 
     // Wait for the new input to appear
-    const textInputs = await screen.findAllByLabelText(/labels.text/);
+    const textInputs = await screen.findAllByLabelText(/labels.choiceNumber/);
     fireEvent.change(textInputs[0], { target: { value: 'Option 1' } });
     fireEvent.change(textInputs[1], { target: { value: 'Option 2' } });
 
-    const defaultCheckboxes = screen.getAllByLabelText(/labels.default/);
+    const defaultCheckboxes = screen.getAllByLabelText(/buttons.setDefault/);
 
     // Simulate checking the first option as default
     fireEvent.click(defaultCheckboxes[0]);
@@ -1213,6 +1216,7 @@ describe("QuestionAdd", () => {
         sampleText: '',
         useSampleTextAsDefault: false,
         required: true,
+        tags: []
       });
     });
   })
@@ -1698,33 +1702,32 @@ describe("Research Output Question Type", () => {
         breadcrumbs={<div>Breadcrumbs</div>}
       />);
 
-    // Find the panel
-    const outputTypeCheckbox = screen.getByTestId('checkbox-outputType');
-    await act(async () => { // open panel
-      fireEvent.click(outputTypeCheckbox);
+    // Select the button that controls the outputType panel directly, regardless of its label
+    const outputTypeToggle = document.querySelector('button[aria-controls="panel-outputType"]');
+    if (!outputTypeToggle) throw new Error('outputType toggle button not found');
+
+    await act(async () => {
+      fireEvent.click(outputTypeToggle);
     });
+
     const panel = document.getElementById('panel-outputType');
     if (!panel) throw new Error('panel-outputType not found');
 
-    // Find the hidden select element within the panel
     const hiddenSelect = within(panel).getByRole('combobox', { hidden: true });
 
     await act(async () => {
       fireEvent.change(hiddenSelect, { target: { value: 'mine' } });
     });
 
-    // Verify the mode changed by checking the button text
     await waitFor(() => {
-      const selectButton = within(panel!).getByTestId('select-button');
+      const selectButton = within(panel).getByTestId('select-button');
       expect(selectButton).toHaveTextContent('researchOutput.labels.useCustomList');
     });
 
-    // Verify custom fields section appears
     await waitFor(() => {
       expect(screen.getByText('researchOutput.outputType.legends.myOutputs')).toBeInTheDocument();
     });
 
-    // Verify all expected fields are present for custom output types
     expect(screen.getByLabelText('researchOutput.outputType.labels.enterOutputType')).toBeInTheDocument();
     expect(screen.getByLabelText('researchOutput.outputType.labels.typeDescription')).toBeInTheDocument();
     expect(screen.getByRole('button', {

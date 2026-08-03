@@ -1,6 +1,13 @@
 {
   "memberRoles": [
     {
+      "id": 5,
+      "label": "No Role Assigned",
+      "uri": "",
+      "description": "",
+      "displayOrder": 0
+    },
+    {
       "id": 1,
       "label": "Data Manager",
       "uri": "https://credit.niso.org/contributor-roles/data-curation/",

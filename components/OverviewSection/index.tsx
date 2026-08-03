@@ -57,23 +57,22 @@ const OverviewSection: React.FC<OverviewSectionProps> = ({
           {heading}
         </h2>
         <div className={styles.overviewSectionText}>{children}</div>
-      </div>
-      {
-        includeLink && (
-          <>
+        {includeLink && (
+          <div className={styles.overviewSectionActions}>
             {!disabled ? (
               <Link
                 href={linkHref}
                 aria-label={linkAriaLabel}
-                className={styles.overviewSectionLink}
+                className="text-link"
               >
                 {linkText}
               </Link>
             ) : (
               <DialogTrigger>
                 <Button
-                  className="link-disabled"
-                  aria-disabled={true}>
+                  className="link-disabled text-link"
+                  aria-disabled={true}
+                >
                   {linkText}
                 </Button>
 
@@ -84,9 +83,9 @@ const OverviewSection: React.FC<OverviewSectionProps> = ({
                 </Popover>
               </DialogTrigger>
             )}
-          </>
-        )
-      }
+          </div>
+        )}
+      </div>
     </section>
   );
 };

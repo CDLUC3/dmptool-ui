@@ -2,39 +2,122 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 0;
-  margin: 0 var(--fs-xl);
+  gap: 16px;
+  padding: 16px;
+  margin: 12px 0;
+  border: 1px solid var(--gray-100);
+  border-radius: 8px;
+  background: var(--gray-50);
 
-  .tooltipButton {
-    background: none !important;
+  // Nested under .emailRow to out-specify the global `button` styles.
+  .emailLink {
+    cursor: pointer;
+    font-size: var(--fs-small);
+    font-weight: 400;
+    text-decoration: underline;
+    text-align: left;
+    color: inherit;
+    font-family: inherit;
+    background: none;
     border: none;
-    margin: 0;
     padding: 0;
+    margin: 0;
+    width: fit-content;
+    transition: none;
+
+    &:hover:not(:disabled),
+    &:active:not(:disabled) {
+      background: none;
+      color: var(--blue-900);
+      text-decoration: underline;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--blue-900);
+      outline-offset: 2px;
+      background: none;
+      color: var(--blue-900);
+    }
+  }
+
+  .deleteButton {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    cursor: pointer;
+    background: none;
+    border: none;
+    padding: 4px;
+    margin: 0;
+    border-radius: 4px;
+    transition: none;
+
+    &:hover:not(:disabled),
+    &:active:not(:disabled) {
+      background: none;
+
+      .trashcanIcon {
+        fill: var(--red-500);
+      }
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--blue-900);
+      outline-offset: 2px;
+      background: none;
+    }
   }
 }
 
 .emailContent {
   display: flex;
   flex-direction: column;
+  gap: 4px;
+  min-width: 0;
 }
 
 .emailAddress {
-  margin-bottom: 0;
+  margin: 0;
+  padding: 0;
   font-weight: 700;
+  line-height: 1.4;
 }
 
-.emailLink {
-  cursor:pointer;
+.deleteDisabledMessage {
+  margin: 0;
+  padding: 0;
   font-size: var(--fs-small);
-  text-decoration: underline;
-}
-
-.primaryEmail svg {
-  cursor:auto;
-  fill: var(--gray-300);
+  color: var(--gray-500);
+  line-height: 1.4;
 }
 
 .trashcanIcon {
   cursor: pointer;
-  fill: var(--blue-900) !important;
+  fill: var(--blue-900);
+}
+
+.primaryBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: var(--blue-100, var(--gray-100));
+  color: var(--blue-900);
+  font-size: var(--fs-small);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.primaryBadgeIcon {
+  fill: var(--blue-900);
+}
+
+.dialogActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: var(--space-4, 16px);
 }

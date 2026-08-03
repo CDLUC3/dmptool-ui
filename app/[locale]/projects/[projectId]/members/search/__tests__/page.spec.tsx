@@ -78,6 +78,10 @@ describe('ProjectsProjectMembersSearch Integration Tests', () => {
     setProjectMember: jest.fn(),
     roles: [],
     memberRoles: mockMemberRoles,
+    memberRolesLoading: false,
+    memberRolesError: undefined,
+    refetchMemberRoles: jest.fn(),
+    isSubmitting: false,
     errors: [],
     fieldErrors: {
       givenName: '',
@@ -134,12 +138,29 @@ describe('ProjectsProjectMembersSearch Integration Tests', () => {
       expect(screen.getByRole('textbox', { name: /labels\.givenName/ })).toBeInTheDocument();
       expect(screen.getByRole('textbox', { name: /labels\.surName/ })).toBeInTheDocument();
       expect(screen.getByRole('textbox', { name: /labels\.email/ })).toBeInTheDocument();
+      expect(screen.getByRole('textbox', { name: /labels\.orcid/ })).toBeInTheDocument();
 
       // Check for checkbox group
       const checkboxGroup = screen.getByTestId('checkbox-group');
       expect(checkboxGroup).toBeInTheDocument();
       expect(within(checkboxGroup).getByText('Principal Investigator')).toBeInTheDocument();
       expect(within(checkboxGroup).getByText('Co-Investigator')).toBeInTheDocument();
+    });
+
+    it('should disable the submit button while adding a member', () => {
+      mockUseProjectMemberForm.mockReturnValue({
+        ...defaultProjectMemberForm,
+        isSubmitting: true,
+      });
+
+      render(
+        <MockedProvider>
+          <ProjectsProjectMembersSearch />
+        </MockedProvider>
+      );
+
+      expect(screen.getByRole('button', { name: /buttons\.submitting/i })).toBeDisabled();
+      expect(screen.queryByTestId('loading-component')).not.toBeInTheDocument();
     });
 
     it('should handle search input and calls hook methods correctly', () => {
@@ -207,14 +228,14 @@ describe('ProjectsProjectMembersSearch Integration Tests', () => {
         resetErrors: mockResetErrors,
       });
 
-      render(
+      const { rerender } = render(
         <MockedProvider>
           <ProjectsProjectMembersSearch />
         </MockedProvider>
       );
 
       const searchResult = screen.getByTestId('result-0');
-      fireEvent.click(searchResult);
+      fireEvent.click(within(searchResult).getByRole('button'));
 
       expect(mockSetProjectMember).toHaveBeenCalledWith({
         givenName: 'John',
@@ -226,6 +247,57 @@ describe('ProjectsProjectMembersSearch Integration Tests', () => {
         otherAffiliationName: '',
       });
       expect(mockResetErrors).toHaveBeenCalled();
+
+      mockUseProjectMemberForm.mockReturnValue({
+        ...defaultProjectMemberForm,
+        projectMember: {
+          ...defaultProjectMemberForm.projectMember,
+          givenName: 'John',
+          surName: 'Doe',
+          email: 'john.doe@example.com',
+          orcid: '0000-0000-0000-0001',
+          affiliationName: 'Test University',
+          affiliationId: 'test-uni-id',
+        },
+        setProjectMember: mockSetProjectMember,
+        resetErrors: mockResetErrors,
+      });
+
+      rerender(
+        <MockedProvider>
+          <ProjectsProjectMembersSearch />
+        </MockedProvider>
+      );
+
+      expect(screen.getByRole('heading', { name: 'headings.selectedMatch' })).toBeInTheDocument();
+      expect(screen.queryByRole('search')).not.toBeInTheDocument();
+      const orcidInput = screen.getByRole('textbox', { name: /labels\.orcid/ });
+      expect(orcidInput).toHaveValue('0000-0000-0000-0001');
+      expect(orcidInput).toBeEnabled();
+      expect(screen.getByText('labels.orcidFromSearch')).toBeInTheDocument();
+
+      mockUseProjectMemberForm.mockReturnValue({
+        ...defaultProjectMemberForm,
+        projectMember: {
+          ...defaultProjectMemberForm.projectMember,
+          givenName: 'John',
+          surName: 'Doe',
+          email: 'john.doe@example.com',
+          orcid: '0000-0000-0000-0002',
+          affiliationName: 'Test University',
+          affiliationId: 'test-uni-id',
+        },
+        setProjectMember: mockSetProjectMember,
+        resetErrors: mockResetErrors,
+      });
+
+      rerender(
+        <MockedProvider>
+          <ProjectsProjectMembersSearch />
+        </MockedProvider>
+      );
+
+      expect(screen.queryByText('labels.orcidFromSearch')).not.toBeInTheDocument();
     });
 
     it('should show loading state during search', () => {
@@ -233,6 +305,7 @@ describe('ProjectsProjectMembersSearch Integration Tests', () => {
         ...defaultCollaboratorSearch,
         isSearching: true,
         loading: true,
+        results: [mockCollaboratorResult],
       });
 
       render(
@@ -243,6 +316,7 @@ describe('ProjectsProjectMembersSearch Integration Tests', () => {
 
       expect(screen.getByRole('status')).toBeInTheDocument();
       expect(screen.getByText('messaging.loading')).toBeInTheDocument();
+      expect(screen.queryByText('John Doe')).not.toBeInTheDocument();
     });
 
     it('should display errors from both hooks', () => {
@@ -286,11 +360,12 @@ describe('ProjectsProjectMembersSearch Integration Tests', () => {
       expect(mockHandleFormSubmit).toHaveBeenCalled();
     });
 
-    it('should auto-populate form when search results change', () => {
+    it('should wait for the user to select a search result', () => {
       const mockSetProjectMember = jest.fn();
 
       mockUseCollaboratorSearch.mockReturnValue({
         ...defaultCollaboratorSearch,
+        isSearching: true,
         results: [mockCollaboratorResult],
       });
 
@@ -305,16 +380,8 @@ describe('ProjectsProjectMembersSearch Integration Tests', () => {
         </MockedProvider>
       );
 
-      // The useEffect should trigger auto-population
-      expect(mockSetProjectMember).toHaveBeenCalledWith({
-        givenName: 'John',
-        surName: 'Doe',
-        email: 'john.doe@example.com',
-        orcid: '0000-0000-0000-0001',
-        affiliationName: 'Test University',
-        affiliationId: 'test-uni-id',
-        otherAffiliationName: '',
-      });
+      expect(mockSetProjectMember).not.toHaveBeenCalled();
+      expect(screen.getByRole('button', { name: 'ariaSelectSearchResult' })).toBeInTheDocument();
     });
   });
 

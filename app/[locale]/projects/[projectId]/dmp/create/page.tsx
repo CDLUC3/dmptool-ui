@@ -1,6 +1,13 @@
 'use client';
 
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type TransitionStartFunction
+} from 'react';
 import { useMutation, useQuery, useLazyQuery } from '@apollo/client/react';
 import { useParams, useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
@@ -22,6 +29,7 @@ import PageHeader from "@/components/PageHeader";
 import { ContentContainer, LayoutContainer } from '@/components/Container';
 import TemplateList from '@/components/TemplateList';
 import ErrorMessages from '@/components/ErrorMessages';
+import Loading from '@/components/Loading';
 import { CheckboxGroupComponent } from '@/components/Form';
 import Pagination from '@/components/Pagination';
 
@@ -254,7 +262,7 @@ const PlanCreate: React.FC = () => {
   };
 
   // When user selects a template, we create a plan and redirect
-  const onSelect = async (versionedTemplateId: number) => {
+  const onSelect = async (versionedTemplateId: number, startTransition: TransitionStartFunction) => {
     if (isSubmitting) return; // Prevent multiple submissions
 
     setIsSubmitting(true);
@@ -315,10 +323,10 @@ const PlanCreate: React.FC = () => {
       // errors returned by the AddPlanFundingMutation. This is because we already
       // created the plan at this point, and it will cause confusion if we now
       // deal with errors without redirecting to the newly created plan.
-      router.push(routePath('projects.dmp.show', {
-        projectId,
-        dmpId: newPlanId,  // newPlanId was set in the preceding promise
-      }));
+      startTransition(() => {
+        router.push(routePath('projects.dmp.show', { projectId, dmpId: newPlanId }));
+      });
+
     } catch (err) {
       logECS('error', 'addPlanMutation', {
         error: err,
@@ -463,12 +471,26 @@ const PlanCreate: React.FC = () => {
     return templateMetaData?.publishedTemplatesMetaData?.hasBestPracticeTemplates ?? false;
   }, [templateMetaData]);
 
+  // Whether the page is still performing its initial template load. Used to show a
+  // spinner (instead of the "no items found" message) before the first fetch has been
+  // applied, so the empty state doesn't flash on initial load. Once the user interacts
+  // (search/filter), we no longer suppress the empty state — an empty result should
+  // surface immediately as "no items found".
+  const isLoadingTemplates =
+    !userHasInteracted &&
+    (loading ||
+      projectFundingsLoading ||
+      userLoading ||
+      templatesMetaDataLoading ||
+      !initialSelectionApplied);
+
   const initialFilterConfig = useMemo(() => {
     // Don't calculate if user has interacted or data isn't ready
     if (
       userHasInteracted ||
       loading ||
       projectFundingsLoading ||
+      userLoading ||
       templatesMetaDataLoading
     ) {
       return null;
@@ -502,6 +524,7 @@ const PlanCreate: React.FC = () => {
     userHasInteracted,
     loading,
     projectFundingsLoading,
+    userLoading,
     templatesMetaDataLoading,
     userData
   ]);
@@ -689,6 +712,8 @@ const PlanCreate: React.FC = () => {
                   handlePageClick={handlePageClick}
                 />)}
             </>
+          ) : isLoadingTemplates ? (
+            <Loading variant="inline" message={Global('messaging.loading')} />
           ) : (
             <p>{Global('messaging.noItemsFound')}</p>
           )}

@@ -285,6 +285,15 @@ const emptyPopularMock = [
   },
 ];
 
+const popularErrorMock = [
+  {
+    request: {
+      query: PopularFundersDocument,
+    },
+    error: new Error('Popular funders request failed'),
+  },
+];
+
 
 // Needed for the errormessages component
 jest.mock('@/utils/general', () => ({
@@ -319,6 +328,10 @@ describe("ProjectsProjectFundingSearch", () => {
 
     // NOTE: Search-field is the testid provided by the fundersearch component
     expect(screen.getByTestId('search-field')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('loading-component')).not.toBeInTheDocument();
+    });
   });
 
   it("should show a short-list of Popular Funders", async () => {
@@ -330,7 +343,23 @@ describe("ProjectsProjectFundingSearch", () => {
 
     await waitFor(() => {
       expect(screen.getByText('popularTitle')).toBeInTheDocument();
+      expect(screen.getByText('popularDescription')).toBeInTheDocument();
       expect(screen.getByText('Popular Funder 1')).toBeInTheDocument();
+    });
+  });
+
+  it("should show a loading state while Popular Funders are fetched", async () => {
+    render(
+      <MockedProvider mocks={mocks}>
+        <CreateProjectSearchFunder />
+      </MockedProvider>
+    );
+
+    expect(screen.getByText('popularTitle')).toBeInTheDocument();
+    expect(screen.getByTestId('loading-component')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('loading-component')).not.toBeInTheDocument();
     });
   });
 
@@ -342,7 +371,22 @@ describe("ProjectsProjectFundingSearch", () => {
     );
 
     await waitFor(() => {
-      expect(screen.queryByText('popularTitle')).not.toBeInTheDocument();
+      expect(screen.getByText('popularTitle')).toBeInTheDocument();
+      expect(screen.getByText('popularFallbackTitle')).toBeInTheDocument();
+      expect(screen.getByText('popularFallbackDescription')).toBeInTheDocument();
+    });
+  });
+
+  it("should show search guidance when Popular Funders fail to load", async () => {
+    render(
+      <MockedProvider mocks={popularErrorMock}>
+        <CreateProjectSearchFunder />
+      </MockedProvider>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('popularFallbackTitle')).toBeInTheDocument();
+      expect(screen.getByText('popularFallbackDescription')).toBeInTheDocument();
     });
   });
 
@@ -399,6 +443,7 @@ describe("ProjectsProjectFundingSearch", () => {
 
     await waitFor(() => {
       expect(screen.getByText("noResults")).toBeInTheDocument();
+      expect(screen.getByText("noResultsDescription")).toBeInTheDocument();
     });
   });
 
@@ -725,7 +770,7 @@ describe("ProjectsProjectFundingSearch", () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText("popularTitle")).toBeInTheDocument();
+      expect(screen.getByText("Popular Funder 1")).toBeInTheDocument();
     });
 
     const results = await axe(container);

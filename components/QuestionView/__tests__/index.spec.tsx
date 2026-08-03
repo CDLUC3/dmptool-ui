@@ -691,12 +691,13 @@ describe("QuestionView", () => {
         path="/template/123"
       />
     );
-    expect(screen.getByTestId('card-body').textContent).toContain('+');
-    expect(screen.getByTestId('card-body').textContent).toContain('-');
-    expect(screen.getByDisplayValue('$0.00')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /increase/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /decrease/i })).not.toBeInTheDocument();
+    expect(screen.getByText('$')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('0')).toBeInTheDocument();
 
     const groups = screen.queryAllByRole('button');
-    expect(groups).toHaveLength(2);
+    expect(groups).toHaveLength(0);
   });
 
 
@@ -821,30 +822,32 @@ describe("QuestionView", () => {
       meta: {
         title: "Research Output Table",
         schemaVersion: "1.0",
-        usageDescription: "A table for collecting structured research output data"
+        usageDescription: "A table for collecting structured research output data",
       },
       type: "researchOutputTable",
       columns: [
         {
+          commonStandardId: "title",
           help: "Enter the title of this research output",
           content: {
             meta: {
-              schemaVersion: "1.0"
+              schemaVersion: "1.0",
             },
             type: "text",
             attributes: {
-              maxLength: 500
-            }
+              maxLength: 500,
+            },
           },
           enabled: true,
           heading: "Title",
-          required: true
+          required: true,
         },
         {
+          commonStandardId: "description",
           help: "Enter a brief description of this research output",
           content: {
             meta: {
-              schemaVersion: "1.0"
+              schemaVersion: "1.0",
             },
             type: "textArea",
             attributes: {
@@ -853,42 +856,78 @@ describe("QuestionView", () => {
               maxLength: 10000,
               asRichText: true,
               label: "Description",
-              labelTranslationKey: "labels.description"
-            }
+              labelTranslationKey: "labels.description",
+            },
           },
           enabled: true,
           heading: "Description",
-          required: true
+          required: true,
         },
         {
+          commonStandardId: "type",
           help: "Select the type of this research output",
           content: {
             meta: {
-              schemaVersion: "1.0"
+              schemaVersion: "1.0",
             },
             type: "selectBox",
             options: [
               {
                 label: "Dataset",
                 value: "dataset",
-                selected: false
+                selected: false,
               },
               {
                 label: "Software",
                 value: "software",
-                selected: false
-              }
+                selected: false,
+              },
             ],
             attributes: {
               multiple: false,
               label: "Output Type",
-              labelTranslationKey: "labels.outputType"
-            }
+              labelTranslationKey: "labels.outputType",
+            },
           },
           enabled: true,
           heading: "Output Type",
-          required: true
-        }
+          required: true,
+        },
+        {
+          heading: "Anticipated Release Date",
+          commonStandardId: "issued",
+          help: "",
+          required: false,
+          enabled: false,
+          content: {
+            type: "date",
+            meta: { schemaVersion: "1.0" },
+            attributes: { step: 1 },
+          },
+        },
+        {
+          heading: "Anticipated File Size",
+          commonStandardId: "byte_size",
+          help: "",
+          required: false,
+          enabled: false,
+          content: {
+            type: "numberWithContext",
+            meta: { schemaVersion: "1.0" },
+            attributes: {
+              step: 1,
+              min: 0,
+              context: [
+                { label: "Bytes", value: "bytes", selected: false },
+                { label: "KB", value: "kb", selected: true },
+                { label: "MB", value: "mb", selected: false },
+                { label: "GB", value: "gb", selected: true },
+                { label: "TB", value: "tb", selected: true },
+                { label: "PB", value: "pb", selected: true },
+              ],
+            },
+          },
+        },
       ],
       attributes: {
         help: "",
@@ -896,8 +935,8 @@ describe("QuestionView", () => {
         canAddRows: true,
         initialRows: 1,
         canRemoveRows: true,
-        labelTranslationKey: ""
-      }
+        labelTranslationKey: "",
+      },
     };
     const mockQuestionWithResearchOutput = { ...mockQuestion, json: JSON.stringify(json) };
 

@@ -80,6 +80,9 @@ const mockFetchCsrfToken = fetchCsrfToken as jest.Mock;
 // Mock fetch globally
 global.fetch = jest.fn() as jest.MockedFunction<typeof fetch>;
 
+const serverEndpoint = process.env.NEXT_PUBLIC_SERVER_ENDPOINT as string;
+const signUpUrl = `${serverEndpoint}/apollo-signup`;
+
 describe('SignUpPage', () => {
   const signupData = {
     givenName: "John",
@@ -228,7 +231,7 @@ describe('SignUpPage', () => {
 
   it("makes the backend call on final signin", async () => {
     jest.spyOn(global, 'fetch').mockImplementation((url) => {
-      if (url === 'http://localhost:4000/apollo-signup') {
+      if (url === signUpUrl) {
         return Promise.resolve({
           ok: true,
           status: 200,
@@ -250,7 +253,7 @@ describe('SignUpPage', () => {
 
     await waitFor(() => {
       // expect(mockUseRouter().push).toHaveBeenCalledWith('/');
-      expect(global.fetch).toHaveBeenCalledWith('http://localhost:4000/apollo-signup', {
+      expect(global.fetch).toHaveBeenCalledWith(signUpUrl, {
         method: 'POST',
         credentials: 'include',
         headers: {
@@ -306,7 +309,7 @@ describe('SignUpPage', () => {
     fireEvent.click(signupBtn);
 
     await waitFor(() => {
-      expect(screen.getByText('passMissMatch')).toBeInTheDocument();
+      expect(screen.getByText('messaging.errors.passMissMatch')).toBeInTheDocument();
     });
   });
 
@@ -356,6 +359,84 @@ describe('SignUpPage', () => {
     await waitFor(() => {
       expect(screen.getByText('institutionRequired')).toBeInTheDocument();
     });
+  });
+
+  it("should display error if password does not meet requirements", async () => {
+    render(<SignUpPage />);
+
+    // Step 1
+    fireEvent.change(screen.getByLabelText("emailAddress"), {
+      target: { value: signupData.email },
+    });
+    fireEvent.click(screen.getByTestId("continue"));
+
+    expect(screen.getByTestId("signup")).toBeInTheDocument();
+
+    // Step 2 — everything else valid, only the password is weak
+    fireEvent.change(screen.getByLabelText("firstName"), {
+      target: { value: signupData.givenName },
+    });
+    fireEvent.change(screen.getByLabelText("lastName"), {
+      target: { value: signupData.surName },
+    });
+
+    fireEvent.change(screen.getByTestId("institution"), {
+      target: { value: "InstitutionID" },
+    });
+
+    fireEvent.change(screen.getByTestId("otherinst"), {
+      target: { value: "Test" },
+    });
+
+    // Too short, no uppercase, no number, no special char
+    fireEvent.change(screen.getByTestId("pass"), {
+      target: { value: "weak" },
+    });
+    fireEvent.change(screen.getByTestId("confirmpass"), {
+      target: { value: "weak" },
+    });
+
+    const termsCheckbox = screen.getByLabelText("acceptTerms");
+    fireEvent.click(termsCheckbox);
+    expect(termsCheckbox).toBeChecked();
+
+    const signupBtn = screen.getByTestId("signup");
+    fireEvent.click(signupBtn);
+
+    await waitFor(() => {
+      expect(screen.getByText('passwordRequirements')).toBeInTheDocument();
+    });
+
+    // Validation should block the request entirely
+    expect(global.fetch).not.toHaveBeenCalled();
+  });
+
+  it("should update the password requirements list as the user types", () => {
+    render(<SignUpPage />);
+
+    // Step 1
+    fireEvent.change(screen.getByLabelText("emailAddress"), {
+      target: { value: signupData.email },
+    });
+    fireEvent.click(screen.getByTestId("continue"));
+
+    // Nothing typed yet — every requirement should be unmet
+    expect(screen.getByTestId("requirement-minLength")).toHaveClass('unmet');
+    expect(screen.getByTestId("requirement-hasUppercase")).toHaveClass('unmet');
+    expect(screen.getByTestId("requirement-hasLowercase")).toHaveClass('unmet');
+    expect(screen.getByTestId("requirement-hasNumber")).toHaveClass('unmet');
+    expect(screen.getByTestId("requirement-hasSpecialChar")).toHaveClass('unmet');
+
+    // Type a password that satisfies every rule
+    fireEvent.change(screen.getByTestId("pass"), {
+      target: { value: "Abcdefg1!" },
+    });
+
+    expect(screen.getByTestId("requirement-minLength")).toHaveClass('met');
+    expect(screen.getByTestId("requirement-hasUppercase")).toHaveClass('met');
+    expect(screen.getByTestId("requirement-hasLowercase")).toHaveClass('met');
+    expect(screen.getByTestId("requirement-hasNumber")).toHaveClass('met');
+    expect(screen.getByTestId("requirement-hasSpecialChar")).toHaveClass('met');
   });
 
   it('should handle 403 error by calling fetchCsrfToken', async () => {

@@ -7,16 +7,9 @@ import { useQuery, useMutation } from '@apollo/client/react';
 import {
   Breadcrumb,
   Breadcrumbs,
-  Button,
-  Checkbox,
-  CheckboxGroup,
-  Dialog,
-  DialogTrigger,
   Form,
   Label,
   Link,
-  OverlayArrow,
-  Popover,
   Tab,
   TabList,
   TabPanel,
@@ -28,17 +21,14 @@ import {
   SectionErrors,
   SectionsDisplayOrderDocument,
   AddSectionDocument,
-  TagsDocument
 } from '@/generated/graphql';
 import {
   SectionFormErrorsInterface,
   SectionFormInterface,
-  TagsInterface
 } from '@/app/types';
 
 //Components
 import { ContentContainer, LayoutContainer, } from '@/components/Container';
-import { DmpIcon } from "@/components/Icons";
 import PageHeader from "@/components/PageHeader";
 import TinyMCEEditor from "@/components/TinyMCEEditor";
 import ErrorMessages from '@/components/ErrorMessages';
@@ -85,7 +75,6 @@ const CreateSectionPage: React.FC = () => {
   })
 
   // Keep track of which checkboxes have been selected
-  const [selectedTags, setSelectedTags] = useState<TagsInterface[]>([]);
   const [maxDisplayOrderNum, setMaxDisplayOrderNum] = useState<number>(0);
   // Save errors in state to display on page
   const [errors, setErrors] = useState<string[]>([]);
@@ -101,14 +90,8 @@ const CreateSectionPage: React.FC = () => {
   const CreateSectionPage = useTranslations('CreateSectionPage');
   const Section = useTranslations('Section');
 
-  //Store selection of tags in state
-  const [tags, setTags] = useState<TagsInterface[]>([]);
-
   // Initialize user addSection mutation
   const [addSectionMutation] = useMutation(AddSectionDocument);
-
-  // Query for all tags
-  const { data: tagsData } = useQuery(TagsDocument);
 
   // Query for all section displayOrder
   const { data: sectionDisplayOrders } = useQuery(SectionsDisplayOrderDocument, {
@@ -182,7 +165,7 @@ const CreateSectionPage: React.FC = () => {
 
   // Make GraphQL mutation request to create section
   const createSection = async (): Promise<SectionErrors> => {
-    // string all tags from sectionName before sending to backend
+    // string all HTML tags from sectionName before sending to backend
     const cleanedSectionName = stripHtmlTags(sectionNameContent);
 
     try {
@@ -196,7 +179,6 @@ const CreateSectionPage: React.FC = () => {
             requirements: sectionRequirementsContent,
             guidance: sectionGuidanceContent,
             displayOrder: newDisplayOrder,
-            tags: selectedTags
           }
         },
         refetchQueries: [{ //Need to update the sectionDisplayOrders with latest from db
@@ -217,23 +199,6 @@ const CreateSectionPage: React.FC = () => {
       });
     }
     return {};
-  };
-
-  // Handle changes to tag checkbox selection
-  const handleCheckboxChange = (tag: TagsInterface) => {
-    setSelectedTags((prevTags) => {
-      // Check if the tag is already selected
-      const isAlreadySelected = prevTags.some((selectedTag) => selectedTag.id === tag.id);
-
-      if (isAlreadySelected) {
-        // If already selected, remove it
-        return prevTags.filter((selectedTag) => selectedTag.id !== tag.id);
-      } else {
-        // If not selected, add it
-        return [...prevTags, tag];
-      }
-    });
-    setHasUnsavedChanges(true);
   };
 
   // Show Success Message
@@ -280,17 +245,6 @@ const CreateSectionPage: React.FC = () => {
       scrollToTop(topRef);
     }
   };
-
-  useEffect(() => {
-    if (tagsData?.tags) {
-      // Remove __typename field from the tags selection
-      const cleanedData = tagsData.tags.map(({
-        __typename,
-        ...fields
-      }) => fields);
-      setTags(cleanedData);
-    }
-  }, [tagsData])
 
   useEffect(() => {
     if (sectionDisplayOrders?.sections && sectionDisplayOrders.sections.length > 0) {
@@ -419,54 +373,6 @@ const CreateSectionPage: React.FC = () => {
                       helpText={Section('helpText.sectionGuidance')}
                     />
 
-                    <CheckboxGroup name="sectionTags">
-                      <Label>{Section('labels.bestPracticeTags')}</Label>
-                      <span className="help">{Section('helpText.bestPracticeTagsDesc')}</span>
-                      <div className="checkbox-group-two-column">
-                        {tags && tags.map(tag => {
-                          const id = (tag.id)?.toString();
-                          return (
-                            <Checkbox
-                              value={tag.name}
-                              key={tag.name}
-                              id={id}
-                              onChange={() => handleCheckboxChange(tag)}
-                            >
-                              <div className="checkbox">
-                                <svg viewBox="0 0 18 18" aria-hidden="true">
-                                  <polyline points="1 9 7 14 15 4" />
-                                </svg>
-                              </div>
-                              <span className="checkbox-label"
-                                data-testid='checkboxLabel'>
-                                <div className="checkbox-wrapper">
-                                  <div>{tag.name}</div>
-                                  <DialogTrigger>
-                                    <Button className="popover-btn"
-                                      aria-label="Click for more info"><div
-                                        className="icon info"><DmpIcon
-                                          icon="info" /></div></Button>
-                                    <Popover>
-                                      <OverlayArrow>
-                                        <svg width={12} height={12}
-                                          viewBox="0 0 12 12">
-                                          <path d="M0 0 L6 6 L12 0" />
-                                        </svg>
-                                      </OverlayArrow>
-                                      <Dialog>
-                                        <div className="flex-col">
-                                          {tag.description}
-                                        </div>
-                                      </Dialog>
-                                    </Popover>
-                                  </DialogTrigger>
-                                </div>
-                              </span>
-                            </Checkbox>
-                          )
-                        })}
-                      </div>
-                    </CheckboxGroup>
                     <TransitionButton
                       type="submit"
                       isDisabled={isSubmitting}

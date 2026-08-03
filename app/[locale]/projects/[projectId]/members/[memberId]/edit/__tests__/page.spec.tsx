@@ -31,6 +31,15 @@ jest.mock('@/hooks/projectMemberData', () => ({
   useProjectMemberData: jest.fn()
 }));
 
+jest.mock('@/components/Form/TypeAheadWithOther/useAffiliationSearch', () => ({
+  useAffiliationSearch: () => ({
+    suggestions: [],
+    handleSearch: jest.fn(),
+    isSearching: false,
+    searchError: '',
+  }),
+}));
+
 const mockRouter = {
   push: jest.fn(),
 };
@@ -121,6 +130,8 @@ describe("ProjectsProjectMembersEdit", () => {
         givenName: 'Test',
         surName: 'User',
         affiliationId: 'test-affiliation',
+        affiliationName: 'Test University',
+        otherAffiliationName: '',
         email: 'test@example.com',
         orcid: '0000-0000-0000-0000',
       },
@@ -149,7 +160,7 @@ describe("ProjectsProjectMembersEdit", () => {
     jest.clearAllMocks();
   });
 
-  it('should render loading state', async () => {
+  it('should render a loading indicator while project roles load', async () => {
     // Override the mock for this specific test
     mockUseQuery.mockImplementation((document) => {
       if (document === MemberRolesDocument) {
@@ -179,17 +190,48 @@ describe("ProjectsProjectMembersEdit", () => {
       render(<ProjectsProjectMembersEdit />);
     });
 
-    expect(screen.getByText('messaging.loading...')).toBeInTheDocument();
+    expect(screen.getByRole('status')).toHaveTextContent('messaging.loadingRoles');
+    expect(screen.getByText('labels.definedRole')).toBeInTheDocument();
+    expect(screen.getByText('memberRolesDescription.selection')).toBeInTheDocument();
+    expect(screen.getByText('memberRolesDescription.credit')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1 })).toBeInTheDocument();
   });
 
-  it('should render error state', async () => {
-    // Override the mock for this specific test
+  it('should render the project loading component during the initial page load', () => {
+    (useProjectMemberData as jest.Mock).mockReturnValue({
+      projectMemberData: {
+        givenName: '',
+        surName: '',
+        affiliationId: '',
+        affiliationName: '',
+        otherAffiliationName: '',
+        email: '',
+        orcid: '',
+      },
+      checkboxRoles: [],
+      setCheckboxRoles: jest.fn(),
+      loading: true,
+      setProjectMemberData: jest.fn(),
+      data: null,
+      queryError: null,
+    });
+
+    render(<ProjectsProjectMembersEdit />);
+
+    expect(screen.getByTestId('loading-component')).toHaveClass('loading-page');
+    expect(screen.getByRole('status')).toHaveTextContent('messaging.loading');
+  });
+
+  it('should render an inline roles error and retry loading', async () => {
+    const refetchMemberRoles = jest.fn();
+
     mockUseQuery.mockImplementation((document) => {
       if (document === MemberRolesDocument) {
         return {
           data: null,
           loading: false,
           error: true,
+          refetch: refetchMemberRoles,
           /* eslint-disable @typescript-eslint/no-explicit-any */
         } as any;
       }
@@ -212,7 +254,10 @@ describe("ProjectsProjectMembersEdit", () => {
       render(<ProjectsProjectMembersEdit />);
     });
 
-    expect(screen.getByText('messaging.error')).toBeInTheDocument();
+    expect(screen.getByRole('alert')).toHaveTextContent('messaging.errors.projectRolesLoadError');
+    fireEvent.click(screen.getByRole('button', { name: 'buttons.retryRoles' }));
+    expect(refetchMemberRoles).toHaveBeenCalled();
+    expect(screen.getByRole('heading', { level: 1 })).toBeInTheDocument();
   });
 
   it("should render correct fields", async () => {
@@ -223,24 +268,93 @@ describe("ProjectsProjectMembersEdit", () => {
     const heading = screen.getByRole('heading', { level: 1 });
     expect(heading).toHaveTextContent('title');
     expect(screen.getByRole('link', { name: /breadcrumbs.projects/i })).toBeInTheDocument();
-    expect(screen.getByLabelText(/form.labels.firstName/i)).toBeInTheDocument();
-    expect(screen.getByRole('textbox', { name: /firstName/i })).toBeInTheDocument();
-    expect(screen.getByLabelText(/form.labels.lastName/i)).toBeInTheDocument();
-    expect(screen.getByRole('textbox', { name: /lastName/i })).toBeInTheDocument();
-    expect(screen.getByLabelText(/form.labels.affiliation/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/labels.givenName/i)).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: /labels.givenName/i })).toBeInTheDocument();
+    expect(screen.getByLabelText(/labels.surName/i)).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: /labels.surName/i })).toBeInTheDocument();
+    expect(screen.getByLabelText(/labels.affiliation/i)).toHaveValue('Test University');
     expect(screen.getByRole('textbox', { name: /affiliation/i })).toBeInTheDocument();
-    expect(screen.getByLabelText(/form.labels.emailAddress/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/labels.email/i)).toBeInTheDocument();
     expect(screen.getByRole('textbox', { name: /email/i })).toBeInTheDocument();
-    expect(screen.getByLabelText(/form.labels.orcid/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/labels.orcid/i)).toBeInTheDocument();
     expect(screen.getByRole('textbox', { name: /orcid/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /buttons.saveChanges/i })).toBeInTheDocument();
 
     const checkboxGroup = screen.getByTestId('checkbox-group');
     expect(checkboxGroup).toBeInTheDocument();
     expect(screen.getByText('labels.definedRole')).toBeInTheDocument();
-    expect(screen.getByText('memberRolesDescription')).toBeInTheDocument();
+    expect(screen.getByText('memberRolesDescription.selection')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /links.learnMoreAboutCreditTaxonomy/i })).toHaveAttribute(
+      'href',
+      'https://credit.niso.org/'
+    );
     expect(within(checkboxGroup).getByText('Principal Investigator (PI)')).toBeInTheDocument();
     expect(within(checkboxGroup).getByText('Project Administrator')).toBeInTheDocument();
+    expect(within(checkboxGroup).getByRole('checkbox', { name: 'Data Manager' })).toBeInTheDocument();
+    expect(within(checkboxGroup).getByRole('checkbox', { name: 'No Role Assigned' })).toBeInTheDocument();
+
+    const orderedRoleLabels = within(checkboxGroup)
+      .getAllByRole('checkbox')
+      .map((checkbox) => checkbox.closest('label')?.textContent?.trim());
+    expect(orderedRoleLabels).toEqual([
+      'Data Manager',
+      'Other',
+      'Principal Investigator (PI)',
+      'Project Administrator',
+      'No Role Assigned',
+    ]);
+  });
+
+  it('should make No Role Assigned exclusive when selected', () => {
+    const setCheckboxRoles = jest.fn();
+    (useProjectMemberData as jest.Mock).mockReturnValue({
+      projectMemberData: {
+        givenName: 'Test',
+        surName: 'User',
+        affiliationId: 'test-affiliation',
+        affiliationName: 'Test University',
+        otherAffiliationName: '',
+        email: '',
+        orcid: '',
+      },
+      checkboxRoles: ['1', '2'],
+      setCheckboxRoles,
+      loading: false,
+      setProjectMemberData: jest.fn(),
+      data: null,
+      queryError: null,
+    });
+
+    render(<ProjectsProjectMembersEdit />);
+    fireEvent.click(screen.getByRole('checkbox', { name: 'No Role Assigned' }));
+
+    expect(setCheckboxRoles).toHaveBeenCalledWith(['5']);
+  });
+
+  it('should clear No Role Assigned when another role is selected', () => {
+    const setCheckboxRoles = jest.fn();
+    (useProjectMemberData as jest.Mock).mockReturnValue({
+      projectMemberData: {
+        givenName: 'Test',
+        surName: 'User',
+        affiliationId: 'test-affiliation',
+        affiliationName: 'Test University',
+        otherAffiliationName: '',
+        email: '',
+        orcid: '',
+      },
+      checkboxRoles: ['5'],
+      setCheckboxRoles,
+      loading: false,
+      setProjectMemberData: jest.fn(),
+      data: null,
+      queryError: null,
+    });
+
+    render(<ProjectsProjectMembersEdit />);
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Data Manager' }));
+
+    expect(setCheckboxRoles).toHaveBeenCalledWith(['1']);
   });
 
   it("should handle form submission", async () => {
@@ -258,12 +372,127 @@ describe("ProjectsProjectMembersEdit", () => {
     });
   });
 
-  it("should display validation errors if givenName and surName are too short", async () => {
+  it("should submit the custom affiliation name when Other is selected", async () => {
     (useProjectMemberData as jest.Mock).mockReturnValue({
       projectMemberData: {
-        givenName: 'T',
-        surName: 'U',
+        givenName: 'Test',
+        surName: 'User',
+        affiliationId: 'other',
+        affiliationName: 'Other',
+        otherAffiliationName: 'Custom Research Institute',
+        email: 'test@example.com',
+        orcid: '',
+      },
+      checkboxRoles: ['1'],
+      setCheckboxRoles: jest.fn(),
+      loading: false,
+      setProjectMemberData: jest.fn(),
+      data: null,
+      queryError: null,
+    });
+    mockUpdateProjectMemberFn.mockResolvedValueOnce({ data: mockResponse });
+
+    render(<ProjectsProjectMembersEdit />);
+    fireEvent.click(screen.getByRole('button', { name: /buttons.saveChanges/i }));
+
+    await waitFor(() => {
+      expect(mockUpdateProjectMemberFn).toHaveBeenCalledWith(expect.objectContaining({
+        variables: {
+          input: expect.objectContaining({
+            affiliationId: '',
+            affiliationName: 'Custom Research Institute',
+          }),
+        },
+      }));
+    });
+  });
+
+  it("should disable the save button while updating", () => {
+    mockUseMutation.mockImplementation((document) => {
+      if (document === UpdateProjectMemberDocument) {
+        /* eslint-disable @typescript-eslint/no-explicit-any */
+        return [mockUpdateProjectMemberFn, { loading: true, error: undefined }] as any;
+      }
+
+      /* eslint-disable @typescript-eslint/no-explicit-any */
+      return [mockRemoveProjectMemberFn, { loading: false, error: undefined }] as any;
+    });
+
+    render(<ProjectsProjectMembersEdit />);
+
+    expect(screen.getByRole('button', { name: /messaging.saving/i })).toBeDisabled();
+    expect(screen.queryByTestId('loading-component')).not.toBeInTheDocument();
+  });
+
+  it("should allow form submission without an email address", async () => {
+    (useProjectMemberData as jest.Mock).mockReturnValue({
+      projectMemberData: {
+        givenName: 'Test',
+        surName: 'User',
+        affiliationId: 'https://ror.org/test',
+        affiliationName: 'Test University',
+        otherAffiliationName: '',
+        email: '',
+        orcid: '',
+      },
+      checkboxRoles: ['1'],
+      setCheckboxRoles: jest.fn(),
+      loading: false,
+      setProjectMemberData: jest.fn(),
+      data: { projectMember: { affiliation: { displayName: 'Test University', uri: 'https://ror.org/test' } } },
+      queryError: null,
+    });
+    mockUpdateProjectMemberFn.mockResolvedValueOnce({ data: mockResponse });
+
+    render(<ProjectsProjectMembersEdit />);
+    fireEvent.click(screen.getByRole('button', { name: /buttons.saveChanges/i }));
+
+    await waitFor(() => {
+      expect(mockUpdateProjectMemberFn).toHaveBeenCalledWith(expect.objectContaining({
+        variables: {
+          input: expect.objectContaining({
+            affiliationId: 'https://ror.org/test',
+            email: '',
+          }),
+        },
+      }));
+    });
+  });
+
+  it("should require at least one project role", async () => {
+    (useProjectMemberData as jest.Mock).mockReturnValue({
+      projectMemberData: {
+        givenName: 'Test',
+        surName: 'User',
+        affiliationId: 'https://ror.org/test',
+        affiliationName: 'Test University',
+        otherAffiliationName: '',
+        email: '',
+        orcid: '',
+      },
+      checkboxRoles: [],
+      setCheckboxRoles: jest.fn(),
+      loading: false,
+      setProjectMemberData: jest.fn(),
+      data: { projectMember: { affiliation: { displayName: 'Test University', uri: 'https://ror.org/test' } } },
+      queryError: null,
+    });
+
+    render(<ProjectsProjectMembersEdit />);
+    fireEvent.click(screen.getByRole('button', { name: /buttons.saveChanges/i }));
+
+    expect(await screen.findByText('messaging.errors.projectRolesRequired')).toBeInTheDocument();
+    expect(mockUpdateProjectMemberFn).not.toHaveBeenCalled();
+  });
+
+  it("should display validation errors if givenName and surName are empty", async () => {
+    (useProjectMemberData as jest.Mock).mockReturnValue({
+      projectMemberData: {
+        givenName: '',
+        surName: '',
         affiliationId: 'test-affiliation',
+        affiliationName: 'Test University',
+        otherAffiliationName: '',
         email: 'test@example.com',
         orcid: '0000-0000-0000-0000',
       },
@@ -273,9 +502,9 @@ describe("ProjectsProjectMembersEdit", () => {
       setProjectMemberData: jest.fn(),
       data: {
         projectMember: {
-          givenName: 'T',
-          surName: 'U',
-          affiliation: { uri: 'test-affiliation' },
+          givenName: '',
+          surName: '',
+          affiliation: { displayName: 'Test University', uri: 'test-affiliation' },
           email: 'test@example.com',
           orcid: '0000-0000-0000-0000',
           memberRoles: [
@@ -295,8 +524,8 @@ describe("ProjectsProjectMembersEdit", () => {
     fireEvent.click(saveButton);
 
     await waitFor(() => {
-      expect(screen.getByText('form.errors.firstName')).toBeInTheDocument();
-      expect(screen.getByText('form.errors.lastName')).toBeInTheDocument();
+      expect(screen.getByText('messaging.errors.givenNameRequired')).toBeInTheDocument();
+      expect(screen.getByText('messaging.errors.surNameRequired')).toBeInTheDocument();
     });
   });
 
@@ -308,6 +537,8 @@ describe("ProjectsProjectMembersEdit", () => {
         givenName: 'Valid First Name',
         surName: 'Valid Last Name',
         affiliationId: 'test-affiliation',
+        affiliationName: 'Test University',
+        otherAffiliationName: '',
         email: 'invalid-email-format',
         orcid: '0000-0000-0000-0000',
       },
@@ -335,14 +566,14 @@ describe("ProjectsProjectMembersEdit", () => {
       render(<ProjectsProjectMembersEdit />);
     });
 
-    const emailInput = screen.getByLabelText('form.labels.emailAddress');
+    const emailInput = screen.getByLabelText(/labels.email/i);
     expect(emailInput).toHaveAttribute('aria-invalid', 'true');
-    expect(screen.getByText('form.errors.email')).toBeInTheDocument();
+    expect(screen.getByText('messaging.errors.invalidEmail')).toBeInTheDocument();
 
     const saveButton = screen.getByRole('button', { name: /buttons.saveChanges/i });
     fireEvent.click(saveButton);
 
-    expect(screen.getByText('form.errors.email')).toBeInTheDocument();
+    expect(screen.getByText('messaging.errors.invalidEmail')).toBeInTheDocument();
   });
 
   it("should clear validation errors when user corrects the field values", async () => {
@@ -350,9 +581,11 @@ describe("ProjectsProjectMembersEdit", () => {
 
     (useProjectMemberData as jest.Mock).mockReturnValue({
       projectMemberData: {
-        givenName: 'A',
-        surName: 'B',
+        givenName: '',
+        surName: '',
         affiliationId: 'test-affiliation',
+        affiliationName: 'Test University',
+        otherAffiliationName: '',
         email: 'test@example.com',
         orcid: '0000-0000-0000-0000',
       },
@@ -362,9 +595,9 @@ describe("ProjectsProjectMembersEdit", () => {
       setProjectMemberData: setProjectMemberDataMock,
       data: {
         projectMember: {
-          givenName: 'A',
-          surName: 'B',
-          affiliation: { uri: 'test-affiliation' },
+          givenName: '',
+          surName: '',
+          affiliation: { displayName: 'Test University', uri: 'test-affiliation' },
           email: 'test@example.com',
           orcid: '0000-0000-0000-0000',
           memberRoles: [
@@ -387,11 +620,11 @@ describe("ProjectsProjectMembersEdit", () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByText('form.errors.firstName')).toBeInTheDocument();
-      expect(screen.getByText('form.errors.lastName')).toBeInTheDocument();
+      expect(screen.getByText('messaging.errors.givenNameRequired')).toBeInTheDocument();
+      expect(screen.getByText('messaging.errors.surNameRequired')).toBeInTheDocument();
     });
 
-    const firstNameInput = screen.getByRole('textbox', { name: /firstName/i });
+    const firstNameInput = screen.getByRole('textbox', { name: /labels.givenName/i });
 
     await act(async () => {
       fireEvent.change(firstNameInput, { target: { value: 'Valid First Name' } });
@@ -403,7 +636,7 @@ describe("ProjectsProjectMembersEdit", () => {
       })
     );
 
-    const lastNameInput = screen.getByRole('textbox', { name: /lastName/i });
+    const lastNameInput = screen.getByRole('textbox', { name: /labels.surName/i });
 
     await act(async () => {
       fireEvent.change(lastNameInput, { target: { value: 'Valid Last Name' } });
@@ -463,26 +696,29 @@ describe("ProjectsProjectMembersEdit", () => {
     });
 
     const removeButton = screen.getByRole('button', { name: 'buttons.removeMember' });
+    expect(removeButton).toHaveClass('danger');
 
     await act(async () => {
       fireEvent.click(removeButton);
     });
 
     await waitFor(() => {
-      expect(screen.getByRole('dialog')).toBeInTheDocument();
-      const heading = screen.getByRole('heading', { level: 3 });
+      expect(screen.getByRole('alertdialog')).toBeInTheDocument();
+      const heading = screen.getByRole('heading', { name: 'headings.removeProjectMember' });
       expect(heading).toBeInTheDocument();
       expect(heading).toHaveTextContent('headings.removeProjectMember');
 
-      const dialog = screen.getByRole('dialog');
+      const dialog = screen.getByRole('alertdialog');
       const modalButtons = within(dialog).getAllByRole('button');
       expect(modalButtons).toHaveLength(2);
       expect(modalButtons[0]).toHaveTextContent('buttons.cancel');
-      expect(modalButtons[1]).toHaveTextContent('buttons.delete');
+      expect(modalButtons[1]).toHaveTextContent('buttons.removeMember');
+      expect(modalButtons[0]).toHaveClass('secondary');
+      expect(modalButtons[1]).toHaveClass('danger');
     });
 
-    const dialog = screen.getByRole('dialog');
-    const deleteButton = within(dialog).getByRole('button', { name: 'buttons.delete' });
+    const dialog = screen.getByRole('alertdialog');
+    const deleteButton = within(dialog).getByRole('button', { name: 'buttons.removeMember' });
 
     await act(async () => {
       fireEvent.click(deleteButton);
@@ -505,14 +741,14 @@ describe("ProjectsProjectMembersEdit", () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByRole('dialog')).toBeInTheDocument();
+      expect(screen.getByRole('alertdialog')).toBeInTheDocument();
     });
 
-    const dialog = screen.getByRole('dialog');
+    const dialog = screen.getByRole('alertdialog');
     const modalButtons = within(dialog).getAllByRole('button');
     expect(modalButtons).toHaveLength(2);
     expect(modalButtons[0]).toHaveTextContent('buttons.cancel');
-    expect(modalButtons[1]).toHaveTextContent('buttons.delete');
+    expect(modalButtons[1]).toHaveTextContent('buttons.removeMember');
 
     await act(async () => {
       fireEvent.click(modalButtons[0]);
@@ -543,10 +779,11 @@ describe("ProjectsProjectMembersEdit", () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByRole('dialog')).toBeInTheDocument();
+      expect(screen.getByRole('alertdialog')).toBeInTheDocument();
     });
 
-    const deleteButton = screen.getByRole('button', { name: 'buttons.delete' });
+    const deleteButton = within(screen.getByRole('alertdialog'))
+      .getByRole('button', { name: 'buttons.removeMember' });
 
     await act(async () => {
       fireEvent.click(deleteButton);
@@ -569,10 +806,11 @@ describe("ProjectsProjectMembersEdit", () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByRole('dialog')).toBeInTheDocument();
+      expect(screen.getByRole('alertdialog')).toBeInTheDocument();
     });
 
-    const deleteButton = screen.getByRole('button', { name: 'buttons.delete' });
+    const deleteButton = within(screen.getByRole('alertdialog'))
+      .getByRole('button', { name: 'buttons.removeMember' });
 
     await act(async () => {
       fireEvent.click(deleteButton);
@@ -598,6 +836,8 @@ describe("ProjectsProjectMembersEdit", () => {
         givenName: 'Test',
         surName: 'User',
         affiliationId: 'test-affiliation',
+        affiliationName: 'Test University',
+        otherAffiliationName: '',
         email: 'test@example.com',
         orcid: '0000-0000-0000-0000',
       },
@@ -609,7 +849,7 @@ describe("ProjectsProjectMembersEdit", () => {
         projectMember: {
           givenName: 'Test',
           surName: 'User',
-          affiliation: { uri: 'test-affiliation' },
+          affiliation: { displayName: 'Test University', uri: 'test-affiliation' },
           email: 'test@example.com',
           orcid: '0000-0000-0000-0000',
           memberRoles: [

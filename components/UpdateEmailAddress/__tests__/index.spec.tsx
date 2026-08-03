@@ -186,6 +186,47 @@ describe('UpdateEmailAddressPage', () => {
     expect(screen.getByText(/me@test.com/i)).toBeInTheDocument();
   });
 
+  it('should render the primary badge and no delete control for the primary email', async () => {
+    render(
+      <UpdateEmailAddress
+        emailAddresses={mockEmailAddresses}
+      />
+    );
+
+    const primaryEmailRow = screen.getByText(/me@test.com/i).closest('[class*="emailRow"]');
+    expect(primaryEmailRow).toBeInTheDocument();
+
+    expect(within(primaryEmailRow as HTMLElement).getByText('primaryBadge')).toBeInTheDocument();
+    expect(within(primaryEmailRow as HTMLElement).getByText('primaryEmailCannotBeDeleted')).toBeInTheDocument();
+    expect(within(primaryEmailRow as HTMLElement).queryByRole('button', { name: 'deleteEmailAria' })).not.toBeInTheDocument();
+    expect(screen.getAllByRole('button', { name: 'deleteEmailAria' })).toHaveLength(1);
+  });
+
+  it('should ask for confirmation and not delete when cancelled', async () => {
+    render(
+      <UpdateEmailAddress
+        emailAddresses={mockEmailAddresses}
+      />
+    );
+
+    const deleteTrigger = screen.getByRole('button', { name: 'deleteEmailAria' });
+    await act(async () => {
+      fireEvent.click(deleteTrigger);
+    });
+
+    expect(screen.getByText('deleteEmailConfirmTitle')).toBeInTheDocument();
+
+    const cancelButton = screen.getByRole('button', { name: 'btnCancel' });
+    await act(async () => {
+      fireEvent.click(cancelButton);
+    });
+
+    expect(mockRemoveUserEmailMutationFn).not.toHaveBeenCalled();
+    await waitFor(() => {
+      expect(screen.queryByText('deleteEmailConfirmTitle')).not.toBeInTheDocument();
+    });
+  });
+
   it('should call removeUserEmailMutation when deleting an email', async () => {
     mockRemoveUserEmailMutationFn.mockResolvedValue({
       data: {
@@ -203,9 +244,14 @@ describe('UpdateEmailAddressPage', () => {
     );
 
     // Find and click the delete button for test@test.com
-    const deleteTrigger = document.querySelector('.delete-email') as HTMLElement;
+    const deleteTrigger = screen.getByRole('button', { name: 'deleteEmailAria' });
     await act(async () => {
       fireEvent.click(deleteTrigger);
+    });
+
+    const confirmDelete = screen.getByRole('button', { name: 'btnDelete' });
+    await act(async () => {
+      fireEvent.click(confirmDelete);
     });
 
     // Verify the mutation was called with correct parameters
@@ -243,10 +289,15 @@ describe('UpdateEmailAddressPage', () => {
     );
 
     // Find and click the delete button for test@test.com
-    const deleteTrigger = document.querySelector('.delete-email') as HTMLElement;
+    const deleteTrigger = screen.getByRole('button', { name: 'deleteEmailAria' });
 
     await act(async () => {
       fireEvent.click(deleteTrigger);
+    });
+
+    const confirmDelete = screen.getByRole('button', { name: 'btnDelete' });
+    await act(async () => {
+      fireEvent.click(confirmDelete);
     });
 
     // Verify the error message is displayed
@@ -295,10 +346,15 @@ describe('UpdateEmailAddressPage', () => {
     );
 
     // Find and click the delete button for test@test.com
-    const deleteTrigger = document.querySelector('.delete-email') as HTMLElement;
+    const deleteTrigger = screen.getByRole('button', { name: 'deleteEmailAria' });
 
     await act(async () => {
       fireEvent.click(deleteTrigger);
+    });
+
+    const confirmDelete = screen.getByRole('button', { name: 'btnDelete' });
+    await act(async () => {
+      fireEvent.click(confirmDelete);
     });
 
     // Verify the mutation was called twice

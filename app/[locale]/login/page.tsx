@@ -9,13 +9,8 @@ import { useAuthContext } from '@/context/AuthContext';
 import { useTranslations } from "next-intl";
 import {
   Button,
-  FieldError,
   Form,
-  Input,
-  Label,
   Link,
-  Text,
-  TextField,
 } from "react-aria-components";
 import {
   ContentContainer,
@@ -23,7 +18,9 @@ import {
   ToolbarContainer,
 } from '@/components/Container';
 import ErrorMessages from "@/components/ErrorMessages";
+import { FormInput } from '@/components/Form';
 import styles from './login.module.scss';
+import { routePath } from "@/utils/index";
 
 
 type LoginSteps =
@@ -90,6 +87,7 @@ const LoginPage: React.FC = () => {
         error: err,
         url: { path: '/apollo-signin' }
       });
+      setErrors([t('loginError')]);
     } finally {
       setLoading(false);
     }
@@ -134,9 +132,13 @@ const LoginPage: React.FC = () => {
     }
   }, [step]);
 
+  useEffect(() => {
+    document.title = `${t('pageTitle')} | DMPTool`;
+  }, []);
+
   return (
-    <LayoutContainer className={styles.loginPage}>
-      <ContentContainer className={styles.loginContent}>
+    <LayoutContainer className="auth-container">
+      <ContentContainer className="auth-card">
         <h3>{t('pageTitle')}</h3>
 
         <Form
@@ -147,46 +149,38 @@ const LoginPage: React.FC = () => {
         >
           <ErrorMessages errors={errors} ref={errorRef} />
           {(step === "email" || step === "password") && (
-            <TextField
+            <FormInput
               name="email"
               type="email"
-              aria-label={t('emailAddress')}
-              onChange={setEmail}
+              label={t('emailAddress')}
+              ariaLabel={t('emailAddress')}
+              onChange={(e) => setEmail(e.target.value)}
               value={email}
               isRequired
-              isReadOnly={step === "password"}
+              readOnly={step === "password"}
               autoComplete={step === "password" ? "off" : "email"}
-            >
-              <Label>{t('emailAddress')}</Label>
-              <Input
-                data-testid="emailInput"
-                className={step === "password" ? "disabled-look" : ""}
-              />
-              {(step === "email") && (
-                <Text slot="description" className={styles.help}>
-                  {t('singleSignOn')}
-                </Text>
-              )}
-              <FieldError />
-            </TextField>
+              inputClasses={step === "password" ? "disabled-look" : ""}
+              helpMessage={step === "email" ? t('singleSignOn') : undefined}
+              data-testid="emailInput"
+            />
           )}
 
           {(step === "password") && (
-            <TextField
+            <FormInput
               id="password"
               name="password"
               type="password"
-              aria-label={t('password')}
-              onChange={setPassword}
+              label={t('password')}
+              ariaLabel={t('password')}
+              onChange={(e) => setPassword(e.target.value)}
               isRequired
-            >
-              <Label>{t('password')}</Label>
-              <Input data-testid="passInput" />
-              <FieldError />
-              <Text slot="description" className={styles.help}>
-                <Link>{t('forgotPassword')}</Link>
-              </Text>
-            </TextField>
+              helpMessage={(
+                <Link href={routePath('login.forgotPassword')} className={styles.forgotPasswordLink}>
+                  {t('forgotPassword.title')}
+                </Link>
+              )}
+              data-testid="passInput"
+            />
           )}
 
           <ToolbarContainer className={styles.formActions}>

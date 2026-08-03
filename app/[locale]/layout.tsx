@@ -4,6 +4,7 @@ import { getMessages } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { routing } from '@/i18n/routing';
 import { ToastProviderWrapper } from '@/context/ToastContext';
+import type { Metadata } from 'next';
 
 // Components
 import Header from "@/components/Header";
@@ -17,6 +18,7 @@ import { CsrfProvider } from "@/context/CsrfContext";
 
 //Styles
 import '@fortawesome/fontawesome-svg-core/styles.css'
+import 'nprogress/nprogress.css';
 import "@/styles/globals.scss";
 
 const font_sans_serif = Poppins({
@@ -25,6 +27,15 @@ const font_sans_serif = Poppins({
   variable: '--font-sans-serif',
   preload: false, // ← stops Next.js injecting preload hints, since preloading is adding warnings in browser, and font should be cached anyways after first page
 });
+
+export const metadata: Metadata = {
+  icons: {
+    icon: {
+      url: `https://${process.env.CDN_ENDPOINT}/logos/ror.org/03yrm5c26/cdl.jpeg`,
+      type: 'image/jpeg',
+    },
+  },
+};
 
 export default async function LocaleLayout({
   children,

@@ -1,22 +1,30 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { useQuery } from "@apollo/client/react";
 
+// GraphQL
 import {
   AdminNotificationsDocument,
 } from "@/generated/graphql";
+
+// Components
 import PageHeader from "@/components/PageHeader";
 import PageLinkCard, { PageLinkSection } from "@/components/PageLinkCard";
 import { ContentContainer, LayoutWithPanel, SidebarPanel } from "@/components/Container";
+import ErrorMessages from '@/components/ErrorMessages';
+
 import { routePath } from "@/utils/routes";
 
 import styles from "./admin.module.scss";
+import { handleApolloError } from "@/utils/index";
 
 const AdminOverviewPage: React.FC = () => {
+  const errorRef = useRef<HTMLDivElement | null>(null);
   const t = useTranslations("Admin");
-  const { data: notificationsData } = useQuery(AdminNotificationsDocument);
+  const [errors, setErrors] = useState<string[]>([]);
+  const { data: notificationsData, error: notificationsError } = useQuery(AdminNotificationsDocument);
 
   const adminSections: PageLinkSection[] = [
     {
@@ -93,6 +101,14 @@ const AdminOverviewPage: React.FC = () => {
     },
   ];
 
+  useEffect(() => {
+    if (notificationsError) {
+      const { wasRealError, message } = handleApolloError(notificationsError, 'AdminOverviewPage.notifications');
+      if (wasRealError) setErrors([message]);
+    }
+  }, [notificationsError]);
+
+
   return (
     <>
       <PageHeader
@@ -105,6 +121,7 @@ const AdminOverviewPage: React.FC = () => {
         <div className={styles.mainContent}>
           <LayoutWithPanel>
             <ContentContainer className={styles.layoutContentContainer}>
+              <ErrorMessages errors={errors} ref={errorRef} />
               <PageLinkCard sections={adminSections} />
             </ContentContainer>
             <SidebarPanel className={styles.layoutSidebarPanel}>

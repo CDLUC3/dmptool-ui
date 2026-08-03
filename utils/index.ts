@@ -11,5 +11,8 @@ export { getSecret } from './getSecret';
 export { handleApolloErrors, handleGraphQLErrors, handleNetworkError } from './gqlErrorHandler';
 export { routes, type RouteName, routePath } from './routes';
 export { default as userFriendlyErrorMessages, type ErrorMessages } from './userFriendlyErrorMessages';
-export { isValidEmail } from './validation';
+export { isValidEmail, isValidPassword, getPasswordRequirements } from './validation';
 export { executeGraphQLMutation } from './server/graphqlServerActionHandler';
+// Apollo query/mutation error handler with AbortError filtering
+export { handleApolloError, isAbortError } from './apolloErrorHandler';
+export { extractErrors } from './errorHandler';

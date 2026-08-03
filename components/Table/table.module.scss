@@ -1,6 +1,3 @@
-.dmpTable {
-}
-
 .dmpTableHeader {
   background-color: white;
 
@@ -9,8 +6,10 @@
   }
 }
 
-.dmpTableColumn {
+.noWrap {
+  white-space: nowrap !important;
 }
 
-.dmpTableRow {
+.centerAligned {
+  text-align: center;
 }

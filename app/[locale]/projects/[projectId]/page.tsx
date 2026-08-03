@@ -229,7 +229,7 @@ const ProjectOverviewPage: React.FC = () => {
               linkAriaLabel={isReadOnly ? ProjectOverview("viewProject") : ProjectOverview("editProject")}
             >
               <p>
-                <strong>{project.title}</strong>
+                {project.title}
               </p>
               {project.startDate && project.endDate && (
                 <p>
@@ -246,27 +246,34 @@ const ProjectOverviewPage: React.FC = () => {
               headingId="fundings-title"
               linkHref={routePath("projects.fundings.index", { projectId })}
               linkText={isReadOnly ? Global("buttons.view") : ProjectOverview("editFundingDetails")}
+              includeLink={!isReadOnly || project.fundings.length > 0}
               linkAriaLabel={isReadOnly ? ProjectOverview("viewFundingDetails") : ProjectOverview("editFundingDetails")}
             >
-              <p>
-                <strong>{ProjectOverview("fundingCount", { count: project.fundings.length })}</strong>
-              </p>
-              <p>
-                {project.fundings.map((funding, index) => (
-                  <span
-                    key={funding.id}
-                    data-index={index}
-                  >
-                    {funding.grantId
-                      ? ProjectOverview("fundingInfo", {
-                        name: funding.name,
-                        id: funding.grantId,
-                      })
-                      : funding.name}
-                    {index < project.fundings.length - 1 && ", "}
-                  </span>
-                ))}
-              </p>
+              {project.fundings.length > 0 ? (
+                <>
+                  <p>
+                    {ProjectOverview("fundingCount", { count: project.fundings.length })}
+                  </p>
+                  <p>
+                    {project.fundings.map((funding, index) => (
+                      <span
+                        key={funding.id}
+                        data-index={index}
+                      >
+                        {funding.grantId
+                          ? ProjectOverview("fundingInfo", {
+                            name: funding.name,
+                            id: funding.grantId,
+                          })
+                          : funding.name}
+                        {index < project.fundings.length - 1 && ", "}
+                      </span>
+                    ))}
+                  </p>
+                </>
+              ) : (
+                <p>{ProjectOverview("noFunderSelected")}</p>
+              )}
             </OverviewSection>
 
             <OverviewSection
@@ -277,7 +284,7 @@ const ProjectOverviewPage: React.FC = () => {
               linkAriaLabel={isReadOnly ? ProjectOverview("viewProjectMembers") : ProjectOverview("editProjectMembers")}
             >
               <p>
-                <strong>{ProjectOverview("memberCount", { count: project.projectMembers.length })}</strong>
+                {ProjectOverview("memberCount", { count: project.projectMembers.length })}
               </p>
               <p>
                 {project.projectMembers.map((member, index) => (
@@ -391,7 +398,7 @@ const ProjectOverviewPage: React.FC = () => {
                   key={plan.id}
                 >
                   <p className="mb-1">
-                    {ProjectOverview("funding")}: {plan.funding}
+                    {ProjectOverview("funding")}: {plan.funding || ProjectOverview("noFunderSelected")}
                   </p>
                   <h3 className="mt-0">{plan.templateTitle}</h3>
                   <div className="plan-sections mb-4">

@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { useParams, useRouter } from 'next/navigation';
 import { useQuery } from '@apollo/client/react';
 import ProjectsProjectMembers from '../page';
@@ -104,7 +104,8 @@ describe('ProjectsProjectMembers', () => {
 
     render(<ProjectsProjectMembers />);
 
-    expect(screen.getByText('messaging.loading...')).toBeInTheDocument();
+    expect(screen.getByTestId('skeleton-list-loading')).toBeInTheDocument();
+    expect(screen.getByText('messaging.loadingList')).toBeInTheDocument();
   });
 
   it('should render error state', () => {
@@ -141,16 +142,34 @@ describe('ProjectsProjectMembers', () => {
     expect(screen.getByText('Captain Nemo')).toBeInTheDocument();
     const affiliation = screen.getAllByText('University of California, Davis (ucdavis.edu)');
     expect(affiliation).toHaveLength(2);
-    expect(screen.getByText('0000-JACQ-0000-0000')).toBeInTheDocument();
-    expect(screen.getByText('0000-NEMO-0000-0000')).toBeInTheDocument();
-    expect(screen.getByText('Principal Investigator (PI), Project Administrator')).toBeInTheDocument();
-    expect(screen.getByText('Principal Investigator (PI)')).toBeInTheDocument();
+    expect(screen.getAllByTestId('orcidIconSvg')).toHaveLength(2);
+    expect(screen.getAllByRole('link', { name: /ariaLabels\.orcidProfile/i })[0]).toHaveAttribute(
+      'href',
+      'https://orcid.org/0000-JACQ-0000-0000'
+    );
+    const jacquesCard = screen.getByText('Jacques Cousteau').closest('li');
+    expect(jacquesCard).not.toBeNull();
+    expect(within(jacquesCard as HTMLElement).getByRole('link', { name: /ariaLabels\.editMember/i })).toHaveAttribute(
+      'href',
+      '/en-US/projects/1/members/1/edit'
+    );
+    expect(within(jacquesCard as HTMLElement).getByRole('heading', { level: 3, name: /ariaLabels\.editMember/i })).toBeInTheDocument();
+    expect(within(jacquesCard as HTMLElement).getByText('Principal Investigator (PI)')).toBeInTheDocument();
+    expect(within(jacquesCard as HTMLElement).getByText('Project Administrator')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 2, name: 'title' })).toHaveClass('sr-only');
     expect(screen.getByRole('button', { name: /buttons.addMembers/i })).toBeInTheDocument();
-    const editButton = screen.getByRole('button', { name: "Edit Jacques Cousteau's details" });
+    const editButton = within(jacquesCard as HTMLElement).getByRole('button', { name: /ariaLabels\.editMember/i });
     expect(editButton).toBeInTheDocument();
     expect(screen.getByRole('heading', { level: 2, name: 'headings.h2AllowCollaborators' })).toBeInTheDocument();
     expect(screen.getByText('para.para1AllowCollaborators')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /buttons.shareWithPeople/i })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /buttons.shareWithPeople/i })).toHaveAttribute(
+      'href',
+      '/en-US/projects/1/collaboration'
+    );
+    expect(screen.getByRole('link', { name: /shareWithPeople/i })).toHaveAttribute(
+      'href',
+      '/en-US/projects/1/collaboration'
+    );
   });
 
   it('should handle add member button click', () => {
@@ -186,6 +205,35 @@ describe('ProjectsProjectMembers', () => {
     expect(mockRouter.push).toHaveBeenCalledWith('/en-US/projects/1/members/1/edit');
   });
 
+  it('should not render edit controls for members without an id', () => {
+    mockUseQuery.mockReturnValue({
+      data: {
+        project: {
+          members: [
+            {
+              id: null,
+              givenName: 'Test',
+              surName: 'Researcher',
+              orcid: null,
+              memberRoles: [{ id: 1, label: 'Project Administrator', description: '' }],
+              affiliation: { displayName: 'California Digital Library (cdlib.org)' },
+            },
+          ],
+          readOnly: false,
+        },
+      },
+      loading: false,
+      error: undefined,
+      refetch: jest.fn(),
+    } as any);
+
+    render(<ProjectsProjectMembers />);
+
+    expect(screen.getByRole('heading', { level: 3, name: 'Test Researcher' })).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /ariaLabels\.editMember/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /ariaLabels\.editMember/i })).not.toBeInTheDocument();
+  });
+
   it('should pass axe accessibility test', async () => {
 
     const { container } = render(
@@ -217,6 +265,7 @@ describe('ProjectsProjectMembers', () => {
       render(<ProjectsProjectMembers />);
       expect(screen.getByText('Jacques Cousteau')).toBeInTheDocument();
       expect(screen.queryByRole('button', { name: /edit/i })).not.toBeInTheDocument();
+      expect(screen.queryByRole('link', { name: /ariaLabels\.editMember/i })).not.toBeInTheDocument();
     });
 
     it('should still render all member names and details', () => {
@@ -225,8 +274,7 @@ describe('ProjectsProjectMembers', () => {
       expect(screen.getByText('Captain Nemo')).toBeInTheDocument();
       const affiliations = screen.getAllByText('University of California, Davis (ucdavis.edu)');
       expect(affiliations).toHaveLength(2);
-      expect(screen.getByText('0000-JACQ-0000-0000')).toBeInTheDocument();
-      expect(screen.getByText('0000-NEMO-0000-0000')).toBeInTheDocument();
+      expect(screen.getAllByTestId('orcidIconSvg')).toHaveLength(2);
     });
 
     it('should not render the collaborators section', () => {

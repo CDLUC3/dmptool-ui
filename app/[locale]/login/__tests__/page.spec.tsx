@@ -46,6 +46,7 @@ const mockFetchCsrfToken = fetchCsrfToken as jest.Mock;
 // Mock fetch globally
 global.fetch = jest.fn() as jest.MockedFunction<typeof fetch>;
 
+const signInUrl = `${process.env.NEXT_PUBLIC_SERVER_ENDPOINT}/apollo-signin`;
 
 describe('LoginPage', () => {
   const doSteps = async () => {
@@ -109,9 +110,23 @@ describe('LoginPage', () => {
     expect(emailField).toHaveAttribute('readonly');
   });
 
+  it("should show reset password link on the password step", async () => {
+    render(<LoginPage />);
+
+    fireEvent.change(screen.getByTestId("emailInput"), {
+      target: { value: "test@test.com" }
+    });
+
+    fireEvent.click(screen.getByTestId("actionContinue"));
+
+    await waitFor(() => {
+      expect(screen.getByRole("link", { name: "forgotPassword.title" })).toBeInTheDocument();
+    });
+  });
+
   it("should redirect to home on successful login", async () => {
     jest.spyOn(global, 'fetch').mockImplementation((url) => {
-      if (url === 'http://localhost:4000/apollo-signin') {
+      if (url === signInUrl) {
         return Promise.resolve({
           ok: true,
           status: 200,
@@ -130,7 +145,7 @@ describe('LoginPage', () => {
 
     await waitFor(() => {
       //Assert that the fetch calls were made with the correct arguments
-      expect(global.fetch).toHaveBeenCalledWith('http://localhost:4000/apollo-signin', {
+      expect(global.fetch).toHaveBeenCalledWith(signInUrl, {
         method: 'POST',
         credentials: 'include',
         headers: {
@@ -152,7 +167,7 @@ describe('LoginPage', () => {
 
   it('should render login form, save token in cookie, and redirect to home page', async () => {
     jest.spyOn(global, 'fetch').mockImplementation((url) => {
-      if (url === 'http://localhost:4000/apollo-signin') {
+      if (url === signInUrl) {
         return Promise.resolve({
           ok: true,
           status: 200,
@@ -170,7 +185,7 @@ describe('LoginPage', () => {
 
     await waitFor(() => {
       //Assert that the fetch calls were made with the correct arguments
-      expect(global.fetch).toHaveBeenCalledWith('http://localhost:4000/apollo-signin', {
+      expect(global.fetch).toHaveBeenCalledWith(signInUrl, {
         method: 'POST',
         credentials: 'include',
         headers: {
@@ -192,7 +207,7 @@ describe('LoginPage', () => {
 
   it('should initially disable submit button after submitting form until response is returned ', async () => {
     jest.spyOn(global, 'fetch').mockImplementation((url) => {
-      if (url === 'http://localhost:4000/apollo-signin') {
+      if (url === signInUrl) {
         return Promise.resolve({
           ok: true,
           status: 200,
@@ -260,25 +275,18 @@ describe('LoginPage', () => {
   });
 
   it('should handle fetch error', async () => {
-    jest.spyOn(global, 'fetch').mockImplementation(url => {
-      if (url === 'http://localhost:4000/login') {
-        return Promise.resolve({
-          ok: false,
-          status: 500,
-          statusText: 'Internal Server Error',
-          json: () => Promise.resolve({}),
-        } as unknown as Response);
+    jest.spyOn(global, 'fetch').mockImplementation((url) => {
+      if (url === signInUrl) {
+        return Promise.reject(new Error('Network error'));
       }
       return Promise.reject(new Error('Unknown URL'));
     });
 
-    // renderWithProviders(<LoginPage />);
     render(<LoginPage />);
 
     doSteps();
     fireEvent.click(screen.getByTestId("actionSubmit"));
 
-    // //Check that error logged
     await waitFor(() => {
       expect(logECS).toHaveBeenCalledWith(
         'error',

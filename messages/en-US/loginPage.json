@@ -4,10 +4,42 @@
     "emailAddress": "Email address",
     "singleSignOn": "To enable Single Sign On (SSO), use your institutional address. You will be redirected to your institution's single sign on platform.",
     "password": "Password",
-    "forgotPassword": "Forgot password?",
     "continue": "Continue",
     "login": "Login",
     "signupText": "Create a free DMP Tool account instead",
-    "getHelpText": "Get Help"
+    "getHelpText": "Get Help",
+    "loginError": "Login failed. Please check your email and password and try again.",
+    "forgotPassword": {
+      "title": "Forgot your password?",
+      "emailLabel": "Email address",
+      "invalidEmail": "Please enter a valid email address",
+      "checkEmailTitle": "Check your email",
+      "checkEmailMessage": "If an account exists for that email, we've sent instructions to reset your password.",
+      "buttons": {
+        "backToLogin": "Back to login",
+        "sendReset": "Send me reset password instructions",
+        "sending": "Sending..."
+      },
+      "help": {
+        "problemSigningIn": "Problem signing in? <link>Contact us</link>"
+      }
+    },
+    "resetPassword": {
+      "title": "Change your password",
+      "passwordLabel": "New password",
+      "passwordHelpText": "(8 characters minimum)",
+      "confirmPasswordLabel": "Confirm new password",
+      "invalidPassword": "Please enter a valid password",
+      "passwordRequirements": "Password must meet the requirements below",
+      "passwordUpdatedTitle": "Password updated",
+      "passwordUpdatedMessage": "Your password has been changed successfully. You can now sign in using your new password.",
+      "buttons": {
+        "changeMyPassword": "Change my password",
+        "backToLogin": "Back to login"
+      }
+    },
+    "buttons": {
+      "sending": "Sending..."
+    }
   }
 }
