@@ -448,7 +448,8 @@
         "questionUpdateError": "Error when updating question",
         "questionRemoveError": "Error when removing question",
         "invalidQuestionType": "Invalid question type found",
-        "errorSavingDisplayLogic": "Error saving display logic"
+        "errorSavingDisplayLogic": "Error saving display logic",
+        "errorLoadingDisplayLogic": "Error loading display logic"
       },
       "success": {
         "questionUpdated": "Question was successfully updated",
@@ -515,6 +516,9 @@
         "triggerQuestion": "The answer to this question",
         "conditionOption": "condition option",
         "conditionOperator": "Condition operator"
+      },
+      "helpText": {
+        "noTriggerQuestionsAvailable": "No qualifying questions are available to use as a trigger for display logic."
       }
     }
   },

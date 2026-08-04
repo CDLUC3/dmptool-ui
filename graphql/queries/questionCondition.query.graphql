@@ -1,0 +1,11 @@
+query QuestionConditionGroups($questionId: Int!) {
+  questionConditionGroups(questionId: $questionId) {
+    id
+    triggerQuestionId
+    conditions {
+      id
+      conditionType
+      conditionMatch
+    }
+  }
+}

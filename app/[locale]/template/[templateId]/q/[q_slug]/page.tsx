@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { useQuery } from '@apollo/client/react';
+import { useQuery, useMutation } from '@apollo/client/react';
 import {
   Breadcrumb,
   Breadcrumbs,
@@ -33,7 +33,10 @@ import {
 import {
   TagsDocument,
   QuestionDocument,
-  QuestionsDocument
+  QuestionsDocument,
+  QuestionErrors,
+  SaveQuestionDisplayLogicDocument,
+  QuestionConditionGroupsDocument
 } from '@/generated/graphql';
 
 import {
@@ -102,6 +105,7 @@ import {
 } from '@/app/hooks/useEditQuestion';
 import {
   toSaveInput,
+  fromQuestionConditionGroups
 } from './displayLogicMapper';
 import styles from './questionEdit.module.scss';
 
@@ -227,6 +231,14 @@ const QuestionEdit = () => {
   // Query for all tags
   const { data: tagsData } = useQuery(TagsDocument);
 
+  // Query for display logic groups for this question
+  const { data: displayLogicData } = useQuery(QuestionConditionGroupsDocument, {
+    variables: { questionId: Number(questionId) },
+    skip: !questionId,
+  });
+
+  // GraphQL Mutations
+  const [saveQuestionDisplayLogicMutation] = useMutation(SaveQuestionDisplayLogicDocument);
 
   // Candidate questions this question's display logic can trigger off of:
   // prior multiple-choice/checkbox questions in the same section.
@@ -348,20 +360,29 @@ const QuestionEdit = () => {
 
   // Handler for saving display logic changes (Display Logic tab)
   const handleSaveDisplayLogic = async () => {
-    if (!question) return;
+    if (!displayLogic) return;
     setIsSavingLogic(true);
 
     try {
-      // Simulate a save until backend is implemented
-      if (displayLogic) {
-        toSaveInput(Number(questionId), displayLogic, triggerQuestions);
-      }
+      const input = toSaveInput(Number(questionId), displayLogic, triggerQuestions);
 
-      setHasUnsavedChanges(false);
-      toastState.add(t('messages.success.displayLogicUpdated'), { type: 'success' });
-    } catch {
+      const { data } = await saveQuestionDisplayLogicMutation({
+        variables: { input },
+      });
+
+      const errs = data?.saveQuestionDisplayLogic?.errors
+        ? extractErrors<QuestionErrors>(data.saveQuestionDisplayLogic.errors, ['general'])
+        : [];
+
+      if (errs.length > 0) {
+        setErrors(prev => [...prev, ...errs]);
+      } else {
+        setHasUnsavedChanges(false);
+        toastState.add(t('messages.success.displayLogicUpdated'), { type: 'success' });
+      }
+    } catch (err) {
       logECS('error', 'QuestionEdit.handleSaveDisplayLogic', {
-        error: 'Invalid question type in parsed JSON',
+        error: err,
         url: { path: routePath('template.q.slug', { templateId, q_slug: questionId }) }
       });
       setErrors(prev => [...prev, t('messages.error.errorSavingDisplayLogic')]);
@@ -714,6 +735,37 @@ const QuestionEdit = () => {
       setTags(cleanedData);
     }
   }, [tagsData]);
+
+  // Hydrate displayLogic from the backend once, on first load
+  useEffect(() => {
+    if (
+      displayLogicData?.questionConditionGroups &&
+      displayLogicData.questionConditionGroups.length > 0 &&
+      selectedQuestion?.question &&
+      !displayLogic // don't clobber in-progress edits on a refetch
+    ) {
+      const { displayLogicAction, displayLogicMatchType } = selectedQuestion.question;
+
+      if (displayLogicAction == null || displayLogicMatchType == null) {
+        // Groups/conditions exist, but action/matchType are missing —
+        // data is in an inconsistent state. Surface it rather than guess.
+        logECS('error', 'QuestionEdit.hydrateDisplayLogic', {
+          error: 'Question has display logic groups but no action/matchType',
+          url: { path: routePath('template.q.slug', { templateId, q_slug: questionId }) }
+        });
+        setErrors(prev => [...prev, t('messages.error.errorLoadingDisplayLogic')]);
+        return;
+      }
+
+      const groups = displayLogicData.questionConditionGroups.filter(
+        (g): g is NonNullable<typeof g> => g != null
+      );
+
+      setDisplayLogic(
+        fromQuestionConditionGroups(displayLogicAction, displayLogicMatchType, groups)
+      );
+    }
+  }, [displayLogicData, selectedQuestion, displayLogic]);
 
   // Warn user of unsaved changes if they try to leave the page
   useEffect(() => {

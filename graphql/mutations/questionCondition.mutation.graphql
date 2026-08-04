@@ -1,0 +1,8 @@
+mutation SaveQuestionDisplayLogic($input: SaveQuestionDisplayLogicInput!) {
+  saveQuestionDisplayLogic(input: $input) {
+    id
+    errors {
+      general
+    }
+  }
+}

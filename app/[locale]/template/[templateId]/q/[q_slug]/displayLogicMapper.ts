@@ -1,32 +1,62 @@
-import { DisplayLogic, TriggerQuestionOption } from '@/app/types/displayLogic';
+import { DisplayLogic, DisplayLogicGroup, TriggerQuestionOption } from '@/app/types/displayLogic';
+import {
+  QuestionConditionActionType,
+  QuestionConditionMatchType,
+  QuestionConditionCondition,
+  SaveQuestionDisplayLogicInput,
+  QuestionConditionGroupInput,
+  QuestionConditionInput,
+  QuestionConditionGroupsQuery
+} from '@/generated/graphql';
 
 
-export type BackendAction = 'SHOW_QUESTION' | 'HIDE_QUESTION';
-export type BackendMatchType = 'ANY' | 'ALL';
-export type BackendConditionType = 'EQUAL' | 'DOES_NOT_EQUAL' | 'INCLUDES' | 'DOES_NOT_INCLUDE';
+type FetchedGroup = NonNullable<NonNullable<QuestionConditionGroupsQuery['questionConditionGroups']>[number]>;
 
-export interface SaveQuestionConditionInput {
-  conditionType: BackendConditionType;
-  conditionMatch: string;
-  id?: number;
+// Maps the backend condition enum to the UI's operator type (is / is_not)
+const CONDITION_TYPE_TO_OPERATOR: Record<QuestionConditionCondition, 'is' | 'is_not'> = {
+  [QuestionConditionCondition.Equal]: 'is',
+  [QuestionConditionCondition.Includes]: 'is',
+  [QuestionConditionCondition.DoesNotEqual]: 'is_not',
+  [QuestionConditionCondition.DoesNotInclude]: 'is_not',
+  [QuestionConditionCondition.HasAnswer]: 'is', // not currently produced by the UI; included for exhaustiveness
+};
+
+// Reconstructs the UI's DisplayLogic shape from the question's stored
+// action/matchType plus the groups returned by questionConditionGroups.
+export function fromQuestionConditionGroups(
+  action: QuestionConditionActionType,
+  matchType: QuestionConditionMatchType,
+  groups: FetchedGroup[]
+): DisplayLogic {
+  return {
+    action: action === QuestionConditionActionType.HideQuestion ? 'hide' : 'show',
+    matchType: matchType === QuestionConditionMatchType.All ? 'all' : 'any',
+    groups: groups.map((g): DisplayLogicGroup => ({
+      id: `group-${g.id}`, // synthetic client id, mirrors makeId('group') shape
+      triggerQuestionId: g.triggerQuestionId,
+      conditions: (g.conditions ?? [])
+        .filter((c): c is NonNullable<typeof c> => c != null)
+        .map((c) => ({
+          id: `cond-${c.id}`,
+          operator: CONDITION_TYPE_TO_OPERATOR[c.conditionType],
+          optionValue: c.conditionMatch ?? '',
+        })),
+    })),
+  };
 }
 
-export interface SaveQuestionConditionGroupInput {
-  triggerQuestionId: number;
-  conditions: SaveQuestionConditionInput[];
-}
-
-export interface SaveQuestionDisplayLogicInput {
-  questionId: number;
-  action: BackendAction;
-  matchType: BackendMatchType;
-  groups: SaveQuestionConditionGroupInput[];
-}
-
-
+// Map operator + trigger-question value-type to the backend condition enum.
+// NOTE: verify these enum member names against generated/graphql.ts — exact
+// casing depends on your codegen config.
 const OPERATOR_TO_CONDITION_TYPE = {
-  single: { is: 'EQUAL', is_not: 'DOES_NOT_EQUAL' },
-  multi: { is: 'INCLUDES', is_not: 'DOES_NOT_INCLUDE' },
+  single: {
+    is: QuestionConditionCondition.Equal,
+    is_not: QuestionConditionCondition.DoesNotEqual,
+  },
+  multi: {
+    is: QuestionConditionCondition.Includes,
+    is_not: QuestionConditionCondition.DoesNotInclude,
+  },
 } as const;
 
 
@@ -35,22 +65,26 @@ const OPERATOR_TO_CONDITION_TYPE = {
 export function toSaveInput(
   questionId: number,
   logic: DisplayLogic,
-  triggerQuestions: TriggerQuestionOption[]   // new param
+  triggerQuestions: TriggerQuestionOption[]
 ): SaveQuestionDisplayLogicInput {
   const tqMap = new Map(triggerQuestions.map((q) => [q.id, q]));
 
   return {
     questionId,
-    action: logic.action === 'show' ? 'SHOW_QUESTION' : 'HIDE_QUESTION',
-    matchType: logic.matchType === 'all' ? 'ALL' : 'ANY',
-    groups: logic.groups.map((g) => {
+    action: logic.action === 'show'
+      ? QuestionConditionActionType.ShowQuestion
+      : QuestionConditionActionType.HideQuestion,
+    matchType: logic.matchType === 'all'
+      ? QuestionConditionMatchType.All
+      : QuestionConditionMatchType.Any,
+    groups: logic.groups.map((g): QuestionConditionGroupInput => {
       const isMulti = tqMap.get(g.triggerQuestionId)?.isMultiValue ?? false;
       const ops = isMulti ? OPERATOR_TO_CONDITION_TYPE.multi : OPERATOR_TO_CONDITION_TYPE.single;
       return {
         triggerQuestionId: g.triggerQuestionId,
-        conditions: g.conditions.map((c) => ({
-          conditionType: ops[c.operator], // maps 'is'/'is_not' to the appropriate backend condition type based on whether the trigger question is multi-value
-          conditionMatch: c.optionValue // the value to match against
+        conditions: g.conditions.map((c): QuestionConditionInput => ({
+          conditionType: ops[c.operator],
+          conditionMatch: c.optionValue,
         })),
       };
     }),
