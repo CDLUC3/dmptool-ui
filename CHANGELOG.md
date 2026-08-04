@@ -1,3 +1,15 @@
+## v0.1.1
+
+### Added
+
+### Updated
+
+### Fixed
+
+### Removed
+
+### Chore
+
 ## Added
 - Added `favicon` image from `CDN`. Added a new `.env` variable `CDN_DOMAIN`. We will need to add this variable to the `stage` and `production` servers 
 - Added `login/forgot-password` and `login/reset-password` pages, and added a `PasswordRequirementList` component to assist users in knowing what the password requirements are[#242]
