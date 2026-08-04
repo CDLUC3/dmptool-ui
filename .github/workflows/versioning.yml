@@ -11,20 +11,28 @@ permissions:
 
 jobs:
   version:
-    if: github.event.pull_request.merged == true
+    # ONLY runs if the PR was merged AND the source branch was 'stage'
+    if: github.event.pull_request.merged == true && github.event.pull_request.head.ref == 'stage'
     #GitHub-hosted runner with Ubuntu
     runs-on: ubuntu-latest 
 
     steps:
+      - name: Generate GitHub App Token
+        id: generate_token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           ref: ${{ github.event.pull_request.base.ref }}
           fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ steps.generate_token.outputs.token }}
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: 22
 
@@ -78,14 +86,13 @@ jobs:
 
       - name: Commit changes
         run: |
-          git config user.name "github-actions"
-          git config user.email "github-actions@github.com"
-
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
           git add package.json CHANGELOG.md
-
-          git commit -m "chore: release v${{ steps.version.outputs.version }}" || exit 0
-
+          
+          git commit -m "chore: release v${{ steps.version.outputs.version }} [skip ci]" || exit 0
+          
           git tag -f "v${{ steps.version.outputs.version }}"
-
           git push origin HEAD:${{ github.event.pull_request.base.ref }}
           git push --tags --force
