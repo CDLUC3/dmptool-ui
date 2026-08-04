@@ -1,3 +1,15 @@
+## v0.1.2
+
+### Added
+
+### Updated
+
+### Fixed
+
+### Removed
+
+### Chore
+
 ## v0.1.1
 
 ### Added
