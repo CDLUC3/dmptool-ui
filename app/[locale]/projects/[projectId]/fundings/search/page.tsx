@@ -28,6 +28,7 @@ import {
 } from "@/components/Container";
 import FunderSearch from '@/components/FunderSearch';
 import ErrorMessages from "@/components/ErrorMessages";
+import Loading from "@/components/Loading";
 
 // Utils and other
 import { routePath } from '@/utils/routes';
@@ -38,10 +39,50 @@ import styles from './ProjectsProjectFundingSearch.module.scss';
 import { handleApolloError } from '@/utils/apolloErrorHandler';
 
 
+type SelectableFunder = AffiliationSearch | FunderPopularityResult;
+
+interface FunderListProps {
+  funders: readonly SelectableFunder[];
+  onSelect: (funder: SelectableFunder) => void;
+  funderLabel: string;
+  selectLabel: string;
+}
+
+function FunderList({
+  funders,
+  onSelect,
+  funderLabel,
+  selectLabel,
+}: FunderListProps) {
+  return (
+    <div className={styles.funderList}>
+      {funders.map((funder) => (
+        <div
+          key={funder.uri}
+          className={styles.fundingResultsListItem}
+          role="group"
+          aria-label={`${funderLabel}: ${funder.displayName}`}
+        >
+          <p className="funder-name">{funder.displayName}</p>
+          <Button
+            className="secondary select-button"
+            data-funder-uri={funder.uri}
+            onPress={() => onSelect(funder)}
+            aria-label={`${selectLabel} ${funder.displayName}`}
+          >
+            {selectLabel}
+          </Button>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+
 const ProjectsProjectFundingSearch = () => {
-  const globalTrans = useTranslations('Global');
-  const trans = useTranslations('FunderSearch');
-  const toastState = useToast(); // Access the toast state from context
+  const Global = useTranslations('Global');
+  const t = useTranslations('FunderSearch');
+  const toastState = useToast();
   const router = useRouter();
   const params = useParams();
   const projectId = params.projectId as string;
@@ -56,6 +97,7 @@ const ProjectsProjectFundingSearch = () => {
   const errorRef = useRef<HTMLDivElement>(null);
 
   const [popularFunders, setPopularFunders] = useState<FunderPopularityResult[]>([]);
+  const [popularFundersLoading, setPopularFundersLoading] = useState(true);
   const [popularFundersQuery] = useLazyQuery(PopularFundersDocument);
 
   useEffect(() => {
@@ -70,6 +112,9 @@ const ProjectsProjectFundingSearch = () => {
       })
       .catch((err) => {
         handleApolloError(err, 'ProjectsProjectFundingSearch.popularFundersQuery');
+      })
+      .finally(() => {
+        setPopularFundersLoading(false);
       });
   }, [popularFundersQuery]);
 
@@ -115,10 +160,8 @@ const ProjectsProjectFundingSearch = () => {
           const projectFundingId = result?.data?.addProjectFunding?.id;
           if (projectFundingId) {
             const NEXT_URL = routePath('projects.fundings.edit', { projectId, projectFundingId })
-            const successMessage = trans('messages.success.addProjectFunding');
-            // Set Toast message
+            const successMessage = t('messages.success.addProjectFunding');
             toastState.add(successMessage, { type: 'success', timeout: 3000 });
-            // Route user to the Funder Edit page
             router.push(NEXT_URL);
           } else {
             logECS(
@@ -126,7 +169,7 @@ const ProjectsProjectFundingSearch = () => {
               'ProjectsProjectFundingSearch.addProjectFunding',
               { error: 'projectFundingId not returned in result' }
             );
-            setErrors([globalTrans('messaging.somethingWentWrong')])
+            setErrors([Global('messaging.somethingWentWrong')])
           }
         }
       })
@@ -176,16 +219,16 @@ const ProjectsProjectFundingSearch = () => {
   return (
     <>
       <PageHeader
-        title={trans('headerTitle')}
+        title={t('headerTitle')}
         description=""
         showBackButton={true}
         breadcrumbs={
           <Breadcrumbs>
-            <Breadcrumb><Link href={routePath('app.home')}>{globalTrans('breadcrumbs.home')}</Link></Breadcrumb>
-            <Breadcrumb><Link href={routePath('projects.index', { projectId })}>{globalTrans('breadcrumbs.projects')}</Link></Breadcrumb>
-            <Breadcrumb><Link href={routePath('projects.show', { projectId })}>{globalTrans('breadcrumbs.projectOverview')}</Link></Breadcrumb>
-            <Breadcrumb><Link href={routePath('projects.fundings.index', { projectId })}>{globalTrans('breadcrumbs.projectFunding')}</Link></Breadcrumb>
-            <Breadcrumb>{globalTrans('breadcrumbs.projectFundingSearch')}</Breadcrumb>
+            <Breadcrumb><Link href={routePath('app.home')}>{Global('breadcrumbs.home')}</Link></Breadcrumb>
+            <Breadcrumb><Link href={routePath('projects.index', { projectId })}>{Global('breadcrumbs.projects')}</Link></Breadcrumb>
+            <Breadcrumb><Link href={routePath('projects.show', { projectId })}>{Global('breadcrumbs.projectOverview')}</Link></Breadcrumb>
+            <Breadcrumb><Link href={routePath('projects.fundings.index', { projectId })}>{Global('breadcrumbs.projectFunding')}</Link></Breadcrumb>
+            <Breadcrumb>{Global('breadcrumbs.projectFundingSearch')}</Breadcrumb>
           </Breadcrumbs>
         }
         className="page-project-create-project-funding"
@@ -199,96 +242,118 @@ const ProjectsProjectFundingSearch = () => {
             moreTrigger={moreCounter}
           />
 
-          {((popularFunders.length > 0) && !hasSearched) && (
-            <section aria-labelledby="popular-funders">
-              <h3>{trans('popularTitle')}</h3>
-              <div className={styles.popularFunders}>
-                {popularFunders.map((funder, index) => (
-                  <div key={index} className={styles.fundingResultsList}>
-                    <div
-                      key={index}
-                      className={styles.fundingResultsListItem}
-                      role="group"
-                      aria-label={`${trans('funder')}: ${funder.displayName}`}
-                    >
-                      <p className="funder-name">{funder.displayName}</p>
-                      <Button
-                        className="secondary select-button"
-                        data-funder-uri={funder.uri}
-                        onPress={() => handleSelectFunder(funder)}
-                        aria-label={`${globalTrans('buttons.select')} ${funder.displayName}`}
-                      >
-                        {globalTrans('buttons.select')}
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
+          {!hasSearched && (
+            <section
+              aria-labelledby="popular-funders"
+              className={styles.funderSection}
+            >
+              <h3 id="popular-funders">{t('popularTitle')}</h3>
+              {popularFundersLoading ? (
+                <>
+                  <p className={styles.popularDescription}>
+                    {t('popularDescription')}
+                  </p>
+                  <Loading
+                    variant="inline"
+                    message={t('popularLoading')}
+                    className={styles.popularFundersLoading}
+                  />
+                </>
+              ) : popularFunders.length > 0 ? (
+                <>
+                  <p className={styles.popularDescription}>
+                    {t('popularDescription')}
+                  </p>
+                  <FunderList
+                    funders={popularFunders}
+                    onSelect={handleSelectFunder}
+                    funderLabel={t('funder')}
+                    selectLabel={Global('buttons.select')}
+                  />
+                </>
+              ) : (
+                <div
+                  className={styles.funderMessage}
+                  role="status"
+                  aria-labelledby="popular-funders-fallback"
+                >
+                  <p
+                    id="popular-funders-fallback"
+                    className={styles.funderMessageTitle}
+                  >
+                    {t('popularFallbackTitle')}
+                  </p>
+                  <p className={styles.funderMessageDescription}>
+                    {t('popularFallbackDescription')}
+                  </p>
+                </div>
+              )}
             </section>
           )}
 
           {funders.length > 0 && (
-            <section aria-labelledby="funders-section">
-              <h3 id="funders-section">{trans('found', { count: totalCount })}</h3>
-              <div>
-                {funders.map((funder, index) => (
-                  <div key={index} className={styles.fundingResultsList}>
-                    <div
-                      className={styles.fundingResultsListItem}
-                      role="group"
-                      aria-label={`${trans('funder')}: ${funder.displayName}`}
-                    >
-                      <p className="funder-name">{funder.displayName}</p>
-                      <Button
-                        className="secondary select-button"
-                        data-funder-uri={funder.uri}
-                        onPress={() => handleSelectFunder(funder)}
-                        aria-label={`${globalTrans('buttons.select')} ${funder.displayName}`}
-                      >
-                        {globalTrans('buttons.select')}
-                      </Button>
-                    </div>
-                  </div>
-                ))}
+            <section
+              aria-labelledby="funders-section"
+              className={styles.funderSection}
+            >
+              <h3 id="funders-section">{t('found', { count: totalCount })}</h3>
+              <FunderList
+                funders={funders}
+                onSelect={handleSelectFunder}
+                funderLabel={t('funder')}
+                selectLabel={Global('buttons.select')}
+              />
 
-                {(hasMore()) && (
-                  <div className={styles.fundingResultsListMore}>
-                    <Button
-                      data-testid="load-more-btn"
-                      onPress={() => setMoreCounter(moreCounter + 1)}
-                      aria-label={globalTrans('buttons.loadMore')}
-                    >
-                      {globalTrans('buttons.loadMore')}
-                    </Button>
-                    <p>
-                      {trans('showCount', {
-                        count: funders.length,
-                        total: totalCount,
-                      })}
-                    </p>
-                  </div>
-                )}
-              </div>
+              {(hasMore()) && (
+                <div className={styles.fundingResultsListMore}>
+                  <Button
+                    data-testid="load-more-btn"
+                    onPress={() => setMoreCounter(moreCounter + 1)}
+                    aria-label={Global('buttons.loadMore')}
+                  >
+                    {Global('buttons.loadMore')}
+                  </Button>
+                  <p>
+                    {t('showCount', {
+                      count: funders.length,
+                      total: totalCount,
+                    })}
+                  </p>
+                </div>
+              )}
             </section>
           )}
 
           {funders.length === 0 && hasSearched && (
-            <section>
-              <p>{trans('noResults')}</p>
+            <section className={styles.funderSection}>
+              <div
+                className={styles.funderMessage}
+                role="status"
+                aria-labelledby="funders-empty"
+              >
+                <p id="funders-empty" className={styles.funderMessageTitle}>
+                  {t('noResults')}
+                </p>
+                <p className={styles.funderMessageDescription}>
+                  {t('noResultsDescription')}
+                </p>
+              </div>
             </section>
           )}
 
-          {/* Add Funder Manually (Always Visible After Search) */}
           {hasSearched && (
-            <section aria-labelledby="manual-section" className="mt-8">
-              <h3 id="manual-section">{trans('addManuallyHeading')}</h3>
-              <p>{trans('addManuallyText')}</p>
+            <section
+              aria-labelledby="manual-section"
+              className={styles.manualSection}
+            >
+              <h3 id="manual-section">{t('addManuallyHeading')}</h3>
+              <p>{t('addManuallyText')}</p>
               <Button
                 className="add-funder-button"
                 onPress={() => handleAddFunderManually()}
-                aria-label={trans('addManuallyLabel')}
+                aria-label={t('addManuallyLabel')}
               >
-                {trans('addManuallyLabel')}
+                {t('addManuallyLabel')}
               </Button>
             </section>
           )}

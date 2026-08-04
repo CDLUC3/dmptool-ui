@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, type TransitionStartFunction } from 'react';
 import { Button, Link } from 'react-aria-components';
 import { useTranslations } from 'next-intl';
 import TemplateSelectListItem from "@/components/TemplateSelectListItem";
@@ -25,7 +25,7 @@ export interface TemplateListProps {
   /** Increments for displaying additional templates*/
   increment?: number;
   /** Callback function when a template is selected */
-  onSelect: (versionedTemplateId: number) => Promise<void>;
+  onSelect: (versionedTemplateId: number, startTransition: TransitionStartFunction) => Promise<void>;
   /** Object containing count of visible items for each list type */
   visibleCount?: VisibleCount;
   /** Callback function to load more items */
@@ -43,6 +43,7 @@ const TemplateList: React.FC<TemplateListProps> = ({
   handleLoadMore,
   resetSearch
 }) => {
+
   const nextSectionRef = useRef<HTMLDivElement>(null);
   //Localization keys
   const SelectTemplate = useTranslations('TemplateSelectTemplatePage');

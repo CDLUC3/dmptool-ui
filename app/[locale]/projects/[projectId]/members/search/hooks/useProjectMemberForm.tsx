@@ -43,6 +43,7 @@ export const useProjectMemberForm = (projectId: string) => {
   });
 
   const [roles, setRoles] = useState<string[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<string[]>([]);
   const [fieldErrors, setFieldErrors] = useState({
     givenName: '',
@@ -53,7 +54,12 @@ export const useProjectMemberForm = (projectId: string) => {
     projectRoles: '',
   });
 
-  const { data: memberRolesData } = useQuery(MemberRolesDocument,);
+  const {
+    data: memberRolesData,
+    loading: memberRolesLoading,
+    error: memberRolesError,
+    refetch: refetchMemberRoles,
+  } = useQuery(MemberRolesDocument);
   const memberRoles: MemberRole[] =
     memberRolesData?.memberRoles?.filter((r): r is MemberRole => r !== null) || [];
 
@@ -93,6 +99,7 @@ export const useProjectMemberForm = (projectId: string) => {
       ...prev,
       affiliationId: id,
       affiliationName: value,
+      otherAffiliationName: id === 'other' ? prev.otherAffiliationName : '',
     }));
   }, [resetErrors]);
 
@@ -102,8 +109,16 @@ export const useProjectMemberForm = (projectId: string) => {
       !value.trim() ? t('messaging.errors.givenNameRequired') : '',
     surName: (value: string) =>
       !value.trim() ? t('messaging.errors.surNameRequired') : '',
-    affiliationName: (value: string) =>
-      !value.trim() ? t('messaging.errors.affiliationRequired') : '',
+    affiliationName: () => {
+      if (projectMember.affiliationId === 'other') {
+        return !projectMember.otherAffiliationName.trim()
+          ? t('messaging.errors.affiliationRequired')
+          : '';
+      }
+      return !projectMember.affiliationName.trim()
+        ? t('messaging.errors.affiliationRequired')
+        : '';
+    },
     email: (value: string) =>
       value.trim() && !EMAIL_REGEX.test(value)
         ? t('messaging.errors.invalidEmail')
@@ -112,14 +127,14 @@ export const useProjectMemberForm = (projectId: string) => {
       roles.length === 0
         ? t('messaging.errors.projectRolesRequired')
         : '',
-  }), [t]);
+  }), [t, projectMember.affiliationId, projectMember.affiliationName, projectMember.otherAffiliationName]);
 
   // Validate fields on form submit
   const validateForm = useCallback(() => {
     const newFieldErrors = {
       givenName: validationRules.givenName(projectMember.givenName),
       surName: validationRules.surName(projectMember.surName),
-      affiliationName: validationRules.affiliationName(projectMember.affiliationName),
+      affiliationName: validationRules.affiliationName(),
       affiliationId: '', // No validation for affiliationId to avoid duplicate errors
       email: validationRules.email(projectMember.email),
       projectRoles: validationRules.roles(roles),
@@ -161,52 +176,62 @@ export const useProjectMemberForm = (projectId: string) => {
       return;
     }
 
-    const response = await addProjectMember();
-
-    if (response.redirect) {
-      router.push(response.redirect);
+    if (isSubmitting) {
       return;
     }
 
-    if (!response.success) {
-      const messages =
-        response.errors && response.errors.length > 0
-          ? response.errors
-          : [t('messaging.errors.failedToAddProjectMember')];
-      setErrors(messages);
-      return;
-    }
+    setIsSubmitting(true);
+    try {
+      const response = await addProjectMember();
 
-    if (response.data?.errors) {
-      const normalized = Object.fromEntries(
-        Object.entries(response.data.errors).map(([k, v]) => [k, v ?? undefined])
-      );
-      const errs = extractErrors(normalized, [
-        'general',
-        'affiliationId',
-        'email',
-        'givenName',
-        'memberRoleIds',
-        'orcid',
-        'projectId',
-        'surName',
-      ]);
-
-      if (errs.length > 0) {
-        setErrors(errs);
+      if (response.redirect) {
+        router.push(response.redirect);
         return;
       }
+
+      if (!response.success) {
+        const messages =
+          response.errors && response.errors.length > 0
+            ? response.errors
+            : [t('messaging.errors.failedToAddProjectMember')];
+        setErrors(messages);
+        return;
+      }
+
+      if (response.data?.errors) {
+        const normalized = Object.fromEntries(
+          Object.entries(response.data.errors).map(([k, v]) => [k, v ?? undefined])
+        );
+        const errs = extractErrors(normalized, [
+          'general',
+          'affiliation',
+          'affiliationId',
+          'email',
+          'givenName',
+          'memberRoleIds',
+          'orcid',
+          'projectId',
+          'surName',
+        ]);
+
+        if (errs.length > 0) {
+          setErrors(errs);
+          return;
+        }
+      }
+
+      toastState.add(
+        t('messaging.success.addedProjectMember', {
+          name: `${projectMember.givenName} ${projectMember.surName}`,
+        }),
+        { type: 'success' }
+      );
+
+      router.push(routePath('projects.members.index', { projectId }));
+    } finally {
+      setIsSubmitting(false);
     }
-
-    toastState.add(
-      t('messaging.success.addedProjectMember', {
-        name: `${projectMember.givenName} ${projectMember.surName}`,
-      }),
-      { type: 'success' }
-    );
-
-    router.push(routePath('projects.members.index', { projectId }));
-  }, [resetErrors, validateForm, addProjectMember, router, projectId, t, toastState, projectMember.givenName, projectMember.surName]);
+  }, [resetErrors, validateForm, isSubmitting, addProjectMember, router, projectId, t, toastState, projectMember.givenName, projectMember.surName]);
 
   // Handle member role checkbox changes
   const handleCheckboxChange = useCallback((values: string[]) => {
@@ -220,6 +245,10 @@ export const useProjectMemberForm = (projectId: string) => {
     setProjectMember,
     roles,
     memberRoles,
+    memberRolesLoading,
+    memberRolesError,
+    refetchMemberRoles,
+    isSubmitting,
     errors,
     fieldErrors,
     handleCheckboxChange,

@@ -1,7 +1,10 @@
 import styles from "./LinkFilter.module.scss";
 import React from "react";
-import { Radio, RadioGroup } from "react-aria-components";
-import { RadioGroupProps } from "@react-types/radio";
+import {
+  Radio,
+  RadioGroup,
+  RadioGroupProps
+} from "react-aria-components";
 
 interface LinkFilterProps extends RadioGroupProps {
   label?: string;

@@ -10,6 +10,7 @@
     "dates": "Dates",
     "collaborators": "Collaborators",
     "funding": "Funding",
+    "noFunderSelected": "No funder selected",
     "grantId": "Grant ID",
     "edit": "Edit",
     "editProject": "Edit project details",
@@ -29,6 +30,7 @@
     "outputCount": "{count, plural, =0 {0 outputs} one {1 output} other {{count} outputs}}",
     "editOutputs": "Edit research outputs",
     "editResearchOutputs": "Edit research outputs",
+    "researchOutputs": "Research outputs",
     "plan": "Plan",
     "plans": "Plans",
     "sections": "Sections",
@@ -83,6 +85,10 @@
       "createProject": "Create project"
     },
     "messages": {
+      "info": {
+        "noProjectsHeading": "Your projects will appear here",
+        "noProjectsDescription": "Create a data management plan to get started. You can manage all your DMPs and research projects from this dashboard."
+      },
       "errors": {
         "errorRetrievingProjects": "Something went wrong with retrieving projects. Please try again later."
       }
@@ -285,7 +291,8 @@
       "shareWithPeople": "Share with people"
     },
     "headings": {
-      "h2AllowCollaborators": "Allow collaborators edit or comment access?"
+      "h2AllowCollaborators": "Allow collaborators edit or comment access?",
+      "roles": "Roles"
     },
     "para": {
       "para1AllowCollaborators": "You can invite people to access, edit or comment on plans by using the \"<shareWithPeople>share with people</shareWithPeople>\" button."
@@ -299,8 +306,8 @@
     }
   },
   "ProjectsProjectMembersEdit": {
-    "title": "Edit Member Details",
-    "description": "Update collaborator information",
+    "title": "Edit project member",
+    "description": "Update this project member's information.",
     "breadcrumbs": {
       "projectMembers": "Project members"
     },
@@ -310,11 +317,11 @@
     },
     "headings": {
       "h2RemoveMember": "Remove member",
-      "removeProjectMember": "Remove project member"
+      "removeProjectMember": "Remove member"
     },
     "paragraphs": {
-      "removeMember": "Removing this member means they will no longer be able to access this plan. This is not reversible.",
-      "modalInfo": "Please note that if you remove this project member, the member will also be removed from any associated plans. Also, if this is the only member under the project, it cannot be deleted."
+      "removeMember": "Removing this member means they will no longer be able to access this plan.",
+      "modalInfo": "Removing this project member will also remove them from any associated plans. If they are the project's only member, they cannot be removed."
     },
     "form": {
       "errors": {
@@ -455,14 +462,22 @@
     "ariaAddMemberButton": "Add {name} as project member",
     "buttons": {
       "addToProject": "Add to project",
-      "clearForm": "Clear form"
+      "clearForm": "Clear form",
+      "changeSelection": "Change selection",
+      "searchAgain": "Search again",
+      "selectPerson": "Select person",
+      "retryRoles": "Retry loading roles"
     },
     "headings": {
       "enterMemberDetails": "Project member's details",
-      "searchResultsHeader": "Found a match"
+      "searchResultsHeader": "Select this person",
+      "selectedMatch": "Person selected"
     },
     "messaging": {
       "noSearchResultsFound": "No record associated with that ORCiD was found. Please check the ORCiD and try again.",
+      "detailsPrefilled": "Their details have been filled in below. Review them, select their roles, then add them to the project.",
+      "loadingRoles": "Loading project roles...",
+      "selectSearchResult": "Review the match, then select it to fill in the member details below.",
       "errors": {
         "failedToLoadCollaborators": "Failed to load more collaborators",
         "failedToAddProjectMember": "Failed to add member. Please try again.",
@@ -470,9 +485,11 @@
         "givenNameRequired": "First name is required",
         "emailRequired": "Email address is required",
         "invalidEmail": "Please enter a valid email address",
+        "projectRolesLoadError": "Project roles could not be loaded. Please try again.",
         "projectRolesRequired": "At least one project role must be selected",
         "affiliationRequired": "Affiliation is required",
         "searchTermRequired": "Please enter an ORCiD or a URL containing an ORCiD to search",
+        "searchLookupFailed": "Unable to look up that ORCiD right now. Please try again, or enter the member details manually below.",
         "valueOrcidRequired": "Please enter a valid ORCiD in the format XXXX-XXXX-XXXX-XXXX or a URL containing an ORCiD"
       },
       "success": {
@@ -493,9 +510,12 @@
       "orcidFromSearch": "ORCID from search result"
     },
     "links": {
-      "learnMoreAboutCreditTaxonomy": "Learn more about each role"
+      "learnMoreAboutCreditTaxonomy": "Learn more about CRediT Taxonomy ↗"
     },
-    "memberRolesDescription": "<p>Select the role(s) that should be displayed within citations for this project member with the DMP.</p><p>We use an ANSI/NISO standard called CRediT, a community-owned 14 role taxonomy that can be used to describe the key types of contributions typically made to the production and publication of research output such as research articles.</p><p><link>Learn more about CRediT Taxonomy ↗</link></p>"
+    "memberRolesDescription": {
+      "selection": "Select the role(s) that should be displayed within citations for this project member with the DMP.",
+      "credit": "We use an ANSI/NISO standard called CRediT, a community-owned 14 role taxonomy that can be used to describe the key types of contributions typically made to the production and publication of research output such as research articles."
+    }
   },
   "ProjectsProjectMemberCreate": {
     "title": "Add a new project member",

@@ -5,9 +5,8 @@
 //
 // - [1] https://react-spectrum.adobe.com/react-aria/Table.html
 //
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import classNames from 'classnames';
-//import { useQuery } from '@apollo/client/react';
 
 import {
   Table,
@@ -21,8 +20,6 @@ import {
 } from 'react-aria-components';
 import { SortDescriptor } from '@react-types/shared';
 
-//import { DmpIcon } from '@/components/Icons';
-
 import styles from './table.module.scss';
 
 
@@ -35,6 +32,8 @@ export type DmpTableColumn = {
   isRowHeader?: boolean;
   allowsSorting?: boolean;
   direction?: SortDirection;
+  noWrap?: boolean;
+  centered?: boolean;
 }
 
 export type DmpTableColumnSet = Iterable<DmpTableColumn>;
@@ -167,7 +166,7 @@ export function DmpTable({
   label,
   onDmpSortChange,
 }: DmpTableProps): React.ReactElement {
-
+  const isFirstRender = useRef(true);
   const [sorting, setSorting] = useState<SortDescriptor>({
     column: "",
     direction: "ascending",
@@ -182,7 +181,7 @@ export function DmpTable({
       if (col.id === descriptor.column) {
         return { ...col, direction: descriptor.direction };
       }
-      return col;
+      return { ...col, direction: '' as const };  // reset all other columns otherwise it will get stuck on one sortField 
     });
 
     setSorting(descriptor);
@@ -190,15 +189,22 @@ export function DmpTable({
   }
 
   useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
     if (onDmpSortChange) {
       onDmpSortChange(columns);
     } else {
-      // Only use our internal sorting function if we never provided
-      // an onDmpSortChange() handler
       const sortedRows = sortData(rows, columns);
       setRows(sortedRows);
     }
   }, [columns]);
+
+
+  useEffect(() => {
+    setRows(rowData);
+  }, [rowData]);
 
   return (
     <Table
@@ -209,8 +215,10 @@ export function DmpTable({
     >
       <DmpTableHeader className={styles.dmpTableHeader} columns={columns}>
         {(col) => (
-          <Column isRowHeader={col.isRowHeader} allowsSorting={col.allowsSorting}>
-            {col.name}
+          <Column id={col.id} isRowHeader={col.isRowHeader} allowsSorting={col.allowsSorting}>
+            <span className={classNames({ [styles.noWrap]: col.noWrap })}>
+              {col.name}
+            </span>
             {col.allowsSorting && (
               <>
                 {!col.direction && (<span>⇅</span>)}
@@ -223,12 +231,19 @@ export function DmpTable({
       </DmpTableHeader>
 
       <TableBody items={rows as DataRowSet} dependencies={[columns]}>
-        {(row) => (
-          <DmpTableRow row={row} columns={columns}>
-            {(col: DmpTableColumn) => <Cell>{row[col.id]}</Cell>}
-          </DmpTableRow>
-        )}
+        {(row) => {
+          return (
+            <DmpTableRow row={row} columns={columns}>
+              {(col: DmpTableColumn) =>
+                <Cell
+                  className={classNames({
+                    [styles.noWrap]: col.noWrap,
+                    [styles.centerAligned]: col.centered
+                  })}>{row[col.id]}</Cell>}
+            </DmpTableRow>
+          );
+        }}
       </TableBody>
-    </Table>
+    </Table >
   );
 }

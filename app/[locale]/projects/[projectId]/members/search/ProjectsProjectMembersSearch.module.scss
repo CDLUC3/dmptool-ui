@@ -2,36 +2,45 @@
   margin-bottom: 2rem;
 }
 
+.resultsSection {
+  margin-bottom: var(--space-6);
+}
+
 .memberResultsList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
   max-width: 60ch;
-  border-top: 1px solid var(--gray-100);
+  padding: 0;
+  margin: 0;
+  list-style: none;
 }
 
 .memberResultsListItem {
-  display: flex;
-  justify-content: space-between;
-  padding: 1rem 0;
-  align-items: flex-start;
-  border-bottom: 1px solid var(--gray-100);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--space-4);
+  align-items: center;
+  padding: var(--card-padding);
+  background: var(--bg-white);
+  border: var(--card-border);
+  border-radius: var(--card-border-radius);
+  box-shadow: var(--card-shadow);
 }
 
 .memberInfo {
-  .nameAndOrcid {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    margin-bottom: 0.25rem;
-  }
+  min-width: 0;
 
   .name {
-    font-weight: 500;
-    margin: 0;
+    margin: 0 0 var(--space-1);
+    font-weight: var(--fw-semibold);
   }
 
   .orcid {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: var(--space-2);
+    margin: var(--space-1) 0 0;
     color: var(--text-secondary);
     font-size: var(--fs-small);
   }
@@ -76,7 +85,56 @@
 
 .resultsHeader {
   display: flex;
-  align-items: center;
-  gap: var(--space-2);
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--space-4);
   margin-bottom: var(--space-4);
+
+  h2 {
+    margin: 0 0 var(--space-1);
+    font-size: 1.125rem;
+  }
+
+  p {
+    margin: 0;
+    color: var(--text-secondary);
+  }
+}
+
+.selectedMatch {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--space-2) var(--space-4);
+  max-width: 60ch;
+  margin-bottom: var(--space-6);
+}
+
+.selectedSummary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-2);
+  align-items: baseline;
+  margin: 0;
+}
+
+.selectedLabel {
+  color: var(--text-secondary);
+  font-size: var(--fs-small);
+}
+
+.selectedOrcid {
+  color: var(--text-secondary);
+  font-size: var(--fs-small);
+}
+
+.selectedSummary strong {
+  font-weight: var(--fw-semibold);
+}
+
+.selectedMessage {
+  margin: var(--space-1) 0 0;
+  color: var(--text-secondary);
+  font-size: var(--fs-small);
 }

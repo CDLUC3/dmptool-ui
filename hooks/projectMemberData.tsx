@@ -15,6 +15,8 @@ export const useProjectMemberData = (projectMemberId: number) => {
     givenName: '',
     surName: '',
     affiliationId: '',
+    affiliationName: '',
+    otherAffiliationName: '',
     email: '',
     orcid: '',
   });
@@ -38,6 +40,8 @@ export const useProjectMemberData = (projectMemberId: number) => {
         givenName: projMember.givenName ?? '',
         surName: projMember?.surName ?? '',
         affiliationId: projMember?.affiliation?.uri ?? '',
+        affiliationName: projMember?.affiliation?.displayName ?? '',
+        otherAffiliationName: '',
         email: projMember?.email ?? '',
         orcid: projMember?.orcid ?? '',
       })

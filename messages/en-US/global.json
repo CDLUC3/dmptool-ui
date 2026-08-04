@@ -94,6 +94,11 @@
     "notificationsDesc": "This email address will be used for DMP notifications. <manage> Manage your notifications </manage>.",
     "aliasEmailDesc": "Alias email addresses may be used to help others find you, for example if they‘d like to share a DMP with you.",
     "linkMakePrimary": "Make primary email address",
+    "primaryEmailCannotBeDeleted": "To change your primary email, add another address below and set it as primary.",
+    "primaryBadge": "Primary",
+    "deleteEmailAria": "Delete email address {email}",
+    "deleteEmailConfirmTitle": "Delete email address?",
+    "deleteEmailConfirmMessage": "Are you sure you want to delete {email}? This action cannot be undone.",
     "helpTextForAddAlias": "You will be sent an email to confirm this addition",
     "helpTextSelectYourLanguage": "Select your preferred language",
     "helpTextSearchForInstitution": "Search for your institution",
@@ -102,6 +107,7 @@
     "btnUpdating": "Updating",
     "btnUpdate": "Update",
     "btnAdd": "Add",
+    "btnDelete": "Delete",
     "linkUpdatePassword": "Update password",
     "linkUpdateConnections": "Update connections",
     "linkManageNotifications": "Manage notifications",
@@ -191,18 +197,37 @@
     "orcidConnection": {
       "title": "ORCID iD",
       "content": "ORCID provides a persistent identifier — an ORCID iD — that distinguishes you from other users. Learn more at <link>ORCID.org</link>.",
-      "btnText": "Connect your ORCID iD"
+      "btnText": "Connect your ORCID iD",
+      "connectSuccess": "Your ORCID iD has been connected."
     },
     "orcidConnectionConnected": {
-      "title": "ORCID iD",
-      "content": "You've successfully connected your ORCID iD. Learn more or manage your record at <link>ORCID.org</link>.",
-      "btnText": "View ORCID iD"
+      "connectedBadge": "Connected",
+      "disconnect": "Disconnect",
+      "disconnectAria": "Disconnect your ORCID iD",
+      "disconnectConfirmTitle": "Confirm disconnection",
+      "disconnectConfirmMessage": "Are you sure you want to disconnect your ORCID iD? You can reconnect at any time.",
+      "disconnectSuccess": "Your ORCID iD has been disconnected."
     },
     "ssoConnection": {
       "title": "Single Sign On",
       "content": "Connect your account so that you can log into DMP Tool via your institution.",
-      "btnText": "Connect institutional credentials"
+      "btnText": "Connect institutional credentials",
+      "connectSuccess": "Your institutional credentials have been connected."
     },
+    "ssoConnectionConnected": {
+      "connectedBadge": "Connected",
+      "disconnect": "Disconnect",
+      "disconnectAria": "Disconnect your institutional credentials",
+      "disconnectConfirmTitle": "Confirm disconnection",
+      "disconnectConfirmMessage": "Are you sure you want to disconnect your institutional credentials? You can reconnect at any time.",
+      "disconnectSuccess": "Your institutional credentials have been disconnected."
+    },
+    "btnCancel": "Cancel",
+    "previewStatesHeading": "State previews",
+    "previewOrcidNotConnected": "ORCID — Not connected",
+    "previewOrcidConnected": "ORCID — Connected",
+    "previewSsoNotConnected": "Single Sign On — Not connected",
+    "previewSsoConnected": "Single Sign On — Connected",
     "headingRelatedActions": "Related actions",
     "linkUpdatePassword": "Update password",
     "linkUpdateConnections": "Update connections",
@@ -213,11 +238,16 @@
     "headerDescription": "Select the funder to use for this project. This can be the funder you plan to apply to or where you already have funding from. You'll be able to add additional funders later if you have more than one.",
     "funder": "Funder",
     "popularTitle": "Most popular funders",
+    "popularDescription": "These are the funders most frequently used in plans during the past year.",
+    "popularLoading": "Loading popular funders...",
+    "popularFallbackTitle": "Looking for a specific funder?",
+    "popularFallbackDescription": "Search above by funder name or related keyword. If it still isn't listed, you'll be able to add it manually.",
     "found": "{count} funders found",
-    "noResults": "No results found",
+    "noResults": "No funders found",
+    "noResultsDescription": "Try a different name or related keyword. If the funder is still not listed, you can add it manually below.",
     "showCount": "Showing {count} of {total}",
     "addManuallyHeading": "Not in this list?",
-    "addManuallyText": "If your project isn’t shown, you can add the details manually.",
+    "addManuallyText": "If your funder isn’t shown, you can add the details manually.",
     "addManuallyLabel": "Add funder manually",
     "noFunderHeading": "Don't have a funder yet?",
     "noFunderText": "If you don't have a funder yet, you can use the link below to proceed to the next step.",
@@ -323,18 +353,102 @@
     },
     "users": {
       "title": "User Accounts",
+      "admin": "Admin",
       "description": "Below is a list of users registered for your organization",
       "buttons": {
         "createUserLabel": "Create User",
-        "searchLabel": "Search"
+        "searchLabel": "Search",
+        "download": "Download as CSV"
       },
       "tools": {
         "searchLabel": "Search by name or email",
-        "permissionLabel": "Permission"
+        "permissionLabel": "Role",
+        "organizationLabel": "Organization"
       },
       "userTable": {
-        "label": "User List"
+        "label": "User List",
+        "noResults": "No users found"
+      },
+      "manageUser": "Manage user {name}",
+      "downloadWarning": "This export may contain sensitive user information. Please ensure the downloaded file is stored securely and only shared with authorized individuals.",
+      "headings": {
+        "confirmDownload": "Export user data"
+      },
+      "messages": {
+        "disabledDownloadMessage": "You must select an organization to download the user list.",
+        "noUsersToExport": "There are no users to export for the selected organization."
       }
+    },
+    "userProfile": {
+      "title": "{name} profile",
+      "userProfileHeading": "Edit info for {name}",
+      "userProfile": "User profile",
+      "roleRadioLabel": "Select a role for this user",
+      "buttons": {
+        "viewAllUsers": "View all users"
+      },
+      "headings": {
+        "identifiers": "Identifiers",
+        "mergeAccounts": "Merge Accounts",
+        "role": "User role"
+      },
+      "mergeAccounts": {
+        "selectUser": "Select a user to merge",
+        "merge": "Merge",
+        "confirmMessage": "The selected user's content {mergeEmail} will be merged into the account for {keepEmail}. The selected account will then be removed.",
+        "successMessage": "Accounts merged successfully",
+        "searchUsers": "Search for users to merge"
+      },
+      "definitions": {
+        "ssoId": "Institutional SSO ID",
+        "orcid": "ORCiD"
+      },
+      "profileForm": {
+        "labels": {
+          "email": "Email",
+          "givenName": "First name",
+          "surName": "Last name",
+          "institution": "Institution",
+          "department": "Department or school",
+          "language": "Language",
+          "otherInstitution": "Other institution"
+        }
+      },
+      "messages": {
+        "errors": {
+          "errorUpdatingProfile": "Error updating profile",
+          "errorUpdatingRole": "Error updating user role",
+          "invalidEmail": "Invalid email address",
+          "givenName": "Invalid first name",
+          "surName": "Invalid last name",
+          "affiliationValidation": "Invalid institution name",
+          "otherAffiliationValidation": "Invalid otherinstitution name",
+          "searchError": "An error occurred while searching. Please try again.",
+          "errorArchivingUser": "Unable to archive user account at this time."
+        },
+        "helpText": {
+          "institution": "Search for your institution",
+          "language": "Select your preferred language"
+        },
+        "success": {
+          "profileUpdateSuccess": "Successfully updated profile.",
+          "archiveSuccess": "Successfully archived user account."
+        }
+      },
+      "userPlansTable": {
+        "label": "Projects and Plans",
+        "noResults": "No projects found for this user",
+        "searchPlans": "Search for plans",
+        "projectLabel": "Project Titles",
+        "noOfPlans": "Number of plans",
+        "fundersLabel": "Funder(s)",
+        "organizationLabel": "Organization",
+        "membersLabel": "Members",
+        "startDateLabel": "Start date",
+        "endDateLabel": "End date",
+        "datesFromTo": "{startDate} to {endDate}"
+      },
+      "cannotFindInstitution": "I cannot find my institution in the list"
     }
   },
   "AdminNotifications": {
@@ -394,7 +508,7 @@
       "organizationDomain": {
         "label": "Organization domain name",
         "placeholder": "Enter organization domain name (e.g. example.com)",
-        "helpMessage": "Displayed along with your organization's name when users search. Research organization registry (ROR) homepage:",
+        "helpMessage": "Displayed along with your organization's name when users search. Research organization registry (ROR) homepage: <link>{homepage}</link>",
         "helpMessageNonRor": "The website domain of your organization. For example 'example.edu' not 'library.example.edu'. This will be used to help users find your organization when searching and will be displayed along with your organization's name in search results."
       },
       "organizationType": {
@@ -460,14 +574,16 @@
       "apiTarget": {
         "label": "API URL",
         "description": "If the affiliation is a funder, providing this will enable the project search workflow (relies on application code to be in place)."
-      }
+      },
+      "identifiersMessage": "If you need to make a change to one of these fields, please <link>contact us</link>."
     },
     "actions": {
       "requestChange": "Request Change"
     },
     "buttons": {
       "save": "Save",
-      "addLink": "Add another link",
+      "addLink": "Add link",
+      "addAnotherLink": "Add another link",
       "deleteLink": "Remove",
       "removeLogo": "Remove logo"
     },
@@ -535,6 +651,10 @@
     "title": "Organization Projects",
     "intro": "Manage DMSP projects and plans across your organization",
     "messages": {
+      "info": {
+        "noProjectsHeading": "Organization projects will appear here",
+        "noProjectsDescription": "When researchers in your organization create data management plans, they will be listed here."
+      },
       "errors": {
         "errorRetrievingProjects": "Something went wrong with retrieving projects. Please try again later."
       }
@@ -833,6 +953,7 @@
       "saveAndUpdate": "Save and update",
       "saveChanges": "Save changes",
       "update": "Update",
+      "updating": "Updating...",
       "remove": "Remove",
       "removeAll": "Remove all",
       "confirm": "Confirm",
@@ -848,6 +969,7 @@
       "deleteLabel": "Delete {item}",
       "preview": "Preview",
       "publish": "Publish",
+      "publishing": "Publishing...",
       "publishChanges": "Publish changes",
       "unpublish": "Unpublish",
       "close": "Close",
@@ -871,7 +993,11 @@
       "viewPlan": "View plan",
       "viewTemplate": "View template",
       "markAsRead": "Mark as read",
-      "markAsUnread": "Mark as unread"
+      "markAsUnread": "Mark as unread",
+      "archive": "Archive",
+      "archiving": "Archiving...",
+      "submit": "Submit",
+      "submitting": "Submitting..."
     },
     "labels": {
       "required": "required",
@@ -902,7 +1028,15 @@
       "selectAnItem": "Select an item",
       "mayContainSensitiveData": "May contain sensitive data?",
       "mayContainPersonalData": "May contain personally identifiable information?",
-      "additionalComments": "Additional comments"
+      "additionalComments": "Additional comments",
+      "show": "Show",
+      "hide": "Hide",
+      "showPassword": "Show password",
+      "hidePassword": "Hide password",
+      "showPasswordFor": "Show password for {field}",
+      "hidePasswordFor": "Hide password for {field}",
+      "passwordIsVisible": "Your password is visible",
+      "passwordIsHidden": "Your password is hidden"
     },
     "helpText": {
       "searchHelpText": "Search by research organization, field station or lab, template description, etc.",
@@ -931,6 +1065,7 @@
     },
     "messaging": {
       "loading": "Loading",
+      "loadingList": "Loading list, please wait...",
       "loadingPage": "Loading page...",
       "submitting": "Submitting...",
       "submittingSROnly": "Submitting feedback request...",
@@ -945,13 +1080,22 @@
       "sectionIsExpanded": "Section is expanded",
       "sectionIsCollapsed": "Section is collapsed",
       "continueAnyway": "Continue anyway",
+      "exportingProgress": "Exporting progress: {percent}% complete",
       "error": "Something went wrong. Please try again.",
+      "exportComplete": "Export complete",
+      "exportFailed": "Export failed",
+      "exportingLabel": "Exporting...",
       "errors": {
         "invalidQuestionType": "Invalid question type found.",
         "questionUnexpectedFormat": "Unexpected format for question.json.",
         "questionJSONFParseFailed": "JSON.parse failed.",
         "requiredField": "{field} is required",
-        "errorParsingData": "Error parsing data"
+        "errorParsingData": "Error parsing data",
+        "positiveNumberOnly": "{field} must be a positive integer",
+        "byteSizeWithoutContext": "{field} must be a valid unit size",
+        "invalidDateFormat": "{field} must be a valid date",
+        "institutionSuggestionsLoadError": "Could not load institution suggestions. Please try again.",
+        "passMissMatch": "Passwords don't match"
       },
       "numDisplaying": "Showing {num} of {total}",
       "unsavedChangesWarning": "You have unsaved changes. Are you sure you want to leave this page?"
@@ -959,7 +1103,7 @@
     "tabs": {
       "editQuestion": "Edit question",
       "options": "Options",
-      "logic": "Logic"
+      "logic": "Display Logic"
     },
     "headings": {
       "preview": "Preview",
@@ -994,6 +1138,16 @@
       "draft": "Draft",
       "unpublishedChanges": "Unpublished changes",
       "notStarted": "Not started"
+    },
+    "passwordRequirements": {
+      "description": "Create a password that:",
+      "minLength": "At least 8 characters",
+      "hasUppercase": "One uppercase letter",
+      "hasLowercase": "One lowercase letter",
+      "hasNumber": "One number",
+      "hasSpecialChar": "One special character (` ! @ # $ % ^ & * - _ = + ?)",
+      "metPrefix": "Requirement met:",
+      "unmetPrefix": "Requirement not yet met:"
     }
   },
   "OrganizationTemplates": {
@@ -1012,7 +1166,33 @@
     },
     "ariaLabels": {
       "editMember": "Edit {name}'s details",
-      "orcidProfile": "ORCID profile for {name}"
+      "orcidProfile": "View {name}'s ORCID profile (opens in a new tab)"
+    }
+  },
+  "Contact": {
+    "title": "Contact us",
+    "contactDescription": "DMP Tool is provided by the University of California Curation Center (UC3). You can find out more about us on our <link>website</link>.",
+    "contactDescriptionLoggedIn": "If you would like to contact us about the DMP Tool, please fill out the form below.",
+    "contactDescriptionLoggedOut": "If you would like to learn more about the DMP Tool, would like to become a participating organization, or are having difficulty accessing your account, please email our helpdesk: dmptool [at] ucop [dot] edu.",
+    "form": {
+      "labels": {
+        "name": "Name",
+        "email": "Email",
+        "subject": "Subject",
+        "message": "Message"
+      }
+    },
+    "messages": {
+      "success": {
+        "messageSent": "Your message has been sent successfully."
+      },
+      "errors": {
+        "invalidEmail": "Invalid email address",
+        "invalidName": "Name field must be at least 2 characters long",
+        "invalidSubject": "Subject field must be at least 2 characters long",
+        "invalidMessage": "Message field must be at least 2 characters long",
+        "formSubmittalFailed": "Form submission failed. Please try again later."
+      }
     }
   }
 }

@@ -33,6 +33,10 @@ mutation UpdateQuestion($input: UpdateQuestionInput!) {
     sectionId
     templateId
     questionText
+    tags {
+      id
+      name
+    }
   }
 }
 

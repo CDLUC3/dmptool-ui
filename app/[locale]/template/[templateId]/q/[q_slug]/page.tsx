@@ -9,6 +9,7 @@ import {
   Breadcrumbs,
   Button,
   Checkbox,
+  CheckboxGroup,
   Dialog,
   DialogTrigger,
   Form,
@@ -17,6 +18,8 @@ import {
   Link,
   Modal,
   ModalOverlay,
+  OverlayArrow,
+  Popover,
   Radio,
   Tab,
   TabList,
@@ -28,7 +31,9 @@ import {
 
 // GraphQL
 import {
+  TagsDocument,
   QuestionDocument,
+  QuestionsDocument
 } from '@/generated/graphql';
 
 import {
@@ -43,8 +48,10 @@ import {
   QuestionOptions,
   QuestionFormatInterface,
   RemoveQuestionErrors,
+  TagsInterface,
   UpdateQuestionErrors,
 } from '@/app/types';
+import { DisplayLogic } from '@/app/types/displayLogic';
 
 // Components
 import PageHeader from "@/components/PageHeader";
@@ -52,21 +59,23 @@ import QuestionOptionsComponent
   from '@/components/Form/QuestionOptionsComponent';
 import QuestionPreview from '@/components/QuestionPreview';
 import {
-  FormInput,
+  FormTextArea,
   RadioGroupComponent,
   RangeComponent,
   TypeAheadSearch,
   ResearchOutputComponent
 } from '@/components/Form';
-import FormTextArea from '@/components/Form/FormTextArea';
+import DisplayLogicComponent from './DisplayLogicComponent';
 import ErrorMessages from '@/components/ErrorMessages';
 import QuestionView from '@/components/QuestionView';
 import { getParsedQuestionJSON } from '@/components/hooks/getParsedQuestionJSON';
 import { TransitionButton } from "@/components/Form";
 import Loading from '@/components/Loading';
+import { DmpIcon } from "@/components/Icons";
 
 //Utils and Other
 import { useResearchOutputTable } from '@/app/hooks/useResearchOutputTable';
+import { useTriggerQuestions } from './hooks/useTriggerQuestions';
 import { useToast } from '@/context/ToastContext';
 import { routePath } from '@/utils/routes';
 import { stripHtmlTags } from '@/utils/general';
@@ -91,25 +100,33 @@ import {
   isOptionsType,
   getOverrides,
 } from '@/app/hooks/useEditQuestion';
+import {
+  toSaveInput,
+} from './displayLogicMapper';
 import styles from './questionEdit.module.scss';
 
 const QuestionEdit = () => {
+  // hooks
   const params = useParams();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const toastState = useToast(); // Access the toast state from context
+  const toastState = useToast();
+
+  // params
   const templateId = String(params.templateId);
   const questionId = String(params.q_slug); //question id
   const questionTypeIdQueryParam = searchParams.get('questionType') || null;
 
   //For scrolling to error in page
   const errorRef = useRef<HTMLDivElement | null>(null);
-
+  // Track whether the component has hydrated to avoid running certain effects on the server
   const hasHydrated = useRef(false);
   // Track whether there are unsaved changes
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState<boolean>(false);
   // Form state
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [isSavingLogic, setIsSavingLogic] = useState<boolean>(false);
+  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
 
   // State for managing form inputs
   const [question, setQuestion] = useState<Question>();
@@ -125,8 +142,18 @@ const QuestionEdit = () => {
   const [parsedQuestionJSON, setParsedQuestionJSON] = useState<AnyParsedQuestion>();
   const [isConfirmOpen, setConfirmOpen] = useState(false);
 
+  // Display logic tab state — null means "no logic configured yet",
+  // which drives the empty state (description + Add Display Logic button).
+  const [displayLogic, setDisplayLogic] = useState<DisplayLogic | null>(null);
+
   // Add state for live region announcements
   const [announcement, setAnnouncement] = useState('');
+
+  // List of tags available for selection, fetched from the backend
+  const [tags, setTags] = useState<TagsInterface[]>([]);
+
+  // Keep track of which checkboxes have been selected
+  const [selectedTags, setSelectedTags] = useState<TagsInterface[]>([]);
 
   // localization keys
   const Global = useTranslations('Global');
@@ -175,7 +202,7 @@ const QuestionEdit = () => {
     updateStandardFieldProperty
   } = useResearchOutputTable({ setHasUnsavedChanges, announce });
 
-  // Run selected question query
+  // GraphQL Queries
   const {
     data: selectedQuestion,
     loading,
@@ -185,6 +212,29 @@ const QuestionEdit = () => {
       questionId: Number(questionId)
     }
   });
+
+  // All questions in the same section as this one — the source list that
+  // Display Logic's trigger-question dropdown filters down from.
+  const {
+    data: questionsData,
+    loading: questionsLoading,
+    error: questionsError
+  } = useQuery(QuestionsDocument, {
+    variables: { sectionId: selectedQuestion?.question?.sectionId ?? 0 },
+    skip: !selectedQuestion?.question?.sectionId
+  });
+
+  // Query for all tags
+  const { data: tagsData } = useQuery(TagsDocument);
+
+
+  // Candidate questions this question's display logic can trigger off of:
+  // prior multiple-choice/checkbox questions in the same section.
+  const { triggerQuestions } = useTriggerQuestions(
+    questionsData?.questions,
+    Number(questionId),
+    (question?.displayOrder ? Number(question.displayOrder) : undefined)
+  );
 
   // Update rows state and question.json when options change
   const updateRows = (newRows: QuestionOptions[]) => {
@@ -290,6 +340,36 @@ const QuestionEdit = () => {
     }
   };
 
+  // Handler for display logic changes (Display Logic tab)
+  const handleDisplayLogicChange = (logic: DisplayLogic | null) => {
+    setDisplayLogic(logic);
+    setHasUnsavedChanges(true);
+  };
+
+  // Handler for saving display logic changes (Display Logic tab)
+  const handleSaveDisplayLogic = async () => {
+    if (!question) return;
+    setIsSavingLogic(true);
+
+    try {
+      // Simulate a save until backend is implemented
+      if (displayLogic) {
+        toSaveInput(Number(questionId), displayLogic, triggerQuestions);
+      }
+
+      setHasUnsavedChanges(false);
+      toastState.add(t('messages.success.displayLogicUpdated'), { type: 'success' });
+    } catch {
+      logECS('error', 'QuestionEdit.handleSaveDisplayLogic', {
+        error: 'Invalid question type in parsed JSON',
+        url: { path: routePath('template.q.slug', { templateId, q_slug: questionId }) }
+      });
+      setErrors(prev => [...prev, t('messages.error.errorSavingDisplayLogic')]);
+    } finally {
+      setIsSavingLogic(false);
+    }
+  };
+
   // Prepare input for the questionTypeHandler. For options questions, we update the 
   // values with rows state. For non-options questions, we use the parsed JSON
   const getFormState = (question: Question, rowsOverride?: QuestionOptions[]) => {
@@ -362,7 +442,6 @@ const QuestionEdit = () => {
         // Strip all tags from questionText before sending to backend
         const cleanedQuestionText = stripHtmlTags(question.questionText ?? '');
 
-        // Add mutation for question
         const response = await updateQuestionAction({
           questionId: Number(questionId),
           displayOrder: Number(question.displayOrder),
@@ -372,7 +451,8 @@ const QuestionEdit = () => {
           guidanceText: String(question.guidanceText),
           sampleText: String(question.sampleText),
           useSampleTextAsDefault: question?.useSampleTextAsDefault || false,
-          required: Boolean(question.required)
+          required: Boolean(question.required),
+          tags: selectedTags
         });
 
         if (response.redirect) {
@@ -440,6 +520,16 @@ const QuestionEdit = () => {
     }
   };
 
+  // Handle changes to tag checkbox selection
+  const handleCheckboxChange = (tag: TagsInterface) => {
+    setSelectedTags(prevTags => prevTags.some(selectedTag => selectedTag.id === tag.id)
+      ? prevTags.filter(selectedTag => selectedTag.id !== tag.id)
+      : [...prevTags, tag]
+    );
+    setHasUnsavedChanges(true);
+  };
+
+
   // Saves any query errors to errors state
   useEffect(() => {
     const allErrors = [];
@@ -448,8 +538,12 @@ const QuestionEdit = () => {
       allErrors.push(selectedQuestionQueryError.message);
     }
 
+    if (questionsError) {
+      allErrors.push(questionsError.message);
+    }
+
     setErrors(allErrors);
-  }, [selectedQuestionQueryError]);
+  }, [selectedQuestionQueryError, questionsError]);
 
   // Set question details in state when data is loaded
   useEffect(() => {
@@ -503,6 +597,15 @@ const QuestionEdit = () => {
             }));
           setRows(optionRows);
         }
+
+        // Set selected tags
+        if (q?.tags) {
+          const cleanedTags = q?.tags.filter(tag => tag !== null && tag !== undefined);
+          const cleanedData = cleanedTags.map(({ __typename, ...fields }) => fields);
+          setSelectedTags((prevTags) => {
+            return [...prevTags, ...cleanedData];
+          });
+        }
       } catch (error) {
         logECS('error', 'Parsing error', {
           error,
@@ -511,7 +614,7 @@ const QuestionEdit = () => {
         setErrors(prev => [...prev, 'Error parsing question data']);
       }
     }
-  }, [selectedQuestion]);
+  }, [selectedQuestion, questionId]);
 
   useEffect(() => {
     if (questionType) {
@@ -603,6 +706,15 @@ const QuestionEdit = () => {
     }
   }, [question])
 
+  // Filter out null or undefined tags and set the cleaned tags to state
+  useEffect(() => {
+    if (tagsData?.tags) {
+      const cleanedTags = tagsData.tags.filter(tag => tag !== null && tag !== undefined);
+      const cleanedData = cleanedTags.map(({ __typename, ...fields }) => fields);
+      setTags(cleanedData);
+    }
+  }, [tagsData]);
+
   // Warn user of unsaved changes if they try to leave the page
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
@@ -618,14 +730,23 @@ const QuestionEdit = () => {
     };
   }, [hasUnsavedChanges]);
 
-  if (loading) {
+
+  useEffect(() => {
+    const stillLoading = loading || (!!selectedQuestion?.question?.sectionId && questionsLoading);
+    if (!stillLoading && !initialLoadComplete) {
+      setInitialLoadComplete(true);
+    }
+  }, [loading, questionsLoading, selectedQuestion, initialLoadComplete]);
+
+  if (!initialLoadComplete) {
     return <Loading message={Global('messaging.loading')} />;
   }
+
 
   return (
     <>
       <PageHeader
-        title={t('title', { title: selectedQuestion?.question?.questionText ?? '' })}
+        title={t('title')}
         description=""
         showBackButton={false}
         breadcrumbs={
@@ -637,7 +758,7 @@ const QuestionEdit = () => {
           </Breadcrumbs>
         }
         actions={null}
-        className=""
+        className="mb-3"
       />
 
       {/* Live region for announcements - visually hidden but read by screen readers */}
@@ -655,11 +776,12 @@ const QuestionEdit = () => {
         <div className="main-content">
           <Tabs>
             <TabList aria-label="Question editing">
-              <Tab id="edit">{Global('tabs.editQuestion')}</Tab>
-              <Tab id="options">{Global('tabs.options')}</Tab>
-              <Tab id="logic">{Global('tabs.logic')}</Tab>
+              <Tab id="edit">{t('tabs.editQuestion')}</Tab>
+              <Tab id="options">{t('tabs.options')}</Tab>
+              <Tab id="logic">{t('tabs.logic')}</Tab>
             </TabList>
 
+            {/* Tab: Edit Question Tab */}
             <TabPanel id="edit">
               <Form onSubmit={handleUpdate}>
                 <TextField
@@ -683,16 +805,17 @@ const QuestionEdit = () => {
                   </Text>
                 </TextField>
 
-                <FormInput
+                <FormTextArea
                   name="question_text"
-                  type="text"
                   isRequired={true}
                   label={t('labels.questionText')}
                   value={question?.questionText ? question.questionText : ''}
-                  onChange={(e) => handleQuestionTextChange(e.target.value)}
+                  onChange={handleQuestionTextChange}
                   helpMessage={t('helpText.questionText')}
                   isInvalid={!question?.questionText}
                   errorMessage={t('messages.errors.questionTextRequired')}
+                  richText={false}
+                  textAreaClasses={styles.questionFormField}
                 />
 
                 {/**Question type fields here */}
@@ -785,43 +908,42 @@ const QuestionEdit = () => {
                 />
 
                 {questionType === TEXT_AREA_QUESTION_TYPE && (
-                  <FormTextArea
-                    name="sample_text"
-                    isRequired={false}
-                    richText={true}
-                    description={t('descriptions.sampleText')}
-                    textAreaClasses={styles.questionFormField}
-                    label={t('labels.sampleText')}
-                    value={question?.sampleText ? question?.sampleText : ''}
-                    onChange={(newValue) => {
-                      setQuestion(prev => ({
-                        ...prev,
-                        sampleText: newValue
-                      }));
-                      setHasUnsavedChanges(true);
-                    }}
-                  />
-                )}
+                  <div className={styles.sampleTextGroup}>
+                    <FormTextArea
+                      name="sample_text"
+                      isRequired={false}
+                      richText={true}
+                      description={t('descriptions.sampleText')}
+                      textAreaClasses={styles.questionFormField}
+                      label={t('labels.sampleText')}
+                      value={question?.sampleText ? question?.sampleText : ''}
+                      onChange={(newValue) => {
+                        setQuestion(prev => ({
+                          ...prev,
+                          sampleText: newValue
+                        }));
+                        setHasUnsavedChanges(true);
+                      }}
+                    />
 
-                {questionType === TEXT_AREA_QUESTION_TYPE && (
-                  <Checkbox
-                    onChange={() => {
-                      setQuestion({
-                        ...question,
-                        useSampleTextAsDefault: !question?.useSampleTextAsDefault
-                      });
-                      setHasUnsavedChanges(true);
-                    }}
-                    isSelected={question?.useSampleTextAsDefault || false}
-                  >
-                    <div className="checkbox">
-                      <svg viewBox="0 0 18 18" aria-hidden="true">
-                        <polyline points="1 9 7 14 15 4" />
-                      </svg>
-                    </div>
-                    {t('descriptions.sampleTextAsDefault')}
-
-                  </Checkbox>
+                    <Checkbox
+                      onChange={() => {
+                        setQuestion({
+                          ...question,
+                          useSampleTextAsDefault: !question?.useSampleTextAsDefault
+                        });
+                        setHasUnsavedChanges(true);
+                      }}
+                      isSelected={question?.useSampleTextAsDefault || false}
+                    >
+                      <div className="checkbox">
+                        <svg viewBox="0 0 18 18" aria-hidden="true">
+                          <polyline points="1 9 7 14 15 4" />
+                        </svg>
+                      </div>
+                      {t('descriptions.sampleTextAsDefault')}
+                    </Checkbox>
+                  </div>
                 )}
 
                 {questionType === RESEARCH_OUTPUT_QUESTION_TYPE && (
@@ -871,6 +993,53 @@ const QuestionEdit = () => {
                   </div>
                 </RadioGroupComponent>
 
+                <CheckboxGroup
+                  name="sectionTags"
+                  defaultValue={selectedTags.map(tag => tag.name)}
+                >
+                  <Label>{t('labels.bestPracticeTags')}</Label>
+                  <span className="help">{t('helpText.bestPracticeTagsDesc')}</span>
+                  <div className="checkbox-group-two-column">
+                    {tags && tags.map(tag => {
+                      const id = (tag.id)?.toString();
+                      return (
+                        <Checkbox
+                          value={tag.name}
+                          key={tag.name}
+                          id={id}
+                          onChange={() => handleCheckboxChange(tag)}
+                        >
+                          <div className="checkbox">
+                            <svg viewBox="0 0 18 18" aria-hidden="true">
+                              <polyline points="1 9 7 14 15 4" />
+                            </svg>
+                          </div>
+                          <span className="checkbox-label" data-testid='checkboxLabel'>
+                            <div className="checkbox-wrapper">
+                              <div>{tag.name}</div>
+                              <DialogTrigger>
+                                <Button className="popover-btn" aria-label="Click for more info"><div className="icon info"><DmpIcon icon="info" /></div></Button>
+                                <Popover>
+                                  <OverlayArrow>
+                                    <svg width={12} height={12} viewBox="0 0 12 12">
+                                      <path d="M0 0 L6 6 L12 0" />
+                                    </svg>
+                                  </OverlayArrow>
+                                  <Dialog>
+                                    <div className="flex-col">
+                                      {tag.description}
+                                    </div>
+                                  </Dialog>
+                                </Popover>
+                              </DialogTrigger>
+                            </div>
+                          </span>
+                        </Checkbox>
+                      )
+                    })}
+                  </div>
+                </CheckboxGroup>
+
                 <TransitionButton
                   type="submit"
                   isDisabled={isSubmitting}
@@ -880,14 +1049,24 @@ const QuestionEdit = () => {
                   {Global('buttons.saveAndUpdate')}
                 </TransitionButton>
               </Form>
-
-
             </TabPanel>
+
+            {/** Tab: Options Tab */}
             <TabPanel id="options">
-              <h2>{Global('tabs.options')}</h2>
+              <h2>{t('tabPanel.headings.options')}</h2>
             </TabPanel>
+
+            {/** Tab: Display Logic Tab */}
             <TabPanel id="logic">
-              <h2>{Global('tabs.logic')}</h2>
+              <h2>{t('tabPanel.headings.logic')}</h2>
+              <DisplayLogicComponent
+                triggerQuestions={triggerQuestions}
+                displayLogic={displayLogic}
+                onDisplayLogicChange={handleDisplayLogicChange}
+                onDisplayLogicSave={handleSaveDisplayLogic}
+                isSaving={isSavingLogic}
+              />
+
             </TabPanel>
           </Tabs>
 

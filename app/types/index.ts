@@ -398,6 +398,8 @@ export interface ProjectMemberFormInterface {
   givenName: string;
   surName: string;
   affiliationId: string;
+  affiliationName?: string;
+  otherAffiliationName?: string;
   email: string;
   orcid: string;
 }
@@ -447,6 +449,7 @@ export interface PlanOverviewInterface {
   orgId?: string;
   feedbackStatus?: string;
   completedAllRequiredQuestions?: boolean;
+  isTestProject?: boolean;
 }
 
 export interface ActionResponse {

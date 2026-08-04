@@ -2,7 +2,9 @@
 
 import React from "react";
 import Link from "next/link";
+import type { CurrencyQuestionType } from "@dmptool/types";
 import { ContentContainer, LayoutContainer } from "@/components/Container";
+import { CurrencyQuestionComponent } from "@/components/Form/QuestionComponents";
 
 // Import our custom Form components
 import {
@@ -47,6 +49,14 @@ export default function FormElementsPage() {
     "<p>This is <strong>rich text</strong> with <em>formatting</em>.</p>",
   );
   const [numberValue, setNumberValue] = React.useState<number>(100);
+  const [currencyValue, setCurrencyValue] = React.useState<number | null>(250000);
+  const [currencyStepperValue, setCurrencyStepperValue] = React.useState<number | null>(250000);
+  const [currencyMaximumValue, setCurrencyMaximumValue] = React.useState<number | null>(100_000_000);
+  const [currencyMinorUnitValue, setCurrencyMinorUnitValue] = React.useState<number | null>(250000);
+  const [sterlingValue, setSterlingValue] = React.useState<number | null>(250000);
+  const [euroValue, setEuroValue] = React.useState<number | null>(250000);
+  const [polishZlotyValue, setPolishZlotyValue] = React.useState<number | null>(250000);
+  const [brazilianRealValue, setBrazilianRealValue] = React.useState<number | null>(250000);
   const [dateValue, setDateValue] = React.useState<string | null>(null);
   const [rangeStart, setRangeStart] = React.useState<string>("Minimum Value");
   const [rangeEnd, setRangeEnd] = React.useState<string>("Maximum Value");
@@ -64,6 +74,50 @@ export default function FormElementsPage() {
     { id: "ca", name: "Canada" },
     { id: "au", name: "Australia" },
   ];
+
+  const currencyQuestion: CurrencyQuestionType = {
+    type: "currency",
+    meta: { schemaVersion: "1.0" },
+    attributes: {
+      denomination: "USD",
+      min: 0,
+      max: 100_000_000,
+      step: 100,
+    },
+  };
+
+  const sterlingQuestion: CurrencyQuestionType = {
+    ...currencyQuestion,
+    attributes: {
+      ...currencyQuestion.attributes,
+      denomination: "GBP",
+    },
+  };
+
+  const euroQuestion: CurrencyQuestionType = {
+    ...currencyQuestion,
+    attributes: {
+      ...currencyQuestion.attributes,
+      denomination: "EUR",
+    },
+  };
+
+  const polishZlotyQuestion: CurrencyQuestionType = {
+    ...currencyQuestion,
+    attributes: {
+      ...currencyQuestion.attributes,
+      denomination: "PLN",
+    },
+  };
+
+  const brazilianRealQuestion: CurrencyQuestionType = {
+    ...currencyQuestion,
+    attributes: {
+      ...currencyQuestion.attributes,
+      denomination: "BRL",
+    },
+  };
+
   return (
     <LayoutContainer>
       <ContentContainer>
@@ -91,6 +145,9 @@ export default function FormElementsPage() {
               <ul>
                 <li>
                   <a href="#text-input">Text Input</a>
+                </li>
+                <li>
+                  <a href="#password-input">Password Input</a>
                 </li>
                 <li>
                   <a href="#textarea">Text Area</a>
@@ -251,6 +308,118 @@ export default function FormElementsPage() {
           </SGComponentExample>
         </section>
 
+        {/* Password Input */}
+        <section id="password-input">
+          <h2>Password Input</h2>
+          <p>
+            Password fields use <code>FormInput</code> with a Show/Hide link beside the input. The toggle is on by
+            default when <code>type=&quot;password&quot;</code>.
+          </p>
+
+          <SGComponentExample>
+            <SGComponentExampleHeader title="Password Input Variants" />
+            <SGComponentExampleContent>
+              <SGComponentExampleDemo>
+                <h4>Standard (hidden by default)</h4>
+                <FormInput
+                  name="password-standard"
+                  type="password"
+                  label="Password"
+                  placeholder="Enter your password"
+                  isRequired
+                />
+
+                <h4>Visible by default</h4>
+                <FormInput
+                  name="password-visible"
+                  type="password"
+                  label="Password"
+                  placeholder="Enter your password"
+                  defaultPasswordVisible={true}
+                  isRequired
+                />
+
+                <h4>No toggle</h4>
+                <FormInput
+                  name="password-no-toggle"
+                  type="password"
+                  label="Password"
+                  placeholder="Enter your password"
+                  showPasswordToggle={false}
+                  isRequired
+                />
+              </SGComponentExampleDemo>
+
+              <h4>Usage</h4>
+              <SGCodeBlock>{`import { FormInput } from '@/components/Form';
+
+// Standard — toggle on, password hidden
+<FormInput
+  name="password"
+  type="password"
+  label="Password"
+  isRequired
+/>
+
+// Visible by default
+<FormInput
+  name="password"
+  type="password"
+  label="Password"
+  defaultPasswordVisible={true}
+  isRequired
+/>
+
+// No Show/Hide toggle
+<FormInput
+  name="password"
+  type="password"
+  label="Password"
+  showPasswordToggle={false}
+  isRequired
+/>`}</SGCodeBlock>
+
+              <h4>Props</h4>
+              <SGPropsTable>
+                <thead>
+                  <tr>
+                    <th>Prop</th>
+                    <th>Type</th>
+                    <th>Default</th>
+                    <th>Description</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>
+                      <code>showPasswordToggle</code>
+                    </td>
+                    <td>
+                      <code>boolean</code>
+                    </td>
+                    <td>
+                      <code>true</code> when <code>type=&quot;password&quot;</code>
+                    </td>
+                    <td>Render the Show/Hide link beside the field</td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <code>defaultPasswordVisible</code>
+                    </td>
+                    <td>
+                      <code>boolean</code>
+                    </td>
+                    <td>
+                      <code>false</code>
+                    </td>
+                    <td>Start with the password shown as plain text</td>
+                  </tr>
+                </tbody>
+              </SGPropsTable>
+            </SGComponentExampleContent>
+          </SGComponentExample>
+        </section>
+
         {/* Text Area */}
         <section id="textarea">
           <h2>Text Area</h2>
@@ -364,6 +533,160 @@ export default function FormElementsPage() {
   maxValue={1000000}
   step={10}
   onChange={setBudgetValue}
+/>`}</SGCodeBlock>
+            </SGComponentExampleContent>
+          </SGComponentExample>
+
+          <SGComponentExample>
+            <SGComponentExampleHeader title="Currency Field States" />
+            <SGComponentExampleContent>
+              <p>
+                Currency fields use the shared number API with a wider input, an external currency prefix,
+                and optional steppers. Steppers are off by default so manually entered values remain precise.
+              </p>
+
+              <SGComponentExampleDemo>
+                <div className="form-row">
+                  <CurrencyQuestionComponent
+                    parsedQuestion={currencyQuestion}
+                    inputCurrencyValue={currencyValue}
+                    currencyLabel="Default USD field"
+                    placeholder="Enter an amount"
+                    handleCurrencyChange={setCurrencyValue}
+                  />
+                  <p>
+                    <small>Current value: {currencyValue ?? "No value"}</small>
+                  </p>
+                </div>
+
+                <div className="form-row">
+                  <CurrencyQuestionComponent
+                    parsedQuestion={currencyQuestion}
+                    inputCurrencyValue={currencyStepperValue}
+                    currencyLabel="USD field with optional $100 steppers"
+                    placeholder="Enter an amount"
+                    handleCurrencyChange={setCurrencyStepperValue}
+                    showSteppers
+                  />
+                  <p>
+                    <small>Current value: {currencyStepperValue ?? "No value"}</small>
+                  </p>
+                </div>
+
+                <div className="form-row">
+                  <CurrencyQuestionComponent
+                    parsedQuestion={currencyQuestion}
+                    inputCurrencyValue={currencyMaximumValue}
+                    currencyLabel="Maximum value (decrement to leave boundary)"
+                    handleCurrencyChange={setCurrencyMaximumValue}
+                    showSteppers
+                  />
+                  <p>
+                    <small>Current value: {currencyMaximumValue ?? "No value"}</small>
+                  </p>
+                </div>
+
+                <div className="form-row">
+                  <CurrencyQuestionComponent
+                    parsedQuestion={currencyQuestion}
+                    inputCurrencyValue={currencyMinorUnitValue}
+                    currencyLabel="Minor units enabled"
+                    handleCurrencyChange={setCurrencyMinorUnitValue}
+                    showMinorUnits
+                  />
+                  <p>
+                    <small>Current value: {currencyMinorUnitValue ?? "No value"}</small>
+                  </p>
+                </div>
+
+                <div className="form-row">
+                  <CurrencyQuestionComponent
+                    parsedQuestion={currencyQuestion}
+                    inputCurrencyValue={250000}
+                    currencyLabel="Disabled currency field"
+                    handleCurrencyChange={() => undefined}
+                    isDisabled
+                  />
+                </div>
+
+                <div className="form-row">
+                  <CurrencyQuestionComponent
+                    parsedQuestion={sterlingQuestion}
+                    inputCurrencyValue={sterlingValue}
+                    currencyLabel="Alternate denomination (GBP)"
+                    handleCurrencyChange={setSterlingValue}
+                  />
+                  <p>
+                    <small>Current value: {sterlingValue ?? "No value"}</small>
+                  </p>
+                </div>
+
+                <div className="form-row">
+                  <CurrencyQuestionComponent
+                    parsedQuestion={euroQuestion}
+                    inputCurrencyValue={euroValue}
+                    currencyLabel="Euro with German formatting (250.000,00 €)"
+                    handleCurrencyChange={setEuroValue}
+                    locale="de-DE"
+                    symbolPosition="suffix"
+                    showMinorUnits
+                  />
+                  <p>
+                    <small>Current value: {euroValue ?? "No value"}</small>
+                  </p>
+                </div>
+
+                <div className="form-row">
+                  <CurrencyQuestionComponent
+                    parsedQuestion={polishZlotyQuestion}
+                    inputCurrencyValue={polishZlotyValue}
+                    currencyLabel="Polish złoty (PLN) with 100-unit steppers"
+                    handleCurrencyChange={setPolishZlotyValue}
+                    locale="pl-PL"
+                    symbolPosition="suffix"
+                    showSteppers
+                  />
+                  <p>
+                    <small>Current value: {polishZlotyValue ?? "No value"}</small>
+                  </p>
+                </div>
+
+                <div className="form-row">
+                  <CurrencyQuestionComponent
+                    parsedQuestion={brazilianRealQuestion}
+                    inputCurrencyValue={brazilianRealValue}
+                    currencyLabel="Brazilian real (BRL, pt-BR)"
+                    handleCurrencyChange={setBrazilianRealValue}
+                    locale="pt-BR"
+                    showMinorUnits
+                  />
+                  <p>
+                    <small>Current value: {brazilianRealValue ?? "No value"}</small>
+                  </p>
+                </div>
+              </SGComponentExampleDemo>
+
+              <h4>Currency API</h4>
+              <SGCodeBlock>{`const currencyQuestion = {
+  type: 'currency',
+  meta: { schemaVersion: '1.0' },
+  attributes: {
+    denomination: 'USD',
+    min: 0,
+    max: 100_000_000,
+    step: 100,
+  },
+};
+
+<CurrencyQuestionComponent
+  parsedQuestion={currencyQuestion}
+  inputCurrencyValue={currencyValue}
+  currencyLabel="Budget"
+  handleCurrencyChange={setCurrencyValue}
+  showSteppers={false} // optional; defaults to false
+  showMinorUnits={false} // optional; defaults to false
+  symbolPosition="prefix" // optional; prefix or suffix
+  locale="en-US" // optional; use pt-BR for Brazilian formatting
 />`}</SGCodeBlock>
             </SGComponentExampleContent>
           </SGComponentExample>

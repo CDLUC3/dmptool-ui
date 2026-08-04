@@ -31,6 +31,7 @@ import { OrcidIcon } from '@/components/Icons/orcid/';
 import { FormInput } from "@/components/Form";
 import { TypeAheadWithOther, useAffiliationSearch } from '@/components/Form/TypeAheadWithOther';
 import Loading from '@/components/Loading';
+import TransitionButton from '@/components/TransitionButton';
 import ProjectRoles from '../ProjectRoles';
 import ErrorMessages from '@/components/ErrorMessages';
 
@@ -40,6 +41,7 @@ import { useProjectMemberForm } from './hooks/useProjectMemberForm';
 
 // Utils
 import { routePath } from '@/utils/index';
+import { extractOrcid } from '@/lib/identifierUtils';
 import styles from './ProjectsProjectMembersSearch.module.scss';
 
 const ProjectsProjectMembersSearch = () => {
@@ -57,9 +59,11 @@ const ProjectsProjectMembersSearch = () => {
   const t = useTranslations('ProjectsProjectMembersSearch');
 
   // For TypeAhead component
-  const { suggestions, handleSearch: handleAffiliationSearch } = useAffiliationSearch();
+  const { suggestions, handleSearch: handleAffiliationSearch, isSearching: isAffiliationSearching, searchError: affiliationSearchError } = useAffiliationSearch();
 
   const [otherField, setOtherField] = useState(false);
+  const [selectedResult, setSelectedResult] = useState<CollaboratorSearchResult | null>(null);
+  const [searchOrcid, setSearchOrcid] = useState<string | null>(null);
 
   // Use the custom hook for form management
   const {
@@ -67,6 +71,10 @@ const ProjectsProjectMembersSearch = () => {
     setProjectMember,
     roles,
     memberRoles,
+    memberRolesLoading,
+    memberRolesError,
+    refetchMemberRoles,
+    isSubmitting,
     errors,
     fieldErrors,
     handleCheckboxChange,
@@ -104,6 +112,8 @@ const ProjectsProjectMembersSearch = () => {
   //Update searchTerm state whenever entry in the search field changes
   const handleSearchInput = (value: string) => {
     reset(); // clear form and errors when search input changes
+    setSelectedResult(null);
+    setSearchOrcid(null);
     setSearchTerm(value);
   }
 
@@ -112,17 +122,22 @@ const ProjectsProjectMembersSearch = () => {
   const handleMemberSearch = async () => {
     clearAllFormFields();
     resetErrors();
+    setSelectedResult(null);
+    setSearchOrcid(null);
     await handleCollaboratorSearch();
   };
 
 
   // Handle selecting a search result to populate form fields
   const handleSelectSearchResult = (result: CollaboratorSearchResult) => {
+    const resolvedOrcid = result?.orcid?.trim() || extractOrcid(term) || '';
+    setSelectedResult(result);
+    setSearchOrcid(resolvedOrcid || null);
     setProjectMember({
       givenName: result?.givenName || '',
       surName: result?.surName || '',
       email: result?.email || '',
-      orcid: result?.orcid || '',
+      orcid: resolvedOrcid,
       affiliationName: result?.affiliationName || '',
       affiliationId: result?.affiliationId || result?.affiliationRORId || '',
       otherAffiliationName: '',
@@ -134,16 +149,14 @@ const ProjectsProjectMembersSearch = () => {
 
   // Handle clearing the form to start fresh
   const handleClearForm = () => {
+    setSelectedResult(null);
+    setSearchOrcid(null);
     clearSearch();
   }
 
-  // Auto-populate form with the result when we get search results
-  useEffect(() => {
-    if (results.length > 0) {
-      const firstResult = results[0];
-      handleSelectSearchResult(firstResult);
-    }
-  }, [results]);
+  const showOrcidFromSearch = Boolean(
+    searchOrcid && projectMember.orcid.trim() === searchOrcid.trim()
+  );
 
 
   // Reset form when search term is cleared
@@ -151,6 +164,7 @@ const ProjectsProjectMembersSearch = () => {
     if (term === '') {
       // Clear form when search is cleared
       clearAllFormFields();
+      setSearchOrcid(null);
       resetErrors();
     }
   }, [term, clearAllFormFields, resetErrors])
@@ -174,100 +188,140 @@ const ProjectsProjectMembersSearch = () => {
 
       <LayoutContainer>
         <ContentContainer>
-          {/** Search */}
-          <section id="search-section" className={styles.searchSection} role="search" ref={topRef}>
-            <SearchField>
-              <Label>{t('searchLabel')} <span className="is-required">(recommended)</span></Label>
-              <Input
-                aria-describedby="search-help"
-                value={term}
-                onChange={e => handleSearchInput(e.target.value)} />
+          {selectedResult ? (
+            <section
+              className={styles.selectedMatch}
+              aria-labelledby="selected-match-heading"
+            >
+              <div>
+                <h2 id="selected-match-heading" className="sr-only">{t('headings.selectedMatch')}</h2>
+                <p className={styles.selectedSummary}>
+                  <span className={styles.selectedLabel}>{t('labels.selected')}:</span>
+                  <strong>
+                    {`${selectedResult.givenName ?? ''} ${selectedResult.surName ?? ''}`.trim()}
+                  </strong>
+                  {selectedResult.orcid && (
+                    <span className={styles.selectedOrcid}>ORCID {selectedResult.orcid}</span>
+                  )}
+                </p>
+                <p className={styles.selectedMessage} role="status">{t('messaging.detailsPrefilled')}</p>
+              </div>
               <Button
+                type="button"
+                className="link"
                 onPress={() => {
-                  handleMemberSearch();
+                  setSelectedResult(null);
+                  setSearchOrcid(null);
                 }}
               >
-                {Global('buttons.lookup')}
+                {t('buttons.changeSelection')}
               </Button>
-              <Text slot="description" className="help-text" id="search-help">
-                {t('searchDescription')}
-              </Text>
-            </SearchField>
-          </section>
-
-          {/** Search Result section */}
-          {isSearching && (
-            <section aria-labelledby="results-section">
-              {results.length > 0 && (
-                <>
-                  <div id="results-section" className={styles.resultsHeader}><strong>{t('headings.searchResultsHeader')}</strong>
-                    <Button
-                      className="link"
-                      onPress={handleClearForm}
-                      aria-label={t('buttons.clearForm')}
-                    >
-                      {t('buttons.clearForm')}
-                    </Button>
-                  </div>
-                </>
-              )}
-
-              <div>
-                {searchLoading && (
-                  <Loading
-                    variant="inline"
-                    message={Global('messaging.loading')}
-                    isActive={true}
-                  />
-                )}
-
-                {results.length === 0 && !searchLoading && (
-                  <div className={styles.noResults}>
-                    <p>{Global('messaging.noItemsFound')}</p>
-                  </div>
-                )}
-
-                {results.map((result: CollaboratorSearchResult, index: number) => {
-                  const name = `${result?.givenName} ${result?.surName} `;
-                  return (
-                    <div
-                      key={result.id}
-                      data-testid={`result-${index} `}
-                      data-result-index={index}
-                      className={`${styles.memberResultsListItem}`}
-                      role="button"
-                      tabIndex={0}
-                      onClick={() => handleSelectSearchResult(result)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' || e.key === ' ') {
-                          e.preventDefault();
-                          handleSelectSearchResult(result);
-                        }
-                      }}
-                      aria-label={t('ariaSelectSearchResult', { name })}
-                      style={{ cursor: 'pointer' }}
-                    >
-                      <div className={styles.memberInfo}>
-                        <div className={styles.nameAndOrcid}>
-                          <p className={styles.name}>{name}</p>
-                        </div>
-                        <p className={styles.organization}>
-                          {result?.affiliationName}
-
-                          <br />
-                          {result?.orcid && (
-                            <span className={styles.orcid}>
-                              <OrcidIcon icon="orcid" classes={styles.orcidLogo} />
-                              {result.orcid}
-                            </span>
-                          )}
-                        </p>
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
             </section>
+          ) : (
+            <>
+              {/** Search */}
+              <section id="search-section" className={styles.searchSection} role="search" ref={topRef}>
+                <SearchField>
+                  <Label>{t('searchLabel')} <span className="is-required">(recommended)</span></Label>
+                  <Input
+                    aria-describedby="search-help"
+                    value={term}
+                    onChange={e => handleSearchInput(e.target.value)} />
+                  <Button
+                    type="button"
+                    isDisabled={searchLoading}
+                    onPress={() => {
+                      handleMemberSearch();
+                    }}
+                  >
+                    {Global('buttons.lookup')}
+                  </Button>
+                  <Text slot="description" className="help-text" id="search-help">
+                    {t('searchDescription')}
+                  </Text>
+                </SearchField>
+              </section>
+
+              {/** Search Result section */}
+              {isSearching && (
+                <section
+                  className={styles.resultsSection}
+                  aria-label={t('headings.searchResultsHeader')}
+                  aria-busy={searchLoading}
+                >
+                  {results.length > 0 && !searchLoading && (
+                    <>
+                      <div className={styles.resultsHeader}>
+                        <div>
+                          <h2>{t('headings.searchResultsHeader')}</h2>
+                          <p>{t('messaging.selectSearchResult')}</p>
+                        </div>
+                        <Button
+                          type="button"
+                          className="link"
+                          onPress={handleClearForm}
+                        >
+                          {t('buttons.searchAgain')}
+                        </Button>
+                      </div>
+                    </>
+                  )}
+
+                  <div>
+                    {searchLoading && (
+                      <Loading
+                        variant="inline"
+                        message={Global('messaging.loading')}
+                        isActive={true}
+                      />
+                    )}
+
+                    {results.length === 0 && !searchLoading && (
+                      <div className={styles.noResults}>
+                        <p>{Global('messaging.noItemsFound')}</p>
+                      </div>
+                    )}
+
+                    {!searchLoading && (
+                      <ul className={styles.memberResultsList} role="list">
+                        {results.map((result: CollaboratorSearchResult, index: number) => {
+                          const name = `${result?.givenName ?? ''} ${result?.surName ?? ''}`.trim();
+                          return (
+                            <li
+                              key={result.id}
+                              data-testid={`result-${index}`}
+                              data-result-index={index}
+                              className={styles.memberResultsListItem}
+                            >
+                              <div className={styles.memberInfo}>
+                                <p className={styles.name}>{name}</p>
+                                <p className={styles.organization}>
+                                  {result?.affiliationName}
+                                </p>
+                                {result?.orcid && (
+                                  <p className={styles.orcid}>
+                                    <OrcidIcon icon="orcid" classes={styles.orcidLogo} />
+                                    {result.orcid}
+                                  </p>
+                                )}
+                              </div>
+                              <Button
+                                type="button"
+                                className="secondary"
+                                onPress={() => handleSelectSearchResult(result)}
+                                aria-label={t('ariaSelectSearchResult', { name })}
+                              >
+                                {t('buttons.selectPerson')}
+                              </Button>
+                            </li>
+                          )
+                        })}
+                      </ul>
+                    )}
+                  </div>
+                </section>
+              )}
+            </>
           )}
 
           {/** Member Details section */}
@@ -309,11 +363,12 @@ const ProjectsProjectMembersSearch = () => {
                 fieldName="affiliation"
                 setOtherField={setOtherField}
                 isRequiredVisualOnly={true}
-                error={fieldErrors.affiliationName}
+                error={fieldErrors.affiliationName ?? affiliationSearchError ?? ''}
                 updateFormData={updateAffiliationFormData}
                 value={projectMember.affiliationName}
                 suggestions={suggestions}
                 onSearch={handleAffiliationSearch}
+                isLoading={isAffiliationSearching}
               />
               {otherField && (
                 <div className={`${styles.formRow} ${styles.oneItemRow}`}>
@@ -345,6 +400,21 @@ const ProjectsProjectMembersSearch = () => {
                 errorMessage={fieldErrors.email}
               />
 
+              <FormInput
+                name="orcid"
+                id="orcid"
+                type="text"
+                isRequired={false}
+                isRecommended={!showOrcidFromSearch}
+                label={t('labels.orcid')}
+                value={projectMember.orcid}
+                helpMessage={showOrcidFromSearch ? t('labels.orcidFromSearch') : undefined}
+                onChange={(e) => {
+                  resetErrors();
+                  setProjectMember({ ...projectMember, orcid: e.target.value })
+                }}
+              />
+
               <div className={styles.memberRoles}>
                 <ProjectRoles
                   roles={roles}
@@ -352,9 +422,21 @@ const ProjectsProjectMembersSearch = () => {
                   isInvalid={(!!fieldErrors.projectRoles)}
                   errorMessage={fieldErrors.projectRoles}
                   memberRoles={memberRoles}
+                  isLoading={memberRolesLoading}
+                  hasLoadError={Boolean(memberRolesError)}
+                  onRetry={() => void refetchMemberRoles()}
                 />
               </div>
-              <Button type="submit" className="submit-button">{t('buttons.addToProject')}</Button>
+              <TransitionButton
+                type="submit"
+                className="submit-button"
+                isDisabled={isSubmitting}
+                loadingLabel={Global('buttons.submitting')}
+                loadingVariant="inline"
+                showLoading={false}
+              >
+                {t('buttons.addToProject')}
+              </TransitionButton>
             </Form>
           </section>
         </ContentContainer>

@@ -45,6 +45,11 @@ const routes = {
   // Home route
   'app.home': '/',
   "app.login": '/login',
+  "app.contact": '/contact',
+
+  // Login routes
+  'login.forgotPassword': '/login/forgot-password',
+  'login.resetPassword': '/login/reset-password',
 
   // Project routes
   'projects.index': '/projects',
@@ -126,6 +131,8 @@ const routes = {
   'admin.index': '/admin',
   'admin.notifications': '/admin/notifications',
   'admin.templates': '/admin/templates',
+  'admin.users.manage': '/admin/users/:userId/manage',
+  'admin.users.projects': '/admin/users/:userId/projects',
 
   // Guidance routes
   'admin.guidance.index': '/admin/guidance',

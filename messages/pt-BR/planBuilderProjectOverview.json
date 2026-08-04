@@ -10,6 +10,7 @@
     "dates": "Datas",
     "collaborators": "Colaboradores",
     "funding": "Financiamento",
+    "noFunderSelected": "Nenhum financiador selecionado",
     "grantId": "ID do Financiamento",
     "edit": "Alterar",
     "editProject": "Editar Detalhes do Projeto",
@@ -83,6 +84,10 @@
       "createProject": "Criar projeto"
     },
     "messages": {
+      "info": {
+        "noProjectsHeading": "Seus projetos aparecerão aqui",
+        "noProjectsDescription": "Crie um plano de gerenciamento de dados para começar. Você pode gerenciar todos os seus DMPs e projetos de pesquisa neste painel."
+      },
       "errors": {
         "errorRetrievingProjects": "Algo deu errado do nosso lado. Por favor, tente novamente mais tarde."
       }
@@ -285,7 +290,8 @@
       "shareWithPeople": "Compartilhar com pessoas"
     },
     "headings": {
-      "h2AllowCollaborators": "Permitir que colaboradores possam editar ou comentar acesso?"
+      "h2AllowCollaborators": "Permitir que colaboradores possam editar ou comentar acesso?",
+      "roles": "Funções"
     },
     "para": {
       "para1AllowCollaborators": "Você pode convidar pessoas para acessar, editar ou comentar em planos usando o botão \"<shareWithPeople>compartilhar com pessoas</shareWithPeople>\"."
@@ -299,8 +305,8 @@
     }
   },
   "ProjectsProjectMembersEdit": {
-    "title": "Editar Detalhes do Membro",
-    "description": "Atualizar informações colaboradoras",
+    "title": "Editar membro do projeto",
+    "description": "Atualize as informações deste membro do projeto.",
     "breadcrumbs": {
       "projectMembers": "Membros de projeto"
     },
@@ -310,11 +316,11 @@
     },
     "headings": {
       "h2RemoveMember": "Remover membro",
-      "removeProjectMember": "Remover membro do projeto"
+      "removeProjectMember": "Remover membro"
     },
     "paragraphs": {
-      "removeMember": "Remover este membro significa que ele não será mais capaz de acessar este plano. Isso não é reversível.",
-      "modalInfo": "Observe que, se você remover este membro do projeto, o membro também será removido de quaisquer planos associados. Além disso, se este for o único membro sob o projeto, ele não pode ser excluído."
+      "removeMember": "Remover este membro significa que ele não poderá mais acessar este plano.",
+      "modalInfo": "A remoção deste membro do projeto também o removerá de todos os planos associados. Se ele for o único membro do projeto, não poderá ser removido."
     },
     "form": {
       "errors": {
@@ -455,14 +461,22 @@
     "ariaAddMemberButton": "Adicionar {name} como membro do projeto",
     "buttons": {
       "addToProject": "Adicionar ao projeto",
-      "clearForm": "Limpar formulário"
+      "clearForm": "Limpar formulário",
+      "changeSelection": "Alterar seleção",
+      "searchAgain": "Pesquisar novamente",
+      "selectPerson": "Selecionar pessoa",
+      "retryRoles": "Tentar carregar funções novamente"
     },
     "headings": {
       "enterMemberDetails": "Detalhes do membro do projeto",
-      "searchResultsHeader": "Encontrado uma correspondência"
+      "searchResultsHeader": "Selecione esta pessoa",
+      "selectedMatch": "Pessoa selecionada"
     },
     "messaging": {
       "noSearchResultsFound": "Nenhum registro associado ao ORCiD foi encontrado. Por favor, verifique o ORCiD e tente novamente.",
+      "detailsPrefilled": "Os dados foram preenchidos abaixo. Revise-os, selecione as funções e adicione a pessoa ao projeto.",
+      "loadingRoles": "Carregando funções do projeto...",
+      "selectSearchResult": "Revise a correspondência e selecione-a para preencher os dados do membro abaixo.",
       "errors": {
         "failedToLoadCollaborators": "Falha ao carregar mais colaboradores",
         "failedToAddProjectMember": "Falha ao adicionar membro. Por favor, tente novamente.",
@@ -470,9 +484,11 @@
         "givenNameRequired": "O primeiro nome é obrigatório",
         "emailRequired": "É necessário um endereço de e-mail",
         "invalidEmail": "Por favor insira um endereço de e-mail válido",
+        "projectRolesLoadError": "Não foi possível carregar as funções do projeto. Tente novamente.",
         "projectRolesRequired": "Pelo menos uma função do projeto deve ser selecionada",
         "affiliationRequired": "Afiliação é necessária",
         "searchTermRequired": "Por favor, informe um ORCiD ou um URL contendo um ORCiD para pesquisar",
+        "searchLookupFailed": "Não foi possível consultar esse ORCiD agora. Tente novamente ou insira os dados do membro manualmente abaixo.",
         "valueOrcidRequired": "Por favor, digite um ORCiD válido no formato XXXX-XXXX-XXXX-XXXX ou uma URL contendo um ORCiD"
       },
       "success": {
@@ -493,9 +509,12 @@
       "orcidFromSearch": "ORCID do resultado da pesquisa"
     },
     "links": {
-      "learnMoreAboutCreditTaxonomy": "Saiba mais sobre cada função"
+      "learnMoreAboutCreditTaxonomy": "Saiba mais sobre a Taxonomia CRediT ↗"
     },
-    "memberRolesDescription": "<p>Selecione a(s) função(ões) que devem ser exibida(s) nas citações referentes a este membro do projeto no DMP.</p><p>Utilizamos um padrão ANSI/NISO denominado CRediT, uma taxonomia de 14 funções de propriedade da comunidade, que pode ser utilizada para descrever os principais tipos de contribuições tipicamente realizadas na produção e publicação de resultados de pesquisa, tais como artigos científicos.</p><p><link>Saiba mais sobre a Taxonomia CRediT ↗</link></p>"
+    "memberRolesDescription": {
+      "selection": "Selecione a(s) função(ões) que devem ser exibida(s) nas citações referentes a este membro do projeto no DMP.",
+      "credit": "Utilizamos um padrão ANSI/NISO denominado CRediT, uma taxonomia de 14 funções de propriedade da comunidade, que pode ser utilizada para descrever os principais tipos de contribuições tipicamente realizadas na produção e publicação de resultados de pesquisa, tais como artigos científicos."
+    }
   },
   "ProjectsProjectMemberCreate": {
     "title": "Adicionar um novo membro ao projeto",

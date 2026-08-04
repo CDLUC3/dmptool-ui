@@ -21,6 +21,7 @@ const mockOnSearch = jest.fn();
 describe('TypeAheadWithOther', () => {
   beforeEach(() => {
     jest.useFakeTimers();
+    HTMLElement.prototype.scrollIntoView = jest.fn();
   });
 
   afterEach(() => {
@@ -128,7 +129,7 @@ describe('TypeAheadWithOther', () => {
     })
   });
 
-  it('should clear input value and call updateFormData when user clicks input', async () => {
+  it('should preserve the input value and place the cursor at the end on focus', () => {
     const mockUpdateFormData = jest.fn();
 
     render(
@@ -150,16 +151,41 @@ describe('TypeAheadWithOther', () => {
     // Verify initial value is set
     expect(input).toHaveValue('Initial Value');
 
-    // Click the input
-    fireEvent.click(input);
+    act(() => {
+      input.focus();
+    });
 
-    // Verify the input is cleared
+    expect(input).toHaveValue('Initial Value');
+    expect(input).toHaveFocus();
+    expect(input).toHaveProperty('selectionStart', 'Initial Value'.length);
+    expect(input).toHaveProperty('selectionEnd', 'Initial Value'.length);
+    expect(mockUpdateFormData).not.toHaveBeenCalled();
+  });
+
+  it('should clear the input and form data on focus when clearOnFocus is enabled', () => {
+    const mockUpdateFormData = jest.fn();
+
+    render(
+      <TypeAheadWithOther
+        label="Institution"
+        helpText="Search for an institution"
+        setOtherField={mockSetOtherField}
+        fieldName="test"
+        error=""
+        updateFormData={mockUpdateFormData}
+        value="Initial Value"
+        suggestions={mocksAffiliations}
+        onSearch={mockOnSearch}
+        clearOnFocus
+      />
+    );
+
+    const input = screen.getByLabelText('Institution');
+
+    fireEvent.focus(input);
+
     expect(input).toHaveValue('');
-
-    // Verify updateFormData was called with empty values
     expect(mockUpdateFormData).toHaveBeenCalledWith('', '');
-
-    // Verify setOtherField was called with false
     expect(mockSetOtherField).toHaveBeenCalledWith(false);
   });
 
@@ -188,9 +214,10 @@ describe('TypeAheadWithOther', () => {
 
     // Verify updateFormData was called with correct arguments
     expect(mockUpdateFormData).toHaveBeenCalledWith('', 'Test University');
+    expect(mockSetOtherField).toHaveBeenCalledWith(false);
   });
 
-  it('should focus input when alphanumeric key is pressed', async () => {
+  it('should close the suggestions list when Escape is pressed', async () => {
     const mockUpdateFormData = jest.fn();
 
     render(
@@ -206,30 +233,20 @@ describe('TypeAheadWithOther', () => {
 
     const input = screen.getByLabelText('Institution');
 
-    // Type to show suggestions
     fireEvent.change(input, { target: { value: 'Test' } });
 
     act(() => {
       jest.advanceTimersByTime(350);
     });
 
-    // Wait for suggestions to appear
     await waitFor(() => {
-      expect(screen.getByText('Test University')).toBeInTheDocument();
+      expect(screen.getByRole('combobox')).toHaveAttribute('aria-expanded', 'true');
     });
 
-    const suggestionsList = screen.getByRole('listbox');
+    fireEvent.keyDown(input, { key: 'Escape' });
 
-    // Create a spy on the input's focus method
-    const focusSpy = jest.spyOn(input, 'focus');
-
-    // Press an alphanumeric key on the suggestions list
-    fireEvent.keyDown(suggestionsList, { key: 'a' });
-
-    // Verify input was focused
-    expect(focusSpy).toHaveBeenCalled();
-
-    focusSpy.mockRestore();
+    expect(screen.getByRole('combobox')).toHaveAttribute('aria-expanded', 'false');
+    expect(input).not.toHaveAttribute('aria-activedescendant');
   });
 
   it('should setOtherField(true) when "Other" option is selected', async () => {
@@ -264,7 +281,7 @@ describe('TypeAheadWithOther', () => {
 
     // Check last call to updateFormData
     const lastCall = mockUpdateFormData.mock.calls.at(-1);
-    expect(lastCall).toEqual(['', 'Other (organization not listed)']);
+    expect(lastCall).toEqual(['other', 'Other (organization not listed)']);
 
     expect(mockSetOtherField).toHaveBeenCalledWith(true);
     expect(input).toHaveValue('Other (organization not listed)');
@@ -298,15 +315,35 @@ describe('TypeAheadWithOther', () => {
       expect(screen.getByText('Test University')).toBeInTheDocument();
     });
 
-    // Test arrow down
-    fireEvent.keyDown(input, { key: 'ArrowDown' });
-    await waitFor(() => {
-      expect(screen.getByText('Other(organization not listed)')).toHaveFocus();
-    })
+    act(() => {
+      input.focus();
+    });
 
-    // Test arrow up
-    fireEvent.keyDown(screen.getByText('Test University'), { key: 'ArrowUp' });
+    // Test arrow down: focus stays on the input, the first option ("Other") is highlighted
+    fireEvent.keyDown(input, { key: 'ArrowDown' });
+    const otherOption = screen.getByText('Other(organization not listed)');
+    await waitFor(() => {
+      expect(otherOption).toHaveAttribute('aria-selected', 'true');
+    });
     expect(input).toHaveFocus();
+    expect(input).toHaveAttribute('aria-activedescendant', otherOption.id);
+
+    // Test arrow down again: highlight moves to the first suggestion
+    fireEvent.keyDown(input, { key: 'ArrowDown' });
+    const firstSuggestion = screen.getByText('Test University');
+    await waitFor(() => {
+      expect(firstSuggestion).toHaveAttribute('aria-selected', 'true');
+    });
+    expect(input).toHaveFocus();
+    expect(input).toHaveAttribute('aria-activedescendant', firstSuggestion.id);
+    expect(otherOption).toHaveAttribute('aria-selected', 'false');
+
+    // Test arrow up back past the first option: highlight is cleared
+    fireEvent.keyDown(input, { key: 'ArrowUp' });
+    fireEvent.keyDown(input, { key: 'ArrowUp' });
+    expect(input).toHaveFocus();
+    expect(input).not.toHaveAttribute('aria-activedescendant');
+    expect(otherOption).toHaveAttribute('aria-selected', 'false');
   });
 
   it('should correctly handle use of \'Enter\' key for selecting an item from the dropdown', async () => {
@@ -338,21 +375,20 @@ describe('TypeAheadWithOther', () => {
       expect(screen.getByText('Test University')).toBeInTheDocument();
     });
 
-    await act(async () => {
-      fireEvent.keyDown(input, { key: 'ArrowDown' });
-    });
+    // Arrow down twice: past "Other" onto the first suggestion. Focus stays on the input.
+    fireEvent.keyDown(input, { key: 'ArrowDown' });
+    fireEvent.keyDown(input, { key: 'ArrowDown' });
 
-    const listItem = await screen.findByText('Test University'); // Use findBy* to handle async rendering
-    listItem.focus();
-
-    expect(listItem).toHaveFocus();
-    Object.defineProperty(listItem, 'innerText', { value: 'Test University' });
+    const listItem = await screen.findByText('Test University');
+    expect(listItem).toHaveAttribute('aria-selected', 'true');
+    expect(input).toHaveAttribute('aria-activedescendant', listItem.id);
 
     await act(async () => {
-      fireEvent.keyDown(listItem, { key: 'Enter', code: 'Enter' });
+      fireEvent.keyDown(input, { key: 'Enter', code: 'Enter' });
     });
 
     expect(input).toHaveValue('Test University');
+    expect(input).not.toHaveAttribute('aria-activedescendant');
   });
 
   it('should display "(required)" text when field is required', () => {

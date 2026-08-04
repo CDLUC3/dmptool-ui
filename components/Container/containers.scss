@@ -257,3 +257,23 @@
   justify-content: right;
   width: 100%;
 }
+
+// Split panel styles
+.layout-split-panel {
+  @include layoutContainer;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+
+  // Override the bottom margin on LayoutWithPanel when it's a child
+  > .layout-with-panel {
+    margin-bottom: 0;
+  }
+}
+
+.layout-full-width-section {
+  @include contentContainer;
+  width: 100%;
+  // Override any max-width constraints from parent layout
+  max-width: none !important;
+}

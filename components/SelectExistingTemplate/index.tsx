@@ -1,6 +1,11 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import {
+  useEffect,
+  useRef,
+  useState,
+  type TransitionStartFunction
+} from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import {
@@ -184,7 +189,6 @@ const TemplateSelectTemplatePage = ({ templateName }: { templateName: string }) 
     }
   }
 
-
   // Handle search input changes
   const handleInputChange = (value: string) => {
     // Update search term immediately for UI responsiveness
@@ -208,13 +212,15 @@ const TemplateSelectTemplatePage = ({ templateName }: { templateName: string }) 
   };
 
   // When user selects a template from myTemplates (org templates)
-  const onSelectMyTemplate = async (templateId: number) => {
-    addTemplateMutation({
-      variables: {
-        name: templateName,
-        copyFromTemplateId: templateId,
-      },
-    }).then(response => {
+  const onSelectMyTemplate = async (templateId: number, startTransition: TransitionStartFunction) => {
+    try {
+      const response = await addTemplateMutation({
+        variables: {
+          name: templateName,
+          copyFromTemplateId: templateId,
+        },
+      });
+
       if (response?.data) {
         const responseData = response?.data?.addTemplate;
         if (responseData && responseData.errors) {
@@ -226,25 +232,29 @@ const TemplateSelectTemplatePage = ({ templateName }: { templateName: string }) 
 
         const newTemplateId = response?.data?.addTemplate?.id;
         if (newTemplateId) {
-          router.push(routePath('template.show', { templateId: newTemplateId }));
+          startTransition(() => {
+            router.push(routePath('template.show', { templateId: newTemplateId }));
+          });
         }
       }
-    }).catch(err => {
+    } catch (err) {
       logECS('error', 'handleClick', {
         error: err,
         url: { path: routePath('template.create') }
       });
-    });
+    }
   };
 
   // When user selects a template from publishedTemplates (versioned templates)
-  const onSelectPublishedTemplate = async (versionedTemplateId: number) => {
-    addTemplateMutation({
-      variables: {
-        name: templateName,
-        copyFromVersionedTemplateId: versionedTemplateId,
-      },
-    }).then(response => {
+  const onSelectPublishedTemplate = async (versionedTemplateId: number, startTransition: TransitionStartFunction) => {
+    try {
+      const response = await addTemplateMutation({
+        variables: {
+          name: templateName,
+          copyFromVersionedTemplateId: versionedTemplateId,
+        },
+      });
+
       if (response?.data) {
         const responseData = response?.data?.addTemplate;
         if (responseData && responseData.errors) {
@@ -256,15 +266,17 @@ const TemplateSelectTemplatePage = ({ templateName }: { templateName: string }) 
 
         const newTemplateId = response?.data?.addTemplate?.id;
         if (newTemplateId) {
-          router.push(routePath('template.show', { templateId: newTemplateId }));
+          startTransition(() => {
+            router.push(routePath('template.show', { templateId: newTemplateId }));
+          });
         }
       }
-    }).catch(err => {
+    } catch (err) {
       logECS('error', 'handleClick', {
         error: err,
         url: { path: routePath('template.create') }
       });
-    });
+    }
   };
 
   async function handleStartNew() {
@@ -329,6 +341,7 @@ const TemplateSelectTemplatePage = ({ templateName }: { templateName: string }) 
         lastRevisedBy: template?.modifiedByName || null,
         publishStatus: Global('published'),// These are all published templates
         hasAdditionalGuidance: false,
+        bestPractices: template?.bestPractice || false,
         defaultExpanded: false,
         visibility: template?.visibility,
       }))

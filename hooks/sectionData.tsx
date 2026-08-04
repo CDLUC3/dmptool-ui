@@ -7,7 +7,7 @@ import { useQuery } from '@apollo/client/react';
 import { SectionDocument, } from '@/generated/graphql';
 
 // Utils and other
-import { SectionFormInterface, TagsInterface } from '@/app/types';
+import { SectionFormInterface } from '@/app/types';
 import { stripHtmlTags } from '@/utils/general';
 
 export const useSectionData = (sectionId: number) => {
@@ -20,10 +20,6 @@ export const useSectionData = (sectionId: number) => {
     displayOrder: undefined,
     bestPractice: undefined
   });
-
-  // Keep track of which checkboxes have been selected
-  const [selectedTags, setSelectedTags] = useState<TagsInterface[]>([]);
-  const [checkboxTags, setCheckboxTags] = useState<string[]>([]);
 
   // Query for the specified section
   const { data, loading } = useQuery(SectionDocument, {
@@ -47,28 +43,14 @@ export const useSectionData = (sectionId: number) => {
         bestPractice: section?.bestPractice ? Boolean(section.bestPractice) : undefined
 
       })
-      if (data.section?.tags) {
-        const cleanedTags = data.section?.tags.filter(tag => tag !== null && tag !== undefined);
-        const cleanedData = cleanedTags.map(({ __typename, ...fields }) => fields);
-        setSelectedTags((prevTags) => {
-          return [...prevTags, ...cleanedData];
-        });
-        const selectedTagNames = cleanedData.map(tag => {
-          return tag.name;
-        });
-        setCheckboxTags(selectedTagNames);
-      }
     }
   }, [data])
 
 
   return {
     sectionData,
-    selectedTags,
-    checkboxTags,
     loading,
     setSectionData,
-    setSelectedTags,
     data
   };
 };

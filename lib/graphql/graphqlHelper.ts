@@ -53,6 +53,14 @@ export const errorLink = new ErrorLink(({ error, operation, forward }) => {
       ({ extensions }) => extensions?.code === 'FORBIDDEN'
     );
     if (forbidden) {
+      if (forbidden.message !== 'Invalid CSRF token') {
+        // Genuine authorization failure — retrying won't help and will just
+        // bypass errorLink on the second failure. Log it once, cleanly, here.
+        logECS('error', `[GraphQL Error]: FORBIDDEN (authorization) - ${forbidden.message}`, {
+          errorCode: 'FORBIDDEN_AUTHZ',
+        });
+        return; // no retry; propagates to component once, with a classifiable code
+      }
       return new Observable(observer => {
         (async () => {
           try {
@@ -94,6 +102,40 @@ export const errorLink = new ErrorLink(({ error, operation, forward }) => {
     if ('name' in error && error.name === 'AbortError') {
       return; // Ignore abort errors silently
     }
+
+    // express-jwt (isRevokedCallback) rejects requests at the middleware layer,
+    // before Apollo Server runs — this produces a raw HTTP 401, not a GraphQL
+    // error with extensions.code, so it lands here rather than the branch above.
+    const statusCode = 'statusCode' in error ? (error as { statusCode?: number }).statusCode : undefined;
+
+    if (statusCode === 401) {
+      return new Observable(observer => {
+        (async () => {
+          try {
+            const result = await refreshAuthTokens();
+            if (result?.shouldRedirect) {
+              observer.error(new Error('Authentication failed - redirecting to login'));
+              navigateTo(result.redirectTo);
+            } else if (result?.response) {
+              forward(operation).subscribe({
+                next: observer.next.bind(observer),
+                error: observer.error.bind(observer),
+                complete: observer.complete.bind(observer),
+              });
+            } else {
+              logECS('error', 'Token refresh failed with unexpected result', { errorCode: 'UNAUTHENTICATED_401', result });
+              observer.error(new Error('Token refresh failed'));
+              navigateTo('/login');
+            }
+          } catch (refreshError) {
+            logECS('error', 'Token refresh failed', { error: refreshError });
+            observer.error(refreshError);
+            navigateTo('/login');
+          }
+        })();
+      });
+    }
+
 
     logECS('error', `[GraphQL Network Error]: ${error.message}`, { errorCode: 'NETWORK_ERROR' });
     const customNetworkError = error as CustomError;

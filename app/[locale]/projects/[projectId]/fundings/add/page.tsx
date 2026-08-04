@@ -68,7 +68,7 @@ const AddProjectFunderManually = () => {
   const projectId = Number(params.projectId);
 
   // For TypeAhead component
-  const { suggestions, handleSearch } = useAffiliationSearch();
+  const { suggestions, handleSearch, isSearching, searchError } = useAffiliationSearch();
 
   const [addAffiliation] = useMutation(AddAffiliationDocument);
   const [addProjectFunding] = useMutation(AddProjectFundingDocument);
@@ -319,11 +319,12 @@ const AddProjectFunderManually = () => {
               fieldName="funderName"
               setOtherField={setOtherField}
               isRequired={true}
-              error={fieldErrors.affiliationId}
+              error={fieldErrors.affiliationId ?? searchError ?? ''}
               updateFormData={updateAffiliationFormData}
               value={fundingData.affiliationName}
               suggestions={suggestions}
               onSearch={handleSearch}
+              isLoading={isSearching}
             />
             {otherField && (
               <div className={`${styles.formRow} ${styles.oneItemRow}`}>

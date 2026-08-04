@@ -338,6 +338,7 @@ const CustomQuestionNew: React.FC = () => {
               };
               await addCustomQuestionMutation({ variables: { input } });
             }}
+            showTags={false}
           />
         </>
       )}

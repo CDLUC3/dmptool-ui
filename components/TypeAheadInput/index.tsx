@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useId, useRef, useState } from 'react';
 import {
   Input,
   Label,
@@ -25,6 +25,8 @@ export type TypeAheadInputProps = {
   className?: string;
   suggestions: SuggestionInterface[];
   onSearch: (searchTerm: string) => void;
+  clearOnFocus?: boolean;
+  isLoading?: boolean;
 }
 
 const TypeAheadInput = ({
@@ -32,26 +34,33 @@ const TypeAheadInput = ({
   placeholder,
   helpText,
   fieldName,
+  required,
   error,
   updateFormData,
   value,
   className,
   suggestions,
   onSearch,
+  clearOnFocus = false,
+  isLoading = false,
 }: TypeAheadInputProps) => {
+  const baseId = useId();
+  const listboxId = `${baseId}-results`;
+  const optionId = (index: number) => `${baseId}-option-${index}`;
 
   const [inputValue, setInputValue] = useState<string>(value ?? "");
-  const [showSuggestionSpinner, setShowSuggestionSpinner] = useState(false);
   const [currentListItemFocused, setCurrentListItemFocused] = useState(-1);
-  const [activeDescendentId, setActiveDescendentId] = useState<string>("");
   const [open, setOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const isFocusedRef = useRef(false);
   const listRef = useRef<HTMLUListElement | null>(null);
   const listItemRefs = useRef<(HTMLLIElement | null)[]>([]);
 
+  const activeDescendentId = currentListItemFocused >= 0 ? optionId(currentListItemFocused) : undefined;
+
   const handleUpdate = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setShowSuggestionSpinner(true);
     setOpen(true);
+    setCurrentListItemFocused(-1);
     const value = e.target.value;
     const dataId = (e.target as HTMLElement).dataset.id || '';
 
@@ -61,23 +70,28 @@ const TypeAheadInput = ({
     if (onSearch) {
       onSearch(value);
     }
-
-    setShowSuggestionSpinner(false);
   };
 
-  const handleInputClick = () => {
+  const handleInputFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+    isFocusedRef.current = true;
     setOpen(true);
-    setInputValue('');
-    updateFormData('', ''); // Clear the form data when input is clicked
+    if (clearOnFocus) {
+      setInputValue('');
+      updateFormData('', '');
+      return;
+    }
+
+    const end = e.currentTarget.value.length;
+    e.currentTarget.setSelectionRange(end, end);
   }
 
-  const handleSelection = async (e: React.KeyboardEvent<HTMLElement> | React.MouseEvent<HTMLLIElement>) => {
-    const li = (e.target as HTMLElement).closest('li'); // always get the <li>
-    if (!li) return;
+  const handleInputBlur = () => {
+    isFocusedRef.current = false;
+  }
 
+  const selectOption = (li: HTMLLIElement) => {
     setOpen(false);
     const item = (li.textContent ?? '').trim();
-    const activeDescendentId = li.id;
 
     const dataId = li.dataset.id || '';
 
@@ -85,28 +99,24 @@ const TypeAheadInput = ({
 
     setInputValue(item);
     setCurrentListItemFocused(-1);
-    setActiveDescendentId(activeDescendentId);
 
     inputRef.current?.focus();
   }
 
-  const focusListItem = (index: number) => {
-    setCurrentListItemFocused(index);
-    if (listRef.current) {
-      const listItem = listItemRefs.current[index];
-      if (listItem) {
-        listItem.focus();
-        setActiveDescendentId(listItem.id);
-      }
+  const handleSelection = (e: React.MouseEvent<HTMLLIElement>) => {
+    const li = (e.target as HTMLElement).closest('li');
+    if (li) {
+      selectOption(li);
     }
+  }
+
+  const highlightListItem = (index: number) => {
+    setCurrentListItemFocused(index);
+    listItemRefs.current[index]?.scrollIntoView({ block: 'nearest' });
   };
 
   const handleKeyboardEvents = (e: React.KeyboardEvent<HTMLElement>) => {
-    let listItems = [];
-    if (listRef.current) {
-      // Convert NodeListOf<ChildNode> to an array of HTMLElement
-      listItems = Array.from(listRef.current.childNodes);
-    }
+    const optionCount = listRef.current ? listRef.current.childNodes.length : 0;
 
     if (["ArrowUp", "ArrowDown", "Enter"].includes(e.key)) {
       e.preventDefault();
@@ -114,54 +124,39 @@ const TypeAheadInput = ({
 
     switch (e.key) {
       case "ArrowDown":
-        // Allow user to navigate through list items using down arrow key
-        if (currentListItemFocused <= listItems.length - 1) {
-          if (currentListItemFocused < 0) {
-            focusListItem(1)
-          } else {
-            focusListItem(currentListItemFocused + 1);
-          }
+        if (currentListItemFocused < optionCount - 1) {
+          highlightListItem(currentListItemFocused + 1);
         }
         break;
 
       case "ArrowUp":
-        // Allow user to navigate through list items using up arrow key
-        if (currentListItemFocused > 1) {
-          focusListItem(currentListItemFocused - 1);
+        if (currentListItemFocused > 0) {
+          highlightListItem(currentListItemFocused - 1);
         } else {
           setCurrentListItemFocused(-1);
-          setActiveDescendentId("");
-          if (inputRef && inputRef.current) {
-            inputRef.current.focus();
-          }
         }
         break;
 
-      case 'Enter':
-        // If user hits "Enter" on a list item, then set as current
-        // input value
-        if (currentListItemFocused !== -1) {
-          handleSelection(e)
+      case 'Enter': {
+        const li = listItemRefs.current[currentListItemFocused];
+        if (currentListItemFocused !== -1 && li) {
+          selectOption(li);
         }
         break;
+      }
 
-      default:
-        if (/([a-zA-Z0-9_]|ArrowLeft|ArrowRight)/.test(e.key)) {
-          // If list item is focused and user presses an alphanumeric key, or left or right
-          // Focus on the input instead
-          if (inputRef && inputRef.current) {
-            inputRef.current.focus();
-          }
-        }
+      case 'Escape':
+        setOpen(false);
+        setCurrentListItemFocused(-1);
         break;
     }
   }
 
   useEffect(() => {
-    if (onSearch) {
-      onSearch(inputValue);
+    if (!isFocusedRef.current) {
+      setInputValue(value ?? "");
     }
-  }, [inputValue]);
+  }, [value]);
 
   useEffect(() => {
     // Function to handle click outside the input and list
@@ -188,12 +183,13 @@ const TypeAheadInput = ({
 
 
   return (
-    <div className={`${styles.autocompleteContainer} ${styles.expanded} ${className} form-row`} aria-expanded={open} role="combobox" aria-controls="results">
+    <div className={`${styles.autocompleteContainer} ${styles.expanded} ${className} form-row`} aria-expanded={open} role="combobox" aria-controls={listboxId}>
       <TextField
         type="text"
         data-testid="typeaheadWithOther"
         className={(!!error) ? styles.fieldError : ''}
         isInvalid={!!error}
+        isRequired={required}
       >
         <Label>{label}</Label>
         <Input
@@ -201,11 +197,12 @@ const TypeAheadInput = ({
           type="text"
           value={inputValue}
           role="textbox"
-          aria-controls="results"
+          aria-controls={listboxId}
           aria-activedescendant={activeDescendentId}
           className={classNames('react-aria-Input', styles.searchInput)}
           onChange={handleUpdate}
-          onClick={handleInputClick}
+          onFocus={handleInputFocus}
+          onBlur={handleInputBlur}
           onKeyDown={handleKeyboardEvents}
           placeholder={placeholder ? placeholder : 'Type to search...'}
           ref={inputRef}
@@ -221,14 +218,20 @@ const TypeAheadInput = ({
             {error}
           </Text>
         )}
-        <Spinner className={`${styles.searchSpinner} ${showSuggestionSpinner ? styles.show : ''}`}
-          isActive={showSuggestionSpinner} />
+        <Spinner className={`${styles.searchSpinner} ${isLoading ? styles.show : ''}`}
+          isActive={isLoading} />
 
         {/*Visually hidden element for screen readers */}
         <div
           aria-live="polite"
           className="hidden-accessibly">
-          {showSuggestionSpinner ? "Loading..." : ""}
+          {isLoading
+            ? "Loading..."
+            : open
+              ? (suggestions && suggestions.length > 0
+                ? `${suggestions.length} suggestions available.`
+                : "No results found.")
+              : ""}
         </div>
 
         <div
@@ -247,10 +250,8 @@ const TypeAheadInput = ({
       <ul
         className={`${styles.autocompleteResults} ${open ? styles.visible : ''}`}
         ref={listRef}
-        id="results"
+        id={listboxId}
         role="listbox"
-        onKeyDown={handleKeyboardEvents}
-        tabIndex={-1}
       >
         {suggestions && suggestions.length > 0 && (
           <>
@@ -261,14 +262,13 @@ const TypeAheadInput = ({
                   <li
                     key={index}
                     className={styles.autocompleteItem}
-                    id={`autocompleteItem-${index + 1}`}
+                    id={optionId(index)}
                     role='option'
-                    aria-selected={currentListItemFocused === index + 1}
+                    aria-selected={currentListItemFocused === index}
                     data-id={suggestion?.uri}
                     onClick={handleSelection}
-                    tabIndex={-1}
                     ref={(el) => {
-                      listItemRefs.current[index + 1] = el;
+                      listItemRefs.current[index] = el;
                     }}
                   >{suggestion.displayName}</li>
                 )

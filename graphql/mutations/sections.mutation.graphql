@@ -1,9 +1,6 @@
 mutation AddSection($input: AddSectionInput!) {
   addSection(input: $input) {
     id
-    tags {
-      name
-    }
     guidance
     errors {
       general
@@ -44,11 +41,6 @@ mutation UpdateSection($input: UpdateSectionInput!) {
       guidance
     }
     bestPractice
-    tags {
-      id
-      description
-      name
-    }
   }
 }
 
@@ -84,11 +76,6 @@ mutation UpdateSectionDisplayOrder($sectionId: Int!, $newDisplayOrder: Int!) {
       questionText
       sectionId
       templateId
-    }
-    tags {
-      id
-      description
-      name
     }
     errors {
       general

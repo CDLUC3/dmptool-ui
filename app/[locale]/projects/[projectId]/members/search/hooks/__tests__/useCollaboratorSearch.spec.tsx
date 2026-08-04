@@ -277,6 +277,50 @@ describe('useCollaboratorSearch', () => {
       });
     });
 
+    it('should fall back to the search term when results omit ORCID', async () => {
+      const orcidMocks = [
+        {
+          request: {
+            query: FindCollaboratorDocument,
+            variables: {
+              term: '0000-0002-1825-0097',
+            },
+          },
+          result: {
+            data: {
+              findCollaborator: {
+                __typename: 'CollaboratorSearchResults',
+                limit: 5,
+                items: [{
+                  ...mockCollaboratorResults[0],
+                  orcid: null,
+                }],
+                availableSortFields: [],
+                nextCursor: null,
+                totalCount: 1,
+              },
+            },
+          },
+        },
+      ];
+
+      const { result } = renderHook(() => useCollaboratorSearch(), {
+        wrapper: createWrapper(orcidMocks),
+      });
+
+      act(() => {
+        result.current.setSearchTerm('0000-0002-1825-0097');
+      });
+
+      await act(async () => {
+        await result.current.handleMemberSearch();
+      });
+
+      await waitFor(() => {
+        expect(result.current.results[0]?.orcid).toBe('0000-0002-1825-0097');
+      });
+    });
+
     it('should convert search term to lowercase when making API call', async () => {
       const upperCaseMocks = [
         {
@@ -429,9 +473,11 @@ describe('useCollaboratorSearch', () => {
         await result.current.handleMemberSearch();
       });
 
-      // The hook sets loading to true during search
-      expect(result.current.loading).toBe(true);
-      expect(result.current.isSearching).toBe(true);
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+        expect(result.current.isSearching).toBe(false);
+        expect(result.current.errors).toContain('messaging.errors.searchLookupFailed');
+      });
     });
   });
 

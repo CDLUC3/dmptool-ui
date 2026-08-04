@@ -19,7 +19,7 @@
   justify-content: flex-end;
   align-items: center;
   margin-bottom: var(--space-5);
-  
+
   h3 {
     margin: 0;
   }
@@ -41,7 +41,7 @@
   border: 1px solid var(--border-color);
   border-radius: 6px;
   transition: all 0.2s ease;
-  
+
   &:hover {
     border-color: var(--focus-ring);
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
@@ -71,7 +71,7 @@
   &[data-pressed]:not(:disabled):not(:hover) {
     background: var(--bg-white) !important;
   }
-  
+
   &:hover:not(:disabled) {
     background: var(--blue-500) !important;
     color: #fff !important;
@@ -83,8 +83,8 @@
   &:active:not(:disabled):not(:hover),
   &[data-pressed]:not(:disabled):not(:hover) {
     background: var(--red-400) !important;
-  } 
-  
+  }
+
   &:hover:not(:disabled) {
     background: var(--blue-900);
     color: #fff;
@@ -97,6 +97,8 @@
 }
 
 .fileSizeSelect {
+  flex: 1;
+  max-width: 250px;
   min-width: 120px;
 }
 
@@ -117,20 +119,20 @@
 // Repo list card definitions
 .dList {
   display: flex;
-  gap: var(--space-1); 
+  gap: var(--space-1);
   align-items: baseline;
-  
+
   dt, dd {
     margin: 0;
   }
-  
+
   dt {
     font-weight: 400;
   }
-  
+
   dd {
     margin-right: var(--space-3); // Space after the value before next dt
-    
+
     &:last-child {
       margin-right: 0;
     }

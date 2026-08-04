@@ -19,6 +19,7 @@ import { addRepositoryAction } from '@/app/actions';
 import mockRepositories from '../__mocks__/mockRepositories.json';
 import mockSubjectAreas from '../__mocks__/mockSubjectAreas.json';
 import mockRepositoryTypes from '../__mocks__/mockRepositoryTypes.json';
+import { ResearchOutputTableColumnsEnum } from "@dmptool/types";
 
 expect.extend(toHaveNoViolations);
 
@@ -52,6 +53,7 @@ const mockFetchRepositories = jest.fn().mockResolvedValue({
 // ---- Test data ----
 const createMockField = (hasCustomRepos: boolean = true, customRepos: RepositoryInterface[] = []) => ({
   id: 'repoSelector',
+  commonStandardId: ResearchOutputTableColumnsEnum.enum.host,
   label: 'Repo selector',
   enabled: false,
   placeholder: '',
