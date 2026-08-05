@@ -6,3 +6,7 @@ mutation SaveQuestionDisplayLogic($input: SaveQuestionDisplayLogicInput!) {
     }
   }
 }
+
+mutation RemoveQuestionDisplayLogic($questionId: Int!) {
+  removeQuestionDisplayLogic(questionId: $questionId)
+}

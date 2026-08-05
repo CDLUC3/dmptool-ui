@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   Button,
   Dialog,
@@ -19,13 +19,16 @@ import {
 
 import styles from './displayLogic.module.scss';
 import { DmpIcon } from '@/components/Icons';
+import Loading from '@/components/Loading';
 
 interface DisplayLogicComponentProps {
   triggerQuestions: TriggerQuestionOption[]; // all applicable: options-type, before this question
   displayLogic: DisplayLogic | null;
   onDisplayLogicChange: (logic: DisplayLogic | null) => void;
   onDisplayLogicSave: () => Promise<void>;
+  onDisplayLogicRemove: () => Promise<void>;
   isSaving?: boolean;
+  isLoadingExistingLogic?: boolean;
 }
 
 const MAX_OPTION_LABEL_LENGTH = 60; // Max length for a select option label before truncating with ellipsis.
@@ -36,11 +39,12 @@ const truncateLabel = (label: string) =>
     ? `${label.slice(0, MAX_OPTION_LABEL_LENGTH - 1)}…`
     : label;
 
-// Generates a unique ID for a new group or condition. This will probably not be needed once backend work is done.
+// Generates a unique ID for a new group or condition.
 const makeId = (prefix: string) =>
   `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
 // Creates a new DisplayLogicGroup with a single condition, defaulting to the first option of the trigger question.
+// Temporary id is generated client-side since the backend doesn't provide one.
 const makeGroup = (triggerQuestionId: number, tq: TriggerQuestionOption): DisplayLogicGroup => {
   const firstOption = tq.options[0];
   return {
@@ -60,9 +64,6 @@ const makeGroup = (triggerQuestionId: number, tq: TriggerQuestionOption): Displa
  * Notes:
  * - Each trigger question can only be used by one group at a time; both the trigger
  *   question dropdown and "Add trigger question" button filter out ones already in use.
- * - A trigger question is auto-added on first load if `displayLogic` starts with zero
- *   groups (see `hasAutoAddedRef` — this only fires once, even if groups are later
- *   removed back down to zero).
  * - This is a controlled component: all `displayLogic` state lives in the parent;
  *   `onDisplayLogicChange` must be wired up to actually persist changes.
  */
@@ -71,17 +72,17 @@ const DisplayLogicComponent = ({
   displayLogic,
   onDisplayLogicChange,
   onDisplayLogicSave,
+  onDisplayLogicRemove,
   isSaving = false,
+  isLoadingExistingLogic = false,
 }: DisplayLogicComponentProps) => {
   // hooks
   const t = useTranslations('QuestionEdit');
   const Global = useTranslations('Global');
 
-  // Refs
-  const hasAutoAddedRef = useRef(false);
-
   // State
   const [isRemoveAllOpen, setRemoveAllOpen] = useState(false);
+  const [isRemoving, setIsRemoving] = useState(false);
 
 
   const ACTION_ITEMS = [
@@ -92,11 +93,14 @@ const DisplayLogicComponent = ({
     { id: 'any', name: t('tabPanel.matchTypeItemAny') },
     { id: 'all', name: t('tabPanel.matchTypeItemAll') },
   ];
-  const OPERATOR_ITEMS = [
+  const OPERATOR_ITEMS_SINGLE = [
     { id: 'is', name: t('tabPanel.operatorItemIsSelected') },
     { id: 'is_not', name: t('tabPanel.operatorItemIsNotSelected') },
   ];
-
+  const OPERATOR_ITEMS_MULTI = [
+    { id: 'is', name: t('tabPanel.operatorItemIncludes') },
+    { id: 'is_not', name: t('tabPanel.operatorItemDoesNotInclude') },
+  ];
 
   // Memoized map of trigger questions for quick lookup by ID
   const triggerQuestionMap = useMemo(
@@ -191,33 +195,26 @@ const DisplayLogicComponent = ({
   };
 
   // Removes all display logic (all groups and conditions)
-  const handleRemoveAll = () => {
-    onDisplayLogicChange(null);
-    setRemoveAllOpen(false);
-  };
-
-  // When page first loads, automatically add a trigger question if there are any available.
-  useEffect(() => {
-    if (displayLogic && displayLogic.groups.length === 0 && !hasAutoAddedRef.current) {
-      hasAutoAddedRef.current = true;
-      handleAddTriggerQuestion();
+  const handleRemoveAll = async () => {
+    try {
+      await onDisplayLogicRemove();
+    } finally {
+      setIsRemoving(false);
+      setRemoveAllOpen(false);
     }
-  }, [displayLogic]);
+  };
 
   // If there's no display logic yet, show the "Add display logic" button (or a message if there are no trigger questions)
   if (!displayLogic) {
     return (
       <div className={styles.displayLogicWrapper}>
         <p>{t('tabPanel.descriptions.displayLogic')}</p>
-        {triggerQuestions.length === 0 ? (
-          <p className={styles.emptyStateText}>
-            {t('tabPanel.helpText.noTriggerQuestionsAvailable')}
-          </p>
+        {isLoadingExistingLogic ? (
+          <Loading message={Global('messaging.loading')} />
+        ) : triggerQuestions.length === 0 ? (
+          <p className={styles.emptyStateText}>{t('tabPanel.helpText.noTriggerQuestionsAvailable')}</p>
         ) : (
-          <Button
-            className={`react-aria-Button ${styles.addLogicButton}`}
-            onPress={handleAddDisplayLogic}
-          >
+          <Button className={`react-aria-Button ${styles.addLogicButton}`} onPress={handleAddDisplayLogic}>
             {t('tabPanel.buttons.addDisplayLogic')}
           </Button>
         )}
@@ -258,6 +255,8 @@ const DisplayLogicComponent = ({
           const tq = triggerQuestionMap.get(group.triggerQuestionId);
           if (!tq) return null;
 
+          const operatorItems = tq.isMultiValue ? OPERATOR_ITEMS_MULTI : OPERATOR_ITEMS_SINGLE;
+
           const groupTriggerItems = availableTriggerQuestions(group.id).map(q => ({
             id: q.id.toString(),
             name: q.questionText,
@@ -296,9 +295,10 @@ const DisplayLogicComponent = ({
                 {group.conditions.map((condition) => {
                   const selectedOption = tq.options.find((opt) => opt.value === condition.optionValue);
                   const conditionLabel = t('tabPanel.buttons.removeConditionAriaLabel', {
-                    operator: OPERATOR_ITEMS.find((o) => o.id === condition.operator)?.name ?? '',
+                    operator: operatorItems.find((o) => o.id === condition.operator)?.name ?? '',
                     option: selectedOption ? truncateLabel(selectedOption.label) : '',
                   });
+
 
                   return (
                     <div key={condition.id} className={styles.conditionRow}>
@@ -307,7 +307,7 @@ const DisplayLogicComponent = ({
                         label={t('tabPanel.labels.conditionOperator')}
                         selectClasses={styles.conditionOperator}
                         hideLabelVisually
-                        items={OPERATOR_ITEMS}
+                        items={operatorItems}
                         selectedKey={condition.operator}
                         onChange={(value) => handleConditionChange(group, condition.id, 'operator', value)}
                       />
@@ -351,7 +351,10 @@ const DisplayLogicComponent = ({
             type="button"
             onPress={handleAddTriggerQuestion}
           >
-            {t('tabPanel.buttons.addTriggerQuestion')}
+            {displayLogic.groups.length > 0
+              ? t('tabPanel.buttons.addAnotherTriggerQuestion')
+              : t('tabPanel.buttons.addTriggerQuestion')}
+
           </Button>
         )}
 
@@ -367,6 +370,7 @@ const DisplayLogicComponent = ({
           </TransitionButton>
         </div>
       </div>
+
       {
         displayLogic.groups.length > 0 && (
           <div className={styles.removeDisplayLogicSection}>
@@ -388,11 +392,11 @@ const DisplayLogicComponent = ({
                           <TransitionButton
                             className="danger"
                             onPress={async () => {
-                              handleRemoveAll();
+                              await handleRemoveAll();
                               close();
                             }}
                             loadingLabel={Global('buttons.confirming')}
-                            showLoading={false}
+                            isDisabled={isRemoving}
                           >
                             {Global('buttons.confirm')}
                           </TransitionButton>

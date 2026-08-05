@@ -13,11 +13,12 @@ interface RawTriggerQuestion {
 }
 
 /**
+ * Will calculate the list of trigger questions for a given question.
  * Trigger questions are a list of questions this question's Display Logic can trigger
- * off of: questions displayed earlier in the same section that are option-type 
+ * off of (i.e., questions displayed earlier in the same section that are option-type 
  * questions(["radioButtons", "checkBoxes", "multiselectBox", "selectBox"];)
  *
- * Takes the alist of section questions from QuestionsDocument query.
+ * Takes the list of section questions from QuestionsDocument query.
  *
  * @param questions - all questions in the current section (unfiltered)
  * @param currentQuestionId - excluded from the list

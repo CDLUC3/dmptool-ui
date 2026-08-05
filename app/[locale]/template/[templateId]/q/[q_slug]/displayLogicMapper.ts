@@ -8,7 +8,7 @@ import {
   QuestionConditionInput,
   QuestionConditionGroupsQuery
 } from '@/generated/graphql';
-
+import logECS from '@/utils/clientLogger';
 
 type FetchedGroup = NonNullable<NonNullable<QuestionConditionGroupsQuery['questionConditionGroups']>[number]>;
 
@@ -22,17 +22,32 @@ const CONDITION_TYPE_TO_OPERATOR: Record<QuestionConditionCondition, 'is' | 'is_
 };
 
 // Reconstructs the UI's DisplayLogic shape from the question's stored
-// action/matchType plus the groups returned by questionConditionGroups.
+// displayLogicAction/displayLogicMatchType plus the groups returned by questionConditionGroups.
 export function fromQuestionConditionGroups(
-  action: QuestionConditionActionType,
-  matchType: QuestionConditionMatchType,
+  displayLogicAction: QuestionConditionActionType,
+  displayLogicMatchType: QuestionConditionMatchType,
   groups: FetchedGroup[]
-): DisplayLogic {
+): DisplayLogic | null {
+  let action: DisplayLogic['action'];
+
+  // Make sure it's an action we support; if not, log a warning and return null.
+  // Returning null will cause the UI to show the "no display logic" state, which is better than crashing or showing a blank screen.
+  if (displayLogicAction === QuestionConditionActionType.HideQuestion) {
+    action = 'hide';
+  } else if (displayLogicAction === QuestionConditionActionType.ShowQuestion) {
+    action = 'show';
+  } else {
+    logECS('warn', 'fromQuestionConditionGroups', {
+      error: `Unsupported displayLogicAction: ${displayLogicAction}`,
+    });
+    return null;
+  }
+
   return {
-    action: action === QuestionConditionActionType.HideQuestion ? 'hide' : 'show',
-    matchType: matchType === QuestionConditionMatchType.All ? 'all' : 'any',
+    action,
+    matchType: displayLogicMatchType === QuestionConditionMatchType.All ? 'all' : 'any',
     groups: groups.map((g): DisplayLogicGroup => ({
-      id: `group-${g.id}`, // synthetic client id, mirrors makeId('group') shape
+      id: `group-${g.id}`,
       triggerQuestionId: g.triggerQuestionId,
       conditions: (g.conditions ?? [])
         .filter((c): c is NonNullable<typeof c> => c != null)
@@ -60,8 +75,17 @@ const OPERATOR_TO_CONDITION_TYPE = {
 } as const;
 
 
-// Saves the display logic to the backend format, using the trigger questions to
-// determine whether to use single-value or multi-value operators for each group
+
+/**
+ * Converts the display logic to the format expected by the backend. Use triggerQuestions to determine whether
+ * to use single-value or multi-value operators for each group.
+ * 
+ * @param questionId - is for the question being edited
+ * @param logic - displayLogic is the "show/hide" and "any/all" logic with the condition groups, made up of trigger question with an array of conditions
+ * @param triggerQuestions - triggerQuestions is the list of questions that can be used to trigger the display logic (i.e., options 
+// questions in the same section with a lower display order than this question)
+ * @returns The graphqlinput object in the format expected by the backend.
+ */
 export function toSaveInput(
   questionId: number,
   logic: DisplayLogic,
