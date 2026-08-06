@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { fromQuestionConditionGroups, toSaveInput } from '../displayLogicMapper';
 import { DisplayLogic, TriggerQuestionOption } from '@/app/types/displayLogic';
 import {
