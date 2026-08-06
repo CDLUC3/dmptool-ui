@@ -1,17 +1,25 @@
 import React from "react";
 import { act, fireEvent, render, screen, waitFor, within } from '@/utils/test-utils';
 import { routePath } from '@/utils/routes';
-import { useQuery } from '@apollo/client/react';
+import { useQuery, useMutation } from '@apollo/client/react';
 import {
   QuestionDocument,
   LicensesDocument,
   DefaultResearchOutputTypesDocument,
+  SaveQuestionDisplayLogicDocument,
+  RemoveQuestionDisplayLogicDocument,
+  QuestionConditionGroupsDocument,
+  QuestionConditionActionType,
+  QuestionConditionMatchType,
+  QuestionConditionCondition
 } from '@/generated/graphql';
 
 import {
   removeQuestionAction,
   updateQuestionAction
 } from '../actions';
+
+import { useTriggerQuestions } from '../hooks/useTriggerQuestions';
 
 import { axe, toHaveNoViolations } from 'jest-axe';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
@@ -206,6 +214,13 @@ jest.mock('next/navigation', () => ({
   useSearchParams: jest.fn()
 }))
 
+jest.mock('../hooks/useTriggerQuestions', () => ({
+  useTriggerQuestions: jest.fn(),
+}));
+const mockUseTriggerQuestions = useTriggerQuestions as jest.Mock;
+const mockSaveDisplayLogicMutate = jest.fn();
+const mockRemoveDisplayLogicMutate = jest.fn();
+
 const mockUseRouter = useRouter as jest.Mock;
 const mockSearchParams = useSearchParams as jest.Mock;
 
@@ -222,10 +237,12 @@ jest.mock('@/context/ToastContext', () => ({
 // Mock Apollo Client hooks
 jest.mock('@apollo/client/react', () => ({
   useQuery: jest.fn(),
+  useMutation: jest.fn(),
 }));
 
 // Cast with jest.mocked utility
 const mockUseQuery = jest.mocked(useQuery);
+const mockUseMutation = jest.mocked(useMutation);
 
 const setupMocks = () => {
   // Create stable references OUTSIDE mockImplementation
@@ -267,9 +284,75 @@ const setupMocks = () => {
     };
   });
 };
+
+const sampleTriggerQuestion = {
+  id: 100,
+  questionText: 'Prior multiple-choice question?',
+  questionType: 'radioButtons',
+  isMultiValue: false,
+  options: [
+    { label: 'Yes', value: 'Yes' },
+    { label: 'No', value: 'No' },
+  ],
+};
+
+// Mocks useQuery for QuestionDocument, TagsDocument, and
+// QuestionConditionGroupsDocument together, since the display-logic tests
+// need to control all three independently of setupMocks().
+const setupDisplayLogicQueryMocks = ({
+  question,
+  tags = [],
+  conditionGroups = null,
+  conditionGroupsLoading = false,
+}: {
+  question: Record<string, unknown>;
+  tags?: unknown[];
+  conditionGroups?: unknown[] | null;
+  conditionGroupsLoading?: boolean;
+}) => {
+  const questionReturn = { data: { question }, loading: false, error: undefined };
+  const conditionGroupsReturn = {
+    data: conditionGroups ? { questionConditionGroups: conditionGroups } : undefined,
+    loading: conditionGroupsLoading,
+  };
+  const tagsReturn = { data: { tags }, loading: false, error: undefined };
+  const fallbackReturn = { data: null, loading: false, error: undefined };
+
+  mockUseQuery.mockImplementation((document: unknown) => {
+    if (document === QuestionDocument) return questionReturn as any;
+    if (document === QuestionConditionGroupsDocument) return conditionGroupsReturn as any;
+    if (document === undefined) return fallbackReturn as any;
+    return tagsReturn as any; // TagsDocument, QuestionsDocument, etc.
+  });
+};
+
+// Switches to the "Display Logic" tab.
+const goToLogicTab = () => {
+  fireEvent.click(screen.getByRole('tab', { name: 'tabs.logic' }));
+};
+
 describe("QuestionEditPage", () => {
   let mockRouter;
   beforeEach(() => {
+    mockUseTriggerQuestions.mockReturnValue({ triggerQuestions: [] });
+
+    mockSaveDisplayLogicMutate.mockReset().mockResolvedValue({
+      data: { saveQuestionDisplayLogic: { errors: null } },
+    });
+    mockRemoveDisplayLogicMutate.mockReset().mockResolvedValue({
+      data: { removeQuestionDisplayLogic: true },
+    });
+
+    mockUseMutation.mockImplementation((document: unknown) => {
+      if (document === SaveQuestionDisplayLogicDocument) {
+        return [mockSaveDisplayLogicMutate, { loading: false }] as any;
+      }
+      if (document === RemoveQuestionDisplayLogicDocument) {
+        return [mockRemoveDisplayLogicMutate, { loading: false }] as any;
+      }
+      return [jest.fn().mockResolvedValue({ data: {} }), { loading: false }] as any;
+    });
+
     setupMocks();
     HTMLElement.prototype.scrollIntoView = mockScrollIntoView;
     mockScrollTo();
@@ -2446,4 +2529,467 @@ describe("Research Output Question Type - Edit", () => {
     expect(screen.queryByText('researchOutput.description')).not.toBeInTheDocument();
   });
 
+});
+
+
+
+describe('Display Logic tab', () => {
+  const baseQuestion = {
+    id: 67,
+    questionText: 'A trigger-able question',
+    displayOrder: 17,
+    sectionId: 300,
+    requirementText: '',
+    guidanceText: '',
+    sampleText: '',
+    useSampleTextAsDefault: false,
+    required: false,
+    json: '{"type":"text","attributes":{},"meta":{"schemaVersion":"1.0"}}',
+    tags: [],
+    displayLogicAction: null,
+    displayLogicMatchType: null,
+  };
+
+  beforeEach(() => {
+    HTMLElement.prototype.scrollIntoView = mockScrollIntoView;
+    mockScrollTo();
+    (useParams as jest.Mock).mockReturnValue({ templateId: '123', q_slug: 67 });
+    (useRouter as jest.Mock).mockReturnValue({ push: jest.fn() });
+    (useSearchParams as jest.Mock).mockReturnValue({ get: () => null });
+    (useToast as jest.Mock).mockReturnValue({ add: jest.fn() });
+    window.tinymce = { init: jest.fn(), remove: jest.fn() };
+
+    mockSaveDisplayLogicMutate.mockReset().mockResolvedValue({
+      data: { saveQuestionDisplayLogic: { errors: null } },
+    });
+    mockRemoveDisplayLogicMutate.mockReset().mockResolvedValue({
+      data: { removeQuestionDisplayLogic: true },
+    });
+
+    mockUseMutation.mockImplementation((document: unknown) => {
+      if (document === SaveQuestionDisplayLogicDocument) {
+        return [mockSaveDisplayLogicMutate, { loading: false }] as any;
+      }
+      if (document === RemoveQuestionDisplayLogicDocument) {
+        return [mockRemoveDisplayLogicMutate, { loading: false }] as any;
+      }
+      return [jest.fn().mockResolvedValue({ data: {} }), { loading: false }] as any;
+    });
+  });
+
+  describe('hydration from backend', () => {
+    it('should hydrate an existing group so the save button is enabled without any user action', async () => {
+      mockUseTriggerQuestions.mockReturnValue({ triggerQuestions: [sampleTriggerQuestion] });
+      setupDisplayLogicQueryMocks({
+        question: {
+          ...baseQuestion,
+          displayLogicAction: QuestionConditionActionType.ShowQuestion,
+          displayLogicMatchType: QuestionConditionMatchType.Any,
+        },
+        conditionGroups: [
+          {
+            id: 1,
+            triggerQuestionId: 100,
+            conditions: [{ id: 1, conditionType: QuestionConditionCondition.Equal, conditionMatch: 'Yes' }],
+          },
+        ],
+      });
+
+      await act(async () => {
+        render(<QuestionEdit />);
+      });
+      goToLogicTab();
+
+      const saveButton = await screen.findByRole('button', { name: 'tabPanel.buttons.saveDisplayLogic' });
+      expect(saveButton).not.toBeDisabled();
+    });
+
+    it('should leave displayLogic as null (empty state) when there are no condition groups', async () => {
+      mockUseTriggerQuestions.mockReturnValue({ triggerQuestions: [sampleTriggerQuestion] });
+      setupDisplayLogicQueryMocks({
+        question: {
+          ...baseQuestion,
+          displayLogicAction: QuestionConditionActionType.ShowQuestion,
+          displayLogicMatchType: QuestionConditionMatchType.Any,
+        },
+        conditionGroups: [],
+      });
+
+      await act(async () => {
+        render(<QuestionEdit />);
+      });
+      goToLogicTab();
+
+      expect(await screen.findByRole('button', { name: 'tabPanel.buttons.addDisplayLogic' })).toBeInTheDocument();
+      expect(logECS).not.toHaveBeenCalledWith('error', 'QuestionEdit.hydrateDisplayLogic', expect.anything());
+    });
+
+    it('should log an error and show a load error when displayLogicAction/matchType are missing but groups exist', async () => {
+      mockUseTriggerQuestions.mockReturnValue({ triggerQuestions: [sampleTriggerQuestion] });
+      setupDisplayLogicQueryMocks({
+        question: {
+          ...baseQuestion,
+          displayLogicAction: null,
+          displayLogicMatchType: null,
+        },
+        conditionGroups: [
+          {
+            id: 1,
+            triggerQuestionId: 100,
+            conditions: [{ id: 1, conditionType: QuestionConditionCondition.Equal, conditionMatch: 'Yes' }],
+          },
+        ],
+      });
+
+      await act(async () => {
+        render(<QuestionEdit />);
+      });
+      goToLogicTab();
+
+      await waitFor(() => {
+        expect(logECS).toHaveBeenCalledWith(
+          'error',
+          'QuestionEdit.hydrateDisplayLogic',
+          expect.objectContaining({
+            error: expect.stringContaining('Missing displayLogicAction'),
+          })
+        );
+      });
+      expect(await screen.findByText('messages.errors.errorLoadingDisplayLogic')).toBeInTheDocument();
+    });
+  });
+
+  describe('handleDisplayLogicChange', () => {
+    it('should mark the form dirty when the user starts building display logic', async () => {
+      mockUseTriggerQuestions.mockReturnValue({ triggerQuestions: [sampleTriggerQuestion] });
+      setupDisplayLogicQueryMocks({ question: baseQuestion, conditionGroups: [] });
+
+      await act(async () => {
+        render(<QuestionEdit />);
+      });
+      goToLogicTab();
+
+      fireEvent.click(await screen.findByRole('button', { name: 'tabPanel.buttons.addDisplayLogic' }));
+
+      // With groups still empty, the group-builder UI (not the empty-state
+      // button) should now be showing — proving setDisplayLogic ran.
+      expect(await screen.findByRole('button', { name: 'tabPanel.buttons.addTriggerQuestion' })).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'tabPanel.buttons.addDisplayLogic' })).not.toBeInTheDocument();
+    });
+  });
+
+  describe('handleSaveDisplayLogic', () => {
+    const hydratedQuestion = {
+      ...baseQuestion,
+      displayLogicAction: QuestionConditionActionType.ShowQuestion,
+      displayLogicMatchType: QuestionConditionMatchType.Any,
+    };
+    const hydratedGroups = [
+      {
+        id: 1,
+        triggerQuestionId: 100,
+        conditions: [{ id: 1, conditionType: QuestionConditionCondition.Equal, conditionMatch: 'Yes' }],
+      },
+    ];
+
+    it('should call the save mutation with the mapped input and show a success toast', async () => {
+      mockUseTriggerQuestions.mockReturnValue({ triggerQuestions: [sampleTriggerQuestion] });
+      setupDisplayLogicQueryMocks({ question: hydratedQuestion, conditionGroups: hydratedGroups });
+
+      await act(async () => {
+        render(<QuestionEdit />);
+      });
+      goToLogicTab();
+
+      const saveButton = await screen.findByRole('button', { name: 'tabPanel.buttons.saveDisplayLogic' });
+      await act(async () => {
+        fireEvent.click(saveButton);
+      });
+
+      await waitFor(() => {
+        expect(mockSaveDisplayLogicMutate).toHaveBeenCalledWith({
+          variables: {
+            input: expect.objectContaining({
+              questionId: 67,
+              action: 'SHOW_QUESTION',
+              matchType: 'ANY',
+            }),
+          },
+        });
+      });
+      expect(screen.queryByText('messages.errors.errorSavingDisplayLogic')).not.toBeInTheDocument();
+    });
+
+    it('should show the first returned error when the mutation responds with errors', async () => {
+      mockUseTriggerQuestions.mockReturnValue({ triggerQuestions: [sampleTriggerQuestion] });
+      setupDisplayLogicQueryMocks({ question: hydratedQuestion, conditionGroups: hydratedGroups });
+      mockSaveDisplayLogicMutate.mockResolvedValueOnce({
+        data: { saveQuestionDisplayLogic: { errors: { general: 'Could not save display logic' } } },
+      });
+
+      await act(async () => {
+        render(<QuestionEdit />);
+      });
+      goToLogicTab();
+
+      const saveButton = await screen.findByRole('button', { name: 'tabPanel.buttons.saveDisplayLogic' });
+      await act(async () => {
+        fireEvent.click(saveButton);
+      });
+
+      expect(await screen.findByText('Could not save display logic')).toBeInTheDocument();
+    });
+
+    it('should log and show a generic error when the mutation throws', async () => {
+      mockUseTriggerQuestions.mockReturnValue({ triggerQuestions: [sampleTriggerQuestion] });
+      setupDisplayLogicQueryMocks({ question: hydratedQuestion, conditionGroups: hydratedGroups });
+      mockSaveDisplayLogicMutate.mockRejectedValueOnce(new Error('network down'));
+
+      await act(async () => {
+        render(<QuestionEdit />);
+      });
+      goToLogicTab();
+
+      const saveButton = await screen.findByRole('button', { name: 'tabPanel.buttons.saveDisplayLogic' });
+      await act(async () => {
+        fireEvent.click(saveButton);
+      });
+
+      await waitFor(() => {
+        expect(logECS).toHaveBeenCalledWith(
+          'error',
+          'QuestionEdit.handleSaveDisplayLogic',
+          expect.objectContaining({ error: expect.any(Error) })
+        );
+      });
+      expect(await screen.findByText('messages.errors.errorSavingDisplayLogic')).toBeInTheDocument();
+    });
+  });
+
+  describe('handleRemoveDisplayLogic', () => {
+    const hydratedQuestion = {
+      ...baseQuestion,
+      displayLogicAction: QuestionConditionActionType.ShowQuestion,
+      displayLogicMatchType: QuestionConditionMatchType.Any,
+    };
+    const hydratedGroups = [
+      {
+        id: 1,
+        triggerQuestionId: 100,
+        conditions: [{ id: 1, conditionType: QuestionConditionCondition.Equal, conditionMatch: 'Yes' }],
+      },
+    ];
+
+    const openRemoveConfirmAndConfirm = async () => {
+      fireEvent.click(await screen.findByRole('button', { name: 'tabPanel.buttons.removeAllDisplayLogic' }));
+      const confirmButton = await screen.findByText('buttons.confirm');
+      await act(async () => {
+        fireEvent.click(confirmButton);
+      });
+    };
+
+    it('should call the remove mutation, clear the logic, and show a success toast', async () => {
+      mockUseTriggerQuestions.mockReturnValue({ triggerQuestions: [sampleTriggerQuestion] });
+      setupDisplayLogicQueryMocks({ question: hydratedQuestion, conditionGroups: hydratedGroups });
+
+      await act(async () => {
+        render(<QuestionEdit />);
+      });
+      goToLogicTab();
+      await screen.findByRole('button', { name: 'tabPanel.buttons.removeAllDisplayLogic' });
+
+      await openRemoveConfirmAndConfirm();
+
+      expect(mockRemoveDisplayLogicMutate).toHaveBeenCalledWith({ variables: { questionId: 67 } });
+      expect(await screen.findByRole('button', { name: 'tabPanel.buttons.addDisplayLogic' })).toBeInTheDocument();
+    });
+
+    it('should show an error when the mutation resolves without a truthy removeQuestionDisplayLogic', async () => {
+      mockUseTriggerQuestions.mockReturnValue({ triggerQuestions: [sampleTriggerQuestion] });
+      setupDisplayLogicQueryMocks({ question: hydratedQuestion, conditionGroups: hydratedGroups });
+      mockRemoveDisplayLogicMutate.mockResolvedValueOnce({ data: { removeQuestionDisplayLogic: false } });
+
+      await act(async () => {
+        render(<QuestionEdit />);
+      });
+      goToLogicTab();
+      await screen.findByRole('button', { name: 'tabPanel.buttons.removeAllDisplayLogic' });
+
+      await openRemoveConfirmAndConfirm();
+
+      expect(await screen.findByText('messages.errors.errorRemovingDisplayLogic')).toBeInTheDocument();
+    });
+
+    it('should log and show an error when the mutation throws', async () => {
+      mockUseTriggerQuestions.mockReturnValue({ triggerQuestions: [sampleTriggerQuestion] });
+      setupDisplayLogicQueryMocks({ question: hydratedQuestion, conditionGroups: hydratedGroups });
+      mockRemoveDisplayLogicMutate.mockRejectedValueOnce(new Error('network down'));
+
+      await act(async () => {
+        render(<QuestionEdit />);
+      });
+      goToLogicTab();
+      await screen.findByRole('button', { name: 'tabPanel.buttons.removeAllDisplayLogic' });
+
+      await openRemoveConfirmAndConfirm();
+
+      await waitFor(() => {
+        expect(logECS).toHaveBeenCalledWith(
+          'error',
+          'QuestionEdit.handleRemoveDisplayLogic',
+          expect.objectContaining({ error: expect.any(Error) })
+        );
+      });
+      expect(await screen.findByText('messages.errors.errorRemovingDisplayLogic')).toBeInTheDocument();
+    });
+  });
+});
+
+describe('query error handling (both errors present)', () => {
+  beforeEach(() => {
+    HTMLElement.prototype.scrollIntoView = mockScrollIntoView;
+    mockScrollTo();
+    (useParams as jest.Mock).mockReturnValue({ templateId: '123', q_slug: 67 });
+    (useRouter as jest.Mock).mockReturnValue({ push: jest.fn() });
+    (useSearchParams as jest.Mock).mockReturnValue({ get: () => null });
+    (useToast as jest.Mock).mockReturnValue({ add: jest.fn() });
+    mockUseTriggerQuestions.mockReturnValue({ triggerQuestions: [] });
+    window.tinymce = { init: jest.fn(), remove: jest.fn() };
+  });
+
+  it('should surface both selectedQuestionQueryError and questionsError together', async () => {
+    // Stable references, built once — not inline inside mockImplementation.
+    const questionErrorReturn = {
+      data: null,
+      loading: false,
+      error: { message: 'Question query failed' },
+    };
+    const otherErrorReturn = {
+      data: null,
+      loading: false,
+      error: { message: 'Questions query failed' },
+    };
+
+    mockUseQuery.mockImplementation((document) => {
+      if (document === QuestionDocument) return questionErrorReturn as any;
+      return otherErrorReturn as any;
+    });
+
+    await act(async () => {
+      render(<QuestionEdit />);
+    });
+
+    expect(screen.getByText('Question query failed')).toBeInTheDocument();
+    expect(screen.getByText('Questions query failed')).toBeInTheDocument();
+  });
+});
+
+
+describe('missing question data', () => {
+  beforeEach(() => {
+    HTMLElement.prototype.scrollIntoView = mockScrollIntoView;
+    mockScrollTo();
+    (useParams as jest.Mock).mockReturnValue({ templateId: '123', q_slug: 67 });
+    (useRouter as jest.Mock).mockReturnValue({ push: jest.fn() });
+    (useSearchParams as jest.Mock).mockReturnValue({ get: () => null });
+    (useToast as jest.Mock).mockReturnValue({ add: jest.fn() });
+    mockUseTriggerQuestions.mockReturnValue({ triggerQuestions: [] });
+    window.tinymce = { init: jest.fn(), remove: jest.fn() };
+  });
+
+  it('should render without crashing when selectedQuestion.question is not yet present', async () => {
+    const noQuestionReturn = { data: { question: null }, loading: false, error: undefined };
+    const fallbackReturn = { data: null, loading: false, error: undefined };
+
+    mockUseQuery.mockImplementation((document) => {
+      if (document === QuestionDocument) return noQuestionReturn as any;
+      return fallbackReturn as any;
+    });
+
+    await act(async () => {
+      render(<QuestionEdit />);
+    });
+
+    expect(screen.getByRole('heading', { level: 1 })).toBeInTheDocument();
+    expect(screen.queryByText('Error parsing question data')).not.toBeInTheDocument();
+  });
+});
+
+
+describe('parsed question missing a type', () => {
+  beforeEach(() => {
+    HTMLElement.prototype.scrollIntoView = mockScrollIntoView;
+    mockScrollTo();
+    (useParams as jest.Mock).mockReturnValue({ templateId: '123', q_slug: 67 });
+    (useRouter as jest.Mock).mockReturnValue({ push: jest.fn() });
+    (useSearchParams as jest.Mock).mockReturnValue({ get: () => null });
+    (useToast as jest.Mock).mockReturnValue({ add: jest.fn() });
+    mockUseTriggerQuestions.mockReturnValue({ triggerQuestions: [] });
+    window.tinymce = { init: jest.fn(), remove: jest.fn() };
+  });
+
+  it('should surface the parse error without crashing when parsed.type is missing', async () => {
+    const mockGetParsed = getParsedJSONModule.getParsedQuestionJSON as jest.Mock;
+    mockGetParsed.mockReturnValueOnce({
+      parsed: {}, // truthy, but no `.type`
+      error: 'Could not determine question type',
+    });
+
+    const textFieldReturn = { data: mockQuestionDataForTextField, loading: false, error: undefined };
+    const fallbackReturn = { data: null, loading: false, error: undefined };
+
+    mockUseQuery.mockImplementation((document) => {
+      if (document === QuestionDocument) return textFieldReturn as any;
+      return fallbackReturn as any;
+    });
+
+    await act(async () => {
+      render(<QuestionEdit />);
+    });
+
+    expect(await screen.findByText('Could not determine question type')).toBeInTheDocument();
+  });
+});
+
+
+describe('question with existing tags', () => {
+  beforeEach(() => {
+    HTMLElement.prototype.scrollIntoView = mockScrollIntoView;
+    mockScrollTo();
+    (useParams as jest.Mock).mockReturnValue({ templateId: '123', q_slug: 67 });
+    (useRouter as jest.Mock).mockReturnValue({ push: jest.fn() });
+    (useSearchParams as jest.Mock).mockReturnValue({ get: () => null });
+    (useToast as jest.Mock).mockReturnValue({ add: jest.fn() });
+    mockUseTriggerQuestions.mockReturnValue({ triggerQuestions: [] });
+    window.tinymce = { init: jest.fn(), remove: jest.fn() };
+  });
+
+  it('should pre-select tags that were already saved on the question', async () => {
+    const savedTag = { id: 1, name: 'Reproducibility', description: 'About reproducibility', __typename: 'Tag' };
+
+    // Build both return objects ONCE, outside mockImplementation.
+    const questionReturn = {
+      data: {
+        question: {
+          ...mockQuestionDataForTextField.question,
+          tags: [savedTag],
+        },
+      },
+      loading: false,
+      error: undefined,
+    };
+    const tagsReturn = { data: { tags: [savedTag] }, loading: false, error: undefined };
+
+    mockUseQuery.mockImplementation((document) => {
+      if (document === QuestionDocument) return questionReturn as any;
+      return tagsReturn as any; // TagsDocument
+    });
+
+    await act(async () => {
+      render(<QuestionEdit />);
+    });
+
+    const checkbox = screen.getByRole('checkbox', { name: /Reproducibility/i });
+    expect(checkbox).toBeChecked();
+  });
 });

@@ -196,6 +196,7 @@ const DisplayLogicComponent = ({
 
   // Removes all display logic (all groups and conditions)
   const handleRemoveAll = async () => {
+    setIsRemoving(true);
     try {
       await onDisplayLogicRemove();
     } finally {
@@ -222,6 +223,8 @@ const DisplayLogicComponent = ({
     );
   }
 
+  // Show "Add another trigger question" button only if there are still trigger questions 
+  // available that aren't already used by another group.
   const canAddMoreTriggerQuestions = availableTriggerQuestions().length > 0;
 
   return (
@@ -255,6 +258,7 @@ const DisplayLogicComponent = ({
           const tq = triggerQuestionMap.get(group.triggerQuestionId);
           if (!tq) return null;
 
+          // Determine which operator items to show based on whether the trigger question is multi-value or single-value
           const operatorItems = tq.isMultiValue ? OPERATOR_ITEMS_MULTI : OPERATOR_ITEMS_SINGLE;
 
           const groupTriggerItems = availableTriggerQuestions(group.id).map(q => ({
@@ -324,6 +328,7 @@ const DisplayLogicComponent = ({
                         className={`react-aria-Button ${styles.removeConditionButton}`}
                         type="button"
                         aria-label={conditionLabel}
+                        isDisabled={group.conditions.length === 1}
                         onPress={() => handleRemoveCondition(group, condition.id)}
                       >
                         <DmpIcon icon="trashcan" classes={styles.trashcanIcon} />
@@ -362,7 +367,7 @@ const DisplayLogicComponent = ({
           <TransitionButton
             type="button"
             onPress={onDisplayLogicSave}
-            isDisabled={displayLogic.groups.length === 0 || isSaving}
+            isDisabled={displayLogic.groups.length === 0 || displayLogic.groups.some((g) => g.conditions.length === 0) || isSaving}
             loadingLabel={Global('buttons.saving')}
             showLoading={isSaving}
           >
@@ -393,7 +398,6 @@ const DisplayLogicComponent = ({
                             className="danger"
                             onPress={async () => {
                               await handleRemoveAll();
-                              close();
                             }}
                             loadingLabel={Global('buttons.confirming')}
                             isDisabled={isRemoving}

@@ -39,9 +39,9 @@ export function useTriggerQuestions(
       .filter((q): q is RawTriggerQuestion => q !== null && q.id != null) // Filters out nulls and questions with no id
       .filter((q) => q.id !== currentQuestionId) // Exclude the current question itself
       .filter((q) => // Only include questions with a lower displayOrder than the current question
-        currentDisplayOrder === undefined || q.displayOrder == null
-          ? true
-          : q.displayOrder < currentDisplayOrder
+        currentDisplayOrder === undefined
+          ? q.displayOrder != null  // if we don't know our own order, still require the candidate to have one
+          : q.displayOrder != null && q.displayOrder < currentDisplayOrder
       )
       .map((q) => {
         if (!q.json) return null;

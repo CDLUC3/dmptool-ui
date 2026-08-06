@@ -140,22 +140,6 @@ describe('useTriggerQuestions', () => {
 
       expect(result.current.triggerQuestions).toHaveLength(2);
     });
-
-    it('should include a question with a null displayOrder regardless of currentDisplayOrder', () => {
-      mockParsedResultsById({
-        2: { parsed: { type: 'radioButtons', options: [{ label: 'Yes', value: 'yes' }] } },
-      });
-
-      const { result } = renderHook(() =>
-        useTriggerQuestions(
-          [{ id: 2, questionText: 'Q2', displayOrder: null, json: '{}' }],
-          1,
-          5
-        )
-      );
-
-      expect(result.current.triggerQuestions).toHaveLength(1);
-    });
   });
 
   describe('JSON parsing / options-type filtering', () => {
