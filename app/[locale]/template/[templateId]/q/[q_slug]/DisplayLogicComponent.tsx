@@ -29,6 +29,11 @@ interface DisplayLogicComponentProps {
   onDisplayLogicRemove: () => Promise<void>;
   isSaving?: boolean;
   isLoadingExistingLogic?: boolean;
+  // True once display logic has actually been persisted server-side (either
+  // hydrated from an existing save, or saved successfully in this session).
+  // Lets "Remove all" skip the backend call when there's nothing there yet
+  // to delete — the user is just discarding a local, never-saved draft.
+  hasSavedDisplayLogic?: boolean;
 }
 
 const MAX_OPTION_LABEL_LENGTH = 60; // Max length for a select option label before truncating with ellipsis.
@@ -75,6 +80,7 @@ const DisplayLogicComponent = ({
   onDisplayLogicRemove,
   isSaving = false,
   isLoadingExistingLogic = false,
+  hasSavedDisplayLogic = false,
 }: DisplayLogicComponentProps) => {
   // hooks
   const t = useTranslations('QuestionEdit');
@@ -135,9 +141,18 @@ const DisplayLogicComponent = ({
     });
   };
 
-  // Adds a new display logic block with default values (show, any, no groups)
+  // Adds a new display logic block, pre-populated with one condition group
+  // on the first available trigger question — so the user immediately sees
+  // an example of what a condition group looks like, rather than a blank
+  // "Add trigger question" prompt.
   const handleAddDisplayLogic = () => {
-    onDisplayLogicChange({ action: 'show', matchType: 'any', groups: [] });
+    const first = triggerQuestions[0];
+    // This button only renders when triggerQuestions.length > 0
+    if (!first) {
+      onDisplayLogicChange({ action: 'show', matchType: 'any', groups: [] });
+      return;
+    }
+    onDisplayLogicChange({ action: 'show', matchType: 'any', groups: [makeGroup(first.id, first)] });
   };
 
   // Adds a new trigger-question box, defaulting to the first
@@ -194,8 +209,16 @@ const DisplayLogicComponent = ({
     });
   };
 
-  // Removes all display logic (all groups and conditions)
+  // Removes all display logic. If nothing has actually been saved
+  // server-side yet, this is just discarding a local draft — no need to
+  // hit the backend for something that was never persisted.
   const handleRemoveAll = async () => {
+    if (!hasSavedDisplayLogic) {
+      onDisplayLogicChange(null);
+      setRemoveAllOpen(false);
+      return;
+    }
+
     setIsRemoving(true);
     try {
       await onDisplayLogicRemove();
@@ -367,7 +390,7 @@ const DisplayLogicComponent = ({
           <TransitionButton
             type="button"
             onPress={onDisplayLogicSave}
-            isDisabled={displayLogic.groups.length === 0 || displayLogic.groups.some((g) => g.conditions.length === 0) || isSaving}
+            isDisabled={isSaving}
             loadingLabel={Global('buttons.saving')}
             showLoading={isSaving}
           >
@@ -376,44 +399,40 @@ const DisplayLogicComponent = ({
         </div>
       </div>
 
-      {
-        displayLogic.groups.length > 0 && (
-          <div className={styles.removeDisplayLogicSection}>
-            <DialogTrigger isOpen={isRemoveAllOpen} onOpenChange={setRemoveAllOpen}>
-              <Button className={`${styles.removeDisplayLogicButton} danger`} type="button">
-                {t('tabPanel.buttons.removeAllDisplayLogic')}
-              </Button>
-              <ModalOverlay>
-                <Modal>
-                  <Dialog>
-                    {({ close }) => (
-                      <>
-                        <h3>{t('tabPanel.headings.confirmClearDisplayLogic')}</h3>
-                        <p>{t('tabPanel.descriptions.clearDisplayLogicWarning')}</p>
-                        <div className={styles.removeAllConditionsDialogButtons}>
-                          <Button className="react-aria-Button" autoFocus onPress={close}>
-                            {Global('buttons.cancel')}
-                          </Button>
-                          <TransitionButton
-                            className="danger"
-                            onPress={async () => {
-                              await handleRemoveAll();
-                            }}
-                            loadingLabel={Global('buttons.confirming')}
-                            isDisabled={isRemoving}
-                          >
-                            {Global('buttons.confirm')}
-                          </TransitionButton>
-                        </div>
-                      </>
-                    )}
-                  </Dialog>
-                </Modal>
-              </ModalOverlay>
-            </DialogTrigger>
-          </div>
-        )
-      }
+      <div className={styles.removeDisplayLogicSection}>
+        <DialogTrigger isOpen={isRemoveAllOpen} onOpenChange={setRemoveAllOpen}>
+          <Button className={`${styles.removeDisplayLogicButton} danger`} type="button">
+            {t('tabPanel.buttons.removeAllDisplayLogic')}
+          </Button>
+          <ModalOverlay>
+            <Modal>
+              <Dialog>
+                {({ close }) => (
+                  <>
+                    <h3>{t('tabPanel.headings.confirmClearDisplayLogic')}</h3>
+                    <p>{t('tabPanel.descriptions.clearDisplayLogicWarning')}</p>
+                    <div className={styles.removeAllConditionsDialogButtons}>
+                      <Button className="react-aria-Button" autoFocus onPress={close}>
+                        {Global('buttons.cancel')}
+                      </Button>
+                      <TransitionButton
+                        className="danger"
+                        onPress={async () => {
+                          await handleRemoveAll();
+                        }}
+                        loadingLabel={Global('buttons.confirming')}
+                        isDisabled={isRemoving}
+                      >
+                        {Global('buttons.confirm')}
+                      </TransitionButton>
+                    </div>
+                  </>
+                )}
+              </Dialog>
+            </Modal>
+          </ModalOverlay>
+        </DialogTrigger>
+      </div>
     </div >
   );
 };

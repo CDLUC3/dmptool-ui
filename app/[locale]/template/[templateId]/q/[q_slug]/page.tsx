@@ -154,6 +154,7 @@ const QuestionEdit = () => {
   // which drives the empty state (description + Add Display Logic button).
   const [displayLogic, setDisplayLogic] = useState<DisplayLogic | null>(null);
   const [displayLogicError, setDisplayLogicError] = useState<string | null>(null);
+  const [hasSavedDisplayLogic, setHasSavedDisplayLogic] = useState(false);
   const displayLogicErrorRef = useRef<HTMLDivElement | null>(null);
 
   // Add state for live region announcements
@@ -397,6 +398,7 @@ const QuestionEdit = () => {
         setDisplayLogicError(errs[0]); // Show the first error in the display logic tab
       } else {
         setHasUnsavedChanges(false);
+        setHasSavedDisplayLogic(true);
         toastState.add(t('messages.success.displayLogicUpdated'), { type: 'success' });
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }
@@ -421,6 +423,7 @@ const QuestionEdit = () => {
 
       if (data?.removeQuestionDisplayLogic) {
         setDisplayLogic(null);
+        setHasSavedDisplayLogic(false);
         toastState.add(t('messages.success.displayLogicRemoved'), { type: 'success' });
         window.scrollTo({ top: 0, behavior: 'smooth' });
 
@@ -815,6 +818,7 @@ const QuestionEdit = () => {
 
     hasHydratedDisplayLogicRef.current = true;
     setDisplayLogic(fromQuestionConditionGroups(displayLogicAction, displayLogicMatchType, groups));
+    setHasSavedDisplayLogic(true);
   }, [displayLogicData, selectedQuestion]);
 
   // Warn user of unsaved changes if they try to leave the page
@@ -1165,6 +1169,7 @@ const QuestionEdit = () => {
               <DisplayLogicComponent
                 triggerQuestions={triggerQuestions}
                 displayLogic={displayLogic}
+                hasSavedDisplayLogic={hasSavedDisplayLogic}
                 onDisplayLogicChange={handleDisplayLogicChange}
                 onDisplayLogicSave={handleSaveDisplayLogic}
                 onDisplayLogicRemove={handleRemoveDisplayLogic}

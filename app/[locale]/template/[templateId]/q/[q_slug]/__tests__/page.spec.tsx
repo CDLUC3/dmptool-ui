@@ -2671,9 +2671,6 @@ describe('Display Logic tab', () => {
 
       fireEvent.click(await screen.findByRole('button', { name: 'tabPanel.buttons.addDisplayLogic' }));
 
-      // With groups still empty, the group-builder UI (not the empty-state
-      // button) should now be showing — proving setDisplayLogic ran.
-      expect(await screen.findByRole('button', { name: 'tabPanel.buttons.addTriggerQuestion' })).toBeInTheDocument();
       expect(screen.queryByRole('button', { name: 'tabPanel.buttons.addDisplayLogic' })).not.toBeInTheDocument();
     });
   });

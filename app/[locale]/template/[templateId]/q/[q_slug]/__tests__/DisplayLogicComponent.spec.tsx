@@ -111,7 +111,23 @@ describe('DisplayLogicComponent', () => {
 
       fireEvent.click(screen.getByRole('button', { name: 'tabPanel.buttons.addDisplayLogic' }));
 
-      expect(onDisplayLogicChange).toHaveBeenCalledWith({ action: 'show', matchType: 'any', groups: [] });
+      expect(onDisplayLogicChange).toHaveBeenCalledWith({
+        action: 'show',
+        matchType: 'any',
+        groups: [
+          {
+            id: expect.any(String),
+            triggerQuestionId: mockTriggerQuestions[0].id,
+            conditions: [
+              {
+                id: expect.any(String),
+                operator: 'is',
+                optionValue: mockTriggerQuestions[0].options[0].value,
+              },
+            ],
+          },
+        ],
+      });
     });
   });
 
@@ -465,6 +481,7 @@ describe('DisplayLogicComponent', () => {
           {...defaultProps}
           displayLogic={makeDisplayLogic()}
           onDisplayLogicRemove={onDisplayLogicRemove}
+          hasSavedDisplayLogic={true}
         />
       );
 
@@ -495,18 +512,17 @@ describe('DisplayLogicComponent', () => {
       expect(onDisplayLogicRemove).not.toHaveBeenCalled();
     });
 
-    it('should not show the "Remove all display logic" section when there are no groups', () => {
+    it('should still show the "Remove all display logic" button even when there are no groups', () => {
       render(<DisplayLogicComponent {...defaultProps} displayLogic={makeDisplayLogic({ groups: [] })} />);
-
-      expect(screen.queryByRole('button', { name: 'tabPanel.buttons.removeAllDisplayLogic' })).not.toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'tabPanel.buttons.removeAllDisplayLogic' })).toBeInTheDocument();
     });
   });
 
   describe('save button', () => {
-    it('should be disabled when there are no groups', () => {
+    it('should be enabled even when there are no groups, since isDisabled only tracks isSaving', () => {
       render(<DisplayLogicComponent {...defaultProps} displayLogic={makeDisplayLogic({ groups: [] })} />);
 
-      expect(screen.getByRole('button', { name: 'tabPanel.buttons.saveDisplayLogic' })).toBeDisabled();
+      expect(screen.getByRole('button', { name: 'tabPanel.buttons.saveDisplayLogic' })).not.toBeDisabled();
     });
 
     it('should be disabled while isSaving is true', () => {
