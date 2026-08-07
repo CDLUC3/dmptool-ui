@@ -4272,7 +4272,7 @@ export type Question = {
  */
 export type QuestionCondition = {
   __typename?: 'QuestionCondition';
-  /** The value(s) to match on (e.g., HAS_ANSWER should equate to null here). JSON to accommodate future multi-value/range operators. */
+  /** The value(s) to match on */
   conditionMatch?: Maybe<Scalars['String']['output']>;
   /** The type of condition/operator to evaluate */
   conditionType: QuestionConditionCondition;
@@ -4310,8 +4310,6 @@ export enum QuestionConditionCondition {
   DoesNotInclude = 'DOES_NOT_INCLUDE',
   /** When a question equals a specific value */
   Equal = 'EQUAL',
-  /** When a question has an answer */
-  HasAnswer = 'HAS_ANSWER',
   /** When a question (multi-value) includes a specific value */
   Includes = 'INCLUDES'
 }
@@ -4375,7 +4373,7 @@ export type QuestionConditionGroupInput = {
 
 /** Input for a single condition within a group, used by saveQuestionDisplayLogic */
 export type QuestionConditionInput = {
-  /** The value(s) to match on (e.g., HAS_ANSWER should equate to null here) */
+  /** The value(s) to match on */
   conditionMatch?: InputMaybe<Scalars['String']['input']>;
   /** The type of condition/operator to evaluate */
   conditionType: QuestionConditionCondition;
@@ -5966,6 +5964,10 @@ export type VersionedQuestion = {
   customizationId?: Maybe<Scalars['Int']['output']>;
   customizationOwnerAffiliation?: Maybe<Affiliation>;
   customizationSampleText?: Maybe<Scalars['String']['output']>;
+  /** Whether to show or hide the question (or send an email) when its display logic conditions match */
+  displayLogicAction?: Maybe<QuestionConditionActionType>;
+  /** Whether ANY or ALL of the question's condition groups must match */
+  displayLogicMatchType?: Maybe<QuestionConditionMatchType>;
   /** The display order of the VersionedQuestion */
   displayOrder?: Maybe<Scalars['Int']['output']>;
   /** Errors associated with the Object */
@@ -6008,7 +6010,7 @@ export type VersionedQuestion = {
  */
 export type VersionedQuestionCondition = {
   __typename?: 'VersionedQuestionCondition';
-  /** The value(s) that were matched on at publish time (e.g., HAS_ANSWER should equate to null here), JSON-encoded as a string */
+  /** The value(s) that were matched on at publish time */
   conditionMatch?: Maybe<Scalars['String']['output']>;
   /** The type of condition/operator that was evaluated at publish time */
   conditionType: VersionedQuestionConditionCondition;
@@ -6024,8 +6026,6 @@ export type VersionedQuestionCondition = {
   modified?: Maybe<Scalars['String']['output']>;
   /** The user who last modified the Object */
   modifiedById?: Maybe<Scalars['Int']['output']>;
-  /** Id of the original (live) QuestionCondition this was snapshotted from */
-  questionConditionId: Scalars['Int']['output'];
   /** The VersionedQuestionConditionGroup this condition belongs to */
   versionedQuestionConditionGroupId: Scalars['Int']['output'];
 };
@@ -6038,8 +6038,6 @@ export enum VersionedQuestionConditionCondition {
   DoesNotInclude = 'DOES_NOT_INCLUDE',
   /** When a question equals a specific value */
   Equal = 'EQUAL',
-  /** When a question has an answer */
-  HasAnswer = 'HAS_ANSWER',
   /** When a question (multi-value) includes a specific value */
   Includes = 'INCLUDES'
 }
@@ -6051,7 +6049,6 @@ export type VersionedQuestionConditionErrors = {
   conditionType?: Maybe<Scalars['String']['output']>;
   /** General error messages such as the object already exists */
   general?: Maybe<Scalars['String']['output']>;
-  questionConditionId?: Maybe<Scalars['String']['output']>;
   versionedQuestionConditionGroupId?: Maybe<Scalars['String']['output']>;
 };
 
@@ -6077,8 +6074,6 @@ export type VersionedQuestionConditionGroup = {
   modified?: Maybe<Scalars['String']['output']>;
   /** The user who last modified the Object */
   modifiedById?: Maybe<Scalars['Int']['output']>;
-  /** Id of the original (live) QuestionConditionGroup this was snapshotted from */
-  questionConditionGroupId: Scalars['Int']['output'];
   /** The prior question whose answer was being checked at publish time */
   triggerQuestion?: Maybe<Question>;
   /** The id of the prior question whose answer was being checked at publish time */
@@ -6092,7 +6087,6 @@ export type VersionedQuestionConditionGroupErrors = {
   __typename?: 'VersionedQuestionConditionGroupErrors';
   /** General error messages such as the object already exists */
   general?: Maybe<Scalars['String']['output']>;
-  questionConditionGroupId?: Maybe<Scalars['String']['output']>;
   triggerQuestionId?: Maybe<Scalars['String']['output']>;
   versionedQuestionId?: Maybe<Scalars['String']['output']>;
 };
