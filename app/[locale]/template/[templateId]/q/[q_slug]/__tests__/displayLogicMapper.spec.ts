@@ -249,7 +249,6 @@ describe('fromQuestionConditionGroups', () => {
       [QuestionConditionCondition.Includes, 'is'],
       [QuestionConditionCondition.DoesNotEqual, 'is_not'],
       [QuestionConditionCondition.DoesNotInclude, 'is_not'],
-      [QuestionConditionCondition.HasAnswer, 'is'],
     ])('should map %s to operator "%s"', (conditionType: QuestionConditionCondition, expectedOperator: string) => {
       const result = fromQuestionConditionGroups(
         QuestionConditionActionType.ShowQuestion,

@@ -18,7 +18,6 @@ const CONDITION_TYPE_TO_OPERATOR: Record<QuestionConditionCondition, 'is' | 'is_
   [QuestionConditionCondition.Includes]: 'is',
   [QuestionConditionCondition.DoesNotEqual]: 'is_not',
   [QuestionConditionCondition.DoesNotInclude]: 'is_not',
-  [QuestionConditionCondition.HasAnswer]: 'is', // not currently produced by the UI; included for exhaustiveness
 };
 
 // Reconstructs the UI's DisplayLogic shape from the question's stored
