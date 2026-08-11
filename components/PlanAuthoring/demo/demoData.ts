@@ -132,15 +132,23 @@ const availableGuidanceOrgs: PlanGuidanceOrgOption[] = [
   },
 ];
 
+/** Demo signed-in user — owns newly added comments and comment id 3 below. */
+export const DEMO_CURRENT_USER_ID = 101;
+export const DEMO_CURRENT_USER_NAME = "Style Guide User";
+const DEMO_AMELIA_ID = 102;
+const DEMO_JENNIFER_ID = 103;
+
 const sampleComments: PlanComment[] = [
   {
     id: 1,
+    authorId: DEMO_AMELIA_ID,
     authorName: "Amelia Snow",
     createdLabel: "2 days ago",
     text: "Please quantify the expected volume for UAV imagery.",
   },
   {
     id: 2,
+    authorId: DEMO_JENNIFER_ID,
     authorName: "Jennifer Frost",
     createdLabel: "1 day ago",
     text: "Added approximate gigabyte ranges for each product type.",
@@ -148,7 +156,8 @@ const sampleComments: PlanComment[] = [
   },
   {
     id: 3,
-    authorName: "Amelia Snow",
+    authorId: DEMO_CURRENT_USER_ID,
+    authorName: DEMO_CURRENT_USER_NAME,
     createdLabel: "4 hours ago",
     text: "Looks good — please also mention the processing pipeline.",
   },
@@ -231,6 +240,7 @@ export function createPlanAuthoringDemo(): PlanAuthoringModel {
           comments: [
             {
               id: 11,
+              authorId: DEMO_AMELIA_ID,
               authorName: "Amelia Snow",
               createdLabel: "3 days ago",
               text: "Can we estimate seasonal UAV volume separately?",
@@ -498,6 +508,7 @@ export function createPlanAuthoringDemo(): PlanAuthoringModel {
           comments: [
             {
               id: 21,
+              authorId: DEMO_JENNIFER_ID,
               authorName: "Jennifer Frost",
               createdLabel: "5 days ago",
               text: "CC BY keeps us compatible with the repository default.",
@@ -598,6 +609,7 @@ export function createPlanAuthoringDemo(): PlanAuthoringModel {
           comments: [
             {
               id: 31,
+              authorId: DEMO_AMELIA_ID,
               authorName: "Amelia Snow",
               createdLabel: "6 hours ago",
               text: "IT can provide the standard DR statement for campus NAS.",
@@ -755,6 +767,7 @@ export function createPlanAuthoringDemo(): PlanAuthoringModel {
           comments: [
             {
               id: 41,
+              authorId: DEMO_AMELIA_ID,
               authorName: "Amelia Snow",
               createdLabel: "1 day ago",
               text: "We should reference the cruise-report QA checklist here.",
@@ -861,6 +874,7 @@ export function createPlanAuthoringDemo(): PlanAuthoringModel {
           comments: [
             {
               id: 51,
+              authorId: DEMO_JENNIFER_ID,
               authorName: "Jennifer Frost",
               createdLabel: "2 weeks ago",
               text: "Arctic Data Center is required for NSF polar awards.",
@@ -1003,10 +1017,13 @@ export function createPlanAuthoringDemo(): PlanAuthoringModel {
     membersLabel: "Jennifer Frost (PI), Amelia Snow (Other)",
     relatedWorksLabel:
       "Publish your plan to start adding published outputs to your DMP.",
+    currentUserId: DEMO_CURRENT_USER_ID,
+    currentUserName: DEMO_CURRENT_USER_NAME,
     progress: computeProgress(sections),
     capabilities: {
       canEditAnswers: true,
       canComment: true,
+      canModerateComments: true,
       canCustomizeGuidance: true,
       canPublish: true,
     },

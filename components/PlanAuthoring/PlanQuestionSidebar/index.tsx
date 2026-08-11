@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useId, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "react-aria-components";
 import { DmpIcon } from "@/components/Icons";
@@ -8,6 +8,7 @@ import SafeHtml from "@/components/SafeHtml";
 import type { PlanComment, PlanGuidanceSource } from "../model";
 import PlanGuidanceTabs from "../PlanGuidanceTabs";
 import PlanComments from "../PlanComments";
+import { usePlanComments } from "../usePlanComments";
 import styles from "./PlanQuestionSidebar.module.scss";
 
 interface PlanQuestionSidebarProps {
@@ -15,9 +16,13 @@ interface PlanQuestionSidebarProps {
   comments: PlanComment[];
   canCustomize: boolean;
   canComment: boolean;
+  currentUserId: number;
+  canModerateComments: boolean;
   loadGuidance: () => Promise<PlanGuidanceSource[]>;
   loadComments: () => Promise<PlanComment[]>;
   onAddComment: (text: string) => Promise<void>;
+  onUpdateComment: (commentId: number, text: string) => Promise<PlanComment>;
+  onDeleteComment: (commentId: number) => Promise<void>;
   onCustomize: () => void;
   className?: string;
 }
@@ -27,13 +32,18 @@ export default function PlanQuestionSidebar({
   comments,
   canCustomize,
   canComment,
+  currentUserId,
+  canModerateComments,
   loadGuidance,
   loadComments,
   onAddComment,
+  onUpdateComment,
+  onDeleteComment,
   onCustomize,
   className,
 }: PlanQuestionSidebarProps) {
   const t = useTranslations("PlanAuthoring");
+  const commentsPanelId = useId();
   const [selectedId, setSelectedId] = useState<string | null>(
     sources[0]?.id ?? null
   );
@@ -60,7 +70,45 @@ export default function PlanQuestionSidebar({
     [selectedId, visibleSources]
   );
 
+  const visibleComments = loadedComments ?? comments;
   const unreadCount = comments.length;
+  const commentsExpanded = activeTab === "comments";
+
+  const refreshComments = useCallback(async () => {
+    setLoadedComments(await loadComments());
+  }, [loadComments]);
+
+  const handleUpdateComment = useCallback(
+    async (commentId: number, text: string) => {
+      const updated = await onUpdateComment(commentId, text);
+      await refreshComments();
+      return updated;
+    },
+    [onUpdateComment, refreshComments]
+  );
+
+  const handleDeleteComment = useCallback(
+    async (commentId: number) => {
+      await onDeleteComment(commentId);
+      await refreshComments();
+    },
+    [onDeleteComment, refreshComments]
+  );
+
+  const {
+    localComments,
+    editingCommentId,
+    editingCommentText,
+    setEditingCommentText,
+    handleEditComment,
+    handleUpdateComment: commitUpdateComment,
+    handleCancelEdit,
+    handleDeleteComment: commitDeleteComment,
+  } = usePlanComments({
+    comments: visibleComments,
+    onUpdateComment: handleUpdateComment,
+    onDeleteComment: handleDeleteComment,
+  });
 
   return (
     <aside
@@ -103,24 +151,42 @@ export default function PlanQuestionSidebar({
               <p>{t("sidebar.selectGuidanceSource")}</p>
             )}
           </div>
-        ) : (
-          <PlanComments
-            comments={loadedComments ?? comments}
-            canAdd={canComment}
-            loading={loadingComments}
-            onAdd={async (text) => {
-              await onAddComment(text);
-              setLoadedComments(await loadComments());
-            }}
-          />
-        )}
+        ) : null}
+
+        <div
+          id={commentsPanelId}
+          hidden={!commentsExpanded}
+        >
+          {commentsExpanded ? (
+            <PlanComments
+              comments={localComments}
+              canAdd={canComment}
+              currentUserId={currentUserId}
+              canModerateComments={canModerateComments}
+              loading={loadingComments}
+              editingCommentId={editingCommentId}
+              editingCommentText={editingCommentText}
+              setEditingCommentText={setEditingCommentText}
+              handleEditComment={handleEditComment}
+              handleUpdateComment={commitUpdateComment}
+              handleCancelEdit={handleCancelEdit}
+              handleDeleteComment={commitDeleteComment}
+              onAdd={async (text) => {
+                await onAddComment(text);
+                await refreshComments();
+              }}
+            />
+          ) : null}
+        </div>
       </div>
 
       <Button
         className={styles.commentsTab}
-        data-selected={activeTab === "comments"}
+        data-selected={commentsExpanded}
+        aria-expanded={commentsExpanded}
+        aria-controls={commentsPanelId}
         onPress={async () => {
-          if (activeTab === "comments") {
+          if (commentsExpanded) {
             setActiveTab("guidance");
             return;
           }
@@ -142,7 +208,9 @@ export default function PlanQuestionSidebar({
             height={16}
             fill="currentColor"
           />
-          {t("sidebar.comments")}
+          {commentsExpanded
+            ? t("sidebar.hideComments")
+            : t("sidebar.showComments")}
         </span>
         {unreadCount ? (
           <span className={styles.commentsCount}>

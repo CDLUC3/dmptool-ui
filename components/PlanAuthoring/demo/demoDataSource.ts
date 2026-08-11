@@ -98,7 +98,8 @@ export function createPlanAuthoringDemoDataSource(
 
       const comment: PlanComment = {
         id: Date.now(),
-        authorName: "Style Guide User",
+        authorId: model.currentUserId,
+        authorName: model.currentUserName,
         createdLabel: "Just now",
         text,
       };
@@ -106,6 +107,46 @@ export function createPlanAuthoringDemoDataSource(
       model = { ...model, sections: [...model.sections] };
       notify();
       return comment;
+    },
+
+    async updateComment(questionKeyValue, commentId, text) {
+      await wait(delayMs);
+      const question = findQuestion(questionKeyValue);
+      if (!question) {
+        throw new Error("Question not found.");
+      }
+
+      const existing = question.comments.find((item) => item.id === commentId);
+      if (!existing) {
+        throw new Error("Comment not found.");
+      }
+
+      const updated: PlanComment = {
+        ...existing,
+        text,
+        isEdited: true,
+        createdLabel: existing.createdLabel,
+      };
+      question.comments = question.comments.map((item) =>
+        item.id === commentId ? updated : item
+      );
+      model = { ...model, sections: [...model.sections] };
+      notify();
+      return updated;
+    },
+
+    async deleteComment(questionKeyValue, commentId) {
+      await wait(delayMs);
+      const question = findQuestion(questionKeyValue);
+      if (!question) {
+        throw new Error("Question not found.");
+      }
+
+      question.comments = question.comments.filter(
+        (item) => item.id !== commentId
+      );
+      model = { ...model, sections: [...model.sections] };
+      notify();
     },
 
     async searchGuidanceOrgs(term) {

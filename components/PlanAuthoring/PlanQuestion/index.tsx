@@ -16,6 +16,7 @@ import styles from "./PlanQuestion.module.scss";
 interface PlanQuestionProps {
   question: PlanQuestionDefinition;
   capabilities: PlanCapabilities;
+  currentUserId: number;
   dataSource: PlanAuthoringDataSource;
   onCustomizeGuidance: () => void;
   className?: string;
@@ -24,6 +25,7 @@ interface PlanQuestionProps {
 export default function PlanQuestion({
   question,
   capabilities,
+  currentUserId,
   dataSource,
   onCustomizeGuidance,
   className,
@@ -113,10 +115,18 @@ export default function PlanQuestion({
           comments={question.comments}
           canCustomize={capabilities.canCustomizeGuidance}
           canComment={capabilities.canComment && question.hasAnswer}
+          currentUserId={currentUserId}
+          canModerateComments={capabilities.canModerateComments}
           loadGuidance={() => dataSource.loadGuidance(key)}
           loadComments={() => dataSource.loadComments(key)}
           onAddComment={(text) =>
             dataSource.addComment(key, text).then(() => undefined)
+          }
+          onUpdateComment={(commentId, text) =>
+            dataSource.updateComment(key, commentId, text)
+          }
+          onDeleteComment={(commentId) =>
+            dataSource.deleteComment(key, commentId)
           }
           onCustomize={onCustomizeGuidance}
         />

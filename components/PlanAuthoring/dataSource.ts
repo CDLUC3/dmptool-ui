@@ -14,6 +14,12 @@ export interface PlanAuthoringDataSource {
   loadGuidance(questionKeyValue: string): Promise<PlanGuidanceSource[]>;
   loadComments(questionKeyValue: string): Promise<PlanComment[]>;
   addComment(questionKeyValue: string, text: string): Promise<PlanComment>;
+  updateComment(
+    questionKeyValue: string,
+    commentId: number,
+    text: string
+  ): Promise<PlanComment>;
+  deleteComment(questionKeyValue: string, commentId: number): Promise<void>;
   searchGuidanceOrgs(term: string): Promise<PlanGuidanceOrgOption[]>;
   setSelectedGuidanceOrgs(orgIds: string[]): Promise<string[]>;
   subscribe(listener: () => void): () => void;

@@ -18,6 +18,8 @@ export type PlanQuestionSaveState =
 export interface PlanCapabilities {
   canEditAnswers: boolean;
   canComment: boolean;
+  /** Plan owners / moderators can delete any comment (mirrors planOwners in useComments). */
+  canModerateComments: boolean;
   canCustomizeGuidance: boolean;
   canPublish: boolean;
 }
@@ -40,10 +42,14 @@ export interface PlanGuidanceOrgOption {
 
 export interface PlanComment {
   id: number;
+  /** Author user id — compared to currentUserId for edit/delete (mirrors MergedComment.user.id). */
+  authorId: number;
   authorName: string;
   createdLabel: string;
   text: string;
   isFeedback?: boolean;
+  /** True when modified differs from created (mirrors CommentList edited indicator). */
+  isEdited?: boolean;
 }
 
 export interface PlanQuestionDefinition {
@@ -84,6 +90,9 @@ export interface PlanAuthoringModel {
   funderName: string;
   membersLabel: string;
   relatedWorksLabel: string;
+  /** Signed-in user id — mirrors me.me.id for comment ownership checks. */
+  currentUserId: number;
+  currentUserName: string;
   progress: PlanAuthoringProgress;
   capabilities: PlanCapabilities;
   sections: PlanSectionDefinition[];

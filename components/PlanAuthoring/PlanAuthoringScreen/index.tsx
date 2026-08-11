@@ -193,6 +193,7 @@ export default function PlanAuthoring({
                     key={questionKey(question.identity)}
                     question={question}
                     capabilities={model.capabilities}
+                    currentUserId={model.currentUserId}
                     dataSource={dataSource}
                     onCustomizeGuidance={() => setCustomizeOpen(true)}
                   />

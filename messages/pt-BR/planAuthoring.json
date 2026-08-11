@@ -43,6 +43,8 @@
       "funderGuidance": "Orientação do financiador",
       "selectGuidanceSource": "Selecione uma fonte de orientação.",
       "comments": "Comentários",
+      "showComments": "Mostrar comentários",
+      "hideComments": "Ocultar comentários",
       "newCount": "{count} novo(s)"
     },
     "guidance": {
@@ -54,8 +56,10 @@
       "empty": "Ainda não há comentários.",
       "listAria": "Comentários",
       "admin": " (administrador)",
+      "edited": "editado",
       "placeholder": "Adicionar um comentário…",
       "addAria": "Adicionar um comentário",
+      "editAria": "Editar comentário",
       "posting": "Publicando…",
       "comment": "Comentar",
       "saveBeforeCommenting": "Salve uma resposta antes de adicionar comentários."

@@ -43,6 +43,8 @@
       "funderGuidance": "Funder guidance",
       "selectGuidanceSource": "Select a guidance source.",
       "comments": "Comments",
+      "showComments": "Show comments",
+      "hideComments": "Hide comments",
       "newCount": "{count} new"
     },
     "guidance": {
@@ -54,8 +56,10 @@
       "empty": "No comments yet.",
       "listAria": "Comments",
       "admin": " (admin)",
+      "edited": "edited",
       "placeholder": "Add a comment…",
       "addAria": "Add a comment",
+      "editAria": "Edit comment",
       "posting": "Posting…",
       "comment": "Comment",
       "saveBeforeCommenting": "Save an answer before adding comments."
