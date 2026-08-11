@@ -65,6 +65,11 @@ export interface PlanQuestionDefinition {
   guidanceSources: PlanGuidanceSource[];
   comments: PlanComment[];
   displayOrder: number;
+  sampleText?: string | null;
+  customizationSampleText?: string | null;
+  useSampleTextAsDefault?: boolean;
+  sampleTextOrgLabel?: string;
+  customizationSampleOrgLabel?: string;
 }
 
 export interface PlanSectionDefinition {

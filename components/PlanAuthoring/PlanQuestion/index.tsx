@@ -1,13 +1,21 @@
 "use client";
 
-import React, { useCallback, useRef, useState } from "react";
+import React, { useCallback, useMemo, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "react-aria-components";
+import { TEXT_AREA_QUESTION_TYPE } from "@/lib/constants";
+import { useToast } from "@/context/ToastContext";
 import type { PlanAuthoringDataSource } from "../dataSource";
 import type { PlanCapabilities, PlanQuestionDefinition } from "../model";
 import { questionAnchorId, questionKey } from "../model";
+import {
+  buildSampleAnswerDraft,
+  getPlanSampleAnswers,
+  resolveInitialAnswer,
+} from "../sampleAnswers";
 import { usePlanQuestionController } from "../usePlanQuestionController";
 import PlanQuestionHeader from "../PlanQuestionHeader";
+import PlanSampleAnswers from "../PlanSampleAnswers";
 import PlanQuestionAnswer from "../PlanQuestionAnswer";
 import PlanQuestionSaveStatus from "../PlanQuestionSaveStatus";
 import PlanQuestionSidebar from "../PlanQuestionSidebar";
@@ -32,10 +40,21 @@ export default function PlanQuestion({
 }: PlanQuestionProps) {
   const t = useTranslations("PlanAuthoring");
   const Global = useTranslations("Global");
+  const toast = useToast();
   const key = questionKey(question.identity);
+  const initialAnswer = useMemo(
+    () => resolveInitialAnswer(question),
+    [
+      question.answerJson,
+      question.questionType,
+      question.sampleText,
+      question.useSampleTextAsDefault,
+    ]
+  );
+  const sampleAnswers = getPlanSampleAnswers(question);
   const controller = usePlanQuestionController({
     questionKeyValue: key,
-    initialAnswer: question.answerJson,
+    initialAnswer,
     dataSource,
     canEdit: capabilities.canEditAnswers,
   });
@@ -43,6 +62,10 @@ export default function PlanQuestion({
   const [heightPx, setHeightPx] = useState<number | null>(null);
 
   const mode = controller.mode;
+  const showSampleAnswers =
+    question.questionType === TEXT_AREA_QUESTION_TYPE &&
+    capabilities.canEditAnswers &&
+    sampleAnswers.length > 0;
 
   const onResizePointerDown = useCallback(
     (event: React.PointerEvent<HTMLDivElement>) => {
@@ -83,6 +106,24 @@ export default function PlanQuestion({
       <div className={styles.planQuestionBody}>
         <div className={styles.planQuestionMain}>
           <PlanQuestionHeader question={question} />
+          {showSampleAnswers ? (
+            <PlanSampleAnswers
+              samples={sampleAnswers}
+              onUseSample={(html) => {
+                controller.setDraftAnswer(
+                  buildSampleAnswerDraft(
+                    question.questionType,
+                    html,
+                    controller.draftAnswer
+                  )
+                );
+                toast.add(t("sampleAnswers.sampleTextAdded"), {
+                  type: "success",
+                  timeout: 3000,
+                });
+              }}
+            />
+          ) : null}
           <PlanQuestionAnswer
             question={question}
             mode={mode}

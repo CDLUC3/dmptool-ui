@@ -104,6 +104,13 @@
       "badge": "Section {index}",
       "ofTotal": "Section {index} of {total}",
       "backToTop": "Back to top of section {title}"
+    },
+    "sampleAnswers": {
+      "viewSampleAnswer": "View sample answer",
+      "viewSampleAnswersCount": "View sample answers ({count})",
+      "useAnswer": "Use answer",
+      "organizationSampleText": "{org} sample text",
+      "sampleTextAdded": "Sample text added"
     }
   }
 }

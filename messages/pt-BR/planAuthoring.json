@@ -104,6 +104,13 @@
       "badge": "Seção {index}",
       "ofTotal": "Seção {index} de {total}",
       "backToTop": "Voltar ao topo da seção {title}"
+    },
+    "sampleAnswers": {
+      "viewSampleAnswer": "Ver amostra da resposta",
+      "viewSampleAnswersCount": "Ver amostras das respostas ({count})",
+      "useAnswer": "Usar resposta",
+      "organizationSampleText": "{org} texto de exemplo",
+      "sampleTextAdded": "Exemplo de texto adicionado"
     }
   }
 }
