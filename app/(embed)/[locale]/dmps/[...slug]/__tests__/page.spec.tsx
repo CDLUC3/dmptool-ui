@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
@@ -17,10 +18,10 @@ jest.mock('next/navigation', () => ({
   useRouter: () => ({ push: mockPush }),
 }));
 
+
 // --- next/image ---
 jest.mock('next/image', () => {
-  const MockImage = ({ priority, ...props }: any) => {
-    // eslint-disable-next-line @next/next/no-img-element, jsx-a11y/alt-text
+  const MockImage = ({ ...props }: any) => {
     return <img {...props} />;
   };
   MockImage.displayName = 'MockImage';

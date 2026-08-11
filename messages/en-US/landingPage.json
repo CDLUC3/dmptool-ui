@@ -31,6 +31,9 @@
       "releaseTimeline": "Release timeline",
       "intendedRepository": "Intended repository",
       "licenseForReuse": "License for reuse"
+    },
+    "errors": {
+      "failedToDownloadPDF": "Failed to download PDF"
     }
   }
 }

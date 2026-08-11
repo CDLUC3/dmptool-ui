@@ -1,6 +1,7 @@
 'use client';
 
-import { useParams, useRouter } from 'next/navigation';
+import { useRef, useState } from 'react';
+import { useParams } from 'next/navigation';
 import Image from 'next/image';
 import { useTranslations } from 'next-intl';
 import {
@@ -10,15 +11,23 @@ import {
   MenuTrigger,
   Popover,
 } from 'react-aria-components';
+
+// GraphQL
 import { useQuery } from '@apollo/client/react';
 import {
   ProjectFundingStatus,
   PublicPlanByDmpIdDocument
 } from '@/generated/graphql';
+
+// Components
 import SafeHtml from '@/components/SafeHtml';
 import Loading from '@/components/Loading';
 import { DmpIcon } from "@/components/Icons";
 import { OrcidIcon } from '@/components/Icons/orcid/';
+import ErrorMessages from "@/components/ErrorMessages";
+
+// Utils and other
+import { logECS, routePath } from "@/utils/index";
 import styles from './landing.module.scss';
 
 function formatDate(dateStr?: string | null, includeTime = false): string {
@@ -58,7 +67,10 @@ function VersionsDropdown({
   versions,
   currentModified,
 }: {
-  versions: Array<{ timestamp?: string | null; url?: string | null }>;
+  versions: {
+    timestamp?: string | null;
+    url?: string | null;
+  }[];
   currentModified?: string | null;
 }) {
   const pastVersions = versions
@@ -94,6 +106,11 @@ function VersionsDropdown({
 export default function DmpLandingPage() {
   const params = useParams();
 
+
+  // Errors
+  const [error, setError] = useState<string | null>(null);
+  const errorRef = useRef<HTMLDivElement | null>(null);
+
   // Localization keys
   const t = useTranslations('LandingPage');
 
@@ -104,6 +121,7 @@ export default function DmpLandingPage() {
     : `https://doi.org/${rawDoi}`;
   const shortDoi = rawDoi.replace('https://doi.org/', '');
 
+  // GraphQL query to fetch the public plan by DMP ID
   const { data: publicPlanData, loading: publicPlanLoading, error: publicPlanError } = useQuery(PublicPlanByDmpIdDocument, {
     variables: { dmpId },
   });
@@ -168,6 +186,7 @@ export default function DmpLandingPage() {
   const pdfDownloadUrl = `/api/download-narrative?${pdfDownloadParams.toString()}`;
   const jsonUrl = plan.dmpId;
 
+  // Get PDF and assign plan.title as the filename for download
   const handleDownloadPdf = async () => {
     try {
       const response = await fetch(pdfDownloadUrl, {
@@ -175,7 +194,11 @@ export default function DmpLandingPage() {
       });
 
       if (!response.ok) {
-        // handle error as appropriate for this page
+        setError(t('errors.failedToDownloadPDF'));
+        logECS("error", "handleDownloadPdf", {
+          error,
+          url: { path: routePath("dmp.landing", { slug: shortDoi }) },
+        });
         return;
       }
 
@@ -190,7 +213,11 @@ export default function DmpLandingPage() {
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
     } catch (error) {
-      // handle error as appropriate for this page
+      setError(t('errors.failedToDownloadPDF'));
+      logECS("error", "handleDownloadPdf", {
+        error,
+        url: { path: routePath("dmp.landing", { slug: shortDoi }) },
+      });
     }
   };
 
@@ -198,6 +225,8 @@ export default function DmpLandingPage() {
 
   return (
     <div className={styles.landingPage}>
+      <ErrorMessages errors={[error ?? '']} ref={errorRef} />
+
       <div className={styles.topBand}>
         {/* Title block - title/subtitle on the left, actions pinned top-right */}
         <div className={styles.titleBlock}>

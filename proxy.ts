@@ -7,7 +7,6 @@ import { routing } from './i18n/routing';
 import { verifyJwtToken } from './lib/server/auth';
 import logECS from '@/utils/clientLogger';
 import { refreshAuthTokens } from "@/utils/authHelper";
-import { getAuthTokenServer } from '@/utils/getAuthTokenServer';
 import { locales, defaultLocale } from './config/i18nConfig';
 
 interface JWTAccessToken extends JwtPayload {
