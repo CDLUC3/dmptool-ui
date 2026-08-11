@@ -99,7 +99,7 @@
     "section": {
       "badge": "Section {index}",
       "ofTotal": "Section {index} of {total}",
-      "backToTop": "Back to top of section"
+      "backToTop": "Back to top of section {title}"
     }
   }
 }

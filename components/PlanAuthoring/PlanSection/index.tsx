@@ -56,7 +56,8 @@ export default function PlanSection({
       <div className={styles.planSectionQuestions}>{children}</div>
       <p className={styles.backToTop}>
         <a href={`#${sectionAnchorId(section.identity)}`}>
-          <span aria-hidden="true">↑</span> {t("section.backToTop")}
+          <span aria-hidden="true">↑</span>{" "}
+          {t("section.backToTop", { title: section.title })}
         </a>
       </p>
     </section>

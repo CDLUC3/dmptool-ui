@@ -99,7 +99,7 @@
     "section": {
       "badge": "Seção {index}",
       "ofTotal": "Seção {index} de {total}",
-      "backToTop": "Voltar ao topo da seção"
+      "backToTop": "Voltar ao topo da seção {title}"
     }
   }
 }
