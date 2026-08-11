@@ -68,15 +68,19 @@ describe('proxy', () => {
 
     request = {
       cookies: {
-        get: jest.fn().mockReturnValue('cookie-value'),
+        get: jest.fn().mockImplementation((key: string) => {
+          if (key === 'dmspt') return { name: 'dmspt', value: 'accessToken' };
+          if (key === 'dmspr') return { name: 'dmspr', value: 'refreshTokenValue' };
+          return undefined;
+        }),
         getAll: jest.fn().mockReturnValue([
           { name: 'dmspt', value: 'accessToken' },
           { name: 'dmspr', value: 'refreshTokenValue' }
         ]),
       },
-      headers: {
-        get: jest.fn().mockReturnValue('dmspr=refreshTokenValue')
-      },
+      headers: new Headers({
+        'Accept-Language': 'en-US',
+      }),
       nextUrl: {
         pathname: '',
         href: 'http://localhost/test',
@@ -104,7 +108,7 @@ describe('proxy', () => {
 
     const result = await proxy(request);
 
-    expect(NextResponse.redirect).toHaveBeenCalledWith(new URL('/pt-BR/login', request.url));
+    expect(NextResponse.redirect).toHaveBeenCalledWith(new URL('/en-US/login', request.url));
     expect(result).toBe(NextResponse.redirect(new URL('/login', request.url)));
   });
 

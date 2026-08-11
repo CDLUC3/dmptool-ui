@@ -1,0 +1,95 @@
+query PublicPlanByDMPId($dmpId: String!) {
+  publicPlanByDMPId(dmpId: $dmpId) {
+    id
+    title
+    dmpId
+    created
+    modified
+    registered
+    visibility
+    versionedTemplate {
+      id
+      name
+      version
+      owner {
+        name
+        displayName
+        uri
+        homepage
+      }
+    }
+    project {
+      title
+      abstractText
+      startDate
+      endDate
+      researchDomain {
+        name
+        uri
+      }
+      fundings {
+        id
+        affiliation {
+          name
+          displayName
+          uri
+          homepage
+        }
+        grantId
+        funderOpportunityNumber
+        funderProjectNumber
+        status
+      }
+      members {
+        isPrimaryContact
+        id
+        givenName
+        surName
+        orcid
+        affiliation {
+          name
+          displayName
+          uri
+        }
+        memberRoles {
+          label
+          id
+          uri
+        }
+      }
+    }
+    members {
+      id
+      isPrimaryContact
+      memberRoles {
+        label
+        uri
+      }
+    }
+    versions {
+      timestamp
+      url
+    }
+    outputs {
+      title
+      issued
+      hosts {
+        name
+        url
+      }
+      description
+      type
+      byteSize
+      byteSizeUnit
+      licenses {
+        uri
+        name
+      }
+      metadataStandards {
+        uri
+        name
+      }
+      type
+    }
+  }
+}

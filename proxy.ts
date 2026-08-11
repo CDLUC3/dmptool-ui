@@ -39,34 +39,28 @@ function isServerAction(request: NextRequest): boolean {
 
 const handleI18nRouting = createMiddleware(routing);
 
-async function getLocaleFromJWT(): Promise<string | null> {
+// Function to get locale from JWT token
+async function getLocaleFromJWT(accessToken: string | undefined): Promise<{ locale: string | null; user: JWTAccessToken | null }> {
   try {
-    const token = await getAuthTokenServer();
-    if (!token) {
-      return null;
-    }
-    const user = await verifyJwtToken(token);
+    if (!accessToken) return { locale: null, user: null };
 
-    if (!user) {
-      return null;
-    }
-    const { languageId } = user as JWTAccessToken;
+    const user = await verifyJwtToken(accessToken) as JWTAccessToken | null;
+    if (!user) return { locale: null, user: null };
 
-    if (languageId && locales.includes(languageId)) {
-      return languageId;
-    }
-    return null;
+    const { languageId } = user;
+    return {
+      locale: languageId && locales.includes(languageId) ? languageId : null,
+      user,
+    };
   } catch (error) {
     console.error('Error parsing JWT:', error);
-    return null;
+    return { locale: null, user: null };
   }
 }
 
-async function getLocale(request: NextRequest) {
+async function getLocale(request: NextRequest, jwtResult: { locale: string | null; user: JWTAccessToken | null }) {
   try {
-    // First try and get locale from JWT
-    const userLocale = await getLocaleFromJWT();
-    if (userLocale) return userLocale;
+    if (jwtResult.locale) return jwtResult.locale;
 
     //Fall back to Accept-Language header
     const acceptLanguage = request.headers.get('Accept-Language');
@@ -89,7 +83,6 @@ async function getLocale(request: NextRequest) {
 }
 
 export async function proxy(request: NextRequest) {
-  const response = NextResponse.next();
   const { pathname } = request.nextUrl;
 
   /* TODO: might want to add a 'redirect' query param to url to redirect user after
@@ -110,7 +103,14 @@ export async function proxy(request: NextRequest) {
 
   const accessToken = request.cookies.get('dmspt');
   const refreshToken = request.cookies.get('dmspr');
-  const locale = await getLocale(request);
+  const jwtResult = await getLocaleFromJWT(accessToken?.value);
+  const locale = await getLocale(request, jwtResult);
+
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set('x-is-authenticated', jwtResult.user ? 'true' : 'false');
+
+  const response = NextResponse.next({ request: { headers: requestHeaders } });
+
 
   // Redirect to login if no tokens are found
   if (!isExcludedPath && !isServerActionRequest) {
@@ -163,7 +163,6 @@ export async function proxy(request: NextRequest) {
   );
 
   if (pathnameIsMissingLocale) {
-    const locale = await getLocale(request);
     const newUrl = new URL(`/${locale}${pathname}`, request.url);
     if (request.nextUrl.search) {
       newUrl.search = request.nextUrl.search; // Only assign if it's valid
@@ -172,7 +171,10 @@ export async function proxy(request: NextRequest) {
   }
 
   const i18nResponse = handleI18nRouting(request);
-  if (i18nResponse) return i18nResponse;
+  if (i18nResponse) {
+    i18nResponse.headers.set('x-is-authenticated', jwtResult.user ? 'true' : 'false');
+    return i18nResponse;
+  }
 
   // Add url info to custom header. Need this for just the /dmps landing page
   if (request.nextUrl.pathname.startsWith('/en-US/dmps')) {
