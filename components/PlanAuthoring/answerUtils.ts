@@ -29,3 +29,44 @@ export function getAnswerValue(answerJson: unknown): unknown {
   }
   return (answerJson as { answer?: unknown }).answer;
 }
+
+/** Answer-JSON key for the optional "explain your answer" field (legacy contract). */
+export const ADDITIONAL_COMMENT_JSON_KEY = "comment" as const;
+
+export function getAdditionalCommentValue(answerJson: unknown): string {
+  if (!answerJson || typeof answerJson !== "object") {
+    return "";
+  }
+  const additionalComment = (answerJson as { comment?: unknown }).comment;
+  return typeof additionalComment === "string" ? additionalComment : "";
+}
+
+export function hasAdditionalCommentKey(answerJson: unknown): boolean {
+  return (
+    !!answerJson &&
+    typeof answerJson === "object" &&
+    ADDITIONAL_COMMENT_JSON_KEY in (answerJson as object)
+  );
+}
+
+export function withAdditionalComment(
+  answerJson: unknown,
+  questionType: string,
+  additionalComment: string
+): unknown {
+  if (answerJson && typeof answerJson === "object") {
+    const record = answerJson as Record<string, unknown>;
+    return {
+      ...record,
+      type: typeof record.type === "string" ? record.type : questionType,
+      answer: "answer" in record ? record.answer : null,
+      [ADDITIONAL_COMMENT_JSON_KEY]: additionalComment,
+    };
+  }
+
+  return {
+    type: questionType,
+    answer: getAnswerValue(answerJson) ?? null,
+    [ADDITIONAL_COMMENT_JSON_KEY]: additionalComment,
+  };
+}

@@ -3,7 +3,12 @@ import type {
   ParsedQuestion,
   RenderQuestionFieldProps,
 } from "@/components/hooks/useRenderQuestionField";
-import { getAnswerValue } from "./answerUtils";
+import {
+  ADDITIONAL_COMMENT_JSON_KEY,
+  getAnswerValue,
+  getAdditionalCommentValue,
+  hasAdditionalCommentKey,
+} from "./answerUtils";
 
 interface BuildPlanRenderQuestionPropsArgs {
   questionType: string;
@@ -42,7 +47,15 @@ export function buildPlanRenderQuestionProps({
   const value = getAnswerValue(draftAnswer);
 
   const emit = (answer: unknown) => {
-    onChange({ type: questionType, answer });
+    const base = { type: questionType, answer };
+    if (hasAdditionalCommentKey(draftAnswer)) {
+      onChange({
+        ...base,
+        [ADDITIONAL_COMMENT_JSON_KEY]: getAdditionalCommentValue(draftAnswer),
+      });
+      return;
+    }
+    onChange(base);
   };
 
   const stringValue = typeof value === "string" ? value : "";

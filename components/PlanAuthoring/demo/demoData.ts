@@ -198,6 +198,7 @@ export function createPlanAuthoringDemo(): PlanAuthoringModel {
           questionType: RADIOBUTTONS_QUESTION_TYPE,
           parsedJson: {
             type: RADIOBUTTONS_QUESTION_TYPE,
+            showCommentField: true,
             options: [
               {
                 label: "Observational (sensor, field, or survey-derived)",
@@ -220,6 +221,8 @@ export function createPlanAuthoringDemo(): PlanAuthoringModel {
           answerJson: {
             type: RADIOBUTTONS_QUESTION_TYPE,
             answer: "mixed",
+            comment:
+              "Most stored volume is continuous UAV imagery and field sensor streams (observational), with a smaller share of post-processed DEM and habitat-suitability model outputs that can be regenerated from documented workflows.",
           },
           hasAnswer: true,
           guidanceSources: richGuidanceCatalog,

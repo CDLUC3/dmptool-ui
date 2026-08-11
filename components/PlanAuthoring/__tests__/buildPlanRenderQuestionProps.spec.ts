@@ -42,4 +42,49 @@ describe("buildPlanRenderQuestionProps", () => {
       answer: true,
     });
   });
+
+  it("preserves an existing additional-comment JSON key when the main answer changes", () => {
+    const onChange = jest.fn();
+    const props = buildPlanRenderQuestionProps({
+      questionType: "radioButtons",
+      parsedJson: {
+        type: "radioButtons",
+        options: [{ label: "A", value: "a" }],
+      },
+      draftAnswer: {
+        type: "radioButtons",
+        answer: "a",
+        comment: "kept note",
+      },
+      editorId: "editor-3",
+      onChange,
+    });
+
+    props.radioProps?.handleRadioChange("b");
+    expect(onChange).toHaveBeenCalledWith({
+      type: "radioButtons",
+      answer: "b",
+      comment: "kept note",
+    });
+  });
+
+  it("omits additional comment from emit when the draft has no comment key", () => {
+    const onChange = jest.fn();
+    const props = buildPlanRenderQuestionProps({
+      questionType: "radioButtons",
+      parsedJson: {
+        type: "radioButtons",
+        options: [{ label: "A", value: "a" }],
+      },
+      draftAnswer: { type: "radioButtons", answer: "a" },
+      editorId: "editor-4",
+      onChange,
+    });
+
+    props.radioProps?.handleRadioChange("b");
+    expect(onChange).toHaveBeenCalledWith({
+      type: "radioButtons",
+      answer: "b",
+    });
+  });
 });

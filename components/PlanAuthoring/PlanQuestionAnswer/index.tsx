@@ -5,10 +5,15 @@ import { useTranslations } from "next-intl";
 import { Button } from "react-aria-components";
 import { TEXT_AREA_QUESTION_TYPE } from "@/lib/constants";
 import { useRenderQuestionField } from "@/components/hooks/useRenderQuestionField";
+import FormTextArea from "@/components/Form/FormTextArea";
 import SafeHtml from "@/components/SafeHtml";
 import type { PlanQuestionDefinition } from "../model";
 import { questionKey } from "../model";
-import { getAnswerValue } from "../answerUtils";
+import {
+  getAnswerValue,
+  getAdditionalCommentValue,
+  withAdditionalComment,
+} from "../answerUtils";
 import { buildPlanRenderQuestionProps } from "../buildPlanRenderQuestionProps";
 import styles from "./PlanQuestionAnswer.module.scss";
 
@@ -32,9 +37,14 @@ export default function PlanQuestionAnswer({
   className,
 }: PlanQuestionAnswerProps) {
   const t = useTranslations("PlanAuthoring");
+  const tGlobal = useTranslations("Global");
   const reactId = useId();
   const editorId = `plan-editor-${questionKey(question.identity)}-${reactId}`;
   const value = getAnswerValue(draftAnswer);
+  const additionalCommentValue = getAdditionalCommentValue(draftAnswer);
+  // Question JSON flag (legacy). Distinct from collaborative PlanComments.
+  const showAdditionalCommentField =
+    question.parsedJson.showCommentField === true;
 
   // Always call — mode early-return must not violate Rules of Hooks.
   //
@@ -67,6 +77,14 @@ export default function PlanQuestionAnswer({
         ) : (
           <p>{Array.isArray(value) ? value.join(", ") : String(value)}</p>
         )}
+        {additionalCommentValue ? (
+          <div className={styles.additionalCommentView}>
+            <p className={styles.additionalCommentLabel}>
+              {tGlobal("labels.additionalComments")}
+            </p>
+            <p>{additionalCommentValue}</p>
+          </div>
+        ) : null}
         {!disabled ? (
           <Button className="button-as-link" onPress={onStartEditing}>
             {t("answer.editAnswer")}
@@ -79,6 +97,20 @@ export default function PlanQuestionAnswer({
   return (
     <div className={[styles.answerEditor, className].filter(Boolean).join(" ")}>
       {questionField}
+      {showAdditionalCommentField ? (
+        <FormTextArea
+          name="additionalComment"
+          label={tGlobal("labels.additionalComments")}
+          placeholder={tGlobal("placeholders.enterComment")}
+          value={additionalCommentValue}
+          onChange={(next) =>
+            onChange(
+              withAdditionalComment(draftAnswer, question.questionType, next)
+            )
+          }
+          disabled={disabled}
+        />
+      ) : null}
     </div>
   );
 }
