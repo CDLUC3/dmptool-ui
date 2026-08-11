@@ -1,4 +1,5 @@
 ## Added
+- Added new `PlanAuthoring` module for the single-page plan overview/authoring UI (sections, questions, section navigation, guidance/comments sidebar, save status), with a pluggable `PlanAuthoringDataSource`, demo data, and en-US/pt-BR translations. Styleguide showcase at `/styleguide/components/plan-authoring`. Frontend scaffold only — not yet wired to production routes or backend; research output answers deferred to a follow-up [#195]
 - Added `DisplayLogicComponent` for the `DisplayLogic` tab in `QuestionEdit`. Also, added `useTriggerQuestion` hook, and `displayLogicMapper` for use with the new component, and `displayLogic` types [#299]
 - Added an override for the `systeminformation` dependency
 - Added show/hide password toggle to `FormInput`, enabled by default for password fields [#80]
