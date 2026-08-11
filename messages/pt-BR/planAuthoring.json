@@ -14,7 +14,7 @@
       "progress": "Progresso",
       "percentComplete": "{percent}% concluído",
       "writeYourPlan": "Escreva seu plano",
-      "writePlanIntro": "Trabalhe em cada seção abaixo — as respostas são salvas automaticamente. Use Ir para seção ou o título da seção acima para navegar entre as seções.",
+      "writePlanIntro": "Trabalhe em cada seção abaixo — as respostas são salvas automaticamente. Use Ir para seção para navegar entre as seções.",
       "questionsAnswered": "{answered} de {total} perguntas respondidas"
     },
     "question": {
@@ -94,7 +94,7 @@
       "ofTotal": "de {total}",
       "openPickerAria": "Abrir seletor de seção",
       "selectASection": "Selecione uma seção",
-      "clickTitleHint": "Clique no título da seção para ir · {shortcut}",
+      "clickTitleHint": "Clique em Ir para seção · {shortcut}",
       "currentSectionAria": "Seção atual {index} de {total}: {title}",
       "noSectionSelected": "Nenhuma seção selecionada",
       "jumpToSection": "Ir para seção…",

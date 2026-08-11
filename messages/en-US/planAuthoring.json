@@ -14,7 +14,7 @@
       "progress": "Progress",
       "percentComplete": "{percent}% complete",
       "writeYourPlan": "Write your plan",
-      "writePlanIntro": "Work through each section below — answers save automatically. Use Jump to section or the section title above to move between sections.",
+      "writePlanIntro": "Work through each section below — answers save automatically. Use Jump to section to move between sections.",
       "questionsAnswered": "{answered} of {total} questions answered"
     },
     "question": {
@@ -94,7 +94,7 @@
       "ofTotal": "of {total}",
       "openPickerAria": "Open section picker",
       "selectASection": "Select a section",
-      "clickTitleHint": "Click section title to jump · {shortcut}",
+      "clickTitleHint": "Click Jump to section · {shortcut}",
       "currentSectionAria": "Current section {index} of {total}: {title}",
       "noSectionSelected": "No section selected",
       "jumpToSection": "Jump to section…",
