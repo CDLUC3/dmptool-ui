@@ -1,4 +1,5 @@
 ## Added
+- Added new arrow DMP Tool logos to the CDN, and updated `layout.tsx` to use them [#337]
 - Added `favicon` image from `CDN`. Added a new `.env` variable `CDN_DOMAIN`. We will need to add this variable to the `stage` and `production` servers 
 - Added `login/forgot-password` and `login/reset-password` pages, and added a `PasswordRequirementList` component to assist users in knowing what the password requirements are[#242]
 - Added `SendPasswordResetEmail`, `ResetPassword` and `ValidatePasswordResetToken` mutations and query [#242]
@@ -34,6 +35,7 @@
 - Added `UpdateAffiliation` and `AffiliationById` queries [#203]
 
 ## Updated
+- Updated the page titles so that we put a space between `DMP` became `Tool` [#337]
 - Removed the best practice checkbox group of tags from the add/edit Section pages, and added them to the add/edit Question pages [#274]
 - Updated the `TransitionButton` to use `startTransaction` so components using it can better control the loading gif and progress bar. Updated some of the pages to utilize this new `startTransaction` [#274]
 - Updated shared `QuestionAdd` to include a `showTags` boolean so that we can exclude it for custom pages for now [#274]

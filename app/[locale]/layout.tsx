@@ -30,10 +30,18 @@ const font_sans_serif = Poppins({
 
 export const metadata: Metadata = {
   icons: {
-    icon: {
-      url: `https://${process.env.CDN_ENDPOINT}/logos/ror.org/03yrm5c26/cdl.jpeg`,
-      type: 'image/jpeg',
-    },
+    icon: [
+      {
+        url: `https://${process.env.CDN_ENDPOINT}/logos/ror.org/03yrm5c26/dmptool-logo-light.svg`,
+        type: 'image/svg+xml',
+        media: '(prefers-color-scheme: light)',
+      },
+      {
+        url: `https://${process.env.CDN_ENDPOINT}/logos/ror.org/03yrm5c26/dmptool-logo-dark.svg`,
+        type: 'image/svg+xml',
+        media: '(prefers-color-scheme: dark)',
+      },
+    ],
   },
 };
 
