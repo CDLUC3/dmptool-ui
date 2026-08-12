@@ -65,6 +65,8 @@ query Question($questionId: Int!) {
       name
       slug
     }
+    displayLogicAction
+    displayLogicMatchType
   }
 }
 
