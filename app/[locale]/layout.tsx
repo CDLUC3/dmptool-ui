@@ -1,3 +1,4 @@
+import { headers } from 'next/headers';
 import { Poppins } from "next/font/google";
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
@@ -68,6 +69,11 @@ export default async function LocaleLayout({
   // Providing all messages to the client
   // side is the easiest way to get started
   const messages = await getMessages();
+  const headersList = await headers();
+
+  // The `x-is-authenticated` is set in the header by proxy.ts middleware. This is to avoid any flashing of the navigation bar
+  // when the user is authenticated, since the authentication state is determined on the client side after the page has loaded.
+  const initialIsAuthenticated = headersList.get('x-is-authenticated') === 'true';
 
   return (
     <html lang={locale} className={font_sans_serif.variable}>
@@ -77,7 +83,7 @@ export default async function LocaleLayout({
         <NextIntlClientProvider messages={messages}>
           <CsrfProvider>
             <ApolloWrapper>
-              <AuthProvider>
+              <AuthProvider initialIsAuthenticated={initialIsAuthenticated}>
                 <Header />
                 <SubHeader />
                 <ToastProviderWrapper>
