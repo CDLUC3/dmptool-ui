@@ -21,7 +21,7 @@ interface JWTAccessToken extends JwtPayload {
 }
 
 // TODO: These routes will need to be updated.
-const excludedPaths = ['/email', '/favicon.ico', '/_next', '/api', '/login', '/signup', '/styleguide', '/contact'];
+const excludedPaths = ['/email', '/favicon.ico', '/_next', '/api', '/login', '/signup', '/styleguide', '/contact', '/dmps'];
 
 // Check if the request is for a server action
 function isServerAction(request: NextRequest): boolean {
@@ -186,6 +186,6 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   // Don't run middleware for api endpoints, static files, anything in our pubic folder or _next files
-  matcher: ['/((?!api|_next|static|.*\\..*).*)',]
+  matcher: ['/((?!api|_next|static|.*\\.(?:ico|png|jpg|jpeg|gif|svg|css|js|json|woff2?|ttf|map|txt|xml)$).*)'],
 };
 

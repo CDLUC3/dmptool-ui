@@ -35,6 +35,7 @@
 - Added `UpdateAffiliation` and `AffiliationById` queries [#203]
 
 ## Updated
+- Updated `proxy.ts` to exclude `/dmps` from requiring authentication [#293]
 - Removed the best practice checkbox group of tags from the add/edit Section pages, and added them to the add/edit Question pages [#274]
 - Updated the `TransitionButton` to use `startTransaction` so components using it can better control the loading gif and progress bar. Updated some of the pages to utilize this new `startTransaction` [#274]
 - Updated shared `QuestionAdd` to include a `showTags` boolean so that we can exclude it for custom pages for now [#274]

@@ -102,8 +102,19 @@ describe('proxy', () => {
     expect(NextResponse.redirect).toHaveBeenCalledWith(expectedUrl);
   });
 
-  it('should redirect to /login if both tokens are missing and path is protected', async () => {
+  it('should redirect to add locale prefix (not /login) when accessing /dmps without tokens', async () => {
     request.nextUrl.pathname = '/dmps/';
+    request.cookies.get = jest.fn().mockReturnValue(undefined); // No tokens
+
+    await proxy(request);
+
+    // /dmps is a public path — no login redirect, just locale-prefixing
+    expect(NextResponse.redirect).toHaveBeenCalledWith(new URL('/en-US/dmps/', request.url));
+    expect(NextResponse.redirect).not.toHaveBeenCalledWith(new URL('/en-US/login', request.url));
+  });
+
+  it('should still redirect to /login for a protected path when both tokens are missing', async () => {
+    request.nextUrl.pathname = '/some-protected-path/';
     request.cookies.get = jest.fn().mockReturnValue(undefined); // No tokens
 
     const result = await proxy(request);
