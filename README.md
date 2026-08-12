@@ -207,19 +207,37 @@ docker run -p 3000:3000 dmsp_frontend_prototype:dmsp_frontend_prod
 
 
 ## Project Structure
+### Route Groups & Embeddable Pages
+Most pages live under `app/[locale]/`, which is wrapped by `app/[locale]/layout.tsx` — this provides the shared `Header`, `SubHeader`, and `Footer`, along with the app's core providers (`NextIntlClientProvider`, `ApolloWrapper`, `AuthProvider`, `CsrfProvider`, `ToastProviderWrapper`).
+
+Some pages need to render **without** that shared chrome — for example, the public DMP landing page at `app/(embed)/[locale]/dmps/[...slug]/page.tsx`, which is meant to be embeddable/linkable on its own (e.g. as a DOI landing page) rather than appearing as part of the main app shell.
+
+To achieve this, we use a Next.js [route group](https://nextjs.org/docs/app/building-your-application/routing/route-groups) — the `(embed)` folder. Route group names in parentheses are not part of the URL, so `app/(embed)/[locale]/dmps/[...slug]/page.tsx` still resolves to `/{locale}/dmps/{...slug}`. Because it lives outside `app/[locale]/`, it does **not** inherit `app/[locale]/layout.tsx` or any of the providers/chrome defined there — instead, `app/(embed)/[locale]/layout.tsx` provides its own minimal layout and whichever providers that page actually needs.
+
+When adding a new page that should bypass the shared Header/Footer, it can be added under the `app/(embed)` directory.
+
 ```bash
 |-- app/
 |   |-- api
 |       |-- setCookie
 |           |-- __tests__
 |           |-- route.ts
-|   |-- login
-|       |-- __tests__
-|       |-- login.module.scss
-|       |-- page.tsx
-|   |-- layout.tsx
-|   |-- page.tsx
-|   |-- not-found.tsx
++|   |-- (embed)
++|       |-- [locale]
++|           |-- dmps
++|               |-- [...slug]
++|                   |-- __tests__
++|                   |-- page.tsx
++|                   |-- landing.module.scss
+          |-- layout.tsx
++|   |-- [locale]
++|       |-- login
++|           |-- __tests__
++|           |-- login.module.scss
++|           |-- page.tsx
++|       |-- layout.tsx
++|       |-- page.tsx
++|       |-- not-found.tsx
 |-- components/
 |   |-- Header
 |       |-- __tests__
@@ -271,6 +289,7 @@ docker run -p 3000:3000 dmsp_frontend_prototype:dmsp_frontend_prod
 |-- package.json
 |-- tsconfig.json
 ```
+
 
 ## Authentication
 There are currently two context files, AuthContext.tsx and CsrfContext.tsx, that help manage the auth state and the csrf token state.
