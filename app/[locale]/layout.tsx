@@ -33,6 +33,10 @@ export const metadata: Metadata = {
     icon: [
       {
         url: `https://${process.env.CDN_ENDPOINT}/logos/ror.org/03yrm5c26/dmptool-logo-light.svg`,
+        type: 'image/svg+xml',// Default icon for browsers that don't support media queries
+      },
+      {
+        url: `https://${process.env.CDN_ENDPOINT}/logos/ror.org/03yrm5c26/dmptool-logo-light.svg`,
         type: 'image/svg+xml',
         media: '(prefers-color-scheme: light)',
       },
