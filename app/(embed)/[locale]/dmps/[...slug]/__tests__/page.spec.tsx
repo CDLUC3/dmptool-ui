@@ -21,7 +21,7 @@ jest.mock('next/navigation', () => ({
 
 // --- next/image ---
 jest.mock('next/image', () => {
-  const MockImage = ({ ...props }: any) => {
+  const MockImage = ({ priority: _priority, fill: _fill, ...props }: any) => {
     return <img {...props} />;
   };
   MockImage.displayName = 'MockImage';
@@ -41,6 +41,11 @@ jest.mock('@/generated/graphql', () => ({
     Granted: 'GRANTED',
     Denied: 'DENIED',
     Planned: 'PLANNED',
+  },
+  PlanVisibility: {
+    Organizational: 'ORGANIZATIONAL',
+    Public: 'PUBLIC',
+    Private: 'PRIVATE',
   },
 }));
 
@@ -103,12 +108,55 @@ jest.mock('@/components/Icons/orcid/', () => ({
   OrcidIcon: () => <span data-testid="orcid-icon" />,
 }));
 
+const RESEARCH_OUTPUT_ANSWER_JSON = JSON.stringify({
+  meta: { schemaVersion: '1.0' },
+  type: 'researchOutputTable',
+  answer: [
+    {
+      columns: [
+        { meta: { schemaVersion: '1.0' }, type: 'text', answer: 'Data Paper from migration studies', commonStandardId: 'title' },
+        { meta: { schemaVersion: '1.0' }, type: 'textArea', answer: '<p>A description.</p>', commonStandardId: 'description' },
+        { meta: { schemaVersion: '1.0' }, type: 'selectBox', answer: 'data-paper', commonStandardId: 'type' },
+        {
+          meta: { schemaVersion: '1.0' },
+          type: 'repositorySearch',
+          answer: [
+            {
+              repositoryId: 'https://www.re3data.org/repository/r3d100014251',
+              repositoryName: 'Arias Montano',
+              repositoryWebsite: 'https://www.re3data.org/repository/r3d100014251',
+            },
+          ],
+          commonStandardId: 'host',
+        },
+        {
+          meta: { schemaVersion: '1.0' },
+          type: 'metadataStandardSearch',
+          answer: [{ metadataStandardId: 'https://repositorio.unicamp.br/', metadataStandardName: 'Terminal RI Unicamp' }],
+          commonStandardId: 'metadata',
+        },
+        {
+          meta: { schemaVersion: '1.0' },
+          type: 'licenseSearch',
+          answer: [{ licenseId: 'https://spdx.org/licenses/CC0-1.0.json', licenseName: 'CC0-1.0' }],
+          commonStandardId: 'license_ref',
+        },
+        { meta: { schemaVersion: '1.0' }, type: 'date', answer: '2027-05-31', commonStandardId: 'issued' },
+        { meta: { schemaVersion: '1.0' }, type: 'numberWithContext', answer: { value: 2, context: 'mb' }, commonStandardId: 'byte_size' },
+      ],
+    },
+  ],
+});
+
 const BASE_PLAN = {
   title: 'Butterflies of Ecuador DMP',
   dmpId: 'https://doi.org/10.48321/D1e8b71d18',
   created: '2026-08-11T16:30:48Z',
   modified: '2026-08-11T16:33:35Z',
   registered: '2026-08-11T16:33:35Z',
+  visibility: 'PUBLIC',
+  doi: '10.48321/D1e8b71d18',
+  url: 'https://dmphub.example.org/dmps/10.48321/D1e8b71d18',
   versionedTemplate: {
     owner: {
       name: 'California Digital Library',
@@ -144,18 +192,8 @@ const BASE_PLAN = {
       },
     ],
   },
-  outputs: [
-    {
-      title: 'Data Paper from migration studies',
-      description: '<p>A description.</p>',
-      type: 'data-paper',
-      issued: '2027-05-31',
-      byteSize: 2,
-      byteSizeUnit: 'mb',
-      hosts: [{ name: 'Arias Montano', url: 'https://www.re3data.org/repository/r3d100014251' }],
-      metadataStandards: [{ name: 'Terminal RI Unicamp', uri: 'https://repositorio.unicamp.br/' }],
-      licenses: [{ name: 'CC0-1.0', uri: 'https://spdx.org/licenses/CC0-1.0.json' }],
-    },
+  answers: [
+    { id: 1, json: RESEARCH_OUTPUT_ANSWER_JSON },
   ],
   versions: [
     { timestamp: '2026-08-11T16:33:35.000Z', url: 'https://dmphub.example.org/dmps/10.48321/D1e8b71d18?version=2026-08-11T16:33:35.000Z' },
@@ -336,6 +374,36 @@ describe('DmpLandingPage', () => {
     });
 
     expect(global.URL.createObjectURL).not.toHaveBeenCalled();
+  });
+
+  it('should show the download button when the plan is public', () => {
+    render(<DmpLandingPage />);
+
+    expect(screen.getByRole('button', { name: /download the data management plan/i })).toBeInTheDocument();
+  });
+
+  it('should hide the download button when the plan is private', () => {
+    setupApolloMocks({
+      plan: { ...BASE_PLAN, visibility: 'PRIVATE' },
+    });
+
+    render(<DmpLandingPage />);
+
+    expect(
+      screen.queryByRole('button', { name: /download the data management plan/i })
+    ).not.toBeInTheDocument();
+  });
+
+  it('should hide the download button when the plan is organizational', () => {
+    setupApolloMocks({
+      plan: { ...BASE_PLAN, visibility: 'ORGANIZATIONAL' },
+    });
+
+    render(<DmpLandingPage />);
+
+    expect(
+      screen.queryByRole('button', { name: /download the data management plan/i })
+    ).not.toBeInTheDocument();
   });
 
   it('should pass accessibility tests', async () => {

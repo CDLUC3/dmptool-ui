@@ -33,7 +33,8 @@
       "licenseForReuse": "License for reuse"
     },
     "errors": {
-      "failedToDownloadPDF": "Failed to download PDF"
+      "failedToDownloadPDF": "Failed to download PDF",
+      "pdfNotAvailable": "PDF download is not available for this plan"
     }
   }
 }
