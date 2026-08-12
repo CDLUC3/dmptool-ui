@@ -33,16 +33,16 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       {
-        url: `https://${process.env.CDN_ENDPOINT}/logos/ror.org/03yrm5c26/dmptool-logo-light.svg`,
+        url: `https://${process.env.CDN_ENDPOINT}/assets/dmptool-logo-light.svg`,
         type: 'image/svg+xml',// Default icon for browsers that don't support media queries
       },
       {
-        url: `https://${process.env.CDN_ENDPOINT}/logos/ror.org/03yrm5c26/dmptool-logo-light.svg`,
+        url: `https://${process.env.CDN_ENDPOINT}/assets/dmptool-logo-light.svg`,
         type: 'image/svg+xml',
         media: '(prefers-color-scheme: light)',
       },
       {
-        url: `https://${process.env.CDN_ENDPOINT}/logos/ror.org/03yrm5c26/dmptool-logo-dark.svg`,
+        url: `https://${process.env.CDN_ENDPOINT}/assets/dmptool-logo-dark.svg`,
         type: 'image/svg+xml',
         media: '(prefers-color-scheme: dark)',
       },
