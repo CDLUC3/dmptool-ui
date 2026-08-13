@@ -92,12 +92,23 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           
           git add package.json CHANGELOG.md
+
+          git diff --cached --quiet && { echo "Nothing to commit"; exit 0; }
           
-          git commit -m "chore: release v${{ steps.version.outputs.version }} [skip ci]" || exit 0
+          git commit -m "chore: release v${{ steps.version.outputs.version }} [skip ci]"
           
           git tag -f "v${{ steps.version.outputs.version }}"
           git push origin HEAD:${{ github.event.pull_request.base.ref }}
           git push --tags --force
+
+      # Upload release files for later jobs to download and sync to other branches
+      - name: Upload release files
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-files
+          path: |
+            package.json
+            CHANGELOG.md
 
   sync-stage:
       needs: version
@@ -116,6 +127,11 @@ jobs:
           fetch-depth: 0
           token: ${{ steps.generate_token.outputs.token }}
 
+      - name: Download release files
+        uses: actions/download-artifact@v4
+        with:
+          name: release-files
+
       - name: Open sync PR to stage
         env:
           GH_TOKEN: ${{ steps.generate_token.outputs.token }}
@@ -127,10 +143,12 @@ jobs:
           BRANCH="sync/release-v${VERSION}-to-stage"
 
           git checkout -B "$BRANCH" origin/stage
-          git checkout origin/main -- package.json CHANGELOG.md
-
+          
+          # package.json and CHANGELOG.md are already downloaded from the previous step, 
+          # so we just need to add them to the commit
+          git add package.json CHANGELOG.md
           if git diff --cached --quiet; then
-            echo "stage already matches main for these files. Nothing to do."
+            echo "stage already matches release files. Nothing to do."
             exit 0
           fi
 
@@ -160,6 +178,11 @@ jobs:
           fetch-depth: 0
           token: ${{ steps.generate_token.outputs.token }}
 
+      - name: Download release files
+        uses: actions/download-artifact@v4
+        with:
+          name: release-files
+
       - name: Open sync PR to development
         env:
           GH_TOKEN: ${{ steps.generate_token.outputs.token }}
@@ -171,10 +194,12 @@ jobs:
           BRANCH="sync/release-v${VERSION}-to-development"
 
           git checkout -B "$BRANCH" origin/development
-          git checkout origin/main -- package.json CHANGELOG.md
 
+          # package.json and CHANGELOG.md are already downloaded from the previous step, 
+          # so we just need to add them to the commit
+          git add package.json CHANGELOG.md
           if git diff --cached --quiet; then
-            echo "development already matches main for these files. Nothing to do."
+            echo "stage already matches release files. Nothing to do."
             exit 0
           fi
 
