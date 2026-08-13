@@ -126,15 +126,6 @@ jobs:
           
           BRANCH="sync/release-v${VERSION}-to-stage"
 
-          # Close any older, still-open sync PRs targeting stage so they don't pile up
-          # Filter precisely on headRefName (exact prefix match)
-          gh pr list --base stage --state open \
-            --json number,headRefName,author \
-            --jq '.[] | select(.headRefName | startswith("sync/release-v")) | select(.author.login == "github-actions[bot]" or (.author.login | endswith("[bot]"))) | .number' \
-          | while read -r num; do
-              echo "Closing stale sync PR #$num"
-              gh pr close "$num" --delete-branch || true
-            done
           git checkout -B "$BRANCH" origin/stage
           git checkout origin/main -- package.json CHANGELOG.md
 
@@ -179,15 +170,6 @@ jobs:
           
           BRANCH="sync/release-v${VERSION}-to-development"
 
-          # Close any older, still-open sync PRs targeting development so they don't pile up
-          # Filter precisely on headRefName (exact prefix match)
-          gh pr list --base development --state open \
-            --json number,headRefName,author \
-            --jq '.[] | select(.headRefName | startswith("sync/release-v")) | select(.author.login == "github-actions[bot]" or (.author.login | endswith("[bot]"))) | .number' \
-          | while read -r num; do
-              echo "Closing stale sync PR #$num"
-              gh pr close "$num" --delete-branch || true
-            done
           git checkout -B "$BRANCH" origin/development
           git checkout origin/main -- package.json CHANGELOG.md
 
