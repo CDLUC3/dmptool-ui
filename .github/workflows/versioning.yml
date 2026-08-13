@@ -8,6 +8,7 @@ on:
 
 permissions:
   contents: write
+  pull-requests: write
 
 jobs:
   version:
@@ -15,7 +16,8 @@ jobs:
     if: github.event.pull_request.merged == true && github.event.pull_request.head.ref == 'stage'
     #GitHub-hosted runner with Ubuntu
     runs-on: ubuntu-latest 
-
+    outputs:
+      version: ${{ steps.version.outputs.version }}
     steps:
       - name: Generate GitHub App Token
         id: generate_token
@@ -96,3 +98,91 @@ jobs:
           git tag -f "v${{ steps.version.outputs.version }}"
           git push origin HEAD:${{ github.event.pull_request.base.ref }}
           git push --tags --force
+
+  sync-stage:
+      needs: version
+      runs-on: ubuntu-latest
+      steps:
+      - name: Generate GitHub App Token
+        id: generate_token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+
+      - name: Checkout Stage
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          token: ${{ steps.generate_token.outputs.token }}
+
+      - name: Open sync PR to stage
+        env:
+          GH_TOKEN: ${{ steps.generate_token.outputs.token }}
+          VERSION: ${{ needs.version.outputs.version }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          BRANCH="sync/release-v${VERSION}-to-stage"
+
+          git checkout -B "$BRANCH" origin/stage
+          git checkout origin/main -- package.json CHANGELOG.md
+
+          if git diff --cached --quiet; then
+            echo "stage already matches main for these files. Nothing to do."
+            exit 0
+          fi
+
+          git commit -m "chore: sync release v${VERSION} to stage [skip ci]"
+          git push origin "$BRANCH" --force
+
+          gh pr create \
+            --base stage \
+            --head "$BRANCH" \
+            --title "chore: sync release v${VERSION} to stage" \
+            --body "Automated sync of \`package.json\` and \`CHANGELOG.md\` from \`main\` after release v${VERSION}."
+
+  sync-development:
+    needs: version
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate GitHub App Token
+        id: generate_token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+
+      - name: Checkout development
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          token: ${{ steps.generate_token.outputs.token }}
+
+      - name: Open sync PR to development
+        env:
+          GH_TOKEN: ${{ steps.generate_token.outputs.token }}
+          VERSION: ${{ needs.version.outputs.version }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          BRANCH="sync/release-v${VERSION}-to-development"
+
+          git checkout -B "$BRANCH" origin/development
+          git checkout origin/main -- package.json CHANGELOG.md
+
+          if git diff --cached --quiet; then
+            echo "development already matches main for these files. Nothing to do."
+            exit 0
+          fi
+
+          git commit -m "chore: sync release v${VERSION} to development [skip ci]"
+          git push origin "$BRANCH" --force
+
+          gh pr create \
+            --base development \
+            --head "$BRANCH" \
+            --title "chore: sync release v${VERSION} to development" \
+            --body "Automated sync of \`package.json\` and \`CHANGELOG.md\` from \`main\` after release v${VERSION}."
