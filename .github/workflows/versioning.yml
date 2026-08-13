@@ -92,12 +92,23 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           
           git add package.json CHANGELOG.md
+
+          git diff --cached --quiet && { echo "Nothing to commit"; exit 0; }
           
-          git commit -m "chore: release v${{ steps.version.outputs.version }} [skip ci]" || exit 0
+          git commit -m "chore: release v${{ steps.version.outputs.version }} [skip ci]"
           
           git tag -f "v${{ steps.version.outputs.version }}"
           git push origin HEAD:${{ github.event.pull_request.base.ref }}
           git push --tags --force
+
+      # Upload release files for later jobs to download and sync to other branches
+      - name: Upload release files
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-files
+          path: |
+            package.json
+            CHANGELOG.md
 
   sync-stage:
       needs: version
@@ -116,6 +127,12 @@ jobs:
           fetch-depth: 0
           token: ${{ steps.generate_token.outputs.token }}
 
+      - name: Download release files
+        uses: actions/download-artifact@v4
+        with:
+          name: release-files
+          path: release-files # Download the release files to a subdirectory to avoid overwriting the current working directory
+
       - name: Open sync PR to stage
         env:
           GH_TOKEN: ${{ steps.generate_token.outputs.token }}
@@ -127,10 +144,15 @@ jobs:
           BRANCH="sync/release-v${VERSION}-to-stage"
 
           git checkout -B "$BRANCH" origin/stage
-          git checkout origin/main -- package.json CHANGELOG.md
+          
+          # Now that we're on target branch, overlay the release files
+          cp release-files/package.json package.json
+          cp release-files/CHANGELOG.md CHANGELOG.md
 
+          # Add the updated files to the commit. If there are no changes, exit early.
+          git add package.json CHANGELOG.md
           if git diff --cached --quiet; then
-            echo "stage already matches main for these files. Nothing to do."
+            echo "stage already matches release files. Nothing to do."
             exit 0
           fi
 
@@ -160,6 +182,13 @@ jobs:
           fetch-depth: 0
           token: ${{ steps.generate_token.outputs.token }}
 
+      - name: Download release files
+        uses: actions/download-artifact@v4
+        with:
+          name: release-files
+          path: release-files # Download the release files to a subdirectory to avoid overwriting the current working directory
+
+
       - name: Open sync PR to development
         env:
           GH_TOKEN: ${{ steps.generate_token.outputs.token }}
@@ -171,10 +200,15 @@ jobs:
           BRANCH="sync/release-v${VERSION}-to-development"
 
           git checkout -B "$BRANCH" origin/development
-          git checkout origin/main -- package.json CHANGELOG.md
 
+          # Overlay the release files
+          cp release-files/package.json package.json
+          cp release-files/CHANGELOG.md CHANGELOG.md
+
+          # Add the updated files to the commit. If there are no changes, exit early.
+          git add package.json CHANGELOG.md
           if git diff --cached --quiet; then
-            echo "development already matches main for these files. Nothing to do."
+            echo "stage already matches release files. Nothing to do."
             exit 0
           fi
 
