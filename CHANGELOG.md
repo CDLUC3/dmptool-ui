@@ -1,6 +1,28 @@
+## v0.1.2
+
+### Added
+
+### Updated
+
+### Fixed
+
+### Removed
+
+### Chore
+
+## v0.1.1
+
+### Added
+
+### Updated
+
+### Fixed
+
+### Removed
+
+### Chore
+
 ## Added
-- Added new `DmpLandingPage` at `app/(embed)/[locale]/dmps/[...slug]/page.tsx`. The `(embed)` directory allows us to assign a different wrapping layout to this page, so we can exlude the shared header and footer [#293]
-- Added `SaveQuestionDisplayLogic` mutation and `QuestionConditionGroups` query [#508]
 - Added `favicon` image from `CDN`. Added a new `.env` variable `CDN_DOMAIN`. We will need to add this variable to the `stage` and `production` servers 
 - Added `login/forgot-password` and `login/reset-password` pages, and added a `PasswordRequirementList` component to assist users in knowing what the password requirements are[#242]
 - Added `SendPasswordResetEmail`, `ResetPassword` and `ValidatePasswordResetToken` mutations and query [#242]
@@ -36,10 +58,6 @@
 - Added `UpdateAffiliation` and `AffiliationById` queries [#203]
 
 ## Updated
-- Updated `DisplayLogicComponent` to include props for `onDisplayLogicRemove` and `isLoadingExistingLogic`, and added operators for multi-select questions, so we can change the language from `is` to `includes`. [#508]
-- Updated `displayLogicMapper` with all the new question condition types. Added `fromQuestionConditionGroups` to reconstruct display logic from backend [#508]
-- Updated `QuestionEdit` page to use the new queries and mutations related to display logic. Updated `handleSaveDisplayLogic` to actually save to the backend, and added `handleRemoveDisplayLogic` [#508]
-- Updated the `useResearchOutputTable` hook to pass in `markDirty` in place of `setHasUnsavedChanges` so that we could include clearing all errors for any new interactions with forms [#508]
 - Removed the best practice checkbox group of tags from the add/edit Section pages, and added them to the add/edit Question pages [#274]
 - Updated the `TransitionButton` to use `startTransaction` so components using it can better control the loading gif and progress bar. Updated some of the pages to utilize this new `startTransaction` [#274]
 - Updated shared `QuestionAdd` to include a `showTags` boolean so that we can exclude it for custom pages for now [#274]
@@ -131,7 +149,6 @@
 - Updated `RepoSelectorForAnswer` to wait to query `Re3byUrIsDocument` until we have `preferredReposURIs` because preferred repos don't display even though they eventually do to trigger the display of the "preferred repositories" checkbox [#118]
 
 ## Fixed
-- Fixed an issue where there was flashing in the header due to a delay in the page registering the `isAuthenticated` value. So our `proxy.ts` middleware was updated to add `x-is-authenticated` in the header, and we updated `layout.tsx` to get the value and pass it into `AuthProvider`. Then `AuthContext` was updated to use this value as the initial value [#293]
 - Fixed breaking build due to the recent `next` version update to `16.2.12` where `Turbopack` has stricter rules, so we had to import `nprogress/nprogress.css` in `layout.tsx` rather than in `globals.scss` [#331]
 - Fixed Question Display Logic layout issue by updating the `DisplayLogicComponent` css to have more specificity, so that the order in which css is loaded will not break anything [#325]
 - Fixed the issue where "add Funder" button was displayed even when `readOnly` was set to true [#305]
@@ -143,7 +160,8 @@
 - Fixed issue with Feedback Notification headers displaying for any collaborator on the Plan Overview, Section and Question pages. It should only display to Org Admins and Super Admins. Added shared isOrgAdmin hook for pages. [#249]
 
 ## Chore
-- Updated `brace-expansion` to `v5.0.9`, `js-yaml` to `v4.3.1`, and `domPurify` to `v3.4.13` to address high vulnerabilities [#337]
+- Updated the `versioning.yml` github workflow file on `stage` to test that it works on merge to `main`.
+- Small tweak in CHANGELOG.md to test another merge to test automated versioning.
 - Updated `@types/react` to `v18.3.31`, `react` to `v19.2.8`, `react-dom` to `v19.2.8`, `postcss` to `v8.5.25`, `qs` to `v6.15.3`, `@apollo/client` to `v4.2.9`, `@types/node` to `v24.13.3`, `systeminformation` to `v5.31.17`, `dompurify` to `v3.4.12`, `eslint` to `v9.39.5`, `sanitize-html` to `v2.17.6`, `next` to `v16.2.12`. Also updated `jest.config.ts` to accommodate the recent update in `sanitize-html` and its dependencies to be `ESM-only`, so we had to specify that `jest` transform them to `Common JS` [#331]
 - Updated `brace-expansion` to `v5.0.8` to address high vulnerability [#303]
 - Updated `sharp` override to `v0.35.0` and `dompurify` to `v3.4.12` to address vulnerabilities [#304]
@@ -388,6 +406,7 @@
 - Updated `jws` to `3.2.3` due to vulnerability
 - Updated `next` version to `15.5.7` due to vulnerability
 - Ran `npm audit fix` to address `glob` vulnerability and `js-yaml` vulnerability
+- Updated `renovate` and `dependabot` configs for comparison purposes
 ====================================================================================================================================
 ## All changes above the line happened after the merge to the main branch on Nov 3, 2025
 ### Added
@@ -449,6 +468,7 @@
 - `small` button CSS class.
 - Added curl to the AWS Dockerfile for session manager access
 - Added bash to the AWS Dockerfile for session manager access
+- Added `CONTRIBUTING.md` and `CODE_OF_CONDUCT.md` files to the repo
 - Added shared `dmptool-network` to the `docker-compose.yaml` file to allow nextJS server side actions to be able to reach the local apollo server
 - Static Feedback page with translation and text [#750]
 - Added `RelatedWorks` page and associated components `RelatedWorksList`, `RelatedWorksListItem`, `ExpandableNameList` and `LinkFilter`. [#672][#673]
@@ -474,7 +494,6 @@
 - Created the static page for the org admin user dashboard. [#782]
 
 ### Updated
-
 - Removed some duplicate text from `template/[templateId]/access` under `External people` [#482]
 - Updated description on `template/[templateId]/access` and visibility text on template publish modal [#482]
 - Updated `/template/[templateId]` to include the `View history` link in the header description [#430]
@@ -492,6 +511,9 @@
 - Updated language used in RelatedWorks UI, moved accept and reject buttons into the cards out of the expand section and changed order of accept and reject buttons [#799]
 - Hooked up the `ProjectsProjectCollaboration` page. Added new `server actions` to handle access level changes, revoking collaborator and resending invite [#381]
 - Optimized the `graphqlServerActionHandler` so that we can normalize errors returned and simplify client-side handling [#381]
+=======
+- Updated the `CODE_OF_CONDUCT.md` to reflect CDLUC3's Code of Conduct
+- Updated the `CONTRIBUTING.md` to include steps for contributing to the repo
 - Updated the shared`RadioGroupComponent` and `CheckboxGroupComponent` components to be more like a wrapper to reduce duplicate of code and make it more flexible [#743]
 - Project over is now using sidebar to allow for collaboration [#750]
 - Sidebar is now using global styling rather than css modules [#750]
@@ -586,8 +608,12 @@
 - Deleted `__mocks__/mockQuestionTypes.json` as it is no longer needed [#322](https://github.com/CDLUC3/dmsp_backend_prototype/issues/322)
 
 ### Chore
+<<<<<<< HEAD
 - Fixed type error in `FormSelect` due to a change in `@types/react` versions when merging `stage` into `development`
 - Addressed `fast-redact` but upgrading `pino` version
+=======
+- Added `renovate.json` config file in order to get automatic PRs for dependency updates
+>>>>>>> main
 - Upgraded to `NextJS v15.5.2` to remove vulnerability and added `next-env.d.ts` to the ignore list for linting. [#751]
 
 ====================================================================================================================================
