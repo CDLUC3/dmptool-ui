@@ -104,7 +104,7 @@ function Header() {
         <div className={`${styles.navigation} ${styles.desktop}`}>
           <ul role="menu">
             {/* Show authenticated user items first when logged in */}
-            {isAuthenticated && (
+            {isAuthenticated === true && (
               <>
                 <li role="menuitem">
                   <Link href={routePath("projects.index")}>{t("menuProjectsPlans")}</Link>
@@ -210,7 +210,7 @@ function Header() {
             </li>
 
             {/* Show authenticated user items */}
-            {isAuthenticated && (
+            {isAuthenticated === true && (
               <>
                 <li role="menuitem">
                   <div className={styles.dropdown}>
@@ -337,7 +337,7 @@ function Header() {
             )}
 
             {/* Show login/signup for non-authenticated users */}
-            {!isAuthenticated && (
+            {isAuthenticated === false && (
               <>
                 <li role="menuitem">
                   <Button
@@ -392,7 +392,7 @@ function Header() {
           </button>
           <ul role="menubar">
             {/* Show authenticated user items first when logged in */}
-            {isAuthenticated && (
+            {isAuthenticated === true && (
               <>
                 <li role="menuitem">
                   <Link href={routePath("projects.index")}>{t("menuProjectsPlans")}</Link>
@@ -472,7 +472,7 @@ function Header() {
             </li>
 
             {/* Show authenticated user items */}
-            {isAuthenticated && (
+            {isAuthenticated === true && (
               <>
                 <li role="menuitem">
                   <div className={styles.dropdown}>
@@ -610,7 +610,7 @@ function Header() {
             )}
 
             {/* Show login/signup for non-authenticated users */}
-            {!isAuthenticated && (
+            {isAuthenticated === false && (
               <>
                 <li role="menuitem">
                   <Button

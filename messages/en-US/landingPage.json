@@ -1,0 +1,40 @@
+{
+  "LandingPage": {
+    "dmpTool": "DMP Tool",
+    "templateInfoWithOrg": "This page describes a data management plan written for <orgLink>{orgName}</orgLink> using the <dmptoolLink>DMP Tool</dmptoolLink>.",
+    "templateInfoWithoutOrg": "This page describes a data management plan using the <dmptoolLink>DMP Tool</dmptoolLink>.",
+    "downloadPlan": "Download the plan <pdfLabel>(PDF)</pdfLabel>",
+    "viewAsJson": "View as JSON",
+    "opensInNewWindow": "Opens in a new window",
+    "projectStart": "Project start",
+    "projectEnd": "Project end",
+    "researchDomain": "Research domain",
+    "dmpCreated": "DMP created",
+    "dmpLastModified": "DMP last modified",
+    "dmpLastModifiedBy": "DMP last modified by",
+    "whenCitingThisDMP": "When citing this DMP use",
+    "dataManagementPlan": "Data Management Plan",
+    "dmpIdInfo": "When connecting to this DMP to related project outputs (such as datasets) use the ID: <dmpIdLink>{dmpId}</dmpIdLink>",
+    "fundingOpportunity": "Funding opportunity",
+    "sectionHeadings": {
+      "plannedOutputs": "Planned outputs",
+      "projectDescription": "Project description",
+      "fundingStatusAndSources": "Funding status and sources",
+      "citation": "Citation",
+      "projectDetails": "Project details",
+      "contributors": "Contributors to this project"
+    },
+    "output": {
+      "format": "Format",
+      "metaDataStandards": "Metadata standard(s)",
+      "anticipatedVolume": "Anticipated volume",
+      "releaseTimeline": "Release timeline",
+      "intendedRepository": "Intended repository",
+      "licenseForReuse": "License for reuse"
+    },
+    "errors": {
+      "failedToDownloadPDF": "Failed to download PDF",
+      "pdfNotAvailable": "PDF download is not available for this plan"
+    }
+  }
+}

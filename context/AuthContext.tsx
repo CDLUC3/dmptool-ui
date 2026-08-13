@@ -17,10 +17,11 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 /*Will wrap the content with this AuthProvider so that we can use context to check
 the authentication state, and to update the state*/
-export function AuthProvider({ children }: {
+export function AuthProvider({ children, initialIsAuthenticated = null }: {
   children: React.ReactNode;
+  initialIsAuthenticated?: boolean | null;
 }) {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(initialIsAuthenticated);
   useEffect(() => {
     const checkAuth = async () => {
       try {

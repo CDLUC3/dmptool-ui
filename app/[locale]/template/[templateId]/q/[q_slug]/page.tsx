@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { useQuery } from '@apollo/client/react';
+import { useQuery, useMutation } from '@apollo/client/react';
 import {
   Breadcrumb,
   Breadcrumbs,
@@ -33,7 +33,11 @@ import {
 import {
   TagsDocument,
   QuestionDocument,
-  QuestionsDocument
+  QuestionsDocument,
+  QuestionErrors,
+  SaveQuestionDisplayLogicDocument,
+  QuestionConditionGroupsDocument,
+  RemoveQuestionDisplayLogicDocument,
 } from '@/generated/graphql';
 
 import {
@@ -102,6 +106,7 @@ import {
 } from '@/app/hooks/useEditQuestion';
 import {
   toSaveInput,
+  fromQuestionConditionGroups
 } from './displayLogicMapper';
 import styles from './questionEdit.module.scss';
 
@@ -119,8 +124,11 @@ const QuestionEdit = () => {
 
   //For scrolling to error in page
   const errorRef = useRef<HTMLDivElement | null>(null);
+
   // Track whether the component has hydrated to avoid running certain effects on the server
   const hasHydrated = useRef(false);
+  const hasHydratedDisplayLogicRef = useRef(false);
+
   // Track whether there are unsaved changes
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState<boolean>(false);
   // Form state
@@ -145,6 +153,9 @@ const QuestionEdit = () => {
   // Display logic tab state — null means "no logic configured yet",
   // which drives the empty state (description + Add Display Logic button).
   const [displayLogic, setDisplayLogic] = useState<DisplayLogic | null>(null);
+  const [displayLogicError, setDisplayLogicError] = useState<string | null>(null);
+  const [hasSavedDisplayLogic, setHasSavedDisplayLogic] = useState(false);
+  const displayLogicErrorRef = useRef<HTMLDivElement | null>(null);
 
   // Add state for live region announcements
   const [announcement, setAnnouncement] = useState('');
@@ -168,6 +179,12 @@ const QuestionEdit = () => {
     setAnnouncement(message);
     // Clear after announcement is made
     setTimeout(() => setAnnouncement(''), 100);
+  };
+
+  // Mark the form as dirty and indicate that there are unsaved changes, and clear all errors
+  const markDirty = () => {
+    setHasUnsavedChanges(true);
+    clearAllErrors();
   };
 
   // Research Output Table Hooks
@@ -200,7 +217,7 @@ const QuestionEdit = () => {
     handleDeleteAdditionalField,
     handleUpdateAdditionalField,
     updateStandardFieldProperty
-  } = useResearchOutputTable({ setHasUnsavedChanges, announce });
+  } = useResearchOutputTable({ markDirty, announce });
 
   // GraphQL Queries
   const {
@@ -227,6 +244,20 @@ const QuestionEdit = () => {
   // Query for all tags
   const { data: tagsData } = useQuery(TagsDocument);
 
+  // Query for display logic groups for this question
+  const { data: displayLogicData, loading: displayLogicLoading } = useQuery(QuestionConditionGroupsDocument, {
+    variables: { questionId: Number(questionId) },
+    skip: !questionId,
+    fetchPolicy: 'network-only' // Always fetch fresh data for display logic
+  });
+
+  // GraphQL Mutations
+  const [saveQuestionDisplayLogicMutation] = useMutation(SaveQuestionDisplayLogicDocument);
+  const [removeQuestionDisplayLogicMutation] = useMutation(RemoveQuestionDisplayLogicDocument, {
+    refetchQueries: [
+      { query: QuestionConditionGroupsDocument, variables: { questionId: Number(questionId) } }
+    ]
+  });
 
   // Candidate questions this question's display logic can trigger off of:
   // prior multiple-choice/checkbox questions in the same section.
@@ -248,7 +279,7 @@ const QuestionEdit = () => {
           ...prev,
           json: JSON.stringify(updatedJSON.data),
         }));
-        setHasUnsavedChanges(true);
+        markDirty();
       }
     }
   };
@@ -266,7 +297,7 @@ const QuestionEdit = () => {
       ...prev,
       questionText: value
     }));
-    setHasUnsavedChanges(true);
+    markDirty();
   };
 
   // Update common input fields when any of them change
@@ -275,7 +306,7 @@ const QuestionEdit = () => {
       ...prev,
       [field]: value === undefined ? '' : value, // Default to empty string if value is undefined
     }));
-    setHasUnsavedChanges(true);
+    markDirty();
   };
 
 
@@ -287,7 +318,7 @@ const QuestionEdit = () => {
         ...prev,
         required: isRequired
       }));
-      setHasUnsavedChanges(true);
+      markDirty();
     }
   };
 
@@ -303,7 +334,7 @@ const QuestionEdit = () => {
           ...prev,
           json: JSON.stringify(updatedParsed),
         }));
-        setHasUnsavedChanges(true);
+        markDirty();
       }
     }
   };
@@ -319,7 +350,7 @@ const QuestionEdit = () => {
         ...prev,
         json: JSON.stringify(updatedParsed),
       }));
-      setHasUnsavedChanges(true);
+      markDirty();
     }
   };
 
@@ -335,7 +366,7 @@ const QuestionEdit = () => {
           ...prev,
           json: JSON.stringify(updatedParsed),
         }));
-        setHasUnsavedChanges(true);
+        markDirty();
       }
     }
   };
@@ -343,30 +374,68 @@ const QuestionEdit = () => {
   // Handler for display logic changes (Display Logic tab)
   const handleDisplayLogicChange = (logic: DisplayLogic | null) => {
     setDisplayLogic(logic);
-    setHasUnsavedChanges(true);
+    markDirty();
   };
 
   // Handler for saving display logic changes (Display Logic tab)
   const handleSaveDisplayLogic = async () => {
-    if (!question) return;
+    if (!displayLogic) return;
     setIsSavingLogic(true);
+    clearAllErrors(); // Clear any previous errors before saving
 
     try {
-      // Simulate a save until backend is implemented
-      if (displayLogic) {
-        toSaveInput(Number(questionId), displayLogic, triggerQuestions);
-      }
+      const input = toSaveInput(Number(questionId), displayLogic, triggerQuestions);
 
-      setHasUnsavedChanges(false);
-      toastState.add(t('messages.success.displayLogicUpdated'), { type: 'success' });
-    } catch {
+      const { data } = await saveQuestionDisplayLogicMutation({
+        variables: { input },
+      });
+
+      const errs = data?.saveQuestionDisplayLogic?.errors
+        ? extractErrors<QuestionErrors>(data.saveQuestionDisplayLogic.errors, ['general'])
+        : [];
+
+      if (errs.length > 0) {
+        setDisplayLogicError(errs[0]); // Show the first error in the display logic tab
+      } else {
+        setHasUnsavedChanges(false);
+        setHasSavedDisplayLogic(true);
+        toastState.add(t('messages.success.displayLogicUpdated'), { type: 'success' });
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    } catch (err) {
       logECS('error', 'QuestionEdit.handleSaveDisplayLogic', {
-        error: 'Invalid question type in parsed JSON',
+        error: err,
         url: { path: routePath('template.q.slug', { templateId, q_slug: questionId }) }
       });
-      setErrors(prev => [...prev, t('messages.error.errorSavingDisplayLogic')]);
+      setDisplayLogicError(t('messages.errors.errorSavingDisplayLogic'));
     } finally {
       setIsSavingLogic(false);
+    }
+  };
+
+  // Handler for removing display logic (Display Logic tab)
+  const handleRemoveDisplayLogic = async () => {
+    clearAllErrors(); // Clear any previous errors before removing
+    try {
+      const { data } = await removeQuestionDisplayLogicMutation({
+        variables: { questionId: Number(questionId) },
+      });
+
+      if (data?.removeQuestionDisplayLogic) {
+        setDisplayLogic(null);
+        setHasSavedDisplayLogic(false);
+        toastState.add(t('messages.success.displayLogicRemoved'), { type: 'success' });
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+
+      } else {
+        setDisplayLogicError(t('messages.errors.errorRemovingDisplayLogic'));
+      }
+    } catch (err) {
+      logECS('error', 'QuestionEdit.handleRemoveDisplayLogic', {
+        error: err,
+        url: { path: routePath('template.q.slug', { templateId, q_slug: questionId }) }
+      });
+      setDisplayLogicError(t('messages.errors.errorRemovingDisplayLogic'));
     }
   };
 
@@ -392,7 +461,7 @@ const QuestionEdit = () => {
 
     if (!parsed) {
       if (error) {
-        setErrors(prev => [...prev, error])
+        setErrors([error]);
       }
       return;
     }
@@ -412,7 +481,7 @@ const QuestionEdit = () => {
 
     if (!parsed) {
       if (error) {
-        setErrors(prev => [...prev, error])
+        setErrors([error])
       }
       return;
     }
@@ -422,10 +491,16 @@ const QuestionEdit = () => {
     );
   };
 
+  const clearAllErrors = () => {
+    setErrors([]);
+    setDisplayLogicError(null);
+  };
+
   // Handle form submission to update the question
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormSubmitted(true);
+    clearAllErrors();
 
     // Prevent double submission
     if (isSubmitting) return;
@@ -463,6 +538,7 @@ const QuestionEdit = () => {
           const errors = response.errors;
           setIsSubmitting(false);
           // Announcement for screen readers
+          clearAllErrors();
           announce(QuestionAdd('researchOutput.announcements.errorOccurred') || 'An error occurred. Please check the form.');
 
           //Check if errors is an array or an object
@@ -526,7 +602,7 @@ const QuestionEdit = () => {
       ? prevTags.filter(selectedTag => selectedTag.id !== tag.id)
       : [...prevTags, tag]
     );
-    setHasUnsavedChanges(true);
+    markDirty();
   };
 
 
@@ -561,7 +637,7 @@ const QuestionEdit = () => {
               url: { path: routePath('template.q.slug', { templateId, q_slug: questionId }) }
             });
 
-            setErrors(prev => [...prev, error])
+            setErrors([error])
           }
           return;
         }
@@ -677,7 +753,7 @@ const QuestionEdit = () => {
           json: JSON.stringify(qInfo.defaultJSON)
         }));
 
-        setHasUnsavedChanges(true);
+        markDirty(); // Mark the form as having unsaved changes
 
         setQuestionType(questionTypeIdQueryParam)
 
@@ -714,6 +790,36 @@ const QuestionEdit = () => {
       setTags(cleanedData);
     }
   }, [tagsData]);
+
+  // Hydrate displayLogic from the backend once, on first load
+  useEffect(() => {
+    if (hasHydratedDisplayLogicRef.current) return; // only ever hydrate once
+    if (!displayLogicData?.questionConditionGroups || !selectedQuestion?.question) return;
+
+    const groups = displayLogicData.questionConditionGroups.filter(
+      (g): g is NonNullable<typeof g> => g != null
+    );
+
+    if (groups.length === 0) {
+      hasHydratedDisplayLogicRef.current = true; // nothing to hydrate, but don't check again
+      return;
+    }
+
+    const { displayLogicAction, displayLogicMatchType } = selectedQuestion.question;
+    if (displayLogicAction == null || displayLogicMatchType == null) {
+      logECS('error', 'QuestionEdit.hydrateDisplayLogic', {
+        error: 'Missing displayLogicAction or displayLogicMatchType in selectedQuestion',
+        url: { path: routePath('template.q.slug', { templateId, q_slug: questionId }) }
+      });
+      setDisplayLogicError(t('messages.errors.errorLoadingDisplayLogic'));
+      hasHydratedDisplayLogicRef.current = true;
+      return;
+    }
+
+    hasHydratedDisplayLogicRef.current = true;
+    setDisplayLogic(fromQuestionConditionGroups(displayLogicAction, displayLogicMatchType, groups));
+    setHasSavedDisplayLogic(true);
+  }, [displayLogicData, selectedQuestion]);
 
   // Warn user of unsaved changes if they try to leave the page
   useEffect(() => {
@@ -885,7 +991,7 @@ const QuestionEdit = () => {
                       ...prev,
                       requirementText: newValue
                     }));
-                    setHasUnsavedChanges(true);
+                    markDirty();
                   }}
                 />
 
@@ -902,7 +1008,7 @@ const QuestionEdit = () => {
                       ...prev,
                       guidanceText: newValue
                     }));
-                    setHasUnsavedChanges(true);
+                    markDirty();
                   }}
                   helpMessage={t('helpText.guidanceText')}
                 />
@@ -922,7 +1028,7 @@ const QuestionEdit = () => {
                           ...prev,
                           sampleText: newValue
                         }));
-                        setHasUnsavedChanges(true);
+                        markDirty();
                       }}
                     />
 
@@ -932,7 +1038,7 @@ const QuestionEdit = () => {
                           ...question,
                           useSampleTextAsDefault: !question?.useSampleTextAsDefault
                         });
-                        setHasUnsavedChanges(true);
+                        markDirty();
                       }}
                       isSelected={question?.useSampleTextAsDefault || false}
                     >
@@ -1058,13 +1164,17 @@ const QuestionEdit = () => {
 
             {/** Tab: Display Logic Tab */}
             <TabPanel id="logic">
+              <ErrorMessages errors={displayLogicError ? [displayLogicError] : []} ref={displayLogicErrorRef} />
               <h2>{t('tabPanel.headings.logic')}</h2>
               <DisplayLogicComponent
                 triggerQuestions={triggerQuestions}
                 displayLogic={displayLogic}
+                hasSavedDisplayLogic={hasSavedDisplayLogic}
                 onDisplayLogicChange={handleDisplayLogicChange}
                 onDisplayLogicSave={handleSaveDisplayLogic}
+                onDisplayLogicRemove={handleRemoveDisplayLogic}
                 isSaving={isSavingLogic}
+                isLoadingExistingLogic={displayLogicLoading}
               />
 
             </TabPanel>

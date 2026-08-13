@@ -173,6 +173,12 @@ const QuestionAdd = ({
   };
 
 
+  // Mark the form as dirty and indicate that there are unsaved changes, and clear all errors
+  const markDirty = () => {
+    setHasUnsavedChanges(true);
+    setErrors([]); // Clear all errors
+  };
+
   // Research Output Table Hooks
   const {
     buildResearchOutputFormState,
@@ -202,7 +208,7 @@ const QuestionAdd = ({
     handleDeleteAdditionalField,
     handleUpdateAdditionalField,
     updateStandardFieldProperty
-  } = useResearchOutputTable({ setHasUnsavedChanges, announce });
+  } = useResearchOutputTable({ markDirty, announce });
 
   // Update question.json whenever Research Output fields change
   useEffect(() => {
@@ -259,6 +265,7 @@ const QuestionAdd = ({
           ...prev,
           json: JSON.stringify(updatedJSON.data),
         }));
+        markDirty();
       }
 
     }
@@ -276,7 +283,7 @@ const QuestionAdd = ({
           ...prev,
           json: JSON.stringify(updatedParsed),
         }));
-        setHasUnsavedChanges(true);
+        markDirty();
       }
     }
   };
@@ -294,7 +301,7 @@ const QuestionAdd = ({
           ...prev,
           json: JSON.stringify(updatedParsed),
         }));
-        setHasUnsavedChanges(true);
+        markDirty();
       }
     }
   };
@@ -311,7 +318,7 @@ const QuestionAdd = ({
           ...prev,
           json: JSON.stringify(updatedParsed),
         }));
-        setHasUnsavedChanges(true);
+        markDirty();
       }
     }
   };
@@ -324,7 +331,7 @@ const QuestionAdd = ({
         ...prev,
         required: isRequired
       }));
-      setHasUnsavedChanges(true);
+      markDirty();
     }
   };
 
@@ -335,7 +342,7 @@ const QuestionAdd = ({
       ...prev,
       [field]: value === undefined ? '' : value, // Default to empty string if value is undefined
     }));
-    setHasUnsavedChanges(true);
+    markDirty();
   };
 
   //Handle change to Question Text
@@ -344,7 +351,7 @@ const QuestionAdd = ({
       ...prev,
       questionText: value
     }));
-    setHasUnsavedChanges(true);
+    markDirty();
   };
 
 
@@ -378,7 +385,7 @@ const QuestionAdd = ({
 
     if (!parsed) {
       if (error) {
-        setErrors(prev => [...prev, error])
+        setErrors([error])
       }
       return;
     }
@@ -400,7 +407,7 @@ const QuestionAdd = ({
 
     if (!parsed) {
       if (error) {
-        setErrors(prev => [...prev, error])
+        setErrors([error]);
       }
       return;
     }
@@ -427,9 +434,10 @@ const QuestionAdd = ({
 
     const updatedJSON = buildUpdatedJSON(question);
     const { success, error } = updatedJSON ?? {};
+    setErrors([]);
 
     if (!success || error) {
-      setErrors(prev => [...prev, error ?? QuestionAdd('messages.errors.questionAddingError')]);
+      setErrors([error ?? QuestionAdd('messages.errors.questionAddingError')]);
       announce(QuestionAdd('researchOutput.announcements.errorOccurred'));
       setIsSubmitting(false);
       return;
@@ -453,7 +461,7 @@ const QuestionAdd = ({
       toastState.add(QuestionAdd('messages.success.questionAdded'), { type: 'success' });
       router.push(successUrl);
     } catch (error) {
-      setErrors(prev => [...prev, QuestionAdd('messages.errors.questionAddingError')]);
+      setErrors([QuestionAdd('messages.errors.questionAddingError')]);
       logECS('error', 'Adding Question in QuestionAdd', { error });
     } finally {
       setIsSubmitting(false);
@@ -466,7 +474,7 @@ const QuestionAdd = ({
       ? prevTags.filter(selectedTag => selectedTag.id !== tag.id)
       : [...prevTags, tag]
     );
-    setHasUnsavedChanges(true);
+    markDirty();
   };
 
 
