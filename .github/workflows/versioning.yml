@@ -131,6 +131,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: release-files
+          path: release-files # Download the release files to a subdirectory to avoid overwriting the current working directory
 
       - name: Open sync PR to stage
         env:
@@ -144,8 +145,11 @@ jobs:
 
           git checkout -B "$BRANCH" origin/stage
           
-          # package.json and CHANGELOG.md are already downloaded from the previous step, 
-          # so we just need to add them to the commit
+          # Now that we're on target branch, overlay the release files
+          cp release-files/package.json package.json
+          cp release-files/CHANGELOG.md CHANGELOG.md
+
+          # Add the updated files to the commit. If there are no changes, exit early.
           git add package.json CHANGELOG.md
           if git diff --cached --quiet; then
             echo "stage already matches release files. Nothing to do."
@@ -182,6 +186,8 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: release-files
+          path: release-files # Download the release files to a subdirectory to avoid overwriting the current working directory
+
 
       - name: Open sync PR to development
         env:
@@ -195,8 +201,11 @@ jobs:
 
           git checkout -B "$BRANCH" origin/development
 
-          # package.json and CHANGELOG.md are already downloaded from the previous step, 
-          # so we just need to add them to the commit
+          # Overlay the release files
+          cp release-files/package.json package.json
+          cp release-files/CHANGELOG.md CHANGELOG.md
+
+          # Add the updated files to the commit. If there are no changes, exit early.
           git add package.json CHANGELOG.md
           if git diff --cached --quiet; then
             echo "stage already matches release files. Nothing to do."
