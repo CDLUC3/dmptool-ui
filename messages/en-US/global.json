@@ -114,6 +114,7 @@
     "messages": {
       "profileUpdateSuccess": "The profile form was successfully updated.",
       "emailAddressUpdateSuccess": "The email was successfully added to your profile.",
+      "emailAddressDeleteSuccess": "The email was successfully removed from your profile.",
       "errors": {
         "givenNameValidation": "Name must be at least 2 characters",
         "surNameValidation": "Surname must be at least 2 characters",
