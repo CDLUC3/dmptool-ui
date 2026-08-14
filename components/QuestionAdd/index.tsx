@@ -7,9 +7,14 @@ import { useTranslations } from 'next-intl';
 import {
   Button,
   Checkbox,
+  CheckboxGroup,
+  Dialog,
+  DialogTrigger,
   Form,
   Input,
   Label,
+  OverlayArrow,
+  Popover,
   Radio,
   Tab,
   TabList,
@@ -21,18 +26,18 @@ import {
 
 // GraphQL
 import { useQuery } from '@apollo/client/react';
-import { QuestionsDisplayOrderDocument } from '@/generated/graphql';
+import { QuestionsDisplayOrderDocument, TagsDocument } from '@/generated/graphql';
 
 import {
   Question,
   QuestionOptions,
   AnyParsedQuestion,
+  TagsInterface
 } from '@/app/types';
 
 // Components
 import PageHeader from "@/components/PageHeader";
 import {
-  FormInput,
   FormTextArea,
   RadioGroupComponent,
   RangeComponent,
@@ -45,6 +50,7 @@ import QuestionPreview from '@/components/QuestionPreview';
 import QuestionView from '@/components/QuestionView';
 import { getParsedQuestionJSON } from '@/components/hooks/getParsedQuestionJSON';
 import { TransitionButton } from '@/components/Form';
+import { DmpIcon } from "@/components/Icons";
 
 //Other
 import { useResearchOutputTable } from '@/app/hooks/useResearchOutputTable';
@@ -85,6 +91,7 @@ export interface QuestionCommonFields {
   useSampleTextAsDefault?: boolean;
   required?: boolean;
   displayOrder?: number;
+  tags?: TagsInterface[];
 }
 
 
@@ -96,7 +103,8 @@ const QuestionAdd = ({
   onSave,
   backUrl,
   successUrl,
-  breadcrumbs
+  breadcrumbs,
+  showTags = true
 }:
   {
     questionType?: string | null,
@@ -107,7 +115,7 @@ const QuestionAdd = ({
     backUrl: string;        // where "Change Type" and breadcrumbs point
     successUrl: string;     // where to redirect on save success
     breadcrumbs: React.ReactNode;
-
+    showTags?: boolean;
   }) => {
 
   const params = useParams();
@@ -143,9 +151,19 @@ const QuestionAdd = ({
   // Add state for live region announcements
   const [announcement, setAnnouncement] = useState('');
 
+  //Store tag list in state
+  const [tags, setTags] = useState<TagsInterface[]>([]);
+  // Keep track of which checkboxes have been selected
+  const [selectedTags, setSelectedTags] = useState<TagsInterface[]>([]);
+
   // localization keys
   const Global = useTranslations('Global');
   const QuestionAdd = useTranslations('QuestionAdd');
+
+  // GraphQL Query for all tags - skip query if showTags is false
+  const { data: tagsData } = useQuery(TagsDocument, {
+    skip: !showTags
+  });
 
   // Helper function to make announcements
   const announce = (message: string) => {
@@ -154,6 +172,12 @@ const QuestionAdd = ({
     setTimeout(() => setAnnouncement(''), 100);
   };
 
+
+  // Mark the form as dirty and indicate that there are unsaved changes, and clear all errors
+  const markDirty = () => {
+    setHasUnsavedChanges(true);
+    setErrors([]); // Clear all errors
+  };
 
   // Research Output Table Hooks
   const {
@@ -184,7 +208,7 @@ const QuestionAdd = ({
     handleDeleteAdditionalField,
     handleUpdateAdditionalField,
     updateStandardFieldProperty
-  } = useResearchOutputTable({ setHasUnsavedChanges, announce });
+  } = useResearchOutputTable({ markDirty, announce });
 
   // Update question.json whenever Research Output fields change
   useEffect(() => {
@@ -241,6 +265,7 @@ const QuestionAdd = ({
           ...prev,
           json: JSON.stringify(updatedJSON.data),
         }));
+        markDirty();
       }
 
     }
@@ -258,7 +283,7 @@ const QuestionAdd = ({
           ...prev,
           json: JSON.stringify(updatedParsed),
         }));
-        setHasUnsavedChanges(true);
+        markDirty();
       }
     }
   };
@@ -276,7 +301,7 @@ const QuestionAdd = ({
           ...prev,
           json: JSON.stringify(updatedParsed),
         }));
-        setHasUnsavedChanges(true);
+        markDirty();
       }
     }
   };
@@ -293,7 +318,7 @@ const QuestionAdd = ({
           ...prev,
           json: JSON.stringify(updatedParsed),
         }));
-        setHasUnsavedChanges(true);
+        markDirty();
       }
     }
   };
@@ -306,7 +331,7 @@ const QuestionAdd = ({
         ...prev,
         required: isRequired
       }));
-      setHasUnsavedChanges(true);
+      markDirty();
     }
   };
 
@@ -317,8 +342,18 @@ const QuestionAdd = ({
       ...prev,
       [field]: value === undefined ? '' : value, // Default to empty string if value is undefined
     }));
-    setHasUnsavedChanges(true);
+    markDirty();
   };
+
+  //Handle change to Question Text
+  const handleQuestionTextChange = (value: string) => {
+    setQuestion(prev => ({
+      ...prev,
+      questionText: value
+    }));
+    markDirty();
+  };
+
 
   // Prepare input for the questionTypeHandler. For options questions, we update the 
   // values with rows state. For non-options questions, we use the parsed JSON
@@ -350,7 +385,7 @@ const QuestionAdd = ({
 
     if (!parsed) {
       if (error) {
-        setErrors(prev => [...prev, error])
+        setErrors([error])
       }
       return;
     }
@@ -372,7 +407,7 @@ const QuestionAdd = ({
 
     if (!parsed) {
       if (error) {
-        setErrors(prev => [...prev, error])
+        setErrors([error]);
       }
       return;
     }
@@ -399,9 +434,10 @@ const QuestionAdd = ({
 
     const updatedJSON = buildUpdatedJSON(question);
     const { success, error } = updatedJSON ?? {};
+    setErrors([]);
 
     if (!success || error) {
-      setErrors(prev => [...prev, error ?? QuestionAdd('messages.errors.questionAddingError')]);
+      setErrors([error ?? QuestionAdd('messages.errors.questionAddingError')]);
       announce(QuestionAdd('researchOutput.announcements.errorOccurred'));
       setIsSubmitting(false);
       return;
@@ -416,6 +452,7 @@ const QuestionAdd = ({
       useSampleTextAsDefault: question?.useSampleTextAsDefault ?? false,
       required: question?.required,
       displayOrder: getDisplayOrder(),
+      ...(showTags ? { tags: selectedTags } : {}), // Only include tags if showTags is true
     };
 
     try {
@@ -424,12 +461,22 @@ const QuestionAdd = ({
       toastState.add(QuestionAdd('messages.success.questionAdded'), { type: 'success' });
       router.push(successUrl);
     } catch (error) {
-      setErrors(prev => [...prev, QuestionAdd('messages.errors.questionAddingError')]);
+      setErrors([QuestionAdd('messages.errors.questionAddingError')]);
       logECS('error', 'Adding Question in QuestionAdd', { error });
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  // Handle changes to tag checkbox selection
+  const handleCheckboxChange = (tag: TagsInterface) => {
+    setSelectedTags(prevTags => prevTags.some(selectedTag => selectedTag.id === tag.id)
+      ? prevTags.filter(selectedTag => selectedTag.id !== tag.id)
+      : [...prevTags, tag]
+    );
+    markDirty();
+  };
+
 
   // If questionType is missing, return user to the Question Types selection page
   // If sectionId is missing, return user back to the Edit Template page
@@ -490,6 +537,18 @@ const QuestionAdd = ({
       }
     }
   }, [question]);
+
+  useEffect(() => {
+    if (tagsData?.tags) {
+      // Remove __typename field from the tags selection
+      const cleanedData = tagsData.tags.map(({
+        __typename,
+        ...fields
+      }) => fields);
+      setTags(cleanedData);
+    }
+  }, [tagsData])
+
 
   // Warn user of unsaved changes if they try to leave the page
   useEffect(() => {
@@ -553,16 +612,16 @@ const QuestionAdd = ({
                   </Text>
                 </TextField>
 
-                <FormInput
+                <FormTextArea
                   name="question_text"
-                  type="text"
                   isRequired={true}
                   label={QuestionAdd('labels.questionText')}
                   value={question?.questionText ? question.questionText : ''}
-                  onChange={(e) => handleInputChange('questionText', e.currentTarget.value)}
+                  onChange={handleQuestionTextChange}
                   helpMessage={QuestionAdd('helpText.questionText')}
                   isInvalid={!question?.questionText && formSubmitted}
                   errorMessage={QuestionAdd('messages.errors.questionTextRequired')}
+                  richText={false}
                 />
 
                 {/**Options question types*/}
@@ -695,6 +754,55 @@ const QuestionAdd = ({
                     onUpdateAdditionalField={handleUpdateAdditionalField}
                     onAddAdditionalField={addAdditionalField}
                   />
+                )}
+
+                {showTags && (
+                  <CheckboxGroup
+                    name="sectionTags"
+                    defaultValue={selectedTags.map(tag => tag.name)}
+                  >
+                    <Label>{QuestionAdd('labels.bestPracticeTags')}</Label>
+                    <span className="help">{QuestionAdd('helpText.bestPracticeTagsDesc')}</span>
+                    <div className="checkbox-group-two-column">
+                      {tags && tags.map(tag => {
+                        const id = (tag.id)?.toString();
+                        return (
+                          <Checkbox
+                            value={tag.name}
+                            key={tag.name}
+                            id={id}
+                            onChange={() => handleCheckboxChange(tag)}
+                          >
+                            <div className="checkbox">
+                              <svg viewBox="0 0 18 18" aria-hidden="true">
+                                <polyline points="1 9 7 14 15 4" />
+                              </svg>
+                            </div>
+                            <span className="checkbox-label" data-testid='checkboxLabel'>
+                              <div className="checkbox-wrapper">
+                                <div>{tag.name}</div>
+                                <DialogTrigger>
+                                  <Button className="popover-btn" aria-label="Click for more info"><div className="icon info"><DmpIcon icon="info" /></div></Button>
+                                  <Popover>
+                                    <OverlayArrow>
+                                      <svg width={12} height={12} viewBox="0 0 12 12">
+                                        <path d="M0 0 L6 6 L12 0" />
+                                      </svg>
+                                    </OverlayArrow>
+                                    <Dialog>
+                                      <div className="flex-col">
+                                        {tag.description}
+                                      </div>
+                                    </Dialog>
+                                  </Popover>
+                                </DialogTrigger>
+                              </div>
+                            </span>
+                          </Checkbox>
+                        )
+                      })}
+                    </div>
+                  </CheckboxGroup>
                 )}
 
                 {/** Research Output question types have "required" at individual fields, and not on the whole question */}

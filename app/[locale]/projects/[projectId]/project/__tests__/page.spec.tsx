@@ -243,7 +243,9 @@ describe('ProjectsProjectDetail', () => {
 
     render(<ProjectsProjectDetail />);
     fireEvent.change(screen.getByLabelText(/labels.projectName/), { target: { value: '' } });
-    fireEvent.submit(screen.getByRole('button', { name: /save/i }));
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /save/i }));
+    });
     const alert = await screen.findByRole('alert');
     expect(alert).toBeInTheDocument();
     expect(within(alert).getByText('messages.errors.projectName')).toBeInTheDocument();
@@ -265,9 +267,10 @@ describe('ProjectsProjectDetail', () => {
 
     render(<ProjectsProjectDetail />);
     fireEvent.change(screen.getByLabelText(/labels.projectName/), { target: { value: 'Updated Project' } });
-    await waitFor(() => {
-      fireEvent.submit(screen.getByRole('button', { name: /save/i }));
-    })
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /save/i }));
+    });
+
 
     // Verify that router.push was called with "/login"
     expect(mockRouter.push).toHaveBeenCalledWith('/en-US/projects/1');
@@ -301,7 +304,9 @@ describe('ProjectsProjectDetail', () => {
 
     render(<ProjectsProjectDetail />);
     fireEvent.change(screen.getByLabelText(/labels.projectName/), { target: { value: 'Updated Project' } });
-    fireEvent.submit(screen.getByRole('button', { name: /save/i }));
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /save/i }));
+    });
 
     // //Check that error logged
     await waitFor(() => {
@@ -340,9 +345,9 @@ describe('ProjectsProjectDetail', () => {
 
     render(<ProjectsProjectDetail />);
 
-    act(() => {
+    await act(async () => {
       fireEvent.change(screen.getByLabelText(/labels.projectName/), { target: { value: 'Updated Project' } });
-      fireEvent.submit(screen.getByRole('button', { name: /save/i }));
+      fireEvent.click(screen.getByRole('button', { name: /save/i }));
     })
 
     await waitFor(() => {

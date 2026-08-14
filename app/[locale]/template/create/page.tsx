@@ -1,12 +1,18 @@
 'use client';
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useTransition
+} from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
+import NProgress from 'nprogress';
 import {
   Breadcrumb,
   Breadcrumbs,
-  Button,
   Form,
   Link,
 } from "react-aria-components";
@@ -17,10 +23,12 @@ import PageHeader from "@/components/PageHeader";
 import TemplateSelectTemplatePage from '@/components/SelectExistingTemplate';
 import { ContentContainer, LayoutContainer, } from '@/components/Container';
 import FormInput from '@/components/Form/FormInput';
+import Loading from '@/components/Loading';
+import { TransitionButton } from '@/components/Form';
 
+// Utils
 import { debounce } from '@/hooks/debounce';
 import { useQueryStep } from '@/app/[locale]/template/create/useQueryStep';
-import Loading from '@/components/Loading';
 
 const TemplateCreatePage: React.FC = () => {
   const router = useRouter();
@@ -48,17 +56,30 @@ const TemplateCreatePage: React.FC = () => {
     debouncedInputHandler(e.target.value);
   }
 
-  const handleNext = (e: React.FormEvent) => {
-    e.preventDefault();
+  const [, startTransition] = useTransition();
+  const progressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-    // If user enters a valid template name, we want to redirect them to
-    // Step 2 of the create template pages, which is the 'Start with a copy of an existing template' page
-    if (templateName.length > 2) {
-      router.push('/template/create?step=2')
-    } else {
+  const handleNext = async () => {
+    setErrors({});
+
+    if (templateName.length <= 2) {
       setErrors({ templateName: TemplateCreate('messages.templateNameError') });
+      return;
     }
-  }
+
+    if (progressTimer.current) clearTimeout(progressTimer.current);
+    progressTimer.current = setTimeout(() => {
+      NProgress.start();
+      window.dispatchEvent(new CustomEvent('app:navigation:start'));
+    }, 100);
+
+    await new Promise<void>((resolve) => {
+      startTransition(() => {
+        router.push('/template/create?step=2');
+        resolve();
+      });
+    });
+  };
 
   useEffect(() => {
     // If a step was specified in a query param, then set that step (step 1 or 2)
@@ -92,7 +113,7 @@ const TemplateCreatePage: React.FC = () => {
 
           <LayoutContainer>
             <ContentContainer>
-              <Form onSubmit={handleNext}>
+              <Form onSubmit={(e) => e.preventDefault()}>
                 <FormInput
                   name="templateName"
                   type="text"
@@ -105,10 +126,9 @@ const TemplateCreatePage: React.FC = () => {
                   isInvalid={!!errors.templateName}
                 />
 
-                <Button type="submit">
+                <TransitionButton type="submit" onPress={handleNext}>
                   {Global('buttons.next')}
-                </Button>
-
+                </TransitionButton>
               </Form>
             </ContentContainer>
           </LayoutContainer>

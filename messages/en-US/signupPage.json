@@ -19,6 +19,7 @@
     "submitSignup": "Sign Up",
     "signingUp": "Signing up",
     "loginLink": "Alread have a DMP Account?",
-    "helpLink": "Get help"
+    "helpLink": "Get help",
+    "passwordRequirements": "Password must meet the requirements below"
   }
 }

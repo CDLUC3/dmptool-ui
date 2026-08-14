@@ -59,6 +59,14 @@ query Question($questionId: Int!) {
     templateId
     isDirty
     required
+    tags {
+      id
+      description
+      name
+      slug
+    }
+    displayLogicAction
+    displayLogicMatchType
   }
 }
 

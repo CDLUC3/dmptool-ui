@@ -311,6 +311,7 @@ const QuestionTypeSelectPage: React.FC = () => {
               };
               await addQuestionMutation({ variables: { input } });
             }}
+            showTags={true}
           />
         </>
       )}

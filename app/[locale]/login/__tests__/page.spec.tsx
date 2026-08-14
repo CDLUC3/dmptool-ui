@@ -120,11 +120,8 @@ describe('LoginPage', () => {
     fireEvent.click(screen.getByTestId("actionContinue"));
 
     await waitFor(() => {
-      expect(screen.getByRole("link", { name: "resetPassword" })).toBeInTheDocument();
+      expect(screen.getByRole("link", { name: "forgotPassword.title" })).toBeInTheDocument();
     });
-
-    // TODO: enable when reset password flow is implemented
-    // expect(screen.getByRole("link", { name: "resetPassword" })).toHaveAttribute("href", expect.not.stringContaining("#"));
   });
 
   it("should redirect to home on successful login", async () => {

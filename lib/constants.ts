@@ -51,4 +51,3 @@ export const RoleOptions: { label: string; value: UserRole | '' }[] = [
   { label: 'Admin', value: UserRole.Admin },
   { label: 'User', value: UserRole.Researcher },
 ];
-

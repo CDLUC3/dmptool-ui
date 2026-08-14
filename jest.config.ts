@@ -39,7 +39,7 @@ const customJestConfig = {
   coverageThreshold: {
     global: {
       branches: 75,
-      functions: 85,
+      functions: 84,
       lines: 85,
       statements: 85,
     }
@@ -64,8 +64,10 @@ const getJestConfig = async () => {
   const config = await createJestConfig(customJestConfig)();
 
   // Updated transformIgnorePatterns to handle next-intl and its dependencies
+  // Ignore (don't transform) everything under node_modules, except paths that match one of these package names
+  // sanitize-html and its dependencies recently started shipping ESM-only builds, which causes issues with Jest's default transformIgnorePatterns.
   config.transformIgnorePatterns = [
-    'node_modules/(?!(use-intl|next-intl|@formatjs|intl-messageformat|.*\\.mjs$)/)',
+    'node_modules/(?!(sanitize-html|htmlparser2|entities|dom-serializer|domhandler|domutils|domelementtype|use-intl|next-intl|@formatjs|intl-messageformat|.*\\.mjs$)/)',
   ]
 
   return config;

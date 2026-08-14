@@ -1,22 +1,18 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
-import { useQuery, useMutation } from '@apollo/client/react';
+import { useMutation } from '@apollo/client/react';
 import { useParams, useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import {
   Breadcrumb,
   Breadcrumbs,
   Button,
-  Checkbox,
-  CheckboxGroup,
   Dialog,
   DialogTrigger,
   Form,
   Label,
   Link,
-  OverlayArrow,
-  Popover,
   Tab,
   TabList,
   TabPanel,
@@ -28,14 +24,12 @@ import {
 // GraphQL
 import {
   SectionErrors,
-  TagsDocument,
   UpdateSectionDocument,
   RemoveSectionDocument,
 } from '@/generated/graphql';
 
 //Components
 import { ContentContainer, LayoutContainer, } from '@/components/Container';
-import { DmpIcon } from "@/components/Icons";
 import PageHeader from "@/components/PageHeader";
 import TinyMCEEditor from "@/components/TinyMCEEditor";
 import ErrorMessages from '@/components/ErrorMessages';
@@ -46,7 +40,6 @@ import { TransitionButton } from '@/components/Form';
 import {
   SectionFormErrorsInterface,
   SectionFormInterface,
-  TagsInterface
 } from '@/app/types';
 
 // Hooks
@@ -88,11 +81,8 @@ const SectionUpdatePage: React.FC = () => {
 
   const {
     sectionData,
-    selectedTags,
-    checkboxTags,
     loading,
     setSectionData,
-    setSelectedTags,
   } = useSectionData(Number(sectionId));
 
 
@@ -110,9 +100,6 @@ const SectionUpdatePage: React.FC = () => {
   const SectionUpdatePage = useTranslations('SectionUpdatePage');
   const Section = useTranslations('Section');
 
-  //Store selection of tags in state
-  const [tags, setTags] = useState<TagsInterface[]>([]);
-
   // Set URLs
   const TEMPLATE_URL = routePath('template.show', { templateId });
   const UPDATE_SECTION_URL = routePath('template.section.slug', { templateId, section_slug: sectionId });
@@ -123,10 +110,6 @@ const SectionUpdatePage: React.FC = () => {
 
   // Initialize remove section mutation
   const [removeSectionMutation] = useMutation(RemoveSectionDocument);
-
-  // Query for all tags
-  const { data: tagsData } = useQuery(TagsDocument);
-
 
   const updateSectionContent = (key: string, value: string) => {
     setSectionData((prevContents) => ({
@@ -192,7 +175,7 @@ const SectionUpdatePage: React.FC = () => {
 
   // Make GraphQL mutation request to update section
   const updateSection = async (): Promise<[SectionErrors, boolean]> => {
-    // string all tags from sectionName before sending to backend
+    // string all HTML tags from sectionName before sending to backend
     const cleanedSectionName = stripHtmlTags(sectionData.sectionName);
 
     try {
@@ -206,7 +189,6 @@ const SectionUpdatePage: React.FC = () => {
             guidance: sectionData.sectionGuidance,
             displayOrder: sectionData.displayOrder,
             bestPractice: sectionData.bestPractice ?? false, // have to write it this way, otherwise the 'false' will remove this prop from input
-            tags: selectedTags
           }
         }
       });
@@ -252,15 +234,6 @@ const SectionUpdatePage: React.FC = () => {
       setIsDeleting(false);
       setIsDeleteModalOpen(false);
     }
-  };
-
-  // Handle changes to tag checkbox selection
-  const handleCheckboxChange = (tag: TagsInterface) => {
-    setSelectedTags(prevTags => prevTags.some(selectedTag => selectedTag.id === tag.id)
-      ? prevTags.filter(selectedTag => selectedTag.id !== tag.id)
-      : [...prevTags, tag]
-    );
-    setHasUnsavedChanges(true);
   };
 
   // Show Success Message
@@ -327,14 +300,6 @@ const SectionUpdatePage: React.FC = () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
     };
   }, [hasUnsavedChanges]);
-
-  useEffect(() => {
-    if (tagsData?.tags) {
-      // Remove __typename field from the tags selection
-      const cleanedData = tagsData.tags.map(({ __typename, ...fields }) => fields);
-      setTags(cleanedData);
-    }
-  }, [tagsData])
 
   // If errors when submitting publish form, scroll them into view
   useEffect(() => {
@@ -428,52 +393,6 @@ const SectionUpdatePage: React.FC = () => {
                       helpText={Section('helpText.sectionGuidance')}
                     />
 
-                    <CheckboxGroup
-                      name="sectionTags"
-                      defaultValue={checkboxTags}
-                    >
-                      <Label>{Section('labels.bestPracticeTags')}</Label>
-                      <span className="help">{Section('helpText.bestPracticeTagsDesc')}</span>
-                      <div className="checkbox-group-two-column">
-                        {tags && tags.map(tag => {
-                          const id = (tag.id)?.toString();
-                          return (
-                            <Checkbox
-                              value={tag.name}
-                              key={tag.name}
-                              id={id}
-                              onChange={() => handleCheckboxChange(tag)}
-                            >
-                              <div className="checkbox">
-                                <svg viewBox="0 0 18 18" aria-hidden="true">
-                                  <polyline points="1 9 7 14 15 4" />
-                                </svg>
-                              </div>
-                              <span className="checkbox-label" data-testid='checkboxLabel'>
-                                <div className="checkbox-wrapper">
-                                  <div>{tag.name}</div>
-                                  <DialogTrigger>
-                                    <Button className="popover-btn" aria-label="Click for more info"><div className="icon info"><DmpIcon icon="info" /></div></Button>
-                                    <Popover>
-                                      <OverlayArrow>
-                                        <svg width={12} height={12} viewBox="0 0 12 12">
-                                          <path d="M0 0 L6 6 L12 0" />
-                                        </svg>
-                                      </OverlayArrow>
-                                      <Dialog>
-                                        <div className="flex-col">
-                                          {tag.description}
-                                        </div>
-                                      </Dialog>
-                                    </Popover>
-                                  </DialogTrigger>
-                                </div>
-                              </span>
-                            </Checkbox>
-                          )
-                        })}
-                      </div>
-                    </CheckboxGroup>
                     <TransitionButton
                       type="submit"
                       isDisabled={isSubmitting}

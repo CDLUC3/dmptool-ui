@@ -489,6 +489,7 @@ describe("QuestionAdd", () => {
         sampleText: "",
         useSampleTextAsDefault: false,
         required: true,
+        tags: []
       });
     });
   });
@@ -540,6 +541,7 @@ describe("QuestionAdd", () => {
         sampleText: "",
         useSampleTextAsDefault: false,
         required: false,
+        tags: []
       });
     });
   });
@@ -682,6 +684,7 @@ describe("QuestionAdd", () => {
         sampleText: "",
         useSampleTextAsDefault: false,
         required: false,
+        tags: []
       });
     });
   })
@@ -745,6 +748,7 @@ describe("QuestionAdd", () => {
         sampleText: '',
         required: false,
         useSampleTextAsDefault: false,
+        tags: []
       });
     });
   })
@@ -798,6 +802,7 @@ describe("QuestionAdd", () => {
         sampleText: '',
         useSampleTextAsDefault: false,
         required: false,
+        tags: []
       });
     });
   })
@@ -1211,6 +1216,7 @@ describe("QuestionAdd", () => {
         sampleText: '',
         useSampleTextAsDefault: false,
         required: true,
+        tags: []
       });
     });
   })

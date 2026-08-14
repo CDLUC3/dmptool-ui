@@ -6,6 +6,9 @@ import Home from '../page';
 expect.extend(toHaveNoViolations);
 
 describe('Home Page', () => {
+  beforeEach(() => {
+    window.scrollTo = jest.fn();
+  });
   it('renders the Home page with heading and PageLinkCard', () => {
     render(<Home />);
 

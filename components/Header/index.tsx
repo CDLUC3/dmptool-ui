@@ -15,11 +15,14 @@ import { Button } from "react-aria-components";
 import styles from "./header.module.scss";
 import LanguageSelector from "../LanguageSelector";
 import { routePath } from "@/utils/routes";
+import logECS from '@/utils/clientLogger';
 
 function Header() {
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const {
     isAuthenticated,
+    setIsAuthenticated,
+    clearCache,
     clearAuthData
   } = useAuthContext();
   const router = useRouter();
@@ -55,12 +58,22 @@ function Header() {
 
       if (response.ok) {
         await clearAuthData();
-        router.push(routePath("app.login"));
+        await router.push(routePath("app.login"));
       } else {
-        console.error("Failed to logout");
+        logECS("error", "handleLogout", {
+          error: new Error("Failed to logout"),
+        });
+        setIsAuthenticated(false);
+        clearCache();
+        await router.push(routePath("app.login"));
       }
     } catch (err) {
-      console.error("An error occurred during logout:", err);
+      logECS("error", "handleLogout", {
+        error: err as Error,
+      });
+      setIsAuthenticated(false);
+      clearCache();
+      await router.push(routePath("app.login"));
     }
   };
 
@@ -91,7 +104,7 @@ function Header() {
         <div className={`${styles.navigation} ${styles.desktop}`}>
           <ul role="menu">
             {/* Show authenticated user items first when logged in */}
-            {isAuthenticated && (
+            {isAuthenticated === true && (
               <>
                 <li role="menuitem">
                   <Link href={routePath("projects.index")}>{t("menuProjectsPlans")}</Link>
@@ -197,7 +210,7 @@ function Header() {
             </li>
 
             {/* Show authenticated user items */}
-            {isAuthenticated && (
+            {isAuthenticated === true && (
               <>
                 <li role="menuitem">
                   <div className={styles.dropdown}>
@@ -324,7 +337,7 @@ function Header() {
             )}
 
             {/* Show login/signup for non-authenticated users */}
-            {!isAuthenticated && (
+            {isAuthenticated === false && (
               <>
                 <li role="menuitem">
                   <Button
@@ -379,7 +392,7 @@ function Header() {
           </button>
           <ul role="menubar">
             {/* Show authenticated user items first when logged in */}
-            {isAuthenticated && (
+            {isAuthenticated === true && (
               <>
                 <li role="menuitem">
                   <Link href={routePath("projects.index")}>{t("menuProjectsPlans")}</Link>
@@ -459,7 +472,7 @@ function Header() {
             </li>
 
             {/* Show authenticated user items */}
-            {isAuthenticated && (
+            {isAuthenticated === true && (
               <>
                 <li role="menuitem">
                   <div className={styles.dropdown}>
@@ -597,7 +610,7 @@ function Header() {
             )}
 
             {/* Show login/signup for non-authenticated users */}
-            {!isAuthenticated && (
+            {isAuthenticated === false && (
               <>
                 <li role="menuitem">
                   <Button

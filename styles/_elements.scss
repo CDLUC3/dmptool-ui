@@ -720,6 +720,33 @@
   }
 }
 
+// For login pages and signup page
+.auth-container {
+  --layout-content-background: white;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--grid-gap);
+  margin-bottom: var(--space-5);
+}
+
+.auth-card {
+  max-width: 40rem;
+  width: 100%;
+  padding: 1.25rem var(--space-5);
+  border-radius: var(--card-border-radius);
+  background: var(--bg-white);
+  box-shadow: var(--card-shadow);
+  border: 1px solid var(--card-border);
+  margin: var(--space-5) 0;
+
+  h3:first-child {
+    padding: 0;
+  }
+}
+
 // project overview
 .project-overview {
   display: grid;

@@ -1,6 +1,11 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import {
+  useEffect,
+  useRef,
+  useState,
+  TransitionStartFunction
+} from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useMutation } from '@apollo/client/react';
@@ -149,48 +154,40 @@ const ProjectsCreateProject = () => {
     return !hasError;
   };
 
-  // Handle form submit
-  const handleFormSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-
+  // Handle form submit - must be async to allow for the use of startTransition so that isPending can track the real page transition 
+  // instead of just the promise resolving.
+  const handleFormSubmit = async ({ startTransition }: { startTransition: TransitionStartFunction }) => {
     setFormSubmitted(true);
     setErrors([]);
 
-    if (isFormValid()) {
-      const isTestProject = formData.radioGroup === "true";
+    if (!isFormValid()) {
+      return; // formSubmitted is already set to true, so the error messages will be displayed
+    }
 
-      // Create new section
-      addProjectMutation({
-        variables: {
-          isTestProject,
-          title: formData.projectName,
-        }
-      }).then(({ data }) => {
-        const result = data!.addProject;
-        const [hasErrors, errs] = checkErrors(
-          result?.errors as ProjectErrors,
-          ['general', 'title'],
-        );
+    const isTestProject = formData.radioGroup === "true";
 
-        if (hasErrors) {
-          setFieldErrors({
-            ...fieldErrors,
-            projectName: String(errs.title),
-          });
-          setErrors([
-            String(errs.general || CreateProject('messages.errors.createProjectError'))
-          ]);
-        } else {
-          // Show success message
-          showSuccessToast();
-          router.push(routePath('projects.create.funding.search', {
-            projectId: String(result!.id)
-          }));
-        }
-      }).catch((error) => {
-        handleApolloError(error, 'ProjectsCreateProject.handleFormSubmit');
-        setErrors(prevErrors => [...prevErrors, CreateProject('messages.errors.createProjectError')]);
+    try {
+      const { data } = await addProjectMutation({
+        variables: { isTestProject, title: formData.projectName }
       });
+
+      const result = data!.addProject;
+      const [hasErrors, errs] = checkErrors(result?.errors as ProjectErrors, ['general', 'title']);
+
+      if (hasErrors) {
+        setFieldErrors({ ...fieldErrors, projectName: String(errs.title) });
+        setErrors([String(errs.general || CreateProject('messages.errors.createProjectError'))]);
+      } else {
+        showSuccessToast();
+        // Called synchronously inside startTransition — this is the part that
+        // makes isPending actually track the real navigation.
+        startTransition(() => {
+          router.push(routePath('projects.create.funding.search', { projectId: String(result!.id) }));
+        });
+      }
+    } catch (error) {
+      handleApolloError(error, 'ProjectsCreateProject.handleFormSubmit');
+      setErrors(prevErrors => [...prevErrors, CreateProject('messages.errors.createProjectError')]);
     }
   };
 
@@ -223,7 +220,7 @@ const ProjectsCreateProject = () => {
       <LayoutContainer>
         <ContentContainer>
           <ErrorMessages errors={errors} ref={errorRef} />
-          <Form onSubmit={handleFormSubmit}>
+          <Form onSubmit={(e) => e.preventDefault()}>
             <FormInput
               ref={inputFieldRef}
               name="projectName"
@@ -267,9 +264,8 @@ const ProjectsCreateProject = () => {
             <TransitionButton
               type="submit"
               className=""
+              onPress={handleFormSubmit}
               loadingLabel={Global('buttons.loading')}
-              showLoading={false}
-              isDisabled={formSubmitted}
             >
               {Global('buttons.continue')}
             </TransitionButton>
