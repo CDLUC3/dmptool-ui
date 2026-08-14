@@ -98,7 +98,8 @@
       "currentSectionAria": "Current section {index} of {total}: {title}",
       "noSectionSelected": "No section selected",
       "jumpToSection": "Jump to section…",
-      "goToSectionAria": "Go to section {index}: {title}"
+      "goToSectionAria": "Go to section {index}: {title}",
+      "skipToFirstQuestion": "Skip to first question"
     },
     "section": {
       "badge": "Section {index}",

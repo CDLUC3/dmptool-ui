@@ -2,7 +2,7 @@
 
 import React from "react";
 import { useTranslations } from "next-intl";
-import { Button } from "react-aria-components";
+import { Button, Tooltip, TooltipTrigger } from "react-aria-components";
 import type { PlanSectionDefinition } from "../model";
 import { sectionKey } from "../model";
 import { useSectionPickerShortcutLabel } from "../useSectionPickerShortcut";
@@ -49,6 +49,15 @@ export default function PlanSectionNavigation({
       className={[styles.sectionNavigation, className].filter(Boolean).join(" ")}
       aria-label={t("sectionNav.ariaLabel")}
     >
+      {activeSection ? (
+        <button
+          type="button"
+          className={styles.skipToFirstQuestion}
+          onClick={() => onSelectSection?.(activeSection)}
+        >
+          {t("sectionNav.skipToFirstQuestion")}
+        </button>
+      ) : null}
       <div className={styles.sectionNavigationRow}>
         <div className={styles.sectionNavigationMeta}>
           <p className={styles.sectionMetaLine}>
@@ -114,21 +123,27 @@ export default function PlanSectionNavigation({
             "--segment-fill": `${fillPercent}%`,
           };
           return (
-            <button
-              key={key}
-              type="button"
-              className={styles.progressSegment}
-              data-active={isActive}
-              data-complete={isComplete}
-              style={segmentStyle}
-              aria-label={t("sectionNav.goToSectionAria", {
-                index: index + 1,
-                title: section.title,
-              })}
-              aria-current={isActive ? "true" : undefined}
-              title={`${index + 1}. ${section.title}`}
-              onClick={() => onSelectSection?.(section)}
-            />
+            <TooltipTrigger key={key} delay={0} closeDelay={0}>
+              <Button
+                className={styles.progressSegment}
+                data-active={isActive}
+                data-complete={isComplete}
+                style={segmentStyle}
+                aria-label={t("sectionNav.goToSectionAria", {
+                  index: index + 1,
+                  title: section.title,
+                })}
+                aria-current={isActive ? "true" : undefined}
+                onPress={() => onSelectSection?.(section)}
+              />
+              <Tooltip
+                placement="top"
+                offset={8}
+                className={styles.progressTooltip}
+              >
+                {`${index + 1}. ${section.title}`}
+              </Tooltip>
+            </TooltipTrigger>
           );
         })}
       </div>

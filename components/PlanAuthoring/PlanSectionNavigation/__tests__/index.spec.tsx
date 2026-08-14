@@ -57,6 +57,44 @@ describe("PlanSectionNavigation", () => {
     expect(onOpenPicker).toHaveBeenCalled();
   });
 
+  it("offers a skip control that jumps to the active section first", () => {
+    const onSelectSection = jest.fn();
+
+    render(
+      <PlanSectionNavigation
+        sections={sections}
+        activeSection={sections[0]}
+        activeIndex={0}
+        onOpenPicker={jest.fn()}
+        onSelectSection={onSelectSection}
+      />
+    );
+
+    const skip = screen.getByRole("button", {
+      name: "sectionNav.skipToFirstQuestion",
+    });
+
+    fireEvent.click(skip);
+    expect(onSelectSection).toHaveBeenCalledWith(sections[0]);
+  });
+
+  it("omits the skip control when no section is active", () => {
+    render(
+      <PlanSectionNavigation
+        sections={sections}
+        activeSection={null}
+        activeIndex={-1}
+        onOpenPicker={jest.fn()}
+      />
+    );
+
+    expect(
+      screen.queryByRole("button", {
+        name: "sectionNav.skipToFirstQuestion",
+      })
+    ).not.toBeInTheDocument();
+  });
+
   it("should not have accessibility violations", async () => {
     const { container } = render(
       <PlanSectionNavigation

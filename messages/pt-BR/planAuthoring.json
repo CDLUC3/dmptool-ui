@@ -98,7 +98,8 @@
       "currentSectionAria": "Seção atual {index} de {total}: {title}",
       "noSectionSelected": "Nenhuma seção selecionada",
       "jumpToSection": "Ir para seção…",
-      "goToSectionAria": "Ir para a seção {index}: {title}"
+      "goToSectionAria": "Ir para a seção {index}: {title}",
+      "skipToFirstQuestion": "Pular para a primeira pergunta"
     },
     "section": {
       "badge": "Seção {index}",
