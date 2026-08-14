@@ -7,9 +7,17 @@ import NotificationsPage from "../page";
 
 expect.extend(toHaveNoViolations);
 
+const mockToastAdd = jest.fn();
+jest.mock("@/context/ToastContext", () => ({
+  useToast: jest.fn(() => ({
+    add: mockToastAdd,
+  })),
+}));
+
 describe("NotificationsPage", () => {
   beforeEach(() => {
     window.scrollTo = jest.fn();
+    mockToastAdd.mockClear();
   });
 
   afterEach(() => {
@@ -108,6 +116,10 @@ describe("NotificationsPage", () => {
 
     // Should log the notification preferences (static implementation)
     expect(consoleSpy).toHaveBeenCalledWith("Notification preferences updated:", expect.any(Array));
+    expect(mockToastAdd).toHaveBeenCalledWith("messages.preferencesUpdateSuccess", {
+      type: "success",
+      timeout: 3000,
+    });
 
     consoleSpy.mockRestore();
   });
