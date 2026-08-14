@@ -1,6 +1,14 @@
 "use client";
 
-import React, { useCallback, useEffect, useId, useMemo, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "react-aria-components";
 import { DmpIcon } from "@/components/Icons";
@@ -56,6 +64,8 @@ export default function PlanQuestionSidebar({
   const [loadingGuidance, setLoadingGuidance] = useState(false);
   const [loadingComments, setLoadingComments] = useState(false);
   const [activeTab, setActiveTab] = useState<"guidance" | "comments">("guidance");
+  const [showGuidanceScrollFade, setShowGuidanceScrollFade] = useState(false);
+  const guidancePanelRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     setSelectedId(sources[0]?.id ?? null);
@@ -69,6 +79,48 @@ export default function PlanQuestionSidebar({
     () => visibleSources.find((source) => source.id === selectedId) ?? null,
     [selectedId, visibleSources]
   );
+
+  const updateGuidanceScrollFade = useCallback(() => {
+    const panel = guidancePanelRef.current;
+    if (!panel) {
+      setShowGuidanceScrollFade(false);
+      return;
+    }
+    const overflow = panel.scrollHeight - panel.clientHeight > 1;
+    const remaining =
+      panel.scrollHeight - panel.scrollTop - panel.clientHeight;
+    setShowGuidanceScrollFade(overflow && remaining > 1);
+  }, []);
+
+  useLayoutEffect(() => {
+    if (activeTab !== "guidance") {
+      setShowGuidanceScrollFade(false);
+      return;
+    }
+
+    const panel = guidancePanelRef.current;
+    if (!panel) {
+      return;
+    }
+
+    updateGuidanceScrollFade();
+    panel.addEventListener("scroll", updateGuidanceScrollFade, {
+      passive: true,
+    });
+    const resizeObserver = new ResizeObserver(updateGuidanceScrollFade);
+    resizeObserver.observe(panel);
+
+    return () => {
+      panel.removeEventListener("scroll", updateGuidanceScrollFade);
+      resizeObserver.disconnect();
+    };
+  }, [
+    activeTab,
+    loadingGuidance,
+    selectedSource?.id,
+    selectedSource?.bodyHtml,
+    updateGuidanceScrollFade,
+  ]);
 
   const visibleComments = loadedComments ?? comments;
   const unreadCount = comments.length;
@@ -136,20 +188,31 @@ export default function PlanQuestionSidebar({
         />
 
         {activeTab === "guidance" ? (
-          <div className={styles.guidancePanel}>
-            {loadingGuidance ? <p>{t("sidebar.loadingGuidance")}</p> : null}
-            {selectedSource ? (
-              <>
-                <p className={styles.eyebrow}>{t("sidebar.funderGuidance")}</p>
-                <h4>{selectedSource.label}</h4>
-                <SafeHtml
-                  html={selectedSource.bodyHtml}
-                  className={styles.guidanceBody}
-                />
-              </>
-            ) : (
-              <p>{t("sidebar.selectGuidanceSource")}</p>
-            )}
+          <div className={styles.guidanceShell}>
+            <div
+              ref={guidancePanelRef}
+              className={styles.guidancePanel}
+            >
+              {loadingGuidance ? <p>{t("sidebar.loadingGuidance")}</p> : null}
+              {selectedSource ? (
+                <>
+                  <p className={styles.eyebrow}>{t("sidebar.funderGuidance")}</p>
+                  <h4>{selectedSource.label}</h4>
+                  <SafeHtml
+                    html={selectedSource.bodyHtml}
+                    className={styles.guidanceBody}
+                  />
+                </>
+              ) : (
+                <p>{t("sidebar.selectGuidanceSource")}</p>
+              )}
+            </div>
+            {showGuidanceScrollFade ? (
+              <div
+                className={styles.guidanceScrollFade}
+                aria-hidden="true"
+              />
+            ) : null}
           </div>
         ) : null}
 
