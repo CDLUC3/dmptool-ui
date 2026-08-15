@@ -16,13 +16,16 @@
     "dataManagementPlan": "Data Management Plan",
     "dmpIdInfo": "When connecting to this DMP to related project outputs (such as datasets) use the ID: <dmpIdLink>{dmpId}</dmpIdLink>",
     "fundingOpportunity": "Funding opportunity",
+    "registeredDMP": "Data Management plan (registered)",
+    "dmpId": "DMP ID",
     "sectionHeadings": {
       "plannedOutputs": "Planned outputs",
       "projectDescription": "Project description",
       "fundingStatusAndSources": "Funding status and sources",
       "citation": "Citation",
       "projectDetails": "Project details",
-      "contributors": "Contributors to this project"
+      "contributors": "Contributors to this project",
+      "relatedWorks": "Other works associated with this project"
     },
     "output": {
       "format": "Format",

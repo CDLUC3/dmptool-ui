@@ -1,7 +1,11 @@
 'use client';
 
 import { useRef, useState } from 'react';
-import { useParams } from 'next/navigation';
+import {
+  useParams,
+  usePathname,
+  useSearchParams
+} from 'next/navigation';
 import Image from 'next/image';
 import { useTranslations } from 'next-intl';
 import {
@@ -24,7 +28,8 @@ import { useQuery } from '@apollo/client/react';
 import {
   ProjectFundingStatus,
   PublicPlanByDmpIdDocument,
-  PlanVisibility
+  PlanVisibility,
+  PublicPlanVersionByDmpIdDocument
 } from '@/generated/graphql';
 
 // Components
@@ -35,8 +40,15 @@ import { OrcidIcon } from '@/components/Icons/orcid/';
 import ErrorMessages from "@/components/ErrorMessages";
 
 // Utils and other
+import {
+  parseResearchOutputsFromAnswers,
+  outputTypeLabel,
+  type PlanAnswer,
+  type ParsedOutput,
+} from './researchOutputParsing';
 import { logECS, routePath } from "@/utils/index";
 import styles from './landing.module.scss';
+import ArchivedPlanView from './ArchivedPlanView';
 
 function formatDate(dateStr?: string | null, includeTime = false): string {
   if (!dateStr) return '';
@@ -65,28 +77,28 @@ function fundingStatusClass(status?: ProjectFundingStatus | null): string {
   }
 }
 
-function outputTypeLabel(type?: string | null): string {
-  if (!type) return '';
-  const spaced = type.replace(/[-_]/g, ' ');
-  return spaced.charAt(0).toUpperCase() + spaced.slice(1);
-}
+// function outputTypeLabel(type?: string | null): string {
+//   if (!type) return '';
+//   const spaced = type.replace(/[-_]/g, ' ');
+//   return spaced.charAt(0).toUpperCase() + spaced.slice(1);
+// }
 
-type PlanAnswer = {
-  id?: number | string | null;
-  json?: string | null;
-};
+// type PlanAnswer = {
+//   id?: number | string | null;
+//   json?: string | null;
+// };
 
-type ParsedOutput = {
-  title?: string;
-  description?: string;
-  type?: string;
-  issued?: string;
-  byteSize?: number;
-  byteSizeUnit?: string;
-  hosts: { url?: string; name?: string }[];
-  metadataStandards: { uri?: string; name?: string }[];
-  licenses: { uri?: string; name?: string }[];
-};
+// type ParsedOutput = {
+//   title?: string;
+//   description?: string;
+//   type?: string;
+//   issued?: string;
+//   byteSize?: number;
+//   byteSizeUnit?: string;
+//   hosts: { url?: string; name?: string }[];
+//   metadataStandards: { uri?: string; name?: string }[];
+//   licenses: { uri?: string; name?: string }[];
+// };
 
 function getColumn<Id extends AnyResearchOutputTableColumnAnswerType['commonStandardId']>(
   columns: AnyResearchOutputTableColumnAnswerType[],
@@ -132,32 +144,152 @@ function parseRow(row: ResearchOutputTableRowAnswerType): ParsedOutput {
   };
 }
 
-function parseResearchOutputsFromAnswers(answers?: PlanAnswer[] | null): ParsedOutput[] {
-  if (!answers) return [];
+// function parseResearchOutputsFromAnswers(answers?: PlanAnswer[] | null): ParsedOutput[] {
+//   if (!answers) return [];
 
-  const outputs: ParsedOutput[] = [];
+//   const outputs: ParsedOutput[] = [];
 
-  for (const ans of answers) {
-    if (!ans?.json) continue;
+//   for (const ans of answers) {
+//     if (!ans?.json) continue;
 
-    let rawJson: unknown;
-    try {
-      rawJson = JSON.parse(ans.json);
-    } catch {
-      continue;
-    }
+//     let rawJson: unknown;
+//     try {
+//       rawJson = JSON.parse(ans.json);
+//     } catch {
+//       continue;
+//     }
 
-    const result = ResearchOutputTableAnswerSchema.safeParse(rawJson);
-    if (!result.success) continue;
+//     const result = ResearchOutputTableAnswerSchema.safeParse(rawJson);
+//     if (!result.success) continue;
 
-    const tableAnswer: ResearchOutputTableAnswerType = result.data;
+//     const tableAnswer: ResearchOutputTableAnswerType = result.data;
 
-    for (const row of tableAnswer.answer) {
-      outputs.push(parseRow(row));
-    }
+//     for (const row of tableAnswer.answer) {
+//       outputs.push(parseRow(row));
+//     }
+//   }
+
+//   return outputs;
+// }
+
+/* Related Works*/
+type RelatedWorkAuthor = {
+  givenName?: string | null;
+  surname?: string | null;
+  full?: string | null;
+};
+
+type RelatedWorkItem = {
+  id?: number | null;
+  workVersion: {
+    title?: string | null;
+    publicationDate?: string | null;
+    workType: string; // non-nullable per schema (WorkType!)
+    publicationVenue?: string | null;
+    sourceName: string; // non-nullable per schema (String!)
+    sourceUrl?: string | null;
+    authors: RelatedWorkAuthor[]; // non-nullable per schema
+    work: { doi: string }; // non-nullable per schema
+  };
+};
+
+
+// Formats an author list Chicago-style: "Surname, Given, Given Surname, and Given Surname."
+function formatAuthorsForCitation(authors?: RelatedWorkAuthor[] | null): string {
+  if (!authors || authors.length === 0) return '';
+
+  // Full name, given-name-first (used for authors after the first)
+  const displayName = (a: RelatedWorkAuthor) =>
+    [a.givenName, a.surname].filter(Boolean).join(' ') || a.full || '';
+
+  const names = authors.map(displayName).filter(Boolean);
+  if (names.length === 0) return '';
+
+  // First author is "Surname, Given"; fall back to `full` only if surname/givenName are both missing
+  const first = authors[0];
+  const firstFormatted =
+    [first.surname, first.givenName].filter(Boolean).join(', ') || first.full || names[0];
+
+  if (names.length === 1) return firstFormatted;
+
+  const rest = names.slice(1);
+  if (rest.length === 1) return `${firstFormatted}, and ${rest[0]}`;
+
+  return `${firstFormatted}, ${rest.slice(0, -1).join(', ')}, and ${rest[rest.length - 1]}`;
+}
+
+function relatedWorkTypeLabel(workType?: string | null): string {
+  if (!workType) return 'Other';
+  const spaced = workType.replace(/_/g, ' ').toLowerCase();
+  return spaced.charAt(0).toUpperCase() + spaced.slice(1);
+}
+
+function RelatedWorkCitation({ item }: { item: RelatedWorkItem }) {
+  const wv = item.workVersion;
+  const authors = wv?.authors ?? [];
+  const url = wv?.sourceUrl || (wv?.work?.doi ? `https://doi.org/${wv.work.doi}` : null);
+
+  const hasCitableMetadata = !!wv?.title || authors.length > 0;
+
+  // No metadata to cite: just the bare link (shown as its own URL) + fallback text
+  if (!hasCitableMetadata) {
+    return (
+      <>
+        {url && (
+          <a href={url} target="_blank" rel="noopener noreferrer">
+            {url}
+          </a>
+        )}{' '}
+        No citation available.
+      </>
+    );
   }
 
-  return outputs;
+  const year = wv?.publicationDate ? new Date(Date.parse(wv.publicationDate)).getFullYear() : null;
+  const typeLabel = relatedWorkTypeLabel(wv?.workType);
+  const venue = wv?.publicationVenue || wv?.sourceName;
+  const authorsStr = formatAuthorsForCitation(authors);
+
+  return (
+    <>
+      {authorsStr && <>{authorsStr}. </>}
+      {year && !isNaN(year) && <>{year}. </>}
+      {wv?.title && <>&#8220;{wv.title}.&#8221; </>}
+      [{typeLabel}].{' '}
+      {venue && <><i>{venue}</i>. </>}
+      {url && (
+        <a href={url} target="_blank" rel="noopener noreferrer">
+          {url}
+        </a>
+      )}
+      {url && '.'}
+    </>
+  );
+}
+
+// Groups related works by type, in a stable, sensible display order
+function groupRelatedWorksByType(
+  items?: (RelatedWorkItem | null)[] | null,
+): { type: string; items: RelatedWorkItem[] }[] {
+  const validItems = (items ?? []).filter((item): item is RelatedWorkItem => item != null);
+  if (validItems.length === 0) return [];
+
+  const preferredOrder = ['ARTICLE', 'REPORT', 'DATASET', 'PROTOCOL', 'PREPRINT', 'SOFTWARE'];
+  const groups = new Map<string, RelatedWorkItem[]>();
+
+  for (const item of validItems) {
+    const key = item.workVersion?.workType || 'OTHER';
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key)!.push(item);
+  }
+
+  const orderedKeys = [
+    ...preferredOrder.filter((k) => groups.has(k)),
+    ...Array.from(groups.keys()).filter((k) => !preferredOrder.includes(k) && k !== 'OTHER'),
+    ...(groups.has('OTHER') ? ['OTHER'] : []),
+  ];
+
+  return orderedKeys.map((type) => ({ type, items: groups.get(type)! }));
 }
 
 function VersionsDropdown({
@@ -165,34 +297,55 @@ function VersionsDropdown({
   currentModified,
 }: {
   versions: {
-    timestamp?: string | null;
-    url?: string | null;
+    modified?: string | null;
+    dmpId?: string | null;
   }[];
   currentModified?: string | null;
 }) {
-  const pastVersions = versions
-    .filter((v) => v.timestamp && v.timestamp !== currentModified)
-    .sort((a, b) => (a.timestamp! > b.timestamp! ? -1 : 1));
+  const pathname = usePathname();
 
-  const hasPastVersions = pastVersions.length > 0;
+  const dedupedByModified = new Map<string, { modified?: string | null; dmpId?: string | null }>();
+  for (const v of versions) {
+    if (!v.modified) continue;
+    const existing = dedupedByModified.get(v.modified);
+    if (!existing || (existing.dmpId?.includes('?version=') && !v.dmpId?.includes('?version='))) {
+      dedupedByModified.set(v.modified, v);
+    }
+  }
+  const allVersions = Array.from(dedupedByModified.values())
+    .sort((a, b) => (a.modified! > b.modified! ? -1 : 1));
+
+  const hasVersions = allVersions.length > 0;
 
   return (
     <MenuTrigger>
-      <Button
-        className={styles.versionsDropdownToggle}
-        isDisabled={!hasPastVersions}
-      >
+      <Button className={styles.versionsDropdownToggle} isDisabled={!hasVersions}>
         <strong>Version:</strong> {formatDate(currentModified, true)}
-        {hasPastVersions && <span className={styles.chevron} aria-hidden="true" />}
+        {hasVersions && <span className={styles.chevron} aria-hidden="true" />}
       </Button>
-      {hasPastVersions && (
+      {hasVersions && (
         <Popover className={styles.versionsDropdownMenu} placement="bottom end">
           <Menu>
-            {pastVersions.map((v, i) => (
-              <MenuItem key={i} href={v.url ?? '#'} className={styles.versionsDropdownItem}>
-                {formatDate(v.timestamp, true)}
-              </MenuItem>
-            ))}
+            {allVersions.map((v, i) => {
+              const isCurrent = v.modified === currentModified;
+              return isCurrent ? (
+                <MenuItem
+                  key={i}
+                  isDisabled
+                  className={`${styles.versionsDropdownItem} ${styles.versionsDropdownItemCurrent}`}
+                >
+                  {formatDate(v.modified, true)} (current)
+                </MenuItem>
+              ) : (
+                <MenuItem
+                  key={i}
+                  href={`${pathname}?version=${encodeURIComponent(v.modified!)}`}
+                  className={styles.versionsDropdownItem}
+                >
+                  {formatDate(v.modified, true)}
+                </MenuItem>
+              );
+            })}
           </Menu>
         </Popover>
       )}
@@ -202,7 +355,8 @@ function VersionsDropdown({
 
 export default function DmpLandingPage() {
   const params = useParams();
-
+  const searchParams = useSearchParams();
+  const versionParam = searchParams.get('version');
 
   // Errors
   const [error, setError] = useState<string | null>(null);
@@ -221,7 +375,49 @@ export default function DmpLandingPage() {
   // GraphQL query to fetch the public plan by DMP ID
   const { data: publicPlanData, loading: publicPlanLoading, error: publicPlanError } = useQuery(PublicPlanByDmpIdDocument, {
     variables: { dmpId },
+    skip: !!versionParam, // Skip if a specific version is requested
   });
+
+  // Only run the "archived snapshot" query when a version param IS present
+  const {
+    data: versionedPlanData,
+    loading: versionedPlanLoading,
+    error: versionedPlanError,
+  } = useQuery(PublicPlanVersionByDmpIdDocument, {
+    variables: { dmpId, version: versionParam ?? '' },
+    skip: !versionParam,
+  });
+  console.log("***Versioned plan data***", versionedPlanData);
+
+  if (versionParam) {
+    if (versionedPlanLoading) {
+      return (
+        <div className={styles.landingPage}>
+          <div className={styles.loadingState}>
+            <Loading />
+          </div>
+        </div>
+      );
+    }
+
+    const snapshot = versionedPlanData?.publicPlanVersionByDMPId;
+
+    if (!snapshot || versionedPlanError) {
+      return (
+        <div className={styles.landingPage}>
+          <div className={styles.notFound}>
+            <h2>Version Not Found</h2>
+            <p>
+              We could not find version <strong>{versionParam}</strong> of this data
+              management plan.
+            </p>
+          </div>
+        </div>
+      );
+    }
+
+    return <ArchivedPlanView snapshot={snapshot} />;
+  }
 
   if (publicPlanLoading) {
     return (
@@ -234,6 +430,8 @@ export default function DmpLandingPage() {
   }
 
   const plan = publicPlanData?.publicPlanByDMPId;
+
+  console.log("***Plan data***", plan);
 
   if (!plan || publicPlanError) {
     return (
@@ -251,19 +449,19 @@ export default function DmpLandingPage() {
   }
 
   const title = plan.title || plan.project?.title || 'Untitled DMP';
-  const fundings = plan.project?.fundings ?? [];
-  const members = plan.project?.members ?? [];
+  const fundings = plan?.fundings ?? [];
+  const members = plan.members ?? [];
   const primaryContact = members.find((m) => m.isPrimaryContact);
   const primaryContactName = primaryContact
-    ? [primaryContact.givenName, primaryContact.surName].filter(Boolean).join(' ')
+    ? [primaryContact?.projectMember?.givenName, primaryContact?.projectMember?.surName].filter(Boolean).join(' ')
     : undefined;
   const outputs = parseResearchOutputsFromAnswers(plan.answers);
   const versions = plan.versions;
-
+  const relatedWorksGroups = groupRelatedWorksByType(plan.relatedWorks);
   /* Citation helpers */
   const investigators = members
     .map((m) => {
-      return [m.givenName, m.surName].filter(Boolean).join(' ');
+      return [m.projectMember?.givenName, m.projectMember?.surName].filter(Boolean).join(' ');
     })
     .filter(Boolean);
 
@@ -281,7 +479,7 @@ export default function DmpLandingPage() {
     includeQuestionText: 'true',
   });
   const pdfDownloadUrl = `/api/download-narrative?${pdfDownloadParams.toString()}`;
-  const jsonUrl = plan.dmpId;
+  const jsonUrl = `${process.env.NEXT_PUBLIC_NARRATIVE_SERVICE_URL}/dmps/${shortDoi}/narrative.json`;
 
   // Get PDF and assign plan.title as the filename for download
   const handleDownloadPdf = async () => {
@@ -322,7 +520,7 @@ export default function DmpLandingPage() {
     }
   };
 
-  const writtenForOrg = plan.versionedTemplate?.owner;
+  const writtenForOrg = plan?.owner;
   const canDownloadPdf = plan.visibility === PlanVisibility.Public;
 
   return (
@@ -354,7 +552,7 @@ export default function DmpLandingPage() {
                 </a>
                 <h1 className={styles.titleH1}>{title}</h1>
                 <p className={styles.titleSubtitle}>
-                  {plan.registered ? 'Registered Data Management Plan' : 'Data Management Plan'}
+                  {plan.registered ? t('registeredDMP') : t('dataManagementPlan')}
                 </p>
                 {plan.versionedTemplate && (
                   <p className={styles.titleTemplateInfo}>
@@ -402,15 +600,15 @@ export default function DmpLandingPage() {
                 {canDownloadPdf && (<Button
                   type="button"
                   onPress={handleDownloadPdf}
-                  className={styles.pdfLink}
+                  className="secondary"
                   aria-label="Download the data management plan (downloads a PDF, opens in a new tab)"
                 >
-                  <DmpIcon icon="pdf" aria-hidden="true" classes={styles.downloadIcon} />
                   {t.rich('downloadPlan', {
                     pdfLabel: (chunks) => (
                       <span className={styles.downloadText}>{chunks}</span>
                     ),
                   })}
+                  <DmpIcon icon="download" aria-hidden="true" classes={styles.downloadIcon} />
                 </Button>)}
 
                 {jsonUrl && (
@@ -433,7 +631,7 @@ export default function DmpLandingPage() {
           <div className={styles.subBandInner}>
             {plan.dmpId && (
               <p className={styles.subBandDoi}>
-                <strong>DMP ID:</strong>{' '}
+                <strong>{t('dmpId')}:</strong>{' '}
                 <a href={plan.dmpId} target="_blank" rel="noopener noreferrer">
                   {shortDoi}
                 </a>
@@ -457,7 +655,7 @@ export default function DmpLandingPage() {
               </h2>
               <div className={styles.contributorsList}>
                 {members.map((member, idx) => {
-                  const fullName = [member?.givenName, member?.surName]
+                  const fullName = [member?.projectMember?.givenName, member?.projectMember?.surName]
                     .filter(Boolean)
                     .join(' ');
                   if (!fullName) return null;
@@ -473,7 +671,7 @@ export default function DmpLandingPage() {
                             {' · '}
                             {member.memberRoles.map((role, i) => (
                               <span key={role.id ?? i}>
-                                {role.uri ? (
+                                {(role.uri && role.label !== "No Role Assigned") ? (
                                   <a href={role.uri} target="_blank" rel="noopener noreferrer">
                                     {role.label}
                                   </a>
@@ -485,18 +683,18 @@ export default function DmpLandingPage() {
                             ))}
                           </span>
                         )}
-                        {member?.orcid && (
+                        {member?.projectMember?.orcid && (
                           <>
                             <span aria-hidden="true">
                               <OrcidIcon icon="orcid" classes={styles.orcidLogo} width="18px" height="18px" />
                             </span>
                             <a
-                              href={`https://orcid.org/${member.orcid}`}
+                              href={`https://orcid.org/${member.projectMember?.orcid}`}
                               target="_blank"
                               rel="noopener noreferrer"
                               aria-label={`ORCID profile for ${fullName}`}
                             >
-                              {member.orcid}
+                              {member.projectMember?.orcid}
                             </a>
                           </>
                         )}
@@ -631,65 +829,65 @@ export default function DmpLandingPage() {
                       <span className={styles.dataLabel}>Status:</span>
                       <span className={styles.dataValue}>
                         <span
-                          className={`${styles.statusBadge} ${fundingStatusClass(funding.status)}`}
+                          className={`${styles.statusBadge} ${fundingStatusClass(funding?.projectFunding?.status)}`}
                         >
-                          {fundingStatusLabel(funding.status)}
+                          {fundingStatusLabel(funding?.projectFunding?.status)}
                         </span>
                       </span>
                     </li>
-                    {funding.affiliation && (
+                    {funding.projectFunding?.affiliation && (
                       <li className={styles.dataItem}>
                         <span className={styles.dataLabel}>Funder:</span>
                         <span className={styles.dataValue}>
-                          {funding.affiliation.uri ? (
+                          {funding.projectFunding?.affiliation.uri ? (
                             <a
-                              href={funding.affiliation.uri}
+                              href={funding.projectFunding?.affiliation.uri}
                               target="_blank"
                               rel="noopener noreferrer"
                             >
-                              {funding.affiliation.displayName ||
-                                funding.affiliation.name}
+                              {funding.projectFunding?.affiliation.displayName ||
+                                funding.projectFunding?.affiliation.name}
                             </a>
                           ) : (
-                            funding.affiliation.displayName || funding.affiliation.name
+                            funding.projectFunding?.affiliation.displayName || funding.projectFunding?.affiliation.name
                           )}
                         </span>
                       </li>
                     )}
-                    {funding.funderOpportunityNumber && (
+                    {funding.projectFunding?.funderOpportunityNumber && (
                       <li className={styles.dataItem}>
                         <span className={styles.dataLabel}>
                           {t("fundingOpportunity")}:
                         </span>
                         <span className={styles.dataValue}>
-                          {funding.funderOpportunityNumber.startsWith('http') ? (
+                          {funding.projectFunding?.funderOpportunityNumber.startsWith('http') ? (
                             <a
-                              href={funding.funderOpportunityNumber}
+                              href={funding.projectFunding?.funderOpportunityNumber}
                               target="_blank"
                               rel="noopener noreferrer"
                             >
-                              {funding.funderOpportunityNumber}
+                              {funding.projectFunding?.funderOpportunityNumber}
                             </a>
                           ) : (
-                            funding.funderOpportunityNumber
+                            funding.projectFunding?.funderOpportunityNumber
                           )}
                         </span>
                       </li>
                     )}
-                    {funding.grantId && (
+                    {funding.projectFunding?.grantId && (
                       <li className={styles.dataItem}>
                         <span className={styles.dataLabel}>Grant:</span>
                         <span className={styles.dataValue}>
-                          {funding.grantId.startsWith('http') ? (
+                          {funding.projectFunding?.grantId.startsWith('http') ? (
                             <a
-                              href={funding.grantId}
+                              href={funding.projectFunding?.grantId}
                               target="_blank"
                               rel="noopener noreferrer"
                             >
-                              {funding.grantId}
+                              {funding.projectFunding?.grantId}
                             </a>
                           ) : (
-                            funding.grantId
+                            funding.projectFunding?.grantId
                           )}
                         </span>
                       </li>
@@ -805,8 +1003,47 @@ export default function DmpLandingPage() {
             </section>
           )}
 
+          {/* Related Works */}
+          {relatedWorksGroups.length > 0 && (
+            <section className={styles.dmpSection} aria-labelledby="related-works-heading">
+              <h2 id="related-works-heading" className={styles.dmpSectionTitle}>
+                {t('sectionHeadings.relatedWorks')}
+              </h2>
+              {relatedWorksGroups.map((group) => (
+                <div key={group.type} className={styles.worksCategory}>
+                  <h3 className={styles.worksCategoryTitle}>{relatedWorkTypeLabel(group.type)}</h3>
+                  <ul className={styles.dataList}>
+                    {group.items.map((item) => (
+                      <li key={item.id} className={styles.workItem}>
+                        <p>
+                          <RelatedWorkCitation item={item} />
+                        </p>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </section>
+          )}
+
         </div>
       </main>
+      <footer className={styles.landingFooter}>
+        <div className={styles.landingFooterInner}>
+          <p>
+            This product is a service of the{' '}
+            <a href="https://uc3.cdlib.org/" target="_blank" rel="noopener noreferrer">
+              University of California Curation Center
+            </a>{' '}
+            of the{' '}
+            <a href="http://www.cdlib.org" target="_blank" rel="noopener noreferrer">
+              California Digital Library
+            </a>
+            .
+          </p>
+          <p>Copyright 2010–{new Date().getFullYear()} The Regents of the University of California.</p>
+        </div>
+      </footer>
     </div>
   );
 }
