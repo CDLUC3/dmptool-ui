@@ -111,10 +111,10 @@ const GuidanceGroupIndexPage: React.FC = () => {
   const { data: tagsData, loading: tagsLoading } = useQuery(TagsDocument);
 
   // Run me query to get user's name
-  const { data: me } = useQuery(MeDocument);
+  const { data: me, loading: meLoading } = useQuery(MeDocument);
 
   // Fetch guidance group data
-  const { data: guidanceGroupData } = useQuery(GuidanceGroupDocument, {
+  const { data: guidanceGroupData, loading: guidanceGroupLoading } = useQuery(GuidanceGroupDocument, {
     variables: {
       guidanceGroupId: Number(groupId)
     },
@@ -588,7 +588,7 @@ const GuidanceGroupIndexPage: React.FC = () => {
 
       <LayoutWithPanel>
         <ContentContainer>
-          {tagsLoading || guidanceLoading ? (
+          {(tagsLoading || guidanceLoading || meLoading || guidanceGroupLoading) ? (
             <Loading message={Global("messaging.loading")} />
           ) : (
             <Card data-testid='guidance-card'>
