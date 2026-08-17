@@ -131,6 +131,7 @@
 - Updated `RepoSelectorForAnswer` to wait to query `Re3byUrIsDocument` until we have `preferredReposURIs` because preferred repos don't display even though they eventually do to trigger the display of the "preferred repositories" checkbox [#118]
 
 ## Fixed
+- Fixed issue where the `readOnly` tooltip messages were incorrect [#288]
 - Fixed an issue where there was flashing in the header due to a delay in the page registering the `isAuthenticated` value. So our `proxy.ts` middleware was updated to add `x-is-authenticated` in the header, and we updated `layout.tsx` to get the value and pass it into `AuthProvider`. Then `AuthContext` was updated to use this value as the initial value [#293]
 - Fixed breaking build due to the recent `next` version update to `16.2.12` where `Turbopack` has stricter rules, so we had to import `nprogress/nprogress.css` in `layout.tsx` rather than in `globals.scss` [#331]
 - Fixed Question Display Logic layout issue by updating the `DisplayLogicComponent` css to have more specificity, so that the order in which css is loaded will not break anything [#325]
