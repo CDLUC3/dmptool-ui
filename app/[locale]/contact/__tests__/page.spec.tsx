@@ -103,20 +103,20 @@ const submitErrorMock = {
   error: new Error("Network error"),
 };
 
-  // Helper to fill out and submit the required fields
-  async function fillAndSubmit(user: ReturnType<typeof userEvent.setup>) {
-    // Wait for the me-query data to populate the pre-filled fields first
-    await screen.findByDisplayValue(formValues.email);
+// Helper to fill out and submit the required fields
+async function fillAndSubmit(user: ReturnType<typeof userEvent.setup>) {
+  // Wait for the me-query data to populate the pre-filled fields first
+  await screen.findByDisplayValue(formValues.email);
 
-    const subjectInput = screen.getByLabelText("form.labels.subject (required)");
-    const messageInput = screen.getByLabelText("form.labels.message (required)");
+  const subjectInput = screen.getByLabelText("form.labels.subject (required)");
+  const messageInput = screen.getByLabelText("form.labels.message (required)");
 
-    await user.type(subjectInput, formValues.subject);
-    await user.type(messageInput, formValues.message);
+  await user.type(subjectInput, formValues.subject);
+  await user.type(messageInput, formValues.message);
 
-    const submitButton = screen.getByRole("button", { name: "buttons.submit" });
-    await user.click(submitButton);
-  }
+  const submitButton = screen.getByRole("button", { name: "buttons.submit" });
+  await user.click(submitButton);
+}
 
 describe("ContactUsPage", () => {
   beforeEach(() => {
@@ -237,7 +237,7 @@ describe("ContactUsPage", () => {
     });
   });
 
-  it("should submit the form successfully and show a success toast", async () => {
+  it("should submit the form successfully and show a success message", async () => {
     const user = userEvent.setup();
     (useAuthContext as jest.Mock).mockReturnValue({ isAuthenticated: true });
 
@@ -250,11 +250,15 @@ describe("ContactUsPage", () => {
     await fillAndSubmit(user);
 
     await waitFor(() => {
-      expect(mockToastAdd).toHaveBeenCalledWith(
-        "messages.success.messageSent",
-        { type: "success" }
-      );
+      expect(
+        screen.getByRole("status")
+      ).toHaveTextContent("messages.success.ticketCreated");
     });
+
+    // The form should no longer be displayed after successful submission
+    expect(
+      screen.queryByRole("button", { name: "buttons.submit" })
+    ).not.toBeInTheDocument();
   });
 
   it("should show an error message when submission returns unsuccessful", async () => {
