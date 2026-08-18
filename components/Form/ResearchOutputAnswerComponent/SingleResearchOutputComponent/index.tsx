@@ -597,14 +597,14 @@ const SingleResearchOutputComponent = ({
               allOptions =
                 "options" in col.content && Array.isArray(col.content.options)
                   ? col.content.options.map((opt) => ({
-                      ...opt,
-                      label:
-                        opt.value === "sensitive"
-                          ? Global("labels.mayContainSensitiveData")
-                          : opt.value === "personal"
-                            ? Global("labels.mayContainPersonalData")
-                            : opt.label,
-                    }))
+                    ...opt,
+                    label:
+                      opt.value === "sensitive"
+                        ? Global("labels.mayContainSensitiveData")
+                        : opt.value === "personal"
+                          ? Global("labels.mayContainPersonalData")
+                          : opt.label,
+                  }))
                   : [];
             } else {
               allOptions = "options" in col.content && Array.isArray(col.content.options) ? col.content.options : [];
@@ -695,30 +695,30 @@ const SingleResearchOutputComponent = ({
             const existingRepos = hasExplicitRepoAnswer
               ? repoValue.length > 0
                 ? repoValue.map((repo) => {
-                    return {
-                      id: repo.repositoryId,
-                      uri: repo.repositoryId,
-                      name: repo.repositoryName,
-                      website: repo.repositoryWebsite || "",
-                      description: repo.repositoryDescription || "",
-                      keywords: repo.repositoryKeywords || [],
-                      repositoryType: repo.repositoryType || [],
-                    };
-                  })
+                  return {
+                    id: repo.repositoryId,
+                    uri: repo.repositoryId,
+                    name: repo.repositoryName,
+                    website: repo.repositoryWebsite || "",
+                    description: repo.repositoryDescription || "",
+                    keywords: repo.repositoryKeywords || [],
+                    repositoryType: repo.repositoryType || [],
+                  };
+                })
                 : [] // User explicitly removed all items - show empty
               : colRepoPreferences && colRepoPreferences.length > 0
                 ? colRepoPreferences.map((pref) => {
-                    const typedPref = pref as RepoPreference;
-                    return {
-                      id: typedPref.value,
-                      uri: typedPref.value,
-                      name: typedPref.label,
-                      website: typedPref.website || "",
-                      description: typedPref.description || "",
-                      keywords: typedPref.keywords || [],
-                      repositoryType: typedPref.repositoryType || [],
-                    };
-                  })
+                  const typedPref = pref as RepoPreference;
+                  return {
+                    id: typedPref.value,
+                    uri: typedPref.value,
+                    name: typedPref.label,
+                    website: typedPref.website || "",
+                    description: typedPref.description || "",
+                    keywords: typedPref.keywords || [],
+                    repositoryType: typedPref.repositoryType || [],
+                  };
+                })
                 : []; // No answer yet - show preferences
 
             return (
@@ -762,9 +762,9 @@ const SingleResearchOutputComponent = ({
             type MetadataStdAnswer = { metadataStandardId: string; metadataStandardName: string };
             const metadataValue =
               Array.isArray(value) &&
-              value.length > 0 &&
-              typeof value[0] === "object" &&
-              "metadataStandardId" in value[0]
+                value.length > 0 &&
+                typeof value[0] === "object" &&
+                "metadataStandardId" in value[0]
                 ? (value as MetadataStdAnswer[])
                 : [];
 
@@ -778,24 +778,24 @@ const SingleResearchOutputComponent = ({
             const existingMetaDataStandards = hasExplicitStdAnswer
               ? metadataValue.length > 0
                 ? metadataValue
-                    .filter((std): std is MetadataStdAnswer => !!std.metadataStandardId && !!std.metadataStandardName)
-                    .map((std) => ({
-                      id: std.metadataStandardId,
-                      name: std.metadataStandardName,
-                      uri: std.metadataStandardId,
-                    }))
+                  .filter((std): std is MetadataStdAnswer => !!std.metadataStandardId && !!std.metadataStandardName)
+                  .map((std) => ({
+                    id: std.metadataStandardId,
+                    name: std.metadataStandardName,
+                    uri: std.metadataStandardId,
+                  }))
                 : [] // User explicitly removed all items - show empty
               : colStdPreferences && colStdPreferences.length > 0
                 ? colStdPreferences
-                    .filter(
-                      (pref: { value?: string; label?: string }): pref is { value: string; label: string } =>
-                        !!pref.value && !!pref.label,
-                    )
-                    .map((pref) => ({
-                      id: pref.value,
-                      name: pref.label,
-                      uri: pref.value,
-                    }))
+                  .filter(
+                    (pref: { value?: string; label?: string }): pref is { value: string; label: string } =>
+                      !!pref.value && !!pref.label,
+                  )
+                  .map((pref) => ({
+                    id: pref.value,
+                    name: pref.label,
+                    uri: pref.value,
+                  }))
                 : []; // No answer yet - show preferences
 
             return (
@@ -952,6 +952,34 @@ const SingleResearchOutputComponent = ({
               </div>
             );
           }
+
+          case ResearchOutputTableColumnsEnum.enum.custom:
+            return (
+              <div
+                key={col.heading}
+                ref={(el) => {
+                  fieldRefs.current[`col-${colIndex}`] = el;
+                }}
+              >
+                <FormInput
+                  type="text"
+                  value={typeof value === "string" || typeof value === "number" ? value : ""}
+                  label={translatedLabel}
+                  name={name}
+                  isRequired={col.required}
+                  defaultValue={col?.content?.attributes?.defaultValue || ""}
+                  isInvalid={!!fieldError}
+                  errorMessage={fieldError ?? ""}
+                  helpMessage={col?.content?.attributes?.help || col?.help}
+                  maxLength={col.content.attributes?.maxLength}
+                  minLength={col.content.attributes?.minLength}
+                  onChange={(e) => {
+                    handleCellChange(col.commonStandardId, colIndex, e.target.value);
+                  }}
+                  disabled={isDisabled}
+                />
+              </div>
+            );
         }
       })}
 
