@@ -131,6 +131,7 @@
 - Updated `RepoSelectorForAnswer` to wait to query `Re3byUrIsDocument` until we have `preferredReposURIs` because preferred repos don't display even though they eventually do to trigger the display of the "preferred repositories" checkbox [#118]
 
 ## Fixed
+- NextJS is using `Turbopack` css handling by default since `v16`, and we want to continue using `webpack` due to some known gaps. So updated the `build` script in `package.json` to pin to `--webpack` by default to fix inconsistencies between running locally and on other servers [#340]
 - Fixed issue where the `readOnly` tooltip messages were incorrect [#288]
 
 - Added missing `Custom Field` to the `SingleResearchOutputComponent` page for Research Output questions [#336]
