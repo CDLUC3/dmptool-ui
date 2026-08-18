@@ -1,4 +1,5 @@
 ## Added
+- Added new arrow DMP Tool logos to the CDN, and updated `layout.tsx` to use them [#337]
 - Added new `DmpLandingPage` at `app/(embed)/[locale]/dmps/[...slug]/page.tsx`. The `(embed)` directory allows us to assign a different wrapping layout to this page, so we can exlude the shared header and footer [#293]
 - Added `SaveQuestionDisplayLogic` mutation and `QuestionConditionGroups` query [#508]
 - Added `favicon` image from `CDN`. Added a new `.env` variable `CDN_DOMAIN`. We will need to add this variable to the `stage` and `production` servers 
