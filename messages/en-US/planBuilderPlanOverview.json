@@ -145,7 +145,7 @@
         "successfullyUpdatedStatus": "Successfully updated the plan status"
       },
       "readOnlyLinkMessage": "You do not have the proper permissions to perform this action on this plan.",
-      "readOnlyLinkMessagePublishStatus": "You do not have the proper permissions to change the publish status",
+      "readOnlyLinkMessagePublishStatus": "You do not have the proper permissions to change the publish status.",
       "readOnlyLinkMessageFunding": "You do not have the proper permissions to adjust the funding for this plan.",
       "readOnlyLinkMessageMembers": "You do not have the proper permissions to adjust the members for this plan.",
       "readOnlyLinkMessageRelatedWorks": "You do not have the proper permissions to adjust the related works for this plan.",
