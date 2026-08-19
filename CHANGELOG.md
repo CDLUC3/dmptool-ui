@@ -37,6 +37,7 @@
 - Added `UpdateAffiliation` and `AffiliationById` queries [#203]
 
 ## Updated
+- Updated `Contact` page to display a message in place of the form when submitted. Fixed missing email [#303]
 - Updated `DisplayLogicComponent` to include props for `onDisplayLogicRemove` and `isLoadingExistingLogic`, and added operators for multi-select questions, so we can change the language from `is` to `includes`. [#508]
 - Updated `displayLogicMapper` with all the new question condition types. Added `fromQuestionConditionGroups` to reconstruct display logic from backend [#508]
 - Updated `QuestionEdit` page to use the new queries and mutations related to display logic. Updated `handleSaveDisplayLogic` to actually save to the backend, and added `handleRemoveDisplayLogic` [#508]
