@@ -132,6 +132,7 @@
 - Updated `RepoSelectorForAnswer` to wait to query `Re3byUrIsDocument` until we have `preferredReposURIs` because preferred repos don't display even though they eventually do to trigger the display of the "preferred repositories" checkbox [#118]
 
 ## Fixed
+- Temporary fix for the alignment. I added some missing styles to `.cSubheader` in the `SubHeader` component, because the mobile styles for that just weren't being picked up by the browser. There might be another root cause, but this is a temporary fix [#340]
 - NextJS is using `Turbopack` css handling by default since `v16`, and we want to continue using `webpack` due to some known gaps. So updated the `build` script in `package.json` to pin to `--webpack` by default to fix inconsistencies between running locally and on other servers [#340]
 - Fixed issue where the `readOnly` tooltip messages were incorrect [#288]
 

@@ -12,6 +12,10 @@
 
   // Tablet and up
   @include device('md') {
+    max-width: 1200px;
+    margin: 0 auto;
+    margin-top: -1px;
+    display: flex;
     justify-content: flex-end;
     margin-bottom: var(--space-4);
     padding: 0 var(--space-2);
