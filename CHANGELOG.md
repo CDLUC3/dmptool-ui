@@ -37,6 +37,8 @@
 - Added `UpdateAffiliation` and `AffiliationById` queries [#203]
 
 ## Updated
+- Updated `ProjectsProjectFunding` page to display `View` button for funding if in `readOnly` mode [#246]
+- Upated `ProjectsProjectFundingEdit` to disable form fields for `readOnly` mode and hide action buttons [#246]
 - Updated `Contact` page to display a message in place of the form when submitted. Fixed missing email [#303]
 - Updated `DisplayLogicComponent` to include props for `onDisplayLogicRemove` and `isLoadingExistingLogic`, and added operators for multi-select questions, so we can change the language from `is` to `includes`. [#508]
 - Updated `displayLogicMapper` with all the new question condition types. Added `fromQuestionConditionGroups` to reconstruct display logic from backend [#508]

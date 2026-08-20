@@ -62,7 +62,7 @@ const mockToast = {
 const mockUseQuery = jest.mocked(useQuery);
 const mockUseMutation = jest.mocked(useMutation);
 
-const setupMocks = () => {
+const setupMocks = (isReadOnly = false) => {
   // Create stable references OUTSIDE mockImplementation, so that 
   // the different objects are returned on every call and causing infinite loop
   const stableQueryReturn = {
@@ -75,6 +75,9 @@ const setupMocks = () => {
         funderProjectNumber: 'IRL-123-1234',
         grantId: 'https://example.com/awards/IRL-000000X1',
         status: 'DENIED',
+        project: {
+          readOnly: isReadOnly
+        }
       },
     },
     loading: false,
@@ -509,6 +512,29 @@ describe('ProjectsProjectFundingEdit', () => {
         projectFundingId: expect.any(Number),
       });
       expect(screen.getByText("There was a general error")).toBeInTheDocument();
+    });
+  });
+
+  describe('when isReadOnly is true', () => {
+    it('should disable form inputs', async () => {
+      setupMocks(true);
+      await act(async () => {
+        render(<ProjectsProjectFundingEdit />);
+      });
+
+      expect(screen.getByLabelText(/labels.fundingStatus/)).toBeDisabled();
+      expect(screen.getByLabelText(/labels.grantNumber/)).toBeDisabled();
+      expect(screen.getByLabelText(/labels.projectNumber/)).toBeDisabled();
+    });
+
+    it('should not display save and delete buttons', async () => {
+      setupMocks(true);
+      await act(async () => {
+        render(<ProjectsProjectFundingEdit />);
+      });
+
+      expect(screen.queryByRole('button', { name: /buttons.saveChanges/i })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /buttons.removeFunder/i })).not.toBeInTheDocument();
     });
   });
 

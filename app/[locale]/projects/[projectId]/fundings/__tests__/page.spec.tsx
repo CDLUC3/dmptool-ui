@@ -282,6 +282,21 @@ describe('ProjectsProjectFunding', () => {
       expect(screen.queryByRole('button', { name: /edit/i })).not.toBeInTheDocument();
     });
 
+    it('should render "View" buttons on funding rows', async () => {
+      render(
+        <MockedProvider mocks={mocksWithReadOnly}>
+          <ProjectsProjectFunding />
+        </MockedProvider>
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText('Test Funder 1')).toBeInTheDocument();
+      });
+
+      const viewButtons = screen.getAllByText('buttons.view');
+      expect(viewButtons).toHaveLength(2);
+    });
+
     it('should still render funder names when isReadOnly is true', async () => {
       render(
         <MockedProvider mocks={mocksWithReadOnly}>
