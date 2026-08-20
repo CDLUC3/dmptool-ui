@@ -597,10 +597,17 @@ export default function DmpLandingPage() {
                 )}
               </div>
               <div className={styles.titleActionsCorner}>
+                {jsonUrl && (
+                  <a href={jsonUrl} className={styles.jsonLink} target="_blank" rel="noopener noreferrer">
+                    {t('viewAsJson')}
+                    <span className={styles.jsonLinkArrow} aria-hidden="true">↗</span>
+                    <span className="hidden-accessibly"> ({t('opensInNewWindow')})</span>
+                  </a>
+                )}
                 {canDownloadPdf && (<Button
                   type="button"
                   onPress={handleDownloadPdf}
-                  className="secondary"
+                  className={`${styles.downloadButton} secondary`}
                   aria-label="Download the data management plan (downloads a PDF, opens in a new tab)"
                 >
                   {t.rich('downloadPlan', {
@@ -610,14 +617,6 @@ export default function DmpLandingPage() {
                   })}
                   <DmpIcon icon="download" aria-hidden="true" classes={styles.downloadIcon} />
                 </Button>)}
-
-                {jsonUrl && (
-                  <a href={jsonUrl} className={styles.jsonLink} target="_blank" rel="noopener noreferrer">
-                    {t('viewAsJson')}
-                    <span className={styles.jsonLinkArrow} aria-hidden="true">↗</span>
-                    <span className="hidden-accessibly"> ({t('opensInNewWindow')})</span>
-                  </a>
-                )}
               </div>
             </div>
           </div>

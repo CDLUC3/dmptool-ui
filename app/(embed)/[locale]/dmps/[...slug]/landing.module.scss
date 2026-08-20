@@ -152,6 +152,15 @@
   flex-shrink: 0;
 }
 
+.downloadButton {
+  font-size: 0.75rem;
+
+
+  &:hover:not(:disabled) {
+    background: var(--blue-200) !important;
+    color: var(--blue-900) !important;
+  }
+}
 .downloadText {
   font-size: var(--fs-xsmall);
 }
