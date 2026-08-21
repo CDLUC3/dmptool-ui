@@ -9,5 +9,8 @@ query ProjectFunding($projectFundingId: Int!) {
     grantId
     funderOpportunityNumber
     funderProjectNumber
+    project {
+      readOnly
+    }
   }
 }
