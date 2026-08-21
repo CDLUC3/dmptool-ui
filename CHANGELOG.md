@@ -135,10 +135,10 @@
 - Updated `RepoSelectorForAnswer` to wait to query `Re3byUrIsDocument` until we have `preferredReposURIs` because preferred repos don't display even though they eventually do to trigger the display of the "preferred repositories" checkbox [#118]
 
 ## Fixed
+- Fixed missing success toasts on Account pages: profile saves now show a toast for all field updates (not only language changes); adding and deleting secondary emails show success toasts when the GraphQL response has no real errors; update password and notifications save actions also show success toasts. Added `emailAddressDeleteSuccess` translations [#306]
 - Temporary fix for the alignment. I added some missing styles to `.cSubheader` in the `SubHeader` component, because the mobile styles for that just weren't being picked up by the browser. There might be another root cause, but this is a temporary fix [#340]
 - NextJS is using `Turbopack` css handling by default since `v16`, and we want to continue using `webpack` due to some known gaps. So updated the `build` script in `package.json` to pin to `--webpack` by default to fix inconsistencies between running locally and on other servers [#340]
 - Fixed issue where the `readOnly` tooltip messages were incorrect [#288]
-
 - Added missing `Custom Field` to the `SingleResearchOutputComponent` page for Research Output questions [#336]
 - Fixed an issue where there was flashing in the header due to a delay in the page registering the `isAuthenticated` value. So our `proxy.ts` middleware was updated to add `x-is-authenticated` in the header, and we updated `layout.tsx` to get the value and pass it into `AuthProvider`. Then `AuthContext` was updated to use this value as the initial value [#293]
 - Fixed breaking build due to the recent `next` version update to `16.2.12` where `Turbopack` has stricter rules, so we had to import `nprogress/nprogress.css` in `layout.tsx` rather than in `globals.scss` [#331]

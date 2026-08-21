@@ -27,6 +27,17 @@ jest.mock('@/utils/clientLogger', () => ({
   default: jest.fn()
 }))
 
+jest.mock('@/utils/authHelper', () => ({
+  refreshAuthTokens: jest.fn().mockResolvedValue({ response: true }),
+}));
+
+const mockToastAdd = jest.fn();
+jest.mock('@/context/ToastContext', () => ({
+  useToast: jest.fn(() => ({
+    add: mockToastAdd,
+  })),
+}));
+
 // Mock Apollo Client hooks
 jest.mock('@apollo/client/react', () => ({
   useQuery: jest.fn(),
@@ -60,7 +71,7 @@ jest.mock('next-intl', () => ({
     dateTime: jest.fn(() => '01-01-2023'),
   })),
   useTranslations: jest.fn(() => jest.fn((key) => key)), // Mock `useTranslations`,
-  useLocale: jest.fn(() => 'en-US'), // Return a default locale
+  useLocale: jest.fn(() => 'en'), // Match mockUserData.languageId so locale switch is a no-op
 }));
 
 const mockUserData = {
@@ -132,6 +143,7 @@ describe('ProfilePage', () => {
     setupMocks();
     HTMLElement.prototype.scrollIntoView = mockScrollIntoView;
     mockScrollTo();
+    mockToastAdd.mockClear();
   });
 
   it('should render profile page with user data', async () => {
@@ -412,6 +424,93 @@ describe('ProfilePage', () => {
         },
       },
     });
+  });
+
+  it('should show success toast when profile fields are updated without changing language', async () => {
+    const mockUpdateUserProfile = jest.fn().mockResolvedValue({
+      data: {
+        updateUserProfile: {
+          success: true,
+          message: 'Profile updated successfully',
+        },
+      },
+    });
+    mockUseMutation.mockReturnValue([
+      mockUpdateUserProfile,
+      { loading: false, error: undefined }
+      /* eslint-disable @typescript-eslint/no-explicit-any */
+    ] as any);
+
+    render(<ProfilePage />);
+
+    const editButton = screen.getByRole('button', { name: /edit/i });
+    await act(async () => {
+      fireEvent.click(editButton);
+    });
+
+    const firstNameInput = screen.getByLabelText(/givenName/i);
+    await act(async () => {
+      fireEvent.change(firstNameInput, { target: { value: 'Mary' } });
+    });
+
+    const updateButton = screen.getByRole('button', { name: /btnupdate/i });
+    await act(async () => {
+      fireEvent.click(updateButton);
+    });
+
+    expect(mockToastAdd).toHaveBeenCalledWith('messages.profileUpdateSuccess', {
+      type: 'success',
+      timeout: 3000,
+    });
+  });
+
+  it('should keep saved values as the cancel baseline after a successful update', async () => {
+    const mockUpdateUserProfile = jest.fn().mockResolvedValue({
+      data: {
+        updateUserProfile: {
+          success: true,
+          message: 'Profile updated successfully',
+        },
+      },
+    });
+    mockUseMutation.mockReturnValue([
+      mockUpdateUserProfile,
+      { loading: false, error: undefined }
+      /* eslint-disable @typescript-eslint/no-explicit-any */
+    ] as any);
+
+    render(<ProfilePage />);
+
+    const editButton = screen.getByRole('button', { name: /edit/i });
+    await act(async () => {
+      fireEvent.click(editButton);
+    });
+
+    await act(async () => {
+      fireEvent.change(screen.getByLabelText(/givenName/i), { target: { value: 'Mary' } });
+    });
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /btnupdate/i }));
+    });
+
+    expect(screen.getByText('Mary')).toBeInTheDocument();
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /edit/i }));
+    });
+
+    await act(async () => {
+      fireEvent.change(screen.getByLabelText(/givenName/i), { target: { value: 'ChangedAgain' } });
+    });
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /cancel/i }));
+    });
+
+    expect(screen.getByText('Mary')).toBeInTheDocument();
+    expect(screen.queryByText('John')).not.toBeInTheDocument();
+    expect(screen.queryByText('ChangedAgain')).not.toBeInTheDocument();
   });
 
   it('should display Loading message when meQuery returns queryLoading', async () => {
