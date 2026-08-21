@@ -63,6 +63,8 @@ export interface RenderQuestionFieldProps {
   parsed: ParsedQuestion | undefined;
   question?: Question;
   readOnly?: boolean;
+  /** TinyMCE DOM id — required when multiple textArea questions share a page. */
+  editorId?: string;
 
   radioProps?: {
     selectedRadioValue: string;
@@ -162,6 +164,7 @@ export function useRenderQuestionField({
   parsed,
   readOnly,
   questionType,
+  editorId = 'question-text-editor',
   radioProps,
   checkBoxProps,
   multiSelectBoxProps,
@@ -265,7 +268,7 @@ export function useRenderQuestionField({
       if (parsed.type === 'textArea' && textAreaProps) {
         return (
           <TinyMCEEditor
-            id="question-text-editor"
+            id={editorId}
             content={textAreaProps?.content ?? ''}
             setContent={(value) => textAreaProps?.setContent && textAreaProps?.setContent(value)}
             onChange={textAreaProps?.handleTextAreaChange}

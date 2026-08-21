@@ -38,7 +38,7 @@ const PageHeader: React.FC<PageHeaderProps> = ({
       return; // Skip this render, wait for the real title
     }
 
-    document.title = `${plainTitle} | DMPTool`;
+    document.title = `${plainTitle} | DMP Tool`;
     window.scrollTo(0, 0);
   }, [plainTitle]);
 

@@ -1,0 +1,105 @@
+.planSection {
+  scroll-margin-top: 7rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.planSectionHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin-bottom: 1.75rem;
+  padding: 0 !important;
+  background: transparent !important;
+  color: inherit !important;
+}
+
+.planSectionTitleBar {
+  display: flex;
+  width: 100%;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 2.5rem;
+  padding: 0.625rem 0.75rem;
+  background: var(--section-header-bg) !important;
+  color: #082f49 !important;
+
+  h2 {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: transparent !important;
+    font-size: 1.25rem !important;
+    font-weight: 600 !important;
+    letter-spacing: -0.01em;
+    color: #082f49 !important;
+  }
+}
+
+.sectionBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.625rem;
+  background: var(--section-header-label-bg) !important;
+  color: #082f49 !important;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.planSectionIntro {
+  max-width: 48rem;
+  margin-top: 1.25rem;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: #252532;
+
+  p {
+    margin: 0;
+  }
+}
+
+.planSectionRequirements {
+  max-width: 48rem;
+  margin-top: 0.75rem;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: #767681;
+
+  p {
+    margin: 0;
+  }
+}
+
+.planSectionQuestions {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.backToTop {
+  margin: 1.5rem 0 0.5rem;
+  text-align: left;
+  font-size: 0.75rem;
+
+  a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    color: var(--gray-600);
+    text-decoration: none;
+
+    &:hover {
+      color: var(--blue-900);
+      text-decoration: underline;
+    }
+  }
+}
+
+@media (max-width: 767px) {
+  .planSectionTitleBar {
+    align-items: flex-start;
+  }
+}
