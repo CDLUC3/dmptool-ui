@@ -780,7 +780,7 @@ const PlanOverviewPage: React.FC = () => {
                 linkText={t("funding.edit")}
                 linkAriaLabel={t("funding.edit")}
                 disabled={isReadOnly}
-                hoverMessage={t('messages.readOnlyLinkMessage')}
+                hoverMessage={t('messages.readOnlyLinkMessageFunding')}
               >
                 <p>{planData.funderName || t("funding.noFunderSelected")}</p>
               </OverviewSection>
@@ -792,7 +792,7 @@ const PlanOverviewPage: React.FC = () => {
                 linkText={t("members.edit")}
                 linkAriaLabel={t("members.edit")}
                 disabled={isReadOnly}
-                hoverMessage={t('messages.readOnlyLinkMessage')}
+                hoverMessage={t('messages.readOnlyLinkMessageMembers')}
               >
                 <p>
                   {planData.members.map((member, index) => (
@@ -815,7 +815,7 @@ const PlanOverviewPage: React.FC = () => {
                 linkAriaLabel={t("relatedWorks.edit")}
                 includeLink={!!rwPlanStats?.hasPublishedPlan || !isReadOnly}
                 disabled={isReadOnly}
-                hoverMessage={t('messages.readOnlyLinkMessage')}
+                hoverMessage={t('messages.readOnlyLinkMessageRelatedWorks')}
               >
                 {!rwPlanStats?.hasPublishedPlan && <p>{t("relatedWorks.publish")}</p>}
                 {rwPlanStats?.hasPublishedPlan && rwPlanStats?.pendingCount != null && <p>{t("relatedWorks.pendingCount", { count: rwPlanStats?.pendingCount })}</p>}
@@ -915,8 +915,8 @@ const PlanOverviewPage: React.FC = () => {
                     {Global("buttons.publish")}
                   </Button>
                   <Popover placement="bottom" className="popover--inverse">
-                    <Dialog aria-label={t('messages.readOnlyLinkMessage')} className="popoverContent">
-                      {t('messages.readOnlyLinkMessage')}
+                    <Dialog aria-label={t('messages.readOnlyLinkMessagePublish')} className="popoverContent">
+                      {t('messages.readOnlyLinkMessagePublish')}
                     </Dialog>
                   </Popover>
                 </DialogTrigger>
@@ -946,23 +946,31 @@ const PlanOverviewPage: React.FC = () => {
                     {Global("links.request")}
                   </TransitionLink>
                 ) : (
-                  <DialogTrigger>
-                    <Button
-                      className="link-disabled"
-                      type="button"
-                      aria-disabled={true}
-                    >
-                      {Global("links.request")}
-                    </Button>
-                    <Popover placement="bottom" className="popover--inverse">
-                      <Dialog aria-label={t('messages.readOnlyLinkMessage')} className="popoverContent">
-                        {!isFeedbackEnabled
-                          ? t('messages.feedbackNotAvailable')
-                          : t('messages.readOnlyLinkMessage')
-                        }
-                      </Dialog>
-                    </Popover>
-                  </DialogTrigger>
+                  (() => {
+                    const disabledMessage = isReadOnly
+                      ? t('status.feedback.disabledTooltip')
+                      : !isFeedbackEnabled
+                        ? t('messages.feedbackNotAvailable')
+                        : t('status.feedback.disabledTooltip');
+                    return (
+                      <DialogTrigger>
+                        <Button
+                          className="link-disabled"
+                          type="button"
+                          aria-disabled={true}
+                        >
+                          {Global("links.request")}
+                        </Button>
+                        <Popover placement="bottom" className="popover--inverse">
+                          <Dialog aria-label={disabledMessage} className="popoverContent">
+                            {disabledMessage}
+                          </Dialog>
+
+                        </Popover>
+                      </DialogTrigger>
+                    )
+                  })()
+
                 )}
 
               </div>
@@ -1020,7 +1028,7 @@ const PlanOverviewPage: React.FC = () => {
                       </Button>
                       <Popover placement="bottom" className="popover--inverse">
                         <Dialog aria-label={t('messages.readOnlyLinkMessage')} className="popoverContent">
-                          {t('messages.readOnlyLinkMessage')}
+                          {t('messages.readOnlyLinkMessagePlanStatus')}
                         </Dialog>
                       </Popover>
                     </DialogTrigger>
@@ -1052,8 +1060,8 @@ const PlanOverviewPage: React.FC = () => {
                       {t("status.publish.label")}
                     </Button>
                     <Popover placement="bottom" className="popover--inverse">
-                      <Dialog aria-label={t('messages.readOnlyLinkMessage')} className="popoverContent">
-                        {t('messages.readOnlyLinkMessage')}
+                      <Dialog aria-label={t('messages.readOnlyLinkMessagePublishStatus')} className="popoverContent">
+                        {t('messages.readOnlyLinkMessagePublishStatus')}
                       </Dialog>
                     </Popover>
                   </DialogTrigger>

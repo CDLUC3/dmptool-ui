@@ -1185,7 +1185,8 @@
     },
     "messages": {
       "success": {
-        "messageSent": "Your message has been sent successfully."
+        "messageSent": "Your message has been sent successfully.",
+        "ticketCreated": "Thank you for reaching out. We have created a ticket and you should be getting a confirmation email from DMP Tool Support."
       },
       "errors": {
         "invalidEmail": "Invalid email address",

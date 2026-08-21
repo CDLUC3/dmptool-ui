@@ -974,7 +974,7 @@ describe('PlanOverviewPage', () => {
     fireEvent.click(fundingEditButton);
 
     await waitFor(() => {
-      expect(screen.getByText('messages.readOnlyLinkMessage')).toBeInTheDocument();
+      expect(screen.getByText('messages.readOnlyLinkMessageFunding')).toBeInTheDocument();
     });
   });
 
@@ -2054,6 +2054,103 @@ describe('PlanOverviewPage', () => {
       // Incomplete count should reflect this item being in the error state
       const incompleteCount = screen.getByText('publishModal.publish.checklistInfo');
       expect(incompleteCount).toBeInTheDocument();
+    });
+  });
+});
+
+describe('per-section read-only popover messages', () => {
+  const setupReadOnly = () => {
+    // Build these ONCE, outside mockImplementation, so `data` has a stable reference across renders
+    const planQueryReturn = {
+      data: { plan: { ...mockPlanData.plan, readOnly: true } },
+      loading: false,
+      error: null,
+      refetch: jest.fn(),
+    };
+
+    mockUseQuery.mockImplementation((document) => {
+      if (document === PlanDocument) return planQueryReturn;
+      if (document === MeDocument) return { data: adminMe, loading: false, error: null };
+      return { data: null, loading: false, error: undefined } as any;
+    });
+  };
+
+  it('shows readOnlyLinkMessageMembers for the members edit control', async () => {
+    setupReadOnly();
+    render(<PlanOverviewPage />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'members.edit' }));
+
+    await waitFor(() => {
+      expect(screen.getByText('messages.readOnlyLinkMessageMembers')).toBeInTheDocument();
+    });
+  });
+
+  it('shows readOnlyLinkMessageRelatedWorks for the related works edit control', async () => {
+    const planQueryReturn = {
+      data: { plan: { ...mockPlanData.plan, readOnly: true } },
+      loading: false,
+      error: null,
+      refetch: jest.fn(),
+    };
+    const relatedWorksStatsQueryReturn = {
+      data: {
+        relatedWorksByPlanStats: {
+          hasPublishedPlan: true,
+          pendingCount: 1,
+          acceptedCount: 10,
+        },
+      },
+      loading: false,
+      error: undefined,
+    };
+
+    mockUseQuery.mockImplementation((document) => {
+      if (document === PlanDocument) return planQueryReturn;
+      if (document === MeDocument) return { data: adminMe, loading: false, error: null };
+      if (document === RelatedWorksByPlanStatsDocument) return relatedWorksStatsQueryReturn;
+      return { data: null, loading: false, error: undefined } as any;
+    });
+
+    render(<PlanOverviewPage />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'relatedWorks.edit' }));
+
+    await waitFor(() => {
+      expect(screen.getByText('messages.readOnlyLinkMessageRelatedWorks')).toBeInTheDocument();
+    });
+  });
+
+  it('shows readOnlyLinkMessagePublish for the top Publish button', async () => {
+    setupReadOnly();
+    render(<PlanOverviewPage />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'buttons.publish' }));
+
+    await waitFor(() => {
+      expect(screen.getByText('messages.readOnlyLinkMessagePublish')).toBeInTheDocument();
+    });
+  });
+
+  it('shows readOnlyLinkMessagePlanStatus for the status update control', async () => {
+    setupReadOnly();
+    render(<PlanOverviewPage />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'buttons.linkUpdate' }));
+
+    await waitFor(() => {
+      expect(screen.getByText('messages.readOnlyLinkMessagePlanStatus')).toBeInTheDocument();
+    });
+  });
+
+  it('shows readOnlyLinkMessagePublishStatus for the publish status link', async () => {
+    setupReadOnly();
+    render(<PlanOverviewPage />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'status.publish.label' }));
+
+    await waitFor(() => {
+      expect(screen.getByText('messages.readOnlyLinkMessagePublishStatus')).toBeInTheDocument();
     });
   });
 });

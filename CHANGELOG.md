@@ -1,4 +1,5 @@
 ## Added
+- Added new arrow DMP Tool logos to the CDN, and updated `layout.tsx` to use them [#337]
 - Added new `DmpLandingPage` at `app/(embed)/[locale]/dmps/[...slug]/page.tsx`. The `(embed)` directory allows us to assign a different wrapping layout to this page, so we can exlude the shared header and footer [#293]
 - Added `SaveQuestionDisplayLogic` mutation and `QuestionConditionGroups` query [#508]
 - Added `favicon` image from `CDN`. Added a new `.env` variable `CDN_DOMAIN`. We will need to add this variable to the `stage` and `production` servers 
@@ -36,6 +37,9 @@
 - Added `UpdateAffiliation` and `AffiliationById` queries [#203]
 
 ## Updated
+- Updated `ProjectsProjectFunding` page to display `View` button for funding if in `readOnly` mode [#246]
+- Upated `ProjectsProjectFundingEdit` to disable form fields for `readOnly` mode and hide action buttons [#246]
+- Updated `Contact` page to display a message in place of the form when submitted. Fixed missing email [#303]
 - Updated `DisplayLogicComponent` to include props for `onDisplayLogicRemove` and `isLoadingExistingLogic`, and added operators for multi-select questions, so we can change the language from `is` to `includes`. [#508]
 - Updated `displayLogicMapper` with all the new question condition types. Added `fromQuestionConditionGroups` to reconstruct display logic from backend [#508]
 - Updated `QuestionEdit` page to use the new queries and mutations related to display logic. Updated `handleSaveDisplayLogic` to actually save to the backend, and added `handleRemoveDisplayLogic` [#508]
@@ -132,6 +136,10 @@
 
 ## Fixed
 - Fixed missing success toasts on Account pages: profile saves now show a toast for all field updates (not only language changes); adding and deleting secondary emails show success toasts when the GraphQL response has no real errors; update password and notifications save actions also show success toasts. Added `emailAddressDeleteSuccess` translations [#306]
+- Temporary fix for the alignment. I added some missing styles to `.cSubheader` in the `SubHeader` component, because the mobile styles for that just weren't being picked up by the browser. There might be another root cause, but this is a temporary fix [#340]
+- NextJS is using `Turbopack` css handling by default since `v16`, and we want to continue using `webpack` due to some known gaps. So updated the `build` script in `package.json` to pin to `--webpack` by default to fix inconsistencies between running locally and on other servers [#340]
+- Fixed issue where the `readOnly` tooltip messages were incorrect [#288]
+- Added missing `Custom Field` to the `SingleResearchOutputComponent` page for Research Output questions [#336]
 - Fixed an issue where there was flashing in the header due to a delay in the page registering the `isAuthenticated` value. So our `proxy.ts` middleware was updated to add `x-is-authenticated` in the header, and we updated `layout.tsx` to get the value and pass it into `AuthProvider`. Then `AuthContext` was updated to use this value as the initial value [#293]
 - Fixed breaking build due to the recent `next` version update to `16.2.12` where `Turbopack` has stricter rules, so we had to import `nprogress/nprogress.css` in `layout.tsx` rather than in `globals.scss` [#331]
 - Fixed Question Display Logic layout issue by updating the `DisplayLogicComponent` css to have more specificity, so that the order in which css is loaded will not break anything [#325]
@@ -144,6 +152,8 @@
 - Fixed issue with Feedback Notification headers displaying for any collaborator on the Plan Overview, Section and Question pages. It should only display to Org Admins and Super Admins. Added shared isOrgAdmin hook for pages. [#249]
 
 ## Chore
+- Updated `versioning.yml` to create PRs to merge updated `package.json` and `CHANGELOG.md` into `stage` and `development` [#338]
+- Small tweak in CHANGELOG.md to test another merge to test automated versioning.
 - Updated `brace-expansion` to `v5.0.9`, `js-yaml` to `v4.3.1`, and `domPurify` to `v3.4.13` to address high vulnerabilities [#337]
 - Updated `@types/react` to `v18.3.31`, `react` to `v19.2.8`, `react-dom` to `v19.2.8`, `postcss` to `v8.5.25`, `qs` to `v6.15.3`, `@apollo/client` to `v4.2.9`, `@types/node` to `v24.13.3`, `systeminformation` to `v5.31.17`, `dompurify` to `v3.4.12`, `eslint` to `v9.39.5`, `sanitize-html` to `v2.17.6`, `next` to `v16.2.12`. Also updated `jest.config.ts` to accommodate the recent update in `sanitize-html` and its dependencies to be `ESM-only`, so we had to specify that `jest` transform them to `Common JS` [#331]
 - Updated `brace-expansion` to `v5.0.8` to address high vulnerability [#303]
