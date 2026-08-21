@@ -1,4 +1,5 @@
 ## Added
+- Added new `PlanAuthoring` module for the single-page plan overview/authoring UI (sections, questions, section navigation, guidance/comments sidebar, save status), with a pluggable `PlanAuthoringDataSource`, demo data, and en-US/pt-BR translations. Styleguide showcase at `/styleguide/components/plan-authoring`. Frontend scaffold only — not yet wired to production routes or backend; research output answers deferred to a follow-up [#195]
 - Added new arrow DMP Tool logos to the CDN, and updated `layout.tsx` to use them [#337]
 - Added new `DmpLandingPage` at `app/(embed)/[locale]/dmps/[...slug]/page.tsx`. The `(embed)` directory allows us to assign a different wrapping layout to this page, so we can exlude the shared header and footer [#293]
 - Added `SaveQuestionDisplayLogic` mutation and `QuestionConditionGroups` query [#508]

@@ -1,0 +1,204 @@
+.questionSidebar {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  border-left: 1px solid var(--border-color-subtle);
+  background: #fff;
+
+  @media (min-width: 1024px) {
+    height: 0;
+    min-height: 100%;
+    overflow: hidden;
+  }
+}
+
+.sidebarInner {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.commentsTab {
+  display: flex !important;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  width: 100%;
+  margin-top: auto;
+  min-height: auto !important;
+  border-radius: 0 !important;
+  border: 0 !important;
+  border-top: 1px solid var(--gray-200) !important;
+  background: #fff !important;
+  box-shadow: none !important;
+  padding: 0.5rem 0.75rem !important;
+  font-size: 0.6875rem !important;
+  font-weight: 600 !important;
+  color: var(--blue-900) !important;
+
+  &[data-selected="true"] {
+    background: var(--gray-50) !important;
+  }
+}
+
+.commentsCount {
+  padding: 0.125rem 0.4rem;
+  border-radius: 999px;
+  background: #efebff;
+  font-weight: 500;
+  color: #3f347a;
+}
+
+.commentsTabLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.eyebrow {
+  margin: 0;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--gray-600);
+}
+
+.guidanceShell {
+  position: relative;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.guidancePanel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  flex: 1;
+  min-height: 0;
+  margin: 0;
+  // Extra bottom pad so the last lines clear the 20px scroll fade while it is visible.
+  padding: 1rem 1rem calc(1rem + 20px);
+  overflow: auto;
+  background: transparent;
+  border: 0;
+
+  // Stacked layout: keep a soft cap so guidance doesn't dominate the card.
+  @media (max-width: 1023px) {
+    max-height: min(22rem, 50vh);
+  }
+
+  .eyebrow {
+    margin: 0;
+  }
+
+  // Source label (outside the WYSIWYG body) stays slightly larger.
+  > h4 {
+    margin: 0;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: #171721;
+  }
+}
+
+// Hint that guidance continues when the panel can scroll further down.
+.guidanceScrollFade {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 20px;
+  pointer-events: none;
+  background: linear-gradient(
+    to bottom,
+    rgb(255 255 255 / 0%),
+    #fff
+  );
+}
+
+// WYSIWYG body from the admin: one type scale for headings, lists, quotes,
+// and paragraphs so rich content doesn't explode the sidebar.
+.guidanceBody {
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--gray-700);
+  overflow-wrap: anywhere;
+  word-break: break-word;
+
+  // Explicit (non-:where) so we beat global element rules that otherwise leave
+  // list items and headings on a larger page scale.
+  p,
+  ul,
+  ol,
+  li,
+  blockquote,
+  pre,
+  table,
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    margin: 0 0 0.5rem;
+    font-size: inherit;
+    line-height: inherit;
+    color: inherit;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  strong,
+  b {
+    font-weight: 600;
+    color: #171721;
+  }
+
+  ul,
+  ol {
+    padding-left: 1.25rem;
+  }
+
+  li {
+    margin-bottom: 0.25rem;
+  }
+
+  li:last-child {
+    margin-bottom: 0;
+  }
+
+  blockquote {
+    padding: 0.35rem 0.75rem;
+    border-left: 3px solid rgba(15, 23, 42, 0.15);
+    color: var(--gray-600);
+  }
+
+  a {
+    color: var(--blue-700, #1d4ed8);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    overflow-wrap: anywhere;
+    word-break: break-all;
+  }
+
+  > :last-child {
+    margin-bottom: 0;
+  }
+}
+
+@media (max-width: 1023px) {
+  .questionSidebar {
+    border-left: 0;
+    border-top: 1px solid rgba(15, 23, 42, 0.12);
+  }
+}
