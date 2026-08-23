@@ -1,14 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import {
-  ResearchOutputTableAnswerSchema,
-  ResearchOutputTableColumnsEnum,
-  type ResearchOutputTableAnswerType,
-  type ResearchOutputTableRowAnswerType,
-  type AnyResearchOutputTableColumnAnswerType,
-} from '@dmptool/types';
-
+import Image from 'next/image';
 import {
   Button,
   Menu,
@@ -19,15 +12,53 @@ import {
 // Components
 import SafeHtml from '@/components/SafeHtml';
 import { OrcidIcon } from '@/components/Icons/orcid/';
-import { PublicPlanVersionByDmpIdQuery } from '@/generated/graphql';
-
+import {
+  PublicPlanVersionByDmpIdQuery,
+  WorkType,
+  ProjectFundingStatus,
+} from '@/generated/graphql';
+import { DmpIcon } from "@/components/Icons";
 //Utils and other
 import { parseResearchOutputsFromAnswers, outputTypeLabel } from './researchOutputParsing';
-
-// Reuse the exact same section-card / list styling as the live landing page
 import styles from './landing.module.scss';
 
 type PlanSnapshot = NonNullable<PublicPlanVersionByDmpIdQuery['publicPlanVersionByDMPId']>;
+
+
+/* Related Works*/
+type RelatedWorkAuthor = {
+  givenName?: string | null;
+  surname?: string | null;
+  full?: string | null;
+};
+
+type RelatedWorkItem = {
+  id?: number | null;
+  workVersion: {
+    title?: string | null;
+    publicationDate?: string | null;
+    workType: string;
+    publicationVenue?: string | null;
+    sourceName: string;
+    sourceUrl?: string | null;
+    authors: RelatedWorkAuthor[];
+    work: { doi: string };
+  };
+};
+
+type ArchivedPlanViewProps = {
+  snapshot: PlanSnapshot;
+  jsonUrl?: string;
+  pdfDownloadUrl?: string;
+  canDownloadPdf: boolean;
+  handleDownloadPdfAction: () => Promise<void>;
+  writtenForOrg?: {
+    name: string;
+    displayName?: string | null;
+    homepage?: string | null;
+  };
+  dmpId: string;
+};
 
 function formatDate(dateStr?: string | null, includeTime = false): string {
   if (!dateStr) return '';
@@ -40,129 +71,14 @@ function formatDate(dateStr?: string | null, includeTime = false): string {
   return `${formatted} ${time}`;
 }
 
-// function outputTypeLabel(type?: string | null): string {
-//   if (!type) return '';
-//   const spaced = type.replace(/[-_]/g, ' ');
-//   return spaced.charAt(0).toUpperCase() + spaced.slice(1);
-// }
-
-/* ---- Reuses the exact same research-output parsing as the live page,
-   since the raw JSON shape is identical between live answers and
-   narrative-derived snapshot answers ---- */
-type ParsedOutput = {
-  title?: string;
-  description?: string;
-  type?: string;
-  issued?: string;
-  byteSize?: number;
-  byteSizeUnit?: string;
-  hosts: { url?: string; name?: string }[];
-  metadataStandards: { uri?: string; name?: string }[];
-  licenses: { uri?: string; name?: string }[];
-};
-
-function getColumn<Id extends AnyResearchOutputTableColumnAnswerType['commonStandardId']>(
-  columns: AnyResearchOutputTableColumnAnswerType[],
-  commonStandardId: Id
-): Extract<AnyResearchOutputTableColumnAnswerType, { commonStandardId: Id }> | undefined {
-  return columns.find(
-    (c): c is Extract<AnyResearchOutputTableColumnAnswerType, { commonStandardId: Id }> =>
-      c.commonStandardId === commonStandardId
-  );
-}
-
-function parseRow(row: ResearchOutputTableRowAnswerType): ParsedOutput {
-  const columns = row.columns;
-  const titleCol = getColumn(columns, ResearchOutputTableColumnsEnum.enum.title);
-  const descriptionCol = getColumn(columns, ResearchOutputTableColumnsEnum.enum.description);
-  const typeCol = getColumn(columns, ResearchOutputTableColumnsEnum.enum.type);
-  const issuedCol = getColumn(columns, ResearchOutputTableColumnsEnum.enum.issued);
-  const byteSizeCol = getColumn(columns, ResearchOutputTableColumnsEnum.enum.byte_size);
-  const hostCol = getColumn(columns, ResearchOutputTableColumnsEnum.enum.host);
-  const metadataCol = getColumn(columns, ResearchOutputTableColumnsEnum.enum.metadata);
-  const licenseCol = getColumn(columns, ResearchOutputTableColumnsEnum.enum.license_ref);
-
-  return {
-    title: titleCol?.answer,
-    description: descriptionCol?.answer,
-    type: typeCol?.answer,
-    issued: issuedCol?.answer,
-    byteSize: byteSizeCol?.answer?.value,
-    byteSizeUnit: byteSizeCol?.answer?.context,
-    hosts: (hostCol?.answer ?? []).map((h) => ({ url: h.repositoryId, name: h.repositoryName })),
-    metadataStandards: (metadataCol?.answer ?? []).map((m) => ({
-      uri: m.metadataStandardId,
-      name: m.metadataStandardName,
-    })),
-    licenses: (licenseCol?.answer ?? []).map((l) => ({ uri: l.licenseId, name: l.licenseName })),
-  };
-}
-
-// function parseSnapshotOutputs(answers?: { id?: number | null; json?: string | null }[] | null): ParsedOutput[] {
-//   if (!answers) return [];
-//   const outputs: ParsedOutput[] = [];
-
-//   for (const ans of answers) {
-//     if (!ans?.json) continue;
-//     let rawJson: unknown;
-//     try {
-//       rawJson = JSON.parse(ans.json);
-//     } catch {
-//       continue;
-//     }
-//     const result = ResearchOutputTableAnswerSchema.safeParse(rawJson);
-//     if (!result.success) continue;
-//     const tableAnswer: ResearchOutputTableAnswerType = result.data;
-//     for (const row of tableAnswer.answer) {
-//       outputs.push(parseRow(row));
-//     }
-//   }
-//   return outputs;
-// }
-
-/* ---- Small archived-specific version dropdown, since the snapshot's
-   {timestamp, url} shape doesn't match the live VersionsDropdown's
-   {modified, dmpId} props ---- */
-function ArchivedVersionsList({
-  versions,
-  currentTimestamp,
-}: {
-  versions: { timestamp?: string | null; url?: string | null }[];
-  currentTimestamp?: string | null;
-}) {
-  const pastVersions = versions
-    .filter((v) => v.timestamp && v.timestamp !== currentTimestamp)
-    .sort((a, b) => (a.timestamp! > b.timestamp! ? -1 : 1));
-
-  if (pastVersions.length === 0) return null;
-
-  return (
-    <div className={styles.subBandDoi}>
-      <strong>Other versions:</strong>{' '}
-      {pastVersions.map((v, i) => (
-        <span key={i}>
-          {i > 0 && ', '}
-          {v.url ? (
-            <a href={v.url} target="_blank" rel="noopener noreferrer">
-              {formatDate(v.timestamp, true)}
-            </a>
-          ) : (
-            formatDate(v.timestamp, true)
-          )}
-        </span>
-      ))}
-    </div>
-  );
-}
-
 function ArchivedVersionsDropdown({
   versions,
   currentTimestamp,
-  liveHref,
+  dmpId,
 }: {
   versions: { timestamp?: string | null; url?: string | null }[];
   currentTimestamp?: string | null;
-  liveHref: string;
+  dmpId?: string;
 }) {
   const dedupedByTimestamp = new Map<string, { timestamp?: string | null; url?: string | null }>();
   for (const v of versions) {
@@ -172,10 +88,12 @@ function ArchivedVersionsDropdown({
       dedupedByTimestamp.set(v.timestamp, v);
     }
   }
+
   const allVersions = Array.from(dedupedByTimestamp.values())
     .sort((a, b) => (a.timestamp! > b.timestamp! ? -1 : 1));
 
   const hasVersions = allVersions.length > 0;
+  const shortDoi = dmpId?.replace('https://doi.org/', '') || '';
 
   return (
     <MenuTrigger>
@@ -187,15 +105,19 @@ function ArchivedVersionsDropdown({
         <Popover className={styles.versionsDropdownMenu} placement="bottom end">
           <Menu>
             {allVersions.map((v, i) => {
-              const isCurrent = v.timestamp === currentTimestamp;
+              const isCurrent = v.timestamp === currentTimestamp || (currentTimestamp === 'latest' && i === 0);
+              const versionUrl = isCurrent
+                ? `/dmps/${shortDoi}`
+                : `/dmps/${shortDoi}?version=${encodeURIComponent(v.timestamp!)}`;
+
               return (
                 <MenuItem
                   key={i}
-                  href={isCurrent ? liveHref : (v.url ?? '#')}
+                  href={versionUrl}
                   className={styles.versionsDropdownItem}
                 >
                   {formatDate(v.timestamp, true)}
-                  {isCurrent ? ' (current — click to return to live page)' : ''}
+                  {isCurrent ? ' (current)' : ''}
                 </MenuItem>
               );
             })}
@@ -206,14 +128,161 @@ function ArchivedVersionsDropdown({
   );
 }
 
-export default function ArchivedPlanView({ snapshot }: { snapshot: PlanSnapshot }) {
+function formatAuthorsForCitation(authors?: RelatedWorkAuthor[] | null): string {
+  if (!authors || authors.length === 0) return '';
+
+  const displayName = (a: RelatedWorkAuthor) =>
+    [a.givenName, a.surname].filter(Boolean).join(' ') || a.full || '';
+
+  const names = authors.map(displayName).filter(Boolean);
+  if (names.length === 0) return '';
+
+  const first = authors[0];
+  const firstFormatted =
+    [first.surname, first.givenName].filter(Boolean).join(', ') || first.full || names[0];
+
+  if (names.length === 1) return firstFormatted;
+
+  const rest = names.slice(1);
+  if (rest.length === 1) return `${firstFormatted}, and ${rest[0]}`;
+
+  return `${firstFormatted}, ${rest.slice(0, -1).join(', ')}, and ${rest[rest.length - 1]}`;
+}
+
+
+function fundingStatusLabel(status?: ProjectFundingStatus | null): string {
+  switch (status) {
+    case ProjectFundingStatus.Granted: return 'Awarded';
+    case ProjectFundingStatus.Denied: return 'Denied';
+    default: return 'Planned';
+  }
+}
+
+function fundingStatusClass(status?: ProjectFundingStatus | null): string {
+  switch (status) {
+    case ProjectFundingStatus.Granted: return styles.statusBadgeGranted;
+    case ProjectFundingStatus.Denied: return styles.statusBadgeDenied;
+    default: return styles.statusBadgePlanned;
+  }
+}
+
+function relatedWorkTypeLabel(workType?: string | null): string {
+  if (!workType) return 'Other';
+  const spaced = workType.replace(/_/g, ' ').toLowerCase();
+  return spaced.charAt(0).toUpperCase() + spaced.slice(1);
+}
+
+function RelatedWorkCitation({ item }: { item: RelatedWorkItem }) {
+  const wv = item.workVersion;
+  const authors = wv?.authors ?? [];
+  const url = wv?.sourceUrl || (wv?.work?.doi ? `https://doi.org/${wv.work.doi}` : null);
+
+  const hasCitableMetadata = !!wv?.title || authors.length > 0;
+
+  if (!hasCitableMetadata) {
+    return (
+      <>
+        {url && (
+          <a href={url} target="_blank" rel="noopener noreferrer">
+            {url}
+          </a>
+        )}{' '}
+        t('noCitationInfo')
+      </>
+    );
+  }
+
+
+  let year: number | null = null;
+  if (wv?.publicationDate) {
+    try {
+      const parsedDate = new Date(wv.publicationDate);
+      if (!isNaN(parsedDate.getTime())) {
+        year = parsedDate.getFullYear();
+      }
+    } catch {
+      // Silently fail, year stays null
+    }
+  }
+  const typeLabel = relatedWorkTypeLabel(wv?.workType);
+  const venue = wv?.publicationVenue || wv?.sourceName;
+  const authorsStr = formatAuthorsForCitation(authors);
+
+  return (
+    <>
+      {authorsStr && <>{authorsStr}. </>}
+      {year && !isNaN(year) && <>{year}. </>}
+      {wv?.title && <>&#8220;{wv.title}.&#8221; </>}
+      [{typeLabel}].{' '}
+      {venue && <><i>{venue}</i>. </>}
+      {url && (
+        <a href={url} target="_blank" rel="noopener noreferrer">
+          {url}
+        </a>
+      )}
+      {url && '.'}
+    </>
+  );
+}
+
+function groupRelatedWorksByType(
+  items?: {
+    __typename?: "RelatedWorkSearchResult";
+    id?: number | null;
+    workVersion: {
+      __typename?: "WorkVersion";
+      title?: string | null;
+      publicationDate?: string | null;
+      workType: WorkType;
+      publicationVenue?: string | null;
+      sourceName: string;
+      sourceUrl?: string | null;
+      authors: {
+        givenName?: string | null;
+        surname?: string | null;
+        full?: string | null;
+      }[];
+      work: {
+        doi: string;
+      };
+    };
+  }[] | null,
+): { type: string; items: typeof items }[] {
+  if (!items || items.length === 0) return [];
+
+  const groups = new Map<string, typeof items>();
+
+  for (const item of items) {
+    const key = item.workVersion?.workType || WorkType.Other;
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key)!.push(item);
+  }
+
+  const orderedKeys = [
+    ...Array.from(groups.keys()).filter((k) => k !== WorkType.Other).sort(),
+    ...(groups.has(WorkType.Other) ? [WorkType.Other] : []),
+  ];
+
+  return orderedKeys.map((type) => ({ type, items: groups.get(type)! }));
+}
+
+export default function ArchivedPlanView({
+  snapshot,
+  jsonUrl,
+  pdfDownloadUrl,
+  canDownloadPdf,
+  handleDownloadPdfAction,
+  writtenForOrg,
+  dmpId
+}: ArchivedPlanViewProps) {
+
   const t = useTranslations('LandingPage');
 
   const title = snapshot.title || snapshot.project?.title || 'Untitled DMP';
   const fundings = snapshot?.fundings ?? [];
   const members = snapshot.members ?? [];
   const outputs = parseResearchOutputsFromAnswers(snapshot.answers);
-  const relatedWorkIdentifiers = snapshot.relatedWorkIdentifiers ?? [];
+  const relatedWorksGroups = groupRelatedWorksByType(snapshot.relatedWorks);
 
   const citationNames = members.map((m) => m.name).filter((n): n is string => !!n);
   const citationYear = snapshot.created
@@ -222,32 +291,95 @@ export default function ArchivedPlanView({ snapshot }: { snapshot: PlanSnapshot 
 
   return (
     <div className={styles.landingPage}>
-      {/* Archived-version banner */}
-      <div className={styles.subBand} style={{ background: 'var(--messaging-info, #eef4fb)' }}>
-        <div className={styles.subBandInner}>
-          <p className={styles.subBandDoi}>
-            <strong>Archived version</strong> — viewing this DMP as it existed on{' '}
-            {formatDate(snapshot.versionTimestamp, true)}
-          </p>
-          <ArchivedVersionsList versions={snapshot.versions ?? []} currentTimestamp={snapshot.versionTimestamp} />
-        </div>
-      </div>
-
       <div className={styles.topBand}>
         <div className={styles.titleBlock}>
           <div className={styles.titleInner}>
             <div className={styles.titleTopRow}>
               <div className={styles.titleMain}>
+                <a
+                  href="https://dmptool.org/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title={t('dmpTool')}
+                  className={styles.titleLogo}
+                  aria-label={`${t('dmpTool')} (${t('opensInNewWindow')})`}
+                >
+                  <Image
+                    src="/images/DMP-logo-white.svg"
+                    width={90}
+                    height={13}
+                    alt="DMP Tool"
+                    loading="eager"
+                    priority
+                  />
+                </a>
                 <h1 className={styles.titleH1}>{title}</h1>
                 <p className={styles.titleSubtitle}>
                   {snapshot.registered ? t('registeredDMP') : t('dataManagementPlan')}
                 </p>
                 {snapshot.versionedTemplate && (
                   <p className={styles.titleTemplateInfo}>
-                    Based on template: {snapshot.versionedTemplate.title}
-                    {snapshot.versionedTemplate.version ? ` (${snapshot.versionedTemplate.version})` : ''}
+                    {writtenForOrg
+                      ? t.rich('templateInfoWithOrg', {
+                        orgName: writtenForOrg.displayName || writtenForOrg.name,
+                        orgLink: (chunks) =>
+                          writtenForOrg.homepage ? (
+                            <a
+                              href={writtenForOrg.homepage}
+                              className={styles.templateInfoLink}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              {chunks}
+                            </a>
+                          ) : (
+                            <>{chunks}</>
+                          ),
+                        dmptoolLink: (chunks) => (
+                          <a
+                            href="https://dmptool.org/"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            {chunks}
+                          </a>
+                        ),
+                      })
+                      : t.rich('templateInfoWithoutOrg', {
+                        dmptoolLink: (chunks) => (
+                          <a
+                            href="https://dmptool.org/"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            {chunks}
+                          </a>
+                        ),
+                      })}
                   </p>
                 )}
+              </div>
+              <div className={styles.titleActionsCorner}>
+                {jsonUrl && (
+                  <a href={jsonUrl} className={styles.jsonLink} target="_blank" rel="noopener noreferrer">
+                    {t('viewAsJson')}
+                    <span className={styles.jsonLinkArrow} aria-hidden="true">↗</span>
+                    <span className="hidden-accessibly"> ({t('opensInNewWindow')})</span>
+                  </a>
+                )}
+                {canDownloadPdf && (<Button
+                  type="button"
+                  onPress={handleDownloadPdfAction}
+                  className={`${styles.downloadButton} secondary`}
+                  aria-label="Download the data management plan (downloads a PDF, opens in a new tab)"
+                >
+                  {t.rich('downloadPlan', {
+                    pdfLabel: (chunks) => (
+                      <span className={styles.downloadText}>{chunks}</span>
+                    ),
+                  })}
+                  <DmpIcon icon="download" aria-hidden="true" classes={styles.downloadIcon} />
+                </Button>)}
               </div>
             </div>
           </div>
@@ -269,7 +401,7 @@ export default function ArchivedPlanView({ snapshot }: { snapshot: PlanSnapshot 
               <ArchivedVersionsDropdown
                 versions={snapshot.versions}
                 currentTimestamp={snapshot.versionTimestamp}
-                liveHref={`/dmps/${snapshot.dmpId?.replace('https://doi.org/', '')}`}
+                dmpId={snapshot.dmpId || ''}
               />
             )}
           </div>
@@ -278,7 +410,6 @@ export default function ArchivedPlanView({ snapshot }: { snapshot: PlanSnapshot 
 
       <main id="mainContent" className={styles.landingContent}>
         <div className={styles.contentInner}>
-          {/* Contributors */}
           {/* Contributors */}
           {members.length > 0 && (
             <section className={styles.dmpSection} aria-labelledby="contributors-heading">
@@ -376,19 +507,50 @@ export default function ArchivedPlanView({ snapshot }: { snapshot: PlanSnapshot 
             </section>
           )}
 
-          {/* Citation */}
           {citationNames.length > 0 && snapshot.dmpId && (
             <section className={styles.dmpSection} aria-labelledby="citation-heading">
               <h2 id="citation-heading" className={styles.dmpSectionTitle}>
                 {t('sectionHeadings.citation')}
               </h2>
+              <p style={{ fontSize: 'var(--fs-small)', marginBottom: 'var(--space-2)' }}>
+                <strong>{t('whenCitingThisDMP')}:</strong>
+              </p>
               <div className={styles.citationBlock}>
                 {citationNames.join(', ')} ({citationYear}). &ldquo;{title}&rdquo;. [{t('dataManagementPlan')}].
-                DMPTool.{' '}
-                <a href={snapshot.dmpId} target="_blank" rel="noopener noreferrer">
-                  {snapshot.dmpId}
-                </a>
+                {t('DMPTool')}.{' '}
+                {snapshot.dmpId && (
+                  <a href={snapshot.dmpId} target="_blank" rel="noopener noreferrer">
+                    {snapshot.dmpId}
+                  </a>
+                )}
               </div>
+              <p
+                style={{
+                  fontSize: 'var(--fs-small)',
+                  marginTop: 'var(--space-4)',
+                  marginBottom: 'var(--space-2)',
+                }}
+              >
+                {snapshot.dmpId && (
+                  <strong>
+                    {(() => {
+                      const dmpId = snapshot.dmpId;
+                      return t.rich('dmpIdInfo', {
+                        dmpId,
+                        dmpIdLink: (chunks) => (
+                          <a
+                            href={dmpId}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            {chunks}
+                          </a>
+                        ),
+                      });
+                    })()}
+                  </strong>
+                )}
+              </p>
             </section>
           )}
 
@@ -407,7 +569,13 @@ export default function ArchivedPlanView({ snapshot }: { snapshot: PlanSnapshot 
                     {funding.status && (
                       <li className={styles.dataItem}>
                         <span className={styles.dataLabel}>Status:</span>
-                        <span className={styles.dataValue}>{funding.status}</span>
+                        <span className={styles.dataValue}>
+                          <span
+                            className={`${styles.statusBadge} ${fundingStatusClass(funding.status)}`}
+                          >
+                            {fundingStatusLabel(funding.status)}
+                          </span>
+                        </span>
                       </li>
                     )}
                     {funding.funderName && (
@@ -457,11 +625,7 @@ export default function ArchivedPlanView({ snapshot }: { snapshot: PlanSnapshot 
               {outputs.map((output, idx) => (
                 <div
                   key={idx}
-                  style={{
-                    marginBottom: idx < outputs.length - 1 ? 'var(--space-5)' : 0,
-                    paddingBottom: idx < outputs.length - 1 ? 'var(--space-5)' : 0,
-                    borderBottom: idx < outputs.length - 1 ? '1px solid var(--gray-100)' : 'none',
-                  }}
+                  className={idx < outputs.length - 1 ? styles.outputItemWithBorder : styles.outputItem}
                 >
                   <h3 className={styles.itemTitle}>{output.title || 'Untitled output'}</h3>
                   {output.description && (
@@ -555,29 +719,26 @@ export default function ArchivedPlanView({ snapshot }: { snapshot: PlanSnapshot 
             </section>
           )}
 
-          {/* Related Works — bare DOI list only; full citations unavailable in archived snapshots */}
-          {relatedWorkIdentifiers.length > 0 && (
+          {/* Related Works */}
+          {relatedWorksGroups.length > 0 && (
             <section className={styles.dmpSection} aria-labelledby="related-works-heading">
               <h2 id="related-works-heading" className={styles.dmpSectionTitle}>
                 {t('sectionHeadings.relatedWorks')}
               </h2>
-              <p style={{ fontSize: 'var(--fs-small)', color: 'var(--gray-500)', marginBottom: 'var(--space-2)' }}>
-                Full citation details aren&apos;t available for archived versions.
-              </p>
-              <ul className={styles.dataList}>
-                {relatedWorkIdentifiers.map((doi, i) => (
-                  <li key={i} className={styles.workItem}>
-
-                    <a
-                      href={doi.startsWith('http') ? doi : `https://doi.org/${doi}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      {doi}
-                    </a>
-                  </li>
-                ))}
-              </ul>
+              {relatedWorksGroups.map((group) => (
+                <div key={group.type} className={styles.worksCategory}>
+                  <h3 className={styles.worksCategoryTitle}>{relatedWorkTypeLabel(group.type)}</h3>
+                  <ul className={styles.dataList}>
+                    {group.items?.map((item) => (
+                      <li key={item?.id} className={styles.workItem}>
+                        <p>
+                          <RelatedWorkCitation item={item as RelatedWorkItem} />
+                        </p>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
             </section>
           )}
         </div>

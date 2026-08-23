@@ -1,0 +1,108 @@
+{
+    "publicPlanByDMPId": {
+        "__typename": "Plan",
+        "id": 1,
+        "title": "CDL Project",
+        "dmpId": "https://doi.org/10.48321/D15e7b1210",
+        "created": "2026-08-21 22:38:45",
+        "modified": "2026-08-21 23:10:21",
+        "registered": "2026-08-21 22:39:17",
+        "visibility": "PUBLIC",
+        "versionedTemplate": {
+            "__typename": "VersionedTemplate",
+            "id": 986,
+            "name": "CDL Template 1",
+            "version": "v1",
+            "owner": {
+                "__typename": "Affiliation",
+                "name": "California Digital Library",
+                "displayName": "California Digital Library (cdlib.org)",
+                "uri": "https://ror.org/03yrm5c26",
+                "homepage": "http://www.cdlib.org/"
+            }
+        },
+        "project": {
+            "__typename": "Project",
+            "title": "CDL Project",
+            "abstractText": "",
+            "startDate": null,
+            "endDate": null,
+            "researchDomain": null
+        },
+        "members": [
+            {
+                "__typename": "PlanMember",
+                "id": 1,
+                "isPrimaryContact": true,
+                "memberRoles": [
+                    {
+                        "__typename": "MemberRole",
+                        "label": "No Role Assigned",
+                        "uri": "http://dmptool.org/contributor_roles/other",
+                        "id": 15
+                    }
+                ],
+                "projectMember": {
+                    "__typename": "ProjectMember",
+                    "givenName": "Super",
+                    "surName": "Admin",
+                    "isPrimaryContact": true,
+                    "orcid": null
+                }
+            }
+        ],
+        "versions": [
+            {
+                "__typename": "PlanVersion",
+                "modified": "2026-08-21T22:54:14.000Z",
+                "dmpId": "https://doi.org/10.48321/D15e7b1210"
+            },
+            {
+                "__typename": "PlanVersion",
+                "modified": "2026-08-21T22:44:14.000Z",
+                "dmpId": "https://doi.org/10.48321/D15e7b1210"
+            }
+        ],
+        "answers": [
+            {
+                "__typename": "Answer",
+                "id": 1,
+                "json": "{\"meta\":{\"schemaVersion\":\"1.0\"},\"type\":\"textArea\",\"answer\":\"<p>This is the sample text123</p>\"}"
+            }
+        ],
+        "relatedWorks": [],
+        "owner": {
+            "__typename": "Affiliation",
+            "id": 1,
+            "name": "California Digital Library",
+            "displayName": "California Digital Library (cdlib.org)",
+            "uri": "https://ror.org/03yrm5c26",
+            "homepage": "http://www.cdlib.org/"
+        },
+        "fundings": [
+            {
+                "__typename": "PlanFunding",
+                "id": 1,
+                "projectFunding": {
+                    "__typename": "ProjectFunding",
+                    "grantId": null,
+                    "funderProjectNumber": null,
+                    "funderOpportunityNumber": null,
+                    "id": 1,
+                    "project": {
+                        "__typename": "Project",
+                        "id": 1
+                    },
+                    "status": "PLANNED",
+                    "affiliation": {
+                        "__typename": "Affiliation",
+                        "uri": "https://ror.org/021nxhr62",
+                        "displayName": "National Science Foundation (nsf.gov)",
+                        "id": 114,
+                        "name": "National Science Foundation"
+                    }
+                }
+            }
+        ]
+    }
+}

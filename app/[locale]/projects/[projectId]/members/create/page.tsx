@@ -76,6 +76,7 @@ const ProjectsProjectMemberCreate: React.FC = () => {
     affiliationId: '',
     email: '',
     orcid: '',
+    isPrimaryContact: false,
   });
 
   // Field errors
@@ -221,6 +222,11 @@ const ProjectsProjectMemberCreate: React.FC = () => {
     Object.keys(projectMemberData).forEach((key) => {
       const name = key as keyof ProjectMemberFormInterface;
       const value = projectMemberData[name];
+
+      // Skip boolean fields (isPrimaryContact)
+      if (typeof value === 'boolean') {
+        return;
+      }
 
       // Call validateField to update errors for each field
       const error = validateField(name, value);

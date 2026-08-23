@@ -18,6 +18,8 @@
     "fundingOpportunity": "Funding opportunity",
     "registeredDMP": "Data Management plan (registered)",
     "dmpId": "DMP ID",
+    "noCitationInfo": "No citation available.",
+    "DMPTool": "DMPTool",
     "sectionHeadings": {
       "plannedOutputs": "Planned outputs",
       "projectDescription": "Project description",

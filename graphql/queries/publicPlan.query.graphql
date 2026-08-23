@@ -130,6 +130,13 @@ query PublicPlanVersionByDMPId($dmpId: String!, $version: String!) {
     relatedWorkIdentifiers
     title
     visibility
+    owner {
+      id
+      name
+      displayName
+      uri
+      homepage
+    }
     answers {
       id
       json
@@ -151,6 +158,25 @@ query PublicPlanVersionByDMPId($dmpId: String!, $version: String!) {
       funderUri
       grantId
       status
+    }
+    relatedWorks {
+      id
+      workVersion {
+        title
+        publicationDate
+        workType
+        publicationVenue
+        sourceName
+        sourceUrl
+        authors {
+          givenName
+          surname
+          full
+        }
+        work {
+          doi
+        }
+      }
     }
   }
 }
