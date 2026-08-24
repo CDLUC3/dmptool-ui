@@ -262,6 +262,7 @@ const ProjectsProjectMembersEdit: React.FC = () => {
         affiliationId: isOtherAffiliation ? '' : projectMemberData.affiliationId,
         email: projectMemberData.email,
         orcid: projectMemberData.orcid,
+        isPrimaryContact: projectMemberData.isPrimaryContact,
         memberRoleIds: checkboxRoles.filter((id) => id !== undefined).map(Number),
         ...(affiliationName ? { affiliationName } : {}),
       };

@@ -19,7 +19,8 @@
   display: inline-flex;
   align-items: center;
   line-height: 0;
-  margin-bottom: var(--space-2);
+  opacity: 0.9;
+  margin-bottom: var(--space-3);
 }
 
 /* Title block - shares the topBand background */
@@ -57,9 +58,10 @@
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
-  align-items: center;
+ align-self: flex-end;
   gap: var(--space-3);
   width: 100%;
+  margin-top: 1.75rem;
 
   @include r.device(md) {
     flex-direction: column;
@@ -73,16 +75,6 @@
 .titleMain {
   flex: 1;
   min-width: 0;
-}
-
-/* Small standalone brand mark - deliberately modest so it reads as
-   "published by DMPTool", not as a second page title */
-.titleLogo {
-  display: inline-flex;
-  align-items: center;
-  line-height: 0;
-  opacity: 0.9;
-  margin-bottom: var(--space-3);
 }
 
 .titleH1 {
@@ -104,14 +96,6 @@
   text-transform: uppercase;
   letter-spacing: 0.04em;
   margin: var(--space-1) 0 0;
-}
-
-.titleActionsCorner {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: var(--space-2);
-  flex-shrink: 0;
 }
 
 .pdfLink {
@@ -149,8 +133,18 @@
 
 .downloadIcon {
   flex-shrink: 0;
+  --icon-fill: var(--blue-900);
 }
 
+.downloadButton {
+  font-size: 0.75rem;
+
+
+  &:hover:not(:disabled) {
+    background: var(--blue-200) !important;
+    color: var(--blue-900) !important;
+  }
+}
 .downloadText {
   font-size: var(--fs-xsmall);
 }
@@ -187,10 +181,6 @@
 .jsonLinkArrow {
   display: inline-block;
   transition: transform 150ms;
-}
-
-.downloadIcon {
-  --icon-fill: white;
 }
 
 .titleTemplateInfo {
@@ -477,6 +467,17 @@
   color: var(--text-color);
 }
 
+.citationLabel {
+  font-size: var(--fs-small);
+  margin-bottom: var(--space-2);
+}
+
+.citationDmpIdInfo {
+  font-size: var(--fs-small);
+  margin-top: var(--space-4);
+  margin-bottom: var(--space-2);
+}
+
 /* Status badge */
 .statusBadge {
   display: inline-flex;
@@ -546,6 +547,17 @@
   }
 }
 
+.outputItem {
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.outputItemWithBorder {
+  margin-bottom: var(--space-5);
+  padding-bottom: var(--space-5);
+  border-bottom: 1px solid var(--gray-100);
+}
+
 /* Loading / empty state */
 .loadingState {
   display: flex;
@@ -567,5 +579,42 @@
 
   p {
     color: var(--gray-500);
+  }
+}
+
+/* ----------Footer-------- */
+.landingFooter {
+  background: var(--slate-100);
+  border-top: 1px solid var(--gray-100);
+  padding: var(--space-5) var(--space-5);
+
+  @include r.device(md) {
+    padding: var(--space-5) var(--space-8);
+  }
+}
+
+.landingFooterInner {
+  max-width: 900px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  text-align: center;
+  font-size: var(--fs-small);
+  color: var(--gray-900);
+
+  a {
+    color: var(--link-color);
+    text-decoration: none;
+    font-weight: var(--fw-semibold);
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  p {
+    margin: 0;
   }
 }

@@ -1,4 +1,7 @@
 ## Added
+- Added missing tests for `PlanAuthoring` components, because the tests were not meeting coverage requirements [#339]
+- Added new `ArchivedPlanView` component that renders different versions, and simplified `DmpLandingPage` to mainly be a wrapper [#339]
+- Added new `useFormatDateWithMonth` to shared date utilities [#339]
 - Added new `PlanAuthoring` module for the single-page plan overview/authoring UI (sections, questions, section navigation, guidance/comments sidebar, save status), with a pluggable `PlanAuthoringDataSource`, demo data, and en-US/pt-BR translations. Styleguide showcase at `/styleguide/components/plan-authoring`. Frontend scaffold only — not yet wired to production routes or backend; research output answers deferred to a follow-up [#195]
 - Added new arrow DMP Tool logos to the CDN, and updated `layout.tsx` to use them [#337]
 - Added new `DmpLandingPage` at `app/(embed)/[locale]/dmps/[...slug]/page.tsx`. The `(embed)` directory allows us to assign a different wrapping layout to this page, so we can exlude the shared header and footer [#293]
@@ -38,6 +41,7 @@
 - Added `UpdateAffiliation` and `AffiliationById` queries [#203]
 
 ## Updated
+- Updated `DmpLandingPage` to just use the new `PublicPlanVersionByDmpIdDocument` query, which calls on DynamoDB to get the data [#339]
 - Updated `ProjectsProjectFunding` page to display `View` button for funding if in `readOnly` mode [#246]
 - Upated `ProjectsProjectFundingEdit` to disable form fields for `readOnly` mode and hide action buttons [#246]
 - Updated `Contact` page to display a message in place of the form when submitted. Fixed missing email [#303]

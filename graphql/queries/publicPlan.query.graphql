@@ -1,78 +1,82 @@
-query PublicPlanByDMPId($dmpId: String!) {
-  publicPlanByDMPId(dmpId: $dmpId) {
-    id
-    title
+query PublicPlanVersionByDMPId($dmpId: String!, $version: String!) {
+  publicPlanVersionByDMPId(dmpId: $dmpId, version: $version) {
+    isHistoricalVersion
+    versionTimestamp
+    latestVersionTimestamp
     dmpId
     created
-    modified
-    registered
-    visibility
-    versionedTemplate {
-      id
-      name
-      version
-      owner {
-        name
-        displayName
-        uri
-        homepage
-      }
-    }
-    project {
-      title
-      abstractText
-      startDate
-      endDate
-      researchDomain {
-        name
-        uri
-      }
-      fundings {
-        id
-        affiliation {
-          name
-          displayName
-          uri
-          homepage
-        }
-        grantId
-        funderOpportunityNumber
-        funderProjectNumber
-        status
-      }
-      members {
-        isPrimaryContact
-        id
-        givenName
-        surName
-        orcid
-        affiliation {
-          name
-          displayName
-          uri
-        }
-        memberRoles {
-          label
-          id
-          uri
-        }
-      }
-    }
     members {
-      id
+      name
+      orcid
+      affiliationName
       isPrimaryContact
       memberRoles {
+        id
         label
         uri
       }
+    }
+    project {
+      abstractText
+      endDate
+      startDate
+      title
+      researchDomain {
+        name
+      }
+    }
+    modified
+    registered
+    relatedWorkIdentifiers
+    title
+    visibility
+    owner {
+      id
+      name
+      displayName
+      uri
+      homepage
+    }
+    answers {
+      id
+      json
+      questionText
+    }
+    versionedTemplate {
+      id
+      title
+      version
     }
     versions {
       timestamp
       url
     }
-    answers {
+    fundings {
+      funderName
+      funderOpportunityNumber
+      funderProjectNumber
+      funderUri
+      grantId
+      status
+    }
+    relatedWorks {
       id
-      json
+      workVersion {
+        title
+        publicationDate
+        workType
+        publicationVenue
+        sourceName
+        sourceUrl
+        authors {
+          givenName
+          surname
+          full
+        }
+        work {
+          doi
+        }
+      }
     }
   }
 }

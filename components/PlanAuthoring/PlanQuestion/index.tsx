@@ -177,6 +177,8 @@ export default function PlanQuestion({
         role="separator"
         tabIndex={0}
         aria-orientation="horizontal"
+        aria-valuemin={280}
+        aria-valuenow={heightPx ?? 320}
         aria-label={t("question.resizeAria")}
         title={t("question.resizeHint")}
         onPointerDown={onResizePointerDown}
