@@ -41,6 +41,7 @@
 - Added `UpdateAffiliation` and `AffiliationById` queries [#203]
 
 ## Updated
+- Updated plan title on landing page to expand across the full width [#339]
 - Updated `DmpLandingPage` to just use the new `PublicPlanVersionByDmpIdDocument` query, which calls on DynamoDB to get the data [#339]
 - Updated `ProjectsProjectFunding` page to display `View` button for funding if in `readOnly` mode [#246]
 - Upated `ProjectsProjectFundingEdit` to disable form fields for `readOnly` mode and hide action buttons [#246]

@@ -321,71 +321,73 @@ export default function ArchivedPlanView({
       <div className={styles.topBand}>
         <div className={styles.titleBlock}>
           <div className={styles.titleInner}>
-            <div className={styles.titleTopRow}>
-              <div className={styles.titleMain}>
-                <a
-                  href="https://dmptool.org/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  title={t('dmpTool')}
-                  className={styles.titleLogo}
-                  aria-label={`${t('dmpTool')} (${t('opensInNewWindow')})`}
-                >
-                  <Image
-                    src="/images/DMP-logo-white.svg"
-                    width={90}
-                    height={13}
-                    alt="DMP Tool"
-                    loading="eager"
-                    priority
-                  />
-                </a>
-                <h1 className={styles.titleH1}>{title}</h1>
-                <p className={styles.titleSubtitle}>
-                  {snapshot.registered ? t('registeredDMP') : t('dataManagementPlan')}
+            {/* <div className={styles.titleTopRow}> */}
+            <div className={styles.titleMain}>
+              <a
+                href="https://dmptool.org/"
+                target="_blank"
+                rel="noopener noreferrer"
+                title={t('dmpTool')}
+                className={styles.titleLogo}
+                aria-label={`${t('dmpTool')} (${t('opensInNewWindow')})`}
+              >
+                <Image
+                  src="/images/DMP-logo-white.svg"
+                  width={90}
+                  height={13}
+                  alt="DMP Tool"
+                  loading="eager"
+                  priority
+                />
+              </a>
+              <h1 className={styles.titleH1}>{title}</h1>
+              <p className={styles.titleSubtitle}>
+                {snapshot.registered ? t('registeredDMP') : t('dataManagementPlan')}
+              </p>
+
+            </div>
+            <div className={styles.subTitleWrapper}>
+              {snapshot.versionedTemplate && (
+                <p className={styles.titleTemplateInfo}>
+                  {writtenForOrg
+                    ? t.rich('templateInfoWithOrg', {
+                      orgName: writtenForOrg.displayName || writtenForOrg.name,
+                      orgLink: (chunks) =>
+                        writtenForOrg.homepage ? (
+                          <a
+                            href={writtenForOrg.homepage}
+                            className={styles.templateInfoLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            {chunks}
+                          </a>
+                        ) : (
+                          <>{chunks}</>
+                        ),
+                      dmptoolLink: (chunks) => (
+                        <a
+                          href="https://dmptool.org/"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          {chunks}
+                        </a>
+                      ),
+                    })
+                    : t.rich('templateInfoWithoutOrg', {
+                      dmptoolLink: (chunks) => (
+                        <a
+                          href="https://dmptool.org/"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          {chunks}
+                        </a>
+                      ),
+                    })}
                 </p>
-                {snapshot.versionedTemplate && (
-                  <p className={styles.titleTemplateInfo}>
-                    {writtenForOrg
-                      ? t.rich('templateInfoWithOrg', {
-                        orgName: writtenForOrg.displayName || writtenForOrg.name,
-                        orgLink: (chunks) =>
-                          writtenForOrg.homepage ? (
-                            <a
-                              href={writtenForOrg.homepage}
-                              className={styles.templateInfoLink}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                            >
-                              {chunks}
-                            </a>
-                          ) : (
-                            <>{chunks}</>
-                          ),
-                        dmptoolLink: (chunks) => (
-                          <a
-                            href="https://dmptool.org/"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            {chunks}
-                          </a>
-                        ),
-                      })
-                      : t.rich('templateInfoWithoutOrg', {
-                        dmptoolLink: (chunks) => (
-                          <a
-                            href="https://dmptool.org/"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            {chunks}
-                          </a>
-                        ),
-                      })}
-                  </p>
-                )}
-              </div>
+              )}
               <div className={styles.titleActionsCorner}>
                 {jsonUrl && (
                   <a href={jsonUrl} className={styles.jsonLink} target="_blank" rel="noopener noreferrer">
@@ -409,6 +411,7 @@ export default function ArchivedPlanView({
                 </Button>)}
               </div>
             </div>
+            {/* </div> */}
           </div>
         </div>
       </div>
