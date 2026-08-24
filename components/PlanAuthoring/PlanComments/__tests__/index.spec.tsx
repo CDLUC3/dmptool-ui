@@ -52,7 +52,7 @@ const baseComment: PlanComment = {
   createdLabel: 'Aug 22, 2026',
   isEdited: false,
   isFeedback: false,
-} as PlanComment;
+};
 
 const defaultProps = {
   comments: [] as PlanComment[],
