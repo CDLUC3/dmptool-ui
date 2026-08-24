@@ -35,7 +35,6 @@ const customJestConfig = {
     "<rootDir>/app/types/index.ts", // Exclude types
     "<rootDir>/app/\\[locale\\]/healthcheck/page.tsx", // Exclude health check
     ".*\\.server\\.(js|ts|tsx)$",  // Optional: Exclude files ending with .server.ts etc.
-    '<rootDir>/app /\\(embed\\) /\\[locale\\]/[^/] +\\.(ts | tsx)$', // Exclude top level pages in the embed folder (e.g., /app/(embed)/[locale]/page.tsx)
   ],
   coverageThreshold: {
     global: {

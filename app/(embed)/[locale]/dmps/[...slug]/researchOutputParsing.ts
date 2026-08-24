@@ -23,6 +23,7 @@ export type ParsedOutput = {
   licenses: { uri?: string; name?: string }[];
 };
 
+// Helper function to get a column by its commonStandardId
 function getColumn<Id extends AnyResearchOutputTableColumnAnswerType['commonStandardId']>(
   columns: AnyResearchOutputTableColumnAnswerType[],
   commonStandardId: Id
@@ -33,6 +34,7 @@ function getColumn<Id extends AnyResearchOutputTableColumnAnswerType['commonStan
   );
 }
 
+// Parse a single row of the Research Output Table into a ParsedOutput object
 function parseRow(row: ResearchOutputTableRowAnswerType): ParsedOutput {
   const columns = row.columns;
   const titleCol = getColumn(columns, ResearchOutputTableColumnsEnum.enum.title);
@@ -60,6 +62,7 @@ function parseRow(row: ResearchOutputTableRowAnswerType): ParsedOutput {
   };
 }
 
+// Parse all Research Output Table answers from a plan into an array of ParsedOutput objects for the plan
 export function parseResearchOutputsFromAnswers(answers?: PlanAnswer[] | null): ParsedOutput[] {
   if (!answers) return [];
   const outputs: ParsedOutput[] = [];
@@ -82,6 +85,7 @@ export function parseResearchOutputsFromAnswers(answers?: PlanAnswer[] | null): 
   return outputs;
 }
 
+// Convert a research output type string into a human-readable label
 export function outputTypeLabel(type?: string | null): string {
   if (!type) return '';
   const spaced = type.replace(/[-_]/g, ' ');
