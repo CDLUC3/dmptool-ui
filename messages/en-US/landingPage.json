@@ -20,6 +20,8 @@
     "dmpId": "DMP ID",
     "noCitationInfo": "No citation available.",
     "DMPTool": "DMPTool",
+    "untitledPlan": "Untitled plan",
+    "primaryContact": "Primary contact",
     "sectionHeadings": {
       "plannedOutputs": "Planned outputs",
       "projectDescription": "Project description",
@@ -35,11 +37,34 @@
       "anticipatedVolume": "Anticipated volume",
       "releaseTimeline": "Release timeline",
       "intendedRepository": "Intended repository",
-      "licenseForReuse": "License for reuse"
+      "licenseForReuse": "License for reuse",
+      "UntitledOutput": "Untitled output"
+    },
+    "funding": {
+      "status": "Status",
+      "funder": "Funder",
+      "projectNumber": "Project number",
+      "grant": "Grant"
     },
     "errors": {
       "failedToDownloadPDF": "Failed to download PDF",
+      "failedToDownloadWithStatus": "PDF download failed with status {status}",
       "pdfNotAvailable": "PDF download is not available for this plan"
+    },
+    "messages": {
+      "versionNotFound": "Version Not Found",
+      "dmpNotFound": "Data Management Plan Not Found",
+      "cannotFindVersion": "We could not find version {version} of this data management plan.",
+      "planNotFound": "We could not find a published data management plan for {shortDoi}. This plan may be private, or the identifier may be incorrect."
+    },
+    "ariaLabel": {
+      "downloadPlan": "Download the data management plan (downloads a PDF, opens in a new tab)",
+      "viewAsJson": "View the data management plan as a JSON file",
+      "orcidProfile": "ORCID profile for ${member}"
+    },
+    "footer": {
+      "serviceOf": "This product is a service of the <uc3Link>University of California Curation Center</uc3Link> of the <cdlLink>California Digital Library</cdlLink>.",
+      "copyright": "Copyright 2010–{year} The Regents of the University of California."
     }
   }
 }

@@ -267,8 +267,6 @@ const ProjectsProjectMembersEdit: React.FC = () => {
         ...(affiliationName ? { affiliationName } : {}),
       };
 
-      console.log("***Input for updateProjectMember:", input);
-
       const response = await updateProjectMemberMutation({
         variables: {
           input

@@ -19,7 +19,8 @@
   display: inline-flex;
   align-items: center;
   line-height: 0;
-  margin-bottom: var(--space-2);
+  opacity: 0.9;
+  margin-bottom: var(--space-3);
 }
 
 /* Title block - shares the topBand background */
@@ -76,16 +77,6 @@
   min-width: 0;
 }
 
-/* Small standalone brand mark - deliberately modest so it reads as
-   "published by DMPTool", not as a second page title */
-.titleLogo {
-  display: inline-flex;
-  align-items: center;
-  line-height: 0;
-  opacity: 0.9;
-  margin-bottom: var(--space-3);
-}
-
 .titleH1 {
   font-size: var(--fs-2xl);
   font-weight: var(--fw-bold);
@@ -105,14 +96,6 @@
   text-transform: uppercase;
   letter-spacing: 0.04em;
   margin: var(--space-1) 0 0;
-}
-
-.titleActionsCorner {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: var(--space-2);
-  flex-shrink: 0;
 }
 
 .pdfLink {
@@ -150,6 +133,7 @@
 
 .downloadIcon {
   flex-shrink: 0;
+  --icon-fill: var(--blue-900);
 }
 
 .downloadButton {
@@ -197,10 +181,6 @@
 .jsonLinkArrow {
   display: inline-block;
   transition: transform 150ms;
-}
-
-.downloadIcon {
-  --icon-fill: var(--blue-900);
 }
 
 .titleTemplateInfo {
@@ -485,6 +465,17 @@
   font-size: var(--fs-small);
   line-height: var(--lh-loose);// Gives citation extra vertical room for readability
   color: var(--text-color);
+}
+
+.citationLabel {
+  font-size: var(--fs-small);
+  margin-bottom: var(--space-2);
+}
+
+.citationDmpIdInfo {
+  font-size: var(--fs-small);
+  margin-top: var(--space-4);
+  margin-bottom: var(--space-2);
 }
 
 /* Status badge */

@@ -12,21 +12,11 @@ expect.extend(toHaveNoViolations);
 
 // --- next/navigation ---
 const mockUseParams = jest.fn();
-const mockPush = jest.fn();
+const mockUseSearchParams = jest.fn();
 jest.mock('next/navigation', () => ({
   useParams: () => mockUseParams(),
-  useRouter: () => ({ push: mockPush }),
+  useSearchParams: () => mockUseSearchParams(),
 }));
-
-
-// --- next/image ---
-jest.mock('next/image', () => {
-  const MockImage = ({ priority: _priority, fill: _fill, ...props }: any) => {
-    return <img {...props} />;
-  };
-  MockImage.displayName = 'MockImage';
-  return MockImage;
-});
 
 // --- @apollo/client/react ---
 jest.mock('@apollo/client/react', () => ({
@@ -36,12 +26,7 @@ const mockUseQuery = jest.mocked(useQuery);
 
 // --- generated graphql ---
 jest.mock('@/generated/graphql', () => ({
-  PublicPlanByDmpIdDocument: {},
-  ProjectFundingStatus: {
-    Granted: 'GRANTED',
-    Denied: 'DENIED',
-    Planned: 'PLANNED',
-  },
+  PublicPlanVersionByDmpIdDocument: {},
   PlanVisibility: {
     Organizational: 'ORGANIZATIONAL',
     Public: 'PUBLIC',
@@ -49,189 +34,146 @@ jest.mock('@/generated/graphql', () => ({
   },
 }));
 
-
+// --- next-intl ---
 type MockUseTranslations = {
-  (key: string, ...args: unknown[]): string;
+  (key: string, values?: Record<string, unknown>): string;
   rich: (key: string, values?: RichTranslationValues) => React.ReactNode;
 };
 
 jest.mock('next-intl', () => ({
   useTranslations: jest.fn(() => {
-    const t: MockUseTranslations = ((key: string) => key) as MockUseTranslations;
-    t.rich = (key, values = {}) => {
-      const rendered = Object.entries(values).map(([name, value]) =>
-        typeof value === 'function' ? (
-          <React.Fragment key={name}>{value(name)}</React.Fragment>
-        ) : (
-          <React.Fragment key={name}>{String(value)}</React.Fragment>
-        )
-      );
-      return (
-        <>
-          {key}
-          {rendered}
-        </>
-      );
-    };
+    const t: MockUseTranslations = ((key: string, values?: Record<string, unknown>) => {
+      if (values) {
+        const interpolated = Object.entries(values)
+          .map(([name, value]) => `${name}=${String(value)}`)
+          .join(',');
+        return `${key}(${interpolated})`;
+      }
+      return key;
+    }) as MockUseTranslations;
+    t.rich = (key) => key;
     return t;
   }),
 }));
 
-// --- react-aria-components ---
-jest.mock('react-aria-components', () => ({
-  Button: ({ children, onPress, isDisabled, ...props }: any) => (
-    <button onClick={onPress} disabled={isDisabled} {...props}>
-      {children}
-    </button>
-  ),
-  MenuTrigger: ({ children }: any) => <div>{children}</div>,
-  Menu: ({ children }: any) => <div>{children}</div>,
-  MenuItem: ({ children, href }: any) => <a href={href}>{children}</a>,
-  Popover: ({ children }: any) => <div>{children}</div>,
-}));
-
 // --- misc components ---
-jest.mock('@/components/SafeHtml', () => {
-  const MockSafeHtml = ({ html }: { html: string }) => <div data-testid="safe-html">{html}</div>;
-  MockSafeHtml.displayName = 'MockSafeHtml';
-  return MockSafeHtml;
-});
 jest.mock('@/components/Loading', () => {
   const MockLoading = () => <div>Loading...</div>;
   MockLoading.displayName = 'MockLoading';
   return MockLoading;
 });
-jest.mock('@/components/Icons', () => ({
-  DmpIcon: () => <span data-testid="dmp-icon" />,
-}));
-jest.mock('@/components/Icons/orcid/', () => ({
-  OrcidIcon: () => <span data-testid="orcid-icon" />,
-}));
-
-const RESEARCH_OUTPUT_ANSWER_JSON = JSON.stringify({
-  meta: { schemaVersion: '1.0' },
-  type: 'researchOutputTable',
-  answer: [
-    {
-      columns: [
-        { meta: { schemaVersion: '1.0' }, type: 'text', answer: 'Data Paper from migration studies', commonStandardId: 'title' },
-        { meta: { schemaVersion: '1.0' }, type: 'textArea', answer: '<p>A description.</p>', commonStandardId: 'description' },
-        { meta: { schemaVersion: '1.0' }, type: 'selectBox', answer: 'data-paper', commonStandardId: 'type' },
-        {
-          meta: { schemaVersion: '1.0' },
-          type: 'repositorySearch',
-          answer: [
-            {
-              repositoryId: 'https://www.re3data.org/repository/r3d100014251',
-              repositoryName: 'Arias Montano',
-              repositoryWebsite: 'https://www.re3data.org/repository/r3d100014251',
-            },
-          ],
-          commonStandardId: 'host',
-        },
-        {
-          meta: { schemaVersion: '1.0' },
-          type: 'metadataStandardSearch',
-          answer: [{ metadataStandardId: 'https://repositorio.unicamp.br/', metadataStandardName: 'Terminal RI Unicamp' }],
-          commonStandardId: 'metadata',
-        },
-        {
-          meta: { schemaVersion: '1.0' },
-          type: 'licenseSearch',
-          answer: [{ licenseId: 'https://spdx.org/licenses/CC0-1.0.json', licenseName: 'CC0-1.0' }],
-          commonStandardId: 'license_ref',
-        },
-        { meta: { schemaVersion: '1.0' }, type: 'date', answer: '2027-05-31', commonStandardId: 'issued' },
-        { meta: { schemaVersion: '1.0' }, type: 'numberWithContext', answer: { value: 2, context: 'mb' }, commonStandardId: 'byte_size' },
-      ],
-    },
-  ],
+jest.mock('@/components/ErrorMessages', () => {
+  const MockErrorMessages = ({ errors }: { errors: string[] }) => (
+    <div data-testid="error-messages">{errors.filter(Boolean).join(', ')}</div>
+  );
+  MockErrorMessages.displayName = 'MockErrorMessages';
+  return MockErrorMessages;
 });
 
-const BASE_PLAN = {
-  title: 'Butterflies of Ecuador DMP',
+// --- utils ---
+const mockLogECS = jest.fn();
+jest.mock('@/utils/index', () => ({
+  logECS: (...args: unknown[]) => mockLogECS(...args),
+  routePath: (name: string, params: Record<string, unknown>) => `/${name}/${JSON.stringify(params)}`,
+}));
+
+// --- ArchivedPlanView ---
+// page.tsx's own responsibility is fetching + routing + PDF download, not
+// rendering plan content, so we mock ArchivedPlanView and just assert it
+// receives the right props. Its own rendering is covered by
+// ArchivedPlanView.spec.tsx.
+const mockArchivedPlanView = jest.fn();
+jest.mock('../ArchivedPlanView', () => {
+  const MockArchivedPlanView = (props: any) => {
+    mockArchivedPlanView(props);
+    return (
+      <div data-testid="archived-plan-view">
+        <button
+          type="button"
+          aria-label="download the data management plan"
+          onClick={() => props.handleDownloadPdfAction()}
+          disabled={!props.canDownloadPdf}
+        >
+          download
+        </button>
+      </div>
+    );
+  };
+  MockArchivedPlanView.displayName = 'MockArchivedPlanView';
+  return MockArchivedPlanView;
+});
+
+const BASE_SNAPSHOT = {
+  __typename: 'PlanVersionSnapshot',
+  isHistoricalVersion: true,
+  versionTimestamp: 'latest',
+  latestVersionTimestamp: '2026-08-11T16:33:35.000Z',
   dmpId: 'https://doi.org/10.48321/D1e8b71d18',
-  created: '2026-08-11T16:30:48Z',
-  modified: '2026-08-11T16:33:35Z',
-  registered: '2026-08-11T16:33:35Z',
+  title: 'Butterflies of Ecuador DMP',
+  created: '2026-08-11T16:30:48.000Z',
+  modified: '2026-08-11T16:33:35.000Z',
+  registered: '2026-08-11T16:33:35.000Z',
   visibility: 'PUBLIC',
-  doi: '10.48321/D1e8b71d18',
-  url: 'https://dmphub.example.org/dmps/10.48321/D1e8b71d18',
-  versionedTemplate: {
-    owner: {
-      name: 'California Digital Library',
-      displayName: 'California Digital Library (cdlib.org)',
-      homepage: 'http://www.cdlib.org/',
-    },
+  project: { title: 'Butterflies of Ecuador' },
+  members: [],
+  fundings: [],
+  answers: [],
+  versions: [],
+  relatedWorks: [],
+  relatedWorkIdentifiers: [],
+  owner: {
+    id: 1,
+    name: 'California Digital Library',
+    displayName: 'California Digital Library (cdlib.org)',
+    homepage: 'http://www.cdlib.org/',
   },
-  project: {
-    title: 'Butterflies of Ecuador',
-    abstractText: '<p>An abstract about butterflies.</p>',
-    startDate: '2026-01-01',
-    endDate: '2029-12-31',
-    researchDomain: { name: 'natural-sciences', uri: 'https://dmptool.org/research_domains/natural-sciences' },
-    fundings: [
-      {
-        id: 1,
-        status: 'GRANTED',
-        affiliation: { name: 'NSF', displayName: 'National Science Foundation (nsf.gov)', uri: 'https://ror.org/021nxhr62' },
-        grantId: 'https://www.nsf.gov/awardsearch/showAward?AWD_ID=2529139',
-        funderOpportunityNumber: '',
-      },
-    ],
-    members: [
-      {
-        id: 1,
-        isPrimaryContact: true,
-        givenName: 'Ada',
-        surName: 'Lovelace',
-        orcid: '0000-0001-5727-2427',
-        memberRoles: [
-          { id: 1, label: 'Conceptualization', uri: 'https://credit.niso.org/contributor-roles/conceptualization/' },
-        ],
-      },
-    ],
-  },
-  answers: [
-    { id: 1, json: RESEARCH_OUTPUT_ANSWER_JSON },
-  ],
-  versions: [
-    { timestamp: '2026-08-11T16:33:35.000Z', url: 'https://dmphub.example.org/dmps/10.48321/D1e8b71d18?version=2026-08-11T16:33:35.000Z' },
-    { timestamp: '2026-06-01T10:00:00.000Z', url: 'https://dmphub.example.org/dmps/10.48321/D1e8b71d18?version=2026-06-01T10:00:00.000Z' },
-  ],
 };
 
-import { PublicPlanByDmpIdDocument } from '@/generated/graphql';
+import { PublicPlanVersionByDmpIdDocument } from '@/generated/graphql';
 
 const setupApolloMocks = ({
   loading = false,
   error = undefined,
-  plan = BASE_PLAN,
+  snapshot = BASE_SNAPSHOT,
 }: {
   loading?: boolean;
   error?: Error;
-  plan?: typeof BASE_PLAN | null;
+  snapshot?: typeof BASE_SNAPSHOT | null;
 } = {}) => {
-  const planQueryReturn = {
-    data: loading ? undefined : { publicPlanByDMPId: plan },
+  const queryReturn = {
+    data: loading ? undefined : { publicPlanVersionByDMPId: snapshot },
     loading,
     error,
   };
 
-  const defaultQueryReturn = { data: undefined, loading: false, error: undefined } as any;
-
-  mockUseQuery.mockImplementation((document) => {
-    if (document === PublicPlanByDmpIdDocument) {
-      return planQueryReturn as ReturnType<typeof useQuery>;
+  mockUseQuery.mockImplementation((document, options) => {
+    if (document === PublicPlanVersionByDmpIdDocument) {
+      const result: unknown = {
+        ...queryReturn,
+        variables: (options as any)?.variables,
+      };
+      return result as ReturnType<typeof useQuery>;
     }
-    return defaultQueryReturn;
+    const fallback: unknown = {
+      data: undefined,
+      loading: false,
+      error: undefined,
+    };
+    return fallback as ReturnType<typeof useQuery>;
   });
+};
+
+const setupSearchParams = (version: string | null = null) => {
+  mockUseSearchParams.mockReturnValue({
+    get: (key: string) => (key === 'version' ? version : null),
+  } as any);
 };
 
 describe('DmpLandingPage', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockUseParams.mockReturnValue({ slug: ['10.48321', 'D1e8b71d18'] });
+    setupSearchParams();
     setupApolloMocks();
     HTMLElement.prototype.scrollIntoView = mockScrollIntoView;
     mockScrollTo();
@@ -243,15 +185,58 @@ describe('DmpLandingPage', () => {
     render(<DmpLandingPage />);
 
     expect(screen.getByText('Loading...')).toBeInTheDocument();
+    expect(screen.queryByTestId('archived-plan-view')).not.toBeInTheDocument();
   });
 
-  it('should render a not-found message when the plan is missing', () => {
-    setupApolloMocks({ plan: null });
+  it('should call the query with dmpId built from the slug and version "latest" when no version param is present', () => {
+    render(<DmpLandingPage />);
+
+    expect(mockUseQuery).toHaveBeenCalledWith(
+      PublicPlanVersionByDmpIdDocument,
+      expect.objectContaining({
+        variables: {
+          dmpId: 'https://doi.org/10.48321/D1e8b71d18',
+          version: 'latest',
+        },
+      })
+    );
+  });
+
+  it('should call the query with the version from the URL when a version param is present', () => {
+    setupSearchParams('2026-06-01T10:00:00.000Z');
 
     render(<DmpLandingPage />);
 
-    expect(screen.getByText('DMP Not Found')).toBeInTheDocument();
-    expect(screen.getByText('10.48321/D1e8b71d18')).toBeInTheDocument();
+    expect(mockUseQuery).toHaveBeenCalledWith(
+      PublicPlanVersionByDmpIdDocument,
+      expect.objectContaining({
+        variables: {
+          dmpId: 'https://doi.org/10.48321/D1e8b71d18',
+          version: '2026-06-01T10:00:00.000Z',
+        },
+      })
+    );
+  });
+
+  it('should render a "plan not found" message when the snapshot is missing and there is no version param', () => {
+    setupApolloMocks({ snapshot: null });
+
+    render(<DmpLandingPage />);
+
+    expect(screen.getByText('messages.dmpNotFound')).toBeInTheDocument();
+    expect(screen.getByText('messages.planNotFound(shortDoi=10.48321/D1e8b71d18)')).toBeInTheDocument();
+  });
+
+  it('should render a "version not found" message when the snapshot is missing and a version param is present', () => {
+    setupSearchParams('2026-01-01T00:00:00.000Z');
+    setupApolloMocks({ snapshot: null });
+
+    render(<DmpLandingPage />);
+
+    expect(screen.getByText('messages.versionNotFound')).toBeInTheDocument();
+    expect(
+      screen.getByText('messages.cannotFindVersion(version=2026-01-01T00:00:00.000Z)')
+    ).toBeInTheDocument();
   });
 
   it('should render a not-found message when the query errors', () => {
@@ -259,62 +244,45 @@ describe('DmpLandingPage', () => {
 
     render(<DmpLandingPage />);
 
-    expect(screen.getByText('DMP Not Found')).toBeInTheDocument();
+    expect(screen.getByText('messages.dmpNotFound')).toBeInTheDocument();
   });
 
-  it('should render plan title, DMP ID, and project details once loaded', () => {
+  it('should render ArchivedPlanView once the snapshot loads, passing the expected props', () => {
     render(<DmpLandingPage />);
 
-    expect(screen.getByRole('heading', { level: 1, name: BASE_PLAN.title })).toBeInTheDocument();
-    expect(screen.getByText('10.48321/D1e8b71d18')).toBeInTheDocument();
-    expect(screen.getByText('natural-sciences')).toBeInTheDocument();
-  });
-
-  it('should render a contributor with name, primary-contact badge, role link, and ORCID', () => {
-    render(<DmpLandingPage />);
-
-    expect(screen.getByText('Ada Lovelace')).toBeInTheDocument();
-    expect(screen.getByText('Primary Contact')).toBeInTheDocument();
-
-    const roleLink = screen.getByRole('link', { name: 'Conceptualization' });
-    expect(roleLink).toHaveAttribute('href', 'https://credit.niso.org/contributor-roles/conceptualization/');
-
-    expect(screen.getByRole('link', { name: /orcid profile for ada lovelace/i })).toHaveAttribute(
-      'href',
-      'https://orcid.org/0000-0001-5727-2427'
+    expect(screen.getByTestId('archived-plan-view')).toBeInTheDocument();
+    expect(mockArchivedPlanView).toHaveBeenCalledWith(
+      expect.objectContaining({
+        snapshot: BASE_SNAPSHOT,
+        jsonUrl: expect.stringContaining('/dmps/10.48321/D1e8b71d18/narrative.json'),
+        canDownloadPdf: true,
+        writtenForOrg: {
+          name: 'California Digital Library',
+          displayName: 'California Digital Library (cdlib.org)',
+          homepage: 'http://www.cdlib.org/',
+        },
+      })
     );
   });
 
-  it('should render funding source details', () => {
+  it('should pass canDownloadPdf=false when the snapshot visibility is not PUBLIC', () => {
+    setupApolloMocks({ snapshot: { ...BASE_SNAPSHOT, visibility: 'PRIVATE' } });
+
     render(<DmpLandingPage />);
 
-    expect(screen.getByText('National Science Foundation (nsf.gov)')).toBeInTheDocument();
-    expect(screen.getByText('Awarded')).toBeInTheDocument();
+    expect(mockArchivedPlanView).toHaveBeenCalledWith(
+      expect.objectContaining({ canDownloadPdf: false })
+    );
   });
 
-  it('should render planned outputs with byteSize and unit as provided', () => {
-    render(<DmpLandingPage />);
-
-    expect(screen.getByText('Data Paper from migration studies')).toBeInTheDocument();
-    expect(screen.getByText('2 mb')).toBeInTheDocument();
-  });
-
-  it('should render the version dropdown only when past versions differ from the current one', () => {
-    render(<DmpLandingPage />);
-
-    const versionButton = screen.getByRole('button', { name: /version:/i });
-    expect(versionButton).not.toBeDisabled();
-  });
-
-  it('should disable the version dropdown when there are no past versions', () => {
-    setupApolloMocks({
-      plan: { ...BASE_PLAN, versions: [{ timestamp: BASE_PLAN.modified, url: 'https://example.org/v1' }] },
-    });
+  it('should pass writtenForOrg=undefined when the snapshot has no owner', () => {
+    setupApolloMocks({ snapshot: { ...BASE_SNAPSHOT, owner: null } as any });
 
     render(<DmpLandingPage />);
 
-    const versionButton = screen.getByRole('button', { name: /version:/i });
-    expect(versionButton).toBeDisabled();
+    expect(mockArchivedPlanView).toHaveBeenCalledWith(
+      expect.objectContaining({ writtenForOrg: undefined })
+    );
   });
 
   it('should fetch and download the PDF using the plan title as the filename', async () => {
@@ -361,8 +329,22 @@ describe('DmpLandingPage', () => {
     createElementSpy.mockRestore();
   });
 
-  it('should not attempt to build a download link when the fetch response is not ok', async () => {
+  it('should include the version param in the PDF download URL when viewing a historical version', async () => {
+    setupSearchParams('2026-06-01T10:00:00.000Z');
     global.fetch = jest.fn().mockResolvedValue({ ok: false }) as jest.Mock;
+
+    render(<DmpLandingPage />);
+
+    fireEvent.click(screen.getByRole('button', { name: /download the data management plan/i }));
+
+    await waitFor(() => expect(global.fetch).toHaveBeenCalled());
+
+    const fetchUrl = (global.fetch as jest.Mock).mock.calls[0][0] as string;
+    expect(fetchUrl).toContain('version=2026-06-01T10%3A00%3A00.000Z');
+  });
+
+  it('should show an error message and log via logECS when the fetch response is not ok', async () => {
+    global.fetch = jest.fn().mockResolvedValue({ ok: false, status: 500 }) as jest.Mock;
     global.URL.createObjectURL = jest.fn();
 
     render(<DmpLandingPage />);
@@ -370,40 +352,48 @@ describe('DmpLandingPage', () => {
     fireEvent.click(screen.getByRole('button', { name: /download the data management plan/i }));
 
     await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalled();
+      expect(screen.getByTestId('error-messages')).toHaveTextContent('errors.failedToDownloadPDF');
     });
 
     expect(global.URL.createObjectURL).not.toHaveBeenCalled();
+    expect(mockLogECS).toHaveBeenCalledWith(
+      'error',
+      'handleDownloadPdf',
+      expect.objectContaining({
+        error: expect.stringContaining('500'),
+      })
+    );
   });
 
-  it('should show the download button when the plan is public', () => {
+  it('should show an error message and log via logECS when fetch throws', async () => {
+    const thrown = new Error('network down');
+    global.fetch = jest.fn().mockRejectedValue(thrown) as jest.Mock;
+    global.URL.createObjectURL = jest.fn();
+
     render(<DmpLandingPage />);
 
-    expect(screen.getByRole('button', { name: /download the data management plan/i })).toBeInTheDocument();
-  });
+    fireEvent.click(screen.getByRole('button', { name: /download the data management plan/i }));
 
-  it('should hide the download button when the plan is private', () => {
-    setupApolloMocks({
-      plan: { ...BASE_PLAN, visibility: 'PRIVATE' },
+    await waitFor(() => {
+      expect(screen.getByTestId('error-messages')).toHaveTextContent('errors.failedToDownloadPDF');
     });
 
-    render(<DmpLandingPage />);
-
-    expect(
-      screen.queryByRole('button', { name: /download the data management plan/i })
-    ).not.toBeInTheDocument();
+    expect(global.URL.createObjectURL).not.toHaveBeenCalled();
+    expect(mockLogECS).toHaveBeenCalledWith(
+      'error',
+      'handleDownloadPdf',
+      expect.objectContaining({ err: thrown })
+    );
   });
 
-  it('should hide the download button when the plan is organizational', () => {
-    setupApolloMocks({
-      plan: { ...BASE_PLAN, visibility: 'ORGANIZATIONAL' },
-    });
+  it('should not attempt to download when canDownloadPdf is false', async () => {
+    setupApolloMocks({ snapshot: { ...BASE_SNAPSHOT, visibility: 'PRIVATE' } });
+    global.fetch = jest.fn();
 
     render(<DmpLandingPage />);
 
-    expect(
-      screen.queryByRole('button', { name: /download the data management plan/i })
-    ).not.toBeInTheDocument();
+    const downloadButton = screen.getByRole('button', { name: /download the data management plan/i });
+    expect(downloadButton).toBeDisabled();
   });
 
   it('should pass accessibility tests', async () => {

@@ -19,37 +19,17 @@ import {
 } from '@/generated/graphql';
 import { DmpIcon } from "@/components/Icons";
 //Utils and other
+import { useFormatDateWithMonth } from '@/hooks/useFormatDate';
 import { parseResearchOutputsFromAnswers, outputTypeLabel } from './researchOutputParsing';
 import styles from './landing.module.scss';
 
 type PlanSnapshot = NonNullable<PublicPlanVersionByDmpIdQuery['publicPlanVersionByDMPId']>;
-
-
-/* Related Works*/
-type RelatedWorkAuthor = {
-  givenName?: string | null;
-  surname?: string | null;
-  full?: string | null;
-};
-
-type RelatedWorkItem = {
-  id?: number | null;
-  workVersion: {
-    title?: string | null;
-    publicationDate?: string | null;
-    workType: string;
-    publicationVenue?: string | null;
-    sourceName: string;
-    sourceUrl?: string | null;
-    authors: RelatedWorkAuthor[];
-    work: { doi: string };
-  };
-};
+type RelatedWorkQueryItem = NonNullable<PlanSnapshot['relatedWorks']>[number];
+type RelatedWorkAuthorItem = RelatedWorkQueryItem['workVersion']['authors'][number];
 
 type ArchivedPlanViewProps = {
   snapshot: PlanSnapshot;
   jsonUrl?: string;
-  pdfDownloadUrl?: string;
   canDownloadPdf: boolean;
   handleDownloadPdfAction: () => Promise<void>;
   writtenForOrg?: {
@@ -57,32 +37,31 @@ type ArchivedPlanViewProps = {
     displayName?: string | null;
     homepage?: string | null;
   };
-  dmpId: string;
 };
 
-function formatDate(dateStr?: string | null, includeTime = false): string {
-  if (!dateStr) return '';
-  const date = new Date(Date.parse(dateStr));
-  if (isNaN(date.getTime())) return dateStr;
-  const parts = date.toDateString().split(' ');
-  const formatted = `${parts[2]} ${parts[1]} ${parts[3]}`;
-  if (!includeTime) return formatted;
-  const time = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  return `${formatted} ${time}`;
-}
-
+// This component is used to display a dropdown of all the versions available for this plan
 function ArchivedVersionsDropdown({
   versions,
   currentTimestamp,
+  latestTimestamp,
   dmpId,
 }: {
   versions: { timestamp?: string | null; url?: string | null }[];
   currentTimestamp?: string | null;
+  latestTimestamp?: string | null;
   dmpId?: string;
 }) {
-  const dedupedByTimestamp = new Map<string, { timestamp?: string | null; url?: string | null }>();
+  const formatDate = useFormatDateWithMonth();
+
+  const dedupedByTimestamp = new Map<string, { timestamp?: string | null; url?: string | null; isLatest?: boolean }>();
+
+  if (latestTimestamp) {
+    dedupedByTimestamp.set(latestTimestamp, { timestamp: latestTimestamp, url: null, isLatest: true });
+  }
+
   for (const v of versions) {
     if (!v.timestamp) continue;
+    if (v.timestamp === latestTimestamp) continue;
     const existing = dedupedByTimestamp.get(v.timestamp);
     if (!existing || (existing.url?.includes('?version=') && !v.url?.includes('?version='))) {
       dedupedByTimestamp.set(v.timestamp, v);
@@ -92,21 +71,31 @@ function ArchivedVersionsDropdown({
   const allVersions = Array.from(dedupedByTimestamp.values())
     .sort((a, b) => (a.timestamp! > b.timestamp! ? -1 : 1));
 
-  const hasVersions = allVersions.length > 0;
+  const displayTimestamp =
+    currentTimestamp === 'latest' ? latestTimestamp : currentTimestamp;
+
+  // Only show entries that are NOT the currently-viewed version
+  const otherVersions = allVersions.filter((v) => {
+    const isCurrent = v.isLatest
+      ? currentTimestamp === 'latest'
+      : v.timestamp === currentTimestamp;
+    return !isCurrent;
+  });
+
+  const hasOtherVersions = otherVersions.length > 0;
   const shortDoi = dmpId?.replace('https://doi.org/', '') || '';
 
   return (
     <MenuTrigger>
-      <Button className={styles.versionsDropdownToggle} isDisabled={!hasVersions}>
-        <strong>Version:</strong> {formatDate(currentTimestamp, true)}
-        {hasVersions && <span className={styles.chevron} aria-hidden="true" />}
+      <Button className={styles.versionsDropdownToggle} isDisabled={!hasOtherVersions}>
+        <strong>Version:</strong> {formatDate(displayTimestamp, true)}
+        {hasOtherVersions && <span className={styles.chevron} aria-hidden="true" />}
       </Button>
-      {hasVersions && (
+      {hasOtherVersions && (
         <Popover className={styles.versionsDropdownMenu} placement="bottom end">
           <Menu>
-            {allVersions.map((v, i) => {
-              const isCurrent = v.timestamp === currentTimestamp || (currentTimestamp === 'latest' && i === 0);
-              const versionUrl = isCurrent
+            {otherVersions.map((v, i) => {
+              const versionUrl = v.isLatest
                 ? `/dmps/${shortDoi}`
                 : `/dmps/${shortDoi}?version=${encodeURIComponent(v.timestamp!)}`;
 
@@ -117,7 +106,6 @@ function ArchivedVersionsDropdown({
                   className={styles.versionsDropdownItem}
                 >
                   {formatDate(v.timestamp, true)}
-                  {isCurrent ? ' (current)' : ''}
                 </MenuItem>
               );
             })}
@@ -128,13 +116,34 @@ function ArchivedVersionsDropdown({
   );
 }
 
-function formatAuthorsForCitation(authors?: RelatedWorkAuthor[] | null): string {
+// If there are no versions, this will just display the current version's timestamp.
+function CurrentVersionDisplay({
+  currentTimestamp,
+  latestTimestamp,
+}: {
+  currentTimestamp?: string | null;
+  latestTimestamp?: string | null;
+}) {
+  const formatDate = useFormatDateWithMonth();
+
+  const displayTimestamp =
+    currentTimestamp === 'latest' ? latestTimestamp : currentTimestamp;
+
+  return (
+    <div className={styles.versionsDropdownToggle}>
+      <strong>Version:</strong> {formatDate(displayTimestamp, true)}
+    </div>
+  );
+}
+
+// Get authors names for citation, formatted as "Surname, Given Name" or "Full Name" if no given/surname. 
+function formatAuthorsForCitation(authors?: RelatedWorkAuthorItem[] | null): string {
   if (!authors || authors.length === 0) return '';
 
-  const displayName = (a: RelatedWorkAuthor) =>
-    [a.givenName, a.surname].filter(Boolean).join(' ') || a.full || '';
+  const displayName = (a: RelatedWorkAuthorItem) =>
+    [a.givenName, a.surname].filter(Boolean).join(' ') || a.full || '';// The filter(Boolean) removes empty strings
 
-  const names = authors.map(displayName).filter(Boolean);
+  const names = authors.map(displayName).filter(Boolean); // Put names into an array and filter out any empty strings.
   if (names.length === 0) return '';
 
   const first = authors[0];
@@ -144,12 +153,13 @@ function formatAuthorsForCitation(authors?: RelatedWorkAuthor[] | null): string 
   if (names.length === 1) return firstFormatted;
 
   const rest = names.slice(1);
-  if (rest.length === 1) return `${firstFormatted}, and ${rest[0]}`;
+  if (rest.length === 1) return `${firstFormatted}, and ${rest[0]}`; // If there's only one other author, just return "First, and Second"
 
-  return `${firstFormatted}, ${rest.slice(0, -1).join(', ')}, and ${rest[rest.length - 1]}`;
+  return `${firstFormatted}, ${rest.slice(0, -1).join(', ')}, and ${rest[rest.length - 1]}`; // Add the rest of the authors, with a comma before the last one
 }
 
 
+// Get a label for the funding status, e.g., "Awarded", "Denied", or "Planned"
 function fundingStatusLabel(status?: ProjectFundingStatus | null): string {
   switch (status) {
     case ProjectFundingStatus.Granted: return 'Awarded';
@@ -158,6 +168,7 @@ function fundingStatusLabel(status?: ProjectFundingStatus | null): string {
   }
 }
 
+// Get a CSS class for the funding status, e.g., "statusBadgeGranted", "statusBadgeDenied", or "statusBadgePlanned"
 function fundingStatusClass(status?: ProjectFundingStatus | null): string {
   switch (status) {
     case ProjectFundingStatus.Granted: return styles.statusBadgeGranted;
@@ -166,13 +177,16 @@ function fundingStatusClass(status?: ProjectFundingStatus | null): string {
   }
 }
 
+// Get a label for the related work type, e.g., "Article", "Dataset", etc. If the work type is not recognized, return "Other"
 function relatedWorkTypeLabel(workType?: string | null): string {
   if (!workType) return 'Other';
   const spaced = workType.replace(/_/g, ' ').toLowerCase();
   return spaced.charAt(0).toUpperCase() + spaced.slice(1);
 }
 
-function RelatedWorkCitation({ item }: { item: RelatedWorkItem }) {
+// Render a single related work item as a citation, e.g., "Smith, J. (2020). "Title of the Work." [Article]. 
+// Journal Name. https://doi.org/10.1234/abcd"
+function RelatedWorkCitation({ item, t }: { item: RelatedWorkQueryItem; t: ReturnType<typeof useTranslations> }) {
   const wv = item.workVersion;
   const authors = wv?.authors ?? [];
   const url = wv?.sourceUrl || (wv?.work?.doi ? `https://doi.org/${wv.work.doi}` : null);
@@ -187,16 +201,21 @@ function RelatedWorkCitation({ item }: { item: RelatedWorkItem }) {
             {url}
           </a>
         )}{' '}
-        t('noCitationInfo')
+        {t('noCitationInfo')}
       </>
     );
   }
 
-
   let year: number | null = null;
   if (wv?.publicationDate) {
     try {
-      const parsedDate = new Date(wv.publicationDate);
+      // publicationDate may come through as either an epoch-ms string
+      // (e.g. "1499817600000") or a standard date string (e.g. "2017-07-12").
+      const isEpochMs = /^\d+$/.test(wv.publicationDate);
+      const parsedDate = isEpochMs
+        ? new Date(Number(wv.publicationDate))
+        : new Date(wv.publicationDate);
+
       if (!isNaN(parsedDate.getTime())) {
         year = parsedDate.getFullYear();
       }
@@ -225,29 +244,11 @@ function RelatedWorkCitation({ item }: { item: RelatedWorkItem }) {
   );
 }
 
+// Group related works by their work type, returning an array of objects with the work type and the items of that type. 
+// The order of the groups is alphabetical, with "Other" always last.
 function groupRelatedWorksByType(
-  items?: {
-    __typename?: "RelatedWorkSearchResult";
-    id?: number | null;
-    workVersion: {
-      __typename?: "WorkVersion";
-      title?: string | null;
-      publicationDate?: string | null;
-      workType: WorkType;
-      publicationVenue?: string | null;
-      sourceName: string;
-      sourceUrl?: string | null;
-      authors: {
-        givenName?: string | null;
-        surname?: string | null;
-        full?: string | null;
-      }[];
-      work: {
-        doi: string;
-      };
-    };
-  }[] | null,
-): { type: string; items: typeof items }[] {
+  items?: RelatedWorkQueryItem[] | null,
+): { type: string; items: RelatedWorkQueryItem[] }[] {
   if (!items || items.length === 0) return [];
 
   const groups = new Map<string, typeof items>();
@@ -266,24 +267,50 @@ function groupRelatedWorksByType(
   return orderedKeys.map((type) => ({ type, items: groups.get(type)! }));
 }
 
+/**
+ * Renders the public-facing view of a DMP (Data Management Plan) snapshot —
+ * either the current/live version or a specific historical version, since
+ * both share the same `PlanVersionSnapshot` shape from `PublicPlanVersionByDMPId`.
+ *
+ * Displays the plan's title, contributors, project details, citation info,
+ * funding sources, planned research outputs, abstract, and related works,
+ * along with a version picker for navigating between historical snapshots.
+ *
+ * @param snapshot - The plan version snapshot to render, fetched via the
+ *   `publicPlanVersionByDMPId` query. May represent the "latest" version
+ *   or a specific historical timestamp.
+ * @param jsonUrl - Optional URL to the plan's raw narrative JSON, linked in
+ *   the header as an alternate machine-readable view.
+ * @param canDownloadPdf - Whether the PDF download button should be shown,
+ *   based on the plan's visibility (only public plans can be downloaded).
+ * @param handleDownloadPdfAction - Callback invoked when the user clicks the
+ *   PDF download button; handles fetching and triggering the file download.
+ * @param writtenForOrg - Optional organization the plan's template was
+ *   written for, used to render attribution text near the plan's template info.
+ *
+ * @returns The rendered plan landing page, or its constituent sections
+ *   (contributors, funding, outputs, related works, etc.) conditionally
+ *   based on which data is present on the snapshot.
+ */
 export default function ArchivedPlanView({
   snapshot,
   jsonUrl,
-  pdfDownloadUrl,
   canDownloadPdf,
   handleDownloadPdfAction,
   writtenForOrg,
-  dmpId
 }: ArchivedPlanViewProps) {
 
+  // Localization keys
   const t = useTranslations('LandingPage');
 
-  const title = snapshot.title || snapshot.project?.title || 'Untitled DMP';
+  // Format data hook for displaying dates with month names (e.g., "January 1, 2024")
+  const formatDate = useFormatDateWithMonth();
+
+  const title = snapshot.title || snapshot.project?.title || t('untitledPlan');
   const fundings = snapshot?.fundings ?? [];
   const members = snapshot.members ?? [];
   const outputs = parseResearchOutputsFromAnswers(snapshot.answers);
   const relatedWorksGroups = groupRelatedWorksByType(snapshot.relatedWorks);
-
   const citationNames = members.map((m) => m.name).filter((n): n is string => !!n);
   const citationYear = snapshot.created
     ? new Date(Date.parse(snapshot.created)).getFullYear()
@@ -371,7 +398,7 @@ export default function ArchivedPlanView({
                   type="button"
                   onPress={handleDownloadPdfAction}
                   className={`${styles.downloadButton} secondary`}
-                  aria-label="Download the data management plan (downloads a PDF, opens in a new tab)"
+                  aria-label={t('ariaLabel.downloadPlan')}
                 >
                   {t.rich('downloadPlan', {
                     pdfLabel: (chunks) => (
@@ -397,11 +424,17 @@ export default function ArchivedPlanView({
                 </a>
               </p>
             )}
-            {snapshot.versions && snapshot.versions.length > 0 && (
+            {(snapshot.versions && snapshot.versions.length > 0) ? (
               <ArchivedVersionsDropdown
                 versions={snapshot.versions}
                 currentTimestamp={snapshot.versionTimestamp}
+                latestTimestamp={snapshot.latestVersionTimestamp}
                 dmpId={snapshot.dmpId || ''}
+              />
+            ) : (
+              <CurrentVersionDisplay
+                currentTimestamp={snapshot.versionTimestamp}
+                latestTimestamp={snapshot.latestVersionTimestamp}
               />
             )}
           </div>
@@ -423,7 +456,7 @@ export default function ArchivedPlanView({
                     <div key={idx} className={styles.contributorRow}>
                       <span className={styles.contributorName}>{member.name}</span>
                       {member.isPrimaryContact && (
-                        <span className={styles.contributorPrimaryBadge}>Primary Contact</span>
+                        <span className={styles.contributorPrimaryBadge}>{t('primaryContact')}</span>
                       )}
                       <span className={styles.contributorMeta}>
                         {member.memberRoles && member.memberRoles.length > 0 && (
@@ -452,7 +485,7 @@ export default function ArchivedPlanView({
                               href={member.orcid}
                               target="_blank"
                               rel="noopener noreferrer"
-                              aria-label={`ORCID profile for ${member.name}`}
+                              aria-label={t('ariaLabel.orcidProfile', { member: member.name })}
                             >
                               {member.orcid}
                             </a>
@@ -512,7 +545,7 @@ export default function ArchivedPlanView({
               <h2 id="citation-heading" className={styles.dmpSectionTitle}>
                 {t('sectionHeadings.citation')}
               </h2>
-              <p style={{ fontSize: 'var(--fs-small)', marginBottom: 'var(--space-2)' }}>
+              <p className={styles.citationLabel}>
                 <strong>{t('whenCitingThisDMP')}:</strong>
               </p>
               <div className={styles.citationBlock}>
@@ -524,13 +557,8 @@ export default function ArchivedPlanView({
                   </a>
                 )}
               </div>
-              <p
-                style={{
-                  fontSize: 'var(--fs-small)',
-                  marginTop: 'var(--space-4)',
-                  marginBottom: 'var(--space-2)',
-                }}
-              >
+              <p className={styles.citationDmpIdInfo}>
+
                 {snapshot.dmpId && (
                   <strong>
                     {(() => {
@@ -568,7 +596,7 @@ export default function ArchivedPlanView({
                   <ul className={styles.dataList}>
                     {funding.status && (
                       <li className={styles.dataItem}>
-                        <span className={styles.dataLabel}>Status:</span>
+                        <span className={styles.dataLabel}>{t('funding.status')}:</span>
                         <span className={styles.dataValue}>
                           <span
                             className={`${styles.statusBadge} ${fundingStatusClass(funding.status)}`}
@@ -580,7 +608,7 @@ export default function ArchivedPlanView({
                     )}
                     {funding.funderName && (
                       <li className={styles.dataItem}>
-                        <span className={styles.dataLabel}>Funder:</span>
+                        <span className={styles.dataLabel}>{t('funding.funder')}:</span>
                         <span className={styles.dataValue}>
                           {funding.funderUri ? (
                             <a href={funding.funderUri} target="_blank" rel="noopener noreferrer">
@@ -600,13 +628,13 @@ export default function ArchivedPlanView({
                     )}
                     {funding.funderProjectNumber && (
                       <li className={styles.dataItem}>
-                        <span className={styles.dataLabel}>Project Number:</span>
+                        <span className={styles.dataLabel}>{t('funding.projectNumber')}:</span>
                         <span className={styles.dataValue}>{funding.funderProjectNumber}</span>
                       </li>
                     )}
                     {funding.grantId && (
                       <li className={styles.dataItem}>
-                        <span className={styles.dataLabel}>Grant:</span>
+                        <span className={styles.dataLabel}>{t('funding.grant')}:</span>
                         <span className={styles.dataValue}>{funding.grantId}</span>
                       </li>
                     )}
@@ -627,7 +655,7 @@ export default function ArchivedPlanView({
                   key={idx}
                   className={idx < outputs.length - 1 ? styles.outputItemWithBorder : styles.outputItem}
                 >
-                  <h3 className={styles.itemTitle}>{output.title || 'Untitled output'}</h3>
+                  <h3 className={styles.itemTitle}>{output.title || t('output.UntitledOutput')}</h3>
                   {output.description && (
                     <div style={{ margin: 'var(--space-2) 0' }}>
                       <SafeHtml html={output.description} />
@@ -732,7 +760,7 @@ export default function ArchivedPlanView({
                     {group.items?.map((item) => (
                       <li key={item?.id} className={styles.workItem}>
                         <p>
-                          <RelatedWorkCitation item={item as RelatedWorkItem} />
+                          <RelatedWorkCitation item={item} t={t} />
                         </p>
                       </li>
                     ))}
@@ -746,17 +774,20 @@ export default function ArchivedPlanView({
       <footer className={styles.landingFooter}>
         <div className={styles.landingFooterInner}>
           <p>
-            This product is a service of the{' '}
-            <a href="https://uc3.cdlib.org/" target="_blank" rel="noopener noreferrer">
-              University of California Curation Center
-            </a>{' '}
-            of the{' '}
-            <a href="http://www.cdlib.org" target="_blank" rel="noopener noreferrer">
-              California Digital Library
-            </a>
-            .
+            {t.rich('footer.serviceOf', {
+              uc3Link: (chunks) => (
+                <a href="https://uc3.cdlib.org/" target="_blank" rel="noopener noreferrer">
+                  {chunks}
+                </a>
+              ),
+              cdlLink: (chunks) => (
+                <a href="http://www.cdlib.org" target="_blank" rel="noopener noreferrer">
+                  {chunks}
+                </a>
+              ),
+            })}
           </p>
-          <p>Copyright 2010–{new Date().getFullYear()} The Regents of the University of California.</p>
+          <p>{t('footer.copyright', { year: new Date().getFullYear() })}</p>
         </div>
       </footer>
     </div >

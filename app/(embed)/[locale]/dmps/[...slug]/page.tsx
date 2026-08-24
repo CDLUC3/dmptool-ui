@@ -33,6 +33,7 @@ export default function DmpLandingPage() {
   // Localization keys
   const t = useTranslations('LandingPage');
 
+  // Extract the DMP ID from the slug, which may be a DOI or a URL
   const slugParts = Array.isArray(params.slug) ? params.slug : [params.slug ?? ''];
   const rawDoi = slugParts.join('/');
   const dmpId = rawDoi.startsWith('https://doi.org/')
@@ -51,7 +52,7 @@ export default function DmpLandingPage() {
   const pdfDownloadUrl = `/api/download-narrative?${pdfDownloadParams.toString()}`;
   const jsonUrl = `${process.env.NEXT_PUBLIC_NARRATIVE_SERVICE_URL}/dmps/${shortDoi}/narrative.json`;
 
-  // Use a single query with version="latest" for current, or the versionParam if present
+  // GraphQL Query - Use a single query with version="latest" for current, or the versionParam if present
   const {
     data: planData,
     loading: planLoading,
@@ -79,11 +80,11 @@ export default function DmpLandingPage() {
     return (
       <div className={styles.landingPage}>
         <div className={styles.notFound}>
-          <h2>{versionParam ? 'Version Not Found' : 'DMP Not Found'}</h2>
+          <h2>{versionParam ? t('messages.versionNotFound') : t('messages.dmpNotFound')}</h2>
           <p>
             {versionParam
-              ? `We could not find version ${versionParam} of this data management plan.`
-              : `We could not find a published data management plan for ${shortDoi}. This plan may be private, or the identifier may be incorrect.`
+              ? t('messages.cannotFindVersion', { version: versionParam })
+              : t('messages.planNotFound', { shortDoi })
             }
           </p>
         </div>
@@ -91,8 +92,10 @@ export default function DmpLandingPage() {
     );
   }
 
+  // Determine if the PDF can be downloaded based on the plan's visibility
   const canDownloadPdf = snapshot.visibility === PlanVisibility.Public;
 
+  // Handle PDF download of plan
   const handleDownloadPdf = async () => {
     if (!canDownloadPdf) {
       setError(t('errors.pdfNotAvailable'));
@@ -104,9 +107,10 @@ export default function DmpLandingPage() {
       });
 
       if (!response.ok) {
-        setError(t('errors.failedToDownloadPDF'));
+        const message = t('errors.failedToDownloadPDF');
+        setError(message);
         logECS("error", "handleDownloadPdf", {
-          error,
+          error: t('errors.failedToDownloadWithStatus', { status: response.status }),
           url: { path: routePath("dmp.landing", { slug: shortDoi }) },
         });
         return;
@@ -116,22 +120,21 @@ export default function DmpLandingPage() {
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `${snapshot.title || 'Untitled DMP'}.pdf`;
+      link.download = `${snapshot.title || snapshot.project?.title || t('untitledPlan')}.pdf`;
       document.body.appendChild(link);
       link.click();
 
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
-    } catch (error) {
+    } catch (err) {
       setError(t('errors.failedToDownloadPDF'));
       logECS("error", "handleDownloadPdf", {
-        error,
+        err,
         url: { path: routePath("dmp.landing", { slug: shortDoi }) },
       });
     }
   };
 
-  console.log("***Snapshot", snapshot);
 
   return (
     <>
@@ -139,7 +142,6 @@ export default function DmpLandingPage() {
       <ArchivedPlanView
         snapshot={snapshot}
         jsonUrl={jsonUrl}
-        pdfDownloadUrl={pdfDownloadUrl}
         canDownloadPdf={canDownloadPdf}
         handleDownloadPdfAction={handleDownloadPdf}
         writtenForOrg={snapshot?.owner
@@ -149,7 +151,6 @@ export default function DmpLandingPage() {
             homepage: snapshot.owner.homepage,
           }
           : undefined}
-        dmpId={dmpId}
       />
     </>
   );

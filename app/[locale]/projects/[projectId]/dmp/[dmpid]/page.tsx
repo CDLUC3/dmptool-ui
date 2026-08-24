@@ -205,7 +205,6 @@ const PlanOverviewPage: React.FC = () => {
     notifyOnNetworkStatusChange: true,
   });
 
-  console.log("**Plan Data", data);
   // Query data
   const {
     data: relatedWorksByPlanStats,
@@ -390,7 +389,6 @@ const PlanOverviewPage: React.FC = () => {
     };
   }, [planId, router]);
 
-  console.log("***Plan Data members***", planData.members);
   // Items in the required checklist that must be completed before publishing. Memoize to prevent recalculation on every render.
   const requiredCheckListItems = useMemo(() => [
     {
