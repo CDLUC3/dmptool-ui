@@ -47,6 +47,9 @@ const routes = {
   "app.login": '/login',
   "app.contact": '/contact',
 
+  // DMP Landing page route
+  'dmp.landing': '/dmps/:slug',
+
   // Login routes
   'login.forgotPassword': '/login/forgot-password',
   'login.resetPassword': '/login/reset-password',

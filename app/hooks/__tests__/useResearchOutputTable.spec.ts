@@ -67,17 +67,17 @@ const setupMocks = () => {
 
 };
 describe('useResearchOutputTable', () => {
-  let setHasUnsavedChanges: jest.Mock;
+  let markDirty: jest.Mock;
   let announce: jest.Mock;
 
   beforeEach(() => {
     setupMocks();
-    setHasUnsavedChanges = jest.fn();
+    markDirty = jest.fn();
     announce = jest.fn();
   });
 
   it('should initialize with default standard fields and states', () => {
-    const { result } = renderHook(() => useResearchOutputTable({ setHasUnsavedChanges, announce }));
+    const { result } = renderHook(() => useResearchOutputTable({ markDirty, announce }));
     expect(result.current.standardFields.length).toBeGreaterThan(0);
     expect(result.current.expandedFields).toEqual(['title']);
     expect(result.current.nonCustomizableFieldIds).toContain('accessLevels');
@@ -86,7 +86,7 @@ describe('useResearchOutputTable', () => {
   });
 
   it('should add and delete additional fields', () => {
-    const { result } = renderHook(() => useResearchOutputTable({ setHasUnsavedChanges, announce }));
+    const { result } = renderHook(() => useResearchOutputTable({ markDirty, announce }));
     act(() => {
       result.current.addAdditionalField();
     });
@@ -100,7 +100,7 @@ describe('useResearchOutputTable', () => {
 
 
   it('should update additional field properties', async () => {
-    const { result } = renderHook(() => useResearchOutputTable({ setHasUnsavedChanges, announce }));
+    const { result } = renderHook(() => useResearchOutputTable({ markDirty, announce }));
     act(() => {
       result.current.addAdditionalField();
     });
@@ -114,7 +114,7 @@ describe('useResearchOutputTable', () => {
   });
 
   it('should handle standard field enable/disable', () => {
-    const { result } = renderHook(() => useResearchOutputTable({ setHasUnsavedChanges, announce }));
+    const { result } = renderHook(() => useResearchOutputTable({ markDirty, announce }));
     const fieldId = result.current.standardFields[1].id; // description
     act(() => {
       result.current.handleStandardFieldChange(fieldId, true);
@@ -125,7 +125,7 @@ describe('useResearchOutputTable', () => {
   });
 
   it('should handle customize field expand/collapse', () => {
-    const { result } = renderHook(() => useResearchOutputTable({ setHasUnsavedChanges, announce }));
+    const { result } = renderHook(() => useResearchOutputTable({ markDirty, announce }));
     const fieldId = result.current.standardFields[1].id; // description
     act(() => {
       result.current.handleCustomizeField(fieldId);
@@ -138,7 +138,7 @@ describe('useResearchOutputTable', () => {
   });
 
   it('should handle adding and removing custom output types', () => {
-    const { result } = renderHook(() => useResearchOutputTable({ setHasUnsavedChanges, announce }));
+    const { result } = renderHook(() => useResearchOutputTable({ markDirty, announce }));
     act(() => {
       result.current.handleOutputTypeModeChange('mine');
     });
@@ -159,7 +159,7 @@ describe('useResearchOutputTable', () => {
   });
 
   it('should handle adding and removing custom license types', () => {
-    const { result } = renderHook(() => useResearchOutputTable({ setHasUnsavedChanges, announce }));
+    const { result } = renderHook(() => useResearchOutputTable({ markDirty, announce }));
 
     act(() => {
       result.current.handleLicenseModeChange('addToDefaults');
@@ -191,7 +191,7 @@ describe('useResearchOutputTable', () => {
   });
 
   it('should build research output form state with enabled fields', () => {
-    const { result } = renderHook(() => useResearchOutputTable({ setHasUnsavedChanges, announce }));
+    const { result } = renderHook(() => useResearchOutputTable({ markDirty, announce }));
     const formState = result.current.buildResearchOutputFormState() as ResearchOutputTableQuestionType;
     expect(formState.type).toBeDefined();
     expect(Array.isArray(formState.columns)).toBe(true);
@@ -199,7 +199,7 @@ describe('useResearchOutputTable', () => {
   });
 
   it('should auto-enable repository field when repositories are added via handleRepositoriesChange', () => {
-    const { result } = renderHook(() => useResearchOutputTable({ setHasUnsavedChanges, announce }));
+    const { result } = renderHook(() => useResearchOutputTable({ markDirty, announce }));
 
     // repoSelector starts disabled
     const initialField = result.current.standardFields.find(f => f.id === 'repoSelector');
@@ -220,7 +220,7 @@ describe('useResearchOutputTable', () => {
   });
 
   it('should auto-enable metadata standards field when standards are added via handleMetaDataStandardsChange', () => {
-    const { result } = renderHook(() => useResearchOutputTable({ setHasUnsavedChanges, announce }));
+    const { result } = renderHook(() => useResearchOutputTable({ markDirty, announce }));
 
     // metadataStandards starts disabled
     const initialField = result.current.standardFields.find(f => f.id === 'metadataStandards');
@@ -242,7 +242,7 @@ describe('useResearchOutputTable', () => {
 
   describe('updateStandardFieldProperty auto-enable logic', () => {
     it('should auto-enable disabled field when updating meaningful property', () => {
-      const { result } = renderHook(() => useResearchOutputTable({ setHasUnsavedChanges, announce }));
+      const { result } = renderHook(() => useResearchOutputTable({ markDirty, announce }));
 
       // Find a disabled field (description starts disabled)
       const descriptionField = result.current.standardFields.find(f => f.id === 'description');
@@ -260,7 +260,7 @@ describe('useResearchOutputTable', () => {
     });
 
     it('should auto-enable field when updating outputTypeConfig', () => {
-      const { result } = renderHook(() => useResearchOutputTable({ setHasUnsavedChanges, announce }));
+      const { result } = renderHook(() => useResearchOutputTable({ markDirty, announce }));
 
       // First disable the outputType field
       act(() => {
@@ -287,7 +287,7 @@ describe('useResearchOutputTable', () => {
     });
 
     it('should only auto-enable repoSelector when hasCustomRepos is true', () => {
-      const { result } = renderHook(() => useResearchOutputTable({ setHasUnsavedChanges, announce }));
+      const { result } = renderHook(() => useResearchOutputTable({ markDirty, announce }));
 
       // repoSelector starts disabled
       const initialField = result.current.standardFields.find(f => f.id === 'repoSelector');
@@ -319,7 +319,7 @@ describe('useResearchOutputTable', () => {
     });
 
     it('should only auto-enable metadataStandards when hasCustomStandards is true', () => {
-      const { result } = renderHook(() => useResearchOutputTable({ setHasUnsavedChanges, announce }));
+      const { result } = renderHook(() => useResearchOutputTable({ markDirty, announce }));
 
       // metadataStandards starts disabled
       const initialField = result.current.standardFields.find(f => f.id === 'metadataStandards');
@@ -351,7 +351,7 @@ describe('useResearchOutputTable', () => {
     });
 
     it('should NOT auto-enable field when updating non-meaningful property', () => {
-      const { result } = renderHook(() => useResearchOutputTable({ setHasUnsavedChanges, announce }));
+      const { result } = renderHook(() => useResearchOutputTable({ markDirty, announce }));
 
       // Find a disabled field
       const initialField = result.current.standardFields.find(f => f.id === 'description');
@@ -369,7 +369,7 @@ describe('useResearchOutputTable', () => {
     });
 
     it('should keep already-enabled field enabled when updating property', () => {
-      const { result } = renderHook(() => useResearchOutputTable({ setHasUnsavedChanges, announce }));
+      const { result } = renderHook(() => useResearchOutputTable({ markDirty, announce }));
 
       // title starts enabled
       const initialField = result.current.standardFields.find(f => f.id === 'title');
@@ -386,16 +386,97 @@ describe('useResearchOutputTable', () => {
       expect(updatedField?.required).toBe(false);
     });
 
-    it('should call setHasUnsavedChanges when updating field property', () => {
-      const { result } = renderHook(() => useResearchOutputTable({ setHasUnsavedChanges, announce }));
+    it('should call markDirty when updating field property', () => {
+      const { result } = renderHook(() => useResearchOutputTable({ markDirty, announce }));
 
-      setHasUnsavedChanges.mockClear();
+      markDirty.mockClear();
 
       act(() => {
         result.current.updateStandardFieldProperty('description', 'value', 'test');
       });
 
-      expect(setHasUnsavedChanges).toHaveBeenCalledWith(true);
+      expect(markDirty).toHaveBeenCalled();
     });
+  });
+
+  describe('hydrateFromJSON', () => {
+    it('should set standardFields, additionalFields, and expandedFields from parsed JSON', () => {
+      const { result } = renderHook(() => useResearchOutputTable({ markDirty, announce }));
+
+      const parsed = {
+        type: 'researchOutputTable',
+        meta: { schemaVersion: '1.0', title: 'Research Output Table', usageDescription: '' },
+        columns: [
+          {
+            heading: 'Title',
+            enabled: true,
+            meta: { schemaVersion: '1.0' },
+            content: { type: 'text', meta: { schemaVersion: '1.0' }, attributes: { help: '', maxLength: 500 } },
+            required: true,
+          },
+          {
+            heading: 'Description',
+            enabled: true,
+            meta: { schemaVersion: '1.0' },
+            content: { type: 'textArea', meta: { schemaVersion: '1.0' }, attributes: { help: 'My help text', labelTranslationKey: 'researchOutput.description.heading' } },
+            required: false,
+          },
+        ],
+      } as any;
+
+      act(() => {
+        result.current.hydrateFromJSON(parsed);
+      });
+
+      // standardFields should be hydrated: description column was enabled in JSON, so it should be enabled
+      const descField = result.current.standardFields.find(f => f.id === 'description');
+      expect(descField?.enabled).toBe(true);
+
+      // expandedFields should reflect enabled columns from the parsed JSON
+      expect(result.current.expandedFields).toContain('title');
+      expect(result.current.expandedFields).toContain('description');
+
+      // additionalFields should be empty (no custom columns in this JSON)
+      expect(result.current.additionalFields).toEqual([]);
+    });
+
+    it('should fall back to initial standard fields when parsed JSON is not a researchOutputTable', () => {
+      const { result } = renderHook(() => useResearchOutputTable({ markDirty, announce }));
+
+      const initialFieldCount = result.current.standardFields.length;
+
+      act(() => {
+        result.current.hydrateFromJSON({ type: 'textArea' } as any);
+      });
+
+      // Falls back to initialStandardFields unchanged
+      expect(result.current.standardFields.length).toBe(initialFieldCount);
+      expect(result.current.additionalFields).toEqual([]);
+    });
+  });
+
+  it('should announce repository removed when repos count decreases', () => {
+    const { result } = renderHook(() => useResearchOutputTable({ markDirty, announce }));
+
+    // First add two repositories
+    act(() => {
+      result.current.handleRepositoriesChange([
+        { id: '1', name: 'Repo A', uri: 'https://a.com' },
+        { id: '2', name: 'Repo B', uri: 'https://b.com' },
+      ]);
+    });
+
+    announce.mockClear();
+
+    // Now remove one
+    act(() => {
+      result.current.handleRepositoriesChange([
+        { id: '1', name: 'Repo A', uri: 'https://a.com' },
+      ]);
+    });
+
+    expect(announce).toHaveBeenCalledWith(
+      expect.stringContaining('repositoryRemoved')
+    );
   });
 });

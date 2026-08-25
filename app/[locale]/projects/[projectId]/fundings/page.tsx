@@ -124,13 +124,21 @@ const ProjectsProjectFunding = () => {
                 >
                   <p className="funder-name">{funder?.affiliation?.displayName}</p>
 
-                  {!isReadOnly && (
+                  {!isReadOnly ? (
                     <Button
                       onPress={() => handleEditFunding(funder?.id)}
                       className="secondary"
                       aria-label={`Edit ${funder?.affiliation?.displayName} details`}
                     >
                       {Global('buttons.edit')}
+                    </Button>
+                  ) : (
+                    <Button
+                      onPress={() => handleEditFunding(funder?.id)}
+                      className="secondary"
+                      aria-label={`View ${funder?.affiliation?.displayName} details`}
+                    >
+                      {Global('buttons.view')}
                     </Button>
                   )}
                 </div>

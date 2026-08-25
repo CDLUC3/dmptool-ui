@@ -1,0 +1,13 @@
+.saveStatus {
+  font-size: 0.875rem;
+  color: var(--gray-600);
+
+  &[data-state="error"] {
+    color: var(--error-600, #b91c1c);
+  }
+
+  &[data-state="saving"],
+  &[data-state="saved"] {
+    color: var(--blue-700, #1d4ed8);
+  }
+}

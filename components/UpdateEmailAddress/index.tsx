@@ -24,6 +24,7 @@ import logECS from '@/utils/clientLogger';
 import styles from './updateEmailAddress.module.scss';
 import { useToast } from '@/context/ToastContext';
 import { routePath } from '@/utils/routes';
+import { checkErrors } from '@/utils/errorHandler';
 
 const GET_USER = MeDocument;
 
@@ -91,9 +92,8 @@ const UpdateEmailAddress: React.FC<UpdateEmailAddressProps> = ({
 
 
   // Show Success Message
-  const showSuccessToast = () => {
-    const successMessage = t('messages.emailAddressUpdateSuccess');
-    toastState.add(successMessage, {
+  const showSuccessToast = (messageKey: string) => {
+    toastState.add(t(messageKey), {
       type: 'success',
       priority: 1,
       timeout: 10000
@@ -117,18 +117,19 @@ const UpdateEmailAddress: React.FC<UpdateEmailAddressProps> = ({
       });
 
       const emailData = response?.data?.addUserEmail;
-      if (emailData?.errors && Object.keys(emailData.errors).length > 0) {
-        const errorMessage = emailData?.errors.email || emailData?.errors.general;
-        setErrors(prevErrors => {
-          return {
+      if (emailData?.errors) {
+        const [hasErrors, errs] = checkErrors(emailData.errors, ['general', 'userId', 'email']);
+        if (hasErrors) {
+          setErrors(prevErrors => ({
             ...prevErrors,
-            email: errorMessage
-          }
-        });
+            email: errs.email || errs.general
+          }));
+          return;
+        }
       }
       // Clear the add alias input field
       setAddAliasValue('');
-      showSuccessToast();
+      showSuccessToast('messages.emailAddressUpdateSuccess');
     } catch (err) {
       // Display other errors
       setErrors(prevErrors => ({
@@ -157,11 +158,15 @@ const UpdateEmailAddress: React.FC<UpdateEmailAddressProps> = ({
       })
 
       const emailData = response?.data?.removeUserEmail;
-      if (emailData?.errors && Object.keys(emailData.errors).length > 0) {
-        setErrors(emailData.errors ?? {});
-        return;
+      if (emailData?.errors) {
+        const [hasErrors, errs] = checkErrors(emailData.errors, ['general', 'userId', 'email']);
+        if (hasErrors) {
+          setErrors(errs);
+          return;
+        }
       }
       clearErrors();
+      showSuccessToast('messages.emailAddressDeleteSuccess');
     } catch (err) {
       // Display other errors
       setErrors(prevErrors => ({

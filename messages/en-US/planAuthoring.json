@@ -1,0 +1,117 @@
+{
+  "PlanAuthoring": {
+    "screen": {
+      "basedOn": "This plan is based on the \"{template}\" provided by {funder} — Version: {version}.",
+      "fundingTitle": "Funding for this plan",
+      "membersTitle": "Plan members for this plan",
+      "relatedWorksTitle": "Related works for this plan",
+      "adjustForPlan": "Adjust for this plan",
+      "adjustFundingAria": "Adjust funding for this plan",
+      "adjustMembersAria": "Adjust members for this plan",
+      "adjustRelatedWorksAria": "Adjust related works for this plan",
+      "template": "Template",
+      "affiliation": "Affiliation",
+      "progress": "Progress",
+      "percentComplete": "{percent}% complete",
+      "writeYourPlan": "Write your plan",
+      "writePlanIntro": "Work through each section below — answers save automatically. Use Jump to section to move between sections.",
+      "questionsAnswered": "{answered} of {total} questions answered"
+    },
+    "question": {
+      "resizeAria": "Resize question — drag, or double-click to reset",
+      "resizeHint": "Drag to resize · double-click to reset",
+      "answeredAria": "Answered",
+      "requiredByFunder": "Required by funder"
+    },
+    "answer": {
+      "notAnsweredYet": "Not answered yet.",
+      "editAnswer": "Edit answer",
+      "label": "Answer",
+      "numberLabel": "Number",
+      "dateLabel": "Date"
+    },
+    "saveStatus": {
+      "unsavedChanges": "Unsaved changes",
+      "saving": "Saving…",
+      "saved": "Saved",
+      "saveFailed": "Save failed",
+      "unableToSave": "Unable to save answer."
+    },
+    "sidebar": {
+      "ariaLabel": "Question guidance and comments",
+      "loadingGuidance": "Loading guidance…",
+      "funderGuidance": "Funder guidance",
+      "selectGuidanceSource": "Select a guidance source.",
+      "comments": "Comments",
+      "showComments": "Show comments",
+      "hideComments": "Hide comments",
+      "newCount": "{count} new"
+    },
+    "guidance": {
+      "sourcesAria": "Guidance sources",
+      "customize": "+ Customize"
+    },
+    "comments": {
+      "loading": "Loading comments…",
+      "empty": "No comments yet.",
+      "listAria": "Comments",
+      "admin": " (admin)",
+      "edited": "edited",
+      "placeholder": "Add a comment…",
+      "addAria": "Add a comment",
+      "editAria": "Edit comment",
+      "posting": "Posting…",
+      "comment": "Comment",
+      "saveBeforeCommenting": "Save an answer before adding comments."
+    },
+    "customizeDialog": {
+      "title": "Customize Best Practice",
+      "currentlyDisplaying": "Currently displaying",
+      "sourcesApplyAcrossPlan": "These sources apply across the plan, not just this question.",
+      "requiredByOrganization": "Required by your organization",
+      "locked": "Locked",
+      "removeOrgAria": "Remove {label}",
+      "addMore": "Add more",
+      "searchHelp": "Search by research organization, funder name, or related keywords.",
+      "searchByName": "Search by name",
+      "enterNamePlaceholder": "Enter name…",
+      "noMatchingSources": "No matching sources.",
+      "saveGuidanceSources": "Save guidance sources"
+    },
+    "sectionPicker": {
+      "switchSectionAria": "Switch section",
+      "searchPlaceholder": "Search sections…",
+      "searchAria": "Search sections",
+      "current": "Current",
+      "noSectionsMatch": "No sections match.",
+      "navigateHint": "↑↓ to navigate",
+      "jumpHint": "↵ to jump",
+      "escHint": "Esc to close"
+    },
+    "sectionNav": {
+      "ariaLabel": "Plan sections",
+      "section": "Section",
+      "ofTotal": "of {total}",
+      "openPickerAria": "Open section picker",
+      "selectASection": "Select a section",
+      "clickTitleHint": "Click Jump to section · {shortcut}",
+      "currentSectionAria": "Current section {index} of {total}: {title}",
+      "noSectionSelected": "No section selected",
+      "jumpToSection": "Jump to section…",
+      "goToSectionAria": "Go to section {index}: {title}",
+      "skipToFirstQuestion": "Skip to first question"
+    },
+    "section": {
+      "badge": "Section {index}",
+      "ofTotal": "Section {index} of {total}",
+      "backToTop": "Back to top of section {title}"
+    },
+    "sampleAnswers": {
+      "viewSampleAnswer": "View sample answer",
+      "viewSampleAnswersCount": "View sample answers ({count})",
+      "useAnswer": "Use answer",
+      "organizationSampleText": "{org} sample text",
+      "sampleTextAdded": "Sample text added"
+    }
+  }
+}
