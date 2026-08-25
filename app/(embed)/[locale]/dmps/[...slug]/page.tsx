@@ -44,13 +44,16 @@ export default function DmpLandingPage() {
   // Define URLs early so they're available for both archived and live views
   const pdfDownloadParams = new URLSearchParams({
     dmpId: shortDoi,
+    format: 'pdf',
     ...(versionParam && { version: versionParam }),
     includeCoverPage: 'true',
     includeSectionHeadings: 'true',
     includeQuestionText: 'true',
   });
+  // For PDF download
   const pdfDownloadUrl = `/api/download-narrative?${pdfDownloadParams.toString()}`;
-  const jsonUrl = `${process.env.NEXT_PUBLIC_NARRATIVE_SERVICE_URL}/dmps/${shortDoi}/narrative.json`;
+  // To view JSON
+  const jsonUrl = `/api/download-narrative?dmpId=${encodeURIComponent(shortDoi)}&format=json`;
 
   // GraphQL Query - Use a single query with version="latest" for current, or the versionParam if present
   const {

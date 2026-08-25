@@ -8,6 +8,7 @@ export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
     const dmpId = searchParams.get('dmpId'); // Get the doi, passed as dmpId, from query parameters
+    const format = searchParams.get('format') || 'pdf';
 
     if (!dmpId) {
       return NextResponse.json({ error: 'dmpId is required' }, { status: 400 });
@@ -15,7 +16,13 @@ export async function GET(request: NextRequest) {
 
     // Build the narrative service URL
     const narrativeServiceBase = process.env.NARRATIVE_SERVICE_URL || 'http://localhost:4030';
-    const narrativeUrl = new URL(`${narrativeServiceBase}/dmps/${encodeURIComponent(dmpId)}/narrative`);
+
+    // Adjust path based on format
+    const path = format === 'json'
+      ? `/dmps/${encodeURIComponent(dmpId)}/narrative.json`
+      : `/dmps/${encodeURIComponent(dmpId)}/narrative`;
+
+    const narrativeUrl = new URL(`${narrativeServiceBase}${path}`);
 
     // Forward all other query parameters
     searchParams.forEach((value, key) => {
@@ -25,7 +32,9 @@ export async function GET(request: NextRequest) {
     });
 
     // Get the Accept header from the original request
-    const acceptHeader = request.headers.get('accept') || 'application/pdf';
+    const acceptHeader = format === 'json'
+      ? 'application/json'
+      : request.headers.get('accept') || 'application/pdf';
 
     // Get all cookies to pass in request header
     const cookieStore = await cookies();
@@ -40,6 +49,7 @@ export async function GET(request: NextRequest) {
       Accept: acceptHeader,
       Cookie: cookieString,
     };
+
     if (dmsptToken) {
       headers['Authorization'] = `Bearer ${dmsptToken}`;
     }
@@ -70,10 +80,14 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Get the response as a blob
-    const blob = await response.blob();
+    // Handle JSON vs PDF responses differently
+    if (format === 'json') {
+      const json = await response.json();
+      return NextResponse.json(json);
+    }
 
-    // Return the blob with appropriate headers
+    // For PDF, return as blob with attachment headers
+    const blob = await response.blob();
     return new NextResponse(blob, {
       status: 200,
       headers: {
