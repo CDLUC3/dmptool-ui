@@ -336,7 +336,7 @@ export const PlanOverviewQuestionPageShared: React.FC<{ config: QuestionPageConf
   const [isAutoSaving, setIsAutoSaving] = useState<boolean>(false);
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
   const [currentTime, setCurrentTime] = useState(new Date());
-  const autoSaveTimeoutRef = useRef<NodeJS.Timeout>();
+  const autoSaveTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
   // Localization
   const Global = useTranslations('Global');

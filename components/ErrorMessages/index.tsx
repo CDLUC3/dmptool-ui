@@ -4,7 +4,7 @@ import { scrollToTop } from '@/utils/general';
 type ErrorMessagesProps = {
   errors: string[] | Record<string, string | null | undefined>;
   noScroll?: boolean;
-  firstInvalidFieldRef?: React.RefObject<HTMLElement>;
+  firstInvalidFieldRef?: React.RefObject<HTMLElement | null>;
 };
 
 // Shared Error Message rendering component for both arrays and objects

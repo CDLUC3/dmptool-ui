@@ -102,7 +102,7 @@ export interface TemplateItemProps {
     id?: number | null;
   },
   title: string;
-  content?: JSX.Element | null;
+  content?: React.ReactNode | null;
   description?: string;
   link?: string | null;
   defaultExpanded: boolean;
@@ -428,7 +428,7 @@ export interface PlanMember {
 }
 export interface ListItemsInterface {
   id: number;
-  content: JSX.Element;
+  content: React.ReactNode;
   completed: boolean;
 }
 
