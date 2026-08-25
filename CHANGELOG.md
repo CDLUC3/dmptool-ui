@@ -161,6 +161,9 @@
 - Updated `versioning.yml` to create PRs to merge updated `package.json` and `CHANGELOG.md` into `stage` and `development` [#338]
 - Small tweak in CHANGELOG.md to test another merge to test automated versioning.
 - Updated `brace-expansion` to `v5.0.9`, `js-yaml` to `v4.3.1`, and `domPurify` to `v3.4.13` to address high vulnerabilities [#337]
+- Updated `versioning.yml` workflow file to just copy the exact file merged from `main` back to `stage` and `development` for PR.
+- Updated the `versioning.yml` github workflow file on `stage` to test that it works on merge to `main`.
+- Small tweak in CHANGELOG.md to test another merge to test automated versioning.
 - Updated `@types/react` to `v18.3.31`, `react` to `v19.2.8`, `react-dom` to `v19.2.8`, `postcss` to `v8.5.25`, `qs` to `v6.15.3`, `@apollo/client` to `v4.2.9`, `@types/node` to `v24.13.3`, `systeminformation` to `v5.31.17`, `dompurify` to `v3.4.12`, `eslint` to `v9.39.5`, `sanitize-html` to `v2.17.6`, `next` to `v16.2.12`. Also updated `jest.config.ts` to accommodate the recent update in `sanitize-html` and its dependencies to be `ESM-only`, so we had to specify that `jest` transform them to `Common JS` [#331]
 - Updated `brace-expansion` to `v5.0.8` to address high vulnerability [#303]
 - Updated `sharp` override to `v0.35.0` and `dompurify` to `v3.4.12` to address vulnerabilities [#304]
@@ -405,6 +408,7 @@
 - Updated `jws` to `3.2.3` due to vulnerability
 - Updated `next` version to `15.5.7` due to vulnerability
 - Ran `npm audit fix` to address `glob` vulnerability and `js-yaml` vulnerability
+- Updated `renovate` and `dependabot` configs for comparison purposes
 ====================================================================================================================================
 ## All changes above the line happened after the merge to the main branch on Nov 3, 2025
 ### Added
@@ -466,6 +470,7 @@
 - `small` button CSS class.
 - Added curl to the AWS Dockerfile for session manager access
 - Added bash to the AWS Dockerfile for session manager access
+- Added `CONTRIBUTING.md` and `CODE_OF_CONDUCT.md` files to the repo
 - Added shared `dmptool-network` to the `docker-compose.yaml` file to allow nextJS server side actions to be able to reach the local apollo server
 - Static Feedback page with translation and text [#750]
 - Added `RelatedWorks` page and associated components `RelatedWorksList`, `RelatedWorksListItem`, `ExpandableNameList` and `LinkFilter`. [#672][#673]
@@ -491,7 +496,6 @@
 - Created the static page for the org admin user dashboard. [#782]
 
 ### Updated
-
 - Removed some duplicate text from `template/[templateId]/access` under `External people` [#482]
 - Updated description on `template/[templateId]/access` and visibility text on template publish modal [#482]
 - Updated `/template/[templateId]` to include the `View history` link in the header description [#430]
@@ -509,6 +513,9 @@
 - Updated language used in RelatedWorks UI, moved accept and reject buttons into the cards out of the expand section and changed order of accept and reject buttons [#799]
 - Hooked up the `ProjectsProjectCollaboration` page. Added new `server actions` to handle access level changes, revoking collaborator and resending invite [#381]
 - Optimized the `graphqlServerActionHandler` so that we can normalize errors returned and simplify client-side handling [#381]
+=======
+- Updated the `CODE_OF_CONDUCT.md` to reflect CDLUC3's Code of Conduct
+- Updated the `CONTRIBUTING.md` to include steps for contributing to the repo
 - Updated the shared`RadioGroupComponent` and `CheckboxGroupComponent` components to be more like a wrapper to reduce duplicate of code and make it more flexible [#743]
 - Project over is now using sidebar to allow for collaboration [#750]
 - Sidebar is now using global styling rather than css modules [#750]
@@ -603,8 +610,12 @@
 - Deleted `__mocks__/mockQuestionTypes.json` as it is no longer needed [#322](https://github.com/CDLUC3/dmsp_backend_prototype/issues/322)
 
 ### Chore
+<<<<<<< HEAD
 - Fixed type error in `FormSelect` due to a change in `@types/react` versions when merging `stage` into `development`
 - Addressed `fast-redact` but upgrading `pino` version
+=======
+- Added `renovate.json` config file in order to get automatic PRs for dependency updates
+>>>>>>> main
 - Upgraded to `NextJS v15.5.2` to remove vulnerability and added `next-env.d.ts` to the ignore list for linting. [#751]
 
 ====================================================================================================================================
