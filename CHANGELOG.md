@@ -141,6 +141,7 @@
 - Updated `RepoSelectorForAnswer` to wait to query `Re3byUrIsDocument` until we have `preferredReposURIs` because preferred repos don't display even though they eventually do to trigger the display of the "preferred repositories" checkbox [#118]
 
 ## Fixed
+- Fixed missing favicon in landing page [#339]
 - Fixed `View as JSON` url on landing page [#339]
 - Fixed missing success toasts on Account pages: profile saves now show a toast for all field updates (not only language changes); adding and deleting secondary emails show success toasts when the GraphQL response has no real errors; update password and notifications save actions also show success toasts. Added `emailAddressDeleteSuccess` translations [#306]
 - Temporary fix for the alignment. I added some missing styles to `.cSubheader` in the `SubHeader` component, because the mobile styles for that just weren't being picked up by the browser. There might be another root cause, but this is a temporary fix [#340]
