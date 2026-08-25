@@ -254,7 +254,7 @@ describe('DmpLandingPage', () => {
     expect(mockArchivedPlanView).toHaveBeenCalledWith(
       expect.objectContaining({
         snapshot: BASE_SNAPSHOT,
-        jsonUrl: expect.stringContaining('/dmps/10.48321/D1e8b71d18/narrative.json'),
+        jsonUrl: expect.stringContaining('/api/download-narrative?dmpId=10.48321%2FD1e8b71d18&format=json'),
         canDownloadPdf: true,
         writtenForOrg: {
           name: 'California Digital Library',
