@@ -158,6 +158,7 @@
 
 ## Chore
 - Updated `@types/react` to `v19.2.18` and `@types/react-dom` `19.2.5` and fixed new type errors resulting from that update [#333]
+- Updated version of `typescript` to `v6.0.3` and `@typescript-eslint/eslint-plugin` to `v8.68.0` and `@typescript-eslint/parser` to `v8.68.0` [#333]
 - Updated `versioning.yml` to create PRs to merge updated `package.json` and `CHANGELOG.md` into `stage` and `development` [#338]
 - Small tweak in CHANGELOG.md to test another merge to test automated versioning.
 - Updated `brace-expansion` to `v5.0.9`, `js-yaml` to `v4.3.1`, and `domPurify` to `v3.4.13` to address high vulnerabilities [#337]
@@ -259,7 +260,6 @@
 - Fixed bug where the published status on `/template/[templateId]` did not match that on the template cards at `/template` for the `unpublished changes` state. Added a shared hook for determining the correct status text [#875]
 
 ## Chore
-- Updated version of `typescript` to `v6.0.3` and `@typescript-eslint/eslint-plugin` to `v8.68.0` and `@typescript-eslint/parser` to `v8.68.0` [#333]
 - Updated version of `sanitize-html` to `v2.17.4` to address critical security vulnerability
 - Updated `cypress` to `v15.15.0`. This also addresses a high security vulnerability in `systeminformation` dependency. Also, updated the date in `LICENSE.md` file to the current year.
 - Updated `@apollo/client` to `v4.1.7`, `@apollo/client-integration-nextjs` to `v0.14.5`, `next` to `v16.2.3`, `next-intl` to `v4.9.1`,`@types/node` to `v24.12.2`, `@types/sanitize-html` to `v2.16.1`, `brace-expansion` to `v2.1.0` and `minimatch` to `v10.2.5`, and `next` to `v16.2.6`.
