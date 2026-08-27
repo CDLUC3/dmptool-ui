@@ -144,7 +144,7 @@ interface DrawerPanelProps extends ContentContainerProps {
   isOpen?: boolean;
   onClose?: () => void;
   title?: string;
-  returnFocusRef?: React.RefObject<HTMLElement>;
+  returnFocusRef?: React.RefObject<HTMLElement | null>;
 }
 
 export const DrawerPanel: React.FC<DrawerPanelProps> = ({
