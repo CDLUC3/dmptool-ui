@@ -41,6 +41,7 @@
 - Added `UpdateAffiliation` and `AffiliationById` queries [#203]
 
 ## Updated
+- Redesigned `ProjectListItem` and project list pages (`/projects`, `/admin/projects`, `/admin/users/[userId]/projects`) with expandable plan details, skeleton loading, and GraphQL-backed plan and collaborator data
 - Updated plan title on landing page to expand across the full width [#339]
 - Updated `DmpLandingPage` to just use the new `PublicPlanVersionByDmpIdDocument` query, which calls on DynamoDB to get the data [#339]
 - Updated `ProjectsProjectFunding` page to display `View` button for funding if in `readOnly` mode [#246]
