@@ -50,11 +50,20 @@ const mocks = [
                   orcid: "https://orcid.org/0000-JACQ-0000-0000",
                 },
               ],
+              modified: "1785236348000",
+              collaborators: [
+                {
+                  name: "Jacques Cousteau",
+                  accessLevel: "Primary",
+                  orcid: null,
+                },
+              ],
+              plans: [],
               errors: null,
             },
             {
               title: "Project 2",
-              id: 1,
+              id: 2,
               startDate: "2025-01-01",
               endDate: "2027-12-31",
               fundings: [
@@ -70,11 +79,20 @@ const mocks = [
                   orcid: "https://orcid.org/0000-BETTY-0000-0000",
                 },
               ],
+              modified: "1785236348000",
+              collaborators: [
+                {
+                  name: "Betty White",
+                  accessLevel: "Primary",
+                  orcid: null,
+                },
+              ],
+              plans: [],
               errors: null,
             },
             {
               title: "Project 2",
-              id: 1,
+              id: 3,
               startDate: "2025-09-01",
               endDate: "2028-12-31",
               fundings: [
@@ -90,6 +108,15 @@ const mocks = [
                   orcid: "https://orcid.org/0000-CAPTAIN-0000-0000",
                 },
               ],
+              modified: "1785236348000",
+              collaborators: [
+                {
+                  name: "Captain Jack",
+                  accessLevel: "Primary",
+                  orcid: null,
+                },
+              ],
+              plans: [],
               errors: null,
             },
           ],
@@ -115,7 +142,7 @@ const mocks = [
           items: [
             {
               title: "Reef Havens: Exploring the Role of Reef Ecosystems in Sustaining Eel Populations",
-              id: 1,
+              id: 4,
               startDate: "2025-09-01",
               endDate: "2028-12-31",
               fundings: [
@@ -131,11 +158,20 @@ const mocks = [
                   orcid: "https://orcid.org/0000-JACQ-0000-0000",
                 },
               ],
+              modified: "1785236348000",
+              collaborators: [
+                {
+                  name: "Jacques Cousteau",
+                  accessLevel: "Primary",
+                  orcid: null,
+                },
+              ],
+              plans: [],
               errors: null,
             },
             {
               title: "Project 2",
-              id: 1,
+              id: 5,
               startDate: "2025-01-01",
               endDate: "2027-12-31",
               fundings: [
@@ -151,11 +187,20 @@ const mocks = [
                   orcid: "https://orcid.org/0000-BETTY-0000-0000",
                 },
               ],
+              modified: "1785236348000",
+              collaborators: [
+                {
+                  name: "Betty White",
+                  accessLevel: "Primary",
+                  orcid: null,
+                },
+              ],
+              plans: [],
               errors: null,
             },
             {
               title: "Project 2",
-              id: 1,
+              id: 6,
               startDate: "2025-09-01",
               endDate: "2028-12-31",
               fundings: [
@@ -171,6 +216,15 @@ const mocks = [
                   orcid: "https://orcid.org/0000-CAPTAIN-0000-0000",
                 },
               ],
+              modified: "1785236348000",
+              collaborators: [
+                {
+                  name: "Captain Jack",
+                  accessLevel: "Primary",
+                  orcid: null,
+                },
+              ],
+              plans: [],
               errors: null,
             },
           ],
@@ -199,7 +253,7 @@ const mocks = [
           items: [
             {
               title: "Project 3",
-              id: 1,
+              id: 7,
               startDate: "2025-09-01",
               endDate: "2028-12-31",
               fundings: [
@@ -215,11 +269,20 @@ const mocks = [
                   orcid: "https://orcid.org/0000-JACQ-0000-0000",
                 },
               ],
+              modified: "1785236348000",
+              collaborators: [
+                {
+                  name: "Jacques Cousteau",
+                  accessLevel: "Primary",
+                  orcid: null,
+                },
+              ],
+              plans: [],
               errors: null,
             },
             {
               title: "Project 4",
-              id: 1,
+              id: 8,
               startDate: "2025-01-01",
               endDate: "2027-12-31",
               fundings: [
@@ -235,11 +298,20 @@ const mocks = [
                   orcid: "https://orcid.org/0000-BETTY-0000-0000",
                 },
               ],
+              modified: "1785236348000",
+              collaborators: [
+                {
+                  name: "Betty White",
+                  accessLevel: "Primary",
+                  orcid: null,
+                },
+              ],
+              plans: [],
               errors: null,
             },
             {
               title: "Project 5",
-              id: 1,
+              id: 9,
               startDate: "2025-09-01",
               endDate: "2028-12-31",
               fundings: [
@@ -255,6 +327,15 @@ const mocks = [
                   orcid: "https://orcid.org/0000-CAPTAIN-0000-0000",
                 },
               ],
+              modified: "1785236348000",
+              collaborators: [
+                {
+                  name: "Captain Jack",
+                  accessLevel: "Primary",
+                  orcid: null,
+                },
+              ],
+              plans: [],
               errors: null,
             },
           ],
@@ -282,7 +363,7 @@ const mocks = [
           items: [
             {
               title: "Project 3",
-              id: 1,
+              id: 10,
               startDate: "2025-09-01",
               endDate: "2028-12-31",
               fundings: [
@@ -298,11 +379,20 @@ const mocks = [
                   orcid: "https://orcid.org/0000-JACQ-0000-0000",
                 },
               ],
+              modified: "1785236348000",
+              collaborators: [
+                {
+                  name: "Jacques Cousteau",
+                  accessLevel: "Primary",
+                  orcid: null,
+                },
+              ],
+              plans: [],
               errors: null,
             },
             {
               title: "Project 4",
-              id: 1,
+              id: 11,
               startDate: "2025-01-01",
               endDate: "2027-12-31",
               fundings: [
@@ -318,11 +408,20 @@ const mocks = [
                   orcid: "https://orcid.org/0000-BETTY-0000-0000",
                 },
               ],
+              modified: "1785236348000",
+              collaborators: [
+                {
+                  name: "Betty White",
+                  accessLevel: "Primary",
+                  orcid: null,
+                },
+              ],
+              plans: [],
               errors: null,
             },
             {
               title: "Project 5",
-              id: 1,
+              id: 12,
               startDate: "2025-09-01",
               endDate: "2028-12-31",
               fundings: [
@@ -338,6 +437,15 @@ const mocks = [
                   orcid: "https://orcid.org/0000-CAPTAIN-0000-0000",
                 },
               ],
+              modified: "1785236348000",
+              collaborators: [
+                {
+                  name: "Captain Jack",
+                  accessLevel: "Primary",
+                  orcid: null,
+                },
+              ],
+              plans: [],
               errors: null,
             },
           ],
@@ -365,7 +473,7 @@ const mocks = [
           items: [
             {
               title: "Reef One",
-              id: 2,
+              id: 13,
               startDate: "2025-01-01",
               endDate: "2027-12-31",
               fundings: [
@@ -381,6 +489,15 @@ const mocks = [
                   orcid: "https://orcid.org/0000-BETTY-0000-0000",
                 },
               ],
+              modified: "1785236348000",
+              collaborators: [
+                {
+                  name: "Betty White",
+                  accessLevel: "Primary",
+                  orcid: null,
+                },
+              ],
+              plans: [],
               errors: null,
             },
           ],
@@ -408,7 +525,7 @@ const mocks = [
           items: [
             {
               title: "Reef Havens: Exploring the Role of Reef Ecosystems in Sustaining Eel Populations",
-              id: 1,
+              id: 14,
               startDate: "2025-09-01",
               endDate: "2028-12-31",
               fundings: [
@@ -424,6 +541,15 @@ const mocks = [
                   orcid: "https://orcid.org/0000-JACQ-0000-0000",
                 },
               ],
+              modified: "1785236348000",
+              collaborators: [
+                {
+                  name: "Jacques Cousteau",
+                  accessLevel: "Primary",
+                  orcid: null,
+                },
+              ],
+              plans: [],
               errors: {
                 general: "There was an error getting the projects",
               },
@@ -454,7 +580,7 @@ const mocks = [
           items: [
             {
               title: "Reef Havens: Exploring the Role of Reef Ecosystems in Sustaining Eel Populations",
-              id: 1,
+              id: 15,
               startDate: "2025-09-01",
               endDate: "2028-12-31",
               fundings: [
@@ -470,6 +596,15 @@ const mocks = [
                   orcid: "https://orcid.org/0000-JACQ-0000-0000",
                 },
               ],
+              modified: "1785236348000",
+              collaborators: [
+                {
+                  name: "Jacques Cousteau",
+                  accessLevel: "Primary",
+                  orcid: null,
+                },
+              ],
+              plans: [],
               errors: {
                 general: "There was an error getting the projects",
               },
@@ -498,7 +633,7 @@ const mocks = [
           items: [
             {
               title: "Reef Havens: Exploring the Role of Reef Ecosystems in Sustaining Eel Populations",
-              id: 1,
+              id: 16,
               startDate: "2025-09-01",
               endDate: "2028-12-31",
               fundings: [
@@ -514,6 +649,15 @@ const mocks = [
                   orcid: "https://orcid.org/0000-JACQ-0000-0000",
                 },
               ],
+              modified: "1785236348000",
+              collaborators: [
+                {
+                  name: "Jacques Cousteau",
+                  accessLevel: "Primary",
+                  orcid: null,
+                },
+              ],
+              plans: [],
               errors: null,
             },
           ],
@@ -648,7 +792,7 @@ describe("ProjectsListPage", () => {
     await waitFor(() => {
       expect(screen.getByRole("link", { name: /Global.breadcrumbs.home/i })).toBeInTheDocument();
       expect(screen.getByRole("link", { name: /Global.breadcrumbs.project/i })).toBeInTheDocument();
-      expect(screen.getByRole("heading", { name: /Global.breadcrumbs.planDashboard/i })).toBeInTheDocument();
+      expect(screen.getByRole("heading", { name: /ProjectsListPage.title/i })).toBeInTheDocument();
       expect(screen.getByText("ProjectsListPage.intro")).toBeInTheDocument();
       expect(screen.getByText("Global.buttons.createNewPlan")).toBeInTheDocument();
       expect(screen.getByText("Global.labels.searchByKeyword")).toBeInTheDocument();
@@ -678,9 +822,9 @@ describe("ProjectsListPage", () => {
     });
 
     await waitFor(() => {
-      const expandButton = screen.getByRole("button", {
-        name: /Global.buttons.linkExpand details for Reef Havens: Exploring the Role of Reef Ecosystems in Sustaining Eel Populations/i,
-      });
+      const expandButton = screen.getAllByRole("button", {
+        name: /Global.messaging.detailsToggleAria/i,
+      })[0];
 
       expect(expandButton).toBeInTheDocument();
 
@@ -688,33 +832,28 @@ describe("ProjectsListPage", () => {
       fireEvent.click(expandButton);
     });
 
-    // Note: ProjectOverview.projectDetails and ProjectOverview.dates headings are screen reader only and not accessible to tests
-    const dateText = screen.getByText("9/1/2025 to 12/31/2028", {
-      normalizer: (text) => text.replace(/\s+/g, " ").trim(),
-    });
-    expect(dateText).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: /ProjectOverview.projectMembers/i })).toBeInTheDocument();
-    // Check that Jacques Cousteau appears in both collapsed and expanded views
-    const jacquesElements = screen.getAllByText(/Jacques Cousteau/i);
-    expect(jacquesElements).toHaveLength(2); // One in metadata, one in expanded details
-    // Note: Member roles are not displayed in the current component implementation
-    expect(screen.getByRole("heading", { name: /ProjectOverview.funding/i })).toBeInTheDocument();
-    // Check that National Science Foundation appears in both collapsed and expanded views
-    const nsfElements = screen.getAllByText("National Science Foundation");
-    expect(nsfElements).toHaveLength(2); // One in metadata, one in expanded details
-    expect(screen.getByRole("heading", { name: /ProjectOverview.researchOutputs/i })).toBeInTheDocument();
+    // Expanded panel shows the plans block for this project
+    expect(screen.getByRole("heading", { name: "ProjectOverview.plansInProject" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "ProjectOverview.createNewDmpInProject" })).toHaveAttribute(
+      "href",
+      expect.stringContaining("/projects/1/dmp/start"),
+    );
+    // Plans are empty in this mock fixture, so the empty state is shown
+    expect(screen.getAllByText("ProjectOverview.noPlansYet").length).toBeGreaterThan(0);
+
+    // Header still shows funding and the summary strip shows the collaborator
+    expect(screen.getByText("ProjectOverview.funding: National Science Foundation")).toBeInTheDocument();
+    expect(screen.getAllByText("ProjectOverview.collaboratorsJustYou").length).toBeGreaterThan(0);
 
     // Click on Collapse link
-    const collapseButton = screen.getByRole("button", {
-      name: /Global.buttons.linkCollapse details for Reef Havens: Exploring the Role of Reef Ecosystems in Sustaining Eel Populations/i,
-    });
+    const collapseButton = screen.getAllByRole("button", {
+      name: /Global.messaging.detailsToggleAria/i,
+    })[0];
 
     expect(collapseButton).toBeInTheDocument();
-
-    // Click on Expand link
     fireEvent.click(collapseButton);
 
-    // Note: ProjectOverview.projectDetails heading is screen reader only and not accessible to tests
+    expect(screen.queryByRole("heading", { name: "ProjectOverview.plansInProject" })).not.toBeInTheDocument();
   });
 
   it("should show filtered list when user clicks Search button", async () => {
@@ -785,7 +924,7 @@ describe("ProjectsListPage", () => {
     });
 
     await waitFor(() => {
-      const loadMoreBtn = screen.getByRole("button", { name: "load more" });
+      const loadMoreBtn = screen.getByTestId("load-more-btn");
       expect(loadMoreBtn).toBeInTheDocument();
       fireEvent.click(loadMoreBtn);
     });
@@ -820,7 +959,7 @@ describe("ProjectsListPage", () => {
     });
 
     await waitFor(() => {
-      const loadMoreBtn = screen.getByRole("button", { name: "load more search results" });
+      const loadMoreBtn = screen.getByTestId("search-load-more-btn");
       expect(loadMoreBtn).toBeInTheDocument();
       fireEvent.click(loadMoreBtn);
     });
@@ -871,7 +1010,11 @@ describe("ProjectsListPage", () => {
       );
     });
 
-    expect(screen.getByTestId("loading-component")).toBeInTheDocument();
+    expect(screen.getByTestId("skeleton-list-loading")).toBeInTheDocument();
+    expect(
+      screen.getByTestId("skeleton-list-loading").querySelectorAll('[class*="skeletonItem"]'),
+    ).toHaveLength(3);
+    expect(screen.getByRole("heading", { name: /ProjectsListPage.title/i })).toBeInTheDocument();
     expect(screen.queryByText("ProjectsListPage.messages.info.noProjectsHeading")).not.toBeInTheDocument();
   });
 
@@ -964,11 +1107,20 @@ describe("ProjectsListPage", () => {
             items: [
               {
                 title: "Project Without Funding",
-                id: 99,
+                id: 17,
                 startDate: "2025-01-01",
                 endDate: "2027-12-31",
                 fundings: [],
                 members: [],
+              modified: "1785236348000",
+              collaborators: [
+                {
+                  name: "Test User",
+                  accessLevel: "Primary",
+                  orcid: null,
+                },
+              ],
+              plans: [],
                 errors: null,
               },
             ],
@@ -986,7 +1138,7 @@ describe("ProjectsListPage", () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByText("ProjectOverview.noFunderSelected")).toBeInTheDocument();
+      expect(screen.getByText(/ProjectOverview.noFunderSelected/)).toBeInTheDocument();
     });
   });
 

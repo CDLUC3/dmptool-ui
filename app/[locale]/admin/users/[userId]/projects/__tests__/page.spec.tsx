@@ -74,7 +74,7 @@ const makeProjectsMock = (
 });
 
 const initialLoadMock = () =>
-  makeProjectsMock({ limit: 3 }, undefined);
+  makeProjectsMock({ limit: 10 }, undefined);
 
 const makeMeMockForAdmin = () => makeMeMock(99, UserRole.Admin); // different id from userId param (2)
 const makeMeMockAsUser = () => makeMeMock(2); // same id as userId param — not read-only
@@ -123,7 +123,7 @@ describe("OrgUserProjectsPage", () => {
       await waitFor(() => {
         expect(screen.getByRole('link', { name: /Global.breadcrumbs.home/i })).toBeInTheDocument();
         expect(screen.getByRole('link', { name: /Global.breadcrumbs.projects/i })).toBeInTheDocument();
-        expect(screen.getByRole('heading', { name: /Global.breadcrumbs.planDashboard/i })).toBeInTheDocument();
+        expect(screen.getByRole('heading', { name: /OrganizationUserProjects.title/i })).toBeInTheDocument();
       });
     });
 
@@ -148,7 +148,21 @@ describe("OrgUserProjectsPage", () => {
 
     it('shows loading state before data arrives', () => {
       renderPage(defaultMocks());
-      expect(screen.getByText('Global.messaging.loading')).toBeInTheDocument();
+      expect(screen.getByTestId('skeleton-list-loading')).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: /OrganizationUserProjects.title/i })).toBeInTheDocument();
+    });
+
+    it('shows empty state when the user has no projects', async () => {
+      renderPage([
+        makeMeMockAsUser(),
+        makeProjectsMock({ limit: 10 }, undefined, [], null, 0),
+      ]);
+
+      await waitFor(() => {
+        expect(screen.getByText('OrganizationUserProjects.messages.info.noProjectsHeading')).toBeInTheDocument();
+        expect(screen.getByText('OrganizationUserProjects.messages.info.noProjectsDescription')).toBeInTheDocument();
+        expect(screen.getByRole('link', { name: 'Global.buttons.createNewPlan' })).toBeInTheDocument();
+      });
     });
   });
 
@@ -188,7 +202,7 @@ describe("OrgUserProjectsPage", () => {
   describe('search', () => {
     it('shows filtered results when user searches', async () => {
       const searchMock = makeProjectsMock(
-        { type: 'CURSOR', limit: 3 },
+        { type: 'CURSOR', limit: 10 },
         'reef',
         [makeProject({ title: 'Reef One', id: 2 })],
         null,
@@ -214,7 +228,7 @@ describe("OrgUserProjectsPage", () => {
 
     it('shows no results message when search yields nothing', async () => {
       const emptyMock = makeProjectsMock(
-        { type: 'CURSOR', limit: 3 },
+        { type: 'CURSOR', limit: 10 },
         'nonexistent project', // must match exactly what the input contains
         [],
         null,
@@ -263,7 +277,7 @@ describe("OrgUserProjectsPage", () => {
 
     it('resets results when clear filter is clicked', async () => {
       const searchMock = makeProjectsMock(
-        { type: 'CURSOR', limit: 3 },
+        { type: 'CURSOR', limit: 10 },
         'reef',
         [makeProject({ title: 'Reef One', id: 2 })],
         null,
@@ -298,9 +312,9 @@ describe("OrgUserProjectsPage", () => {
 
   describe('load more', () => {
     it('loads more projects when load more button is clicked', async () => {
-      const initialMock = makeProjectsMock({ limit: 3 }, undefined, [makeProject()], 'next-cursor', 9);
+      const initialMock = makeProjectsMock({ limit: 10 }, undefined, [makeProject()], 'next-cursor', 9);
       const loadMoreMock = makeProjectsMock(
-        { type: 'CURSOR', cursor: 'next-cursor', limit: 3 },
+        { type: 'CURSOR', cursor: 'next-cursor', limit: 10 },
         undefined,
         [makeProject({ title: 'Project 3', id: 3 }), makeProject({ title: 'Project 4', id: 4 })],
       );
@@ -309,7 +323,7 @@ describe("OrgUserProjectsPage", () => {
       renderPage([makeMeMock(), initialMock, loadMoreMock]);
 
       await waitFor(() => {
-        const loadMoreBtn = screen.getByRole('button', { name: 'load more' });
+        const loadMoreBtn = screen.getByTestId('load-more-btn');
         expect(loadMoreBtn).toBeInTheDocument();
         fireEvent.click(loadMoreBtn);
       });
@@ -321,7 +335,7 @@ describe("OrgUserProjectsPage", () => {
 
     it('loads more search results when search load more is clicked', async () => {
       const searchMock = makeProjectsMock(
-        { type: 'CURSOR', limit: 3 },
+        { type: 'CURSOR', limit: 10 },
         'reef',
         [makeProject({ title: 'Reef Two', id: 2 })],
         null,
@@ -329,7 +343,7 @@ describe("OrgUserProjectsPage", () => {
       );
 
       const searchLoadMoreMock = makeProjectsMock(
-        { type: 'CURSOR', cursor: 'next-cursor', limit: 3 },
+        { type: 'CURSOR', cursor: 'next-cursor', limit: 10 },
         'reef',
         [makeProject({ title: 'Reef Two', id: 3 })],
       );
@@ -350,7 +364,7 @@ describe("OrgUserProjectsPage", () => {
       await waitFor(() => expect(screen.getByText('Reef Two')).toBeInTheDocument());
 
       await waitFor(() => {
-        const loadMoreBtn = screen.getByRole('button', { name: 'load more search results' });
+        const loadMoreBtn = screen.getByTestId('search-load-more-btn');
         expect(loadMoreBtn).toBeInTheDocument();
         fireEvent.click(loadMoreBtn);
       });
@@ -366,7 +380,7 @@ describe("OrgUserProjectsPage", () => {
   describe('error handling', () => {
     it('displays error message when a project has errors', async () => {
       const errorMock = makeProjectsMock(
-        { type: 'CURSOR', limit: 3 },
+        { type: 'CURSOR', limit: 10 },
         'bad',
         [makeProject({ errors: { general: 'There was an error getting the projects' } })],
       );

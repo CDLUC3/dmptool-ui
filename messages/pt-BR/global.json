@@ -488,15 +488,32 @@
     }
   },
   "OrganizationProjects": {
-    "title": "Projeto da organização",
-    "intro": "Gerencie projetos e planos para DMSP em toda a sua organização",
+    "title": "Projetos e planos da organização",
+    "intro": "Os planos da sua organização estão agrupados em projetos de pesquisa. Use a pesquisa para encontrar planos em toda a organização.",
+    "projectsList": "Projetos da organização",
     "messages": {
       "info": {
         "noProjectsHeading": "Os projetos da organização aparecerão aqui",
-        "noProjectsDescription": "Quando pesquisadores da sua organização criarem planos de gerenciamento de dados, eles serão listados aqui."
+        "noProjectsDescription": "Quando pesquisadores da sua organização criarem planos de gerenciamento de dados, eles serão listados aqui, agrupados em projetos de pesquisa."
       },
       "errors": {
-        "errorRetrievingProjects": "Algo deu errado ao recuperar projetos. Por favor, tente novamente mais tarde."
+        "errorRetrievingProjects": "Algo deu errado ao recuperar projetos. Por favor, tente novamente mais tarde.",
+        "failedToLoadMore": "Falha ao carregar mais projetos"
+      }
+    }
+  },
+  "OrganizationUserProjects": {
+    "title": "Projetos e planos do usuário",
+    "intro": "Os planos deste usuário estão agrupados em projetos de pesquisa. Use a Pesquisa para encontrar planos em seus projetos.",
+    "projectsList": "Projetos do usuário",
+    "messages": {
+      "info": {
+        "noProjectsHeading": "Este usuário ainda não tem projetos",
+        "noProjectsDescription": "Quando este usuário criar planos de gerenciamento de dados, eles serão listados aqui, agrupados em projetos de pesquisa."
+      },
+      "errors": {
+        "errorRetrievingProjects": "Algo deu errado ao recuperar projetos. Por favor, tente novamente mais tarde.",
+        "failedToLoadMore": "Falha ao carregar mais projetos"
       }
     }
   },
@@ -903,6 +920,7 @@
       "saving": "Salvando...",
       "pageLoaded": "Página carregada",
       "noItemsFound": "Nenhum item encontrado",
+      "detailsToggleAria": "{action} detalhes de {title}",
       "somethingWentWrong": "Ocorreu um erro. Tente novamente.",
       "resultsText": "Os resultados {name} correspondem à sua pesquisa",
       "fixBelow": "Por favor, corrija os erros abaixo",

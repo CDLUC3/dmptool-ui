@@ -2,14 +2,16 @@
 
 // Main project item container
 .projectItem {
+  display: flex;
+  flex-direction: column;
   margin-bottom: 1rem;
   border-radius: var(--card-border-radius);
   background: var(--bg-white);
   box-shadow: var(--card-shadow);
   border: 1px solid var(--card-border);
+  overflow: visible;
 }
 
-// Inner content wrapper
 .inner {
   padding: 1.25rem var(--space-5);
 
@@ -17,261 +19,388 @@
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
+    gap: var(--space-4);
   }
 }
 
-// Header section with project title
 .header {
   margin: 0;
-  font-size: var(--fs-small);
+  min-width: 0;
+  flex: 1 1 auto;
 }
 
-// Action buttons container
 .actions {
   display: flex;
-  gap: 1rem;
-  align-items: center; // Center align buttons for proper alignment
-  margin-top: var(--space-3); // Add margin between date and buttons
+  gap: var(--space-3);
+  align-items: center;
+  flex-shrink: 0;
+  margin-top: var(--space-3);
 
-  @include device(md) {
-    margin-top: var(--space-2); // Slightly less margin on larger screens
+  @include device(lg) {
+    margin-top: 0;
   }
 }
 
-// Project title styling (both collapsed and expanded)
 .projectTitle {
   font-size: var(--fs-lg);
   color: var(--text-color);
   font-weight: var(--fw-bold);
   padding: 0;
-  margin: 0 0 var(--space-3) 0;
+  margin: 0 0 var(--space-2) 0;
+  line-height: 1.3;
+  overflow: visible;
+}
 
-  // Truncate very long project names
+.titleText {
   display: -webkit-box;
-  -webkit-line-clamp: 3; // Allow up to 3 lines before truncating
+  -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
-  line-height: 1.3;
-  max-height: calc(1.3em * 3); // 3 lines max
 }
 
-// Section title styling (dates, collaborators, etc.)
-.sectionTitle {
-  font-size: var(--fs-sm);
-  color: var(--blue-900);
-  font-weight: 600;
-  padding: 0;
-  margin: 0 0 var(--space-1) 0;
-}
-
-// Main project title heading
-.mainTitle {
-  font-size: var(--fs-lg);
-  font-weight: var(--fw-bold);
-  padding: 0;
-  margin: 0 0 0.5rem 0;
-}
-
-// Content text styling
-.contentText {
-  font-size: var(--fs-small);
-  padding: 0;
-  margin: 0;
-}
-
-// Link styles
-.titleLink {
+// Stay heading-coloured in every link state, including :visited.
+.titleLink,
+.titleLink:link,
+.titleLink:visited,
+.titleLink:hover,
+.titleLink:active {
   color: var(--text-color) !important;
+  font-weight: inherit;
   text-decoration: none !important;
-
-  &:hover {
-    text-decoration: none !important;
-  }
 }
 
-// Override for primary button to remove underline
-.actions .react-aria-Button--primary {
-  text-decoration: none !important;
+.titleLink {
+  display: inline;
 
-  &:hover,
   &:focus,
-  &:active {
-    text-decoration: none !important;
+  &:focus-visible {
+    outline: none !important;
+  }
+
+  &:focus-visible .titleText {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    text-decoration-thickness: 2px;
   }
 }
 
-// CSS Module class for update button
-.updateButton {
-  text-decoration: none !important;
 
-  &:hover,
-  &:focus,
-  &:active,
-  &:visited,
-  &[data-hovered] {
-    text-decoration: none !important;
-  }
-}
-
-// Additional override with higher specificity (fallback)
-.actions a.react-aria-Button--primary {
-  text-decoration: none !important;
-
-  &:hover,
-  &:focus,
-  &:active,
-  &:visited,
-  &[data-hovered] {
-    text-decoration: none !important;
-  }
-}
-
-// Expanded content area
-.expandedContent {
-  background-color: var(--blue-100);
-}
-
-// Details grid container
-.detailsGrid {
+.fundingLine {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-2);
-  justify-content: space-between;
-  padding: 1.25rem var(--space-5);
-
+  gap: 0 var(--space-2);
+  margin: 0;
+  font-size: var(--fs-base);
+  color: var(--slate-700);
 }
 
-// Individual detail sections
-.detailSection {
-  flex: 1 1 100%;
-
-  @include device(md) {
-    flex: 1 1 calc(50% - 8px);
-    padding: 0px;
+.fundingGrant {
+  &:before {
+    content: "·";
+    margin-right: var(--space-2);
+    color: var(--slate-700);
   }
 }
 
-// Details heading
-.detailsHeading {
-  margin-bottom: var(--space-5);
+.openProjectLink,
+.createPlanLink,
+.openPlanLink {
+  display: inline-block;
+  font-size: var(--fs-base);
+  font-weight: var(--fw-semibold);
+  color: var(--link-color);
+  white-space: nowrap;
+  text-underline-offset: 2px;
 
-  @include device(md) {
-    margin-bottom: var(--space-1);
+  &:hover,
+  &:focus,
+  &:focus-visible {
+    color: var(--link-hover-color);
+  }
+
+  &:focus,
+  &:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+    border-radius: var(--border-radius-sm);
   }
 }
 
-// New header layout styles
-.plansSection {
-  padding-bottom: var(--space-1);
-  margin-bottom: var(--space-3);
+
+.expandedPanel {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.3s ease;
+}
+
+.expandedPanel[data-expanded="true"] {
+  grid-template-rows: 1fr;
+}
+
+.expandedClip {
+  overflow: hidden;
+  min-height: 0;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+.expandedPanel[data-expanded="true"] .expandedClip {
+  opacity: 1;
+}
+
+.expandedContent {
+  padding: 0 var(--space-5) 1.25rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+  .expandedPanel,
+  .expandedClip {
+    transition: none;
+  }
+}
+
+.plansBlock {
+  background: var(--bg-white);
+  border: 1px solid var(--border-color-subtle);
+  border-radius: var(--border-radius-md);
+  padding: var(--space-4) var(--space-4) var(--space-3);
+}
+
+.plansHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-1) var(--space-2);
+  margin: 0 0 var(--space-3);
 }
 
 .plansHeading {
-  font-size: var(--fs-xxs);
-  font-weight: var(--fw-semibold);
+  margin: 0;
+  font-size: var(--fs-base);
+  font-weight: var(--fw-bold);
   color: var(--text-color);
-  margin: 0 0 2px 0;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
 }
 
-.planItem {
-  position: relative;
-  padding-left: var(--space-2);
-  margin-bottom: 2px;
-  font-size: var(--fs-small);
-  color: var(--blue-900);
-  line-height: 1.3;
-  font-weight: var(--fw-medium);
-
-  &:before {
-    content: "•";
-    position: absolute;
-    left: 0;
-    color: var(--blue-500);
-    font-size: var(--fs-xs);
-    line-height: inherit;
-  }
+.plansHeadSep {
+  color: var(--slate-700);
+  line-height: 1;
 }
 
-.planDoi {
-  color: var(--text-color);
-  font-style: italic;
+.noPlans {
+  margin: 0;
+  font-size: var(--fs-base);
+  color: var(--slate-700);
 }
 
-// Screen reader only text
-.srOnly {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
-}
+.plansTable {
+  width: 100%;
+  table-layout: fixed;
+  margin: 0;
+  background: transparent;
+  font-size: var(--fs-base);
 
-// Consolidated metadata row styling
-.metadataRow {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-  font-size: var(--fs-small);
-  color: var(--text-color);
-  margin-top: var(--space-2);
-
-  @include device(sm) {
-    flex-wrap: nowrap;
-    align-items: center;
+  th,
+  td {
+    text-align: left;
+    vertical-align: middle;
+    background: transparent;
+    border-bottom: 1px solid var(--border-color-subtle);
+    line-height: 1.4;
+    padding: var(--space-2) var(--space-3) !important;
   }
 
-  // Hide funders and collaborators on small screens (under 1200px)
-  // Only show last updated date
-  @media (max-width: 1199px) {
-    .metadataItem:not(:last-child) {
+  th {
+    font-size: var(--fs-small);
+    font-weight: var(--fw-bold);
+    color: var(--text-color);
+    border-bottom: 2px solid var(--border-color);
+  }
+
+  td {
+    color: var(--text-color);
+  }
+
+  tbody tr:nth-child(even) {
+    background: transparent;
+  }
+
+  tbody tr:hover {
+    background: var(--gray-25);
+  }
+
+  tr:last-child td {
+    border-bottom: 0;
+  }
+
+  th:nth-child(1),
+  td:nth-child(1) {
+    width: 44%;
+    overflow-wrap: anywhere;
+  }
+
+  th:nth-child(2),
+  td:nth-child(2),
+  th:nth-child(3),
+  td:nth-child(3) {
+    width: 15%;
+  }
+
+  th:nth-child(4),
+  td:nth-child(4) {
+    width: 12%;
+  }
+
+  th:nth-child(5),
+  td:nth-child(5) {
+    width: 14%;
+  }
+
+  td:nth-child(n + 2) {
+    white-space: nowrap;
+  }
+
+  // Stack rows into cards on small screens
+  @media (max-width: 767px) {
+    thead {
       display: none;
     }
-  }
 
-  // Better mobile handling for very small screens
-  @media (max-width: 480px) {
-    flex-direction: column;
-    gap: var(--space-1);
-    align-items: flex-start;
-  }
-}
+    &,
+    tbody,
+    tr,
+    td {
+      display: block;
+      width: 100% !important;
+    }
 
-.metadataItem {
-  position: relative;
+    tbody tr {
+      padding: var(--space-3) 0;
+      border-bottom: 1px solid var(--border-color-subtle);
 
-  // Only show bullet separators on larger screens
-  @include device(sm) {
-    &:not(:last-child):after {
-      content: "•";
-      color: var(--slate-400);
-      margin-left: var(--space-2);
-      font-weight: bold;
+      &:last-child {
+        border-bottom: 0;
+      }
+    }
+
+    td {
+      border-bottom: 0;
+      white-space: normal !important;
+      padding: var(--space-1) 0 !important;
+
+      &:nth-child(n + 2):not(:last-child) {
+        display: inline-block;
+        width: auto !important;
+        padding-right: var(--space-4) !important;
+        font-size: var(--fs-small);
+
+        &:before {
+          content: attr(data-label) ": ";
+          font-weight: var(--fw-semibold);
+        }
+      }
     }
   }
+}
 
-  &:last-child {
-    font-size: var(--fs-xs);
-    color: var(--slate-500);
+.planNameLink {
+  color: var(--text-color);
+  text-decoration: none;
+
+  &:hover,
+  &:focus,
+  &:focus-visible {
+    color: var(--link-color);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  &:focus,
+  &:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+    border-radius: var(--border-radius-sm);
   }
 }
 
-.othersCount {
-  font-weight: var(--fw-normal);
+.planActionsCell {
+  @media (max-width: 767px) {
+    text-align: right;
+  }
 }
 
-.fundersList {
-  list-style: none;
-  padding: 0;
-  margin: 0;
 
-  li {
-    margin-bottom: var(--space-1);
+.cellEmpty {
+  color: var(--slate-600);
+}
+
+// Plan status badge
+.planStatus {
+  display: inline-block;
+  padding: 2px var(--space-2);
+  border-radius: var(--border-radius-sm);
+  font-size: var(--fs-small);
+  font-weight: var(--fw-medium);
+  line-height: 1.3;
+  color: var(--white);
+}
+
+.planStatusDraft {
+  background: var(--gray-400);
+}
+
+.planStatusComplete {
+  background: var(--green-600);
+}
+
+.planStatusArchived {
+  background: var(--slate-500);
+}
+
+.statusBar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-top: auto;
+  padding: var(--space-3) var(--space-5);
+  background: var(--blue-100);
+  font-size: var(--fs-base);
+  color: var(--text-color);
+  border-radius: 0 0 var(--card-border-radius) var(--card-border-radius);
+}
+
+.statusBarItems {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1) 0;
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.statusItem {
+  display: inline-flex;
+  align-items: center;
+  color: var(--slate-800);
+
+  &:not(:last-child):after {
+    content: "•";
+    margin: 0 var(--space-2);
+    color: var(--slate-700);
   }
+}
+
+.statusItemAlert {
+  color: var(--red-500);
+  font-weight: var(--fw-semibold);
+}
+
+.statusBar button {
+  margin-left: auto;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+  font-size: var(--fs-base);
 }

@@ -649,15 +649,32 @@
     }
   },
   "OrganizationProjects": {
-    "title": "Organization Projects",
-    "intro": "Manage DMSP projects and plans across your organization",
+    "title": "Organization Projects and Plans",
+    "intro": "Plans in your organization are grouped under research projects. Use Search to find plans across your organization.",
+    "projectsList": "Organization projects",
     "messages": {
       "info": {
         "noProjectsHeading": "Organization projects will appear here",
-        "noProjectsDescription": "When researchers in your organization create data management plans, they will be listed here."
+        "noProjectsDescription": "When researchers in your organization create data management plans, they will be listed here, grouped under research projects."
       },
       "errors": {
-        "errorRetrievingProjects": "Something went wrong with retrieving projects. Please try again later."
+        "errorRetrievingProjects": "Something went wrong with retrieving projects. Please try again later.",
+        "failedToLoadMore": "Failed to load more projects"
+      }
+    }
+  },
+  "OrganizationUserProjects": {
+    "title": "User projects and plans",
+    "intro": "Plans for this user are grouped under research projects. Use Search to find plans across their projects.",
+    "projectsList": "User projects",
+    "messages": {
+      "info": {
+        "noProjectsHeading": "This user has no projects yet",
+        "noProjectsDescription": "When this user creates data management plans, they will be listed here, grouped under research projects."
+      },
+      "errors": {
+        "errorRetrievingProjects": "Something went wrong with retrieving projects. Please try again later.",
+        "failedToLoadMore": "Failed to load more projects"
       }
     }
   },
@@ -1074,6 +1091,7 @@
       "saving": "Saving...",
       "pageLoaded": "Page loaded",
       "noItemsFound": "No items found",
+      "detailsToggleAria": "{action} details for {title}",
       "somethingWentWrong": "Something went wrong. Please try again.",
       "resultsText": "{name} results match your search",
       "fixBelow": "Please fix the errors below",

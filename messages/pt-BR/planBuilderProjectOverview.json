@@ -53,6 +53,29 @@
     "view": "Ver plano",
     "dateRange": "{startDate} até {endDate}",
     "created": "Criado",
+    "openProject": "Abrir projeto",
+    "openPlan": "Abrir plano",
+    "plansInProject": "Planos neste projeto",
+    "createNewDmpInProject": "Criar um novo DMP neste projeto",
+    "noPlansYet": "Ainda não há planos.",
+    "statusColumn": "Status",
+    "yourRole": "Sua função",
+    "updated": "Atualizado",
+    "actions": "Ações",
+    "projectSummary": "Resumo do projeto",
+    "lastUpdatedOn": "Última atualização {date}",
+    "planCount": "{count, plural, =0 {0 planos} one {1 plano} other {# planos}}",
+    "funderSummary": "{name} e mais {count}",
+    "collaboratorsJustYou": "Colaboradores: Apenas você",
+    "collaboratorsYouAndOthers": "Colaboradores: Você e {count, plural, one {1 outro} other {# outros}}",
+    "collaboratorsNamed": "Colaboradores: {name}{count, plural, =0 {} one { e 1 outro} other { e # outros}}",
+    "collaboratorsNone": "Colaboradores: Nenhum",
+    "relatedWorksFound": "{count, plural, =0 {0 trabalhos relacionados encontrados} one {1 trabalho relacionado encontrado} other {# trabalhos relacionados encontrados}}",
+    "planStatus": {
+      "DRAFT": "Rascunho",
+      "COMPLETE": "Concluído",
+      "ARCHIVED": "Arquivado"
+    },
     "messages": {
       "errorGettingProject": "Erro ao obter detalhes do projeto",
       "readOnlyLinkMessage": "Apenas colaboradores do projeto podem editar este projeto."
@@ -79,17 +102,20 @@
     }
   },
   "ProjectsListPage": {
-    "intro": "Gerencie seus planos e projetos de gerenciamento de dados. Para criar um novo plano dentro do mesmo projeto de pesquisa, abra o projeto abaixo e, em seguida, crie um novo plano dentro dele.",
+    "title": "Painel de projetos e planos",
+    "intro": "Seus planos estão agrupados em projetos de pesquisa. Use Pesquisa, Status e Sua função para encontrar planos em seus projetos.",
+    "projectsList": "Seus projetos",
     "buttons": {
       "createProject": "Criar projeto"
     },
     "messages": {
       "info": {
         "noProjectsHeading": "Seus projetos aparecerão aqui",
-        "noProjectsDescription": "Crie um plano de gerenciamento de dados para começar. Você pode gerenciar todos os seus DMPs e projetos de pesquisa neste painel."
+        "noProjectsDescription": "Crie um plano de gerenciamento de dados para começar. Os planos que você criar serão agrupados em um projeto de pesquisa."
       },
       "errors": {
-        "errorRetrievingProjects": "Algo deu errado do nosso lado. Por favor, tente novamente mais tarde."
+        "errorRetrievingProjects": "Algo deu errado do nosso lado. Por favor, tente novamente mais tarde.",
+        "failedToLoadMore": "Falha ao carregar mais projetos"
       }
     }
   },

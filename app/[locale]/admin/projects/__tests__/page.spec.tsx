@@ -22,7 +22,7 @@ const mocks = [
       query: MyProjectsDocument,
       variables: {
         paginationOptions: {
-          limit: 3,
+          limit: 10,
         },
       },
     },
@@ -54,7 +54,7 @@ const mocks = [
             },
             {
               title: "Project 2",
-              id: 1,
+              id: 2,
               startDate: "2025-01-01",
               endDate: "2027-12-31",
               fundings: [
@@ -74,7 +74,7 @@ const mocks = [
             },
             {
               title: "Project 2",
-              id: 1,
+              id: 3,
               startDate: "2025-09-01",
               endDate: "2028-12-31",
               fundings: [
@@ -103,7 +103,7 @@ const mocks = [
       query: MyProjectsDocument,
       variables: {
         paginationOptions: {
-          limit: 3,
+          limit: 10,
         },
       },
     },
@@ -115,7 +115,7 @@ const mocks = [
           items: [
             {
               title: "Reef Havens: Exploring the Role of Reef Ecosystems in Sustaining Eel Populations",
-              id: 1,
+              id: 4,
               startDate: "2025-09-01",
               endDate: "2028-12-31",
               fundings: [
@@ -135,7 +135,7 @@ const mocks = [
             },
             {
               title: "Project 2",
-              id: 1,
+              id: 5,
               startDate: "2025-01-01",
               endDate: "2027-12-31",
               fundings: [
@@ -155,7 +155,7 @@ const mocks = [
             },
             {
               title: "Project 2",
-              id: 1,
+              id: 6,
               startDate: "2025-09-01",
               endDate: "2028-12-31",
               fundings: [
@@ -186,7 +186,7 @@ const mocks = [
         paginationOptions: {
           type: "CURSOR",
           cursor: "2025-08-05_00:00:004",
-          limit: 3,
+          limit: 10,
         },
         term: "reef",
       },
@@ -199,7 +199,7 @@ const mocks = [
           items: [
             {
               title: "Project 3",
-              id: 1,
+              id: 7,
               startDate: "2025-09-01",
               endDate: "2028-12-31",
               fundings: [
@@ -219,7 +219,7 @@ const mocks = [
             },
             {
               title: "Project 4",
-              id: 1,
+              id: 8,
               startDate: "2025-01-01",
               endDate: "2027-12-31",
               fundings: [
@@ -239,7 +239,7 @@ const mocks = [
             },
             {
               title: "Project 5",
-              id: 1,
+              id: 9,
               startDate: "2025-09-01",
               endDate: "2028-12-31",
               fundings: [
@@ -270,7 +270,7 @@ const mocks = [
         paginationOptions: {
           type: "CURSOR",
           cursor: "2025-08-05_00:00:004",
-          limit: 3,
+          limit: 10,
         },
       },
     },
@@ -282,7 +282,7 @@ const mocks = [
           items: [
             {
               title: "Project 3",
-              id: 1,
+              id: 10,
               startDate: "2025-09-01",
               endDate: "2028-12-31",
               fundings: [
@@ -302,7 +302,7 @@ const mocks = [
             },
             {
               title: "Project 4",
-              id: 1,
+              id: 11,
               startDate: "2025-01-01",
               endDate: "2027-12-31",
               fundings: [
@@ -322,7 +322,7 @@ const mocks = [
             },
             {
               title: "Project 5",
-              id: 1,
+              id: 12,
               startDate: "2025-09-01",
               endDate: "2028-12-31",
               fundings: [
@@ -351,7 +351,7 @@ const mocks = [
       query: MyProjectsDocument,
       variables: {
         paginationOptions: {
-          limit: 3,
+          limit: 10,
           type: "CURSOR",
         },
         term: "reef",
@@ -365,7 +365,7 @@ const mocks = [
           items: [
             {
               title: "Reef One",
-              id: 2,
+              id: 13,
               startDate: "2025-01-01",
               endDate: "2027-12-31",
               fundings: [
@@ -394,7 +394,7 @@ const mocks = [
       query: MyProjectsDocument,
       variables: {
         paginationOptions: {
-          limit: 3,
+          limit: 10,
           type: "CURSOR",
         },
         term: "throw",
@@ -408,7 +408,7 @@ const mocks = [
           items: [
             {
               title: "Reef Havens: Exploring the Role of Reef Ecosystems in Sustaining Eel Populations",
-              id: 1,
+              id: 14,
               startDate: "2025-09-01",
               endDate: "2028-12-31",
               fundings: [
@@ -440,7 +440,7 @@ const mocks = [
       variables: {
         paginationOptions: {
           type: "CURSOR",
-          limit: 3,
+          limit: 10,
           cursor: "2025-08-05_00:00:004",
         },
         term: "throw",
@@ -454,7 +454,7 @@ const mocks = [
           items: [
             {
               title: "Reef Havens: Exploring the Role of Reef Ecosystems in Sustaining Eel Populations",
-              id: 1,
+              id: 15,
               startDate: "2025-09-01",
               endDate: "2028-12-31",
               fundings: [
@@ -485,7 +485,7 @@ const mocks = [
       query: MyProjectsDocument,
       variables: {
         paginationOptions: {
-          limit: 3,
+          limit: 10,
           type: "CURSOR",
         },
       },
@@ -498,7 +498,7 @@ const mocks = [
           items: [
             {
               title: "Reef Havens: Exploring the Role of Reef Ecosystems in Sustaining Eel Populations",
-              id: 1,
+              id: 16,
               startDate: "2025-09-01",
               endDate: "2028-12-31",
               fundings: [
@@ -528,7 +528,7 @@ const mocks = [
       variables: {
         paginationOptions: {
           type: "CURSOR",
-          limit: 3,
+          limit: 10,
         },
         term: "nonexistent project",
       },
@@ -551,7 +551,7 @@ const emptyProjectsMocks = [
       query: MyProjectsDocument,
       variables: {
         paginationOptions: {
-          limit: 3,
+          limit: 10,
         },
       },
     },
@@ -573,7 +573,7 @@ const emptyProjectsNullTotalCountMocks = [
       query: MyProjectsDocument,
       variables: {
         paginationOptions: {
-          limit: 3,
+          limit: 10,
         },
       },
     },
@@ -586,6 +586,29 @@ const emptyProjectsNullTotalCountMocks = [
         },
       },
     },
+  },
+];
+
+const delayedEmptyProjectsMocks = [
+  {
+    request: {
+      query: MyProjectsDocument,
+      variables: {
+        paginationOptions: {
+          limit: 10,
+        },
+      },
+    },
+    result: {
+      data: {
+        myProjects: {
+          items: [],
+          nextCursor: null,
+          totalCount: 0,
+        },
+      },
+    },
+    delay: 500,
   },
 ];
 
@@ -654,9 +677,9 @@ describe("OrganizationProjectsListPage", () => {
     });
 
     await waitFor(() => {
-      const expandButton = screen.getByRole("button", {
-        name: /Global.buttons.linkExpand details for Reef Havens: Exploring the Role of Reef Ecosystems in Sustaining Eel Populations/i,
-      });
+      const expandButton = screen.getAllByRole("button", {
+        name: /Global.messaging.detailsToggleAria/i,
+      })[0];
 
       expect(expandButton).toBeInTheDocument();
 
@@ -664,29 +687,23 @@ describe("OrganizationProjectsListPage", () => {
       fireEvent.click(expandButton);
     });
 
-    // Check that the expanded content is visible
-    expect(screen.getByRole("heading", { name: "ProjectOverview.project" })).toBeInTheDocument();
-    const dateText = screen.getByText("9/1/2025 to 12/31/2028", {
-      normalizer: (text) => text.replace(/\s+/g, " ").trim(),
-    });
-    expect(dateText).toBeInTheDocument();
-    expect(screen.getByText(/ProjectOverview.dates:/i)).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "ProjectOverview.projectMembers" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "ProjectOverview.fundings" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "ProjectOverview.researchOutputs" })).toBeInTheDocument();
+    // Check that the expanded plans panel is visible
+    expect(screen.getByRole("heading", { name: "ProjectOverview.plansInProject" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "ProjectOverview.createNewDmpInProject" })).toBeInTheDocument();
+    expect(screen.getAllByText("ProjectOverview.noPlansYet").length).toBeGreaterThan(0);
 
     // Click on Collapse link
-    const collapseButton = screen.getByRole("button", {
-      name: /Global.buttons.linkCollapse details for Reef Havens: Exploring the Role of Reef Ecosystems in Sustaining Eel Populations/i,
-    });
+    const collapseButton = screen.getAllByRole("button", {
+      name: /Global.messaging.detailsToggleAria/i,
+    })[0];
 
     expect(collapseButton).toBeInTheDocument();
 
     // Click on Collapse link
     fireEvent.click(collapseButton);
 
-    // The Project heading should no longer be visible
-    expect(screen.queryByRole("heading", { name: "ProjectOverview.project" })).not.toBeInTheDocument();
+    // The plans heading should no longer be visible
+    expect(screen.queryByRole("heading", { name: "ProjectOverview.plansInProject" })).not.toBeInTheDocument();
   });
 
   it("should show filtered list when user clicks Search button", async () => {
@@ -756,7 +773,7 @@ describe("OrganizationProjectsListPage", () => {
     });
 
     await waitFor(() => {
-      const loadMoreBtn = screen.getByRole("button", { name: "load more" });
+      const loadMoreBtn = screen.getByTestId("load-more-btn");
       expect(loadMoreBtn).toBeInTheDocument();
       fireEvent.click(loadMoreBtn);
     });
@@ -789,7 +806,7 @@ describe("OrganizationProjectsListPage", () => {
     });
 
     await waitFor(() => {
-      const loadMoreBtn = screen.getByRole("button", { name: "load more search results" });
+      const loadMoreBtn = screen.getByTestId("search-load-more-btn");
       expect(loadMoreBtn).toBeInTheDocument();
       fireEvent.click(loadMoreBtn);
     });
@@ -829,6 +846,23 @@ describe("OrganizationProjectsListPage", () => {
     await waitFor(() => {
       expect(screen.getByText("OrganizationProjects.messages.info.noProjectsHeading")).toBeInTheDocument();
     });
+  });
+
+  it("should not display empty state while projects are loading", async () => {
+    await act(async () => {
+      render(
+        <MockedProvider mocks={delayedEmptyProjectsMocks}>
+          <OrganizationProjectsListPage />
+        </MockedProvider>,
+      );
+    });
+
+    expect(screen.getByTestId("skeleton-list-loading")).toBeInTheDocument();
+    expect(
+      screen.getByTestId("skeleton-list-loading").querySelectorAll('[class*="skeletonItem"]'),
+    ).toHaveLength(10);
+    expect(screen.getByRole("heading", { name: /OrganizationProjects.title/i })).toBeInTheDocument();
+    expect(screen.queryByText("OrganizationProjects.messages.info.noProjectsHeading")).not.toBeInTheDocument();
   });
 
   it("should display no items found message when search yields no results", async () => {
