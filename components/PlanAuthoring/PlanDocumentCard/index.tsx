@@ -137,7 +137,7 @@ export default function PlanDocumentCard({
           <div className={styles.downloadAction}>
             <TransitionLink
               href={document.downloadHref}
-              className="react-aria-Button"
+              className="react-aria-Button secondary"
               aria-label={downloadLabel}
             >
               {t("document.download")}
