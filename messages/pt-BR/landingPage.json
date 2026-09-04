@@ -1,69 +1,69 @@
 {
   "LandingPage": {
-    "dmpTool": "DMP Tool",
-    "templateInfoWithOrg": "This page describes a data management plan written for <orgLink>{orgName}</orgLink> using the <dmptoolLink>DMP Tool</dmptoolLink>.",
-    "templateInfoWithoutOrg": "This page describes a data management plan using the <dmptoolLink>DMP Tool</dmptoolLink>.",
-    "downloadPlan": "Download the plan <pdfLabel>(PDF)</pdfLabel>",
-    "viewAsJson": "View as JSON",
-    "opensInNewWindow": "Opens in a new window",
-    "projectStart": "Project start",
-    "projectEnd": "Project end",
-    "researchDomain": "Research domain",
-    "dmpCreated": "DMP created",
-    "dmpLastModified": "DMP last modified",
-    "dmpLastModifiedBy": "DMP last modified by",
-    "whenCitingThisDMP": "When citing this DMP use",
-    "dataManagementPlan": "Data Management Plan",
-    "dmpIdInfo": "When connecting to this DMP to related project outputs (such as datasets) use the ID: <dmpIdLink>{dmpId}</dmpIdLink>",
-    "fundingOpportunity": "Funding opportunity",
-    "registeredDMP": "Data Management plan (registered)",
-    "dmpId": "DMP ID",
-    "noCitationInfo": "No citation available.",
-    "DMPTool": "DMPTool",
-    "untitledPlan": "Untitled plan",
-    "primaryContact": "Primary contact",
+    "dmpTool": "Ferramenta DMP",
+    "templateInfoWithOrg": "Esta página descreve um plano de gerenciamento de dados escrito para <orglink>{orgName}</orglink> usando a <dmptoollink>Ferramenta DMP</dmptoollink>.",
+    "templateInfoWithoutOrg": "Esta página descreve um plano de gerenciamento de dados usando a <dmptoollink>Ferramenta DMP</dmptoollink>.",
+    "downloadPlan": "Baixar o plano <pdflabel>(PDF)</pdflabel>",
+    "viewAsJson": "Ver no formato JSON",
+    "opensInNewWindow": "Abrir em uma nova janela",
+    "projectStart": "Início do projeto",
+    "projectEnd": "Final do projeto",
+    "researchDomain": "Domínio de pesquisa",
+    "dmpCreated": "DMP criado",
+    "dmpLastModified": "DMP modificado recentemente",
+    "dmpLastModifiedBy": "DMP modificado por",
+    "whenCitingThisDMP": "Ao citar este uso de DMP",
+    "dataManagementPlan": "Plano de gerenciamento de dados",
+    "dmpIdInfo": "Ao conectar a este DMP com saídas de projetos relacionados (como datasets) use o ID: <dmpidlink>{dmpId}</dmpidlink>",
+    "fundingOpportunity": "Oportunidade de financiamento",
+    "registeredDMP": "Plano de gerenciamento de dados (registrado)",
+    "dmpId": "ID DMP",
+    "noCitationInfo": "Nenhuma citação disponível.",
+    "DMPTool": "DMPFerramenta",
+    "untitledPlan": "Plano sem título",
+    "primaryContact": "Contato principal",
     "sectionHeadings": {
-      "plannedOutputs": "Planned outputs",
-      "projectDescription": "Project description",
-      "fundingStatusAndSources": "Funding status and sources",
-      "citation": "Citation",
-      "projectDetails": "Project details",
-      "contributors": "Contributors to this project",
-      "relatedWorks": "Other works associated with this project"
+      "plannedOutputs": "Saídas planejadas",
+      "projectDescription": "Descrição do projeto",
+      "fundingStatusAndSources": "Status do financiamento e fontes",
+      "citation": "Citação",
+      "projectDetails": "Detalhes de Projeto",
+      "contributors": "Colaboradores para este projeto",
+      "relatedWorks": "Outras obras associadas a este projeto"
     },
     "output": {
-      "format": "Format",
-      "metaDataStandards": "Metadata standard(s)",
-      "anticipatedVolume": "Anticipated volume",
-      "releaseTimeline": "Release timeline",
-      "intendedRepository": "Intended repository",
-      "licenseForReuse": "License for reuse",
-      "UntitledOutput": "Untitled output"
+      "format": "Formato",
+      "metaDataStandards": "Padrões de metadado(s)",
+      "anticipatedVolume": "Volume esperado",
+      "releaseTimeline": "Liberar timeline",
+      "intendedRepository": "Repositório interno",
+      "licenseForReuse": "Licença para reutilização",
+      "UntitledOutput": "Saída sem título"
     },
     "funding": {
       "status": "Status",
-      "funder": "Funder",
-      "projectNumber": "Project number",
-      "grant": "Grant"
+      "funder": "Finalizações",
+      "projectNumber": "Número do Projeto",
+      "grant": "Conceder"
     },
     "errors": {
       "failedToDownloadPDF": "Failed to download PDF",
-      "failedToDownloadWithStatus": "PDF download failed with status {status}",
-      "pdfNotAvailable": "PDF download is not available for this plan"
+      "failedToDownloadWithStatus": "O download do PDF falhou com o status {status}",
+      "pdfNotAvailable": "Download de PDF não está disponível para este plano"
     },
     "messages": {
-      "versionNotFound": "Version Not Found",
-      "dmpNotFound": "Data Management Plan Not Found",
-      "cannotFindVersion": "We could not find version {version} of this data management plan.",
-      "planNotFound": "We could not find a published data management plan for {shortDoi}. This plan may be private, or the identifier may be incorrect."
+      "versionNotFound": "Versão não encontrada",
+      "dmpNotFound": "Plano de gerenciamento de dados não encontrado",
+      "cannotFindVersion": "Não foi possível encontrar a versão {version} deste plano de gerenciamento de dados.",
+      "planNotFound": "Não foi possível encontrar um plano de gerenciamento de dados publicado para {shortDoi}. Este plano pode ser privado ou o identificador pode estar incorreto."
     },
     "ariaLabel": {
-      "downloadPlan": "Download the data management plan (downloads a PDF, opens in a new tab)",
-      "viewAsJson": "View the data management plan as a JSON file",
-      "orcidProfile": "ORCID profile for ${member}"
+      "downloadPlan": "Baixe o plano de gerenciamento de dados (baixa um PDF, abre em uma nova aba)",
+      "viewAsJson": "Ver o plano de gerenciamento de dados como um arquivo JSON",
+      "orcidProfile": "Perfil ORCID para ${member}"
     },
     "footer": {
-      "serviceOf": "This product is a service of the <uc3Link>University of California Curation Center</uc3Link> of the <cdlLink>California Digital Library</cdlLink>.",
+      "serviceOf": "Este produto é um serviço da <uc3Link>Universidade de Curação da Califórnia</uc3Link> da <cdlLink>Biblioteca Digital da Califórnia</cdlLink>.",
       "copyright": "Copyright 2010–{year} The Regents of the University of California."
     }
   }

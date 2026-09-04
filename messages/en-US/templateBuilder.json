@@ -495,7 +495,7 @@
       "descriptions": {
         "displayLogic": "Configure display logic to show or hide this question based on how users answered previous multiple choice or checkbox questions. Add one or more conditions to determine when this question appears.",
         "clearDisplayLogicWarning": "This will clear all your saved conditions for this question. This action cannot be undone.",
-        "matchTypeChangeWarning": "Switching the match type may clear some of your conditions if your existing condition conflict with each other and will be removed."
+        "matchTypeChangeWarning": "Switching the match type may clear some of your conditions if your existing conditions conflict with each other and will be removed."
       },
       "buttons": {
         "addDisplayLogic": "Add display logic",

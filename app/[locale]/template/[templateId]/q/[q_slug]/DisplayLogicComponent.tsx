@@ -453,7 +453,7 @@ const DisplayLogicComponent = ({
       onDisplayLogicChange({ ...displayLogic, groups: validGroups });
       toastState.add(t('tabPanel.messages.removedUnavailableTriggerQuestions'));
     }
-  }, [triggerQuestions]);
+  }, [triggerQuestions, displayLogic, triggerQuestionMap, onDisplayLogicChange, toastState, t]);
 
   // If there's no display logic yet, show the "Add display logic" button (or a message if there are no trigger questions)
   if (!displayLogic) {
@@ -513,7 +513,7 @@ const DisplayLogicComponent = ({
             <Dialog aria-labelledby="confirm-match-type-change-title">
               {({ close }) => (
                 <>
-                  <h3>{t('tabPanel.headings.confirmMatchTypeChange')}</h3>
+                  <h3 id="confirm-match-type-change-title">{t('tabPanel.headings.confirmMatchTypeChange')}</h3>
                   <p>{t('tabPanel.descriptions.matchTypeChangeWarning')}</p>
 
                   <div className={styles.removeAllConditionsDialogButtons}>

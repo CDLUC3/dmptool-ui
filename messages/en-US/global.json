@@ -1172,7 +1172,7 @@
   },
   "Contact": {
     "title": "Contact us",
-    "contactDescription": "DMP Tool is provided by the University of California Curation Center (UC3). You can find out more about us on our <link>website</link>.",
+    "contactDescription": "DMP Tool is provided by the University of California Curation Center (UC3). You can find out more about us on our <link />website.",
     "contactDescriptionLoggedIn": "If you would like to contact us about the DMP Tool, please fill out the form below.",
     "contactDescriptionLoggedOut": "If you would like to learn more about the DMP Tool, would like to become a participating organization, or are having difficulty accessing your account, please email our helpdesk: dmptool [at] ucop [dot] edu.",
     "form": {
