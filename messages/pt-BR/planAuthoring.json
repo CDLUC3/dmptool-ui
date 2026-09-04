@@ -15,7 +15,32 @@
       "percentComplete": "{percent}% concluído",
       "writeYourPlan": "Escreva seu plano",
       "writePlanIntro": "Trabalhe em cada seção abaixo — as respostas são salvas automaticamente. Use Ir para seção para navegar entre as seções.",
-      "questionsAnswered": "{answered} de {total} perguntas respondidas"
+      "questionsAnswered": "{answered} de {total} perguntas respondidas",
+      "planDocument": "Documento do plano",
+      "planDocumentIntro": "Este plano é representado por um único documento DMP enviado. Use <strong>Atualizar documento</strong> para substituí-lo por um novo arquivo."
+    },
+    "document": {
+      "download": "Baixar",
+      "downloadAria": "Baixar {fileName}",
+      "updateDocument": "Atualizar documento",
+      "doi": "DOI",
+      "lastUpdated": "Última atualização {date}",
+      "created": "Criado {date}",
+      "fileType": "Arquivo {type}",
+      "unknownFileType": "Arquivo",
+      "deleteTitle": "Excluir documento?",
+      "deleteWarning": "Isso excluirá permanentemente {fileName}. Esta ação não pode ser desfeita."
+    },
+    "uploadDialog": {
+      "title": "Atualizar documento",
+      "replaceWarning": "O envio de um novo arquivo substituirá permanentemente <strong>{fileName}</strong>. Esta ação não pode ser desfeita.",
+      "uploadHeading": "Enviar um Plano de Gestão de Dados (DMP)",
+      "fileTypes": "Somente arquivos PDF, DOC ou DOCX",
+      "selectFile": "Selecionar um arquivo",
+      "dropHint": "Solte um arquivo aqui ou clique para selecionar",
+      "selectedFile": "Arquivo selecionado: {fileName}",
+      "dropAria": "Solte um arquivo aqui para enviar",
+      "upload": "Enviar"
     },
     "question": {
       "resizeAria": "Redimensionar pergunta — arraste, ou clique duas vezes para redefinir",

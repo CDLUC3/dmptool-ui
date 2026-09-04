@@ -1,7 +1,9 @@
 import type {
   PlanAuthoringModel,
+  PlanAuthoringVariant,
   PlanCapabilities,
   PlanComment,
+  PlanDocument,
   PlanGuidanceOrgOption,
   PlanGuidanceSource,
   PlanQuestionDefinition,
@@ -15,8 +17,10 @@ import type { PlanAuthoringDataSource } from "./dataSource";
 
 export type {
   PlanAuthoringModel,
+  PlanAuthoringVariant,
   PlanCapabilities,
   PlanComment,
+  PlanDocument,
   PlanGuidanceOrgOption,
   PlanGuidanceSource,
   PlanQuestionDefinition,

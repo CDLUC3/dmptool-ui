@@ -1,0 +1,123 @@
+.documentCard {
+  display: flex;
+  flex-direction: column;
+  max-width: 48rem;
+}
+
+.topRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.documentMain {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.fileIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: var(--card-border-radius);
+  background: var(--blue-100);
+  color: var(--blue-900);
+}
+
+.fileIconText {
+  font-size: var(--fs-small);
+  font-weight: var(--fw-semibold);
+  line-height: 1;
+}
+
+.documentMeta {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.fileName {
+  margin: 0;
+  padding: 0;
+  color: var(--heading-color);
+  overflow-wrap: anywhere;
+}
+
+.fileNameLink,
+.fileNameLink:link,
+.fileNameLink:visited,
+.fileNameLink:active {
+  color: var(--heading-color);
+  font-weight: inherit;
+  text-decoration: none;
+}
+
+.fileNameLink:hover,
+.fileNameLink:focus-visible {
+  color: var(--heading-color);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.fileType,
+.doi,
+.timestamps {
+  margin: 0;
+  font-size: var(--fs-small);
+  line-height: var(--lh-normal);
+  color: var(--text-color-base);
+}
+
+.fileType {
+  font-weight: var(--fw-semibold);
+  color: var(--heading-color);
+}
+
+.doiLabel {
+  margin-right: var(--space-1);
+}
+
+.doiLink,
+.doiLink:link,
+.doiLink:visited,
+.doiLink:active {
+  color: inherit;
+  font-weight: inherit;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.doiLink:hover,
+.doiLink:focus-visible {
+  color: var(--heading-color);
+}
+
+.downloadAction {
+  flex-shrink: 0;
+}
+
+.secondaryActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-4);
+  margin-top: var(--space-2);
+}
+
+@media (max-width: 40rem) {
+  .topRow {
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+
+  .documentMain {
+    gap: var(--space-2);
+  }
+}
