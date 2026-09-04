@@ -1,4 +1,6 @@
 ## Added
+- Added `PlanCard` with template and uploaded variants on the project overview, plus styleguide demos [#93]
+- Added plan authoring uploaded-document view with document card, update/replace dialog, and styleguide demo [#93]
 - Added missing tests for `PlanAuthoring` components, because the tests were not meeting coverage requirements [#339]
 - Added new `ArchivedPlanView` component that renders different versions, and simplified `DmpLandingPage` to mainly be a wrapper [#339]
 - Added new `useFormatDateWithMonth` to shared date utilities [#339]
