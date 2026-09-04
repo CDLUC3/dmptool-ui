@@ -151,7 +151,7 @@ const getAvailableConditionOptions = (
 const getAvailableOperatorOptions = (
   group: DisplayLogicGroup,
   conditionId: string,
-  allOperatorItems: Array<{ id: string; name: string }>
+  allOperatorItems: { id: string; name: string }[]
 ) => {
   const condition = group.conditions.find((c) => c.id === conditionId);
   if (!condition) return allOperatorItems;
