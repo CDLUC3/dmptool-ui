@@ -23,6 +23,7 @@ const ErrorMessages = forwardRef<HTMLDivElement, ErrorMessagesProps>(
       } else if (ref && "current" in ref && ref.current) {
         // Fall back to scrolling to the error message container
         scrollToTop(ref);
+        ref.current.focus(); // Focus the error message container for accessibility
       }
     }, [errors, ref, noScroll, firstInvalidFieldRef]);
 
@@ -51,7 +52,13 @@ const ErrorMessages = forwardRef<HTMLDivElement, ErrorMessagesProps>(
     };
 
     return (
-      <div className="messages error" role="alert" aria-live="assertive" ref={ref} data-testid="error-messages">
+      <div
+        className="messages error"
+        role="alert"
+        aria-live="assertive"
+        ref={ref}
+        tabIndex={-1}
+        data-testid="error-messages">
         {renderErrors()}
       </div>
     );

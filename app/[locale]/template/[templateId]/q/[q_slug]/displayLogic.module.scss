@@ -68,7 +68,6 @@
 
     &:hover {
       background: var(--gray-100, #e0e0e0);
-      border-color: var(--red-400, #D3273E);
       color: var(--red-600, #731200);
     }
 
@@ -84,11 +83,10 @@
     width: fit-content;
   }
 }
-
 .conditionRow {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto; // option select takes the left side, trash button takes the right side
+  align-items: center;
   gap: 0.5rem;
 
   > div {
@@ -96,19 +94,54 @@
     width: 100%;
   }
 
+  // Operator takes the full row
+  > div:first-child {
+    grid-column: 1 / -1;
+  }
+
+  // Option takes the left side
+  .conditionOption {
+    grid-column: 1;
+  }
+
+  // Trash button sits beside the option
+  .removeConditionButton {
+    grid-column: 2;
+    grid-row: 2;
+    align-self: center;
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
   @include r.device('sm') {
+    display: flex;
     flex-direction: row;
     align-items: center;
 
     > div {
       width: auto;
     }
+
+    .removeConditionButton {
+      width: auto;
+      height: auto;
+    }
   }
 }
 
 .conditionOperator{
-  margin-bottom: 0;
   max-width: 100%;
+
+  // The global form select rule sets `.react-aria-Select { margin-bottom: 2rem; }`.
+  // Target the same element with higher specificity inside display logic.
+  &:global(.react-aria-Select) {
+    margin-bottom: 0;
+  }
 
   @include r.device('sm') {
     flex: 0 0 35%;
@@ -117,8 +150,11 @@
 }
 
 .conditionOption {
-  margin-bottom: 0;
   max-width: 100%;
+
+  &:global(.react-aria-Select) {
+    margin-bottom: 0;
+  }
 
   @include r.device('sm') {
     flex: 1 0 0%;
@@ -152,7 +188,6 @@
 .saveButtonWrapper {
   display: flex;
   justify-content: flex-start;
-  margin: var(--space-4) 0 var(--space-8) 0;
 }
 
 .groupJoiner { // "and" or "or" text between condition groups
@@ -162,6 +197,22 @@
   gap: 0.5rem;
   margin-top: 0.5rem;
   margin-bottom: 1rem;
+}
+
+.conditionJoiner { // "and" or "or" text between conditions in the same group
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0.125rem 0 0.5rem 0;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--gray-500, #5f6368);
+
+  @include r.device('sm') {
+    justify-content: flex-start;
+    padding-left: 34%;
+  }
 }
 
 .tabPanelWrapper {
@@ -195,6 +246,7 @@
   background: var(--gray-50, #ffffff);
   border-top: 1px solid var(--gray-200, #afafaf);
   padding-top: var(--space-8);
+  margin-top: var(--space-8);
 
   // "Remove all display logic" trigger button lives inside this section.
   .removeDisplayLogicButton {

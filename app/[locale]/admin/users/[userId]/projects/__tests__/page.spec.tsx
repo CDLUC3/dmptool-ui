@@ -146,9 +146,14 @@ describe("OrgUserProjectsPage", () => {
       });
     });
 
-    it('shows loading state before data arrives', () => {
+    it('shows loading state before data arrives', async () => {
       renderPage(defaultMocks());
       expect(screen.getByText('Global.messaging.loading')).toBeInTheDocument();
+
+      // Allow initial data/effects to settle so no state update occurs after test exit.
+      await waitFor(() => {
+        expect(screen.getByRole('heading', { name: /Reef Havens/i })).toBeInTheDocument();
+      });
     });
   });
 

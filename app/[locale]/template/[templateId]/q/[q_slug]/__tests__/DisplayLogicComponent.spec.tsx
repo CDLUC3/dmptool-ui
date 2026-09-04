@@ -1,7 +1,8 @@
-import { act, fireEvent, render, screen } from '@/utils/test-utils';
+import { act, fireEvent, render, screen, waitFor } from '@/utils/test-utils';
 import { axe, toHaveNoViolations } from 'jest-axe';
 import DisplayLogicComponent from '../DisplayLogicComponent';
 import { DisplayLogic, TriggerQuestionOption } from '@/app/types/displayLogic';
+import { mockScrollIntoView, mockScrollTo } from "@/__mocks__/common";
 
 expect.extend(toHaveNoViolations);
 
@@ -76,9 +77,17 @@ const defaultProps = {
   isSaving: false,
 };
 
+const mockToastAdd = jest.fn();
+jest.mock('@/context/ToastContext', () => ({
+  useToast: () => ({ add: mockToastAdd }),
+}));
+
 describe('DisplayLogicComponent', () => {
   beforeEach(() => {
+    HTMLElement.prototype.scrollIntoView = mockScrollIntoView;
+    mockScrollTo();
     jest.clearAllMocks();
+    mockToastAdd.mockClear();
   });
 
   describe('empty state', () => {
@@ -210,10 +219,22 @@ describe('DisplayLogicComponent', () => {
 
       render(<DisplayLogicComponent {...defaultProps} displayLogic={logic} />);
 
-      expect(screen.queryByRole('button', { name: 'tabPanel.buttons.addTriggerQuestion' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'tabPanel.buttons.addAnotherTriggerQuestion' })).not.toBeInTheDocument();
     });
 
-    it('should add a new group with the next available trigger question when "Add trigger question" is clicked', () => {
+    it('should hide "Add trigger question" when no trigger candidates are available', () => {
+      const logic = makeDisplayLogic({
+        groups: [
+          { id: 'group-1', triggerQuestionId: 3691, conditions: [{ id: 'cond-1', operator: 'is', optionValue: 'Observational (e.g., sensor data, surveys, field notes)' }] },
+        ],
+      });
+
+      render(<DisplayLogicComponent {...defaultProps} displayLogic={logic} triggerQuestions={[]} />);
+
+      expect(screen.queryByRole('button', { name: 'tabPanel.buttons.addAnotherTriggerQuestion' })).not.toBeInTheDocument();
+    });
+
+    it('should add a new group defaulting to the next unused trigger question when "Add trigger question" is clicked', () => {
       const onDisplayLogicChange = jest.fn();
       const logic = makeDisplayLogic({
         groups: [
@@ -229,6 +250,25 @@ describe('DisplayLogicComponent', () => {
       const [updatedLogic] = onDisplayLogicChange.mock.calls[0];
       expect(updatedLogic.groups).toHaveLength(2);
       expect(updatedLogic.groups[1].triggerQuestionId).toBe(3692);
+    });
+
+    it('should render OR text between multiple conditions in the same group when matchType is any', () => {
+      const logic = makeDisplayLogic({
+        groups: [
+          {
+            id: 'group-1',
+            triggerQuestionId: 3691,
+            conditions: [
+              { id: 'cond-1', operator: 'is', optionValue: 'Observational (e.g., sensor data, surveys, field notes)' },
+              { id: 'cond-2', operator: 'is_not', optionValue: 'Experimental (e.g., lab protocols, genetic sequencing)' },
+            ],
+          },
+        ],
+      });
+
+      render(<DisplayLogicComponent {...defaultProps} displayLogic={logic} />);
+
+      expect(screen.getByText('OR')).toBeInTheDocument();
     });
 
     it("should reset a group's conditions when its trigger question is changed", () => {
@@ -260,6 +300,189 @@ describe('DisplayLogicComponent', () => {
       expect(updatedLogic.groups[0].conditions).toEqual([
         expect.objectContaining({ operator: 'is', optionValue: 'CSV' }),
       ]);
+    });
+
+    it('should render AND text between multiple conditions in the same group when matchType is all', () => {
+      const logic = makeDisplayLogic({
+        matchType: 'all',
+        groups: [
+          {
+            id: 'group-1',
+            triggerQuestionId: 3691,
+            conditions: [
+              { id: 'cond-1', operator: 'is', optionValue: 'Observational (e.g., sensor data, surveys, field notes)' },
+              { id: 'cond-2', operator: 'is_not', optionValue: 'Experimental (e.g., lab protocols, genetic sequencing)' },
+            ],
+          },
+        ],
+      });
+
+      render(<DisplayLogicComponent {...defaultProps} displayLogic={logic} />);
+
+      expect(screen.getByText('AND')).toBeInTheDocument();
+    });
+
+    it('should default a newly added condition to an unused option when matchType is all', () => {
+      const onDisplayLogicChange = jest.fn();
+      const logic = makeDisplayLogic({
+        matchType: 'all',
+        groups: [
+          {
+            id: 'group-1',
+            triggerQuestionId: 3691,
+            conditions: [{ id: 'cond-1', operator: 'is', optionValue: 'Observational (e.g., sensor data, surveys, field notes)' }],
+          },
+        ],
+      });
+
+      render(<DisplayLogicComponent {...defaultProps} displayLogic={logic} onDisplayLogicChange={onDisplayLogicChange} />);
+
+      fireEvent.click(screen.getByRole('button', { name: 'tabPanel.buttons.addCondition' }));
+
+      const [updatedLogic] = onDisplayLogicChange.mock.calls[0];
+      expect(updatedLogic.groups[0].conditions).toHaveLength(2);
+      expect(updatedLogic.groups[0].conditions[1].optionValue).toBe('Experimental (e.g., lab protocols, genetic sequencing)');
+    });
+
+    it('should hide add condition in matchType all when all options are already used in the group', () => {
+      const logic = makeDisplayLogic({
+        matchType: 'all',
+        groups: [
+          {
+            id: 'group-1',
+            triggerQuestionId: 3691,
+            conditions: [
+              { id: 'cond-1', operator: 'is', optionValue: 'Observational (e.g., sensor data, surveys, field notes)' },
+              { id: 'cond-2', operator: 'is_not', optionValue: 'Experimental (e.g., lab protocols, genetic sequencing)' },
+            ],
+          },
+        ],
+      });
+
+      render(<DisplayLogicComponent {...defaultProps} displayLogic={logic} />);
+
+      expect(screen.queryByRole('button', { name: 'tabPanel.buttons.addCondition' })).not.toBeInTheDocument();
+    });
+
+    it('should block save and show validation error when matchType is all and a group reuses an option value', async () => {
+      const onDisplayLogicSave = jest.fn().mockResolvedValue(undefined);
+      const logic = makeDisplayLogic({
+        matchType: 'all',
+        groups: [
+          {
+            id: 'group-1',
+            triggerQuestionId: 3691,
+            conditions: [
+              { id: 'cond-1', operator: 'is', optionValue: 'Observational (e.g., sensor data, surveys, field notes)' },
+              { id: 'cond-2', operator: 'is_not', optionValue: 'Observational (e.g., sensor data, surveys, field notes)' },
+            ],
+          },
+        ],
+      });
+
+      render(
+        <DisplayLogicComponent
+          {...defaultProps}
+          displayLogic={logic}
+          onDisplayLogicSave={onDisplayLogicSave}
+        />
+      );
+
+      await act(async () => {
+        fireEvent.click(screen.getByRole('button', { name: 'tabPanel.buttons.saveDisplayLogic' }));
+      });
+
+      expect(onDisplayLogicSave).not.toHaveBeenCalled();
+      expect(
+        screen.getByText('tabPanel.messages.allMatchTypeRule')
+      ).toBeInTheDocument();
+    });
+
+    it('should allow save when matchType is all and each condition uses a different option value', async () => {
+      const onDisplayLogicSave = jest.fn().mockResolvedValue(undefined);
+      const logic = makeDisplayLogic({
+        matchType: 'all',
+        groups: [
+          {
+            id: 'group-1',
+            triggerQuestionId: 3691,
+            conditions: [
+              { id: 'cond-1', operator: 'is', optionValue: 'Observational (e.g., sensor data, surveys, field notes)' },
+              { id: 'cond-2', operator: 'is_not', optionValue: 'Experimental (e.g., lab protocols, genetic sequencing)' },
+            ],
+          },
+        ],
+      });
+
+      render(
+        <DisplayLogicComponent
+          {...defaultProps}
+          displayLogic={logic}
+          onDisplayLogicSave={onDisplayLogicSave}
+        />
+      );
+
+      await act(async () => {
+        fireEvent.click(screen.getByRole('button', { name: 'tabPanel.buttons.saveDisplayLogic' }));
+      });
+
+      expect(onDisplayLogicSave).toHaveBeenCalledTimes(1);
+    });
+
+    it('should block save and show validation error when matchType is any and a group repeats the same operator + option', async () => {
+      const onDisplayLogicSave = jest.fn().mockResolvedValue(undefined);
+      const logic = makeDisplayLogic({
+        matchType: 'any',
+        groups: [
+          {
+            id: 'group-1',
+            triggerQuestionId: 3691,
+            conditions: [
+              { id: 'cond-1', operator: 'is', optionValue: 'Observational (e.g., sensor data, surveys, field notes)' },
+              { id: 'cond-2', operator: 'is', optionValue: 'Observational (e.g., sensor data, surveys, field notes)' },
+            ],
+          },
+        ],
+      });
+
+      render(
+        <DisplayLogicComponent
+          {...defaultProps}
+          displayLogic={logic}
+          onDisplayLogicSave={onDisplayLogicSave}
+        />
+      );
+
+      await act(async () => {
+        fireEvent.click(screen.getByRole('button', { name: 'tabPanel.buttons.saveDisplayLogic' }));
+      });
+
+      expect(onDisplayLogicSave).not.toHaveBeenCalled();
+      expect(
+        screen.getByText('tabPanel.messages.anyMatchTypeRule')
+      ).toBeInTheDocument();
+    });
+
+    it('should hide add condition in matchType any when all operator + option combinations are already used', () => {
+      const logic = makeDisplayLogic({
+        matchType: 'any',
+        groups: [
+          {
+            id: 'group-1',
+            triggerQuestionId: 3691,
+            conditions: [
+              { id: 'cond-1', operator: 'is', optionValue: 'Observational (e.g., sensor data, surveys, field notes)' },
+              { id: 'cond-2', operator: 'is', optionValue: 'Experimental (e.g., lab protocols, genetic sequencing)' },
+              { id: 'cond-3', operator: 'is_not', optionValue: 'Observational (e.g., sensor data, surveys, field notes)' },
+              { id: 'cond-4', operator: 'is_not', optionValue: 'Experimental (e.g., lab protocols, genetic sequencing)' },
+            ],
+          },
+        ],
+      });
+
+      render(<DisplayLogicComponent {...defaultProps} displayLogic={logic} />);
+
+      expect(screen.queryByRole('button', { name: 'tabPanel.buttons.addCondition' })).not.toBeInTheDocument();
     });
   });
 
@@ -442,7 +665,7 @@ describe('DisplayLogicComponent', () => {
             triggerQuestionId: 3691,
             conditions: [
               { id: 'cond-1', operator: 'is', optionValue: 'Observational (e.g., sensor data, surveys, field notes)' },
-              { id: 'cond-2', operator: 'is', optionValue: 'Experimental (e.g., lab protocols, genetic sequencing)' },
+              { id: 'cond-2', operator: 'is_not', optionValue: 'Experimental (e.g., lab protocols, genetic sequencing)' },
             ],
           },
         ],
@@ -460,7 +683,7 @@ describe('DisplayLogicComponent', () => {
       const [updatedLogic] = onDisplayLogicChange.mock.calls[0];
       expect(updatedLogic.groups[0].conditions).toEqual([
         expect.objectContaining({ id: 'cond-1', optionValue: 'Experimental (e.g., lab protocols, genetic sequencing)' }),
-        expect.objectContaining({ id: 'cond-2', optionValue: 'Experimental (e.g., lab protocols, genetic sequencing)' }),
+        expect.objectContaining({ id: 'cond-2', operator: 'is_not', optionValue: 'Experimental (e.g., lab protocols, genetic sequencing)' }),
       ]);
     });
   });
@@ -469,7 +692,9 @@ describe('DisplayLogicComponent', () => {
     it('should open a confirmation dialog when "Remove all display logic" is clicked', async () => {
       render(<DisplayLogicComponent {...defaultProps} displayLogic={makeDisplayLogic()} />);
 
-      fireEvent.click(screen.getByRole('button', { name: 'tabPanel.buttons.removeAllDisplayLogic' }));
+      await act(async () => {
+        fireEvent.click(screen.getByRole('button', { name: 'tabPanel.buttons.removeAllDisplayLogic' }));
+      });
 
       expect(await screen.findByText('tabPanel.headings.confirmClearDisplayLogic')).toBeInTheDocument();
     });
@@ -485,14 +710,18 @@ describe('DisplayLogicComponent', () => {
         />
       );
 
-      fireEvent.click(screen.getByRole('button', { name: 'tabPanel.buttons.removeAllDisplayLogic' }));
+      await act(async () => {
+        fireEvent.click(screen.getByRole('button', { name: 'tabPanel.buttons.removeAllDisplayLogic' }));
+      });
       const confirmButton = await screen.findByText('buttons.confirm');
 
       await act(async () => {
         fireEvent.click(confirmButton);
       });
 
-      expect(onDisplayLogicRemove).toHaveBeenCalledTimes(1);
+      await waitFor(() => {
+        expect(onDisplayLogicRemove).toHaveBeenCalledTimes(1);
+      });
     });
 
     it('should not call onDisplayLogicRemove when removal is cancelled', async () => {
@@ -505,9 +734,13 @@ describe('DisplayLogicComponent', () => {
         />
       );
 
-      fireEvent.click(screen.getByRole('button', { name: 'tabPanel.buttons.removeAllDisplayLogic' }));
+      await act(async () => {
+        fireEvent.click(screen.getByRole('button', { name: 'tabPanel.buttons.removeAllDisplayLogic' }));
+      });
       const cancelButton = await screen.findByText('buttons.cancel');
-      fireEvent.click(cancelButton);
+      await act(async () => {
+        fireEvent.click(cancelButton);
+      });
 
       expect(onDisplayLogicRemove).not.toHaveBeenCalled();
     });
@@ -556,6 +789,167 @@ describe('DisplayLogicComponent', () => {
       const { container } = render(<DisplayLogicComponent {...defaultProps} displayLogic={makeDisplayLogic()} />);
       const results = await axe(container);
       expect(results).toHaveNoViolations();
+    });
+  });
+
+  describe('match type change confirmation', () => {
+    it('should update match type immediately when no group has duplicate option values', () => {
+      const onDisplayLogicChange = jest.fn();
+      const logic = makeDisplayLogic(); // single condition per group — no conflict
+
+      const { container } = render(
+        <DisplayLogicComponent {...defaultProps} displayLogic={logic} onDisplayLogicChange={onDisplayLogicChange} />
+      );
+
+      const matchTypeSelect = container.querySelector('select[name="displayLogicMatchType"]') as HTMLSelectElement;
+      fireEvent.change(matchTypeSelect, { target: { value: 'all' } });
+
+      expect(onDisplayLogicChange).toHaveBeenCalledWith(expect.objectContaining({ matchType: 'all' }));
+      expect(screen.queryByText('tabPanel.headings.confirmMatchTypeChange')).not.toBeInTheDocument();
+    });
+
+    it('should open a confirmation dialog instead of applying immediately when switching to all would create duplicate option values', async () => {
+      const onDisplayLogicChange = jest.fn();
+      const logic = makeDisplayLogic({
+        matchType: 'any',
+        groups: [
+          {
+            id: 'group-1',
+            triggerQuestionId: 3691,
+            conditions: [
+              { id: 'cond-1', operator: 'is', optionValue: 'Observational (e.g., sensor data, surveys, field notes)' },
+              { id: 'cond-2', operator: 'is_not', optionValue: 'Observational (e.g., sensor data, surveys, field notes)' },
+            ],
+          },
+        ],
+      });
+
+      const { container } = render(
+        <DisplayLogicComponent {...defaultProps} displayLogic={logic} onDisplayLogicChange={onDisplayLogicChange} />
+      );
+
+      const matchTypeSelect = container.querySelector('select[name="displayLogicMatchType"]') as HTMLSelectElement;
+      fireEvent.change(matchTypeSelect, { target: { value: 'all' } });
+
+      expect(await screen.findByText('tabPanel.headings.confirmMatchTypeChange')).toBeInTheDocument();
+      // Match type must not be applied yet — waiting on user confirmation
+      expect(onDisplayLogicChange).not.toHaveBeenCalled();
+    });
+
+    it('should apply the match type change and remove conflicting conditions when confirmed', async () => {
+      const onDisplayLogicChange = jest.fn();
+      const logic = makeDisplayLogic({
+        matchType: 'any',
+        groups: [
+          {
+            id: 'group-1',
+            triggerQuestionId: 3691,
+            conditions: [
+              { id: 'cond-1', operator: 'is', optionValue: 'Observational (e.g., sensor data, surveys, field notes)' },
+              { id: 'cond-2', operator: 'is_not', optionValue: 'Observational (e.g., sensor data, surveys, field notes)' },
+            ],
+          },
+        ],
+      });
+
+      const { container } = render(
+        <DisplayLogicComponent {...defaultProps} displayLogic={logic} onDisplayLogicChange={onDisplayLogicChange} />
+      );
+
+      const matchTypeSelect = container.querySelector('select[name="displayLogicMatchType"]') as HTMLSelectElement;
+      fireEvent.change(matchTypeSelect, { target: { value: 'all' } });
+
+      const confirmButton = await screen.findByText('buttons.confirm');
+      await act(async () => {
+        fireEvent.click(confirmButton);
+      });
+      await waitFor(() => {
+        expect(onDisplayLogicChange).toHaveBeenCalledWith(
+          expect.objectContaining({
+            matchType: 'all',
+            groups: [
+              expect.objectContaining({
+                id: 'group-1',
+                // Only the first occurrence of the duplicated option value should survive
+                conditions: [expect.objectContaining({ id: 'cond-1', optionValue: 'Observational (e.g., sensor data, surveys, field notes)' })],
+              }),
+            ],
+          })
+        );
+      });
+    });
+
+    it('should not change the match type when the confirmation dialog is cancelled', async () => {
+      const onDisplayLogicChange = jest.fn();
+      const logic = makeDisplayLogic({
+        matchType: 'any',
+        groups: [
+          {
+            id: 'group-1',
+            triggerQuestionId: 3691,
+            conditions: [
+              { id: 'cond-1', operator: 'is', optionValue: 'Observational (e.g., sensor data, surveys, field notes)' },
+              { id: 'cond-2', operator: 'is_not', optionValue: 'Observational (e.g., sensor data, surveys, field notes)' },
+            ],
+          },
+        ],
+      });
+
+      const { container } = render(
+        <DisplayLogicComponent {...defaultProps} displayLogic={logic} onDisplayLogicChange={onDisplayLogicChange} />
+      );
+
+      const matchTypeSelect = container.querySelector('select[name="displayLogicMatchType"]') as HTMLSelectElement;
+      fireEvent.change(matchTypeSelect, { target: { value: 'all' } });
+
+      const cancelButton = await screen.findByText('buttons.cancel');
+      await act(async () => {
+        fireEvent.click(cancelButton);
+      });
+
+      expect(onDisplayLogicChange).not.toHaveBeenCalled();
+      expect(screen.queryByText('tabPanel.headings.confirmMatchTypeChange')).not.toBeInTheDocument();
+      // Select should still reflect the original matchType
+      expect(matchTypeSelect.value).toBe('any');
+    });
+  });
+
+  describe('orphaned trigger questions', () => {
+    it('should remove groups referencing trigger questions that no longer exist and notify via toast', () => {
+      const onDisplayLogicChange = jest.fn();
+      const logic = makeDisplayLogic({
+        groups: [
+          {
+            id: 'group-orphaned',
+            triggerQuestionId: 9999, // not present in mockTriggerQuestions
+            conditions: [{ id: 'cond-orphaned', operator: 'is', optionValue: 'whatever' }],
+          },
+          {
+            id: 'group-valid',
+            triggerQuestionId: 3691,
+            conditions: [{ id: 'cond-valid', operator: 'is', optionValue: 'Observational (e.g., sensor data, surveys, field notes)' }],
+          },
+        ],
+      });
+
+      render(<DisplayLogicComponent {...defaultProps} displayLogic={logic} onDisplayLogicChange={onDisplayLogicChange} />);
+
+      expect(onDisplayLogicChange).toHaveBeenCalledWith(
+        expect.objectContaining({
+          groups: [expect.objectContaining({ id: 'group-valid' })],
+        })
+      );
+      expect(mockToastAdd).toHaveBeenCalledWith('tabPanel.messages.removedUnavailableTriggerQuestions');
+    });
+
+    it('should not call onDisplayLogicChange when every group references a valid trigger question', () => {
+      const onDisplayLogicChange = jest.fn();
+      const logic = makeDisplayLogic(); // uses triggerQuestionId 3691, which is valid
+
+      render(<DisplayLogicComponent {...defaultProps} displayLogic={logic} onDisplayLogicChange={onDisplayLogicChange} />);
+
+      expect(onDisplayLogicChange).not.toHaveBeenCalled();
+      expect(mockToastAdd).not.toHaveBeenCalled();
     });
   });
 });

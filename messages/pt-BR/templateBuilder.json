@@ -19,17 +19,17 @@
   },
   "CustomizableTemplates": {
     "title": "Modelos personalizáveis",
-    "description": "Selecione um modelo que você pode personalizar com orientações ou perguntas adicionais.",
+    "description": "Selecione um modelo que possa personalizar com orientação adicional ou perguntas.",
     "templateStatus": {
-      "hasChanged": "O modelo do financiador foi alterado.",
-      "notCustomized": "ão personalizado",
+      "hasChanged": "Modelo de falsa mudou",
+      "notCustomized": "Não personalizado",
       "published": "Publicado",
-      "unPublished": "Não publicado",
-      "notCustomizable": "ão personalizável",
-      "lastCustomized": "Última data de personalização",
+      "unPublished": "Inédito",
+      "notCustomizable": "Não personalizável",
+      "lastCustomized": "Última data personalizada",
       "lastCustomizedBy": "Última personalização por",
-      "customizationStatus": "Status de personalização",
-      "templateLastUpdated": "Última atualização do modelo"
+      "customizationStatus": "Status da personalização",
+      "templateLastUpdated": "Modelo atualizado recentemente"
     },
     "heading": {
       "deleteCustomization": "Excluir personalização"
@@ -41,28 +41,28 @@
       "deleteCustomization": "Excluir personalização",
       "deletingCustomizations": "Excluindo personalizações...",
       "publishCustomization": "Publicar personalização",
-      "publishStatus": "Status de publicação",
-      "publishChanges": "Publicar alterações"
+      "publishStatus": "Status da publicação",
+      "publishChanges": "Publicar Alterações"
     },
     "messages": {
       "success": {
-        "templateAddedSuccessfully": "Template {title} adicionado com sucesso",
-        "successfullyDeletedCustomizations": "Personalizações do modelo excluídas com sucesso",
+        "templateAddedSuccessfully": "Modelo {title} adicionado com sucesso",
+        "successfullyDeletedCustomizations": "Personalizações de modelo excluídas com sucesso",
         "sectionMoved": "Seção movida com sucesso",
-        "successfullyUnpublishedCustomization": "Personalização do modelo não publicada com sucesso"
+        "successfullyUnpublishedCustomization": "Personalização de template despublicada com sucesso"
       },
       "error": {
-        "deleteCustomizationError": "Error when deleting template customizations",
-        "saveCustomizationError": "Erro ao salvar personalizações do modelo",
-        "updatingSectionMoveError": "Erro ao reordenar seções",
-        "unpublishCustomizationError": "Erro ao despublicar personalizações do modelo"
+        "deleteCustomizationError": "Erro ao excluir personalizações de templates",
+        "saveCustomizationError": "Erro ao salvar personalizações de templates",
+        "updatingSectionMoveError": "Erro ao reordenar as seções",
+        "unpublishCustomizationError": "Erro ao despublicar personalizações de template"
       }
     },
     "status": {
       "completed": "Concluído",
-      "notCompleted": "ão concluído",
+      "notCompleted": "Não concluído",
       "added": "Adicionado",
-      "notAdded": "ão adicionado"
+      "notAdded": "Não adicionado"
     }
   },
   "EditTemplates": {
@@ -85,7 +85,7 @@
     },
     "button": {
       "archiveTemplate": "Template de arquivo",
-      "archiving": "Arquivando template...",
+      "archiving": "Arquivando modelo...",
       "saveAsDraft": "Salvar como rascunho",
       "savingDraft": "Salvando rascunho...",
       "previewTemplate": "Pré-visualizar template",
@@ -160,7 +160,7 @@
     "links": {
       "editQuestion": "Editar pergunta",
       "addQuestion": "Adicionar pergunta",
-      "customizeQuestion": "Personalizar pergunta"
+      "customizeQuestion": "Customize question"
     },
     "buttons": {
       "moveUp": "Mover pergunta para cima {name}",
@@ -168,10 +168,10 @@
     },
     "messages": {
       "error": {
-        "errorDeletingQuestion": "Erro ao excluir a pergunta"
+        "errorDeletingQuestion": "Erro ao excluir seção"
       },
       "success": {
-        "successDeletingQuestion": "Pergunta excluída com sucesso"
+        "successDeletingQuestion": "Pergunta excluída com sucesso!"
       },
       "questionMoved": "Seção movida para a posição {displayOrder}"
     },
@@ -256,10 +256,10 @@
     }
   },
   "SectionCustomize": {
-    "title": "Seção Personalizar",
+    "title": "Personalizar seção",
     "breadcrumbs": {
       "customizationTemplates": "Modelos de personalização",
-      "customizeTemplate": "Personalizar modelo"
+      "customizeTemplate": "Personalizar modelos"
     },
     "buttons": {
       "deleteCustomization": "Excluir personalização",
@@ -267,56 +267,56 @@
     },
     "heading": {
       "deleteCustomSection": "Excluir seção personalizada",
-      "deleteCustomization": "Excluir personalização da seção"
+      "deleteCustomization": "Excluir personalização de seção"
     },
     "descriptions": {
-      "deleteCustomization": "<strong>Suas personalizações serão removidas desta seção.</strong> Isso não é reversível.",
+      "deleteCustomization": "\n<strong>Suas personalizações serão removidas desta seção.</strong> Isso não é reversível.",
       "deleteCustomSection": "<strong>Sua seção personalizada será removida. Isso não é reversível.</strong>",
-      "tagDescription": "As etiquetas são usadas para reunir as informações de melhores práticas da sua organização e serão exibidas para cada pergunta nesta seção. As etiquetas são definidas pela Ferramenta DMP ou pelo Financiador que criou este modelo originalmente e não podem ser alteradas.",
-      "editGuidanceForTags": "Edite suas orientações para tags."
+      "tagDescription": "Tags são usadas para inserir informações de melhor prática da sua organização e serão mostradas para cada pergunta nesta seção. Etiquetas são definidas pela Ferramenta DMP ou pelo Funder que criou este modelo originalmente e não podem ser alteradas.",
+      "editGuidanceForTags": "Editar sua Orientação para Etiquetas"
     },
     "messages": {
-      "noContent": "O financiador não adicionou {label}",
+      "noContent": "Não foi possível adicionar {label}",
       "success": {
-        "successfullyDeletedSectionCustomization": "Personalizações da seção excluídas com sucesso"
+        "successfullyDeletedSectionCustomization": "Personalizações de seções excluídas com sucesso"
       },
       "error": {
-        "errorDeletingSectionCustomization": "Erro ao excluir personalizações da seção"
+        "errorDeletingSectionCustomization": "Erro ao excluir personalização da seção"
       }
     },
     "labels": {
-      "bestPracticeTags": "Etiquetas de práticas recomendadas"
+      "bestPracticeTags": "Tags de melhor prática"
     }
   },
   "QuestionCustomize": {
     "title": "Personalizar pergunta",
     "messages": {
-      "noContent": "O financiador não adicionou {label}",
+      "noContent": "Não foi possível adicionar {label}",
       "success": {
         "successfullyDeletedCustomization": "Personalizações da pergunta excluídas com sucesso",
-        "successfullyUpdatedCustomization": "Personalizações da pergunta atualizadas com sucesso"
+        "successfullyUpdatedCustomization": "Personalizações de perguntas atualizadas com sucesso"
       },
       "error": {
         "errorDeletingCustomization": "Erro ao excluir personalização da pergunta",
-        "errorUpdatingCustomization": "Erro ao atualizar personalização da pergunta"
+        "errorUpdatingCustomization": "Erro ao atualizar personalização das perguntas"
       }
     },
     "labels": {
-      "additionalGuidanceText": "Texto de orientação adicional",
+      "additionalGuidanceText": "Texto adicional de orientação",
       "additionalSampleText": "Texto de amostra adicional",
       "requirements": "Requisitos",
       "guidance": "Orientação",
       "sampleText": "Texto de amostra"
     },
     "helpText": {
-      "additionalGuidanceText": "Descreva as orientações que um usuário deve considerar para esta pergunta.",
-      "additionalSampleText": "Permitiremos que os usuários copiem o mesmo texto para o campo de texto; isso permitirá que eles agilizem a inserção de conteúdo."
+      "additionalGuidanceText": "Esboça a orientação que um usuário deve considerar para esta pergunta.",
+      "additionalSampleText": "Permitiremos que os usuários copiem o mesmo texto no campo de texto que permitirá que os usuários acelerem a entrada de conteúdo."
     },
     "heading": {
       "deleteCustomization": "Excluir personalização"
     },
     "descriptions": {
-      "deleteCustomization": "<strong>Suas personalizações para este modelo serão removidas da pergunta. </strong>  Isso não é reversível."
+      "deleteCustomization": "\n<strong>Suas personalizações neste modelo serão removidas da questão.</strong> Isso não é reversível."
     },
     "buttons": {
       "deleteCustomization": "Excluir personalização",
@@ -400,23 +400,23 @@
   "TemplateSelectListItem": {
     "messages": {
       "additionalGuidance": "Sua organização de pesquisa tem orientação adicional.",
-      "bestPracticeLabel": "Melhores práticas",
-      "bestPracticeLabelLong": "Modelo de melhores práticas da Ferramenta DMP",
-      "bestPracticeTooltip": "A Ferramenta DMP recomenda este modelo. Consideramos que ele atende às melhores práticas para planos de gestão de dados.",
-      "bestPracticeInfoAria": "Sobre os modelos de melhores práticas"
+      "bestPracticeLabel": "melhor prática",
+      "bestPracticeLabelLong": "Modelo de melhor prática DMP Ferramenta",
+      "bestPracticeTooltip": "A Ferramenta DMP recomenda este modelo. Acreditamos que ele atende às melhores práticas para planos de gerenciamento de dados.",
+      "bestPracticeInfoAria": "Sobre os modelos da melhor prática"
     }
   },
   "QuestionEdit": {
-    "title": "Editar pergunta",
+    "title": "Editar Pergunta",
     "buttons": {
       "changeType": "Mudar os Tipos",
       "previewQuestion": "Pergunta de visualização",
       "deleteQuestion": "Excluir questão",
-      "addOutput": "Add Output"
+      "addOutput": "Adicionar saída"
     },
     "descriptions": {
       "sampleText": "Forneça um exemplo ou modelo de resposta esperada (opcional, mas recomendado)",
-      "sampleTextAsDefault": "Usar este texto de exemplo como resposta padrão no DMP",
+      "sampleTextAsDefault": "Use este exemplo de texto como a resposta padrão no DMP",
       "previewText": "Veja como esta pergunta ficará para os usuários.",
       "bestPracticePara1": "Mantenha a pergunta curta para que possa ser usada como um título no DMP final.",
       "bestPracticePara2": "Use os Requisitos para adicionar instruções mais detalhadas à pergunta, certificar-se de incluir todas as instruções para o que precisa ser respondido na pergunta.",
@@ -425,11 +425,12 @@
     },
     "helpText": {
       "textField": "Alterar o tipo de questão, por exemplo, de campo de texto para botões de rádio, pode resultar na perda de alguns dados.",
-      "questionOptions": "Opções de resposta",
+      "questionOptions": "Answer choices",
       "questionText": "Mantenha a pergunta concisa e clara. Use os requisitos ou orientações para fornecer explicações adicionais.",
       "requirementText": "Use isto para instruções específicas sobre o que os pesquisadores devem incluir em sua resposta, tais como as propriedades dos seus dados que deveriam listar.",
       "guidanceText": "Permita que os pesquisadores saibam como fornecer melhor respostas aos requisitos, tais como políticas para considerar de sua organização ou quais fatores considerar.",
-      "sampleText": "Pesquisadores poderão copiar o texto de amostra para o campo como ponto de partida, como uma maneira de acelerar a entrada de conteúdo."
+      "sampleText": "Pesquisadores poderão copiar o texto de amostra para o campo como ponto de partida, como uma maneira de acelerar a entrada de conteúdo.",
+      "bestPracticeTagsDesc": "Selecione uma ou mais tags para associar a orientação de boas práticas globais escrita pela Ferramenta DMP."
     },
     "labels": {
       "type": "Tipo",
@@ -437,66 +438,137 @@
       "requirementText": "Requisitos de perguntas (opcional, mas recomendado)",
       "guidanceText": "Orientação para perguntas (opcional mas recomendado)",
       "sampleText": "Texto de amostra",
-      "comment": "Comentário adicional"
+      "comment": "Comentário adicional",
+      "bestPracticeTags": "Pergunte as melhores práticas para incluir"
     },
     "messages": {
-      "areYouSureYouWantToDelete": "Tem certeza de que deseja excluir esta saída de pesquisa?",
+      "areYouSureYouWantToDelete": "Tem certeza que deseja excluir esta saída da pesquisa?",
       "errors": {
         "questionTextRequired": "Conjunto de perguntas (obrigatório.",
         "questionUpdateError": "Erro ao criar a seção",
         "questionRemoveError": "Erro ao remover questão",
-        "invalidQuestionType": "Tipo de questão inválido encontrado"
+        "invalidQuestionType": "Tipo de questão inválido encontrado",
+        "errorSavingDisplayLogic": "Erro ao salvar lógica de exibição",
+        "errorLoadingDisplayLogic": "Erro ao carregar lógica de exibição",
+        "errorRemovingDisplayLogic": "Erro ao remover lógica de exibição"
       },
       "success": {
         "questionUpdated": "A pergunta foi atualizada com sucesso",
         "questionRemoved": "A pergunta foi removida com sucesso",
-        "successDeletingQuestion": "Pergunta excluída com sucesso"
+        "successDeletingQuestion": "Seção excluída com sucesso",
+        "displayLogicUpdated": "Lógica de exibição salva com sucesso",
+        "displayLogicRemoved": "Lógica de exibição removida com sucesso"
       }
     },
     "headings": {
       "bestPractice": "Melhores práticas da Ferramenta DMP",
       "deleteQuestion": "Apagar Pergunta",
       "confirmDelete": "Confirmar exclusão?",
-      "addResearchOutput": "Adicionar resultado de pesquisa",
-      "editResearchOutput": "Editar resultado de pesquisa"
+      "addResearchOutput": "Adicionar Saída de Pesquisa",
+      "editResearchOutput": "Editar saída de pesquisa"
     },
     "definitions": {
       "type": "Tipo",
       "repository": "Repositório"
+    },
+    "tabs": {
+      "editQuestion": "Editar pergunta",
+      "options": "Opções",
+      "logic": "Lógica de exibição"
+    },
+    "tabPanel": {
+      "noTriggerQuestionsAvailable": "Não há questões disponíveis para usar como gatilho para a lógica de exibição.",
+      "actionItemShow": "Mostrar",
+      "actionItemHide": "Esconder",
+      "matchTypeItemAny": "Qualquer um",
+      "matchTypeItemAll": "Todas",
+      "operatorItemIsSelected": " selecionado",
+      "operatorItemIsNotSelected": " selecionado",
+      "operatorItemIncludes": "inclui",
+      "operatorItemDoesNotInclude": "não inclui",
+      "headings": {
+        "options": "Opções",
+        "logic": "Lógica de exibição",
+        "confirmClearDisplayLogic": "Limpar toda a lógica da exibição?",
+        "confirmMatchTypeChange": "Alterar tipo de partida?"
+      },
+      "descriptions": {
+        "displayLogic": "Configurar a lógica de exibição para exibir ou ocultar esta questão com base na forma como os usuários responderam a várias escolhas anteriores ou a questões da caixa de seleção. Adicione uma ou mais condições para determinar quando esta questão aparece.",
+        "clearDisplayLogicWarning": "Isto irá limpar todas as suas condições de salvamento para esta questão. Esta ação não pode ser desfeita.",
+        "matchTypeChangeWarning": "Mudar o tipo de correspondência pode limpar algumas de suas condições caso suas condições existentes entrem em conflito umas com as outras e sejam removidas."
+      },
+      "buttons": {
+        "addDisplayLogic": "Adicionar lógica de tela",
+        "removeAllDisplayLogic": "Limpar toda a lógica da exibição",
+        "addCondition": "Adicionar condição",
+        "removeCondition": "Excluir condição",
+        "removeConditionAriaLabel": "Remover condição: {operator} - {option}",
+        "removeGroupAriaLabel": "Remover grupo de condições para \"{triggerQuestion}\"",
+        "saveDisplayLogic": "Salvar lógica de exibição",
+        "addTriggerQuestion": "Adicionar questão ao gatilho",
+        "addAnotherTriggerQuestion": "Adicionar outra questão de gatilho"
+      },
+      "options": {
+        "any": "Qualquer um",
+        "all": "Todas",
+        "show": "Mostrar",
+        "hide": "Esconder",
+        "selectQuestion": "Selecione uma pergunta"
+      },
+      "labels": {
+        "displayLogicAction": "Exibir/Ocultar",
+        "displayLogicMatchType": "Todos/Todos",
+        "thisQuestionIf": "esta questão se",
+        "ofTheFollowingMatch": "das seguintes condições são atendidas",
+        "triggerQuestion": "A resposta para esta pergunta",
+        "conditionOption": "opção de condição",
+        "conditionOperator": "Operador da condição"
+      },
+      "helpText": {
+        "noTriggerQuestionsAvailable": "Nenhuma pergunta qualificada está disponível para ser usada como gatilho para a lógica de exibição."
+      },
+      "messages": {
+        "warnings": {
+          "triggerQuestionUnavailable": "Esta questão de gatilho não está disponível."
+        },
+        "removedUnavailableTriggerQuestions": "Algumas lógicas de exibição foram removidas porque uma pergunta da qual dependia já não está disponível.",
+        "allMatchTypeRule": "Quando o tipo de correspondência é tudo, cada condição em um grupo deve usar um valor de opção diferente.",
+        "anyMatchTypeRule": "Quando o tipo de correspondência é Any, cada condição em um grupo deve ser única (nenhum operador duplicado + pares de opções)."
+      }
     }
   },
   "QuestionOptionsComponent": {
     "headings": {
-      "removeChoice": "Remover opção {number}?"
+      "removeChoice": "Remover escolha {number}?"
     },
     "labels": {
-      "choiceNumber": "Opção {number}",
-      "default": "Selecionada por padrão",
-      "reorder": "Reordenar opção {number}"
+      "choiceNumber": "Escolha {number}",
+      "default": "Selecionado por padrão",
+      "reorder": "Reordenar a escolha {number}"
     },
     "buttons": {
-      "addRow": "Adicionar opção",
-      "deleteRow": "Remover opção {count}",
+      "addRow": "Adicionar escolha",
+      "deleteRow": "Remover escolha {count}",
       "cancel": "Cancelar",
-      "confirmRemove": "Remover opção",
+      "confirmRemove": "Remover escolha",
       "setDefault": "Definir opção {number} como padrão",
-      "clearDefault": "Desmarcar opção {number} como padrão",
-      "moveUp": "Mover opção {number} para cima",
-      "moveDown": "Mover opção {number} para baixo"
+      "clearDefault": "Limpar a escolha {number} como padrão",
+      "moveUp": "Mover escolha {number} para cima",
+      "moveDown": "Mover escolha {number} para baixo"
     },
     "messages": {
-      "rowInfo": "Opção {number}",
-      "choiceRequired": "Insira o texto da opção {number}.",
-      "choiceErrors": "Cada opção de resposta deve incluir texto.",
-      "confirmRemove": "Tem certeza de que deseja remover a opção {number}?",
-      "instructions": "Adicione as opções que os redatores do plano podem selecionar. Cada opção requer texto. Use as setas para alterar a ordem de exibição."
+      "rowInfo": "Escolha {number}",
+      "choiceRequired": "Digite o texto para a escolha {number}.",
+      "choiceErrors": "Cada alternativa deve incluir texto.",
+      "confirmRemove": "Tem certeza que deseja remover a escolha {number}?",
+      "instructions": "Adicione escolhas que planejam escritores podem selecionar. Cada escolha requer texto. Use as setas para alterar sua ordem de exibição."
     },
     "announcements": {
-      "rowDefault": "Opção {number} definida como padrão.",
-      "rowDefaultCleared": "A opção {number} não está mais definida como padrão.",
-      "rowRemoved": "Opção {number} removida.",
-      "rowAdded": "Opção {nextNum} adicionada.",
-      "rowMoved": "Opção movida da posição {from} para {to}."
+      "rowDefault": "Escolha {number} definida como padrão.",
+      "rowDefaultCleared": "A escolha {number} não está mais definida como padrão.",
+      "rowRemoved": "Escolha {number} removida.",
+      "rowAdded": "Escolha {nextNum} adicionada.",
+      "rowMoved": "A escolha foi movida da posição {from} para {to}."
     },
     "placeholder": {
       "text": "Digite o texto"
@@ -506,7 +578,7 @@
     "title": "Acrescentar nova questão",
     "descriptions": {
       "sampleText": "Forneça um exemplo ou modelo de resposta esperada (opcional, mas recomendado)",
-      "sampleTextAsDefault": "Usar este texto de exemplo como resposta padrão no DMP",
+      "sampleTextAsDefault": "Use este exemplo de texto como a resposta padrão no DMP",
       "previewText": "Veja como esta pergunta ficará para os usuários.",
       "bestPracticePara1": "Mantenha a pergunta curta para que possa ser usada como um título no DMP final.",
       "bestPracticePara2": "Use os Requisitos para adicionar instruções mais detalhadas à pergunta, certificar-se de incluir todas as instruções para o que precisa ser respondido na pergunta.",
@@ -531,14 +603,15 @@
       "customAccessLevelList": "Lista de níveis de acesso personalizado",
       "helpText": "Texto de Ajuda para {fieldName}",
       "mayContainSensitiveData": "Pode conter dados sensíveis?",
-      "mayContainPersonalData": "Pode conter informações identificáveis de pessoa física?",
-      "preferredRepositories": "Apenas repositórios preferenciais",
+      "mayContainPersonalData": "Pode conter informações pessoais identificáveis?",
+      "preferredRepositories": "Somente repositórios preferidos",
       "preferredMetadataStandards": "Apenas padrões de metadados preferenciais",
-      "displayPaginationCount": "Exibindo padrões {count} de {totalCount} no total",
-      "displayAdditionalCommentField": "Exibir área de comentário adicional",
-      "additionalCommentBox": "Caixa de comentário adicional",
-      "showCommentField": "Mostrar um campo de comentário onde os redatores de plano podem explicar sua resposta",
-      "doNotShowCommentField": "Não adicionar um campo de comentário"
+      "displayPaginationCount": "Exibindo os padrões {count} de {totalCount} no total",
+      "displayAdditionalCommentField": "Mostrar área adicional de comentário",
+      "additionalCommentBox": "Caixa de comentários adicional",
+      "showCommentField": "Mostrar um campo de comentário onde os autores do plano podem explicar a sua resposta",
+      "doNotShowCommentField": "Não adicionar um campo de comentário",
+      "bestPracticeTags": "Pergunte as melhores práticas para incluir"
     },
     "buttons": {
       "addRow": "Adicionar linha",
@@ -554,20 +627,21 @@
       "requirementText": "Use isto para instruções específicas sobre o que os pesquisadores precisam incluir em sua resposta, tais como as propriedades dos seus dados que devem listar.",
       "guidanceText": "Permita que os pesquisadores saibam como fornecer melhor respostas aos requisitos, tais como políticas para considerar de sua organização ou quais fatores considerar.",
       "sampleText": "Os criadores de planos poderão copiar o texto da amostra para o campo como ponto de partida, para acelerar a entrada de conteúdo.",
-      "dataFlags": "Marque todas as afirmações que são verdadeiras sobre o conjunto de dados",
-      "preferredRepositories": "Esses repositórios foram definidos pelo criador do template como repositórios preferenciais para usar.",
-      "preferredMetadataStandards": "Esses padrões de metadados foram definidos pelo criador do template como padrões de metadados preferenciais para usar."
+      "dataFlags": "Marcar todas as declarações que são verdadeiras sobre o conjunto de dados",
+      "preferredRepositories": "Estes repositórios foram definidos pelo criador de modelos como repositórios preferidos para uso.",
+      "preferredMetadataStandards": "Esses padrões de metadados foram definidos pelo criador do modelo como padrões de metadados preferidos a usar.",
+      "bestPracticeTagsDesc": "Selecione uma ou mais tags para associar a orientação de boas práticas globais escrita pela Ferramenta DMP."
     },
     "headings": {
       "bestPractice": "Melhores práticas pela Ferramenta DMP",
-      "displayingRepositoriesStatus": "Exibindo repositórios {current} de {total}",
-      "noMatchesFound": "Nenhuma correspondência encontrada"
+      "displayingRepositoriesStatus": "Exibindo repositórios {current} do {total}",
+      "noMatchesFound": "Nenhum resultado encontrado"
     },
     "messages": {
       "errors": {
         "questionTextRequired": "Campo texto da pergunta é obrigatório.",
         "questionAddingError": "Erro ao adicionar pergunta.",
-        "questionUpdatingError": "Erro ao atualizar a pergunta.",
+        "questionUpdatingError": "Erro ao criar a seção.",
         "questionValidationError": "Valor inválido",
         "invalidQuestionType": "Tipo de questão inválido encontrado"
       },
@@ -598,7 +672,7 @@
       "accessLevelDescriptionCLOSED": "Outro tipo de acesso",
       "headings": {
         "enableStandardFields": "Ativar campos padrão",
-        "additionalTextFields": "Campos de texto adicionais"
+        "additionalTextFields": "Text fields adicionais"
       },
       "description": "Selecione quais campos padrão para incluir na sua pergunta de saída da pesquisa. Você pode personalizar cada campo individualmente.",
       "tooltip": {
@@ -608,16 +682,18 @@
         "description": "Descrição:",
         "descriptionLowerCase": "Descrição",
         "taxonomyURL": "URL de taxonomia",
-        "websiteURL": "URL do website",
+        "websiteURL": "URL do site",
         "title": "Título",
-        "dataFlags": "Sinalizadores de dados",
+        "dataFlags": "Bandeiras de dados",
         "outputType": "Tipo de saída",
-        "repositories": "Repositórios",
+        "repositories": "repositórios",
         "metadataStandards": "Padrões de metadados",
         "licenses": "Licenças",
-        "initialAccessLevels": "Níveis de Acesso Iniciais",
+        "initialAccessLevels": "Níveis de Acesso Inicial",
+        "releaseDate": "Data de lançamento recomendada",
+        "byteSize": "Tamanho do arquivo esperado",
         "useCustomList": "Usar lista personalizada",
-        "useDefaults": "Usar padrões"
+        "useDefaults": "Usar padrão"
       },
       "legends": {
         "dataFlag": "Quais bandeiras de dados a exibir"
@@ -670,10 +746,10 @@
           "contactTitle": "E-mail de contato",
           "urlTitle": "Descrição do repositório",
           "dataAccessTitle": "Acesso aos dados",
-          "identifierTitle": "Identificador persistente"
+          "identifierTitle": "Persistent identifier"
         },
         "singleRepo": "Repositório",
-        "multipleRepo": "Repositórios"
+        "multipleRepo": "Repositório"
       },
       "metaDataStandards": {
         "headings": {
@@ -683,7 +759,7 @@
         "descriptionLabel": "Descrição:",
         "helpText": "Isto pode ser usado para fornecer orientações e/ou instruções personalizadas para investigadores.",
         "help": {
-          "uri": "The taxonomy URL of the metadata standard"
+          "uri": "A URL da taxonomia do padrão de metadados"
         },
         "messages": {
           "confirmRemovalAll": "Tem certeza que deseja remover todos os metadados selecionados?",
@@ -705,8 +781,8 @@
       "outputType": {
         "labels": {
           "defineOutputTypes": "Definir os tipos de saída",
-          "enterOutputType": "Digite o tipo",
-          "typeDescription": "Descrição do tipo",
+          "enterOutputType": "Inserir nome",
+          "typeDescription": "Descrição de {type}",
           "removeOutputType": "Remover {type}"
         },
         "legends": {
@@ -725,11 +801,16 @@
           "removeAccessLevel": "Remover {level}"
         },
         "legends": {
-          "default": "Níveis de Acesso Padrão",
+          "default": "Default Access Level",
           "myAccessLevels": "Meus Níveis de Acesso"
         },
         "buttons": {
           "addAccessLevel": "Adicionar nível de acesso"
+        }
+      },
+      "fileSize": {
+        "legends": {
+          "default": "Unidades de tamanho padrão"
         }
       },
       "licenses": {
@@ -750,12 +831,12 @@
           "helpText": "O rótulo que será exibido para este campo"
         },
         "helpText": {
-          "label": "Texto de ajuda",
-          "helpText": "Texto de ajuda opcional para orientar os usuários. Comprimento máximo 300 caracteres."
+          "label": "Texto da Ajuda",
+          "helpText": "Texto de ajuda opcional para guiar usuários. Tamanho máximo de 300 caracteres."
         },
         "maxLength": {
-          "label": "Comprimento máximo",
-          "helpText": "Número máximo de caracteres permitidos (deixe vazio para não ter limite)"
+          "label": "Setembro",
+          "helpText": "Número máximo de caracteres permitido (deixe em branco para sem limite)"
         },
         "defaultValue": {
           "label": "Valor padrão",

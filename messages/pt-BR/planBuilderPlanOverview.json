@@ -12,8 +12,8 @@
       "comment": "Comentário"
     },
     "headings": {
-      "comments": "Comentários",
-      "leaveAComment": "Deixar um comentário",
+      "comments": "Comments",
+      "leaveAComment": "Deixar uma foto",
       "requirementsBy": "Requisitos de {funder}",
       "introduction": "Introdução",
       "question": "Pergunta"
@@ -40,7 +40,7 @@
     "funding": {
       "title": "Financiamento para este plano",
       "edit": "Ajustar para este plano",
-      "noFunderSelected": "Nenhum financiador selecionado"
+      "noFunderSelected": "No funder selected"
     },
     "members": {
       "title": "Planejar membros para este plano",
@@ -49,10 +49,10 @@
     },
     "relatedWorks": {
       "title": "Trabalhos relacionados para este plano",
-      "pendingCount": "{count} pending outputs",
-      "acceptedCount": "{count} accepted outputs",
+      "pendingCount": "{count} pendentes saídas",
+      "acceptedCount": "{count} aceitou saídas",
       "edit": "Ajustar para este plano",
-      "publish": "Publish your plan to start adding published outputs to your DMP"
+      "publish": "Publique seu plano para começar a adicionar saídas publicadas no seu DMP"
     },
     "question": {
       "answered": "Respondido",
@@ -65,11 +65,11 @@
       "questionsAnswered": "questões respondidas",
       "update": "Atualização",
       "updateSection": "Editar: {title}",
-      "view": "Visualizar"
+      "view": "Exibir"
     },
     "errors": {
       "invalidDmpId": "ID DMP inválido: O ID de DMP fornecido não é válido.",
-      "invalidSectionId": "ID de seção inválido: O ID de seção fornecido não é válido.",
+      "invalidSectionId": "ID de seção inválido: O ID da seção fornecida não é válido.",
       "sectionNotFound": "Seção não encontrada: Esta seção não pertence ao plano atual."
     },
     "status": {
@@ -98,8 +98,8 @@
         "title": "Publicar",
         "description1": "Publicar um Plano de Gerenciamento de Dados (DMP) atribui a ele um Identificador de Objeto Digital (DOI). Ao publicar, você poderá vincular este plano ao seu ORCiD e a saídas de projeto, como artigos, o que tornará mais fácil mostrar que você atendeu aos requisitos do seu financiador até o final do projeto.",
         "description2": "Este DOI identifica exclusivamente o DMP, facilitando a referência e o acesso no futuro.",
-        "checklistTitle": "Publicar um Plano de Gerenciamento de Dados (DMP) atribui a ele um Identificador de Objeto Digital (DOI). Ao publicar, você poderá vincular este plano ao seu ORCiD e a saídas de projeto, como artigos, o que tornará mais fácil mostrar que você atendeu aos requisitos do seu financiador até o final do projeto.",
-        "checklistInfo": "itens podem ser corrigidos",
+        "checklistTitle": "Antes de publicar seu plano:",
+        "checklistInfo": "{count} item(ns) podem ser corrigidos",
         "buttonNext": "itens podem ser corrigidos",
         "visibilityTitle": "Publicação: definir visibilidade",
         "visibilityDescription": "Ótimo, a publicação do seu plano traz muitos benefícios.",
@@ -120,6 +120,7 @@
         },
         "checklistItem": {
           "primaryContact": "ter um contato principal",
+          "mockProject": "Projeto não marcado como teste",
           "complete": "marcou seu plano como completo",
           "percentageAnswered": "Respondeu pelo menos 50% das perguntas (você respondeu {percentage}%)",
           "fundingText": "identificaram seu",
@@ -128,35 +129,46 @@
           "orcidText": "designou o ORCiD para pelo menos um dos",
           "projectMembers": "Membros de projeto"
         },
-        "publishButton": "Publicar"
+        "publishButton": "Publicar",
+        "recommended": "Recomendado",
+        "required": "Obrigatório"
       }
     },
     "messages": {
       "errors": {
-        "updateTitleError": "Ocorreu um erro ao atualizar o título do plano"
+        "updateTitleError": "Ocorreu um erro ao atualizar o título do plano",
+        "requiredItemsIncomplete": "Você deve completar todos os itens obrigatórios antes de publicar o plano"
       },
       "success": {
         "successfullyUpdatedTitle": "Título do plano atualizado com êxito",
         "successfullyPublished": "Plano publicado com sucesso",
         "successfullyUpdatedStatus": "Status do plano atualizado com sucesso"
       },
-      "readOnlyLinkMessage": "Apenas os colaboradores do plano podem editar este plano."
+      "readOnlyLinkMessage": "Você não tem as permissões necessárias para executar esta ação neste plano.",
+      "readOnlyLinkMessagePublishStatus": "Você não tem as permissões necessárias para alterar o status da publicação.",
+      "readOnlyLinkMessageFunding": "Você não tem as permissões necessárias para ajustar o financiamento deste plano.",
+      "readOnlyLinkMessageMembers": "Você não tem as permissões necessárias para ajustar os membros para este plano.",
+      "readOnlyLinkMessageRelatedWorks": "Você não tem as permissões necessárias para executar esta ação neste plano.",
+      "readOnlyLinkMessagePublish": "Você não tem as permissões necessárias para ajustar os membros para este plano.",
+      "readOnlyLinkMessagePlanStatus": "Você não tem as permissões necessárias para alterar o status da publicação.",
+      "feedbackNotAvailable": "Feedback is currently not available"
     },
     "links": {
-      "editTitle": "Editar título do plano"
+      "editTitle": "Editar título do plano",
+      "projectDetailsPage": "Update in project details page"
     },
     "feedbackNotification": {
-      "description": "Você pode visualizar este plano e deixar comentários.",
+      "description": "Você pode ver este plano e deixar comentários.",
       "title": "Modo de feedback",
-      "description1": "Você pode visualizar este plano e deixar comentários. Quando terminar, clique em Marcar como concluído.",
-      "description2": "Concluir irá remover seu acesso e notificar o autor do plano que seu feedback está completo.",
+      "description1": "Você pode ver este plano e deixar comentários. Ao terminar, clique em Marcar como concluído.",
+      "description2": "Completar irá remover seu acesso e notificar o autor do plano de que seu feedback está completo.",
       "markAsDone": "Marcar como concluído",
       "confirmModal": {
-        "title": "Tem certeza de que deseja finalizar seu feedback?",
-        "description": "Você não poderá mais deixar comentários. Você ainda poderá visualizar o plano.",
-        "emailPromptLabel": "Você deseja enviar um e-mail ao solicitante informando que o feedback foi concluído?",
-        "emailPromptYes": "Sim, envie um e-mail.",
-        "emailPromptNo": "ão, pule o envio do e-mail"
+        "title": "Tem certeza de que deseja completar seu feedback?",
+        "description": "Você não poderá mais deixar comentários. Você ainda poderá ver o plano.",
+        "emailPromptLabel": "Você deseja enviar um e-mail para o solicitante de que o feedback foi concluído?",
+        "emailPromptYes": "Sim, enviar um e-mail",
+        "emailPromptNo": "Não, pule o email de envio"
       },
       "markAsDoneSuccess": "Você completou seu feedback com sucesso."
     }
@@ -166,7 +178,7 @@
     "description": "Selecione um modelo para usar ao criar o DMP.",
     "checkbox": {
       "filterByFunderLabel": "Filtrar por financiador ou organização",
-      "filterByFunderDescription": "Selecione se você deseja ver apenas modelos do seu financiador ou organização.",
+      "filterByFunderDescription": "Selecione se você quiser ver modelos somente pelo seu financiador ou organização.",
       "filterByBestPracticesLabel": "Filtrar por melhores práticas",
       "filterByBestPracticesDescription": "Selecione se você quer ver apenas os modelos de boas práticas"
     },
@@ -219,8 +231,8 @@
     "messages": {
       "success": {
         "questionSaved": "Detalhes da pergunta salvos com sucesso",
-        "questionDeleted": "Detalhes da pergunta excluídos com sucesso",
-        "saved": "Alterações salvas com sucesso."
+        "questionDeleted": "Detalhes da pergunta salvos com sucesso",
+        "saved": "Mudanças salvas com sucesso"
       },
       "unsavedChanges": "Alterações não Salvas",
       "savedJustNow": "Salvo há pouco",
@@ -239,8 +251,8 @@
     "admin": "Administrador",
     "edited": "editado",
     "feedbackNotification": {
-      "title": "Modo de feedback",
-      "description": "Você pode visualizar este plano e deixar comentários."
+      "title": "Modo de Feedback",
+      "description": "Você pode ver este plano e deixar comentários."
     }
   },
   "ProjectsProjectFunding": {
@@ -252,19 +264,19 @@
       "errors": {
         "funderNumberNotFound": "Número do projeto fino não encontrado."
       },
-      "readOnlyLinkMessage": "Apenas colaboradores do plano com níveis de acesso Co-Owner ou Primary podem editar este projeto."
+      "readOnlyLinkMessage": "Somente planejar colaboradores com níveis de acesso do Proprietário ou Primário pode editar este projeto."
     }
   },
   "ProjectsProjectPlanFeedback": {
     "title": "Solicitar feedback",
-    "anonymousOrgName": "Sua instituição",
-    "description": "Você pode obter feedback da equipe de suporte da {orgName}; por favor, leia a seguinte mensagem da equipe.",
+    "anonymousOrgName": "sua instituição",
+    "description": "Você pode obter comentários da equipe de suporte {orgName}, por favor leia a seguinte mensagem da equipe.",
     "form": {
-      "label": "Enviar mensagem para a equipe de suporte da {orgName}",
+      "label": "Enviar mensagem à equipe de suporte {orgName}",
       "placeholder": "Você pode rever o meu plano para quaisquer erros",
       "submitButton": "Solicitar feedback",
       "successMessage": "Pedido enviado",
-      "primaryAccessRequired": "Apenas o proprietário principal pode solicitar feedback"
+      "primaryAccessRequired": "Somente o proprietário principal pode solicitar feedback"
     },
     "messages": {
       "success": {
@@ -348,11 +360,11 @@
     }
   },
   "GuidancePanel": {
-    "bestPractice": "Orientações sobre melhores práticas",
-    "guidanceSourceSelection": "Selecione a fonte de orientação",
+    "bestPractice": "Orientação das melhores práticas",
+    "guidanceSourceSelection": "Selecionar fonte de orientação",
     "removeGuidanceSource": "Remover fonte de orientação",
     "addGuidanceSource": "Adicionar fonte de orientação",
-    "addOrganization": "Personalizar as melhores práticas",
+    "addOrganization": "Personalizar melhores práticas",
     "showMore": "Mostrar mais",
     "showLess": "Mostrar menos",
     "more": "Mais",
@@ -363,8 +375,8 @@
     },
     "headings": {
       "addMore": "Adicionar mais",
-      "customizeBestPractice": "Personalizar Melhores Práticas",
-      "currentlyDisplaying": "Exibindo atualmente"
+      "customizeBestPractice": "Personalizar melhor prática",
+      "currentlyDisplaying": "Atualmente exibindo"
     }
   },
   "SectionPage": {
@@ -372,8 +384,8 @@
       "errorLoadingSections": "Erro ao carregar perguntas {message}"
     },
     "navigation": {
-      "planNavigation": "Navegação do Plano",
-      "planOverview": "Visão Geral do Plano"
+      "planNavigation": "Navegação do plano",
+      "planOverview": "Visão geral"
     },
     "headings": {
       "noQuestionsAvailable": "Nenhuma pergunta disponível"
