@@ -489,11 +489,13 @@
       "headings": {
         "options": "Options",
         "logic": "Display Logic",
-        "confirmClearDisplayLogic": "Clear all display logic?"
+        "confirmClearDisplayLogic": "Clear all display logic?",
+        "confirmMatchTypeChange": "Change match type?"
       },
       "descriptions": {
         "displayLogic": "Configure display logic to show or hide this question based on how users answered previous multiple choice or checkbox questions. Add one or more conditions to determine when this question appears.",
-        "clearDisplayLogicWarning": "This will clear all your saved conditions for this question. This action cannot be undone."
+        "clearDisplayLogicWarning": "This will clear all your saved conditions for this question. This action cannot be undone.",
+        "matchTypeChangeWarning": "Switching the match type may clear some of your conditions if your existing condition conflict with each other and will be removed."
       },
       "buttons": {
         "addDisplayLogic": "Add display logic",
@@ -524,6 +526,14 @@
       },
       "helpText": {
         "noTriggerQuestionsAvailable": "No qualifying questions are available to use as a trigger for display logic."
+      },
+      "messages": {
+        "warnings": {
+          "triggerQuestionUnavailable": "This trigger question is not available."
+        },
+        "removedUnavailableTriggerQuestions": "Some display logic was removed because a question it depended on is no longer available.",
+        "allMatchTypeRule": "When match type is All, each condition in a group must use a different option value.",
+        "anyMatchTypeRule": "When match type is Any, each condition in a group must be unique (no duplicate operator + option pairs)."
       }
     }
   },
