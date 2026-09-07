@@ -649,34 +649,19 @@
     }
   },
   "OrganizationProjects": {
-    "title": "Organization Projects and Plans",
-    "intro": "Plans in your organization are grouped under research projects. Use Search to find plans across your organization.",
-    "projectsList": "Organization projects",
+    "title": "Organization Projects",
+    "intro": "Manage DMSP projects and plans across your organization",
     "messages": {
       "info": {
         "noProjectsHeading": "Organization projects will appear here",
-        "noProjectsDescription": "When researchers in your organization create data management plans, they will be listed here, grouped under research projects."
+        "noProjectsDescription": "When researchers in your organization create data management plans, they will be listed here."
       },
       "errors": {
         "errorRetrievingProjects": "Something went wrong with retrieving projects. Please try again later.",
         "failedToLoadMore": "Failed to load more projects"
       }
-    }
-  },
-  "OrganizationUserProjects": {
-    "title": "User projects and plans",
-    "intro": "Plans for this user are grouped under research projects. Use Search to find plans across their projects.",
-    "projectsList": "User projects",
-    "messages": {
-      "info": {
-        "noProjectsHeading": "This user has no projects yet",
-        "noProjectsDescription": "When this user creates data management plans, they will be listed here, grouped under research projects."
-      },
-      "errors": {
-        "errorRetrievingProjects": "Something went wrong with retrieving projects. Please try again later.",
-        "failedToLoadMore": "Failed to load more projects"
-      }
-    }
+    },
+    "projectsList": "Organization projects"
   },
   "Departments": {
     "title": "Schools/Departments",
@@ -1091,7 +1076,6 @@
       "saving": "Saving...",
       "pageLoaded": "Page loaded",
       "noItemsFound": "No items found",
-      "detailsToggleAria": "{action} details for {title}",
       "somethingWentWrong": "Something went wrong. Please try again.",
       "resultsText": "{name} results match your search",
       "fixBelow": "Please fix the errors below",
@@ -1117,7 +1101,8 @@
         "passMissMatch": "Passwords don't match"
       },
       "numDisplaying": "Showing {num} of {total}",
-      "unsavedChangesWarning": "You have unsaved changes. Are you sure you want to leave this page?"
+      "unsavedChangesWarning": "You have unsaved changes. Are you sure you want to leave this page?",
+      "detailsToggleAria": "{action} details for {title}"
     },
     "tabs": {
       "editQuestion": "Edit question",
@@ -1190,7 +1175,7 @@
   },
   "Contact": {
     "title": "Contact us",
-    "contactDescription": "DMP Tool is provided by the University of California Curation Center (UC3). You can find out more about us on our <link>website</link>.",
+    "contactDescription": "DMP Tool is provided by the University of California Curation Center (UC3). You can find out more about us on our <link />website.",
     "contactDescriptionLoggedIn": "If you would like to contact us about the DMP Tool, please fill out the form below.",
     "contactDescriptionLoggedOut": "If you would like to learn more about the DMP Tool, would like to become a participating organization, or are having difficulty accessing your account, please email our helpdesk: dmptool [at] ucop [dot] edu.",
     "form": {
@@ -1212,6 +1197,21 @@
         "invalidSubject": "Subject field must be at least 2 characters long",
         "invalidMessage": "Message field must be at least 2 characters long",
         "formSubmittalFailed": "Form submission failed. Please try again later."
+      }
+    }
+  },
+  "OrganizationUserProjects": {
+    "title": "User projects and plans",
+    "intro": "Plans for this user are grouped under research projects. Use Search to find plans across their projects.",
+    "projectsList": "User projects",
+    "messages": {
+      "info": {
+        "noProjectsHeading": "This user has no projects yet",
+        "noProjectsDescription": "When this user creates data management plans, they will be listed here, grouped under projects."
+      },
+      "errors": {
+        "errorRetrievingProjects": "Something went wrong with retrieving projects. Please try again later.",
+        "failedToLoadMore": "Failed to load more projects"
       }
     }
   }

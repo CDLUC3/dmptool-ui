@@ -10,7 +10,7 @@
     "dates": "Datas",
     "collaborators": "Colaboradores",
     "funding": "Financiamento",
-    "noFunderSelected": "Nenhum financiador selecionado",
+    "noFunderSelected": "No funder selected",
     "grantId": "ID do Financiamento",
     "edit": "Alterar",
     "editProject": "Editar Detalhes do Projeto",
@@ -30,6 +30,7 @@
     "outputCount": "{count, plural, =0 {0 outputs} one {1 output} other {{count} outputs}}",
     "editOutputs": "Editar resultados de pesquisa",
     "editResearchOutputs": "Editar resultados de pesquisa",
+    "researchOutputs": "Resultados da pesquisa",
     "plan": "Planejamento",
     "plans": "Planos",
     "sections": "Turmas",
@@ -53,6 +54,30 @@
     "view": "Ver plano",
     "dateRange": "{startDate} até {endDate}",
     "created": "Criado",
+    "messages": {
+      "errorGettingProject": "Erro ao obter detalhes do projeto",
+      "readOnlyLinkMessage": "Somente colaboradores do projeto podem editar este projeto."
+    },
+    "status": {
+      "collaboration": {
+        "title": "Colaboração",
+        "description": "{total, plural, =0 {0 colaboradores} one {1 colaborador} other {{total} colaboradores}}",
+        "link_text": "Gerenciar acesso"
+      },
+      "feedback": {
+        "title": "Comentarios",
+        "description": "",
+        "link_text": "Solicitação"
+      }
+    },
+    "relatedWorks": {
+      "title": "Resultados de pesquisa publicados para este projeto",
+      "pendingCount": "{count} saídas pendentes",
+      "acceptedCount": "{count} aceitou saídas",
+      "edit": "Ajustar para este projeto",
+      "view": "Ver trabalhos relacionados para este projeto",
+      "publish": "Publicar um plano para começar a adicionar saídas publicadas no seu projeto"
+    },
     "openProject": "Abrir projeto",
     "openPlan": "Abrir plano",
     "plansInProject": "Planos neste projeto",
@@ -75,49 +100,25 @@
       "DRAFT": "Rascunho",
       "COMPLETE": "Concluído",
       "ARCHIVED": "Arquivado"
-    },
-    "messages": {
-      "errorGettingProject": "Erro ao obter detalhes do projeto",
-      "readOnlyLinkMessage": "Apenas colaboradores do projeto podem editar este projeto."
-    },
-    "status": {
-      "collaboration": {
-        "title": "Colaboração",
-        "description": "{total, plural, =0 {0 colaboradores} one {1 colaborador} other {{total} colaboradores}}",
-        "link_text": "Gerenciar acesso"
-      },
-      "feedback": {
-        "title": "Comentarios",
-        "description": "",
-        "link_text": "Solicitação"
-      }
-    },
-    "relatedWorks": {
-      "title": "Resultados de pesquisa publicados para este projeto",
-      "pendingCount": "{count} resultados pendentes",
-      "acceptedCount": "{count} resultados aceitos",
-      "edit": "Ajustar para este projeto",
-      "view": "Ver trabalhos relacionados para este projeto",
-      "publish": "Publicar um plano para começar a adicionar resultados publicados ao seu projeto"
     }
   },
   "ProjectsListPage": {
-    "title": "Painel de projetos e planos",
-    "intro": "Seus planos estão agrupados em projetos de pesquisa. Use Pesquisa, Status e Sua função para encontrar planos em seus projetos.",
-    "projectsList": "Seus projetos",
+    "intro": "Gerencie seus planos e projetos de gerenciamento de dados. Para criar um novo plano dentro do mesmo projeto de pesquisa, abra o projeto abaixo e, em seguida, crie um novo plano dentro dele.",
     "buttons": {
       "createProject": "Criar projeto"
     },
     "messages": {
       "info": {
         "noProjectsHeading": "Seus projetos aparecerão aqui",
-        "noProjectsDescription": "Crie um plano de gerenciamento de dados para começar. Os planos que você criar serão agrupados em um projeto de pesquisa."
+        "noProjectsDescription": "Crie um plano de gerenciamento de dados para começar. Você pode gerenciar todos os seus DMPs e projetos de pesquisa a partir deste painel."
       },
       "errors": {
         "errorRetrievingProjects": "Algo deu errado do nosso lado. Por favor, tente novamente mais tarde.",
         "failedToLoadMore": "Falha ao carregar mais projetos"
       }
-    }
+    },
+    "title": "Painel de projetos e planos",
+    "projectsList": "Seus projetos"
   },
   "ProjectsCreateProject": {
     "pageTitle": "Criar detalhes do projeto",
@@ -157,47 +158,48 @@
     }
   },
   "ProjectsCreateProjectProjectSearch": {
-    "title": "Buscar projetos",
-    "description": "Insira os detalhes do seu projeto para ajudar a localizá-lo no banco de dados deste financiador. Quanto mais informações você fornecer, maior será a probabilidade de encontrar o seu projeto.",
+    "title": "Busca por projetos",
+    "description": "Digite os detalhes de seu projeto para ajudá-lo a encontrá-lo no banco de dados deste fundo. Quanto mais você insere mais provável é encontrar o seu projeto.",
     "buttons": {
       "addProjectManually": "Adicionar projeto manualmente"
     },
     "messages": {
       "success": {
-        "projectSelected": "Projeto {projectTitle} selecionado. Redirecionando para a página de visão geral do projeto."
+        "projectSelected": "Projeto {projectTitle} selecionado. Redirecionando à página de visão geral do projeto."
       },
       "error": {
-        "selectedFailed": "Falha ao selecionar o projeto. Por favor, tente novamente."
+        "selectedFailed": "Falha ao excluir o projeto. Tente novamente."
       }
     },
     "headings": {
       "notInThisList": "Não está nesta lista?",
-      "noProjectFound": "Nenhum projeto encontrado",
-      "projectsFound": "{count} projetos encontrados"
+      "noProjectFound": "Nenhum projeto encontrado.",
+      "projectsFound": "Projetos {count} encontrados"
     },
     "descriptions": {
       "addProjectManually": "Se o seu projeto não for exibido, você pode adicionar os detalhes manualmente.",
+      "noProjectFound": "Não foi possível encontrar projetos correspondentes à sua pesquisa. Tente novamente com diferentes detalhes.",
       "noProjectsFound": "Não conseguimos encontrar nenhum projeto que combine com sua pesquisa. Tente novamente com detalhes diferentes."
     },
     "definitions": {
-      "projectNumber": "Número do Prêmio/Projeto",
-      "grantId": "Página de Premiação",
-      "principalInvestigator": "Investigador(es) Principal(is)"
+      "projectNumber": "Prêmio/Número do Projeto",
+      "grantId": "Página de prêmios",
+      "principalInvestigator": "Investigador Principal(is)"
     },
     "form": {
-      "projectId": "ID do Projeto",
-      "projectIdPlaceholder": "Insira o ID do projeto ou prêmio...",
-      "projectNamePlaceHolder": "Insira o nome/título do projeto...",
-      "projectAwardYearPlaceholder": "Insira o ano da premiação...",
-      "projectPrincipalInvestigatorPlaceholder": "Insira o nome ou ID do perfil do investigador principal...",
-      "projectIdHelpText": "ID do projeto ou premiação, por exemplo 5R01AI12345-02",
+      "projectId": "ID do projeto",
+      "projectIdPlaceholder": "Digite o projeto ou o ID do prêmio...",
+      "projectNamePlaceHolder": "Digite Nome do Projeto/Título...",
+      "projectAwardYearPlaceholder": "Informe o ano de prêmio...",
+      "projectPrincipalInvestigatorPlaceholder": "Insira o Nome do PI ou ID do perfil...",
+      "projectIdHelpText": "Projeto ou ID do prêmio, por exemplo, 5R01AI12345-02",
       "projectName": "Nome do Projeto",
-      "projectNameDescription": "All or part of the project name/title, for example Particle Physics",
-      "projectAwardYear": "Ano da Premiação",
+      "projectNameDescription": "Tudo ou parte do nome/título do projeto, por exemplo Partículas Física",
+      "projectAwardYear": "Ano de Prêmio",
       "projectPrincipalInvestigator": "Investigador Principal",
-      "projectPrincipalInvestigatorDescription": "Nomes ou IDs de perfis de PI. Separe múltiplos itens com ponto e vírgula (;).",
-      "ariaProjectIdInput": "Entrada do ID do Projeto",
-      "ariaProjectIdHelpText": "Insira o ID do projeto ou número da concessão associado ao seu projeto de pesquisa. Este pode ser o identificador único atribuído pelo seu financiador ou instituição, como um número de concessão, ID de premiação ou código do projeto. Se você tiver múltiplos identificadores, tente inserir diferentes para encontrar seu projeto."
+      "projectPrincipalInvestigatorDescription": "Nomes PI ou IDs de perfil. Separe vários itens com ponto-e-vírgula (;).",
+      "ariaProjectIdInput": "Entrada ID do projeto",
+      "ariaProjectIdHelpText": "Insira o ID do projeto ou conceda o número associado ao seu projeto de pesquisa. Pode ser o identificador exclusivo atribuído pelo seu financiador ou instituição, como um número de atribuição, ID de prêmio ou código do projeto. Se tiver vários identificadores, tente inserir diferentes para encontrar o seu projeto."
     }
   },
   "ProjectsProjectDetail": {
@@ -317,7 +319,7 @@
     },
     "headings": {
       "h2AllowCollaborators": "Permitir que colaboradores possam editar ou comentar acesso?",
-      "roles": "Funções"
+      "roles": "Roles"
     },
     "para": {
       "para1AllowCollaborators": "Você pode convidar pessoas para acessar, editar ou comentar em planos usando o botão \"<shareWithPeople>compartilhar com pessoas</shareWithPeople>\"."
@@ -331,8 +333,8 @@
     }
   },
   "ProjectsProjectMembersEdit": {
-    "title": "Editar membro do projeto",
-    "description": "Atualize as informações deste membro do projeto.",
+    "title": "Editar Detalhes do Projeto",
+    "description": "Atualiza as informações do membro deste projeto.",
     "breadcrumbs": {
       "projectMembers": "Membros de projeto"
     },
@@ -345,8 +347,8 @@
       "removeProjectMember": "Remover membro"
     },
     "paragraphs": {
-      "removeMember": "Remover este membro significa que ele não poderá mais acessar este plano.",
-      "modalInfo": "A remoção deste membro do projeto também o removerá de todos os planos associados. Se ele for o único membro do projeto, não poderá ser removido."
+      "removeMember": "Remover este membro significa que ele não poderá mais colaborar com este plano.",
+      "modalInfo": "Remover este membro do projeto também os removerá de qualquer plano associado. Se ele for o único membro do projeto, ele não poderá ser removido."
     },
     "form": {
       "errors": {
@@ -393,7 +395,7 @@
       }
     },
     "accessLevelOn": "{accessLevel} em",
-    "para1": "When you click <strong>Grant access</strong> we'll send an email to this person inviting them to view your plan.",
+    "para1": "Quando você clicar em <strong>Conceder acesso</strong>, enviaremos um e-mail para essa pessoa convidando-a a visualizar seu plano.",
     "para2": "Se eles ainda não são membros da Ferramenta de DMP, nós os convidaremos a participar.",
     "para3": "Enviamos um convite para <strong>{email}</strong>. Eles terão acesso a este projeto.",
     "para4": "Para também adicioná-los como membro do projeto, <projectmember>vá para a página de membros do projeto</projectmember>.",
@@ -420,18 +422,18 @@
     "title": "Convide pessoas e gerencie o acesso",
     "description": "Quando você convidar uma pessoa, enviaremos um e-mail para essa pessoa convidando-a para visualizar o seu plano.",
     "removeCollaborator": "Remover este membro significa que ele não poderá mais colaborar com este plano.",
-    "saveCollaboratorAccess": "A atualização do nível de acesso de {name} alterará as permissões dele para este plano para {accessLevel}.",
-    "primaryDesignationChangeWarning": "Ao atribuir {name} como Proprietário Principal, seu status de Proprietário Principal será transferido para ele. O nível de acesso do atual Proprietário Principal será alterado para Coproprietário. Deseja continuar?",
-    "canEdit": "Editor",
-    "canComment": "Commenter",
-    "own": "Coproprietário",
-    "primary": "Proprietário Principal",
+    "saveCollaboratorAccess": "A atualização do nível de acesso para {name} mudará as permissões deste plano para {accessLevel}.",
+    "primaryDesignationChangeWarning": "Atribuindo {name} como proprietário principal irá transferir o seu status de proprietário primário para eles. O nível de acesso para o atual proprietário principal será alterado para co-proprietário. Você quer continuar?",
+    "canEdit": "Editores",
+    "canComment": "Comentador",
+    "own": "Co-Proprietário",
+    "primary": "Proprietário primário",
     "cancelRemoval": "Cancelar a remoção do colaborador de projeto {name}",
     "deleteCollaborator": "Excluir colaborador do projeto {name}",
     "canEditPlanFor": "Pode editar o plano de {name}",
     "canCommentPlanFor": "Pode comentar no plano {name}",
-    "canCoOwnPlanFor": "Pode ser coproprietário do plano para {name}",
-    "canPrimaryOwnPlanFor": "Pode ser proprietário do plano para {name}",
+    "canCoOwnPlanFor": "Pode co-criar um plano para {name}",
+    "canPrimaryOwnPlanFor": "Pode ter um plano próprio com {name}",
     "revokeAccessFor": "Revogar o acesso para {name}",
     "saveAccessFor": "Salvar acesso para {name}",
     "deleteInviteFor": "Excluir convite para {name}",
@@ -441,17 +443,17 @@
       "removeCollaborator": "Remover colaborador do projeto",
       "saveCollaboratorAccessUpdate": "Salvar atualização de acesso do colaborador",
       "pendingInvites": "Estas pessoas não aceitaram o convite ainda",
-      "accessLevels": "O que significam esses níveis de acesso?"
+      "accessLevels": "O que significam estes níveis de acesso?"
     },
     "accessLevels": {
       "primary": "Proprietário Principal",
-      "edit": "Editora",
-      "comment": "Comentarista",
+      "edit": "Editor",
+      "comment": "Comentador",
       "own": "Coproprietário",
-      "primaryDescription": "O usuário é capaz de realizar todas as ações em um Plano (tipicamente restritas ao proprietário/criador), e sua afiliação é a organização associada ao projeto.",
-      "editDescription": "Possui direitos de edição sobre os planos (pode escrever e editar os planos).",
-      "commentDescription": "Tem direitos de leitura sobre o projeto (pode visualizar e comentar sobre os planos).",
-      "ownDescription": "Tem direitos de administração sobre o projeto (pode convidar outros usuários, editar os planos e publicá-los)."
+      "primaryDescription": "O usuário é capaz de executar todas as ações em um Plano (normalmente restrito ao proprietário/criador), e sua afiliação é a organização associada ao projeto",
+      "editDescription": "Tem direitos de edição para os planos (pode escrever e editar os planos).",
+      "commentDescription": "Tem direitos de leitura do projeto (pode visualizar e comentar nos planos).",
+      "ownDescription": "Tem direitos de administrador para o projeto (pode convidar outros usuários, editar os planos e publicá-los)."
     },
     "buttons": {
       "invite": "Convidar colaboradores",
@@ -471,7 +473,7 @@
         "updatedAccess": "Acesso atualizado com sucesso de {name} para {accessLevel}"
       },
       "errors": {
-        "mustBePrimaryOwnerOrSuperAdmin": "Apenas o proprietário principal ou um Super Admin pode atualizar os níveis de acesso do Proprietário Principal.",
+        "mustBePrimaryOwnerOrSuperAdmin": "Apenas o proprietário primário ou um Super Administrador pode atualizar os níveis de acesso aos proprietários primários.",
         "cannotRemoveOwnPrimary": "Deve haver sempre um proprietário principal para o projeto. Por favor, atribua outro proprietário principal antes de remover este membro."
       }
     }
@@ -488,21 +490,21 @@
     "buttons": {
       "addToProject": "Adicionar ao projeto",
       "clearForm": "Limpar formulário",
-      "changeSelection": "Alterar seleção",
-      "searchAgain": "Pesquisar novamente",
-      "selectPerson": "Selecionar pessoa",
-      "retryRoles": "Tentar carregar funções novamente"
+      "changeSelection": "Change selection",
+      "searchAgain": "Search again",
+      "selectPerson": "Select person",
+      "retryRoles": "Retry loading roles"
     },
     "headings": {
       "enterMemberDetails": "Detalhes do membro do projeto",
-      "searchResultsHeader": "Selecione esta pessoa",
-      "selectedMatch": "Pessoa selecionada"
+      "searchResultsHeader": "Select this person",
+      "selectedMatch": "Person selected"
     },
     "messaging": {
       "noSearchResultsFound": "Nenhum registro associado ao ORCiD foi encontrado. Por favor, verifique o ORCiD e tente novamente.",
-      "detailsPrefilled": "Os dados foram preenchidos abaixo. Revise-os, selecione as funções e adicione a pessoa ao projeto.",
+      "detailsPrefilled": "Seus dados foram preenchidos abaixo. Reveje-os, selecione os seus papéis e, em seguida, adicione-os ao projeto.",
       "loadingRoles": "Carregando funções do projeto...",
-      "selectSearchResult": "Revise a correspondência e selecione-a para preencher os dados do membro abaixo.",
+      "selectSearchResult": "Revise a partida e selecione-a para preencher os detalhes do membro abaixo.",
       "errors": {
         "failedToLoadCollaborators": "Falha ao carregar mais colaboradores",
         "failedToAddProjectMember": "Falha ao adicionar membro. Por favor, tente novamente.",
@@ -510,11 +512,11 @@
         "givenNameRequired": "O primeiro nome é obrigatório",
         "emailRequired": "É necessário um endereço de e-mail",
         "invalidEmail": "Por favor insira um endereço de e-mail válido",
-        "projectRolesLoadError": "Não foi possível carregar as funções do projeto. Tente novamente.",
+        "projectRolesLoadError": "Papéis de projeto não puderam ser carregados. Por favor tente novamente.",
         "projectRolesRequired": "Pelo menos uma função do projeto deve ser selecionada",
         "affiliationRequired": "Afiliação é necessária",
         "searchTermRequired": "Por favor, informe um ORCiD ou um URL contendo um ORCiD para pesquisar",
-        "searchLookupFailed": "Não foi possível consultar esse ORCiD agora. Tente novamente ou insira os dados do membro manualmente abaixo.",
+        "searchLookupFailed": "Não foi possível procurar por esse ORCiD agora. Tente novamente ou digite os detalhes do membro manualmente abaixo.",
         "valueOrcidRequired": "Por favor, digite um ORCiD válido no formato XXXX-XXXX-XXXX-XXXX ou uma URL contendo um ORCiD"
       },
       "success": {
@@ -535,11 +537,11 @@
       "orcidFromSearch": "ORCID do resultado da pesquisa"
     },
     "links": {
-      "learnMoreAboutCreditTaxonomy": "Saiba mais sobre a Taxonomia CRediT ↗"
+      "learnMoreAboutCreditTaxonomy": "Saiba mais sobre a taxonomia CRediT ↗️"
     },
     "memberRolesDescription": {
-      "selection": "Selecione a(s) função(ões) que devem ser exibida(s) nas citações referentes a este membro do projeto no DMP.",
-      "credit": "Utilizamos um padrão ANSI/NISO denominado CRediT, uma taxonomia de 14 funções de propriedade da comunidade, que pode ser utilizada para descrever os principais tipos de contribuições tipicamente realizadas na produção e publicação de resultados de pesquisa, tais como artigos científicos."
+      "selection": "Selecione as funções que devem ser exibidas em citações para este membro do projeto com o DMP.",
+      "credit": "Nós usamos um padrão ANSI/NISO chamado CRediT, uma taxonomia de papel de 14 proprietários da comunidade que pode ser usada para descrever os principais tipos de contribuições tipicamente feitas para a produção e publicação de resultados da pesquisa, como artigos de pesquisa."
     }
   },
   "ProjectsProjectMemberCreate": {

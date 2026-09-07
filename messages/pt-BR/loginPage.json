@@ -4,10 +4,42 @@
     "emailAddress": "Endereço de e-mail",
     "singleSignOn": "Para ativar o Logon Único (SSO), use o seu endereço institucional. Você será redirecionado para o único sinal da sua instituição na plataforma.",
     "password": "Palavra-passe",
-    "resetPassword": "Redefinir palavra-passe",
     "continue": "Continuar",
     "login": "Entrar",
     "signupText": "Criar uma conta gratuita de DMP Tool",
-    "getHelpText": "Obter Ajuda"
+    "getHelpText": "Obter Ajuda",
+    "loginError": "Falha no login. Verifique seu e-mail e senha e tente novamente.",
+    "forgotPassword": {
+      "title": "Esqueceu a sua senha?",
+      "emailLabel": "Endereço de e-mail",
+      "invalidEmail": "Por favor insira um endereço de e-mail válido",
+      "checkEmailTitle": "Verifique seu e-mail",
+      "checkEmailMessage": "Se existir uma conta para esse e-mail, enviamos instruções para redefinir sua senha.",
+      "buttons": {
+        "backToLogin": "Voltar ao login",
+        "sendReset": "Envie-me instruções de redefinição de senha",
+        "sending": "Enviando..."
+      },
+      "help": {
+        "problemSigningIn": "Problem signing in? <link>Contact us</link>"
+      }
+    },
+    "resetPassword": {
+      "title": "Alterar sua senha",
+      "passwordLabel": "Nova senha",
+      "passwordHelpText": "(Mínimo de 8 caracteres)",
+      "confirmPasswordLabel": "Confirme a nova senha",
+      "invalidPassword": "Por favor, insira uma senha válida",
+      "passwordRequirements": "A senha deve atender aos requisitos abaixo",
+      "passwordUpdatedTitle": "Senha atualizada",
+      "passwordUpdatedMessage": "Sua senha foi alterada com sucesso. Você agora pode entrar usando sua nova senha.",
+      "buttons": {
+        "changeMyPassword": "Alterar minha senha",
+        "backToLogin": "Voltar ao login"
+      }
+    },
+    "buttons": {
+      "sending": "Enviando..."
+    }
   }
 }

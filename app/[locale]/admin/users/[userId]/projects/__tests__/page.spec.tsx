@@ -146,10 +146,15 @@ describe("OrgUserProjectsPage", () => {
       });
     });
 
-    it('shows loading state before data arrives', () => {
+    it('shows loading state before data arrives', async () => {
       renderPage(defaultMocks());
       expect(screen.getByTestId('skeleton-list-loading')).toBeInTheDocument();
       expect(screen.getByRole('heading', { name: /OrganizationUserProjects.title/i })).toBeInTheDocument();
+
+      // Allow initial data/effects to settle so no state update occurs after test exit.
+      await waitFor(() => {
+        expect(screen.getByRole('heading', { name: /Reef Havens/i })).toBeInTheDocument();
+      });
     });
 
     it('shows empty state when the user has no projects', async () => {

@@ -98,7 +98,7 @@
     "primaryBadge": "Principal",
     "deleteEmailAria": "Excluir endereço de e-mail {email}",
     "deleteEmailConfirmTitle": "Excluir endereço de e-mail?",
-    "deleteEmailConfirmMessage": "Tem certeza de que deseja excluir {email}? Esta ação não pode ser desfeita.",
+    "deleteEmailConfirmMessage": "Are you sure you want to delete {email}? This action cannot be undone.",
     "helpTextForAddAlias": "Você receberá um e-mail para confirmar esta adição",
     "helpTextSelectYourLanguage": "Selecione seu idioma preferido",
     "helpTextSearchForInstitution": "Procurar sua instituição",
@@ -107,14 +107,14 @@
     "btnUpdating": "Atualizando",
     "btnUpdate": "Atualização",
     "btnAdd": "Adicionar",
-    "btnDelete": "Excluir",
+    "btnDelete": "Apagar",
     "linkUpdatePassword": "Atualizar senha",
     "linkUpdateConnections": "Atualizar conexão?",
     "linkManageNotifications": "Atualizar conexão?",
     "messages": {
       "profileUpdateSuccess": "Formulário de perfil atualizado com sucesso.",
       "emailAddressUpdateSuccess": "O e-mail foi adicionado com sucesso ao seu perfil.",
-      "emailAddressDeleteSuccess": "O e-mail foi removido com sucesso do seu perfil.",
+      "emailAddressDeleteSuccess": "The email was successfully removed from your profile.",
       "errors": {
         "givenNameValidation": "O nome deve ter pelo menos 2 caracteres",
         "surNameValidation": "O nome deve ter pelo menos 2 caracteres",
@@ -122,7 +122,7 @@
         "otherAffiliationValidation": "Outro nome de instituição não pode estar em branco e deve ter pelo menos 2 caracteres",
         "errorUpdatingProfile": "Erro ao atualizar perfil",
         "errorSettingPrimaryEmail": "Erro ao definir o e-mail principal",
-        "errorAddingNewEmail": "Erro ao adicionar novo e-mail",
+        "errorAddingNewEmail": "Erro ao adicionar pergunta",
         "errorDeletingEmail": "Erro ao excluir e-mail"
       }
     }
@@ -199,14 +199,14 @@
       "title": "ORCID iD",
       "content": "O ORCID fornece um identificador persistente — um ORCID iD — que distingue você de outros usuários. Saiba mais em <link>ORCID.org</link>.",
       "btnText": "Conecte seu ORCID iD",
-      "connectSuccess": "Seu ORCID iD foi conectado."
+      "connectSuccess": "Seu ID ORCID foi conectado."
     },
     "orcidConnectionConnected": {
       "connectedBadge": "Conectado",
       "disconnect": "Desconectar",
-      "disconnectAria": "Desconectar seu ORCID iD",
+      "disconnectAria": "Desconecte seu ORCID iD",
       "disconnectConfirmTitle": "Confirmar desconexão",
-      "disconnectConfirmMessage": "Tem certeza de que deseja desconectar seu ORCID iD? Você pode reconectar a qualquer momento.",
+      "disconnectConfirmMessage": "Tem certeza que deseja desconectar seu ORCID iD? Você pode se reconectar a qualquer momento.",
       "disconnectSuccess": "Seu ORCID iD foi desconectado."
     },
     "ssoConnection": {
@@ -218,17 +218,17 @@
     "ssoConnectionConnected": {
       "connectedBadge": "Conectado",
       "disconnect": "Desconectar",
-      "disconnectAria": "Desconectar suas credenciais institucionais",
+      "disconnectAria": "Desconecte suas credenciais institucionais",
       "disconnectConfirmTitle": "Confirmar desconexão",
-      "disconnectConfirmMessage": "Tem certeza de que deseja desconectar suas credenciais institucionais? Você pode reconectar a qualquer momento.",
-      "disconnectSuccess": "Suas credenciais institucionais foram desconectadas."
+      "disconnectConfirmMessage": "Tem certeza de que deseja desconectar suas credenciais institucionais? Você pode se reconectar a qualquer momento.",
+      "disconnectSuccess": "As suas credenciais institucionais foram desconectadas."
     },
     "btnCancel": "Cancelar",
-    "previewStatesHeading": "Visualização de estados",
+    "previewStatesHeading": "Pré-visualizações do estado",
     "previewOrcidNotConnected": "ORCID — Não conectado",
-    "previewOrcidConnected": "ORCID — Conectado",
-    "previewSsoNotConnected": "Cadastro único — Não conectado",
-    "previewSsoConnected": "Cadastro único — Conectado",
+    "previewOrcidConnected": "ORCID - Conectado",
+    "previewSsoNotConnected": "Logon único — Não conectado",
+    "previewSsoConnected": "Logon único — Conectado",
     "headingRelatedActions": "Ações relacionadas",
     "linkUpdatePassword": "Atualizar senha",
     "linkUpdateConnections": "Atualizar conexão?",
@@ -239,16 +239,16 @@
     "headerDescription": "Selecione o fundo para usar neste projeto. Este pode ser o financiador que você planeja aplicar ou de onde você já tem financiamento. Você poderá adicionar fundos adicionais mais tarde, se tiver mais de um.",
     "funder": "Finalizações",
     "popularTitle": "Financiadores mais populares",
-    "popularDescription": "Estes são os financiadores usados com mais frequência nos planos durante o último ano.",
-    "popularLoading": "Carregando financiadores populares...",
-    "popularFallbackTitle": "Procurando um financiador específico?",
-    "popularFallbackDescription": "Pesquise acima pelo nome do financiador ou por uma palavra-chave relacionada. Se ainda não estiver na lista, você poderá adicioná-lo manualmente.",
+    "popularDescription": "Estes são os financiadores mais frequentemente utilizados nos planos durante o último ano.",
+    "popularLoading": "Carregando fundos populares...",
+    "popularFallbackTitle": "Procurando um fundo específico?",
+    "popularFallbackDescription": "Pesquise acima por nome do financiador ou palavra-chave relacionada. Se ainda não for listado, você poderá adicioná-lo manualmente.",
     "found": "Financiamentos {count} encontrados",
-    "noResults": "Nenhum financiador encontrado",
-    "noResultsDescription": "Tente outro nome ou uma palavra-chave relacionada. Se o financiador ainda não estiver na lista, você pode adicioná-lo manualmente abaixo.",
+    "noResults": "Financiamentos encontrados",
+    "noResultsDescription": "Tente um nome diferente ou palavra-chave relacionada. Se o financiador ainda não estiver listado, você pode adicioná-lo manualmente abaixo.",
     "showCount": "Mostrando {count} de {total}",
     "addManuallyHeading": "Não está nesta lista.",
-    "addManuallyText": "Se o seu financiador não for exibido, você pode adicionar os detalhes manualmente.",
+    "addManuallyText": "Se seu colaborador não estiver mostrado, você pode adicionar seus detalhes manualmente.",
     "addManuallyLabel": "Adicionar professor manualmente",
     "noFunderHeading": "Ainda não tem um financiador?",
     "noFunderText": "Se você ainda não tem um fundo, você pode usar o link abaixo para prosseguir para a próxima etapa.",
@@ -354,23 +354,127 @@
     },
     "users": {
       "title": "Contas de usuário",
+      "admin": "Administrador",
       "description": "Abaixo está uma lista de usuários registrados para sua organização",
       "buttons": {
         "createUserLabel": "Criar Usuário",
-        "searchLabel": "Pesquisa"
+        "searchLabel": "Pesquisa",
+        "download": "Baixar como CSV"
       },
       "tools": {
         "searchLabel": "Pesquisar por nome ou e-mail",
-        "permissionLabel": "Permisschar@@0o"
+        "permissionLabel": "Função",
+        "organizationLabel": "Organização"
       },
       "userTable": {
-        "label": "Lista de Usuários"
+        "label": "Lista de Usuários",
+        "noResults": "Nenhum usuário encontrado"
+      },
+      "manageUser": "Gerenciar usuário {name}",
+      "downloadWarning": "Esta exportação pode conter informações sensíveis de usuário. Certifique-se de que o arquivo baixado é armazenado de forma segura e compartilhado apenas com indivíduos autorizados.",
+      "headings": {
+        "confirmDownload": "Exportar os Dados de Usuário"
+      },
+      "messages": {
+        "disabledDownloadMessage": "Você deve selecionar uma organização para baixar a lista de usuários.",
+        "noUsersToExport": "Não há usuários para exportar para a organização selecionada."
       }
+    },
+    "userProfile": {
+      "title": "Perfil {name}",
+      "userProfileHeading": "Editar informação para {name}",
+      "userProfile": "Perfil de usuário",
+      "roleRadioLabel": "Selecione uma função para este usuário",
+      "buttons": {
+        "viewAllUsers": "Visualizar todos os usuários"
+      },
+      "headings": {
+        "identifiers": "Identificadores",
+        "mergeAccounts": "Unificar contas",
+        "role": "Função"
+      },
+      "mergeAccounts": {
+        "selectUser": "Selecione um usuário para mesclar",
+        "merge": "Mesclar",
+        "confirmMessage": "O conteúdo do usuário selecionado {mergeEmail} será mesclado na conta do {keepEmail}. A conta selecionada será então removida.",
+        "successMessage": "Contas mescladas com sucesso",
+        "searchUsers": "Buscar usuários para mesclar"
+      },
+      "definitions": {
+        "ssoId": "ID SSO institucional",
+        "orcid": "ORCiD"
+      },
+      "profileForm": {
+        "labels": {
+          "email": "E-mail",
+          "givenName": "Primeiro nome",
+          "surName": "Último Nome",
+          "institution": "Instituição",
+          "department": "Departamento ou Escola",
+          "language": "Idioma",
+          "otherInstitution": "Outra instituição"
+        }
+      },
+      "messages": {
+        "errors": {
+          "errorUpdatingProfile": "Erro ao atualizar perfil",
+          "errorUpdatingRole": "Erro ao atualizar função do usuário",
+          "invalidEmail": "Endereço de e-mail invalido",
+          "givenName": "Primeiro nome inválido",
+          "surName": "Sobrenome inválido",
+          "affiliationValidation": "Nome de instituição inválido",
+          "otherAffiliationValidation": "Nome de outra instituição inválido",
+          "searchError": "Ocorreu um erro ao procurar. Por favor, tente novamente.",
+          "errorArchivingUser": "Não foi possível arquivar a conta de usuário neste momento."
+        },
+        "helpText": {
+          "institution": "Procurar sua instituição",
+          "language": "Selecione seu idioma preferido"
+        },
+        "success": {
+          "profileUpdateSuccess": "Perfil atualizado com sucesso",
+          "archiveSuccess": "Conta de usuário arquivada com sucesso."
+        }
+      },
+      "userPlansTable": {
+        "label": "Projectos e Planos",
+        "noResults": "Nenhum projeto encontrado para este usuário",
+        "searchPlans": "Busca de planos",
+        "projectLabel": "Título do Projeto",
+        "noOfPlans": "Número de planos",
+        "fundersLabel": "Finalizações)",
+        "organizationLabel": "Organização",
+        "membersLabel": "Membros",
+        "startDateLabel": "Data de início",
+        "endDateLabel": "Data final",
+        "datesFromTo": "{startDate} até {endDate}"
+      },
+      "cannotFindInstitution": "Não consigo encontrar minha instituição na lista"
     }
+  },
+  "AdminNotifications": {
+    "title": "Notificações",
+    "feedbackRequested": "Feedback solicitado",
+    "funderTemplateAdd": "Modelo de barbatana adicionado",
+    "funderTemplateCustomizationChanged": "Customização de modelo Funder alterada",
+    "daysAgo": "{diffDays} dia{s} atrás",
+    "headings": {
+      "unread": "Gerenciar notificações",
+      "previousNotifications": "Notificações anteriores"
+    },
+    "messages": {
+      "noUnreadNotifications": "Nenhuma notificação não lida encontrada",
+      "noReadNotifications": "Nenhuma notificação anterior encontrada",
+      "today": "Hoje",
+      "errors": {
+        "failedToLoadNotifications": "Não foi possível carregar a seção"
+      }
+    },
+    "description": "As notificações para a sua organização estão listadas abaixo. As notificações não lidas são exibidas na parte superior. Clique em uma notificação para ver mais detalhes."
   },
   "OrganizationDetails": {
     "title": "Detalhes da oganização",
-    "description": "Ver detalhes da organização",
+    "description": "Gerencie informações sobre sua organização.",
     "sections": {
       "organizationDetails": {
         "title": "Editar detalhes da organização"
@@ -382,8 +486,8 @@
         "title": "Marca"
       },
       "organizationUrls": {
-        "title": "URL(s) da organização",
-        "description": "Você pode adicionar até 5 URLs organizacionais."
+        "title": "Links",
+        "description": "Você pode adicionar até 5 links. Eles aparecerão no topo da página para os usuários da sua organização e podem ser usados para ajudar a conectar usuários a recursos importantes como o guia da biblioteca, repositório de dados ou outra página relevante."
       },
       "identifiers": {
         "title": "Identificadores"
@@ -392,29 +496,87 @@
     "fields": {
       "organizationName": {
         "label": "Nome completo da organização",
-        "placeholder": "Insira o nome completo da organização"
+        "placeholder": "Insira o nome completo da organização",
+        "helpMessage": "Pesquisar nome do registro da organização (ROR):",
+        "helpMessageNonRor": "O nome da sua organização como você deseja que ela apareça para os usuários."
       },
       "organizationAbbr": {
         "label": "Nome abreviado da organização",
-        "placeholder": "Digite um nome abreviado"
+        "placeholder": "Digite um nome abreviado",
+        "helpMessage": "Exibido quando o nome da sua organização seria muito longo. Registros de pesquisa de acronyms (ROR):",
+        "helpMessageNonRor": "Uma abreviação para sua organização (até 10 caracteres) que aparecerá em áreas do site onde um nome seria muito longo."
+      },
+      "organizationDomain": {
+        "label": "Nome do domínio da organização",
+        "placeholder": "Digite o nome do domínio da organização (por exemplo, exemplo.com)",
+        "helpMessage": "Exibido juntamente com o nome da sua organização quando os usuários pesquisam. Pesquisa na página inicial da organização de registro (ROR): <link>{homepage}</link>",
+        "helpMessageNonRor": "O domínio do site da sua organização. Por exemplo, 'example.edu' não 'library.example.edu'. Isso será usado para ajudar os usuários a encontrar sua organização quando pesquisarem e será exibido juntamente com o nome da sua organização nos resultados de busca."
       },
       "organizationType": {
-        "label": "Tipo de Organização",
+        "label": "Tipo de Organização)",
         "types": {
-          "archive": "Arquivo",
-          "company": "Empresa",
+          "archive": "Arquivar",
+          "company": "Colegas",
           "education": "Educação",
-          "facility": "Instalações",
-          "government": "Governo",
-          "healthcare": "Saúde",
-          "nonprofit": "Organização sem fins lucrativos",
-          "other": "Outro"
+          "facility": "Complexo",
+          "government": "Software Governamental",
+          "healthcare": "Cuidados de Saúde",
+          "nonprofit": "Terceiro setor",
+          "other": "De outros"
         }
       },
       "contactEmail": {
         "label": "E-mail para contato",
         "placeholder": "Digite um e-mail de contato"
       },
+      "contactName": {
+        "label": "Contato texto de e-mail",
+        "placeholder": "Inserir texto do link"
+      },
+      "affiliationLinks": {
+        "title": "Vínculos de Organizações",
+        "order": {
+          "label": "Ordem",
+          "placeholder": "Digite a ordem para este link"
+        },
+        "url": {
+          "label": "URL:",
+          "placeholder": "Insira um URL"
+        },
+        "text": {
+          "label": "Texto do link para URL",
+          "placeholder": "Inserir texto do link"
+        }
+      },
+      "fundRef": {
+        "label": "Registro Funder de Crossref (FundRef)",
+        "helpMessage": "Veja o registro oficial da Crossref: "
+      },
+      "ror": {
+        "label": "Pesquisa do Registro da Organização (ROR)",
+        "helpMessage": "Ver o registro de ROR oficial: "
+      },
+      "shibboleth": {
+        "label": "Identificador de entrada único (SSO)",
+        "helpMessage": "O identificador para conexão SSO da sua organização."
+      },
+      "domains": {
+        "label": "E-mail de domínios SSO",
+        "helpMessage": "Usado para ajudar a determinar quais domínios de e-mail devem ser direcionados para sua conexão SSO ao fazer login ou inscrever-se. Separe domínios de e-mail com vírgulas."
+      },
+      "managed": {
+        "label": "Gerenciado?",
+        "description": "Indica que esta organização tem administradores que irão gerenciar modelos, orientação e usuários."
+      },
+      "funder": {
+        "label": "Finalizações",
+        "description": "Indica que esta organização deve ser tratada como um fundo."
+      },
+      "apiTarget": {
+        "label": "URL da API",
+        "description": "Se a afiliação for um fundo, fornecendo isso permitirá o fluxo de trabalho de pesquisa do projeto (depende do código do aplicativo para estar no lugar)."
+      },
+      "identifiersMessage": "Se precisar alterar um destes campos, por favor, <link>entre em contato conosco</link>.",
       "linkText": {
         "label": "Contato texto de e-mail",
         "placeholder": "Digite o texto do link"
@@ -426,18 +588,6 @@
       "urlLinkText": {
         "label": "Texto do link para URL",
         "placeholder": "Inserir texto do link"
-      },
-      "fundRef": {
-        "label": "Registro Funder de Crossref (FundRef)"
-      },
-      "ror": {
-        "label": "Pesquisa do Registro da Organização (ROR)"
-      },
-      "shibboleth": {
-        "label": "Login Institucional (Shibboleth)"
-      },
-      "domains": {
-        "label": "Domínio(s)"
       }
     },
     "actions": {
@@ -446,7 +596,11 @@
       "addAnotherUrl": "Adicionar outra URL"
     },
     "buttons": {
-      "save": "Salvar"
+      "save": "Salvar",
+      "addLink": "Adicionar link",
+      "addAnotherLink": "Adicionar outro link",
+      "deleteLink": "Remover",
+      "removeLogo": "Remover logotipo"
     },
     "upload": {
       "dropZone": {
@@ -459,8 +613,29 @@
     },
     "messages": {
       "success": {
-        "organizationDetailsSaved": "Detalhes da organização salvos com sucesso!"
-      }
+        "organizationDetailsSaved": "Detalhes da organização salvos com sucesso!",
+        "addingLink": "Novo link adicionado com sucesso"
+      },
+      "errors": {
+        "organizationDetailsSave": "Não foi possível salvar as alterações. Por favor, verifique o formulário e tente novamente.",
+        "displayName": "O nome da organização deve ter pelo menos 2 caracteres",
+        "displayAbbr": "A abreviatura da organização deve ter pelo menos 2 caracteres",
+        "contactName": "O nome deve ter no m&iacute;nimo 2 caracteres",
+        "contactEmail": "O e-mail de contato deve ser um endereço de e-mail válido",
+        "types": "Por favor, selecione pelo menos um tipo de organização",
+        "linkURL": "Links devem ser uma URL que comece com http:// ou https://",
+        "logoFileSelect": {
+          "format": "As imagens devem estar em formato PNG, JPG ou SVG",
+          "select": "Não foi possível carregar o arquivo no momento. Por favor, selecione um arquivo diferente e tente novamente.",
+          "size": "A imagem deve ter menos de 5 MB"
+        },
+        "logoFileUploadPartOne": "Não é possível processar seu logotipo neste momento. Por favor, tente novamente mais tarde.",
+        "logoFileUploadPartTwo": "Não é possível carregar seu logotipo neste momento. Por favor, tente novamente mais tarde.",
+        "logoName": "Houve um problema ao carregar seu logotipo. Por favor, verifique o arquivo e tente novamente."
+      },
+      "linkRowInfo": "Linha {number}",
+      "linkAdded": "Linha {nextNum} adicionada",
+      "linkRemoved": "Linha {number} adicionada"
     }
   },
   "EmailPreferences": {
@@ -488,34 +663,19 @@
     }
   },
   "OrganizationProjects": {
-    "title": "Projetos e planos da organização",
-    "intro": "Os planos da sua organização estão agrupados em projetos de pesquisa. Use a pesquisa para encontrar planos em toda a organização.",
-    "projectsList": "Projetos da organização",
+    "title": "Projeto da organização",
+    "intro": "Gerencie projetos e planos para DMSP em toda a sua organização",
     "messages": {
       "info": {
         "noProjectsHeading": "Os projetos da organização aparecerão aqui",
-        "noProjectsDescription": "Quando pesquisadores da sua organização criarem planos de gerenciamento de dados, eles serão listados aqui, agrupados em projetos de pesquisa."
+        "noProjectsDescription": "Quando pesquisadores em sua organização criarem planos de gestão de dados, eles serão listados aqui."
       },
       "errors": {
         "errorRetrievingProjects": "Algo deu errado ao recuperar projetos. Por favor, tente novamente mais tarde.",
         "failedToLoadMore": "Falha ao carregar mais projetos"
       }
-    }
-  },
-  "OrganizationUserProjects": {
-    "title": "Projetos e planos do usuário",
-    "intro": "Os planos deste usuário estão agrupados em projetos de pesquisa. Use a Pesquisa para encontrar planos em seus projetos.",
-    "projectsList": "Projetos do usuário",
-    "messages": {
-      "info": {
-        "noProjectsHeading": "Este usuário ainda não tem projetos",
-        "noProjectsDescription": "Quando este usuário criar planos de gerenciamento de dados, eles serão listados aqui, agrupados em projetos de pesquisa."
-      },
-      "errors": {
-        "errorRetrievingProjects": "Algo deu errado ao recuperar projetos. Por favor, tente novamente mais tarde.",
-        "failedToLoadMore": "Falha ao carregar mais projetos"
-      }
-    }
+    },
+    "projectsList": "Projetos da organização"
   },
   "Departments": {
     "title": "Escolas/Departamentos",
@@ -569,16 +729,16 @@
         }
       },
       "feedbackEmail": {
-        "label": "E-mail de feedbacks",
+        "label": "E-mail de feedback",
         "placeholder": "Digite o e-mail de feedback",
-        "description": "Insira os e-mails separados por vírgulas.",
+        "description": "Digite os e-mails separados por vírgulas",
         "helpText": "Por padrão este é o endereço de e-mail do contato organizações, mas você pode alterar o endereço de e-mail de feedback",
-        "invalidEmail": "Um ou mais endereços de e-mail são inválidos. Por favor, verifique e corrija os endereços de e-mail."
+        "invalidEmail": "Um ou mais endereços de e-mail são inválidos. Por favor, verifique e tente novamente."
       },
       "feedbackText": {
         "label": "Mensagem exibida aos usuários solicitando feedback",
         "description": "Dê informações aos usuários sobre o que esperar quando eles solicitarem feedback sobre seu DMP",
-        "helpText": "Mensagem de exemplo: Um bibliotecário de dados do Escritório da Presidência da Universidade da Califórnia (ucop.edu) responderá à sua solicitação em até 48 horas. Caso tenha dúvidas relacionadas a esta ação, por favor, entre em contato conosco pelo e-mail <mailtoLink>dmptool@ucop.edu.</mailtoLink>",
+        "helpText": "Exemplo de mensagem: um bibliotecário de dados da Universidade da Califórnia, o Gabinete do Presidente (ucop.edu) responderá ao seu pedido dentro de 48 horas. Se você tiver dúvidas sobre esta ação, por favor, entre em contato conosco pelo endereço <mailtoLink>dmptool@ucop.edu.</mailtoLink>",
         "placeholder": "Digitar texto de feedback"
       }
     },
@@ -730,8 +890,8 @@
         "guidanceTextUpdated": "Texto de orientação para {tagName} atualizado com sucesso. As alterações precisam ser publicadas para terem efeito."
       },
       "errors": {
-        "unableToAddOrganization": "Não foi possível adicionar a organização.",
-        "unableToRemoveOrganization": "Não foi possível remover a organização."
+        "unableToAddOrganization": "Não é possível adicionar organização",
+        "unableToRemoveOrganization": "Não é possível remover a organização"
       }
     },
     "labels": {
@@ -778,7 +938,7 @@
       "createText": "Criar texto",
       "editText": "Editar Texto",
       "group": "grupo",
-      "relatedWorks": "Obras Relacionadas"
+      "relatedWorks": "Resultados de Pesquisa Publicados"
     },
     "form": {
       "yesLabel": "Sim",
@@ -796,10 +956,10 @@
     "dataFormat": "Formato de dados:",
     "dataVolume": "Volume dos dados",
     "opensInNewTab": "Abrir em uma nova aba",
-    "noGuidanceAvailable": "A organização selecionada não tem orientação para esta pergunta",
+    "noGuidanceAvailable": "A organização selecionada não tem orientação para esta questão",
     "buttons": {
       "search": "Buscar",
-      "searching": "Pesquisando...",
+      "searching": "Procurando...",
       "lookup": "Procurar",
       "select": "Select",
       "selecting": "Selecionando...",
@@ -810,10 +970,11 @@
       "saveAndUpdate": "Salvar e atualizar",
       "saveChanges": "Salvar as alterações",
       "update": "Atualização",
+      "updating": "Updating...",
       "remove": "Remover",
       "removeAll": "Remover todos os",
       "confirm": "Confirmação",
-      "confirming": "Confirmando...",
+      "confirming": "Confirmando…",
       "change": "Mudança",
       "cancel": "Cancelar",
       "linkUpdate": "Atualização",
@@ -825,26 +986,35 @@
       "deleteLabel": "Apagar {item}",
       "preview": "Pré-visualizar",
       "publish": "Publicar",
+      "publishing": "Publishing...",
       "publishChanges": "Publicar alterações",
       "unpublish": "Retirar a publicação",
       "close": "Fechar",
       "closeModal": "Fechar modal",
       "loadMore": "Carregar mais",
-      "loading": "Carregando...",
+      "loading": "Baixar...",
       "addAnother": "Adicionar mais",
       "goToProject": "Ir para o projeto",
       "back": "Voltar",
-      "backToList": "Voltar para a lista",
+      "backToList": "Voltar à lista",
       "add": "Adicionar",
       "customize": "Personalizar",
       "applyFilter": "Aplicar filtro(s)",
-      "applyFilterSingular": "Aplicar filtro",
+      "applyFilterSingular": "Apply filter",
       "moreInfo": "Mais informações",
       "lessInfo": "Menos informações",
       "createNewPlan": "Criar nova DMP",
       "deletingCustomization": "Excluindo personalização...",
       "deleteCustomization": "Excluir personalização",
-      "view": "Visualizar"
+      "view": "Exibir",
+      "viewPlan": "Ver plano",
+      "viewTemplate": "Ver template",
+      "markAsRead": "Marcar Tudo como Lido",
+      "markAsUnread": "Marcar como não lida",
+      "archive": "Arquivar",
+      "archiving": "Arquivando...",
+      "submit": "submeter",
+      "submitting": "Submetendo..."
     },
     "labels": {
       "required": "Obrigatório",
@@ -860,28 +1030,28 @@
       "name": "Nome:",
       "url": "URL:",
       "unit": "Unidade",
-      "description": "Descrição",
+      "description": "Descrição:",
       "searchTerm": "Termo para pesquisa",
       "title": "Título",
-      "dataFlags": "Sinalizadores de dados",
-      "outputType": "Tipo de saída",
+      "dataFlags": "Bandeiras de dados",
+      "outputType": "Tipo de Retorno",
       "repositories": "Repositórios",
-      "metadataStandards": "Padrões de metadata",
+      "metadataStandards": "Padrões de Metadados",
       "licenses": "Licenças",
-      "initialAccessLevels": "Níveis de acesso iniciais",
-      "anticipatedReleaseDate": "Data de liberação antecipada",
-      "anticipatedFileSize": "Tamanho do arquivo antecipado",
-      "fileSizeUnit": "Unidade de tamanho do arquivo",
-      "selectAnItem": "Selecionar um item",
+      "initialAccessLevels": "Níveis de Acesso Inicial",
+      "anticipatedReleaseDate": "Data de lançamento recomendada",
+      "anticipatedFileSize": "Tamanho do arquivo esperado",
+      "fileSizeUnit": "Unidade de tamanho",
+      "selectAnItem": "Selecione um item",
       "mayContainSensitiveData": "Pode conter dados sensíveis?",
-      "mayContainPersonalData": "Pode conter informações de identificação pessoal?",
+      "mayContainPersonalData": "Pode conter informações pessoais identificáveis?",
       "additionalComments": "Comentários adicionais",
       "show": "Mostrar",
-      "hide": "Ocultar",
+      "hide": "Esconder",
       "showPassword": "Mostrar senha",
-      "hidePassword": "Ocultar senha",
-      "showPasswordFor": "Mostrar senha para {field}",
-      "hidePasswordFor": "Ocultar senha para {field}",
+      "hidePassword": "Ocultar Senha",
+      "showPasswordFor": "Mostrar senha do {field}",
+      "hidePasswordFor": "Ocultar senha do {field}",
       "passwordIsVisible": "Sua senha está visível",
       "passwordIsHidden": "Sua senha está oculta"
     },
@@ -895,8 +1065,8 @@
     },
     "placeholders": {
       "funderSearch": "Insira o nome da pasta",
-      "nameSearch": "Insira o nome...",
-      "enterComment": "Insira seu comentário"
+      "nameSearch": "Inserir nome...",
+      "enterComment": "Insira o seu comentário"
     },
     "links": {
       "clearFilter": "limpar filtro",
@@ -911,16 +1081,15 @@
       "viewHistory": "Ver histórico"
     },
     "messaging": {
-      "loading": "Carregando",
-      "loadingList": "Carregando lista, aguarde...",
+      "loading": "Baixar",
+      "loadingList": "Carregando lista, por favor aguarde...",
       "loadingPage": "Carregando página...",
-      "submitting": "Enviando...",
+      "submitting": "Submetendo...",
       "submittingSROnly": "Enviando solicitação de feedback...",
-      "save": "Salvar",
+      "save": "Guardar",
       "saving": "Salvando...",
       "pageLoaded": "Página carregada",
       "noItemsFound": "Nenhum item encontrado",
-      "detailsToggleAria": "{action} detalhes de {title}",
       "somethingWentWrong": "Ocorreu um erro. Tente novamente.",
       "resultsText": "Os resultados {name} correspondem à sua pesquisa",
       "fixBelow": "Por favor, corrija os erros abaixo",
@@ -928,27 +1097,36 @@
       "sectionIsExpanded": "Secção expandida",
       "sectionIsCollapsed": "Seção colapsada",
       "continueAnyway": "Continuar assim mesmo",
+      "exportingProgress": "Exporting progress: {percent}% complete",
       "error": "Ocorreu um erro. Tente novamente.",
+      "exportComplete": "Export complete",
+      "exportFailed": "Export failed",
+      "exportingLabel": "Exporting...",
       "errors": {
         "invalidQuestionType": "Tipo de questão inválido encontrado.",
         "questionUnexpectedFormat": "Formato inesperado para question.json.",
         "questionJSONFParseFailed": "JSON.parse falhou.",
         "requiredField": "{field} é obrigatório",
-        "errorParsingData": "Error parsing data",
-        "institutionSuggestionsLoadError": "Não foi possível carregar as sugestões de instituição. Tente novamente."
+        "errorParsingData": "Erro ao analisar dados",
+        "positiveNumberOnly": "{field} deve ser um inteiro positivo",
+        "byteSizeWithoutContext": "{field} deve ser um tamanho de unidade válido",
+        "invalidDateFormat": "{field} deve ser uma data válida",
+        "institutionSuggestionsLoadError": "Não foi possível carregar as sugestões da instituição. Por favor, tente novamente.",
+        "passMissMatch": "As senhas não conferem"
       },
       "numDisplaying": "Mostrando {num} de {total}",
-      "unsavedChangesWarning": "Você tem alterações não salvas. Tem certeza que deseja sair desta página?"
+      "unsavedChangesWarning": "Você tem alterações não salvas. Tem certeza que deseja sair desta página?",
+      "detailsToggleAria": "{action} detalhes de {title}"
     },
     "tabs": {
       "editQuestion": "Editar pergunta",
       "options": "Opções",
-      "logic": "Lógica"
+      "logic": "Lógica de exibição"
     },
     "headings": {
       "preview": "Pré-visualizar",
-      "requirementsByFunder": "Requisitos do {funder}",
-      "guidanceFromOrg": "Orientação da {org}",
+      "requirementsByFunder": "Requisitos de {funder}",
+      "guidanceFromOrg": "Orientação de {org}",
       "requirements": "Requisitos",
       "guidance": "Orientação"
     },
@@ -971,13 +1149,23 @@
       "filteredSearch": "Pesquisa com filtros",
       "table": "Tabela",
       "affiliationSearch": "Busca de afiliação",
-      "researchOutputTable": "Tabela de resultados de pesquisa"
+      "researchOutputTable": "Tabela de saída de pesquisa"
     },
     "status": {
       "published": "Publicado",
       "draft": "Rascunho",
       "unpublishedChanges": "Alterações não publicadas",
       "notStarted": "Não iniciado"
+    },
+    "passwordRequirements": {
+      "description": "Crie uma senha que:",
+      "minLength": "Pelo menos 8 caracteres",
+      "hasUppercase": "1 letra maiúscula",
+      "hasLowercase": "Uma letra minúscula",
+      "hasNumber": "Um número",
+      "hasSpecialChar": "Um caractere especial (` ! @ # $ % ^ & * - _ = + ?)",
+      "metPrefix": "Requisito atendido:",
+      "unmetPrefix": "Requisito ainda não cumprido:"
     }
   },
   "OrganizationTemplates": {
@@ -996,7 +1184,49 @@
     },
     "ariaLabels": {
       "editMember": "Editar detalhes de {name}",
-      "orcidProfile": "Ver o perfil ORCID de {name} (abre em uma nova aba)"
+      "orcidProfile": "Visualizar perfil ORCID do {name}(abre em uma nova aba)"
+    }
+  },
+  "Contact": {
+    "title": "Contate-nos",
+    "contactDescription": "A Ferramenta DMP é fornecida pelo Centro de Curação da Universidade da Califórnia (UC3). Você pode saber mais sobre nós no nosso <link />site.",
+    "contactDescriptionLoggedIn": "Se você gostaria de nos contatar sobre a Ferramenta DMP, por favor preencha o formulário abaixo.",
+    "contactDescriptionLoggedOut": "Se você gostaria de saber mais sobre a Ferramenta DMP, gostaria de se tornar uma organização participante, ou está tendo dificuldade para acessar sua conta, por favor, envie um e-mail para o nosso helpdesk: dmptool [at] ucop [dot] edu.",
+    "form": {
+      "labels": {
+        "name": "Nome:",
+        "email": "E-mail",
+        "subject": "Cargo",
+        "message": "Mensagem"
+      }
+    },
+    "messages": {
+      "success": {
+        "messageSent": "Sua mensagem foi enviada com sucesso.",
+        "ticketCreated": "Obrigado por entrar. Nós criamos um ticket e você deve receber um e-mail de confirmação do Suporte à Ferramenta DMP."
+      },
+      "errors": {
+        "invalidEmail": "Endereço de e-mail invalido",
+        "invalidName": "O nome deve ter no m&iacute;nimo 2 caracteres",
+        "invalidSubject": "A senha deve ter pelo menos 2 caracteres",
+        "invalidMessage": "O nome deve ter no m&iacute;nimo 2 caracteres",
+        "formSubmittalFailed": "Falha ao enviar o formulário. Tente novamente mais tarde."
+      }
+    }
+  },
+  "OrganizationUserProjects": {
+    "title": "Projetos e planos do usuário",
+    "intro": "Os planos deste usuário estão agrupados em projetos de pesquisa. Use a Pesquisa para encontrar planos em seus projetos.",
+    "projectsList": "Projetos do usuário",
+    "messages": {
+      "info": {
+        "noProjectsHeading": "Este usuário ainda não tem projetos",
+        "noProjectsDescription": "Quando este usuário criar planos de gerenciamento de dados, eles serão listados aqui, agrupados em projetos."
+      },
+      "errors": {
+        "errorRetrievingProjects": "Algo deu errado ao recuperar projetos. Por favor, tente novamente mais tarde.",
+        "failedToLoadMore": "Falha ao carregar mais projetos"
+      }
     }
   }
 }

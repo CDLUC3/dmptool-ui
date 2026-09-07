@@ -53,7 +53,7 @@
     "react-dom": "19.2.8",
     "react-transition-progress": "0.0.4",
     "rxjs": "7.8.2",
-    "sanitize-html": "2.17.6",
+    "sanitize-html": "2.17.7",
     "tinymce": "7.9.3",
     "zod": "4.4.3"
   },
@@ -97,7 +97,7 @@
   },
   "overrides": {
     "postcss": "8.5.25",
-    "qs": "6.15.3",
+    "qs": "6.16.0",
     "js-yaml": "4.3.1",
     "systeminformation": "5.31.17",
     "sharp": "0.35.0"
