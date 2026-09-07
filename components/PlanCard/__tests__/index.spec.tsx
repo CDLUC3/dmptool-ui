@@ -21,21 +21,21 @@ const templatePlan: PlanCardPlan = {
       versionedSectionId: 1,
       title: "Types of data produced",
       href: "/sections/1",
-      answeredQuestions: 1,
-      totalQuestions: 2,
+      answeredRequiredQuestions: 1,
+      totalRequiredQuestions: 2,
     },
     {
       versionedSectionId: 2,
       title: "Data and metadata standards",
       href: "/sections/2",
-      answeredQuestions: 0,
-      totalQuestions: 1,
+      answeredRequiredQuestions: 0,
+      totalRequiredQuestions: 1,
     },
     {
       customSectionId: 9,
       title: "Custom section",
-      answeredQuestions: 0,
-      totalQuestions: 1,
+      answeredRequiredQuestions: 0,
+      totalRequiredQuestions: 1,
     },
   ],
   downloadHref: "/download",
@@ -85,11 +85,20 @@ describe("PlanCard", () => {
       expect(screen.getByRole("heading", { name: "sections" })).toBeInTheDocument();
       expect(screen.getByRole("list", { name: "sections" })).toBeInTheDocument();
       expect(screen.getByRole("link", { name: "Types of data produced" })).toHaveAttribute("href", "/sections/1");
-      expect(screen.getAllByText("progress")).toHaveLength(3);
+      expect(screen.getAllByText("progressRequired")).toHaveLength(3);
+      expect(screen.queryByText("progress")).not.toBeInTheDocument();
       expect(screen.getByText("Custom section")).toBeInTheDocument();
       expect(screen.getByRole("link", { name: "https://doi.org/10.1111/example" })).toHaveAttribute(
         "href",
         "https://doi.org/10.1111/example",
+      );
+      expect(screen.getByRole("link", { name: "https://doi.org/10.1111/example" })).toHaveAttribute(
+        "target",
+        "_blank",
+      );
+      expect(screen.getByRole("link", { name: "https://doi.org/10.1111/example" })).toHaveAttribute(
+        "rel",
+        "noopener noreferrer",
       );
       expect(screen.getByText(/lastUpdated: 14-07-2026/)).toBeInTheDocument();
       expect(screen.getByText(/created: 13-07-2026/)).toBeInTheDocument();
@@ -129,8 +138,8 @@ describe("PlanCard", () => {
             versionedSectionId: 1,
             title: "   ",
             href: "/sections/1",
-            answeredQuestions: 0,
-            totalQuestions: 1,
+            answeredRequiredQuestions: 0,
+            totalRequiredQuestions: 1,
           },
         ],
       };
@@ -205,13 +214,56 @@ describe("PlanCard", () => {
             versionedSectionId: 1,
             title: "Types of data produced",
             href: "/sections/1",
-            answeredQuestions: 1,
+            answeredRequiredQuestions: 1,
           },
         ],
       };
       render(<PlanCard plan={plan} />);
 
       expect(screen.getByRole("link", { name: "Types of data produced" })).toBeInTheDocument();
+      expect(screen.queryByText("progressRequired")).not.toBeInTheDocument();
+      expect(screen.queryByText("progress")).not.toBeInTheDocument();
+    });
+
+    it("falls back to all-question progress when a section has no required questions", () => {
+      const plan: PlanCardPlan = {
+        ...templatePlan,
+        versionedSections: [
+          {
+            versionedSectionId: 1,
+            title: "Types of data produced",
+            href: "/sections/1",
+            answeredRequiredQuestions: 0,
+            totalRequiredQuestions: 0,
+            answeredQuestions: 0,
+            totalQuestions: 1,
+          },
+        ],
+      };
+      render(<PlanCard plan={plan} />);
+
+      expect(screen.getByRole("link", { name: "Types of data produced" })).toBeInTheDocument();
+      expect(screen.getByText("progress")).toBeInTheDocument();
+      expect(screen.queryByText("progressRequired")).not.toBeInTheDocument();
+    });
+
+    it("hides section progress when required total is zero and all-question counts are missing", () => {
+      const plan: PlanCardPlan = {
+        ...templatePlan,
+        versionedSections: [
+          {
+            versionedSectionId: 1,
+            title: "Types of data produced",
+            href: "/sections/1",
+            answeredRequiredQuestions: 0,
+            totalRequiredQuestions: 0,
+          },
+        ],
+      };
+      render(<PlanCard plan={plan} />);
+
+      expect(screen.getByRole("link", { name: "Types of data produced" })).toBeInTheDocument();
+      expect(screen.queryByText("progressRequired")).not.toBeInTheDocument();
       expect(screen.queryByText("progress")).not.toBeInTheDocument();
     });
 

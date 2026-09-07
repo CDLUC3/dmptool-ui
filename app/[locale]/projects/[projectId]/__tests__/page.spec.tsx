@@ -102,19 +102,23 @@ const mockProjectData = {
       versionedSections: [
         {
           answeredQuestions: 0,
+          answeredRequiredQuestions: 0,
           displayOrder: 1,
           versionedSectionId: 7,
           title: "Roles & Responsibilities",
           totalQuestions: 1,
+          totalRequiredQuestions: 1,
           customSectionId: null,
           sectionType: "BASE"
         },
         {
           answeredQuestions: 0,
+          answeredRequiredQuestions: 0,
           displayOrder: 2,
           versionedSectionId: null,
           title: "Custom section",
           totalQuestions: 1,
+          totalRequiredQuestions: 1,
           customSectionId: 2,
           sectionType: "CUSTOM"
         }

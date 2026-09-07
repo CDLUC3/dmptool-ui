@@ -35,12 +35,17 @@
       "title": "Atualizar documento",
       "replaceWarning": "O envio de um novo arquivo substituirá permanentemente <strong>{fileName}</strong>. Esta ação não pode ser desfeita.",
       "uploadHeading": "Enviar um Plano de Gestão de Dados (DMP)",
-      "fileTypes": "Somente arquivos PDF, DOC ou DOCX",
+      "fileTypes": "Somente arquivos PDF, DOC ou DOCX (máx. 20MB)",
       "selectFile": "Selecionar um arquivo",
       "dropHint": "Solte um arquivo aqui ou clique para selecionar",
       "selectedFile": "Arquivo selecionado: {fileName}",
       "dropAria": "Solte um arquivo aqui para enviar",
-      "upload": "Enviar"
+      "upload": "Enviar",
+      "errors": {
+        "invalidType": "Somente arquivos PDF, DOC ou DOCX são permitidos.",
+        "tooLarge": "Os arquivos devem ter no máximo 20MB.",
+        "multipleFiles": "Somente um arquivo pode ser enviado. Usando o primeiro arquivo."
+      }
     },
     "question": {
       "resizeAria": "Redimensionar pergunta — arraste, ou clique duas vezes para redefinir",

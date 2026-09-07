@@ -37,7 +37,7 @@ interface PlanAuthoringProps {
   dataSource: PlanAuthoringDataSource;
   className?: string;
   variant?: PlanAuthoringVariant;
-  document?: PlanDocument;
+  planDocument?: PlanDocument;
   idPrefix?: string;
 }
 
@@ -49,7 +49,7 @@ export default function PlanAuthoring({
   dataSource,
   className,
   variant = "questions",
-  document,
+  planDocument: initialPlanDocument,
   idPrefix = "plan-authoring",
 }: PlanAuthoringProps) {
   const t = useTranslations("PlanAuthoring");
@@ -62,7 +62,7 @@ export default function PlanAuthoring({
   const [customizeOpen, setCustomizeOpen] = useState(false);
   const [uploadOpen, setUploadOpen] = useState(false);
   const [planDocument, setPlanDocument] = useState<PlanDocument | undefined>(
-    document
+    initialPlanDocument
   );
 
   useEffect(() => {
@@ -72,8 +72,8 @@ export default function PlanAuthoring({
   }, [dataSource]);
 
   useEffect(() => {
-    setPlanDocument(document);
-  }, [document]);
+    setPlanDocument(initialPlanDocument);
+  }, [initialPlanDocument]);
 
   useSectionPickerShortcut(
     useCallback(() => {
@@ -196,7 +196,7 @@ export default function PlanAuthoring({
             </div>
             {planDocument ? (
               <PlanDocumentCard
-                document={planDocument}
+                planDocument={planDocument}
                 onUpdate={() => setUploadOpen(true)}
                 onDelete={() => {
                   setUploadOpen(false);

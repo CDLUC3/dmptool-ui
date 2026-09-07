@@ -59,7 +59,7 @@ export default function PlanAuthoringStyleGuidePage() {
       <PlanAuthoring
         dataSource={documentDataSource}
         variant="document"
-        document={DEMO_PLAN_DOCUMENT}
+        planDocument={DEMO_PLAN_DOCUMENT}
         idPrefix="plan-document"
       />
     </LayoutContainer>

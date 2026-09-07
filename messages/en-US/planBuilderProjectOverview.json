@@ -47,6 +47,7 @@
     "createNewPlan": "Create a new plan",
     "funder": "Funder",
     "planSections": "Plan sections",
+    "progressRequired": "{current} of {total} required",
     "progress": "{current} of {total}",
     "doi": "DOI",
     "lastUpdated": "Last updated",

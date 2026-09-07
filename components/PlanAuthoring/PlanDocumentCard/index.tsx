@@ -11,18 +11,18 @@ import type { PlanDocument } from "../model";
 import styles from "./PlanDocumentCard.module.scss";
 
 export interface PlanDocumentCardProps {
-  document: PlanDocument;
+  planDocument: PlanDocument;
   onUpdate: () => void;
   onDelete: () => void;
 }
 
-function fileTypeLabel(document: PlanDocument, unknownLabel: string): string {
-  const explicit = document.fileType?.trim();
+function fileTypeLabel(planDocument: PlanDocument, unknownLabel: string): string {
+  const explicit = planDocument.fileType?.trim();
   if (explicit) {
     return explicit;
   }
 
-  const parts = document.fileName.split(".");
+  const parts = planDocument.fileName.split(".");
   if (parts.length < 2) {
     return unknownLabel;
   }
@@ -31,15 +31,15 @@ function fileTypeLabel(document: PlanDocument, unknownLabel: string): string {
 }
 
 export default function PlanDocumentCard({
-  document,
+  planDocument,
   onUpdate,
   onDelete,
 }: PlanDocumentCardProps) {
   const t = useTranslations("PlanAuthoring");
   const Global = useTranslations("Global");
-  const fileType = fileTypeLabel(document, t("document.unknownFileType"));
+  const fileType = fileTypeLabel(planDocument, t("document.unknownFileType"));
   const downloadLabel = t("document.downloadAria", {
-    fileName: document.fileName,
+    fileName: planDocument.fileName,
   });
 
   return (
@@ -66,46 +66,46 @@ export default function PlanDocumentCard({
           </span>
           <div className={styles.documentMeta}>
             <h3 className={styles.fileName}>
-              {document.downloadHref ? (
+              {planDocument.downloadHref ? (
                 <TransitionLink
-                  href={document.downloadHref}
+                  href={planDocument.downloadHref}
                   className={styles.fileNameLink}
                 >
-                  {document.fileName}
+                  {planDocument.fileName}
                 </TransitionLink>
               ) : (
-                document.fileName
+                planDocument.fileName
               )}
             </h3>
             <p className={styles.fileType}>
               {t("document.fileType", { type: fileType })}
             </p>
-            {document.doi ? (
+            {planDocument.doi ? (
               <p className={styles.doi}>
                 <span className={styles.doiLabel}>{t("document.doi")} </span>
-                {document.doi.startsWith("http") ? (
+                {planDocument.doi.startsWith("http") ? (
                   <AriaLink
-                    href={document.doi}
+                    href={planDocument.doi}
                     className={styles.doiLink}
                   >
-                    {document.doi}
+                    {planDocument.doi}
                   </AriaLink>
                 ) : (
-                  document.doi
+                  planDocument.doi
                 )}
               </p>
             ) : null}
             <p className={styles.timestamps}>
-              {document.modified ? (
+              {planDocument.modified ? (
                 <span>
-                  {t("document.lastUpdated", { date: document.modified })}
+                  {t("document.lastUpdated", { date: planDocument.modified })}
                 </span>
               ) : null}
-              {document.modified && document.created ? (
+              {planDocument.modified && planDocument.created ? (
                 <span aria-hidden="true"> · </span>
               ) : null}
-              {document.created ? (
-                <span>{t("document.created", { date: document.created })}</span>
+              {planDocument.created ? (
+                <span>{t("document.created", { date: planDocument.created })}</span>
               ) : null}
             </p>
             <div className={styles.secondaryActions}>
@@ -120,7 +120,7 @@ export default function PlanDocumentCard({
                 <ModalOverlayComponent
                   heading={t("document.deleteTitle")}
                   content={t("document.deleteWarning", {
-                    fileName: document.fileName,
+                    fileName: planDocument.fileName,
                   })}
                   btnSecondaryText={Global("buttons.cancel")}
                   btnPrimaryText={Global("buttons.delete")}
@@ -133,10 +133,10 @@ export default function PlanDocumentCard({
             </div>
           </div>
         </div>
-        {document.downloadHref && (
+        {planDocument.downloadHref && (
           <div className={styles.downloadAction}>
             <TransitionLink
-              href={document.downloadHref}
+              href={planDocument.downloadHref}
               className="react-aria-Button secondary"
               aria-label={downloadLabel}
             >

@@ -20,7 +20,7 @@ describe("PlanDocumentCard", () => {
   it("renders the file name, DOI, dates, and actions", () => {
     render(
       <PlanDocumentCard
-        document={planDocument}
+        planDocument={planDocument}
         onUpdate={jest.fn()}
         onDelete={jest.fn()}
       />
@@ -29,10 +29,9 @@ describe("PlanDocumentCard", () => {
     expect(
       screen.getByRole("link", { name: planDocument.fileName })
     ).toHaveAttribute("href", "#download");
-    expect(screen.getByRole("link", { name: planDocument.doi })).toHaveAttribute(
-      "href",
-      planDocument.doi
-    );
+    expect(
+      screen.getByRole("link", { name: "https://doi.org/10.48321/D116c4ef8f" })
+    ).toHaveAttribute("href", planDocument.doi);
     expect(screen.getByText("document.lastUpdated")).toBeInTheDocument();
     expect(screen.getByText("document.created")).toBeInTheDocument();
     expect(
@@ -49,7 +48,7 @@ describe("PlanDocumentCard", () => {
   it("derives the file type from the filename when none is provided", () => {
     render(
       <PlanDocumentCard
-        document={{ fileName: "notes.docx" }}
+        planDocument={{ fileName: "notes.docx" }}
         onUpdate={jest.fn()}
         onDelete={jest.fn()}
       />
@@ -62,7 +61,7 @@ describe("PlanDocumentCard", () => {
   it("hides download when there is no download href", () => {
     render(
       <PlanDocumentCard
-        document={{ fileName: "plan.pdf", fileType: "PDF" }}
+        planDocument={{ fileName: "plan.pdf", fileType: "PDF" }}
         onUpdate={jest.fn()}
         onDelete={jest.fn()}
       />
@@ -83,7 +82,7 @@ describe("PlanDocumentCard", () => {
   it("omits DOI and date lines that are not provided", () => {
     render(
       <PlanDocumentCard
-        document={{ fileName: "plan.pdf", modified: "04-13-2026" }}
+        planDocument={{ fileName: "plan.pdf", modified: "04-13-2026" }}
         onUpdate={jest.fn()}
         onDelete={jest.fn()}
       />
@@ -97,7 +96,7 @@ describe("PlanDocumentCard", () => {
   it("renders created without a separator when modified is missing", () => {
     render(
       <PlanDocumentCard
-        document={{ fileName: "plan.pdf", created: "04-13-2026" }}
+        planDocument={{ fileName: "plan.pdf", created: "04-13-2026" }}
         onUpdate={jest.fn()}
         onDelete={jest.fn()}
       />
@@ -110,7 +109,7 @@ describe("PlanDocumentCard", () => {
   it("renders a non-URL DOI as text", () => {
     render(
       <PlanDocumentCard
-        document={{ fileName: "plan.pdf", doi: "10.1234/example" }}
+        planDocument={{ fileName: "plan.pdf", doi: "10.1234/example" }}
         onUpdate={jest.fn()}
         onDelete={jest.fn()}
       />
@@ -127,7 +126,7 @@ describe("PlanDocumentCard", () => {
     const onUpdate = jest.fn();
     render(
       <PlanDocumentCard
-        document={planDocument}
+        planDocument={planDocument}
         onUpdate={onUpdate}
         onDelete={jest.fn()}
       />
@@ -144,7 +143,7 @@ describe("PlanDocumentCard", () => {
     const onDelete = jest.fn();
     render(
       <PlanDocumentCard
-        document={planDocument}
+        planDocument={planDocument}
         onUpdate={jest.fn()}
         onDelete={onDelete}
       />
@@ -167,7 +166,7 @@ describe("PlanDocumentCard", () => {
     const onDelete = jest.fn();
     render(
       <PlanDocumentCard
-        document={planDocument}
+        planDocument={planDocument}
         onUpdate={jest.fn()}
         onDelete={onDelete}
       />
@@ -187,7 +186,7 @@ describe("PlanDocumentCard", () => {
   it("has no accessibility violations", async () => {
     const { container } = render(
       <PlanDocumentCard
-        document={planDocument}
+        planDocument={planDocument}
         onUpdate={jest.fn()}
         onDelete={jest.fn()}
       />
@@ -201,7 +200,7 @@ describe("PlanDocumentCard", () => {
     const user = userEvent.setup();
     render(
       <PlanDocumentCard
-        document={planDocument}
+        planDocument={planDocument}
         onUpdate={jest.fn()}
         onDelete={jest.fn()}
       />

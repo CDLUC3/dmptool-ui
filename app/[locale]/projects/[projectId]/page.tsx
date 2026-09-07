@@ -386,7 +386,9 @@ const ProjectOverviewPage: React.FC = () => {
                 <PlanCard
                   key={plan.id ?? planId}
                   plan={{
-                    variant: "template",
+                    // PlanSearchResult has no variant field yet; cast until GraphQL adds it.
+                    // Prefer API value when present, otherwise default to template.
+                    variant: (plan as { variant?: "template" | "uploaded" }).variant || "template",
                     title: plan.title || plan.templateTitle,
                     funding: plan.funding,
                     dmpId: plan.dmpId,

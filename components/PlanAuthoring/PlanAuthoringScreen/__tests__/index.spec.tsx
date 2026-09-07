@@ -88,7 +88,7 @@ describe("PlanAuthoringScreen", () => {
       <PlanAuthoring
         dataSource={dataSource}
         variant="document"
-        document={DEMO_PLAN_DOCUMENT}
+        planDocument={DEMO_PLAN_DOCUMENT}
       />
     );
 
@@ -129,7 +129,7 @@ describe("PlanAuthoringScreen", () => {
       <PlanAuthoring
         dataSource={dataSource}
         variant="document"
-        document={DEMO_PLAN_DOCUMENT}
+        planDocument={DEMO_PLAN_DOCUMENT}
       />
     );
 
@@ -151,7 +151,7 @@ describe("PlanAuthoringScreen", () => {
       <PlanAuthoring
         dataSource={dataSource}
         variant="document"
-        document={DEMO_PLAN_DOCUMENT}
+        planDocument={DEMO_PLAN_DOCUMENT}
       />
     );
 
@@ -171,7 +171,7 @@ describe("PlanAuthoringScreen", () => {
       <PlanAuthoring
         dataSource={dataSource}
         variant="document"
-        document={DEMO_PLAN_DOCUMENT}
+        planDocument={DEMO_PLAN_DOCUMENT}
       />
     );
 
@@ -179,7 +179,7 @@ describe("PlanAuthoringScreen", () => {
       <PlanAuthoring
         dataSource={dataSource}
         variant="document"
-        document={{
+        planDocument={{
           ...DEMO_PLAN_DOCUMENT,
           fileName: "Updated_Plan.pdf",
         }}
@@ -195,7 +195,7 @@ describe("PlanAuthoringScreen", () => {
       <PlanAuthoring
         dataSource={dataSource}
         variant="document"
-        document={DEMO_PLAN_DOCUMENT}
+        planDocument={DEMO_PLAN_DOCUMENT}
       />
     );
 

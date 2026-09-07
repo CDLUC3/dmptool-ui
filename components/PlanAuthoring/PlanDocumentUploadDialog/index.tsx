@@ -10,6 +10,7 @@ import {
   Heading,
   Modal,
   ModalOverlay,
+  Text,
 } from "react-aria-components";
 import type { DropEvent, FileDropItem } from "react-aria";
 import styles from "./PlanDocumentUploadDialog.module.scss";
@@ -19,6 +20,22 @@ const ACCEPTED_TYPES = [
   "application/msword",
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
 ];
+
+const ACCEPTED_EXTENSIONS = [".pdf", ".doc", ".docx"];
+
+const MAX_FILE_SIZE_BYTES = 20 * 1024 * 1024; // 20MB
+
+type UploadErrorKey = "invalidType" | "tooLarge" | "multipleFiles";
+
+function hasAcceptedType(file: File): boolean {
+  if (ACCEPTED_TYPES.includes(file.type)) {
+    return true;
+  }
+
+  // file.type can be empty if the browser/OS cannot determine the MIME type
+  const name = file.name.toLowerCase();
+  return ACCEPTED_EXTENSIONS.some((ext) => name.endsWith(ext));
+}
 
 export interface PlanDocumentUploadDialogProps {
   isOpen: boolean;
@@ -36,15 +53,30 @@ export default function PlanDocumentUploadDialog({
   const t = useTranslations("PlanAuthoring");
   const Global = useTranslations("Global");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [errorKey, setErrorKey] = useState<UploadErrorKey | null>(null);
 
   useEffect(() => {
     if (isOpen) {
       setSelectedFile(null);
+      setErrorKey(null);
     }
   }, [isOpen]);
 
-  const handleFile = (file: File) => {
+  const handleFile = (file: File, options?: { multipleDropped?: boolean }) => {
+    if (!hasAcceptedType(file)) {
+      setSelectedFile(null);
+      setErrorKey("invalidType");
+      return;
+    }
+
+    if (file.size > MAX_FILE_SIZE_BYTES) {
+      setSelectedFile(null);
+      setErrorKey("tooLarge");
+      return;
+    }
+
     setSelectedFile(file);
+    setErrorKey(options?.multipleDropped ? "multipleFiles" : null);
   };
 
   const handleDrop = (event: DropEvent) => {
@@ -52,9 +84,14 @@ export default function PlanDocumentUploadDialog({
       (item) => item.kind === "file"
     ) as FileDropItem[];
 
-    if (files[0]) {
-      void files[0].getFile().then(handleFile);
+    if (!files[0]) {
+      return;
     }
+
+    const multipleDropped = files.length > 1;
+    void files[0].getFile().then((file) => {
+      handleFile(file, { multipleDropped });
+    });
   };
 
   return (
@@ -114,6 +151,18 @@ export default function PlanDocumentUploadDialog({
                     })
                   : t("uploadDialog.dropHint")}
               </p>
+              {errorKey && (
+                <Text
+                  className={
+                    errorKey === "multipleFiles"
+                      ? styles.notice
+                      : styles.error
+                  }
+                  role="alert"
+                >
+                  {t(`uploadDialog.errors.${errorKey}`)}
+                </Text>
+              )}
             </DropZone>
           </div>
 

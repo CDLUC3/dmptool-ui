@@ -15,9 +15,17 @@ export interface PlanCardSection {
   href?: string;
   versionedSectionId?: number | null;
   customSectionId?: number | null;
+  answeredRequiredQuestions?: number;
+  totalRequiredQuestions?: number;
   answeredQuestions?: number;
   totalQuestions?: number;
 }
+
+type SectionProgress = {
+  messageKey: "progressRequired" | "progress";
+  current: number;
+  total: number;
+};
 
 export interface PlanCardPlan {
   title?: string | null;
@@ -63,8 +71,47 @@ function MetaLine({ parts }: { parts: string[] }) {
   );
 }
 
-function resolveVariant(variant: unknown): PlanCardVariant {
-  return variant === "uploaded" ? "uploaded" : "template";
+function resolveSectionProgress(section: PlanCardSection): SectionProgress | null {
+  if (
+    typeof section.totalRequiredQuestions === "number" &&
+    section.totalRequiredQuestions > 0 &&
+    typeof section.answeredRequiredQuestions === "number"
+  ) {
+    return {
+      messageKey: "progressRequired",
+      current: section.answeredRequiredQuestions,
+      total: section.totalRequiredQuestions,
+    };
+  }
+
+  if (
+    typeof section.totalQuestions === "number" &&
+    section.totalQuestions > 0 &&
+    typeof section.answeredQuestions === "number"
+  ) {
+    return {
+      messageKey: "progress",
+      current: section.answeredQuestions,
+      total: section.totalQuestions,
+    };
+  }
+
+  return null;
+}
+
+function resolveVariant(variant: PlanCardVariant | undefined): PlanCardVariant {
+  switch (variant) {
+    case "uploaded":
+      return "uploaded";
+    case "template":
+    case undefined:
+      return "template";
+    default: {
+      // Compile error if PlanCardVariant gains a new variant; runtime fallback for unexpected values.
+      const _exhaustive: never = variant;
+      return "template";
+    }
+  }
 }
 
 function PlanCard({ plan, className = "" }: PlanCardProps) {
@@ -131,6 +178,7 @@ function PlanCard({ plan, className = "" }: PlanCardProps) {
               >
                 {sections.map((section, index) => {
                   const sectionTitle = displayText(section.title, t("untitledSection"));
+                  const progress = resolveSectionProgress(section);
 
                   return (
                     <li
@@ -147,11 +195,11 @@ function PlanCard({ plan, className = "" }: PlanCardProps) {
                       ) : (
                         <span className={styles.sectionTitle}>{sectionTitle}</span>
                       )}
-                      {section.answeredQuestions != null && section.totalQuestions != null && (
+                      {progress && (
                         <span className={styles.progress}>
-                          {t("progress", {
-                            current: section.answeredQuestions,
-                            total: section.totalQuestions,
+                          {t(progress.messageKey, {
+                            current: progress.current,
+                            total: progress.total,
                           })}
                         </span>
                       )}
@@ -168,6 +216,8 @@ function PlanCard({ plan, className = "" }: PlanCardProps) {
                 <AriaLink
                   href={plan.dmpId}
                   className={styles.doiLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
                 >
                   {plan.dmpId}
                 </AriaLink>
