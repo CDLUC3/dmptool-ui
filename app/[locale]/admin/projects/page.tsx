@@ -62,6 +62,7 @@ const OrganizationProjectsListPage: React.FC = () => {
   const [fetchFailed, setFetchFailed] = useState(false);
   const [fetchProjects, { data: projectData, loading: projectsLoading, error: projectsError }] = useLazyQuery(MyProjectsDocument, {
     notifyOnNetworkStatusChange: true,
+    fetchPolicy: "no-cache",
   });
   const [searchResults, setSearchResults] = useState<ProjectItemProps[]>([]);
   const [isSearchFetch, setIsSearchFetch] = useState(false);
@@ -105,7 +106,6 @@ const OrganizationProjectsListPage: React.FC = () => {
           // Distinct from the mount query (no term key) so Apollo does not reuse that result.
           term: "",
         },
-        fetchPolicy: "no-cache",
       });
     } catch (err) {
       recordProjectsFetchFailure("resetSearch", err);
