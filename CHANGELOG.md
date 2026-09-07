@@ -1,6 +1,7 @@
 ## Added
 - Added `PlanCard` with template and uploaded variants on the project overview, plus styleguide demos [#93]
 - Added plan authoring uploaded-document view with document card, update/replace dialog, and styleguide demo [#93]
+- Added `TriggerQuestionsForQuestion` query [#360]
 - Added missing tests for `PlanAuthoring` components, because the tests were not meeting coverage requirements [#339]
 - Added new `ArchivedPlanView` component that renders different versions, and simplified `DmpLandingPage` to mainly be a wrapper [#339]
 - Added new `useFormatDateWithMonth` to shared date utilities [#339]
@@ -44,6 +45,9 @@
 
 ## Updated
 - Updated `PlanCard` section progress to prefer required counts (`X of Y required`), falling back to all-question counts (`X of Y`) when none are required [#93]
+- Updated `DisplayLogicComponent.tsx` to show condition joiner within condition groups as well as between condition groups [#360]
+- Updated `QuestionEdit` to call `TriggerQuestionsForQuestionDocument` to get the qualifying trigger questions [#360]
+- Updated `useTriggerQuestions` hook to remove currentDisplayOrder since the backend does those calculations before sending data [#360]
 - Updated plan title on landing page to expand across the full width [#339]
 - Updated `DmpLandingPage` to just use the new `PublicPlanVersionByDmpIdDocument` query, which calls on DynamoDB to get the data [#339]
 - Updated `ProjectsProjectFunding` page to display `View` button for funding if in `readOnly` mode [#246]

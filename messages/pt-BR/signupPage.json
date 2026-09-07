@@ -19,6 +19,7 @@
     "submitSignup": "Criar conta",
     "signingUp": "Cadastrando-se",
     "loginLink": "Você já tem uma conta de DMP?",
-    "helpLink": "Obter ajuda"
+    "helpLink": "Obter ajuda",
+    "passwordRequirements": "A senha deve atender aos requisitos abaixo"
   }
 }

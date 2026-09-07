@@ -21,6 +21,23 @@ query Questions($sectionId: Int!) {
   }
 }
 
+query TriggerQuestionsForQuestion($questionId: Int!) {
+  triggerQuestionsForQuestion(questionId: $questionId) {
+    id
+    displayOrder
+    questionText
+    guidanceText
+    errors {
+      general
+    }
+    required
+    requirementText
+    templateId
+    json
+    sectionId
+  }
+}
+
 query PlanSectionQuestions($sectionId: Int!) {
   questions(sectionId: $sectionId) {
     id

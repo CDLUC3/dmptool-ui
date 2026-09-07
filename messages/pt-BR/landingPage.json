@@ -1,0 +1,70 @@
+{
+  "LandingPage": {
+    "dmpTool": "Ferramenta DMP",
+    "templateInfoWithOrg": "Esta página descreve um plano de gerenciamento de dados escrito para <orglink>{orgName}</orglink> usando a <dmptoollink>Ferramenta DMP</dmptoollink>.",
+    "templateInfoWithoutOrg": "Esta página descreve um plano de gerenciamento de dados usando a <dmptoollink>Ferramenta DMP</dmptoollink>.",
+    "downloadPlan": "Baixar o plano <pdflabel>(PDF)</pdflabel>",
+    "viewAsJson": "Ver no formato JSON",
+    "opensInNewWindow": "Abrir em uma nova janela",
+    "projectStart": "Início do projeto",
+    "projectEnd": "Final do projeto",
+    "researchDomain": "Domínio de pesquisa",
+    "dmpCreated": "DMP criado",
+    "dmpLastModified": "DMP modificado recentemente",
+    "dmpLastModifiedBy": "DMP modificado por",
+    "whenCitingThisDMP": "Ao citar este uso de DMP",
+    "dataManagementPlan": "Plano de gerenciamento de dados",
+    "dmpIdInfo": "Ao conectar a este DMP com saídas de projetos relacionados (como datasets) use o ID: <dmpidlink>{dmpId}</dmpidlink>",
+    "fundingOpportunity": "Oportunidade de financiamento",
+    "registeredDMP": "Plano de gerenciamento de dados (registrado)",
+    "dmpId": "ID DMP",
+    "noCitationInfo": "Nenhuma citação disponível.",
+    "DMPTool": "DMPFerramenta",
+    "untitledPlan": "Plano sem título",
+    "primaryContact": "Contato principal",
+    "sectionHeadings": {
+      "plannedOutputs": "Saídas planejadas",
+      "projectDescription": "Descrição do projeto",
+      "fundingStatusAndSources": "Status do financiamento e fontes",
+      "citation": "Citação",
+      "projectDetails": "Detalhes de Projeto",
+      "contributors": "Colaboradores para este projeto",
+      "relatedWorks": "Outras obras associadas a este projeto"
+    },
+    "output": {
+      "format": "Formato",
+      "metaDataStandards": "Padrões de metadado(s)",
+      "anticipatedVolume": "Volume esperado",
+      "releaseTimeline": "Liberar timeline",
+      "intendedRepository": "Repositório interno",
+      "licenseForReuse": "Licença para reutilização",
+      "UntitledOutput": "Saída sem título"
+    },
+    "funding": {
+      "status": "Status",
+      "funder": "Finalizações",
+      "projectNumber": "Número do Projeto",
+      "grant": "Conceder"
+    },
+    "errors": {
+      "failedToDownloadPDF": "Failed to download PDF",
+      "failedToDownloadWithStatus": "O download do PDF falhou com o status {status}",
+      "pdfNotAvailable": "Download de PDF não está disponível para este plano"
+    },
+    "messages": {
+      "versionNotFound": "Versão não encontrada",
+      "dmpNotFound": "Plano de gerenciamento de dados não encontrado",
+      "cannotFindVersion": "Não foi possível encontrar a versão {version} deste plano de gerenciamento de dados.",
+      "planNotFound": "Não foi possível encontrar um plano de gerenciamento de dados publicado para {shortDoi}. Este plano pode ser privado ou o identificador pode estar incorreto."
+    },
+    "ariaLabel": {
+      "downloadPlan": "Baixe o plano de gerenciamento de dados (baixa um PDF, abre em uma nova aba)",
+      "viewAsJson": "Ver o plano de gerenciamento de dados como um arquivo JSON",
+      "orcidProfile": "Perfil ORCID para ${member}"
+    },
+    "footer": {
+      "serviceOf": "Este produto é um serviço da <uc3Link>Universidade de Curação da Califórnia</uc3Link> da <cdlLink>Biblioteca Digital da Califórnia</cdlLink>.",
+      "copyright": "Copyright 2010–{year} The Regents of the University of California."
+    }
+  }
+}
