@@ -39,6 +39,7 @@ import { logECS, routePath } from "@/utils/index";
 import styles from "./OrganizationProjectsListPage.module.scss";
 
 const LIMIT = 10;
+const LIST_LOAD_TIMEOUT_MS = 30000;
 
 type OrgProject = NonNullable<
   NonNullable<NonNullable<MyProjectsQuery["myProjects"]>["items"]>[number]
@@ -58,7 +59,8 @@ const OrganizationProjectsListPage: React.FC = () => {
   const [nextCursor, setNextCursor] = useState<string | null>(null);
 
   const [totalCount, setTotalCount] = useState<number | null>(0);
-  const [fetchProjects, { data: projectData, loading: projectsLoading }] = useLazyQuery(MyProjectsDocument, {
+  const [fetchFailed, setFetchFailed] = useState(false);
+  const [fetchProjects, { data: projectData, loading: projectsLoading, error: projectsError }] = useLazyQuery(MyProjectsDocument, {
     notifyOnNetworkStatusChange: true,
   });
   const [searchResults, setSearchResults] = useState<ProjectItemProps[]>([]);
@@ -67,26 +69,47 @@ const OrganizationProjectsListPage: React.FC = () => {
 
   const [searchNextCursor, setSearchNextCursor] = useState<string | null>(null);
   const [searchTotalCount, setSearchTotalCount] = useState<number | null>(0);
+  const isSearchFetchRef = useRef(false);
 
   const Global = useTranslations("Global");
   const Project = useTranslations("OrganizationProjects");
   const ProjectOverview = useTranslations("ProjectOverview");
 
-  const resetSearch = () => {
+  const recordProjectsFetchFailure = (context: string, err?: unknown) => {
+    setIsPageLoading(false);
+    setFetchFailed(true);
+    const message = Project("messages.errors.errorRetrievingProjects");
+    setErrors((prev) => (prev.includes(message) ? prev : [...prev, message]));
+    logECS("error", context, {
+      errors: err,
+      url: { path: routePath("projects.index") },
+    });
+  };
+
+  const resetSearch = async () => {
     setSearchTerm("");
     setIsSearchFetch(false);
+    isSearchFetchRef.current = false;
+    setFetchFailed(false);
     setProjects([]);
     setSearchResults([]);
     setSearchButtonClicked(false);
     setNextCursor(null);
     setSearchNextCursor(null);
-    fetchProjects({
-      variables: {
-        paginationOptions: {
-          limit: LIMIT,
+    try {
+      await fetchProjects({
+        variables: {
+          paginationOptions: {
+            limit: LIMIT,
+          },
+          // Distinct from the mount query (no term key) so Apollo does not reuse that result.
+          term: "",
         },
-      },
-    });
+        fetchPolicy: "no-cache",
+      });
+    } catch (err) {
+      recordProjectsFetchFailure("resetSearch", err);
+    }
     scrollToTop(topRef);
   };
 
@@ -103,19 +126,25 @@ const OrganizationProjectsListPage: React.FC = () => {
 
     setSearchButtonClicked(true);
     setErrors([]);
+    setFetchFailed(false);
     setIsSearchFetch(true);
+    isSearchFetchRef.current = true;
     setSearchResults([]);
     setSearchNextCursor(null);
 
-    await fetchProjects({
-      variables: {
-        paginationOptions: {
-          type: "CURSOR",
-          limit: LIMIT,
+    try {
+      await fetchProjects({
+        variables: {
+          paginationOptions: {
+            type: "CURSOR",
+            limit: LIMIT,
+          },
+          term: searchTerm.toLowerCase(),
         },
-        term: searchTerm.toLowerCase(),
-      },
-    });
+      });
+    } catch (err) {
+      recordProjectsFetchFailure("handleSearch", err);
+    }
   };
 
   // Handler for search "Load more"
@@ -269,20 +298,43 @@ const OrganizationProjectsListPage: React.FC = () => {
           limit: LIMIT,
         },
       },
+    }).catch((err) => {
+      recordProjectsFetchFailure("fetchProjects", err);
     });
   }, []);
+
+  useEffect(() => {
+    if (!projectsError) return;
+    recordProjectsFetchFailure("fetchProjects", projectsError);
+  }, [projectsError]);
+
+  useEffect(() => {
+    if (fetchFailed) return;
+    const waiting =
+      isPageLoading ||
+      (isSearchFetch && searchResults.length === 0 && projectsLoading);
+    if (!waiting) return;
+
+    const timeoutId = window.setTimeout(() => {
+      recordProjectsFetchFailure("fetchProjectsTimeout");
+    }, LIST_LOAD_TIMEOUT_MS);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [fetchFailed, isPageLoading, isSearchFetch, searchResults.length, projectsLoading]);
 
   // Transform project data when projectData updates
   useEffect(() => {
     if (!projectData || !projectData.myProjects) return;
 
     setIsPageLoading(false);
+    setFetchFailed(false);
 
     const items = (projectData.myProjects.items ?? [])
       .filter((item): item is OrgProject => item != null);
     const transformed = items.map(transformProject);
+    const searching = isSearchFetchRef.current;
 
-    if (isSearchFetch) {
+    if (searching) {
       if (searchResults.length === 0) {
         setSearchResults(transformed);
       } else {
@@ -308,7 +360,7 @@ const OrganizationProjectsListPage: React.FC = () => {
     if (projectErrors.length > 0) {
       setErrors((prev) => [...prev, ...projectErrors]);
     }
-  }, [projectData, isSearchFetch]);
+  }, [projectData]);
 
   useEffect(() => {
     // Need this to set list of projects back to original, full list after filtering
@@ -353,8 +405,9 @@ const OrganizationProjectsListPage: React.FC = () => {
     (totalCount === 0 || totalCount == null);
 
   const showListSkeleton =
-    isPageLoading ||
-    (isSearchFetch && searchResults.length === 0 && projectsLoading);
+    !fetchFailed &&
+    (isPageLoading ||
+      (isSearchFetch && searchResults.length === 0 && projectsLoading));
 
   return (
     <>
@@ -421,7 +474,7 @@ const OrganizationProjectsListPage: React.FC = () => {
             </Button>
           )}
           {showListSkeleton ? (
-            <SkeletonListLoading count={LIMIT} ariaLabel={Global("messaging.loadingList")} />
+            <SkeletonListLoading count={5} ariaLabel={Global("messaging.loadingList")} />
           ) : searchResults.length > 0 ? (
             <>
               <div

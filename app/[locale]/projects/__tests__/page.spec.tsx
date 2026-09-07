@@ -687,6 +687,57 @@ const mocks = [
       },
     },
   },
+  // Clear-filter refetch (term: "")
+  {
+    request: {
+      query: MyProjectsDocument,
+      variables: {
+        paginationOptions: {
+          limit: 3,
+        },
+        term: "",
+      },
+    },
+    result: {
+      data: {
+        myProjects: {
+          totalCount: 9,
+          nextCursor: "2025-08-05_00:00:004",
+          items: [
+            {
+              title: "Reef Havens: Exploring the Role of Reef Ecosystems in Sustaining Eel Populations",
+              id: 1,
+              startDate: "2025-09-01",
+              endDate: "2028-12-31",
+              fundings: [
+                {
+                  name: "National Science Foundation",
+                  grantId: null,
+                },
+              ],
+              members: [
+                {
+                  name: "Jacques Cousteau",
+                  role: "Data Manager, Formal analysis",
+                  orcid: "https://orcid.org/0000-JACQ-0000-0000",
+                },
+              ],
+              modified: "1785236348000",
+              collaborators: [
+                {
+                  name: "Jacques Cousteau",
+                  accessLevel: "Primary",
+                  orcid: null,
+                },
+              ],
+              plans: [],
+              errors: null,
+            },
+          ],
+        },
+      },
+    },
+  },
 ];
 
 const emptyProjectsMocks = [
@@ -755,6 +806,261 @@ const delayedEmptyProjectsMocks = [
     delay: 500,
   },
 ];
+
+const initialLoadErrorMocks = [
+  {
+    request: {
+      query: MyProjectsDocument,
+      variables: {
+        paginationOptions: {
+          limit: 3,
+        },
+      },
+    },
+    error: new Error("Network error"),
+  },
+];
+
+const hungInitialLoadMocks = [
+  {
+    request: {
+      query: MyProjectsDocument,
+      variables: {
+        paginationOptions: {
+          limit: 3,
+        },
+      },
+    },
+    result: {
+      data: {
+        myProjects: {
+          items: [],
+          nextCursor: null,
+          totalCount: 0,
+        },
+      },
+    },
+    delay: 60000,
+  },
+];
+
+const searchErrorMocks = [
+  mocks[0],
+  {
+    request: {
+      query: MyProjectsDocument,
+      variables: {
+        paginationOptions: {
+          type: "CURSOR",
+          limit: 3,
+        },
+        term: "reef",
+      },
+    },
+    error: new Error("Network error"),
+  },
+];
+
+const resetSearchErrorMocks = [
+  {
+    request: {
+      query: MyProjectsDocument,
+      variables: {
+        paginationOptions: {
+          limit: 3,
+        },
+      },
+    },
+    result: {
+      data: {
+        myProjects: {
+          totalCount: 9,
+          nextCursor: "2025-08-05_00:00:004",
+          items: [
+            {
+              title: "Initial Project",
+              id: 1,
+              startDate: "2025-01-01",
+              endDate: "2027-12-31",
+              fundings: [{ name: "NIH", grantId: null }],
+              members: [
+                {
+                  name: "Betty White",
+                  role: "Principal",
+                  orcid: "https://orcid.org/0000-BETTY-0000-0000",
+                },
+              ],
+              modified: "1785236348000",
+              collaborators: [],
+              plans: [],
+              errors: null,
+            },
+          ],
+        },
+      },
+    },
+  },
+  {
+    request: {
+      query: MyProjectsDocument,
+      variables: {
+        paginationOptions: {
+          type: "CURSOR",
+          limit: 3,
+        },
+        term: "reef",
+      },
+    },
+    result: {
+      data: {
+        myProjects: {
+          totalCount: 9,
+          nextCursor: "2025-08-05_00:00:004",
+          items: [
+            {
+              title: "Reef One",
+              id: 13,
+              startDate: "2025-01-01",
+              endDate: "2027-12-31",
+              fundings: [{ name: "NIH", grantId: null }],
+              members: [
+                {
+                  name: "Betty White",
+                  role: "Principal",
+                  orcid: "https://orcid.org/0000-BETTY-0000-0000",
+                },
+              ],
+              modified: "1785236348000",
+              collaborators: [],
+              plans: [],
+              errors: null,
+            },
+          ],
+        },
+      },
+    },
+  },
+  {
+    request: {
+      query: MyProjectsDocument,
+      variables: {
+        paginationOptions: {
+          limit: 3,
+        },
+        term: "",
+      },
+    },
+    error: new Error("Network error"),
+  },
+];
+
+const searchLoadMoreErrorMocks = [
+  mocks[0],
+  mocks[1],
+  mocks[4],
+  {
+    request: {
+      query: MyProjectsDocument,
+      variables: {
+        paginationOptions: {
+          type: "CURSOR",
+          cursor: "2025-08-05_00:00:004",
+          limit: 3,
+        },
+        term: "reef",
+      },
+    },
+    error: new Error("Network error"),
+  },
+];
+
+const defaultLoadMoreErrorMocks = [
+  mocks[0],
+  mocks[1],
+  {
+    request: {
+      query: MyProjectsDocument,
+      variables: {
+        paginationOptions: {
+          type: "CURSOR",
+          cursor: "2025-08-05_00:00:004",
+          limit: 3,
+        },
+      },
+    },
+    error: new Error("Network error"),
+  },
+];
+
+const titleOnlyErrorMock = {
+  request: {
+    query: MyProjectsDocument,
+    variables: {
+      paginationOptions: {
+        limit: 3,
+      },
+    },
+  },
+  result: {
+    data: {
+      myProjects: {
+        totalCount: 1,
+        nextCursor: null,
+        items: [
+          {
+            ...mocks[0].result.data.myProjects.items[0],
+            errors: { title: "x" },
+          },
+        ],
+      },
+    },
+  },
+};
+
+const titleOnlyErrorMocks = [titleOnlyErrorMock, { ...titleOnlyErrorMock }];
+
+const plansTransformMock = {
+  request: {
+    query: MyProjectsDocument,
+    variables: {
+      paginationOptions: {
+        limit: 3,
+      },
+    },
+  },
+  result: {
+    data: {
+      myProjects: {
+        totalCount: 1,
+        nextCursor: null,
+        items: [
+          {
+            ...mocks[0].result.data.myProjects.items[0],
+            plans: [
+              { id: null, title: "Skipped" },
+              {
+                id: 21,
+                title: "Visible Plan",
+                dmpId: "dmp-21",
+                status: "DRAFT",
+                modified: "1785236348000",
+              },
+              {
+                id: 22,
+                title: "Undated Plan",
+                dmpId: "dmp-22",
+                status: "DRAFT",
+                modified: "",
+              },
+            ],
+          },
+        ],
+      },
+    },
+  },
+};
+
+const plansTransformMocks = [plansTransformMock, { ...plansTransformMock }];
 
 describe("ProjectsListPage", () => {
   beforeEach(() => {
@@ -924,14 +1230,17 @@ describe("ProjectsListPage", () => {
     });
 
     await waitFor(() => {
-      const loadMoreBtn = screen.getByTestId("load-more-btn");
-      expect(loadMoreBtn).toBeInTheDocument();
-      fireEvent.click(loadMoreBtn);
+      expect(screen.getByTestId("load-more-btn")).toBeInTheDocument();
     });
+    mockScrollIntoView.mockClear();
+    fireEvent.click(screen.getByTestId("load-more-btn"));
 
     await waitFor(() => {
       expect(screen.getByText("Project 3")).toBeInTheDocument();
     });
+
+    await act(() => new Promise((r) => setTimeout(r, 200)));
+    expect(mockScrollIntoView).toHaveBeenCalled();
   });
 
   it("should handle clicking on the Load more button in search list", async () => {
@@ -967,6 +1276,128 @@ describe("ProjectsListPage", () => {
     await waitFor(() => {
       expect(screen.getByText("Project 3")).toBeInTheDocument();
     });
+  });
+
+  it("should display failedToLoadMore when search Load more hits a network error", async () => {
+    await act(async () => {
+      render(
+        <MockedProvider mocks={searchLoadMoreErrorMocks}>
+          <ProjectsListPage />
+        </MockedProvider>,
+      );
+    });
+
+    await screen.findByLabelText("Global.labels.searchByKeyword");
+
+    const searchInput = screen.getByLabelText("Global.labels.searchByKeyword");
+    fireEvent.change(searchInput, { target: { value: "reef" } });
+
+    const searchButton = screen.getByText("Global.buttons.search");
+    await act(async () => {
+      fireEvent.click(searchButton);
+    });
+    await waitFor(() => {
+      expect(screen.getByText("Reef One")).toBeInTheDocument();
+    });
+
+    await waitFor(() => {
+      const loadMoreBtn = screen.getByTestId("search-load-more-btn");
+      expect(loadMoreBtn).toBeInTheDocument();
+      fireEvent.click(loadMoreBtn);
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId("error-messages")).toHaveTextContent(
+        "ProjectsListPage.messages.errors.failedToLoadMore",
+      );
+    });
+  });
+
+  it("should display failedToLoadMore when Load more hits a network error", async () => {
+    await act(async () => {
+      render(
+        <MockedProvider mocks={defaultLoadMoreErrorMocks}>
+          <ProjectsListPage />
+        </MockedProvider>,
+      );
+    });
+
+    await waitFor(() => {
+      const loadMoreBtn = screen.getByTestId("load-more-btn");
+      expect(loadMoreBtn).toBeInTheDocument();
+      fireEvent.click(loadMoreBtn);
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId("error-messages")).toHaveTextContent(
+        "ProjectsListPage.messages.errors.failedToLoadMore",
+      );
+    });
+  });
+
+  it("should display item GraphQL errors and scroll them into view", async () => {
+    await act(async () => {
+      render(
+        <MockedProvider mocks={mocks}>
+          <ProjectsListPage />
+        </MockedProvider>,
+      );
+    });
+
+    await screen.findByLabelText("Global.labels.searchByKeyword");
+    mockScrollIntoView.mockClear();
+
+    const searchInput = screen.getByLabelText("Global.labels.searchByKeyword");
+    fireEvent.change(searchInput, { target: { value: "throw" } });
+
+    const searchButton = screen.getByText("Global.buttons.search");
+    await act(async () => {
+      fireEvent.click(searchButton);
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId("error-messages")).toHaveTextContent(
+        "There was an error getting the projects",
+      );
+    });
+    expect(mockScrollIntoView).toHaveBeenCalled();
+  });
+
+  it("should display errorRetrievingProjects when an item error has only a title", async () => {
+    await act(async () => {
+      render(
+        <MockedProvider mocks={titleOnlyErrorMocks}>
+          <ProjectsListPage />
+        </MockedProvider>,
+      );
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId("error-messages")).toHaveTextContent(
+        "ProjectsListPage.messages.errors.errorRetrievingProjects",
+      );
+    });
+  });
+
+  it("should skip plans without an id and show plans with an id", async () => {
+    await act(async () => {
+      render(
+        <MockedProvider mocks={plansTransformMocks}>
+          <ProjectsListPage />
+        </MockedProvider>,
+      );
+    });
+
+    await waitFor(() => {
+      const expandButton = screen.getAllByRole("button", {
+        name: /Global.messaging.detailsToggleAria/i,
+      })[0];
+      expect(expandButton).toBeInTheDocument();
+      fireEvent.click(expandButton);
+    });
+
+    expect(screen.getByText("Visible Plan")).toBeInTheDocument();
+    expect(screen.queryByText("Skipped")).not.toBeInTheDocument();
   });
 
   it("should display empty state with CTA when user has no projects", async () => {
@@ -1013,9 +1444,118 @@ describe("ProjectsListPage", () => {
     expect(screen.getByTestId("skeleton-list-loading")).toBeInTheDocument();
     expect(
       screen.getByTestId("skeleton-list-loading").querySelectorAll('[class*="skeletonItem"]'),
-    ).toHaveLength(3);
+    ).toHaveLength(5);
     expect(screen.getByRole("heading", { name: /ProjectsListPage.title/i })).toBeInTheDocument();
     expect(screen.queryByText("ProjectsListPage.messages.info.noProjectsHeading")).not.toBeInTheDocument();
+  });
+
+  it("should dismiss the skeleton and show an error when the initial load fails", async () => {
+    await act(async () => {
+      render(
+        <MockedProvider mocks={initialLoadErrorMocks}>
+          <ProjectsListPage />
+        </MockedProvider>,
+      );
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId("error-messages")).toHaveTextContent(
+        "ProjectsListPage.messages.errors.errorRetrievingProjects",
+      );
+    });
+    expect(screen.queryByTestId("skeleton-list-loading")).not.toBeInTheDocument();
+  });
+
+  it("should dismiss the skeleton and show an error if the initial load never returns", async () => {
+    jest.useFakeTimers({ advanceTimers: true });
+
+    await act(async () => {
+      render(
+        <MockedProvider mocks={hungInitialLoadMocks}>
+          <ProjectsListPage />
+        </MockedProvider>,
+      );
+    });
+
+    expect(screen.getByTestId("skeleton-list-loading")).toBeInTheDocument();
+
+    await act(async () => {
+      jest.advanceTimersByTime(30000);
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId("error-messages")).toHaveTextContent(
+        "ProjectsListPage.messages.errors.errorRetrievingProjects",
+      );
+    });
+    expect(screen.queryByTestId("skeleton-list-loading")).not.toBeInTheDocument();
+
+    jest.useRealTimers();
+  });
+
+  it("should dismiss the skeleton and show an error when search fails", async () => {
+    await act(async () => {
+      render(
+        <MockedProvider mocks={searchErrorMocks}>
+          <ProjectsListPage />
+        </MockedProvider>,
+      );
+    });
+
+    await waitFor(() => {
+      expect(screen.queryByTestId("skeleton-list-loading")).not.toBeInTheDocument();
+    });
+
+    const searchInput = screen.getByLabelText("Global.labels.searchByKeyword");
+    fireEvent.change(searchInput, { target: { value: "reef" } });
+
+    const searchButton = screen.getByText("Global.buttons.search");
+    await act(async () => {
+      fireEvent.click(searchButton);
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId("error-messages")).toHaveTextContent(
+        "ProjectsListPage.messages.errors.errorRetrievingProjects",
+      );
+    });
+    expect(screen.queryByTestId("skeleton-list-loading")).not.toBeInTheDocument();
+  });
+
+  it("should show an error when clear filter refetch fails", async () => {
+    await act(async () => {
+      render(
+        <MockedProvider mocks={resetSearchErrorMocks}>
+          <ProjectsListPage />
+        </MockedProvider>,
+      );
+    });
+
+    await waitFor(() => {
+      expect(screen.queryByTestId("skeleton-list-loading")).not.toBeInTheDocument();
+    });
+
+    const searchInput = screen.getByLabelText("Global.labels.searchByKeyword");
+    fireEvent.change(searchInput, { target: { value: "reef" } });
+
+    const searchButton = screen.getByText("Global.buttons.search");
+    await act(async () => {
+      fireEvent.click(searchButton);
+    });
+    await waitFor(() => {
+      expect(screen.getByText("Reef One")).toBeInTheDocument();
+    });
+
+    const clearFilterBtn = screen.getAllByRole("button", { name: "Global.links.clearFilter" });
+    await act(async () => {
+      fireEvent.click(clearFilterBtn[0]);
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId("error-messages")).toHaveTextContent(
+        "ProjectsListPage.messages.errors.errorRetrievingProjects",
+      );
+    });
   });
 
   it("should display no items found message when search yields no results", async () => {
