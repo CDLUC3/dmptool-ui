@@ -147,13 +147,6 @@ export default function DmpLandingPage() {
         jsonUrl={jsonUrl}
         canDownloadPdf={canDownloadPdf}
         handleDownloadPdfAction={handleDownloadPdf}
-        writtenForOrg={snapshot?.owner
-          ? {
-            name: snapshot.owner.name ?? 'Unknown',
-            displayName: snapshot.owner.displayName,
-            homepage: snapshot.owner.homepage,
-          }
-          : undefined}
       />
     </>
   );

@@ -51,13 +51,12 @@ import {
   logECS,
   handleApolloError
 } from '@/utils/index';
-import { RoleOptions } from '@/lib/constants';
+import { RoleOptions, EXPORT_PAGE_SIZE } from '@/lib/constants';
 import { useFormatDate } from "@/hooks/useFormatDate";
 import styles from './UsersDashboardPage.module.scss';
 
 // Number of records to display per page in the users table
 const LIMIT = 10;
-export const EXPORT_PAGE_SIZE = 100; // Number of records to fetch per page when exporting users (matches backend)
 const EXPORT_CONCURRENCY = 5; // Number of concurrent requests to make when exporting users
 export type UsersPageItems = NonNullable<NonNullable<UsersQuery['users']>['items']>;
 interface UserRow {

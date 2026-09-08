@@ -26,17 +26,13 @@ import styles from './landing.module.scss';
 type PlanSnapshot = NonNullable<PublicPlanVersionByDmpIdQuery['publicPlanVersionByDMPId']>;
 type RelatedWorkQueryItem = NonNullable<PlanSnapshot['relatedWorks']>[number];
 type RelatedWorkAuthorItem = RelatedWorkQueryItem['workVersion']['authors'][number];
+type RelatedFundingItem = NonNullable<PlanSnapshot['fundings']>[number];
 
 type ArchivedPlanViewProps = {
   snapshot: PlanSnapshot;
   jsonUrl?: string;
   canDownloadPdf: boolean;
   handleDownloadPdfAction: () => Promise<void>;
-  writtenForOrg?: {
-    name: string;
-    displayName?: string | null;
-    homepage?: string | null;
-  };
 };
 
 // This component is used to display a dropdown of all the versions available for this plan
@@ -134,6 +130,19 @@ function CurrentVersionDisplay({
       <strong>Version:</strong> {formatDate(displayTimestamp, true)}
     </div>
   );
+}
+
+// Joins funder names into "A", "A and B", or "A, B, and C" for the template
+// attribution line
+function formatFunderNamesForTemplate(fundings: RelatedFundingItem[]): string {
+  const names = fundings.map((f) => f.funderName).filter((n): n is string => !!n);
+  if (names.length === 0) return '';
+  if (names.length === 1) return names[0];
+
+  const rest = names.slice(1);
+  if (rest.length === 1) return `${names[0]} and ${rest[0]}`;
+
+  return `${names[0]}, ${rest.slice(0, -1).join(', ')}, and ${rest[rest.length - 1]}`;
 }
 
 // Get authors names for citation, formatted as "Surname, Given Name" or "Full Name" if no given/surname. 
@@ -297,7 +306,6 @@ export default function ArchivedPlanView({
   jsonUrl,
   canDownloadPdf,
   handleDownloadPdfAction,
-  writtenForOrg,
 }: ArchivedPlanViewProps) {
 
   // Localization keys
@@ -308,6 +316,7 @@ export default function ArchivedPlanView({
 
   const title = snapshot.title || snapshot.project?.title || t('untitledPlan');
   const fundings = snapshot?.fundings ?? [];
+  const templateFundings = fundings.filter((f) => f.funderName);
   const members = snapshot.members ?? [];
   const outputs = parseResearchOutputsFromAnswers(snapshot.answers);
   const relatedWorksGroups = groupRelatedWorksByType(snapshot.relatedWorks);
@@ -349,13 +358,13 @@ export default function ArchivedPlanView({
             <div className={styles.subTitleWrapper}>
               {snapshot.versionedTemplate && (
                 <p className={styles.titleTemplateInfo}>
-                  {writtenForOrg
+                  {templateFundings.length > 0
                     ? t.rich('templateInfoWithOrg', {
-                      orgName: writtenForOrg.displayName || writtenForOrg.name,
+                      orgName: formatFunderNamesForTemplate(templateFundings),
                       orgLink: (chunks) =>
-                        writtenForOrg.homepage ? (
-                          <a
-                            href={writtenForOrg.homepage}
+                        templateFundings.length === 1 && templateFundings[0].funderUri ? (
+                          < a
+                            href={templateFundings[0].funderUri}
                             className={styles.templateInfoLink}
                             target="_blank"
                             rel="noopener noreferrer"
@@ -413,36 +422,38 @@ export default function ArchivedPlanView({
             </div>
             {/* </div> */}
           </div>
-        </div>
-      </div>
+        </div >
+      </div >
 
-      {(snapshot.dmpId || (snapshot.versions && snapshot.versions.length > 0)) && (
-        <div className={styles.subBand}>
-          <div className={styles.subBandInner}>
-            {snapshot.dmpId && (
-              <p className={styles.subBandDoi}>
-                <strong>{t('dmpId')}:</strong>{' '}
-                <a href={snapshot.dmpId} target="_blank" rel="noopener noreferrer">
-                  {snapshot.dmpId.replace('https://doi.org/', '')}
-                </a>
-              </p>
-            )}
-            {(snapshot.versions && snapshot.versions.length > 0) ? (
-              <ArchivedVersionsDropdown
-                versions={snapshot.versions}
-                currentTimestamp={snapshot.versionTimestamp}
-                latestTimestamp={snapshot.latestVersionTimestamp}
-                dmpId={snapshot.dmpId || ''}
-              />
-            ) : (
-              <CurrentVersionDisplay
-                currentTimestamp={snapshot.versionTimestamp}
-                latestTimestamp={snapshot.latestVersionTimestamp}
-              />
-            )}
+      {
+        (snapshot.dmpId || (snapshot.versions && snapshot.versions.length > 0)) && (
+          <div className={styles.subBand}>
+            <div className={styles.subBandInner}>
+              {snapshot.dmpId && (
+                <p className={styles.subBandDoi}>
+                  <strong>{t('dmpId')}:</strong>{' '}
+                  <a href={snapshot.dmpId} target="_blank" rel="noopener noreferrer">
+                    {snapshot.dmpId.replace('https://doi.org/', '')}
+                  </a>
+                </p>
+              )}
+              {(snapshot.versions && snapshot.versions.length > 0) ? (
+                <ArchivedVersionsDropdown
+                  versions={snapshot.versions}
+                  currentTimestamp={snapshot.versionTimestamp}
+                  latestTimestamp={snapshot.latestVersionTimestamp}
+                  dmpId={snapshot.dmpId || ''}
+                />
+              ) : (
+                <CurrentVersionDisplay
+                  currentTimestamp={snapshot.versionTimestamp}
+                  latestTimestamp={snapshot.latestVersionTimestamp}
+                />
+              )}
+            </div>
           </div>
-        </div>
-      )}
+        )
+      }
 
       <main id="mainContent" className={styles.landingContent}>
         <div className={styles.contentInner}>

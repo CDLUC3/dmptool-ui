@@ -1,9 +1,9 @@
 {
   "LandingPage": {
     "dmpTool": "DMP Tool",
-    "templateInfoWithOrg": "This page describes a data management plan written for <orglink>{orgName}</orglink> using the <dmptoollink>DMP Tool</dmptoollink>.",
-    "templateInfoWithoutOrg": "This page describes a data management plan using the <dmptoollink>DMP Tool</dmptoollink>.",
-    "downloadPlan": "Download the plan <pdflabel>(PDF)</pdflabel>",
+    "templateInfoWithOrg": "This page describes a data management plan written for <orgLink>{orgName}</orgLink> using the <dmptoolLink>DMP Tool</dmptoolLink>.",
+    "templateInfoWithoutOrg": "This page describes a data management plan using the <dmptoolLink>DMP Tool</dmptoolLink>.",
+    "downloadPlan": "Download the plan <pdfLabel>(PDF)</pdfLabel>",
     "viewAsJson": "View as JSON",
     "opensInNewWindow": "Opens in a new window",
     "projectStart": "Project start",
@@ -14,7 +14,7 @@
     "dmpLastModifiedBy": "DMP last modified by",
     "whenCitingThisDMP": "When citing this DMP use",
     "dataManagementPlan": "Data Management Plan",
-    "dmpIdInfo": "When connecting to this DMP to related project outputs (such as datasets) use the ID: &lt;dmpidlink&gt;{dmpId}&lt;/dmpidlink&gt;",
+    "dmpIdInfo": "When connecting to this DMP to related project outputs (such as datasets) use the ID: <dmpIdLink>{dmpId}</dmpIdLink>",
     "fundingOpportunity": "Funding opportunity",
     "registeredDMP": "Data Management plan (registered)",
     "dmpId": "DMP ID",
