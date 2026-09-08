@@ -51,3 +51,6 @@ export const RoleOptions: { label: string; value: UserRole | '' }[] = [
   { label: 'Admin', value: UserRole.Admin },
   { label: 'User', value: UserRole.Researcher },
 ];
+
+// Number of records to fetch per page when exporting users (matches backend)
+export const EXPORT_PAGE_SIZE = 100;

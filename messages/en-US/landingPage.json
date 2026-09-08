@@ -14,7 +14,7 @@
     "dmpLastModifiedBy": "DMP last modified by",
     "whenCitingThisDMP": "When citing this DMP use",
     "dataManagementPlan": "Data Management Plan",
-    "dmpIdInfo": "When connecting to this DMP to related project outputs (such as datasets) use the ID: &lt;dmpidlink&gt;{dmpId}&lt;/dmpidlink&gt;",
+    "dmpIdInfo": "When connecting to this DMP to related project outputs (such as datasets) use the ID: <dmpIdLink>{dmpId}</dmpIdLink>",
     "fundingOpportunity": "Funding opportunity",
     "registeredDMP": "Data Management plan (registered)",
     "dmpId": "DMP ID",
