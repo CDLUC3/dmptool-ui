@@ -165,6 +165,8 @@
 - Fixed issue with Feedback Notification headers displaying for any collaborator on the Plan Overview, Section and Question pages. It should only display to Org Admins and Super Admins. Added shared isOrgAdmin hook for pages. [#249]
 
 ## Chore
+- Updated `versioning.yml` to just copy `package.json` and `CHANGELOG.md` back to `development` branch [#341]
+- Updated `next` to `v16.3.3`, `js-yaml` to `v4.3.2` and `sharp` to `v0.35.4` due to high vulnerabilities [#341]
 - Updated `@types/react` to `v19.2.18` and `@types/react-dom` `19.2.5` and fixed new type errors resulting from that update [#333]
 - Updated version of `typescript` to `v6.0.3` and `@typescript-eslint/eslint-plugin` to `v8.68.0` and `@typescript-eslint/parser` to `v8.68.0` [#333]
 - Updated `versioning.yml` to create PRs to merge updated `package.json` and `CHANGELOG.md` into `stage` and `development` [#338]
