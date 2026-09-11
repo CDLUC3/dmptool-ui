@@ -8,7 +8,7 @@ import { MockedProvider } from "@apollo/client/testing/react";
 import { MeDocument, UsersDocument, UserRole, UsersQuery } from '@/generated/graphql';
 import { logECS, handleApolloError } from '@/utils/index';
 import OrgUserAccountsPage from '../page';
-import { EXPORT_PAGE_SIZE } from '../page';
+import { EXPORT_PAGE_SIZE } from '@/lib/constants';
 
 expect.extend(toHaveNoViolations);
 

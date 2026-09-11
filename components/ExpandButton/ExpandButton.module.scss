@@ -15,10 +15,14 @@
   margin-top: 2px;
   margin-left: 0;
   transition: transform 0.3s ease;
-  /* Smooth transition */
 }
 
 .expanded {
   transform: rotate(180deg);
-  /* Rotate the arrow when expanded */
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .expandIcon {
+    transition: none;
+  }
 }

@@ -576,10 +576,24 @@
         "label": "URL da API",
         "description": "Se a afiliação for um fundo, fornecendo isso permitirá o fluxo de trabalho de pesquisa do projeto (depende do código do aplicativo para estar no lugar)."
       },
-      "identifiersMessage": "Se precisar alterar um destes campos, por favor, <link>entre em contato conosco</link>."
+      "identifiersMessage": "Se precisar alterar um destes campos, por favor, <link>entre em contato conosco</link>.",
+      "linkText": {
+        "label": "Contato texto de e-mail",
+        "placeholder": "Digite o texto do link"
+      },
+      "url": {
+        "label": "URL",
+        "placeholder": "Digite a URL da organização"
+      },
+      "urlLinkText": {
+        "label": "Texto do link para URL",
+        "placeholder": "Inserir texto do link"
+      }
     },
     "actions": {
-      "requestChange": "Solicitar alteraçaõ"
+      "requestChange": "Solicitar alteraçaõ",
+      "removeUrl": "Remover URL",
+      "addAnotherUrl": "Adicionar outra URL"
     },
     "buttons": {
       "save": "Salvar",
@@ -657,9 +671,11 @@
         "noProjectsDescription": "Quando pesquisadores em sua organização criarem planos de gestão de dados, eles serão listados aqui."
       },
       "errors": {
-        "errorRetrievingProjects": "Algo deu errado ao recuperar projetos. Por favor, tente novamente mais tarde."
+        "errorRetrievingProjects": "Algo deu errado ao recuperar projetos. Por favor, tente novamente mais tarde.",
+        "failedToLoadMore": "Falha ao carregar mais projetos"
       }
-    }
+    },
+    "projectsList": "Projetos da organização"
   },
   "Departments": {
     "title": "Escolas/Departamentos",
@@ -1099,7 +1115,8 @@
         "passMissMatch": "As senhas não conferem"
       },
       "numDisplaying": "Mostrando {num} de {total}",
-      "unsavedChangesWarning": "Você tem alterações não salvas. Tem certeza que deseja sair desta página?"
+      "unsavedChangesWarning": "Você tem alterações não salvas. Tem certeza que deseja sair desta página?",
+      "detailsToggleAria": "{action} detalhes de {title}"
     },
     "tabs": {
       "editQuestion": "Editar pergunta",
@@ -1194,6 +1211,21 @@
         "invalidSubject": "A senha deve ter pelo menos 2 caracteres",
         "invalidMessage": "O nome deve ter no m&iacute;nimo 2 caracteres",
         "formSubmittalFailed": "Falha ao enviar o formulário. Tente novamente mais tarde."
+      }
+    }
+  },
+  "OrganizationUserProjects": {
+    "title": "Projetos e planos do usuário",
+    "intro": "Os planos deste usuário estão agrupados em projetos de pesquisa. Use a Pesquisa para encontrar planos em seus projetos.",
+    "projectsList": "Projetos do usuário",
+    "messages": {
+      "info": {
+        "noProjectsHeading": "Este usuário ainda não tem projetos",
+        "noProjectsDescription": "Quando este usuário criar planos de gerenciamento de dados, eles serão listados aqui, agrupados em projetos."
+      },
+      "errors": {
+        "errorRetrievingProjects": "Algo deu errado ao recuperar projetos. Por favor, tente novamente mais tarde.",
+        "failedToLoadMore": "Falha ao carregar mais projetos"
       }
     }
   }

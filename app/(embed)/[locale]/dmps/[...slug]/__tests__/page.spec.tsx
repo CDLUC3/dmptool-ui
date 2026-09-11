@@ -256,11 +256,6 @@ describe('DmpLandingPage', () => {
         snapshot: BASE_SNAPSHOT,
         jsonUrl: expect.stringContaining('/api/download-narrative?dmpId=10.48321%2FD1e8b71d18&format=json'),
         canDownloadPdf: true,
-        writtenForOrg: {
-          name: 'California Digital Library',
-          displayName: 'California Digital Library (cdlib.org)',
-          homepage: 'http://www.cdlib.org/',
-        },
       })
     );
   });
@@ -272,16 +267,6 @@ describe('DmpLandingPage', () => {
 
     expect(mockArchivedPlanView).toHaveBeenCalledWith(
       expect.objectContaining({ canDownloadPdf: false })
-    );
-  });
-
-  it('should pass writtenForOrg=undefined when the snapshot has no owner', () => {
-    setupApolloMocks({ snapshot: { ...BASE_SNAPSHOT, owner: null } as any });
-
-    render(<DmpLandingPage />);
-
-    expect(mockArchivedPlanView).toHaveBeenCalledWith(
-      expect.objectContaining({ writtenForOrg: undefined })
     );
   });
 

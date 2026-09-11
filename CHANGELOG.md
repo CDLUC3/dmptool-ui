@@ -45,6 +45,7 @@
 
 ## Updated
 - Updated `PlanCard` section progress to prefer required counts (`X of Y required`), falling back to all-question counts (`X of Y`) when none are required [#93]
+- Redesigned `ProjectListItem` and project list pages (`/projects`, `/admin/projects`, `/admin/users/[userId]/projects`) with expandable plan details, skeleton loading, and GraphQL-backed plan and collaborator data
 - Updated `DisplayLogicComponent.tsx` to show condition joiner within condition groups as well as between condition groups [#360]
 - Updated `QuestionEdit` to call `TriggerQuestionsForQuestionDocument` to get the qualifying trigger questions [#360]
 - Updated `useTriggerQuestions` hook to remove currentDisplayOrder since the backend does those calculations before sending data [#360]
@@ -148,6 +149,7 @@
 - Updated `RepoSelectorForAnswer` to wait to query `Re3byUrIsDocument` until we have `preferredReposURIs` because preferred repos don't display even though they eventually do to trigger the display of the "preferred repositories" checkbox [#118]
 
 ## Fixed
+- Fixed bug where owner's affiliation was displayed in subheader of landing page, rather than funder of plan [#365]
 - Fixed missing favicon in landing page [#339]
 - Fixed `View as JSON` url on landing page [#339]
 - Fixed missing success toasts on Account pages: profile saves now show a toast for all field updates (not only language changes); adding and deleting secondary emails show success toasts when the GraphQL response has no real errors; update password and notifications save actions also show success toasts. Added `emailAddressDeleteSuccess` translations [#306]
@@ -167,6 +169,8 @@
 - Fixed issue with Feedback Notification headers displaying for any collaborator on the Plan Overview, Section and Question pages. It should only display to Org Admins and Super Admins. Added shared isOrgAdmin hook for pages. [#249]
 
 ## Chore
+- Updated `versioning.yml` to just copy `package.json` and `CHANGELOG.md` back to `development` branch [#341]
+- Updated `next` to `v16.3.3`, `js-yaml` to `v4.3.2` and `sharp` to `v0.35.4` due to high vulnerabilities [#341]
 - Updated `@types/react` to `v19.2.18` and `@types/react-dom` `19.2.5` and fixed new type errors resulting from that update [#333]
 - Updated version of `typescript` to `v6.0.3` and `@typescript-eslint/eslint-plugin` to `v8.68.0` and `@typescript-eslint/parser` to `v8.68.0` [#333]
 - Updated `versioning.yml` to create PRs to merge updated `package.json` and `CHANGELOG.md` into `stage` and `development` [#338]
