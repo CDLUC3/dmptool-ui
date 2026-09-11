@@ -7,6 +7,7 @@ import { Button } from "react-aria-components";
 
 // Import card components
 import { Card, CardHeading, CardBody, CardFooter, CardEyebrow } from "@/components/Card/card";
+import PlanCard, { type PlanCardPlan } from "@/components/PlanCard";
 
 import {
   SGComponentExample,
@@ -20,6 +21,56 @@ import {
   SGGuidelineItem,
 } from "../../shared/components";
 import "../../shared/styleguide.scss";
+
+const templatePlan: PlanCardPlan = {
+  variant: "template",
+  title: "V4.3: Coastal Ocean Processes of North Greenland",
+  funding: "National Science Foundation",
+  dmpId: "https://doi.org/10.1111/ZZb53989e9",
+  modified: "29 Jul 26",
+  created: "29 Jul 26",
+  versionedSections: [
+    {
+      versionedSectionId: 1,
+      title: "Types of data produced",
+      href: "#research-methodology",
+      answeredRequiredQuestions: 1,
+      totalRequiredQuestions: 2,
+    },
+    {
+      versionedSectionId: 2,
+      title: "Data and metadata standards",
+      href: "#data-collection",
+      answeredRequiredQuestions: 0,
+      totalRequiredQuestions: 1,
+    },
+    {
+      versionedSectionId: 3,
+      title: "Policies for re-use, redistribution",
+      href: "#data-storage",
+      answeredRequiredQuestions: 0,
+      totalRequiredQuestions: 1,
+    },
+    {
+      versionedSectionId: 4,
+      title: "Plans for archiving and preservation",
+      href: "#archiving",
+      answeredRequiredQuestions: 0,
+      totalRequiredQuestions: 1,
+    },
+  ],
+  downloadHref: "#download",
+  actionHref: "#update",
+};
+
+const uploadedPlan: PlanCardPlan = {
+  variant: "uploaded",
+  title: "V4b.1: Coastal Ocean Processes of North Greenland",
+  modified: "29 Jul 26",
+  created: "29 Jul 26",
+  downloadHref: "#download",
+  actionHref: "#update",
+};
 
 export default function CardsPage() {
   return (
@@ -63,6 +114,12 @@ export default function CardsPage() {
                 </li>
                 <li>
                   <a href="#plan-card">Plan Card</a>
+                </li>
+                <li>
+                  <a href="#uploaded-plan-card">Uploaded Plan Card</a>
+                </li>
+                <li>
+                  <a href="#plan-object">Plan object</a>
                 </li>
                 <li>
                   <a href="#card-variants">Card Variants</a>
@@ -221,151 +278,68 @@ import { Button } from 'react-aria-components';
         {/* Plan Card */}
         <section id="plan-card">
           <h2>Plan Card</h2>
-          <p>Specialized card layout for displaying data management plans with sections, metadata, and actions.</p>
+          <p>
+            Card for a data management plan on the project page. <code>template</code> shows sections;{" "}
+            <code>uploaded</code> is the compact file-upload layout.
+          </p>
 
           <SGComponentExample>
-            <SGComponentExampleHeader title="Data Management Plan Card" />
+            <SGComponentExampleHeader title="Template plan card" />
             <SGComponentExampleContent>
               <SGComponentExampleDemo>
-                <div className="plans">
-                  <Card className="plan-item">
-                    <p className="mb-1">Funding: National Science Foundation</p>
-                    <h3 className="mt-0">Standard Research Template</h3>
-                    <div className="plan-sections mb-4">
-                      <h4 className="plan-section-heading">Sections</h4>
-                      <ul
-                        className="plan-sections-list"
-                        aria-label="Plan sections"
-                      >
-                        <li className="plan-sections-list-item">
-                          <Link
-                            href="#research-methodology"
-                            className="text-link"
-                          >
-                            Research Methodology
-                          </Link>
-                          <span className="plan-sections-list-item-progress">Progress: 3/5</span>
-                        </li>
-                        <li className="plan-sections-list-item">
-                          <Link
-                            href="#data-collection"
-                            className="text-link"
-                          >
-                            Data Collection
-                          </Link>
-                          <span className="plan-sections-list-item-progress">Progress: 2/4</span>
-                        </li>
-                        <li className="plan-sections-list-item">
-                          <Link
-                            href="#data-storage"
-                            className="text-link"
-                          >
-                            Data Storage
-                          </Link>
-                          <span className="plan-sections-list-item-progress">Progress: 1/3</span>
-                        </li>
-                      </ul>
-                    </div>
-                    <div className="plan-meta">
-                      <p>
-                        DOI: 10.1234/example.dmp <br />
-                        Last Updated: 15-12-2024
-                        <br />
-                        Created: 01-11-2024
-                      </p>
-                    </div>
-                    <div className="plan-footer">
-                      <div className="plan-links">
-                        <Link
-                          href="#download"
-                          className="text-link"
-                          aria-label="Download plan"
-                        >
-                          Download
-                        </Link>
-                      </div>
-                      <div className="plan-action">
-                        <Link
-                          href="#update"
-                          className="react-aria-Button react-aria-Button--primary"
-                          aria-label="Update plan"
-                        >
-                          Update
-                        </Link>
-                      </div>
-                    </div>
-                  </Card>
-                </div>
+                <PlanCard plan={templatePlan} />
               </SGComponentExampleDemo>
 
               <h4>Usage</h4>
-              <SGCodeBlock>{`import { Card } from '@/components/Card/card';
-import Link from 'next/link';
+              <SGCodeBlock>{`import PlanCard from '@/components/PlanCard';
 
-<div className="plans">
-  <Card className="plan-item">
-    <p className="mb-1">Funding: {fundingSource}</p>
-    <h3 className="mt-0">{templateTitle}</h3>
-    <div className="plan-sections mb-4">
-      <h4 className="plan-section-heading">Sections</h4>
-      <ul className="plan-sections-list" aria-label="Plan sections">
-        {sections.map((section) => (
-          <li key={section.id} className="plan-sections-list-item">
-            <Link href={section.url} className="text-link">{section.title}</Link>
-            <span className="plan-sections-list-item-progress">
-              Progress: {section.answered}/{section.total}
-            </span>
-          </li>
-        ))}
-      </ul>
-    </div>
-    <div className="plan-meta">
-      <p>
-        DOI: {plan.doi} <br />
-        Last Updated: {lastUpdated}<br />
-        Created: {created}
-      </p>
-    </div>
-    <div className="plan-footer">
-      <div className="plan-links">
-        <Link href={downloadUrl} className="text-link">
-          Download
-        </Link>
-      </div>
-      <div className="plan-action">
-        <Link href={updateUrl} className="react-aria-Button react-aria-Button--primary">
-          Update
-        </Link>
-      </div>
-    </div>
-  </Card>
-</div>`}</SGCodeBlock>
-
-              <h4>Key Features</h4>
-              <ul>
-                <li>
-                  <strong>Section Progress:</strong> Shows completion status for each plan section
-                </li>
-                <li>
-                  <strong>Metadata Display:</strong> DOI, creation and modification dates
-                </li>
-                <li>
-                  <strong>Standard Link Styling:</strong> All links use consistent text-link styling with blue color and
-                  underlines
-                </li>
-                <li>
-                  <strong>Primary Action:</strong> Update button for plan editing
-                </li>
-                <li>
-                  <strong>Accessibility:</strong> Proper ARIA labels and semantic structure
-                </li>
-                <li>
-                  <strong>Required Wrapper:</strong> Must be wrapped in a <code>.plans</code> container for proper
-                  styling
-                </li>
-              </ul>
+<PlanCard plan={templatePlan} />`}</SGCodeBlock>
             </SGComponentExampleContent>
           </SGComponentExample>
+        </section>
+
+        <section id="uploaded-plan-card">
+          <h2>Uploaded Plan Card</h2>
+          <p>
+            Same card with <code>variant: &quot;uploaded&quot;</code>. Badge, no section list.
+          </p>
+
+          <SGComponentExample>
+            <SGComponentExampleHeader title="Uploaded plan card" />
+            <SGComponentExampleContent>
+              <SGComponentExampleDemo>
+                <PlanCard plan={uploadedPlan} />
+              </SGComponentExampleDemo>
+
+              <h4>Usage</h4>
+              <SGCodeBlock>{`import PlanCard from '@/components/PlanCard';
+
+<PlanCard plan={uploadedPlan} />`}</SGCodeBlock>
+            </SGComponentExampleContent>
+          </SGComponentExample>
+        </section>
+
+        <section id="plan-object">
+          <h2>Plan object</h2>
+          <p>
+            Format dates and build hrefs on the page, then pass the result as <code>plan</code>.
+          </p>
+          <SGCodeBlock>{`<PlanCard
+  plan={{
+    variant: "template",
+    title: plan.title || plan.templateTitle,
+    funding: plan.funding,
+    dmpId: plan.dmpId,
+    created: formatDate(plan.created),
+    modified: formatDate(plan.modified),
+    versionedSections: plan.versionedSections?.map((section) => ({
+      ...section,
+      href: routePath("projects.dmp.versionedSection", { ... }),
+    })),
+    downloadHref: routePath("projects.dmp.download", { ... }),
+    actionHref: routePath("projects.dmp.show", { ... }),
+  }}
+/>`}</SGCodeBlock>
         </section>
 
         {/* Card Variants */}
@@ -476,6 +450,9 @@ import Link from 'next/link';
             </li>
             <li>
               <code>CardFooter</code> - Actions, metadata, or supplementary information
+            </li>
+            <li>
+              <code>PlanCard</code> - Project plan card with <code>template</code> and <code>uploaded</code> variants
             </li>
           </ul>
         </section>

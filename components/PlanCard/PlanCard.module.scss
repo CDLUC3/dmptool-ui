@@ -1,0 +1,147 @@
+.planCard {
+  display: flex;
+  flex-direction: column;
+}
+
+.funding,
+.meta,
+.doi,
+.progress {
+  font-size: var(--fs-small);
+  color: var(--text-color-base);
+  line-height: var(--lh-normal);
+}
+
+.funding {
+  margin: 0;
+}
+
+.titleRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+
+.title {
+  margin: 0;
+  padding: 0;
+  color: var(--heading-color);
+}
+
+.titleLink,
+.titleLink:link,
+.titleLink:visited,
+.titleLink:active {
+  color: var(--heading-color);
+  font-weight: inherit;
+  text-decoration: none;
+}
+
+.titleLink:hover,
+.titleLink:focus-visible {
+  color: var(--heading-color);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--border-radius-md);
+  background-color: var(--blue-100);
+  color: var(--blue-900);
+  font-size: var(--fs-small);
+  font-weight: var(--fw-semibold);
+  line-height: 1.4;
+}
+
+.sections {
+  margin: var(--space-4) 0 0;
+}
+
+.sectionsHeading {
+  margin: 0 0 var(--space-2);
+  padding: 0;
+  font-size: var(--fs-small);
+  font-weight: var(--fw-semibold);
+  color: var(--text-color-base);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.sectionsList {
+  padding: 0;
+  margin: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  width: 100%;
+  max-width: 32rem;
+}
+
+.sectionsItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--space-4);
+  font-size: var(--fs-base);
+  color: var(--text-color);
+  line-height: var(--lh-normal);
+
+  > :first-child {
+    min-width: 0;
+  }
+}
+
+.sectionTitle {
+  min-width: 0;
+  color: var(--text-color);
+}
+
+.progress {
+  flex-shrink: 0;
+  text-align: right;
+}
+
+.doi,
+.meta {
+  margin: var(--space-4) 0 0;
+}
+
+.doiLink,
+.doiLink:link,
+.doiLink:visited,
+.doiLink:active {
+  color: inherit;
+  font-weight: inherit;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.doiLink:hover,
+.doiLink:focus-visible {
+  color: var(--heading-color);
+}
+
+.doi + .meta {
+  margin-top: var(--space-2);
+}
+
+.footer {
+  margin-top: var(--space-5);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.links,
+.action {
+  display: flex;
+  align-items: center;
+}

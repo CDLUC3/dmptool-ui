@@ -102,23 +102,28 @@ const mockProjectData = {
       versionedSections: [
         {
           answeredQuestions: 0,
+          answeredRequiredQuestions: 0,
           displayOrder: 1,
           versionedSectionId: 7,
           title: "Roles & Responsibilities",
           totalQuestions: 1,
+          totalRequiredQuestions: 1,
           customSectionId: null,
           sectionType: "BASE"
         },
         {
           answeredQuestions: 0,
+          answeredRequiredQuestions: 0,
           displayOrder: 2,
           versionedSectionId: null,
           title: "Custom section",
           totalQuestions: 1,
+          totalRequiredQuestions: 1,
           customSectionId: 2,
           sectionType: "CUSTOM"
         }
       ],
+      title: "Reef Havens DMP",
       templateTitle: "NSF DMP Template",
     }
   ],
@@ -235,6 +240,8 @@ describe('ProjectOverviewPage', () => {
   it('should render the plans', () => {
     render(<ProjectOverviewPage />);
     expect(screen.getByText('plans')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Reef Havens DMP' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Roles & Responsibilities' })).toBeInTheDocument();
   });
 
   it('should render noFunderSelected in funding sources section when project has no fundings', () => {
@@ -450,7 +457,7 @@ describe('Read-only mode', () => {
     // beforeEach already sets a default-user-id that isn't in collaborators
     render(<ProjectOverviewPage />);
 
-    const planActionLink = screen.getByRole('link', { name: 'updatePlan' });
+    const planActionLink = screen.getByRole('link', { name: 'actionWithTitle' });
     expect(planActionLink).toHaveTextContent('view');
   });
 
@@ -466,7 +473,7 @@ describe('Read-only mode', () => {
     render(<ProjectOverviewPage />);
 
     await waitFor(() => {
-      expect(screen.getByRole('link', { name: 'updatePlan' })).toHaveTextContent('update');
+      expect(screen.getByRole('link', { name: 'actionWithTitle' })).toHaveTextContent('update');
     });
   });
 

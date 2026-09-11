@@ -15,7 +15,37 @@
       "percentComplete": "{percent}% complete",
       "writeYourPlan": "Write your plan",
       "writePlanIntro": "Work through each section below — answers save automatically. Use Jump to section to move between sections.",
-      "questionsAnswered": "{answered} of {total} questions answered"
+      "questionsAnswered": "{answered} of {total} questions answered",
+      "planDocument": "Plan document",
+      "planDocumentIntro": "This plan is represented by a single uploaded DMP document. Use <strong>Update document</strong> to replace it with a new file."
+    },
+    "document": {
+      "download": "Download",
+      "downloadAria": "Download {fileName}",
+      "updateDocument": "Update document",
+      "doi": "DOI",
+      "lastUpdated": "Last updated {date}",
+      "created": "Created {date}",
+      "fileType": "{type} file",
+      "unknownFileType": "File",
+      "deleteTitle": "Delete document?",
+      "deleteWarning": "This will permanently delete {fileName}. This action cannot be undone."
+    },
+    "uploadDialog": {
+      "title": "Update document",
+      "replaceWarning": "Uploading a new file will permanently replace <strong>{fileName}</strong>. This action cannot be undone.",
+      "uploadHeading": "Upload a Data Management Plan (DMP)",
+      "fileTypes": "PDF, DOC, or DOCX files only (max 20MB)",
+      "selectFile": "Select a file",
+      "dropHint": "Drop a file here or click to select",
+      "selectedFile": "Selected file: {fileName}",
+      "dropAria": "Drop a file here to upload",
+      "upload": "Upload",
+      "errors": {
+        "invalidType": "Only PDF, DOC, or DOCX files are allowed.",
+        "tooLarge": "Files must be 20MB or smaller.",
+        "multipleFiles": "Only one file can be uploaded. Using the first file."
+      }
     },
     "question": {
       "resizeAria": "Resize question — drag, or double-click to reset",

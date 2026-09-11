@@ -1,4 +1,6 @@
 ## Added
+- Added `PlanCard` with template and uploaded variants on the project overview, plus styleguide demos [#93]
+- Added plan authoring uploaded-document view with document card, update/replace dialog, and styleguide demo [#93]
 - Added `TriggerQuestionsForQuestion` query [#360]
 - Added missing tests for `PlanAuthoring` components, because the tests were not meeting coverage requirements [#339]
 - Added new `ArchivedPlanView` component that renders different versions, and simplified `DmpLandingPage` to mainly be a wrapper [#339]
@@ -42,6 +44,7 @@
 - Added `UpdateAffiliation` and `AffiliationById` queries [#203]
 
 ## Updated
+- Updated `PlanCard` section progress to prefer required counts (`X of Y required`), falling back to all-question counts (`X of Y`) when none are required [#93]
 - Redesigned `ProjectListItem` and project list pages (`/projects`, `/admin/projects`, `/admin/users/[userId]/projects`) with expandable plan details, skeleton loading, and GraphQL-backed plan and collaborator data
 - Updated `DisplayLogicComponent.tsx` to show condition joiner within condition groups as well as between condition groups [#360]
 - Updated `QuestionEdit` to call `TriggerQuestionsForQuestionDocument` to get the qualifying trigger questions [#360]
