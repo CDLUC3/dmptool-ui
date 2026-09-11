@@ -657,9 +657,11 @@
         "noProjectsDescription": "When researchers in your organization create data management plans, they will be listed here."
       },
       "errors": {
-        "errorRetrievingProjects": "Something went wrong with retrieving projects. Please try again later."
+        "errorRetrievingProjects": "Something went wrong with retrieving projects. Please try again later.",
+        "failedToLoadMore": "Failed to load more projects"
       }
-    }
+    },
+    "projectsList": "Organization projects"
   },
   "Departments": {
     "title": "Schools/Departments",
@@ -1099,7 +1101,8 @@
         "passMissMatch": "Passwords don't match"
       },
       "numDisplaying": "Showing {num} of {total}",
-      "unsavedChangesWarning": "You have unsaved changes. Are you sure you want to leave this page?"
+      "unsavedChangesWarning": "You have unsaved changes. Are you sure you want to leave this page?",
+      "detailsToggleAria": "{action} details for {title}"
     },
     "tabs": {
       "editQuestion": "Edit question",
@@ -1194,6 +1197,21 @@
         "invalidSubject": "Subject field must be at least 2 characters long",
         "invalidMessage": "Message field must be at least 2 characters long",
         "formSubmittalFailed": "Form submission failed. Please try again later."
+      }
+    }
+  },
+  "OrganizationUserProjects": {
+    "title": "User projects and plans",
+    "intro": "Plans for this user are grouped under research projects. Use Search to find plans across their projects.",
+    "projectsList": "User projects",
+    "messages": {
+      "info": {
+        "noProjectsHeading": "This user has no projects yet",
+        "noProjectsDescription": "When this user creates data management plans, they will be listed here, grouped under projects."
+      },
+      "errors": {
+        "errorRetrievingProjects": "Something went wrong with retrieving projects. Please try again later.",
+        "failedToLoadMore": "Failed to load more projects"
       }
     }
   }

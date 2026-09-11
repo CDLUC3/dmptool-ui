@@ -7,6 +7,7 @@ query MyProjects($term: String, $paginationOptions: PaginationOptions) {
       id
       startDate
       endDate
+      modified
       fundings {
         name
         grantId
@@ -15,6 +16,19 @@ query MyProjects($term: String, $paginationOptions: PaginationOptions) {
         name
         role
         orcid
+      }
+      collaborators {
+        name
+        accessLevel
+        orcid
+      }
+      plans {
+        id
+        title
+        dmpId
+        status
+        modified
+        # TODO(api): add myAccessLevel (or currentUserRole) on PlanSearchResult so the dashboard can show "Your role" without guessing from Me + collaborator names.
       }
       errors {
         general
@@ -33,6 +47,7 @@ query UserProjects($userId: Int!, $term: String, $paginationOptions: PaginationO
       id
       startDate
       endDate
+      modified
       fundings {
         name
         grantId
@@ -42,12 +57,22 @@ query UserProjects($userId: Int!, $term: String, $paginationOptions: PaginationO
         role
         orcid
       }
-      errors {
-        general
-        title
+      collaborators {
+        name
+        accessLevel
+        orcid
       }
       plans {
         id
+        title
+        dmpId
+        status
+        modified
+        # TODO(api): add myAccessLevel (or currentUserRole) on PlanSearchResult so the dashboard can show "Your role" without guessing from Me + collaborator names.
+      }
+      errors {
+        general
+        title
       }
     }
     hasNextPage

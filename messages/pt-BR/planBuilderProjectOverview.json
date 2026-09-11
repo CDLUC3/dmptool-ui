@@ -77,6 +77,29 @@
       "edit": "Ajustar para este projeto",
       "view": "Ver trabalhos relacionados para este projeto",
       "publish": "Publicar um plano para começar a adicionar saídas publicadas no seu projeto"
+    },
+    "openProject": "Abrir projeto",
+    "openPlan": "Abrir plano",
+    "plansInProject": "Planos neste projeto",
+    "createNewDmpInProject": "Criar um novo DMP neste projeto",
+    "noPlansYet": "Ainda não há planos.",
+    "statusColumn": "Status",
+    "yourRole": "Sua função",
+    "updated": "Atualizado",
+    "actions": "Ações",
+    "projectSummary": "Resumo do projeto",
+    "lastUpdatedOn": "Última atualização {date}",
+    "planCount": "{count, plural, =0 {0 planos} one {1 plano} other {# planos}}",
+    "funderSummary": "{name} e mais {count}",
+    "collaboratorsJustYou": "Colaboradores: Apenas você",
+    "collaboratorsYouAndOthers": "Colaboradores: Você e {count, plural, one {1 outro} other {# outros}}",
+    "collaboratorsNamed": "Colaboradores: {name}{count, plural, =0 {} one { e 1 outro} other { e # outros}}",
+    "collaboratorsNone": "Colaboradores: Nenhum",
+    "relatedWorksFound": "{count, plural, =0 {0 trabalhos relacionados encontrados} one {1 trabalho relacionado encontrado} other {# trabalhos relacionados encontrados}}",
+    "planStatus": {
+      "DRAFT": "Rascunho",
+      "COMPLETE": "Concluído",
+      "ARCHIVED": "Arquivado"
     }
   },
   "ProjectsListPage": {
@@ -90,9 +113,12 @@
         "noProjectsDescription": "Crie um plano de gerenciamento de dados para começar. Você pode gerenciar todos os seus DMPs e projetos de pesquisa a partir deste painel."
       },
       "errors": {
-        "errorRetrievingProjects": "Algo deu errado do nosso lado. Por favor, tente novamente mais tarde."
+        "errorRetrievingProjects": "Algo deu errado do nosso lado. Por favor, tente novamente mais tarde.",
+        "failedToLoadMore": "Falha ao carregar mais projetos"
       }
-    }
+    },
+    "title": "Painel de projetos e planos",
+    "projectsList": "Seus projetos"
   },
   "ProjectsCreateProject": {
     "pageTitle": "Criar detalhes do projeto",
@@ -152,7 +178,8 @@
     },
     "descriptions": {
       "addProjectManually": "Se o seu projeto não for exibido, você pode adicionar os detalhes manualmente.",
-      "noProjectFound": "Não foi possível encontrar projetos correspondentes à sua pesquisa. Tente novamente com diferentes detalhes."
+      "noProjectFound": "Não foi possível encontrar projetos correspondentes à sua pesquisa. Tente novamente com diferentes detalhes.",
+      "noProjectsFound": "Não conseguimos encontrar nenhum projeto que combine com sua pesquisa. Tente novamente com detalhes diferentes."
     },
     "definitions": {
       "projectNumber": "Prêmio/Número do Projeto",

@@ -14,6 +14,7 @@ import QuestionEditCard from "@/components/QuestionEditCard";
 import AdminSectionEditContainer from "@/components/AdminSectionEditContainer";
 import { mockSections as adminMockSections } from "@/components/AdminSectionEditContainer/mockData";
 import ProjectMemberListItem from "@/components/ProjectMemberListItem";
+import SkeletonListLoading from "@/components/SkeletonListLoading";
 
 import "../../shared/styleguide.scss";
 import {
@@ -83,14 +84,18 @@ export default function ListsDataCardsPage() {
   const mockProjects = [
     // Perfect data example - Multiple plans and funders
     {
+      id: 101,
       title: "Coastal Ocean Processes of North Greenland",
       link: "/projects/coastal-ocean-greenland",
       startDate: "July 1st 2025",
       endDate: "June 30 2028",
       funding: "National Science Foundation (nsf.gov), European Research Council",
       grantId: "252552-255",
-      defaultExpanded: false,
-      modified: "04-01-2024",
+      defaultExpanded: true,
+      modified: "12 Aug 2026",
+      collaboratorCount: 3,
+      relatedWorksCount: 3,
+      createPlanLink: "/projects/coastal-ocean-greenland/dmp/start",
       members: [
         { name: "Dr. Erik Lindström", roles: "Principal Investigator" },
         { name: "Dr. Anna Bergqvist", roles: "Co-Investigator" },
@@ -102,21 +107,31 @@ export default function ListsDataCardsPage() {
           name: "Ocean Processes of Greenland",
           dmpId: "10.4832/DIB57N",
           link: "/projects/coastal-ocean-greenland/plans/1",
+          status: "DRAFT",
+          role: "Owner",
+          modified: "14 Aug",
         },
         {
           name: "Arctic Marine Data Collection Protocol",
           dmpId: null, // No DMP ID for second plan
           link: "/projects/coastal-ocean-greenland/plans/2",
+          status: "COMPLETE",
+          role: "Editor",
+          modified: "2 Jul",
         },
         {
           name: "Climate Change Impact Assessment",
           dmpId: "10.1038/s41597-024-03456",
           link: "/projects/coastal-ocean-greenland/plans/3",
+          status: "ARCHIVED",
+          role: "Viewer",
+          modified: "19 Jan",
         },
       ],
     },
     // Single plan, single funder - most common case
     {
+      id: 102,
       title: "Arctic Marine Ecosystem Dynamics",
       link: "/projects/arctic-marine-ecosystem",
       startDate: "January 15 2025",
@@ -124,7 +139,9 @@ export default function ListsDataCardsPage() {
       funding: "National Science Foundation (nsf.gov)",
       grantId: "NSF-2024-789",
       defaultExpanded: false,
-      modified: "15-03-2024",
+      modified: "14 Aug 2026",
+      collaboratorCount: 1,
+      relatedWorksCount: 0,
       members: [
         { name: "Dr. Björn Andersson", roles: "Principal Investigator" },
         { name: "Dr. Ingrid Nilsson", roles: "Co-Investigator" },
@@ -134,11 +151,15 @@ export default function ListsDataCardsPage() {
           name: "Marine Ecosystem Data Management Plan",
           dmpId: "10.5194/essd-2024-123",
           link: "/projects/arctic-marine-ecosystem/plans/1",
+          status: "DRAFT",
+          role: "Owner",
+          modified: "14 Aug",
         },
       ],
     },
     // Multiple funders, single plan
     {
+      id: 103,
       title: "Nordic Climate Research Initiative",
       link: "/projects/nordic-climate-research",
       startDate: "March 1st 2025",
@@ -165,6 +186,7 @@ export default function ListsDataCardsPage() {
     },
     // Single plan, no DMP ID, minimal members
     {
+      id: 104,
       title: "Polar Bear Population Study",
       link: "/projects/polar-bear-study",
       startDate: "June 1st 2025",
@@ -183,6 +205,7 @@ export default function ListsDataCardsPage() {
     },
     // Minimal data example - only required fields
     {
+      id: 105,
       title: "Greenland Ice Sheet Monitoring",
       link: "/projects/greenland-ice-monitoring",
       startDate: "", // No start date
@@ -435,10 +458,14 @@ const templates = [
               <SGComponentExampleDemo>
                 <div>
                   <h4 style={{ margin: "0 0 1rem 0" }}>Active Projects</h4>
-                  <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-                    {mockProjects.map((project, index) => (
+                  <div
+                    role="list"
+                    aria-label="Example projects"
+                    style={{ display: "flex", flexDirection: "column", gap: "1rem" }}
+                  >
+                    {mockProjects.map((project) => (
                       <ProjectListItem
-                        key={index}
+                        key={project.id}
                         item={project}
                       />
                     ))}
@@ -458,11 +485,24 @@ const perfectProject = {
   funding: "National Science Foundation (nsf.gov), PD 98-1610 - Physical Oceanography",
   grantId: "252552-255",
   defaultExpanded: false,
+  modified: "12 Aug 2026",        // shown in the summary strip
+  collaboratorCount: 3,           // "Collaborators: You and 2 others"
+  relatedWorksCount: 3,           // "3 related works found" (omit to hide)
+  createPlanLink: "/projects/coastal-ocean-greenland/dmp/start",
   members: [
     { name: "Dr. Erik Lindström", roles: "Principal Investigator" },
     { name: "Dr. Anna Bergqvist", roles: "Co-Investigator" },
     { name: "Dr. Magnus Carlsson", roles: "Research Associate" },
     { name: "Dr. Astrid Johansson", roles: "Postdoctoral Researcher" }
+  ],
+  plans: [
+    {
+      name: "Ocean Processes of Greenland",
+      link: "/projects/coastal-ocean-greenland/plans/1",
+      status: "DRAFT",              // DRAFT | COMPLETE | ARCHIVED
+      role: "Owner",
+      modified: "14 Aug"
+    }
   ]
 };
 
@@ -487,10 +527,12 @@ const partialProject = {
               <h4>Features</h4>
               <ul>
                 <li>
-                  <strong>Expandable content:</strong> Click to show/hide project details
+                  <strong>Expandable plans table:</strong> Expand to see each plan with status, your role, last
+                  updated date and an &quot;Open plan&quot; action, plus a link to create a new DMP in the project
                 </li>
                 <li>
-                  <strong>Rich metadata:</strong> Dates, funding, collaborators, and grant information
+                  <strong>Summary strip:</strong> Last updated, plan count, collaborators and related works found
+                  (highlighted when greater than zero)
                 </li>
                 <li>
                   <strong>Navigation links:</strong> Direct links to project pages
@@ -507,14 +549,16 @@ const partialProject = {
         <section id="projects-empty-state">
           <h2>Projects Empty State</h2>
           <p>
-            Shown on the Plan Dashboard and Organization Projects list when the user has no projects. Uses global{" "}
-            <code>.empty-state</code> styles from <code>styles/_elements.scss</code>. Search with no matches uses a
-            separate plain message instead.
+            Shown on the Projects and Plans Dashboard and Organization Projects list when there are no projects.
+            Uses global <code>.empty-state</code> styles from <code>styles/_elements.scss</code>. While the list is
+            loading, keep the page header and search visible and swap only the list region for{" "}
+            <code>SkeletonListLoading</code> (see Feedback &amp; Loading). Search with no matches uses a separate
+            plain message instead.
           </p>
 
           <SGComponentExample>
             <SGComponentExampleHeader
-              title="Plan Dashboard (no projects)"
+              title="Projects and Plans Dashboard (no projects)"
               description="Used on /projects when totalCount is zero. Demo button uses a page anchor; production links to projects.create."
             />
             <SGComponentExampleContent>
@@ -543,7 +587,7 @@ const partialProject = {
 
           <SGComponentExample>
             <SGComponentExampleHeader
-              title="Organization Projects (no projects)"
+              title="Organization Projects and Plans (no projects)"
               description="Used on /admin/projects when totalCount is zero"
             />
             <SGComponentExampleContent>
@@ -566,6 +610,18 @@ const partialProject = {
                     {Global("buttons.createNewPlan")}
                   </TransitionLink>
                 </div>
+              </SGComponentExampleDemo>
+            </SGComponentExampleContent>
+          </SGComponentExample>
+
+          <SGComponentExample>
+            <SGComponentExampleHeader
+              title="List loading"
+              description="Swap only the list region. Header and search stay visible. Production uses Global('messaging.loadingList')."
+            />
+            <SGComponentExampleContent>
+              <SGComponentExampleDemo>
+                <SkeletonListLoading count={3} ariaLabel={Global("messaging.loadingList")} />
               </SGComponentExampleDemo>
             </SGComponentExampleContent>
           </SGComponentExample>
@@ -601,8 +657,11 @@ const partialProject = {
   </TransitionLink>
 </div>
 
+// List loading — keep header and search visible
+<SkeletonListLoading ariaLabel={Global('messaging.loadingList')} />
+
 // Project list (when items exist)
-<div className="template-list" role="list">
+<div className="project-list" role="list">
   {projects.map(...)}
 </div>
 

@@ -1,5 +1,5 @@
 import React from "react";
-import { act, fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import ProjectListItem from "../index";
 import { ProjectItemProps } from "@/app/types";
 import { axe, toHaveNoViolations } from "jest-axe";
@@ -11,8 +11,8 @@ jest.mock("next-intl", () => ({
   useTranslations: jest.fn(() => jest.fn((key) => key)),
 }));
 
-// Mock data from styleguide - using the "perfect data example"
 const mockProjectItem: ProjectItemProps = {
+  id: 42,
   title: "Coastal Ocean Processes of North Greenland",
   link: "/projects/coastal-ocean-greenland",
   startDate: "July 1st 2025",
@@ -20,118 +20,291 @@ const mockProjectItem: ProjectItemProps = {
   funding: "National Science Foundation (nsf.gov), European Research Council",
   grantId: "252552-255",
   defaultExpanded: false,
-  modified: "04-01-2024",
+  modified: "12 Aug 2026",
+  collaboratorCount: 3,
+  relatedWorksCount: 3,
   members: [
     { name: "Dr. Erik Lindström", roles: "Principal Investigator" },
     { name: "Dr. Anna Bergqvist", roles: "Co-Investigator" },
-    { name: "Dr. Magnus Carlsson", roles: "Research Associate" },
-    { name: "Dr. Astrid Johansson", roles: "Postdoctoral Researcher" },
   ],
   plans: [
     {
       name: "Ocean Processes of Greenland",
       dmpId: "10.4832/DIB57N",
       link: "/projects/coastal-ocean-greenland/plans/1",
+      status: "DRAFT",
+      role: "Owner",
+      modified: "14 Aug",
     },
     {
       name: "Arctic Marine Data Collection Protocol",
       dmpId: null,
       link: "/projects/coastal-ocean-greenland/plans/2",
-    },
-    {
-      name: "Climate Change Impact Assessment",
-      dmpId: "10.1038/s41597-024-03456",
-      link: "/projects/coastal-ocean-greenland/plans/3",
+      status: "COMPLETE",
+      role: "Editor",
+      modified: "2 Jul",
     },
   ],
 };
 
 describe("ProjectListItem", () => {
-  it("should render the ProjectListItem component", () => {
+  it("renders the collapsed header and summary strip", () => {
     render(<ProjectListItem item={mockProjectItem} />);
 
-    // Check for the main project title heading
     expect(
       screen.getByRole("heading", { level: 2, name: /Coastal Ocean Processes of North Greenland/i }),
     ).toBeInTheDocument();
 
-    // Check for plans section
-    expect(screen.getByText("plans")).toBeInTheDocument();
-    expect(screen.getByText("Ocean Processes of Greenland")).toBeInTheDocument();
+    // Funding line
+    expect(screen.getByText(/funding: funderSummary/)).toBeInTheDocument();
+    expect(screen.getByText(/grantId: 252552-255/)).toBeInTheDocument();
 
-    // Check for update links (title link + update button)
-    const updateLinks = screen.getAllByRole("link", { name: /buttons.linkUpdate/i });
-    expect(updateLinks.length).toBe(1);
+    expect(screen.getByRole("link", { name: "Coastal Ocean Processes of North Greenland" })).toHaveAttribute(
+      "href",
+      "/projects/coastal-ocean-greenland",
+    );
+    expect(screen.getByRole("link", { name: /openProject Coastal Ocean/i })).toBeInTheDocument();
 
-    // Check for expand button
-    expect(screen.getByRole("button", { name: /buttons.linkExpand/i })).toBeInTheDocument();
-    expect(screen.getByText("projectDetails")).toBeInTheDocument();
+    // Summary strip
+    const summary = screen.getByRole("group", { name: "projectSummary" });
+    expect(within(summary).getByText("lastUpdatedOn")).toBeInTheDocument();
+    expect(within(summary).getByText("planCount")).toBeInTheDocument();
+    expect(within(summary).getByText("collaboratorsYouAndOthers")).toBeInTheDocument();
+    expect(within(summary).getByText("relatedWorksFound")).toBeInTheDocument();
+
+    // Plans table is hidden until expanded
+    expect(screen.queryByRole("table")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /messaging.detailsToggleAria/i })).toBeInTheDocument();
   });
 
-  it("should expand and collapse the project details", () => {
+  it("expands to show the plans table and collapses again", () => {
     render(<ProjectListItem item={mockProjectItem} />);
 
-    const expandButton = screen.getByRole("button", { name: /buttons.linkExpand/i });
-    fireEvent.click(expandButton);
+    fireEvent.click(screen.getByRole("button", { name: /messaging.detailsToggleAria/i }));
 
-    // Check for expanded content that only appears when expanded
-    expect(screen.getByText("July 1st 2025 to June 30 2028")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 3, name: "plansInProject" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "createNewDmpInProject" })).toHaveAttribute(
+      "href",
+      expect.stringContaining("/projects/42/dmp/start"),
+    );
 
-    // Check for the expanded project members section (all members listed)
-    // Since each member is in a separate span, we need to check for individual members
-    expect(screen.getByText(/Dr. Anna Bergqvist/i)).toBeInTheDocument();
-    expect(screen.getByText(/Dr. Magnus Carlsson/i)).toBeInTheDocument();
-    expect(screen.getByText(/Dr. Astrid Johansson/i)).toBeInTheDocument();
+    const table = screen.getByRole("table");
+    const headers = within(table).getAllByRole("columnheader").map((h) => h.textContent);
+    expect(headers).toEqual(["plan", "statusColumn", "yourRole", "updated", "actions"]);
 
-    // Check for funding details in expanded section
-    expect(screen.getByText(/National Science Foundation \(nsf\.gov\) \(252552-255\)/i)).toBeInTheDocument();
+    const rows = within(table).getAllByRole("row").slice(1);
+    expect(rows).toHaveLength(2);
 
-    // Check for section headings using getAllByRole to handle multiple matches
-    const h4Headings = screen.getAllByRole("heading", { level: 4 });
-    expect(h4Headings.length).toBeGreaterThanOrEqual(3); // At least project, fundings, projectMembers, researchOutputs
+    const firstRow = within(rows[0]);
+    expect(firstRow.getByRole("link", { name: "Ocean Processes of Greenland" })).toBeInTheDocument();
+    expect(firstRow.getByText("planStatus.DRAFT")).toBeInTheDocument();
+    expect(firstRow.getByText("Owner")).toBeInTheDocument();
+    expect(firstRow.getByText("14 Aug")).toBeInTheDocument();
+    expect(firstRow.getByRole("link", { name: /openPlan Ocean Processes of Greenland/ })).toHaveAttribute(
+      "href",
+      "/projects/coastal-ocean-greenland/plans/1",
+    );
 
-    const collapseButton = screen.getByRole("button", { name: /buttons.linkCollapse/i });
-    fireEvent.click(collapseButton);
+    expect(within(rows[1]).getByText("planStatus.COMPLETE")).toBeInTheDocument();
 
-    // Check that expanded content is hidden (but collapsed metadata should still be there)
-    expect(screen.queryByText("July 1st 2025 to June 30 2028")).not.toBeInTheDocument();
-    expect(screen.queryByText(/Dr. Anna Bergqvist/i)).not.toBeInTheDocument();
-    expect(screen.queryByText(/Dr. Magnus Carlsson/i)).not.toBeInTheDocument();
-    expect(screen.queryByText(/Dr. Astrid Johansson/i)).not.toBeInTheDocument();
-
-    // But the collapsed metadata should still be visible
-    expect(screen.getByText(/Dr. Erik Lindström/i)).toBeInTheDocument(); // This should still be in collapsed metadata
+    fireEvent.click(screen.getByRole("button", { name: /messaging.detailsToggleAria/i }));
+    expect(screen.queryByRole("table")).not.toBeInTheDocument();
+    expect(document.getElementById("project-42-content")).toHaveAttribute("inert");
   });
 
-  it("shows noFunderSelected when funding is empty", () => {
+  it("uses the project id for ARIA relationships and unique ids when titles match", () => {
     render(
+      <div role="list">
+        <ProjectListItem item={mockProjectItem} data-index={0} />
+        <ProjectListItem
+          item={{ ...mockProjectItem, id: 43, title: mockProjectItem.title }}
+          data-index={1}
+        />
+      </div>,
+    );
+
+    const heading = document.getElementById("project-42-heading");
+    expect(heading).toHaveTextContent(mockProjectItem.title);
+    expect(document.getElementById("project-43-heading")).toHaveTextContent(mockProjectItem.title);
+
+    const toggle = screen.getAllByRole("button", {
+      name: /messaging.detailsToggleAria/i,
+    })[0];
+    expect(toggle).toHaveAttribute("aria-controls", "project-42-content");
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
+
+    const region = document.getElementById("project-42-content");
+    expect(region).toBeInTheDocument();
+    expect(region).toHaveAttribute("inert");
+
+    const items = screen.getAllByRole("listitem");
+    expect(items[0]).toHaveAttribute("data-index", "0");
+    expect(items[1]).toHaveAttribute("data-index", "1");
+  });
+
+  it("shows an empty state when the project has no plans", () => {
+    render(<ProjectListItem item={{ ...mockProjectItem, plans: [], defaultExpanded: true }} />);
+
+    expect(screen.getByText("noPlansYet")).toBeInTheDocument();
+    expect(screen.queryByRole("table")).not.toBeInTheDocument();
+  });
+
+  it("shows noFunderSelected when funding is empty and hides the grant id", () => {
+    render(<ProjectListItem item={{ ...mockProjectItem, funding: "", grantId: null }} />);
+
+    expect(screen.getByText(/funding: noFunderSelected/)).toBeInTheDocument();
+    expect(screen.queryByText(/grantId/)).not.toBeInTheDocument();
+  });
+
+  it("falls back to member names when no collaborator count is provided", () => {
+    render(<ProjectListItem item={{ ...mockProjectItem, collaboratorCount: undefined }} />);
+
+    expect(screen.getByText("collaboratorsNamed")).toBeInTheDocument();
+    expect(screen.queryByText("collaboratorsYouAndOthers")).not.toBeInTheDocument();
+  });
+
+  it("omits the related works indicator when no count is provided", () => {
+    render(<ProjectListItem item={{ ...mockProjectItem, relatedWorksCount: undefined }} />);
+
+    expect(screen.queryByText("relatedWorksFound")).not.toBeInTheDocument();
+  });
+
+  it("uses a view label and hides the create link when isReadOnly", () => {
+    render(<ProjectListItem item={{ ...mockProjectItem, defaultExpanded: true }} isReadOnly={true} />);
+
+    expect(screen.getByRole("link", { name: /buttons.view Coastal Ocean/i })).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /openProject/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "createNewDmpInProject" })).not.toBeInTheDocument();
+  });
+
+  it("shows Just you when collaboratorCount is 1", () => {
+    render(<ProjectListItem item={{ ...mockProjectItem, collaboratorCount: 1 }} />);
+
+    expect(screen.getByText("collaboratorsJustYou")).toBeInTheDocument();
+    expect(screen.queryByText("collaboratorsYouAndOthers")).not.toBeInTheDocument();
+  });
+
+  it("shows None when there are no collaborators or named members", () => {
+    const { rerender } = render(
       <ProjectListItem
-        item={{ ...mockProjectItem, funding: "" }}
+        item={{
+          ...mockProjectItem,
+          collaboratorCount: 0,
+          members: [],
+        }}
       />,
     );
 
-    const funderMetadata = screen.getByText("noFunderSelected");
-    expect(funderMetadata).toBeInTheDocument();
-    expect(funderMetadata).not.toHaveAttribute("aria-label");
+    expect(screen.getByText("collaboratorsNone")).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: /buttons.linkExpand/i }));
+    rerender(
+      <ProjectListItem
+        item={{
+          ...mockProjectItem,
+          collaboratorCount: undefined,
+          members: [{ name: "  ", roles: "" }],
+        }}
+      />,
+    );
 
-    expect(screen.getAllByText("noFunderSelected")).toHaveLength(2);
-    expect(screen.getByRole("heading", { name: "fundings" })).toBeInTheDocument();
+    expect(screen.getByText("collaboratorsNone")).toBeInTheDocument();
+    expect(screen.queryByText("collaboratorsJustYou")).not.toBeInTheDocument();
+    expect(screen.queryByText("collaboratorsYouAndOthers")).not.toBeInTheDocument();
+    expect(screen.queryByText("collaboratorsNamed")).not.toBeInTheDocument();
   });
 
-  it("shows view button instead of update when isReadOnly", () => {
-    render(<ProjectListItem item={mockProjectItem} isReadOnly={true} />);
+  it("renders a single funder name and a plain title when there is no project link", () => {
+    render(
+      <ProjectListItem
+        item={{
+          ...mockProjectItem,
+          title: "Standalone project",
+          link: undefined,
+          funding: "National Science Foundation",
+        }}
+      />,
+    );
 
-    expect(screen.getByRole("link", { name: /buttons.view/i })).toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: /buttons.linkUpdate/i })).not.toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 2, name: "Standalone project" })).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Standalone project" })).not.toBeInTheDocument();
+    expect(screen.getByText(/funding: National Science Foundation/)).toBeInTheDocument();
+    expect(screen.queryByText(/funderSummary/)).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /openProject/i })).not.toBeInTheDocument();
   });
 
+  it("handles sparse plan rows and an overridden create-plan link", () => {
+    render(
+      <ProjectListItem
+        item={{
+          ...mockProjectItem,
+          id: undefined,
+          createPlanLink: "/custom/create-plan",
+          defaultExpanded: true,
+          modified: undefined,
+          relatedWorksCount: 0,
+          plans: [
+            {
+              name: "Untitled draft",
+              status: null,
+              role: null,
+              modified: null,
+            },
+            {
+              name: "Legacy plan",
+              status: "UNKNOWN_STATUS",
+              role: "Viewer",
+              modified: "1 Jan",
+              link: "/projects/legacy/plans/9",
+            },
+            {
+              name: "Archived plan",
+              status: "ARCHIVED",
+              role: "Owner",
+              modified: "3 Mar",
+              link: "/projects/legacy/plans/10",
+            },
+          ],
+        }}
+      />,
+    );
 
-  it("should pass axe accessibility test", async () => {
+    expect(screen.queryByText("lastUpdatedOn")).not.toBeInTheDocument();
+    expect(screen.getByText("relatedWorksFound")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "createNewDmpInProject" })).toHaveAttribute(
+      "href",
+      "/custom/create-plan",
+    );
+
+    expect(screen.getByText("Untitled draft")).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Untitled draft" })).not.toBeInTheDocument();
+    expect(screen.getAllByText("—").length).toBeGreaterThanOrEqual(3);
+    expect(screen.getByText("UNKNOWN_STATUS")).toBeInTheDocument();
+    expect(screen.getByText("planStatus.ARCHIVED")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /openPlan Legacy plan/ })).toBeInTheDocument();
+  });
+
+  it("hides the create-plan link when no project id or createPlanLink is available", () => {
+    render(
+      <ProjectListItem
+        item={{
+          ...mockProjectItem,
+          id: undefined,
+          createPlanLink: undefined,
+          defaultExpanded: true,
+        }}
+      />,
+    );
+
+    expect(screen.queryByRole("link", { name: "createNewDmpInProject" })).not.toBeInTheDocument();
+  });
+
+  it("should pass axe accessibility test when collapsed and expanded", async () => {
     const { container } = render(
       <div role="list">
         <ProjectListItem item={mockProjectItem} />
+        <ProjectListItem
+          item={{ ...mockProjectItem, id: 43, title: "Second project", defaultExpanded: true }}
+        />
       </div>,
     );
 

@@ -42,6 +42,7 @@
 - Added `UpdateAffiliation` and `AffiliationById` queries [#203]
 
 ## Updated
+- Redesigned `ProjectListItem` and project list pages (`/projects`, `/admin/projects`, `/admin/users/[userId]/projects`) with expandable plan details, skeleton loading, and GraphQL-backed plan and collaborator data
 - Updated `DisplayLogicComponent.tsx` to show condition joiner within condition groups as well as between condition groups [#360]
 - Updated `QuestionEdit` to call `TriggerQuestionsForQuestionDocument` to get the qualifying trigger questions [#360]
 - Updated `useTriggerQuestions` hook to remove currentDisplayOrder since the backend does those calculations before sending data [#360]
