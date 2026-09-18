@@ -10,6 +10,16 @@ interface PasswordRequirementsListProps {
   password: string;
 }
 
+type RequirementStatus = "pending" | "met" | "unmet";
+
+const getRequirementStatus = (password: string, isMet: boolean): RequirementStatus => {
+  if (!password) {
+    return "pending";
+  }
+
+  return isMet ? "met" : "unmet";
+};
+
 const PasswordRequirementsList: React.FC<PasswordRequirementsListProps> = ({ password }) => {
   const t = useTranslations('Global.passwordRequirements');
   const requirements = getPasswordRequirements(password);
@@ -24,21 +34,33 @@ const PasswordRequirementsList: React.FC<PasswordRequirementsListProps> = ({ pas
 
   return (
     <div id="password-requirements">
-      <p>{t('description')}</p>
+      <p className={styles.heading}>{t('description')}</p>
       <ul className={styles.requirementsList} aria-live="polite">
-        {requirements.map(({ key, isMet }) => (
-          <li
-            key={key}
-            className={isMet ? styles.met : styles.unmet}
-            data-testid={`requirement-${key}`}
-          >
-            <div className={styles.iconContainer}>
-              <span aria-hidden="true">{isMet ? <DmpIcon icon="check_circle" className={styles.met} /> : <DmpIcon icon="error_circle" className={styles.unmet} />}</span>
-              <span className="hidden-accessibly">{isMet ? t('metPrefix') : t('unmetPrefix')}</span>
-              {labels[key]}
-            </div>
-          </li>
-        ))}
+        {requirements.map(({ key, isMet }) => {
+          const status = getRequirementStatus(password, isMet);
+
+          return (
+            <li
+              key={key}
+              className={styles[status]}
+              data-testid={`requirement-${key}`}
+            >
+              <div className={styles.iconContainer}>
+                <span aria-hidden="true">
+                  {status === "unmet" ? (
+                    <DmpIcon icon="error_circle" className={styles.unmet} />
+                  ) : (
+                    <DmpIcon icon="check_circle" className={status === "met" ? styles.met : styles.pending} />
+                  )}
+                </span>
+                {status !== "pending" && (
+                  <span className="hidden-accessibly">{status === "met" ? t('metPrefix') : t('unmetPrefix')}</span>
+                )}
+                {labels[key]}
+              </div>
+            </li>
+          );
+        })}
       </ul>
     </div>
   );

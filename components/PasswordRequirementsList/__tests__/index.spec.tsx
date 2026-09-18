@@ -15,8 +15,10 @@ jest.mock('next-intl', () => ({
 
 jest.mock('./passwordRequirements.module.scss', () => ({
   requirementsList: 'requirementsList',
+  heading: 'heading',
   met: 'met',
   unmet: 'unmet',
+  pending: 'pending',
   iconContainer: 'iconContainer',
 }));
 
@@ -78,22 +80,22 @@ describe('PasswordRequirementsList', () => {
     );
   });
 
-  it('should mark every requirement as unmet for an empty password', () => {
+  it('should treat an empty password as pending, not failed', () => {
     render(<PasswordRequirementsList password={NO_REQUIREMENTS_MET} />);
 
-    expect(screen.getByTestId('requirement-minLength')).toHaveClass('unmet');
-    expect(screen.getByTestId('requirement-hasUppercase')).toHaveClass('unmet');
-    expect(screen.getByTestId('requirement-hasLowercase')).toHaveClass('unmet');
-    expect(screen.getByTestId('requirement-hasNumber')).toHaveClass('unmet');
-    expect(screen.getByTestId('requirement-hasSpecialChar')).toHaveClass('unmet');
+    expect(screen.getByTestId('requirement-minLength')).toHaveClass('pending');
+    expect(screen.getByTestId('requirement-hasUppercase')).toHaveClass('pending');
+    expect(screen.getByTestId('requirement-hasLowercase')).toHaveClass('pending');
+    expect(screen.getByTestId('requirement-hasNumber')).toHaveClass('pending');
+    expect(screen.getByTestId('requirement-hasSpecialChar')).toHaveClass('pending');
 
     const item = screen.getByTestId('requirement-minLength');
     const svg = within(item).getByTestId('dmpIconSvg');
     const use = within(item).getByTestId('dmpIconSvgUse');
 
-    expect(svg).toHaveClass('unmet');
-    expect(svg).toHaveAttribute('aria-hidden', 'true');
-    expect(use).toHaveAttribute('href', '/icons/iconset.svg#icon-error_circle');
+    expect(svg).toHaveClass('pending');
+    expect(use).toHaveAttribute('href', '/icons/iconset.svg#icon-check_circle');
+    expect(item).not.toHaveTextContent('unmetPrefix');
   });
 
 
@@ -160,7 +162,7 @@ describe('PasswordRequirementsList', () => {
       <PasswordRequirementsList password={NO_REQUIREMENTS_MET} />
     );
 
-    expect(screen.getByTestId('requirement-minLength')).toHaveClass('unmet');
+    expect(screen.getByTestId('requirement-minLength')).toHaveClass('pending');
 
     rerender(<PasswordRequirementsList password={ALL_REQUIREMENTS_MET} />);
 
