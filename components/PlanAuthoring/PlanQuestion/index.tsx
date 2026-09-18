@@ -3,8 +3,12 @@
 import React, { useCallback, useMemo, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "react-aria-components";
-import { TEXT_AREA_QUESTION_TYPE } from "@/lib/constants";
+import {
+  RESEARCH_OUTPUT_QUESTION_TYPE,
+  TEXT_AREA_QUESTION_TYPE,
+} from "@/lib/constants";
 import { useToast } from "@/context/ToastContext";
+import type { ResearchOutputRowNavigation } from "@/components/Form/ResearchOutputAnswerComponent";
 import type { PlanAuthoringDataSource } from "../dataSource";
 import type { PlanCapabilities, PlanQuestionDefinition } from "../model";
 import { questionAnchorId, questionKey } from "../model";
@@ -27,6 +31,7 @@ interface PlanQuestionProps {
   currentUserId: number;
   dataSource: PlanAuthoringDataSource;
   onCustomizeGuidance: () => void;
+  rowNavigation?: ResearchOutputRowNavigation;
   className?: string;
 }
 
@@ -36,12 +41,15 @@ export default function PlanQuestion({
   currentUserId,
   dataSource,
   onCustomizeGuidance,
+  rowNavigation,
   className,
 }: PlanQuestionProps) {
   const t = useTranslations("PlanAuthoring");
   const Global = useTranslations("Global");
   const toast = useToast();
   const key = questionKey(question.identity);
+  const isResearchOutput =
+    question.questionType === RESEARCH_OUTPUT_QUESTION_TYPE;
   const initialAnswer = useMemo(
     () => resolveInitialAnswer(question),
     [
@@ -131,16 +139,15 @@ export default function PlanQuestion({
             disabled={!capabilities.canEditAnswers}
             onChange={controller.setDraftAnswer}
             onStartEditing={() => controller.setMode("editing")}
+            onSaveNow={controller.saveNow}
+            rowNavigation={rowNavigation}
           />
           <div className={styles.questionActions}>
             <PlanQuestionSaveStatus
               state={controller.saveState}
               errorMessage={controller.errorMessage}
             />
-            {/* TODO(follow-up PR): for researchOutputTable, hide this Save
-                button while ResearchOutputAnswerComponent is in single-row
-                edit (onEditingStateChange), matching PlanOverviewQuestionPageShared. */}
-            {capabilities.canEditAnswers ? (
+            {capabilities.canEditAnswers && !isResearchOutput ? (
               <Button
                 onPress={() => {
                   void controller.saveNow();

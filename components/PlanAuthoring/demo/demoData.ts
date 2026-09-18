@@ -4,6 +4,7 @@ import {
   DATE_QUESTION_TYPE,
   NUMBER_QUESTION_TYPE,
   RADIOBUTTONS_QUESTION_TYPE,
+  RESEARCH_OUTPUT_QUESTION_TYPE,
   SELECTBOX_QUESTION_TYPE,
   TEXT_AREA_QUESTION_TYPE,
   TEXT_FIELD_QUESTION_TYPE,
@@ -18,7 +19,7 @@ import {
   PlanSectionDefinition,
   computeProgress,
 } from "../model";
-
+import { buildResearchOutputAnswer } from "../researchOutputAnswer";
 export const DEMO_PLAN_DOCUMENT: PlanDocument = {
   fileName: "Coastal_Ocean_DMP_Frost_2026.pdf",
   fileType: "PDF",
@@ -187,6 +188,357 @@ function makeQuestion(
   };
 }
 
+/** Column headings match SingleResearchOutputComponent / getRowDisplayInfo checks. */
+const DEMO_RESEARCH_OUTPUT_COLUMNS = [
+  {
+    heading: "Title",
+    commonStandardId: "title",
+    help: "Enter the title of this research output",
+    required: true,
+    enabled: true,
+    content: {
+      type: "text",
+      meta: { schemaVersion: "1.0" },
+      attributes: {
+        maxLength: 500,
+        labelTranslationKey: "labels.title",
+      },
+    },
+  },
+  {
+    heading: "Description",
+    commonStandardId: "description",
+    help: "Enter a brief description of this research output",
+    required: true,
+    enabled: true,
+    content: {
+      type: "textArea",
+      meta: { schemaVersion: "1.0" },
+      attributes: {
+        cols: 20,
+        rows: 2,
+        asRichText: true,
+        maxLength: 10000,
+        label: "Description",
+        labelTranslationKey: "labels.description",
+      },
+    },
+  },
+  {
+    heading: "Output Type",
+    commonStandardId: "type",
+    help: "Select the type of this research output",
+    required: true,
+    enabled: true,
+    content: {
+      type: "selectBox",
+      meta: { schemaVersion: "1.0" },
+      options: [
+        { label: "Audiovisual", value: "audiovisual", selected: false },
+        { label: "Dataset", value: "dataset", selected: false },
+        { label: "Software", value: "software", selected: false },
+        { label: "Text", value: "text", selected: false },
+      ],
+      attributes: {
+        label: "Output Type",
+        multiple: false,
+        labelTranslationKey: "labels.outputType",
+      },
+    },
+  },
+  {
+    heading: "Data Flags",
+    commonStandardId: "data_flags",
+    help: "Mark all of the statements that are true about the dataset",
+    required: false,
+    enabled: true,
+    content: {
+      type: "checkBoxes",
+      meta: { schemaVersion: "1.0" },
+      options: [
+        {
+          label: "May contain sensitive data",
+          value: "sensitive",
+          checked: false,
+        },
+        {
+          label: "May contain personal data",
+          value: "personal",
+          checked: false,
+        },
+      ],
+      attributes: {
+        label: "Data Flags",
+        labelTranslationKey: "labels.dataFlags",
+      },
+    },
+  },
+  {
+    heading: "Repositories",
+    commonStandardId: "host",
+    help: "Select repository(ies) you would prefer users to deposit in",
+    required: false,
+    enabled: true,
+    content: {
+      type: "repositorySearch",
+      meta: { schemaVersion: "1.0" },
+      attributes: {
+        label: "Repositories",
+        labelTranslationKey: "labels.repositories",
+      },
+    },
+  },
+  {
+    heading: "Metadata Standards",
+    commonStandardId: "metadata",
+    help: "Select metadata standard(s) you would prefer users to use",
+    required: false,
+    enabled: true,
+    content: {
+      type: "metadataStandardSearch",
+      meta: { schemaVersion: "1.0" },
+      attributes: {
+        label: "Metadata Standards",
+        labelTranslationKey: "labels.metadataStandards",
+      },
+    },
+  },
+  {
+    heading: "Licenses",
+    commonStandardId: "license_ref",
+    help: "Select the license you will apply to the research output",
+    required: false,
+    enabled: true,
+    content: {
+      type: "licenseSearch",
+      meta: { schemaVersion: "1.0" },
+      attributes: {
+        label: "Licenses",
+        labelTranslationKey: "labels.licenses",
+      },
+    },
+  },
+  {
+    heading: "Initial Access Levels",
+    commonStandardId: "data_access",
+    help: "Select the access level for this research output",
+    required: false,
+    enabled: true,
+    content: {
+      type: "radioButtons",
+      meta: { schemaVersion: "1.0" },
+      options: [
+        { label: "Open", value: "open", selected: false },
+        { label: "Restricted", value: "restricted", selected: false },
+        { label: "Closed", value: "closed", selected: false },
+      ],
+      attributes: {
+        label: "Initial Access Levels",
+        labelTranslationKey: "labels.initialAccessLevels",
+      },
+    },
+  },
+  {
+    heading: "Anticipated Release Date",
+    commonStandardId: "issued",
+    help: "When do you expect to release this output?",
+    required: false,
+    enabled: true,
+    content: {
+      type: "date",
+      meta: { schemaVersion: "1.0" },
+      attributes: {
+        label: "Anticipated Release Date",
+        labelTranslationKey: "labels.anticipatedReleaseDate",
+      },
+    },
+  },
+  {
+    heading: "Anticipated File Size",
+    commonStandardId: "byte_size",
+    help: "Approximate size of the research output",
+    required: false,
+    enabled: true,
+    content: {
+      type: "numberWithContext",
+      meta: { schemaVersion: "1.0" },
+      attributes: {
+        label: "Anticipated File Size",
+        labelTranslationKey: "labels.anticipatedFileSize",
+      },
+    },
+  },
+] as const;
+
+const DEMO_RESEARCH_OUTPUT_PARSED_JSON = {
+  type: RESEARCH_OUTPUT_QUESTION_TYPE,
+  meta: {
+    schemaVersion: "1.0",
+    title: "Research outputs",
+  },
+  columns: DEMO_RESEARCH_OUTPUT_COLUMNS,
+};
+
+const DEMO_RESEARCH_OUTPUT_ROWS = [
+  {
+    columns: [
+      {
+        type: "text",
+        commonStandardId: "title",
+        meta: { schemaVersion: "1.0" },
+        answer: "Coastal UAV imagery mosaic (2025)",
+      },
+      {
+        type: "textArea",
+        commonStandardId: "description",
+        meta: { schemaVersion: "1.0" },
+        answer:
+          "<p>Orthomosaic and DEM products from seasonal UAV flights over the Frost study area.</p>",
+      },
+      {
+        type: "selectBox",
+        commonStandardId: "type",
+        meta: { schemaVersion: "1.0" },
+        answer: "dataset",
+      },
+      {
+        type: "checkBoxes",
+        commonStandardId: "data_flags",
+        meta: { schemaVersion: "1.0" },
+        answer: [],
+      },
+      {
+        type: "repositorySearch",
+        commonStandardId: "host",
+        meta: { schemaVersion: "1.0" },
+        answer: [
+          {
+            repositoryId: "https://www.re3data.org/repository/r3d100010468",
+            repositoryName: "Zenodo",
+            repositoryWebsite: "https://zenodo.org",
+          },
+        ],
+      },
+      {
+        type: "metadataStandardSearch",
+        commonStandardId: "metadata",
+        meta: { schemaVersion: "1.0" },
+        answer: [
+          {
+            metadataStandardId: "https://schema.datacite.org/",
+            metadataStandardName: "DataCite Metadata Schema",
+          },
+        ],
+      },
+      {
+        type: "licenseSearch",
+        commonStandardId: "license_ref",
+        meta: { schemaVersion: "1.0" },
+        answer: [
+          {
+            licenseId: "https://spdx.org/licenses/CC-BY-4.0.json",
+            licenseName: "CC-BY-4.0",
+          },
+        ],
+      },
+      {
+        type: "radioButtons",
+        commonStandardId: "data_access",
+        meta: { schemaVersion: "1.0" },
+        answer: "open",
+      },
+      {
+        type: "date",
+        commonStandardId: "issued",
+        meta: { schemaVersion: "1.0" },
+        answer: "2026-09-01",
+      },
+      {
+        type: "numberWithContext",
+        commonStandardId: "byte_size",
+        meta: { schemaVersion: "1.0" },
+        answer: { value: 120, context: "gb" },
+      },
+    ],
+  },
+  {
+    columns: [
+      {
+        type: "text",
+        commonStandardId: "title",
+        meta: { schemaVersion: "1.0" },
+        answer: "Habitat suitability model code",
+      },
+      {
+        type: "textArea",
+        commonStandardId: "description",
+        meta: { schemaVersion: "1.0" },
+        answer:
+          "<p>Python notebooks and container recipe used to regenerate habitat-suitability layers.</p>",
+      },
+      {
+        type: "selectBox",
+        commonStandardId: "type",
+        meta: { schemaVersion: "1.0" },
+        answer: "software",
+      },
+      {
+        type: "checkBoxes",
+        commonStandardId: "data_flags",
+        meta: { schemaVersion: "1.0" },
+        answer: [],
+      },
+      {
+        type: "repositorySearch",
+        commonStandardId: "host",
+        meta: { schemaVersion: "1.0" },
+        answer: [
+          {
+            repositoryId: "https://github.com/",
+            repositoryName: "GitHub",
+            repositoryWebsite: "https://github.com",
+          },
+        ],
+      },
+      {
+        type: "metadataStandardSearch",
+        commonStandardId: "metadata",
+        meta: { schemaVersion: "1.0" },
+        answer: [],
+      },
+      {
+        type: "licenseSearch",
+        commonStandardId: "license_ref",
+        meta: { schemaVersion: "1.0" },
+        answer: [
+          {
+            licenseId: "https://spdx.org/licenses/MIT.json",
+            licenseName: "MIT",
+          },
+        ],
+      },
+      {
+        type: "radioButtons",
+        commonStandardId: "data_access",
+        meta: { schemaVersion: "1.0" },
+        answer: "open",
+      },
+      {
+        type: "date",
+        commonStandardId: "issued",
+        meta: { schemaVersion: "1.0" },
+        answer: "2026-12-15",
+      },
+      {
+        type: "numberWithContext",
+        commonStandardId: "byte_size",
+        meta: { schemaVersion: "1.0" },
+        answer: { value: 45, context: "mb" },
+      },
+    ],
+  },
+];
+
 export function createPlanAuthoringDemo(): PlanAuthoringModel {
   const sections: PlanSectionDefinition[] = [
     {
@@ -276,6 +628,36 @@ export function createPlanAuthoringDemo(): PlanAuthoringModel {
           answerJson: { type: BOOLEAN_QUESTION_TYPE, answer: false },
           hasAnswer: true,
           displayOrder: 3,
+        }),
+        makeQuestion({
+          identity: { kind: "base", versionedQuestionId: 104 },
+          sectionIdentity: { kind: "base", versionedSectionId: 1 },
+          title: "Research outputs for this award",
+          requirementHtml:
+            "<p>List each anticipated research output (datasets, software, samples, or other products). Include repository, license, access level, and release timing where known. Reviewers expect concrete destinations rather than \"available on request.\"</p>",
+          required: true,
+          questionType: RESEARCH_OUTPUT_QUESTION_TYPE,
+          parsedJson: DEMO_RESEARCH_OUTPUT_PARSED_JSON as unknown as Record<
+            string,
+            unknown
+          >,
+          answerJson: buildResearchOutputAnswer(
+            DEMO_RESEARCH_OUTPUT_PARSED_JSON,
+            DEMO_RESEARCH_OUTPUT_ROWS as never
+          ),
+          hasAnswer: true,
+          guidanceSources: richGuidanceCatalog,
+          comments: [
+            {
+              id: 21,
+              authorId: DEMO_JENNIFER_ID,
+              authorName: "Jennifer Frost",
+              createdLabel: "5 hours ago",
+              text: "Please confirm Zenodo quotas cover the UAV mosaic volume.",
+              isFeedback: true,
+            },
+          ],
+          displayOrder: 4,
         }),
       ],
     },

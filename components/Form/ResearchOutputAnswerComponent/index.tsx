@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Button } from "react-aria-components";
+import { Link } from "@/i18n/routing";
 import {
   ResearchOutputTableQuestionType
 } from '@dmptool/types';
@@ -16,6 +17,11 @@ import { createEmptyResearchOutputRow, getRowDisplayInfo } from '@/utils/researc
 import { useScrollToElement } from './hooks/useScrollToElement';
 import styles from './researchOutputAnswer.module.scss';
 
+export type ResearchOutputRowNavigation = {
+  editHref: (rowIndex: number) => string;
+  addHref: string;
+};
+
 type ResearchOutputAnswerComponentProps = {
   columns: ResearchOutputTableQuestionType['columns'];
   rows: ResearchOutputTable[];
@@ -24,6 +30,8 @@ type ResearchOutputAnswerComponentProps = {
   initialViewMode?: 'list' | 'form'; // Control initial view - 'form' for preview, 'list' for normal use
   isDisabled?: boolean; // Whether the component is in read-only mode (e.g., for preview or if question is disabled)
   onEditingStateChange?: (isEditing: boolean) => void; // Notify parent when entering/leaving single-edit view
+  /** When set, Edit/Add navigate via href and the list never auto-opens the inline form. */
+  rowNavigation?: ResearchOutputRowNavigation;
 };
 
 const ResearchOutputAnswerComponent: React.FC<ResearchOutputAnswerComponentProps> = ({
@@ -34,10 +42,14 @@ const ResearchOutputAnswerComponent: React.FC<ResearchOutputAnswerComponentProps
   initialViewMode = 'list',
   isDisabled = false,
   onEditingStateChange,
+  rowNavigation,
 }) => {
   // State to track which row is being edited (null means showing list view)
-  // If preview mode, start in form view immediately (no flash)
+  // If preview mode, start in form view immediately (no flash). rowNavigation stays list-only.
   const [editingRowIndex, setEditingRowIndex] = useState<number | null>(() => {
+    if (rowNavigation) {
+      return null;
+    }
     if (initialViewMode === 'form') {
       return 0;
     }
@@ -46,7 +58,9 @@ const ResearchOutputAnswerComponent: React.FC<ResearchOutputAnswerComponentProps
   // To track that the page was rendered once
   const hasInitialized = useRef(false);
   // State to track if we're adding a new entry
-  const [isAddingNew, setIsAddingNew] = useState(initialViewMode === 'form');
+  const [isAddingNew, setIsAddingNew] = useState(
+    !rowNavigation && initialViewMode === 'form'
+  );
 
   // Localization
   const Global = useTranslations('Global');
@@ -149,8 +163,13 @@ const ResearchOutputAnswerComponent: React.FC<ResearchOutputAnswerComponentProps
   }, [editingRowIndex, rows.length]);
 
   // Automatically show form when there are no rows (i.e., first time adding an answer)
-  // Only use delayed effect for normal list mode
+  // Only use delayed effect for normal list mode. Skip when rowNavigation owns Add/Edit.
   useEffect(() => {
+    if (rowNavigation) {
+      hasInitialized.current = true;
+      return;
+    }
+
     if (hasInitialized.current) return;
 
     if (initialViewMode === 'form') {
@@ -182,15 +201,18 @@ const ResearchOutputAnswerComponent: React.FC<ResearchOutputAnswerComponentProps
     }, 50);
 
     return () => clearTimeout(timer);
-  }, [rows.length, editingRowIndex, columns, initialViewMode]);
+  }, [rows.length, editingRowIndex, columns, initialViewMode, rowNavigation]);
 
   // Handle when all items are deleted
   useEffect(() => {
+    if (rowNavigation) {
+      return;
+    }
     // If we've initialized before, rows is now empty, and we're not editing
     if (hasInitialized.current && rows.length === 0 && editingRowIndex === null) {
       handleAddNew();
     }
-  }, [rows.length, editingRowIndex]);
+  }, [rows.length, editingRowIndex, rowNavigation]);
 
   // Notify parent when entering/leaving single-edit view, so that it can
   // hide its own save button, preventing multiple CTAs in the SingleResearchOutputComponent
@@ -236,12 +258,18 @@ const ResearchOutputAnswerComponent: React.FC<ResearchOutputAnswerComponentProps
   return (
     <div className={`${styles.listView} ro-form-wrapper`}>
       <div className={styles.listHeader}>
-        <Button
-          className="primary small"
-          onPress={handleAddNew}
-        >
-          + {t('buttons.addOutput')}
-        </Button>
+        {rowNavigation ? (
+          <Link href={rowNavigation.addHref} className="primary small">
+            + {t('buttons.addOutput')}
+          </Link>
+        ) : (
+          <Button
+            className="primary small"
+            onPress={handleAddNew}
+          >
+            + {t('buttons.addOutput')}
+          </Button>
+        )}
       </div>
 
       <ul className={styles.outputList}>
@@ -272,12 +300,21 @@ const ResearchOutputAnswerComponent: React.FC<ResearchOutputAnswerComponentProps
               </div>
 
               <div className={styles.outputActions}>
-                <Button
-                  className={`${styles.editBtn} small secondary`}
-                  onPress={() => handleEdit(index)}
-                >
-                  {Global('buttons.edit')}
-                </Button>
+                {rowNavigation ? (
+                  <Link
+                    href={rowNavigation.editHref(index)}
+                    className={`${styles.editBtn} small secondary`}
+                  >
+                    {Global('buttons.edit')}
+                  </Link>
+                ) : (
+                  <Button
+                    className={`${styles.editBtn} small secondary`}
+                    onPress={() => handleEdit(index)}
+                  >
+                    {Global('buttons.edit')}
+                  </Button>
+                )}
                 <Button
                   className={`${styles.deleteBtn} small danger`}
                   onPress={() => handleDelete(index)}

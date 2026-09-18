@@ -142,6 +142,12 @@
       "useAnswer": "Use answer",
       "organizationSampleText": "{org} sample text",
       "sampleTextAdded": "Sample text added"
+    },
+    "researchOutput": {
+      "backToPlan": "Back to plan authoring",
+      "notFoundTitle": "Research output not found",
+      "notFoundBody": "That research output question or row is missing from the demo plan.",
+      "saveFailed": "Unable to save research output."
     }
   }
 }

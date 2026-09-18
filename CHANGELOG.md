@@ -1,4 +1,5 @@
 ## Added
+- Added Plan Authoring styleguide research-output Add/Edit as a separate page, with optional `rowNavigation` on `ResearchOutputAnswerComponent` so production inline edit stays unchanged when the prop is omitted
 - Added `PlanCard` with template and uploaded variants on the project overview, plus styleguide demos [#93]
 - Added plan authoring uploaded-document view with document card, update/replace dialog, and styleguide demo [#93]
 - Added `TriggerQuestionsForQuestion` query [#360]

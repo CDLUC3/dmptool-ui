@@ -128,6 +128,25 @@ export function questionKey(identity: PlanQuestionIdentity): string {
     : `custom-question-${identity.customQuestionId}`;
 }
 
+/** Inverse of `questionKey`. Returns null for unrecognized keys. */
+export function parseQuestionKey(key: string): PlanQuestionIdentity | null {
+  const baseMatch = /^base-question-(\d+)$/.exec(key);
+  if (baseMatch) {
+    return {
+      kind: "base",
+      versionedQuestionId: Number(baseMatch[1]),
+    };
+  }
+  const customMatch = /^custom-question-(\d+)$/.exec(key);
+  if (customMatch) {
+    return {
+      kind: "custom",
+      customQuestionId: Number(customMatch[1]),
+    };
+  }
+  return null;
+}
+
 export function sectionAnchorId(identity: PlanSectionIdentity): string {
   return `plan-section-${sectionKey(identity)}`;
 }

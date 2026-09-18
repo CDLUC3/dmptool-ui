@@ -7,19 +7,35 @@ import { PlanAuthoring } from "@/components/PlanAuthoring";
 import {
   createPlanAuthoringDemoDataSource,
   DEMO_PLAN_DOCUMENT,
+  getSharedPlanAuthoringDemoDataSource,
 } from "@/components/PlanAuthoring/demo";
+import { RESEARCH_OUTPUT_QUESTION_TYPE } from "@/lib/constants";
+import { questionKey } from "@/components/PlanAuthoring/model";
+import type { PlanQuestionDefinition } from "@/components/PlanAuthoring/model";
 import "../../shared/styleguide.scss";
-
-const questionsDataSource = createPlanAuthoringDemoDataSource({
-  failSaveOnce: true,
-  delayMs: 450,
-});
 
 const documentDataSource = createPlanAuthoringDemoDataSource({
   delayMs: 0,
 });
 
+function researchOutputHrefBase(identity: PlanQuestionDefinition["identity"]) {
+  return `/styleguide/components/plan-authoring/research-output/${questionKey(identity)}`;
+}
+
+function getResearchOutputRowNavigation(question: PlanQuestionDefinition) {
+  if (question.questionType !== RESEARCH_OUTPUT_QUESTION_TYPE) {
+    return undefined;
+  }
+  const base = researchOutputHrefBase(question.identity);
+  return {
+    editHref: (rowIndex: number) => `${base}/${rowIndex}`,
+    addHref: `${base}/new`,
+  };
+}
+
 export default function PlanAuthoringStyleGuidePage() {
+  const questionsDataSource = getSharedPlanAuthoringDemoDataSource();
+
   return (
     <LayoutContainer className="plan-authoring-layout">
       <ContentContainer>
@@ -38,11 +54,15 @@ export default function PlanAuthoringStyleGuidePage() {
         <p className="lead">
           Demo-data showcase of the single-page plan authoring UI. Saves,
           guidance load, comments, and customize guidance are simulated — the
-          first Save on any question fails once, then succeeds.
+          first Save on any question fails once, then succeeds. Research
+          outputs open on their own Add/Edit page instead of an inline form.
         </p>
       </ContentContainer>
 
-      <PlanAuthoring dataSource={questionsDataSource} />
+      <PlanAuthoring
+        dataSource={questionsDataSource}
+        getResearchOutputRowNavigation={getResearchOutputRowNavigation}
+      />
 
       <ContentContainer>
         <section id="uploaded-document">

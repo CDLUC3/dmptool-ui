@@ -25,6 +25,15 @@ interface MockSingleResearchOutputComponentProps {
   hasOtherRows?: boolean;
 }
 
+// next-intl Link calls usePathname; keep hrefs as given so rowNavigation tests can assert them.
+jest.mock('@/i18n/routing', () => {
+  const React = require('react');
+  return {
+    Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) =>
+      React.createElement('a', { href, ...props }, children),
+  };
+});
+
 // Mock the SingleResearchOutputComponent
 jest.mock('../SingleResearchOutputComponent', () => {
   return function MockSingleResearchOutputComponent({
@@ -1610,6 +1619,74 @@ describe('ResearchOutputAnswerComponent', () => {
         expect(listItems).toHaveLength(1);
         expect(screen.getByText('Dataset 1')).toBeInTheDocument();
       });
+    });
+  });
+
+  describe('rowNavigation', () => {
+    const rowNavigation = {
+      editHref: (index: number) => `/edit/${index}`,
+      addHref: '/edit/new',
+    };
+
+    it('keeps list view and renders Edit/Add as links when rowNavigation is set', async () => {
+      const mockRows = [createMockRow('Dataset 1', 'dataset', [])];
+
+      renderWithProviders(
+        <ResearchOutputAnswerComponent
+          columns={mockColumns}
+          rows={mockRows}
+          setRows={mockSetRows}
+          rowNavigation={rowNavigation}
+        />
+      );
+
+      await waitFor(() => {
+        expect(screen.queryByTestId('single-research-output')).not.toBeInTheDocument();
+      });
+
+      const addLink = screen.getByRole('link', { name: /addOutput/i });
+      expect(addLink).toHaveAttribute('href', '/edit/new');
+
+      const editLink = screen.getByRole('link', { name: /edit/i });
+      expect(editLink).toHaveAttribute('href', '/edit/0');
+      expect(screen.getByRole('button', { name: /delete/i })).toBeInTheDocument();
+    });
+
+    it('does not auto-open the form when empty and rowNavigation is set', async () => {
+      renderWithProviders(
+        <ResearchOutputAnswerComponent
+          columns={mockColumns}
+          rows={[]}
+          setRows={mockSetRows}
+          rowNavigation={rowNavigation}
+        />
+      );
+
+      await waitFor(() => {
+        expect(screen.queryByTestId('single-research-output')).not.toBeInTheDocument();
+      });
+
+      expect(screen.getByRole('link', { name: /addOutput/i })).toHaveAttribute(
+        'href',
+        '/edit/new'
+      );
+      expect(mockSetRows).not.toHaveBeenCalled();
+    });
+
+    it('still enters form view on Edit when rowNavigation is omitted', async () => {
+      const mockRows = [createMockRow('Dataset 1', 'dataset', [])];
+
+      renderWithProviders(
+        <ResearchOutputAnswerComponent
+          columns={mockColumns}
+          rows={mockRows}
+          setRows={mockSetRows}
+        />
+      );
+
+      await user.click(screen.getByRole('button', { name: /edit/i }));
+
+      expect(screen.getByTestId('single-research-output')).toBeInTheDocument();
     });
   });
 });

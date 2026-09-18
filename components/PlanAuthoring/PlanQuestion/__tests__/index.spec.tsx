@@ -33,6 +33,7 @@ jest.mock('react-aria-components', () => ({
 // --- @/lib/constants ---
 jest.mock('@/lib/constants', () => ({
   TEXT_AREA_QUESTION_TYPE: 'textArea',
+  RESEARCH_OUTPUT_QUESTION_TYPE: 'researchOutputTable',
 }));
 
 // --- @/context/ToastContext ---
@@ -348,6 +349,22 @@ describe('PlanQuestion', () => {
       await user.click(screen.getByRole('button', { name: 'Global.buttons.save' }));
 
       expect(mockSaveNow).toHaveBeenCalledTimes(1);
+    });
+
+    it('hides the Save button for researchOutputTable questions', () => {
+      render(
+        <PlanQuestion
+          {...defaultProps}
+          question={{
+            ...baseQuestion,
+            questionType: 'researchOutputTable',
+          }}
+        />
+      );
+
+      expect(
+        screen.queryByRole('button', { name: 'Global.buttons.save' })
+      ).not.toBeInTheDocument();
     });
   });
 
