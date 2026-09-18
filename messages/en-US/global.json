@@ -186,7 +186,9 @@
         "passwordMissingLowercase": "Password must contain at least one lowercase letter",
         "passwordMissingSpecialChar": "Password must contain at least one special character",
         "incorrectCurrentPassword": "Current password is incorrect",
-        "errorUpdatingPassword": "Error when updating password"
+        "errorUpdatingPassword": "Error when updating password",
+        "errorLoadingAccount": "We couldn't load your account. Please try again.",
+        "emailRequiredToUpdatePassword": "A primary email address is required to update your password."
       }
     }
   },

@@ -44,6 +44,8 @@
 - Added `UpdateAffiliation` and `AffiliationById` queries [#203]
 
 ## Updated
+- Updated the Update password page to use the `updatePassword` GraphQL mutation
+- Updated `PasswordRequirementsList` so requirements stay pending until the user types, and use ticks instead of warning dots
 - Updated `PlanCard` section progress to prefer required counts (`X of Y required`), falling back to all-question counts (`X of Y`) when none are required [#93]
 - Redesigned `ProjectListItem` and project list pages (`/projects`, `/admin/projects`, `/admin/users/[userId]/projects`) with expandable plan details, skeleton loading, and GraphQL-backed plan and collaborator data
 - Updated `DisplayLogicComponent.tsx` to show condition joiner within condition groups as well as between condition groups [#360]
