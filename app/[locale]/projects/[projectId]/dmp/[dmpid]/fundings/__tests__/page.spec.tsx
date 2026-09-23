@@ -9,7 +9,7 @@ import {
 
 import '@testing-library/jest-dom';
 import { useParams } from 'next/navigation';
-import { useRouter, usePathname } from '@/i18n/routing';
+import { useRouter } from '@/i18n/routing';
 import { MockedProvider } from '@apollo/client/testing/react';
 import {
   ProjectFundingsDocument,

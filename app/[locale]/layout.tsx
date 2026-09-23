@@ -1,4 +1,4 @@
-import { headers, cookies } from 'next/headers';
+import { cookies } from 'next/headers';
 import { verifyJwtToken } from '@/lib/server/auth';
 import { Poppins } from "next/font/google";
 import { NextIntlClientProvider } from 'next-intl';
