@@ -76,6 +76,7 @@ const ProjectsListPage: React.FC = () => {
   const Project = useTranslations('ProjectsListPage');
   const ProjectOverview = useTranslations('ProjectOverview');
 
+
   const recordProjectsFetchFailure = (context: string, err?: unknown) => {
     const { wasRealError } = handleApolloError(err, `ProjectsListPage.${context}`);
     if (!wasRealError) return; // AbortError: superseded request, ignore silently
