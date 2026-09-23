@@ -4583,7 +4583,7 @@ export type QuestionConditionGroupInput = {
 /** Input for a single condition within a group, used by saveQuestionDisplayLogic */
 export type QuestionConditionInput = {
   /** The value(s) to match on */
-  conditionMatch?: InputMaybe<Scalars['String']['input']>;
+  conditionMatch: Scalars['String']['input'];
   /** The type of condition/operator to evaluate */
   conditionType: QuestionConditionCondition;
 };
