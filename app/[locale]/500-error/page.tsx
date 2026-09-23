@@ -1,5 +1,5 @@
 // pages/500.js
-import Link from 'next/link';
+import { Link } from '@/i18n/routing';
 
 const Custom500: React.FC = () => {
     return (

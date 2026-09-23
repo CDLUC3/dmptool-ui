@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useRef, useReducer, useState } from 'react';
 import { useQuery, useMutation } from '@apollo/client/react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
+import { useRouter } from '@/i18n/routing';
 import { useTranslations } from 'next-intl';
 import {
   Breadcrumb,

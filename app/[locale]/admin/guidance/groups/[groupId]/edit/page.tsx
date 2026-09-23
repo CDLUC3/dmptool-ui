@@ -3,7 +3,8 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Breadcrumb, Breadcrumbs, Link, Button } from "react-aria-components";
 import { useTranslations } from "next-intl";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
+import { useRouter } from "@/i18n/routing";
 import { useQuery } from "@apollo/client/react";
 // GraphQL
 import {

@@ -14,7 +14,8 @@ import {
   Tooltip,
   TooltipTrigger
 } from "react-aria-components";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
+import { useRouter } from "@/i18n/routing";
 
 import { useQuery } from '@apollo/client/react';
 

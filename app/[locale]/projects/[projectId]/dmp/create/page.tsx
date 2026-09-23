@@ -9,7 +9,8 @@ import React, {
   type TransitionStartFunction
 } from 'react';
 import { useMutation, useQuery, useLazyQuery } from '@apollo/client/react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
+import { useRouter } from '@/i18n/routing';
 import { useTranslations } from 'next-intl';
 import {
   Breadcrumb,
@@ -91,6 +92,9 @@ const PlanCreate: React.FC = () => {
   // Scrolling to top
   const topRef = useRef<HTMLDivElement>(null);
 
+  // Track whether the initial fetch has started to avoid multiple fetches on re-render
+  const initialFetchStartedRef = useRef(false);
+
   //states
   const [userHasInteracted, setUserHasInteracted] = useState(false);
   const [bestPractice, setBestPractice] = useState<boolean>(false);
@@ -111,6 +115,8 @@ const PlanCreate: React.FC = () => {
   const PlanCreate = useTranslations('PlanCreate');
   const Global = useTranslations('Global');
 
+  // Don't refetch on an empty search term when page first loads. This is to avoid a double fetch on initial load, since the initial fetch is already handled in the useEffect below.
+  const prevSearchTermRef = useRef(searchTerm);
 
   // Published templates lazy query
   const [fetchPublishedTemplates, { data: publishedTemplates, loading, error: publishedTemplatesError }] = useLazyQuery(PublishedTemplatesDocument);
@@ -164,9 +170,8 @@ const PlanCreate: React.FC = () => {
   // Reset search term to empty and fetch all templates
   const resetSearch = useCallback(() => {
     setSearchTerm('');
-    fetchTemplatesForCurrentFilters();
     scrollToTop(topRef);
-  }, [scrollToTop, fetchTemplatesForCurrentFilters]);
+  }, []);
 
   // Function to transform the templates data into more useable format
   const transformTemplates = (templates: (PublicTemplatesInterface | null)[]) => {
@@ -413,7 +418,6 @@ const PlanCreate: React.FC = () => {
   const fundersData = useMemo(() => {
     // Return empty if data isn't ready yet
     if (
-      loading ||
       projectFundingsLoading ||
       userLoading ||
       templatesMetaDataLoading ||
@@ -459,8 +463,8 @@ const PlanCreate: React.FC = () => {
 
     return result;
   }, [
-    loading,
     projectFundingsLoading,
+    userLoading,
     templatesMetaDataLoading,
     projectFundings,
     templateMetaData,
@@ -488,7 +492,6 @@ const PlanCreate: React.FC = () => {
     // Don't calculate if user has interacted or data isn't ready
     if (
       userHasInteracted ||
-      loading ||
       projectFundingsLoading ||
       userLoading ||
       templatesMetaDataLoading
@@ -522,48 +525,33 @@ const PlanCreate: React.FC = () => {
     fundersData,
     hasBestPracticeTemplates,
     userHasInteracted,
-    loading,
     projectFundingsLoading,
     userLoading,
     templatesMetaDataLoading,
-    userData
   ]);
 
-  // Only for initial data fetching
-  // In your PlanCreate component
+  // Only for initial data fetching. The ref guarantees this runs exactly once,
+  // even if initialFilterConfig changes while the first fetch is in flight.
   useEffect(() => {
-    // CRITICAL: Don't run if no config or already applied
-    if (!initialFilterConfig || initialSelectionApplied) return;
+    if (!initialFilterConfig || initialFetchStartedRef.current) return;
+    initialFetchStartedRef.current = true;
 
-    let isCancelled = false; // Add cancellation flag
-
-    const applyInitialFilters = async () => {
-      if (isCancelled) return; // Check before state updates
-
-      if (initialFilterConfig.type === 'funders') {
-        if (!isCancelled) setFunders(initialFilterConfig.fundersData);
-        if (!isCancelled) setSelectedFunders(initialFilterConfig.funderURIs);
-        if (!isCancelled) setBestPractice(false);
-        await fetchTemplates({ selectedOwnerURIs: initialFilterConfig.funderURIs });
-      } else if (initialFilterConfig.type === 'bestPractice') {
-        if (!isCancelled) setSelectedBestPracticeItems(["DMP Best Practice"]);
-        if (!isCancelled) setBestPractice(true);
-        await fetchTemplates({ bestPractice: true });
-      } else {
-        await fetchTemplates({ page: currentPage });
-      }
-
-      if (!isCancelled) {
-        setInitialSelectionApplied(true);
-      }
-    };
-
-    applyInitialFilters();
-
-    return () => {
-      isCancelled = true; // Cleanup: prevent state updates after unmount
-    };
-  }, [initialFilterConfig, initialSelectionApplied]);
+    if (initialFilterConfig.type === 'funders') {
+      setFunders(initialFilterConfig.fundersData);
+      setSelectedFunders(initialFilterConfig.funderURIs);
+      setBestPractice(false);
+      fetchTemplates({ selectedOwnerURIs: initialFilterConfig.funderURIs })
+        .finally(() => setInitialSelectionApplied(true));
+    } else if (initialFilterConfig.type === 'bestPractice') {
+      setSelectedBestPracticeItems(['DMP Best Practice']);
+      setBestPractice(true);
+      fetchTemplates({ bestPractice: true })
+        .finally(() => setInitialSelectionApplied(true));
+    } else {
+      fetchTemplates({ page: 1 })
+        .finally(() => setInitialSelectionApplied(true));
+    }
+  }, [initialFilterConfig]);
 
   // Handle errors from various queries
   useEffect(() => {
@@ -582,9 +570,10 @@ const PlanCreate: React.FC = () => {
 
   // trigger fetching all templates when searchTerm is manually cleared (place after all state/effect declarations)
   useEffect(() => {
-    if (searchTerm === '') {
+    if (prevSearchTermRef.current !== '' && searchTerm === '') {
       fetchTemplatesForCurrentFilters();
     }
+    prevSearchTermRef.current = searchTerm;
   }, [searchTerm]);
 
   return (

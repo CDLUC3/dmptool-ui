@@ -11,7 +11,8 @@ import {
   Modal,
   Radio
 } from "react-aria-components";
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
+import { useRouter } from '@/i18n/routing';
 import { useTranslations } from 'next-intl';
 
 // Components

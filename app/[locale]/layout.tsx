@@ -1,4 +1,5 @@
-import { headers } from 'next/headers';
+import { headers, cookies } from 'next/headers';
+import { verifyJwtToken } from '@/lib/server/auth';
 import { Poppins } from "next/font/google";
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
@@ -12,6 +13,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SubHeader from "@/components/SubHeader";
 import NavigationEvents from '@/components/NavigationEvents'
+import { AriaRouterProvider } from '@/components/AriaRouterProvider'
 
 import { ApolloWrapper } from "@/lib/graphql/apollo-wrapper";
 import { AuthProvider } from "@/context/AuthContext";
@@ -50,6 +52,16 @@ export const metadata: Metadata = {
   },
 };
 
+async function getInitialIsAuthenticated(): Promise<boolean> {
+  const token = (await cookies()).get('dmspt')?.value;
+  if (!token) return false;
+  try {
+    return !!(await verifyJwtToken(token));
+  } catch {
+    return false;
+  }
+}
+
 export default async function LocaleLayout({
   children,
   params,
@@ -66,14 +78,11 @@ export default async function LocaleLayout({
     notFound();
   }
 
-  // Providing all messages to the client
-  // side is the easiest way to get started
   const messages = await getMessages();
-  const headersList = await headers();
 
-  // The `x-is-authenticated` is set in the header by proxy.ts middleware. This is to avoid any flashing of the navigation bar
-  // when the user is authenticated, since the authentication state is determined on the client side after the page has loaded.
-  const initialIsAuthenticated = headersList.get('x-is-authenticated') === 'true';
+  // Determine auth state on the server from the access token cookie, so the navigation bar
+  // renders correctly on first paint instead of flashing while the client checks auth.
+  const initialIsAuthenticated = await getInitialIsAuthenticated();
 
   return (
     <html lang={locale} className={font_sans_serif.variable}>
@@ -81,21 +90,23 @@ export default async function LocaleLayout({
       <body className={font_sans_serif.className}>
         <a href="#mainContent" className="skip-nav">Skip to main content</a>
         <NextIntlClientProvider messages={messages}>
-          <CsrfProvider>
-            <ApolloWrapper>
-              <AuthProvider initialIsAuthenticated={initialIsAuthenticated}>
-                <Header />
-                <SubHeader />
-                <ToastProviderWrapper>
-                  <div id="App">
-                    <NavigationEvents />
-                    {children}
-                  </div>
-                </ToastProviderWrapper>
-                <Footer />
-              </AuthProvider>
-            </ApolloWrapper>
-          </CsrfProvider>
+          <AriaRouterProvider>
+            <CsrfProvider>
+              <ApolloWrapper>
+                <AuthProvider initialIsAuthenticated={initialIsAuthenticated}>
+                  <Header />
+                  <SubHeader />
+                  <ToastProviderWrapper>
+                    <div id="App">
+                      <NavigationEvents />
+                      {children}
+                    </div>
+                  </ToastProviderWrapper>
+                  <Footer />
+                </AuthProvider>
+              </ApolloWrapper>
+            </CsrfProvider>
+          </AriaRouterProvider>
         </NextIntlClientProvider>
       </body>
     </html>

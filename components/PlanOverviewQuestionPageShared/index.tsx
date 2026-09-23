@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
+import { useRouter } from '@/i18n/routing';
 import { useTranslations } from "next-intl";
 import { CalendarDate, DateValue } from "@internationalized/date";
 import { CURRENT_SCHEMA_VERSION, QuestionTypeMap } from '@dmptool/types';

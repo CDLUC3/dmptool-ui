@@ -61,16 +61,19 @@ async function getLocale(request: NextRequest, jwtResult: { locale: string | nul
   try {
     if (jwtResult.locale) return jwtResult.locale;
 
+    // Explicit choice remembered by next-intl
+    const cookieLocale = request.cookies.get('NEXT_LOCALE')?.value;
+    if (cookieLocale && locales.includes(cookieLocale)) return cookieLocale;
+
     //Fall back to Accept-Language header
     const acceptLanguage = request.headers.get('Accept-Language');
     if (acceptLanguage) {
-      const browserLocale = acceptLanguage
-        .split(',')[0]
-        .split('-')[0]
-        .toLowerCase();
-
-      if (locales.includes(browserLocale)) {
-        return browserLocale
+      const preferred = acceptLanguage.split(',').map(l => l.split(';')[0].trim().toLowerCase());
+      for (const tag of preferred) {
+        const match =
+          locales.find(l => l.toLowerCase() === tag) ??                  // exact: pt-br
+          locales.find(l => l.split('-')[0].toLowerCase() === tag.split('-')[0]); // language: pt
+        if (match) return match;
       }
     }
     //Otherwise, use Default locale
@@ -103,13 +106,13 @@ export async function proxy(request: NextRequest) {
   const accessToken = request.cookies.get('dmspt');
   const refreshToken = request.cookies.get('dmspr');
   const jwtResult = await getLocaleFromJWT(accessToken?.value);
-  const locale = await getLocale(request, jwtResult);
 
-  const requestHeaders = new Headers(request.headers);
-  requestHeaders.set('x-is-authenticated', jwtResult.user ? 'true' : 'false');
+  // Locale already in the URL (e.g. /pt-BR/projects), if any
+  const firstSegment = pathname.split('/')[1];
+  const urlLocale = locales.includes(firstSegment) ? firstSegment : null;
 
-  const response = NextResponse.next({ request: { headers: requestHeaders } });
-
+  // Prefer the URL's locale; otherwise fall back to JWT → cookie → browser → default
+  const locale = urlLocale ?? await getLocale(request, jwtResult);
 
   // Redirect to login if no tokens are found
   if (!isExcludedPath && !isServerActionRequest) {
@@ -157,31 +160,16 @@ export async function proxy(request: NextRequest) {
     }
   }
 
-  const pathnameIsMissingLocale = locales.every(
-    (locale) => !pathname.startsWith(`/${locale}`) && pathname !== `/${locale}`
-  );
 
-  if (pathnameIsMissingLocale) {
-    const newUrl = new URL(`/${locale}${pathname}`, request.url);
+  if (!urlLocale) {
+    const newUrl = new URL(`/${locale}${pathname === '/' ? '' : pathname}`, request.url);
     if (request.nextUrl.search) {
-      newUrl.search = request.nextUrl.search; // Only assign if it's valid
+      newUrl.search = request.nextUrl.search;
     }
     return NextResponse.redirect(newUrl);
   }
 
-  const i18nResponse = handleI18nRouting(request);
-  if (i18nResponse) {
-    i18nResponse.headers.set('x-is-authenticated', jwtResult.user ? 'true' : 'false');
-    return i18nResponse;
-  }
-
-  // Add url info to custom header. Need this for just the /dmps landing page
-  if (request.nextUrl.pathname.startsWith('/en-US/dmps')) {
-    response.headers.set('x-url', request.nextUrl.href);
-  }
-
-  return response;
-
+  return handleI18nRouting(request);
 }
 
 export const config = {

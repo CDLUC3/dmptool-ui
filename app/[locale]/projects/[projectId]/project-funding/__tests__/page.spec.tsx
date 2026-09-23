@@ -4,12 +4,19 @@ import { axe, toHaveNoViolations } from 'jest-axe';
 import { ProjectFundingsApiDocument } from '@/generated/graphql';
 import { MockedProvider } from '@apollo/client/testing/react';
 
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
+import { useRouter } from '@/i18n/routing';
 import ProjectsCreateProjectFunding from '../page';
 
 
 expect.extend(toHaveNoViolations);
 
+jest.mock('@/i18n/routing', () => ({
+  Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
+    <a href={href} {...props}>{children}</a>
+  ),
+  useRouter: jest.fn(() => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn() })),
+}));
 
 const withAPIMocks = [
   {
@@ -61,7 +68,6 @@ const withoutAPIMocks = [
 
 
 jest.mock('next/navigation', () => ({
-  useRouter: jest.fn(),
   useParams: jest.fn(),
 }));
 
@@ -123,7 +129,7 @@ describe('ProjectsCreateProjectFunding', () => {
     fireEvent.click(screen.getByLabelText('form.radioYesLabel'));
     fireEvent.click(screen.getByText('buttons.continue'));
     await waitFor(() => {
-      expect(mockUseRouter().push).toHaveBeenCalledWith('/en-US/projects/123/project');
+      expect(mockUseRouter().push).toHaveBeenCalledWith('/projects/123/project');
     })
   });
 
@@ -139,7 +145,7 @@ describe('ProjectsCreateProjectFunding', () => {
     fireEvent.click(screen.getByLabelText('form.radioYesLabel'));
     fireEvent.click(screen.getByText('buttons.continue'));
     await waitFor(() => {
-      expect(mockUseRouter().push).toHaveBeenCalledWith('/en-US/projects/123/projects-search?affId=99');
+      expect(mockUseRouter().push).toHaveBeenCalledWith('/projects/123/projects-search?affId=99');
     })
   });
 
@@ -155,7 +161,7 @@ describe('ProjectsCreateProjectFunding', () => {
     fireEvent.click(screen.getByLabelText('form.radioNoLabel'));
     fireEvent.click(screen.getByText('buttons.continue'));
     await waitFor(() => {
-      expect(mockUseRouter().push).toHaveBeenCalledWith('/en-US/projects/123/project')
+      expect(mockUseRouter().push).toHaveBeenCalledWith('/projects/123/project')
     })
   });
 

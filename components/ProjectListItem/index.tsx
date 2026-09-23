@@ -1,6 +1,6 @@
 import { useId, useState, type HTMLAttributes } from "react";
 import { useTranslations } from "next-intl";
-import Link from "next/link";
+import { Link } from "@/i18n/routing";
 import { ProjectItemPlanProps, ProjectItemProps } from "@/app/types";
 import { TransitionLink } from "@/components/Form";
 import ExpandButton from "@/components/ExpandButton";

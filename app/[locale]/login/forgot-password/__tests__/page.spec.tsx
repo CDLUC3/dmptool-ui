@@ -4,14 +4,15 @@ import userEvent from "@testing-library/user-event";
 import ForgotPassword from "../page";
 
 import { useMutation } from "@apollo/client/react";
-import { useRouter } from "next/navigation";
+import { useRouter } from '@/i18n/routing';
 import { axe, toHaveNoViolations } from "jest-axe";
 
 expect.extend(toHaveNoViolations);
 
 jest.mock("@apollo/client/react");
-jest.mock("next/navigation", () => ({
-  useRouter: jest.fn(),
+
+jest.mock('@/i18n/routing', () => ({
+  useRouter: jest.fn(() => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn() })),
 }));
 
 jest.mock("next-intl", () => ({
@@ -92,7 +93,7 @@ describe("ForgotPassword Component", () => {
       })
     );
 
-    expect(push).toHaveBeenCalledWith("/en-US/login");
+    expect(push).toHaveBeenCalledWith("/login");
   });
 
   it("should show the sending state while submitting", async () => {
@@ -133,7 +134,7 @@ describe("ForgotPassword Component", () => {
     const link = screen.getByRole("link");
 
     expect(link).toBeInTheDocument();
-    expect(link).toHaveAttribute("href", "/en-US/contact");
+    expect(link).toHaveAttribute("href", "/contact");
     expect(
       screen.getByRole("link", {
         name: /help/i,

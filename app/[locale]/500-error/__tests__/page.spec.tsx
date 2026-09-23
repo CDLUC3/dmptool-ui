@@ -5,6 +5,13 @@ import Custom500 from '../page';
 
 expect.extend(toHaveNoViolations);
 
+jest.mock('@/i18n/routing', () => ({
+  Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
+    <a href={href} {...props}>{children}</a>
+  ),
+}));
+
+
 describe('500-error', () => {
   it('renders the 500 error page correctly', () => {
     render(<Custom500 />);

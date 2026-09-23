@@ -3,7 +3,8 @@ import { act, fireEvent, render, screen, waitFor, cleanup } from '@testing-libra
 import { InMemoryCache } from '@apollo/client';
 import { MockedProvider } from '@apollo/client/testing/react';
 import PlanCreate from '../page';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
+import { useRouter } from '@/i18n/routing';
 import { useToast } from '@/context/ToastContext';
 import logECS from '@/utils/clientLogger';
 import {
@@ -22,7 +23,14 @@ expect.extend(toHaveNoViolations);
 
 jest.mock('next/navigation', () => ({
   useParams: jest.fn(),
-  useRouter: jest.fn(),
+}));
+
+
+jest.mock('@/i18n/routing', () => ({
+  Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
+    <a href={href} {...props}>{children}</a>
+  ),
+  useRouter: jest.fn(() => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn() })),
 }));
 
 jest.mock('next-intl', () => ({
@@ -1271,11 +1279,11 @@ describe('PlanCreate Component using base mock', () => {
         'Plan Create queries',
         expect.objectContaining({
           error: expect.anything(),
-          url: { path: '/en-US/projects/2/dmp/create' },
+          url: { path: '/projects/2/dmp/create' },
         })
       )
       expect(mockToast.add).toHaveBeenCalledWith('messaging.somethingWentWrong', { type: 'error' });
-      expect(mockRouter.push).toHaveBeenCalledWith('/en-US/projects/2');
+      expect(mockRouter.push).toHaveBeenCalledWith('/projects/2');
     }, { timeout: 3000 });
 
     await act(async () => {
@@ -1346,7 +1354,7 @@ describe('PlanCreate Component using base mock', () => {
         'addPlanMutation',
         expect.objectContaining({
           error: expect.anything(),
-          url: { path: '/en-US/projects/1/dmp/create' },
+          url: { path: '/projects/1/dmp/create' },
         })
       )
       expect(mockToast.add).toHaveBeenCalledWith('messaging.somethingWentWrong', { type: 'error' });
@@ -1385,7 +1393,7 @@ describe('PlanCreate Component using base mock', () => {
         'addPlanMutation',
         expect.objectContaining({
           error: expect.anything(),
-          url: { path: '/en-US/projects/2/dmp/create' },
+          url: { path: '/projects/2/dmp/create' },
         })
       )
       expect(mockToast.add).toHaveBeenCalledWith('messaging.somethingWentWrong', { type: 'error' });

@@ -5,7 +5,7 @@ import PageHeader from "@/components/PageHeader";
 import { ContentContainer, LayoutWithPanel, SidebarPanel } from "@/components/Container";
 import { FormInput } from "@/components/Form";
 import { Button, Dialog, DialogTrigger, Modal, ModalOverlay } from "react-aria-components";
-import Link from "next/link";
+import { Link } from "@/i18n/routing";
 import { useTranslations } from "next-intl";
 import styles from "./Departments.module.scss";
 import { routePath } from "@/utils/routes";

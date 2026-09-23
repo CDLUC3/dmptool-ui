@@ -1,5 +1,5 @@
 import React from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/i18n/routing';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { axe, toHaveNoViolations } from 'jest-axe';
@@ -7,8 +7,11 @@ import ProjectsProjectResearchOutputs from '../page';
 
 expect.extend(toHaveNoViolations);
 
-jest.mock('next/navigation', () => ({
-  useRouter: jest.fn(),
+jest.mock('@/i18n/routing', () => ({
+  Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
+    <a href={href} {...props}>{children}</a>
+  ),
+  useRouter: jest.fn(() => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn() })),
 }));
 
 const mockUseRouter = useRouter as jest.Mock;
@@ -39,7 +42,7 @@ describe('ProjectsProjectResearchOutputs', () => {
     fireEvent.click(addButton);
     await waitFor(() => {
       // Should redirect to the Feeback page when modal is closed
-      expect(mockUseRouter().push).toHaveBeenCalledWith('/en-US/projects/proj_2425/research-outputs/edit');
+      expect(mockUseRouter().push).toHaveBeenCalledWith('/projects/proj_2425/research-outputs/edit');
     });
   });
 
@@ -57,7 +60,7 @@ describe('ProjectsProjectResearchOutputs', () => {
     fireEvent.click(editButton);
     await waitFor(() => {
       // Should redirect to the Feeback page when modal is closed
-      expect(mockUseRouter().push).toHaveBeenCalledWith('/en-US/projects/proj_2425/research-outputs/edit?id=output-001');
+      expect(mockUseRouter().push).toHaveBeenCalledWith('/projects/proj_2425/research-outputs/edit?id=output-001');
     });
   });
 

@@ -1,8 +1,8 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { axe, toHaveNoViolations } from 'jest-axe';
-import { useRouter, useParams } from 'next/navigation';
-
+import { useParams } from 'next/navigation';
+import { useRouter } from '@/i18n/routing';
 import {
   mockScrollIntoView,
   mockScrollTo
@@ -27,8 +27,14 @@ jest.mock('@/context/ToastContext', () => ({
 }));
 
 jest.mock('next/navigation', () => ({
-  useRouter: jest.fn(),
   useParams: jest.fn()
+}));
+
+jest.mock('@/i18n/routing', () => ({
+  Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
+    <a href={href} {...props}>{children}</a>
+  ),
+  useRouter: jest.fn(() => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn() })),
 }));
 
 const mockUseRouter = useRouter as jest.Mock;

@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import Link from "next/link";
+import { Link } from "@/i18n/routing";
 import { ContentContainer, LayoutContainer } from "@/components/Container";
 import { Table, TableHeader, TableBody, Column, Row, Cell, Button, SortDescriptor } from "react-aria-components";
 

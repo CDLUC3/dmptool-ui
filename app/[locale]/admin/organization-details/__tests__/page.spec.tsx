@@ -1,7 +1,7 @@
 import React from "react";
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { useMutation, useQuery } from "@apollo/client/react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/i18n/routing";
 import { useToast } from "@/context/ToastContext";
 import {
   AffiliationByIdDocument,
@@ -19,6 +19,13 @@ jest.mock("@apollo/client/react", () => ({
 
 jest.mock("@/app/[locale]/admin/organization-details/actions/s3Uploader", () => ({
   uploadFileToS3: jest.fn(),
+}));
+
+jest.mock('@/i18n/routing', () => ({
+  Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
+    <a href={href} {...props}>{children}</a>
+  ),
+  useRouter: jest.fn(() => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn() })),
 }));
 
 type SetupOptions = {
