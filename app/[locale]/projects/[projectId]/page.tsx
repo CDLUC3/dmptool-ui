@@ -16,6 +16,7 @@ import {
 // GraphQL
 import { useQuery } from '@apollo/client/react';
 import {
+  CustomizableObjectOwnership,
   MeDocument,
   PlanSearchResult,
   PlanSectionProgress,
@@ -158,7 +159,7 @@ const ProjectOverviewPage: React.FC = () => {
           versionedSections: plan.versionedSections?.map(section => ({
             ...section,
             // add sectionType if missing
-            sectionType: section.sectionType ?? "BASE",
+            sectionType: section.sectionType ?? CustomizableObjectOwnership.Base,
             answeredRequiredQuestions: section.answeredRequiredQuestions ?? 0,
             totalRequiredQuestions: section.totalRequiredQuestions ?? 0,
           }))

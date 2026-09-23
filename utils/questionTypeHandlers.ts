@@ -360,8 +360,9 @@ export const questionTypeHandlers: Record<string, QuestionTypeHandler> = {
     return createAndValidateQuestion("datePicker", questionData, QuestionSchemaMap["date"]);
   },
   dateRange: (json, input: QuestionTypeMap["dateRange"]) => {
-    const startCol = input?.columns?.start || {};
-    const endCol = input?.columns?.end || {};
+    type DateRangeCol = QuestionTypeMap["dateRange"]["columns"]["start"];
+    const startCol: Partial<DateRangeCol> = input?.columns?.start ?? {};
+    const endCol: Partial<DateRangeCol> = input?.columns?.end ?? {};
 
     const questionData: QuestionTypeMap["dateRange"] = {
       ...json,
@@ -430,9 +431,9 @@ export const questionTypeHandlers: Record<string, QuestionTypeHandler> = {
         query: json?.graphQL.query,
         queryId: json?.graphQL.queryId,
         variables: json?.graphQL?.variables,
-        answerField: json?.graphQL?.answerField ?? "",
+        answerField: json?.graphQL?.answerField ?? "uri",
         displayFields: json?.graphQL?.displayFields,
-        responseField: json.graphQL?.responseField ?? "",
+        responseField: json.graphQL?.responseField ?? "affiliations.items"
       },
       meta: {
         schemaVersion: CURRENT_SCHEMA_VERSION,
@@ -462,8 +463,10 @@ export const questionTypeHandlers: Record<string, QuestionTypeHandler> = {
     return createAndValidateQuestion("number", questionData, QuestionSchemaMap['number']);
   },
   numberRange: (json, input: QuestionTypeMap["numberRange"]) => {
-    const startCol = input?.columns?.start || {};
-    const endCol = input?.columns?.end || {};
+    type NumberRangeCol = QuestionTypeMap["numberRange"]["columns"]["start"];
+    const startCol: Partial<NumberRangeCol> = input?.columns?.start ?? {};
+    const endCol: Partial<NumberRangeCol> = input?.columns?.end ?? {};
+
     const questionData: QuestionTypeMap["numberRange"] = {
       ...json,
       type: "numberRange",
@@ -580,7 +583,7 @@ export const questionTypeHandlers: Record<string, QuestionTypeHandler> = {
         minRows: input?.attributes?.minRows,
       },
       columns: input?.columns?.map((column: ResearchOutputTableColumn) => {
-        const baseContent = column.content ?? {};
+        const baseContent: Record<string, any> = column.content ?? {};
         const type = baseContent.type;
 
         // Hydrate required fields for each type

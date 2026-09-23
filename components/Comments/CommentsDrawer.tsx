@@ -34,7 +34,7 @@ export interface CommentsDrawerProps {
   me: MeQuery | null | undefined;
   planOwners: number[] | undefined | null;
   locale: string;
-  commentsEndRef: React.RefObject<HTMLDivElement>;
+  commentsEndRef: React.RefObject<HTMLDivElement | null>;
   canAddComments: boolean;
   handleAddComment: (e: React.FormEvent<HTMLFormElement>, newComment: string) => Promise<void>;
 }
