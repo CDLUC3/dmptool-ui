@@ -11,7 +11,8 @@ import {
 } from '@/generated/graphql';
 
 import { axe, toHaveNoViolations } from 'jest-axe';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
+import { useRouter } from '@/i18n/routing';
 import { useToast } from '@/context/ToastContext';
 import logECS from '@/utils/clientLogger';
 import QuestionCustomizePage from '../page';
@@ -20,8 +21,15 @@ import { mockScrollIntoView, mockScrollTo } from "@/__mocks__/common";
 expect.extend(toHaveNoViolations);
 
 jest.mock('next/navigation', () => ({
-  useRouter: jest.fn(),
   useParams: jest.fn(),
+}));
+
+jest.mock('@/i18n/routing', () => ({
+  Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
+    <a href={href} {...props}>{children}</a>
+  ),
+  useRouter: jest.fn(() => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn() })),
+  usePathname: jest.fn(() => '/template/customizations/1/q/1'),
 }));
 
 jest.mock('@apollo/client/react', () => ({
@@ -349,7 +357,7 @@ describe("QuestionCustomizePage", () => {
 
       await waitFor(() => {
         expect(mockRouter.push).toHaveBeenCalledWith(
-          expect.stringContaining('/en-US/template/customizations/8')
+          expect.stringContaining('/template/customizations/8')
         );
       });
     });
@@ -573,7 +581,7 @@ describe("QuestionCustomizePage", () => {
           })
         );
         expect(mockRouter.push).toHaveBeenCalledWith(
-          expect.stringContaining('/en-US/template/customizations/8')
+          expect.stringContaining('/template/customizations/8')
         );
       });
     });

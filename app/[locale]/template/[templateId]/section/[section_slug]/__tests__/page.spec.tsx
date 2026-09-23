@@ -9,7 +9,8 @@ import {
 } from '@/generated/graphql';
 
 import { axe, toHaveNoViolations } from 'jest-axe';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
+import { useRouter } from '@/i18n/routing';
 import logECS from '@/utils/clientLogger';
 import SectionUpdatePage from '../page';
 import { mockScrollIntoView, mockScrollTo } from "@/__mocks__/common";
@@ -17,10 +18,16 @@ import { mockScrollIntoView, mockScrollTo } from "@/__mocks__/common";
 expect.extend(toHaveNoViolations);
 
 jest.mock('next/navigation', () => ({
-  useRouter: jest.fn(),
   useParams: jest.fn()
 }));
 
+jest.mock('@/i18n/routing', () => ({
+  Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
+    <a href={href} {...props}>{children}</a>
+  ),
+  useRouter: jest.fn(() => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn() })),
+  usePathname: jest.fn(() => '/template/1/section/1'),
+}));
 
 // Mock Apollo Client hooks
 jest.mock('@apollo/client/react', () => ({
@@ -425,7 +432,7 @@ describe("SectionUpdatePage", () => {
         'updateSection',
         expect.objectContaining({
           error: expect.anything(),
-          url: { path: '/en-US/template/123/section/123' },
+          url: { path: '/template/123/section/123' },
         })
       );
     });
@@ -516,7 +523,7 @@ describe("SectionUpdatePage", () => {
     fireEvent.click(saveAndAdd);
 
     await waitFor(() => {
-      expect(mockUseRouter().push).toHaveBeenCalledWith('/en-US/template/123');
+      expect(mockUseRouter().push).toHaveBeenCalledWith('/template/123');
     });
   });
 
@@ -620,7 +627,7 @@ describe("SectionUpdatePage", () => {
         expect(mockRemoveSection).toHaveBeenCalledWith({
           variables: { sectionId: 123 }
         });
-        expect(mockUseRouter().push).toHaveBeenCalledWith('/en-US/template/123');
+        expect(mockUseRouter().push).toHaveBeenCalledWith('/template/123');
       });
     });
 
@@ -656,7 +663,7 @@ describe("SectionUpdatePage", () => {
           'deleteSection',
           expect.objectContaining({
             error: expect.anything(),
-            url: { path: '/en-US/template/123/section/123' },
+            url: { path: '/template/123/section/123' },
           })
         );
       });

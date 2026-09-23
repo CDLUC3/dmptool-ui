@@ -128,6 +128,7 @@ const TemplateEditPage: React.FC = () => {
     refetch,
   } = useQuery(TemplateDocument, {
     variables: { templateId: Number(templateId) },
+    fetchPolicy: "network-only", // Always fetch fresh data for this page
   });
 
   const sortSections = (sections: Section[]) => {

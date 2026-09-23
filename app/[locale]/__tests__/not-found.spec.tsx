@@ -4,6 +4,14 @@ import { axe, toHaveNoViolations } from 'jest-axe';
 import NotFound from '../not-found';
 expect.extend(toHaveNoViolations);
 
+jest.mock('@/i18n/routing', () => ({
+  Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
+    <a href={href} {...props}>{children}</a>
+  ),
+  useRouter: jest.fn(() => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn() })),
+  usePathname: jest.fn(() => '/'),
+}));
+
 describe('NotFound', () => {
   it('renders the Not Found page with heading and links', () => {
     render(<NotFound />);

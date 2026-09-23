@@ -18,6 +18,13 @@ jest.mock("@/context/CsrfContext", () => ({
 
 const mockPush = jest.fn();
 jest.mock("next/navigation", () => ({
+  usePathname: jest.fn(() => "/"),
+}));
+
+jest.mock('@/i18n/routing', () => ({
+  Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
+    <a href={href} {...props}>{children}</a>
+  ),
   useRouter: jest.fn(() => ({
     push: mockPush,
   })),

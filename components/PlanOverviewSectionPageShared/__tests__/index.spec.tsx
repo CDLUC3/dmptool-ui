@@ -63,10 +63,17 @@ jest.mock('@/utils/general', () => ({
 // Mock next/navigation
 jest.mock('next/navigation', () => ({
   useParams: jest.fn(),
+  notFound: jest.fn(),
+}));
+
+jest.mock('@/i18n/routing', () => ({
+  Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
+    <a href={href} {...props}>{children}</a>
+  ),
   useRouter: jest.fn(() => ({
     push: jest.fn(),
   })),
-  notFound: jest.fn(),
+  usePathname: jest.fn(() => '/'),
 }));
 
 const mockParams = {
@@ -534,12 +541,12 @@ describe('PlanOverviewSectionPage - BASE section with BASE questions or CUSTOM q
 
     expect(questionLinkWithStartText[0]).toHaveAttribute(
       'href',
-      '/en-US/projects/123/dmp/456/s/456/q/1'
+      '/projects/123/dmp/456/s/456/q/1'
     );
 
     expect(questionLinkWithStartText[1]).toHaveAttribute(
       'href',
-      '/en-US/projects/123/dmp/456/s/456/q/3'
+      '/projects/123/dmp/456/s/456/q/3'
     );
 
     const questionLinkWithUpdateText = screen.getAllByText('sections.update');
@@ -547,7 +554,7 @@ describe('PlanOverviewSectionPage - BASE section with BASE questions or CUSTOM q
 
     expect(questionLinkWithUpdateText[0]).toHaveAttribute(
       'href',
-      '/en-US/projects/123/dmp/456/s/456/q/2'
+      '/projects/123/dmp/456/s/456/q/2'
     );
 
   });
@@ -915,7 +922,7 @@ describe('PlanOverviewSectionPage - CUSTOM section with custom questions', () =>
 
     const startLink = screen.getByText('sections.start');
 
-    expect(startLink).toHaveAttribute('href', '/en-US/projects/123/dmp/456/cs/456/cq/7');
+    expect(startLink).toHaveAttribute('href', '/projects/123/dmp/456/cs/456/cq/7');
 
     // Verify it didn't fall back to versionedQuestion route (which would use 'undefined'
     // since versionedQuestionId is null on custom questions)

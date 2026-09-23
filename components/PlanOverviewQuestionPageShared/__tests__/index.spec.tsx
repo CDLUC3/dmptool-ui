@@ -1,7 +1,8 @@
 import React from 'react';
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
+import { useRouter } from '@/i18n/routing';
 import { axe, toHaveNoViolations } from 'jest-axe';
 import { useQuery, useMutation } from '@apollo/client/react';
 import {
@@ -211,8 +212,15 @@ jest.mock('@/app/actions/index', () => ({
 }));
 
 jest.mock('next/navigation', () => ({
-  useRouter: jest.fn(),
   useParams: jest.fn()
+}));
+
+jest.mock('@/i18n/routing', () => ({
+  Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
+    <a href={href} {...props}>{children}</a>
+  ),
+  useRouter: jest.fn(() => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn() })),
+  usePathname: jest.fn(() => '/'),
 }));
 
 jest.mock('next-intl', () => ({
@@ -1316,7 +1324,7 @@ describe('PlanOverviewQuestionPage render of questions', () => {
 
     fireEvent.click(backToSectionBtn);
 
-    expect(mockUseRouter().push).toHaveBeenCalledWith('/en-US/projects/1/dmp/1/s/22');
+    expect(mockUseRouter().push).toHaveBeenCalledWith('/projects/1/dmp/1/s/22');
   })
 
 });
@@ -2391,7 +2399,7 @@ describe('Call to updateAnswerAction', () => {
       fireEvent.click(saveBtn);
     })
 
-    expect(mockUseRouter().push).toHaveBeenNthCalledWith(2, '/en-US/projects/1/dmp/1/s/22');
+    expect(mockUseRouter().push).toHaveBeenNthCalledWith(2, '/projects/1/dmp/1/s/22');
   })
 
   it('should display errors if updateAnswerAction returns errors in the response', async () => {

@@ -18,10 +18,17 @@ jest.mock("next-intl", () => ({
 
 jest.mock('next/navigation', () => ({
   useParams: () => ({ userId: '2' }),
-  useRouter: () => ({
+}));
+
+jest.mock('@/i18n/routing', () => ({
+  Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
+    <a href={href} {...props}>{children}</a>
+  ),
+  useRouter: jest.fn(() => ({
     push: jest.fn(),
     replace: jest.fn(),
-  }),
+  })),
+  usePathname: jest.fn(() => '/admin/users/1/projects'),
 }));
 
 jest.mock('@/hooks/scrollToTop', () => ({

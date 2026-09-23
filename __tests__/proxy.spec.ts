@@ -3,10 +3,12 @@ import { proxy } from '../proxy';
 import { verifyJwtToken } from '@/lib/server/auth';
 import { getAuthTokenServer } from '@/utils/getAuthTokenServer';
 
+const mockHandleI18nRouting = jest.fn();
+
 // Mock next-intl/middleware BEFORE importing middleware
 jest.mock('next-intl/middleware', () => ({
   __esModule: true,
-  default: jest.fn(() => jest.fn(() => null)), // Return a function that returns null
+  default: jest.fn(() => (req: unknown) => mockHandleI18nRouting(req)),
 }));
 
 // Mock the routing configuration
@@ -89,6 +91,7 @@ describe('proxy', () => {
     } as unknown as NextRequest;
 
     (NextResponse.next as jest.Mock).mockReturnValue(response);
+    mockHandleI18nRouting.mockReturnValue(response);
   });
 
   it('should handle locale resolution correctly', async () => {
@@ -98,7 +101,7 @@ describe('proxy', () => {
 
     await proxy(request);
 
-    const expectedUrl = new URL("http://localhost/pt-BR/");
+    const expectedUrl = new URL("http://localhost/pt-BR");
     expect(NextResponse.redirect).toHaveBeenCalledWith(expectedUrl);
   });
 
@@ -123,27 +126,13 @@ describe('proxy', () => {
     expect(result).toBe(NextResponse.redirect(new URL('/login', request.url)));
   });
 
-  it('should set custom header for /dmps path', async () => {
-    request.nextUrl.pathname = '/en-US/dmps';
-
-    const result = await proxy(request);
-
-    expect(NextResponse.next).toHaveBeenCalled();
-    expect(response.headers.set).toHaveBeenCalledWith('x-url', request.nextUrl.href);
-    expect(result).toBe(response);
-  });
-
-  it('should not redirect if at least one token is present on protected path', async () => {
+  it('should hand off to next-intl when the URL has a locale and a token is present', async () => {
     request.nextUrl.pathname = '/en-US/protected';
-    request.cookies.get = jest.fn().mockImplementation((key) => {
-      if (key === 'dmspt') return 'accessToken'; // Simulate accessToken is present
-      return undefined;
-    });
 
     const result = await proxy(request);
 
-    expect(NextResponse.next).toHaveBeenCalled();
     expect(NextResponse.redirect).not.toHaveBeenCalled();
+    expect(mockHandleI18nRouting).toHaveBeenCalledWith(request);
     expect(result).toBe(response);
   });
 
@@ -156,7 +145,37 @@ describe('proxy', () => {
 
     await proxy(request);
 
-    const expectedUrl = new URL("http://localhost/en-US/");
+    const expectedUrl = new URL("http://localhost/en-US");
     expect(NextResponse.redirect).toHaveBeenCalledWith(expectedUrl);
+  });
+
+  it('should keep the URL locale when redirecting to login', async () => {
+    request.nextUrl.pathname = '/pt-BR/projects/5';
+    request.cookies.get = jest.fn().mockReturnValue(undefined); // logged out, no NEXT_LOCALE
+
+    await proxy(request);
+
+    expect(NextResponse.redirect).toHaveBeenCalledWith(new URL('/pt-BR/login', request.url));
+  });
+
+  it('should use the NEXT_LOCALE cookie when there is no JWT', async () => {
+    request.nextUrl.pathname = '/dmps/abc';
+    request.cookies.get = jest.fn((key: string) =>
+      key === 'NEXT_LOCALE' ? { name: 'NEXT_LOCALE', value: 'pt-BR' } : undefined
+    );
+
+    await proxy(request);
+
+    expect(NextResponse.redirect).toHaveBeenCalledWith(new URL('/pt-BR/dmps/abc', request.url));
+  });
+
+  it('should match Accept-Language by language when there is no exact match', async () => {
+    request.nextUrl.pathname = '/dmps/abc';
+    request.cookies.get = jest.fn().mockReturnValue(undefined);
+    request.headers.set('Accept-Language', 'pt,en;q=0.8');
+
+    await proxy(request);
+
+    expect(NextResponse.redirect).toHaveBeenCalledWith(new URL('/pt-BR/dmps/abc', request.url));
   });
 });

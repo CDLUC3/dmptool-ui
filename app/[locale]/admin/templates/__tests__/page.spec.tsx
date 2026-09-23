@@ -13,6 +13,14 @@ import {
 
 expect.extend(toHaveNoViolations);
 
+jest.mock('@/i18n/routing', () => ({
+  Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
+    <a href={href} {...props}>{children}</a>
+  ),
+  useRouter: jest.fn(() => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn() })),
+  usePathname: jest.fn(() => '/admin/templates'),
+}));
+
 // Mock useFormatter and useTranslations from next-intl
 jest.mock("next-intl", () => ({
   useFormatter: jest.fn(() => ({
@@ -78,7 +86,7 @@ describe("OrganizationTemplateListPage", () => {
     await waitFor(() => {
       const createLink = screen.getByText("actionCreate");
       expect(createLink).toBeInTheDocument();
-      expect(createLink).toHaveAttribute("href", "/en-US/template/create");
+      expect(createLink).toHaveAttribute("href", "/template/create");
     });
   });
 
@@ -173,8 +181,8 @@ describe("OrganizationTemplateListPage", () => {
       const homeLink = screen.getByRole("link", { name: "breadcrumbs.home" });
       const templatesLink = screen.getByRole("link", { name: "breadcrumbs.templates" });
 
-      expect(homeLink).toHaveAttribute("href", "/en-US");
-      expect(templatesLink).toHaveAttribute("href", "/en-US/template");
+      expect(homeLink).toHaveAttribute("href", "/");
+      expect(templatesLink).toHaveAttribute("href", "/template");
     });
   });
 

@@ -2,7 +2,7 @@ import React from 'react';
 import { act, fireEvent, render, screen, within, waitFor, cleanup } from '@/utils/test-utils';
 import { MockedProvider } from '@apollo/client/testing/react';
 import { InMemoryCache } from '@apollo/client';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/i18n/routing';
 import { useToast } from '@/context/ToastContext';
 import TemplateListCustomizationsPage from '../page';
 import { axe, toHaveNoViolations } from 'jest-axe';
@@ -22,8 +22,12 @@ import {
 
 expect.extend(toHaveNoViolations);
 
-jest.mock('next/navigation', () => ({
-  useRouter: jest.fn(),
+jest.mock('@/i18n/routing', () => ({
+  Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
+    <a href={href} {...props}>{children}</a>
+  ),
+  useRouter: jest.fn(() => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn() })),
+  usePathname: jest.fn(() => '/template/customizations'),
 }));
 
 jest.mock('@/context/ToastContext', () => ({
@@ -165,8 +169,8 @@ describe('TemplateListCustomizationsPage', () => {
     const homeLink = await screen.findByRole('link', { name: 'breadcrumbs.home' });
     const templatesLink = await screen.findByRole('link', { name: 'breadcrumbs.templates' });
 
-    expect(homeLink).toHaveAttribute('href', '/en-US');
-    expect(templatesLink).toHaveAttribute('href', '/en-US/template');
+    expect(homeLink).toHaveAttribute('href', '/');
+    expect(templatesLink).toHaveAttribute('href', '/template');
   });
 
   it('should render error when graphql query returns as error', async () => {
@@ -365,7 +369,7 @@ describe('TemplateListCustomizationsPage', () => {
       });
 
       // Should redirect without calling mutation
-      expect(mockPush).toHaveBeenCalledWith('/en-US/template/customizations/1');
+      expect(mockPush).toHaveBeenCalledWith('/template/customizations/1');
     });
 
     it('should create new template customization and redirect on success', async () => {
@@ -459,7 +463,7 @@ describe('TemplateListCustomizationsPage', () => {
 
       // Should redirect to the new customization page
       await waitFor(() => {
-        expect(mockPush).toHaveBeenCalledWith('/en-US/template/customizations/19');
+        expect(mockPush).toHaveBeenCalledWith('/template/customizations/19');
       });
     });
 
@@ -771,7 +775,7 @@ describe('TemplateListCustomizationsPage', () => {
 
       // Verify the redirect happened (mutation succeeded)
       await waitFor(() => {
-        expect(mockPush).toHaveBeenCalledWith('/en-US/template/customizations/19'); // ← Fixed path
+        expect(mockPush).toHaveBeenCalledWith('/template/customizations/19'); // ← Fixed path
       });
 
     });
