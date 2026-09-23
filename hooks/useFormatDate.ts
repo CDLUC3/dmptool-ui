@@ -29,3 +29,30 @@ export const useFormatDate = () => {
     return '';
   };
 };
+
+export const useFormatDateWithMonth = () => {
+  const formatter = useFormatter();
+
+  return (date: string | null | undefined, includeTime = false): string => {
+    if (!date) return '';
+
+    let dateObj: Date | null = null;
+    if (!isNaN(Number(date)) && date.trim() !== '') {
+      dateObj = new Date(Number(date));
+    } else {
+      dateObj = new Date(date);
+    }
+
+    if (!(dateObj instanceof Date) || isNaN(dateObj.getTime())) {
+      console.warn('Invalid date value passed to useFormatDateWithMonth:', date);
+      return '';
+    }
+
+    return formatter.dateTime(dateObj, {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+      ...(includeTime && { hour: '2-digit', minute: '2-digit' }),
+    });
+  };
+};

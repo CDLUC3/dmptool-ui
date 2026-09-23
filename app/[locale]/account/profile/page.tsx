@@ -72,7 +72,7 @@ const ProfilePage: React.FC = () => {
   const [emailAddresses, setEmailAddresses] = useState<EmailInterface[]>([]);
   const [languages, setLanguages] = useState<LanguageInterface[]>([]);
 
-  const switchLanguage = async (newLocale: string, showToast = false) => {
+  const switchLanguage = async (newLocale: string, showToast = false): Promise<boolean> => {
     if (newLocale !== currentLocale) {
       const params = new URLSearchParams();
       // There was an issue with the toast message disappearing when switching languages,
@@ -84,7 +84,9 @@ const ProfilePage: React.FC = () => {
       const basePath = `/${newLocale}${pathname}`;
       const newPath = queryString ? `${basePath}?${queryString}` : basePath;
       router.push(newPath);
+      return true;
     }
+    return false;
   };
 
   // Initialize user profile mutation
@@ -146,16 +148,33 @@ const ProfilePage: React.FC = () => {
     return response.data;
   };
 
+  // Show Success Message
+  const showSuccessToast = () => {
+    const successMessage = t("messages.profileUpdateSuccess");
+    toastState.add(successMessage, { type: "success", timeout: 3000 });
+  };
+
   // Update Profile info
   const updateProfile = async () => {
     try {
       const response = await profileUpdateMutation();
       if (response) {
+        const selectedLanguage = languages.find((lang) => lang.id === formData.languageId);
+        const savedData = {
+          ...formData,
+          languageName: selectedLanguage?.name ?? formData.languageName,
+        };
+        setOriginalData(savedData);
+        setFormData(savedData);
+        setOtherField(savedData.affiliationName === "Other");
         setIsEditing(false);
         // Refresh token to include preferred language in token
         await refreshAuthTokens();
         // Update pathname to match the selected language so user can see page in selected language
-        await switchLanguage(formData.languageId, true);
+        const languageChanged = await switchLanguage(formData.languageId, true);
+        if (!languageChanged) {
+          showSuccessToast();
+        }
       }
     } catch (error) {
       // Handle errors
@@ -169,12 +188,6 @@ const ProfilePage: React.FC = () => {
       });
       setIsEditing(false);
     }
-  };
-
-  // Show Success Message
-  const showSuccessToast = () => {
-    const successMessage = t("messages.profileUpdateSuccess");
-    toastState.add(successMessage, { type: "success", timeout: 3000 });
   };
 
   // Handle form submit
@@ -207,6 +220,7 @@ const ProfilePage: React.FC = () => {
     // Revert back to original data
     if (originalData) {
       setFormData(originalData);
+      setOtherField(originalData.affiliationName === "Other");
     }
 
     //Hide form

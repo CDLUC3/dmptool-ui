@@ -7,6 +7,8 @@ import { render, screen } from '@testing-library/react';
 import LocaleLayout from '@/app/[locale]/layout';
 import { routing } from '@/i18n/routing';
 import { notFound } from 'next/navigation'; // Replace require with import
+import { headers } from 'next/headers';
+
 
 // Mock next-intl/middleware BEFORE importing middleware
 jest.mock('next-intl/middleware', () => ({
@@ -43,11 +45,13 @@ jest.mock('@/components/Header', () => {
   MockHeader.displayName = 'MockHeader';
   return MockHeader;
 });
+
 jest.mock('@/components/Footer', () => {
   const MockFooter = () => <div>Mock Footer</div>;
   MockFooter.displayName = 'MockFooter';
   return MockFooter;
 });
+
 jest.mock('@/components/SubHeader', () => {
   const MockSubHeader = () => <div>Mock SubHeader</div>;
   MockSubHeader.displayName = 'MockSubHeader';
@@ -57,12 +61,19 @@ jest.mock('@/components/SubHeader', () => {
 jest.mock('@/lib/graphql/apollo-wrapper', () => ({
   ApolloWrapper: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }));
+
 jest.mock('@/context/AuthContext', () => ({
-  AuthProvider: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  AuthProvider: ({ children, initialIsAuthenticated }: { children: React.ReactNode; initialIsAuthenticated: boolean }) => (
+    <div data-testid="auth-provider" data-authenticated={String(initialIsAuthenticated)}>
+      {children}
+    </div>
+  ),
 }));
+
 jest.mock('@/context/CsrfContext', () => ({
   CsrfProvider: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }));
+
 jest.mock('@/context/ToastContext', () => ({
   ToastProviderWrapper: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }));
@@ -77,7 +88,20 @@ jest.mock('@/components/NavigationEvents', () => {
   return MockNavigationEvents;
 });
 
+jest.mock('next/headers', () => ({
+  headers: jest.fn().mockResolvedValue(new Headers()),
+}));
+
 describe('LocaleLayout', () => {
+  beforeEach(() => {
+    (headers as jest.Mock).mockResolvedValue(new Headers()); // Reset to default before every test
+  });
+
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
   it('renders layout with valid locale', async () => {
     const TestComponent = await LocaleLayout({
       children: <>Main Content</>,
@@ -115,5 +139,23 @@ describe('LocaleLayout', () => {
     });
 
     expect(notFound).toHaveBeenCalled();
+  });
+  it('passes initialIsAuthenticated=true to AuthProvider when x-is-authenticated header is "true"', async () => {
+    (headers as jest.Mock).mockResolvedValue(new Headers({ 'x-is-authenticated': 'true' }));
+
+    const TestComponent = await LocaleLayout({
+      children: <>Main Content</>,
+      params: Promise.resolve({ locale: routing.locales[0] }),
+    });
+
+    const htmlChildren = TestComponent?.props?.children;
+    const bodyNode = Array.isArray(htmlChildren)
+      ? htmlChildren.find((el: any) => el?.type === 'body')
+      : null;
+    const bodyContent = bodyNode?.props?.children;
+
+    render(<>{bodyContent}</>);
+
+    expect(screen.getByTestId('auth-provider')).toHaveAttribute('data-authenticated', 'true');
   });
 });

@@ -31,12 +31,13 @@ import { FormInput, FormTextArea } from '@/components/Form';
 import Loading from '@/components/Loading';
 
 // Utils and other
-import { useToast } from "@/context/ToastContext";
 import { useAuthContext } from "@/context/AuthContext";
 import {
   logECS,
-  routePath
+  routePath,
+  scrollToTop
 } from "@/utils/index";
+import styles from './contact.module.scss';
 
 interface ContactFormInterface {
   email: string;
@@ -47,8 +48,8 @@ interface ContactFormInterface {
 
 const ContactUsPage: React.FC = () => {
   //Hooks
-  const toastState = useToast();
   const errorRef = useRef<HTMLDivElement | null>(null);
+  const topRef = useRef<HTMLDivElement | null>(null);
   const {
     isAuthenticated,
   } = useAuthContext();
@@ -76,18 +77,14 @@ const ContactUsPage: React.FC = () => {
   });
 
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [isSubmitted, setIsSubmitted] = useState<boolean>(false);
 
   // GraphQL queries and mutations
-  const { data: meData } = useQuery(MeDocument, {
+  const { data: meData, loading: meDataLoading } = useQuery(MeDocument, {
     skip: !isAuthenticated
   });
 
   const [submitContactFormMutation] = useMutation(SubmitContactFormDocument);
-
-  const showSuccessToast = () => {
-    const successMessage = t("messages.success.messageSent");
-    toastState.add(successMessage, { type: "success" });
-  };
 
   // Clear all error messages
   const clearAllErrorMessages = () => {
@@ -103,8 +100,7 @@ const ContactUsPage: React.FC = () => {
   const clearAllFields = () => {
     clearAllErrorMessages();
     setContactFormData({
-      email: "",
-      name: "",
+      ...contactFormData,
       subject: "",
       message: ""
     });
@@ -192,7 +188,8 @@ const ContactUsPage: React.FC = () => {
           });
           return;
         }
-        showSuccessToast();
+        setIsSubmitted(true);
+        scrollToTop(topRef);
       }
     } catch (error) {
       logECS("error", "ContactUsPage.sendMessage", {
@@ -231,15 +228,15 @@ const ContactUsPage: React.FC = () => {
     }
   }, [meData]);
 
-  // Show Loading until we know if user is authenticated or not
-  if (isAuthenticated === null) {
+  // Show Loading until we know if user is authenticated, and if they are,
+  // until we've loaded their profile data
+  if (isAuthenticated === null || (isAuthenticated && meDataLoading)) {
     return <Loading message={Global('buttons.loading')} />;
   }
 
 
-
   return (
-    <>
+    <div ref={topRef} className="pageContainer">
       <PageHeader
         title={t('title')}
         description={""}
@@ -251,8 +248,9 @@ const ContactUsPage: React.FC = () => {
           </Breadcrumbs >
         }
       />
-      < LayoutWithPanel >
+      < LayoutWithPanel>
         <ContentContainer>
+
           <ErrorMessages errors={errorMessages} ref={errorRef} />
           <p>
             {t.rich('contactDescription', {
@@ -274,68 +272,78 @@ const ContactUsPage: React.FC = () => {
             </p>
           )}
           {isAuthenticated && (
-            <Form onSubmit={handleContactFormSubmit}>
+            isSubmitted ? (
               <div className="sectionContainer mt-0">
                 <div className="sectionContent">
-                  <FormInput
-                    name="name"
-                    id="name"
-                    type="text"
-                    label={t("form.labels.name")}
-                    value={contactFormData.name || ''}
-                    disabled={true}
-                  />
-
-                  <FormInput
-                    name="email"
-                    id="email"
-                    type="text"
-                    label={t("form.labels.email")}
-                    value={contactFormData.email || ''}
-                    disabled={true}
-                  />
-
-                  <FormInput
-                    name="subject"
-                    id="subject"
-                    type="text"
-                    label={t("form.labels.subject")}
-                    value={contactFormData.subject || ''}
-                    isRequiredVisualOnly={true}
-                    onChange={handleInputChange}
-                    isInvalid={fieldErrors.subject.length > 0}
-                    errorMessage={
-                      fieldErrors.subject.length > 0
-                        ? fieldErrors.subject
-                        : t("messages.errors.invalidSubject")
-                    }
-                  />
-
-                  <FormTextArea
-                    name="message"
-                    label={t("form.labels.message")}
-                    richText={false}
-                    value={contactFormData.message || ''}
-                    onChange={handleTextAreaChange}
-                    isRequiredVisualOnly={true}
-                    isInvalid={fieldErrors.message.length > 0}
-                    errorMessage={
-                      fieldErrors.message.length > 0
-                        ? fieldErrors.message
-                        : t("messages.errors.invalidMessage")
-                    }
-                  />
-
-                  <Button
-                    type="submit"
-                    className="button button--primary"
-                    isDisabled={isSubmitting}
-                  >
-                    {isSubmitting ? Global("buttons.submitting") : Global("buttons.submit")}
-                  </Button>
+                  <p role="status" className={styles.successText}>
+                    {t('messages.success.ticketCreated')}
+                  </p>
                 </div>
               </div>
-            </Form>
+            ) : (
+              <Form onSubmit={handleContactFormSubmit}>
+                <div className="sectionContainer mt-0">
+                  <div className="sectionContent">
+                    <FormInput
+                      name="name"
+                      id="name"
+                      type="text"
+                      label={t("form.labels.name")}
+                      value={contactFormData.name || ''}
+                      disabled={true}
+                    />
+
+                    <FormInput
+                      name="email"
+                      id="email"
+                      type="text"
+                      label={t("form.labels.email")}
+                      value={contactFormData.email || ''}
+                      disabled={true}
+                    />
+
+                    <FormInput
+                      name="subject"
+                      id="subject"
+                      type="text"
+                      label={t("form.labels.subject")}
+                      value={contactFormData.subject || ''}
+                      isRequiredVisualOnly={true}
+                      onChange={handleInputChange}
+                      isInvalid={fieldErrors.subject.length > 0}
+                      errorMessage={
+                        fieldErrors.subject.length > 0
+                          ? fieldErrors.subject
+                          : t("messages.errors.invalidSubject")
+                      }
+                    />
+
+                    <FormTextArea
+                      name="message"
+                      label={t("form.labels.message")}
+                      richText={false}
+                      value={contactFormData.message || ''}
+                      onChange={handleTextAreaChange}
+                      isRequiredVisualOnly={true}
+                      isInvalid={fieldErrors.message.length > 0}
+                      errorMessage={
+                        fieldErrors.message.length > 0
+                          ? fieldErrors.message
+                          : t("messages.errors.invalidMessage")
+                      }
+                    />
+
+                    <Button
+                      type="submit"
+                      className="button button--primary"
+                      isDisabled={isSubmitting}
+                    >
+                      {isSubmitting ? Global("buttons.submitting") : Global("buttons.submit")}
+                    </Button>
+                  </div>
+                </div>
+              </Form>
+            )
           )}
         </ContentContainer>
 
@@ -373,7 +381,7 @@ const ContactUsPage: React.FC = () => {
           </div>
         </SidebarPanel>
       </LayoutWithPanel >
-    </>
+    </div>
 
   );
 }

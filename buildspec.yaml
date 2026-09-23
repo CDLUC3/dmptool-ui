@@ -26,7 +26,7 @@ phases:
         - echo "Running build in ${NODE_ENV} mode - started on `date`"
         - echo Building the Docker image...
         - cd $CODEBUILD_SRC_DIR
-        - docker build --no-cache --build-arg NEXT_PUBLIC_SERVER_ENDPOINT=$NEXT_PUBLIC_SERVER_ENDPOINT --build-arg NEXT_PUBLIC_BASE_URL=$NEXT_PUBLIC_BASE_URL --build-arg NEXT_PUBLIC_HELPDESK_EMAIL_ADDRESS=$HELPDESK_EMAIL -f Dockerfile.prod -t $SHORT_ECR_URI:nextJS-latest .
+        - docker build --no-cache --build-arg NEXT_PUBLIC_SERVER_ENDPOINT=$NEXT_PUBLIC_SERVER_ENDPOINT --build-arg NEXT_PUBLIC_BASE_URL=$NEXT_PUBLIC_BASE_URL --build-arg NEXT_PUBLIC_HELPDESK_EMAIL_ADDRESS=$NEXT_PUBLIC_HELPDESK_EMAIL_ADDRESS -f Dockerfile.prod -t $SHORT_ECR_URI:nextJS-latest .
         - docker tag $ECR_REPOSITORY_URI:nextJS-latest $SHORT_ECR_URI:$IMAGE_TAG
 
   post_build:

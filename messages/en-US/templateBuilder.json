@@ -448,13 +448,16 @@
         "questionUpdateError": "Error when updating question",
         "questionRemoveError": "Error when removing question",
         "invalidQuestionType": "Invalid question type found",
-        "errorSavingDisplayLogic": "Error saving display logic"
+        "errorSavingDisplayLogic": "Error saving display logic",
+        "errorLoadingDisplayLogic": "Error loading display logic",
+        "errorRemovingDisplayLogic": "Error removing display logic"
       },
       "success": {
         "questionUpdated": "Question was successfully updated",
         "questionRemoved": "Question was successfully removed",
         "successDeletingQuestion": "Question deleted successfully",
-        "displayLogicUpdated": "Display logic saved successfully"
+        "displayLogicUpdated": "Display logic saved successfully",
+        "displayLogicRemoved": "Display logic removed successfully"
       }
     },
     "headings": {
@@ -481,6 +484,8 @@
       "matchTypeItemAll": "All",
       "operatorItemIsSelected": "is selected",
       "operatorItemIsNotSelected": "is NOT selected",
+      "operatorItemIncludes": "includes",
+      "operatorItemDoesNotInclude": "does not include",
       "headings": {
         "options": "Options",
         "logic": "Display Logic",
@@ -498,7 +503,8 @@
         "removeConditionAriaLabel": "Remove condition: {operator} - {option}",
         "removeGroupAriaLabel": "Remove condition group for \"{triggerQuestion}\"",
         "saveDisplayLogic": "Save display logic",
-        "addTriggerQuestion": "Add another trigger question"
+        "addTriggerQuestion": "Add trigger question",
+        "addAnotherTriggerQuestion": "Add another trigger question"
       },
       "options": {
         "any": "Any",
@@ -515,6 +521,9 @@
         "triggerQuestion": "The answer to this question",
         "conditionOption": "condition option",
         "conditionOperator": "Condition operator"
+      },
+      "helpText": {
+        "noTriggerQuestionsAvailable": "No qualifying questions are available to use as a trigger for display logic."
       }
     }
   },

@@ -1,4 +1,11 @@
 ## Added
+- Added missing tests for `PlanAuthoring` components, because the tests were not meeting coverage requirements [#339]
+- Added new `ArchivedPlanView` component that renders different versions, and simplified `DmpLandingPage` to mainly be a wrapper [#339]
+- Added new `useFormatDateWithMonth` to shared date utilities [#339]
+- Added new `PlanAuthoring` module for the single-page plan overview/authoring UI (sections, questions, section navigation, guidance/comments sidebar, save status), with a pluggable `PlanAuthoringDataSource`, demo data, and en-US/pt-BR translations. Styleguide showcase at `/styleguide/components/plan-authoring`. Frontend scaffold only — not yet wired to production routes or backend; research output answers deferred to a follow-up [#195]
+- Added new arrow DMP Tool logos to the CDN, and updated `layout.tsx` to use them [#337]
+- Added new `DmpLandingPage` at `app/(embed)/[locale]/dmps/[...slug]/page.tsx`. The `(embed)` directory allows us to assign a different wrapping layout to this page, so we can exlude the shared header and footer [#293]
+- Added `SaveQuestionDisplayLogic` mutation and `QuestionConditionGroups` query [#508]
 - Added `favicon` image from `CDN`. Added a new `.env` variable `CDN_DOMAIN`. We will need to add this variable to the `stage` and `production` servers 
 - Added `login/forgot-password` and `login/reset-password` pages, and added a `PasswordRequirementList` component to assist users in knowing what the password requirements are[#242]
 - Added `SendPasswordResetEmail`, `ResetPassword` and `ValidatePasswordResetToken` mutations and query [#242]
@@ -34,6 +41,15 @@
 - Added `UpdateAffiliation` and `AffiliationById` queries [#203]
 
 ## Updated
+- Updated plan title on landing page to expand across the full width [#339]
+- Updated `DmpLandingPage` to just use the new `PublicPlanVersionByDmpIdDocument` query, which calls on DynamoDB to get the data [#339]
+- Updated `ProjectsProjectFunding` page to display `View` button for funding if in `readOnly` mode [#246]
+- Upated `ProjectsProjectFundingEdit` to disable form fields for `readOnly` mode and hide action buttons [#246]
+- Updated `Contact` page to display a message in place of the form when submitted. Fixed missing email [#303]
+- Updated `DisplayLogicComponent` to include props for `onDisplayLogicRemove` and `isLoadingExistingLogic`, and added operators for multi-select questions, so we can change the language from `is` to `includes`. [#508]
+- Updated `displayLogicMapper` with all the new question condition types. Added `fromQuestionConditionGroups` to reconstruct display logic from backend [#508]
+- Updated `QuestionEdit` page to use the new queries and mutations related to display logic. Updated `handleSaveDisplayLogic` to actually save to the backend, and added `handleRemoveDisplayLogic` [#508]
+- Updated the `useResearchOutputTable` hook to pass in `markDirty` in place of `setHasUnsavedChanges` so that we could include clearing all errors for any new interactions with forms [#508]
 - Removed the best practice checkbox group of tags from the add/edit Section pages, and added them to the add/edit Question pages [#274]
 - Updated the `TransitionButton` to use `startTransaction` so components using it can better control the loading gif and progress bar. Updated some of the pages to utilize this new `startTransaction` [#274]
 - Updated shared `QuestionAdd` to include a `showTags` boolean so that we can exclude it for custom pages for now [#274]
@@ -125,6 +141,12 @@
 - Updated `RepoSelectorForAnswer` to wait to query `Re3byUrIsDocument` until we have `preferredReposURIs` because preferred repos don't display even though they eventually do to trigger the display of the "preferred repositories" checkbox [#118]
 
 ## Fixed
+- Fixed missing success toasts on Account pages: profile saves now show a toast for all field updates (not only language changes); adding and deleting secondary emails show success toasts when the GraphQL response has no real errors; update password and notifications save actions also show success toasts. Added `emailAddressDeleteSuccess` translations [#306]
+- Temporary fix for the alignment. I added some missing styles to `.cSubheader` in the `SubHeader` component, because the mobile styles for that just weren't being picked up by the browser. There might be another root cause, but this is a temporary fix [#340]
+- NextJS is using `Turbopack` css handling by default since `v16`, and we want to continue using `webpack` due to some known gaps. So updated the `build` script in `package.json` to pin to `--webpack` by default to fix inconsistencies between running locally and on other servers [#340]
+- Fixed issue where the `readOnly` tooltip messages were incorrect [#288]
+- Added missing `Custom Field` to the `SingleResearchOutputComponent` page for Research Output questions [#336]
+- Fixed an issue where there was flashing in the header due to a delay in the page registering the `isAuthenticated` value. So our `proxy.ts` middleware was updated to add `x-is-authenticated` in the header, and we updated `layout.tsx` to get the value and pass it into `AuthProvider`. Then `AuthContext` was updated to use this value as the initial value [#293]
 - Fixed breaking build due to the recent `next` version update to `16.2.12` where `Turbopack` has stricter rules, so we had to import `nprogress/nprogress.css` in `layout.tsx` rather than in `globals.scss` [#331]
 - Fixed Question Display Logic layout issue by updating the `DisplayLogicComponent` css to have more specificity, so that the order in which css is loaded will not break anything [#325]
 - Fixed the issue where "add Funder" button was displayed even when `readOnly` was set to true [#305]
@@ -136,6 +158,9 @@
 - Fixed issue with Feedback Notification headers displaying for any collaborator on the Plan Overview, Section and Question pages. It should only display to Org Admins and Super Admins. Added shared isOrgAdmin hook for pages. [#249]
 
 ## Chore
+- Updated `versioning.yml` to create PRs to merge updated `package.json` and `CHANGELOG.md` into `stage` and `development` [#338]
+- Small tweak in CHANGELOG.md to test another merge to test automated versioning.
+- Updated `brace-expansion` to `v5.0.9`, `js-yaml` to `v4.3.1`, and `domPurify` to `v3.4.13` to address high vulnerabilities [#337]
 - Updated `versioning.yml` workflow file to just copy the exact file merged from `main` back to `stage` and `development` for PR.
 - Updated the `versioning.yml` github workflow file on `stage` to test that it works on merge to `main`.
 - Small tweak in CHANGELOG.md to test another merge to test automated versioning.

@@ -7,9 +7,17 @@ import UpdatePasswordPage from "../page";
 
 expect.extend(toHaveNoViolations);
 
+const mockToastAdd = jest.fn();
+jest.mock("@/context/ToastContext", () => ({
+  useToast: jest.fn(() => ({
+    add: mockToastAdd,
+  })),
+}));
+
 describe("UpdatePasswordPage", () => {
   beforeEach(() => {
     window.scrollTo = jest.fn();
+    mockToastAdd.mockClear();
   });
 
   afterEach(() => {
@@ -117,6 +125,10 @@ describe("UpdatePasswordPage", () => {
     // Should log the form data (static implementation)
     await waitFor(async () => {
       expect(consoleSpy).toHaveBeenCalledWith("Password update submitted:", expect.any(Object));
+      expect(mockToastAdd).toHaveBeenCalledWith("messages.passwordUpdateSuccess", {
+        type: "success",
+        timeout: 3000,
+      });
     }, { timeout: 3000 });
 
     consoleSpy.mockRestore();

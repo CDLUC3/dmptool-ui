@@ -13,6 +13,7 @@ import { ContentContainer, LayoutWithPanel, SidebarPanel } from "@/components/Co
 // Styles
 import styles from "./updatePassword.module.scss";
 import { routePath } from "@/utils/routes";
+import { useToast } from "@/context/ToastContext";
 
 interface PasswordFormData {
   currentPassword: string;
@@ -22,6 +23,7 @@ interface PasswordFormData {
 
 const UpdatePasswordPage: React.FC = () => {
   const t = useTranslations("UpdatePassword");
+  const toast = useToast();
 
   const [formData, setFormData] = useState<PasswordFormData>({
     currentPassword: "",
@@ -51,6 +53,7 @@ const UpdatePasswordPage: React.FC = () => {
       setIsSubmitting(false);
       // In a real implementation, this would make an API call
       console.log("Password update submitted:", formData);
+      toast.add(t("messages.passwordUpdateSuccess"), { type: "success", timeout: 3000 });
     }, 1000);
   };
 

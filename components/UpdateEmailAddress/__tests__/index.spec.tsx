@@ -43,9 +43,10 @@ jest.mock('@/utils/gqlErrorHandler', () => ({
   handleApolloErrors: jest.fn()
 }))
 
+const mockToastAdd = jest.fn();
 jest.mock('@/context/ToastContext', () => ({
   useToast: jest.fn(() => ({
-    add: jest.fn(),
+    add: mockToastAdd,
   })),
 }));
 
@@ -145,6 +146,7 @@ const setupMocks = () => {
 describe('UpdateEmailAddressPage', () => {
   beforeEach(() => {
     setupMocks();
+    mockToastAdd.mockClear();
     // Create a mock scrollIntoView function
     const mockScrollIntoView = jest.fn();
     // Add it to the Element prototype
@@ -231,7 +233,12 @@ describe('UpdateEmailAddressPage', () => {
     mockRemoveUserEmailMutationFn.mockResolvedValue({
       data: {
         removeUserEmail: {
-          errors: null
+          errors: {
+            general: null,
+            userId: null,
+            email: null,
+            __typename: 'UserEmailErrors',
+          }
         }
       }
     });
@@ -264,6 +271,11 @@ describe('UpdateEmailAddressPage', () => {
           query: GET_USER,
         },
       ],
+    });
+    expect(mockToastAdd).toHaveBeenCalledWith('messages.emailAddressDeleteSuccess', {
+      type: 'success',
+      priority: 1,
+      timeout: 10000,
     });
   });
 
@@ -599,6 +611,8 @@ describe('UpdateEmailAddressPage', () => {
       expect(errorDiv).toBeInTheDocument();
       expect(screen.getByText('Email is already in use')).toBeInTheDocument();
     });
+    expect(mockToastAdd).not.toHaveBeenCalled();
+    expect(screen.getByLabelText(/headingAddAliasEmail/i)).toHaveValue('msmith@test.com');
   });
 
   it('should call mockAddUserEmailMutation again if the initial call returns an instance of an Apollo Error', async () => {

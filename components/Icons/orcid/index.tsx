@@ -4,9 +4,11 @@ import './OrcidIcon.scss';
 interface IconProps {
   icon: string;
   classes?: string;
+  width?: string;
+  height?: string;
 }
 
-export function OrcidIcon ({ icon, classes }: IconProps) {
+export function OrcidIcon({ icon, classes, width, height }: IconProps) {
   return (
     <svg
       data-testid="orcidIconSvg"
@@ -14,8 +16,8 @@ export function OrcidIcon ({ icon, classes }: IconProps) {
       xmlns="http://www.w3.org/2000/svg"
       xmlSpace="preserve"
       viewBox="0 0 256 256"
-      width="24px"
-      height="24px"
+      width={width || "24px"}
+      height={height || "24px"}
     >
       <path
         fill="#a6ce39"

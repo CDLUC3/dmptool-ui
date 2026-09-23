@@ -19,6 +19,7 @@ export const useProjectMemberData = (projectMemberId: number) => {
     otherAffiliationName: '',
     email: '',
     orcid: '',
+    isPrimaryContact: false,
   });
 
   // Keep track of which roles are checked
@@ -44,6 +45,7 @@ export const useProjectMemberData = (projectMemberId: number) => {
         otherAffiliationName: '',
         email: projMember?.email ?? '',
         orcid: projMember?.orcid ?? '',
+        isPrimaryContact: projMember?.isPrimaryContact ?? false,
       })
       if (data.projectMember?.memberRoles) {
         const cleanedRoles = data.projectMember?.memberRoles.filter(role => role !== null && role !== undefined);

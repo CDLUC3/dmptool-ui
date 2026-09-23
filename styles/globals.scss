@@ -121,6 +121,11 @@ body {
   --border-color-hover: var(--gray-400);
   --border-color-pressed: var(--gray-400);
   --border-color-disabled: var(--gray-100);
+  --border-color-subtle: rgba(15, 23, 42, 0.12);
+
+  // Section headers (plan authoring and similar surfaces)
+  --section-header-bg: #d9f0ff;
+  --section-header-label-bg: #b7e0ff;
 
   // Form fields
   --field-background: var(--gray-50);

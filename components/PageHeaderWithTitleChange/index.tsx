@@ -72,7 +72,7 @@ const PageHeaderWithTitleChange: React.FC<PageHeaderProps> = ({
   }
 
   useEffect(() => {
-    document.title = `${title} | DMPTool`;
+    document.title = `${title} | DMP Tool`;
     window.scrollTo(0, 0);
   }, [title]);
 

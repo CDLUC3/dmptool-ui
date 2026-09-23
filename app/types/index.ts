@@ -402,6 +402,7 @@ export interface ProjectMemberFormInterface {
   otherAffiliationName?: string;
   email: string;
   orcid: string;
+  isPrimaryContact: boolean;
 }
 
 export interface PlanMemberRolesInterface {

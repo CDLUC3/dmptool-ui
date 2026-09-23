@@ -17,6 +17,13 @@
   }
 }
 
+// Hosts of the PlanAuthoring showcase must not become scroll containers:
+// the layoutContainer mixin's overflow: auto breaks position: sticky on the
+// plan section navigation.
+.plan-authoring-layout {
+  overflow: visible;
+}
+
 .sg-example {
   margin-bottom: 2rem;
 }

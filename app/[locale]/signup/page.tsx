@@ -239,7 +239,7 @@ const SignUpPage: React.FC = () => {
 
   useEffect(() => {
     const pageTitle = (step === "email") ? t('register') : t('createAccount');
-    document.title = `${pageTitle} | DMPTool`;
+    document.title = `${pageTitle} | DMP Tool`;
   }, [step]);
 
   return (

@@ -1,0 +1,88 @@
+.planAuthoring {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  width: 100%;
+  color: var(--blue-900);
+
+  // The layoutContainer mixin sets overflow: auto on .layout-split-panel,
+  // which turns it into the scroll container and silently breaks
+  // position: sticky on the section navigation. The page scrolls on the
+  // document, so restore visible overflow here.
+  > :global(.layout-split-panel) {
+    overflow: visible;
+  }
+}
+
+.planTitleBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  padding: 0 !important;
+  background: transparent !important;
+  color: inherit !important;
+}
+
+.planTitle {
+  margin: 0;
+  font-size: clamp(1.5rem, 2.5vw, 2rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--blue-900);
+}
+
+.planTemplateMeta {
+  margin: 0;
+  max-width: 48rem;
+  font-size: 0.875rem;
+  color: var(--gray-600);
+}
+
+.writePlanRegion {
+  margin-top: var(--space-8, 3rem);
+  background: var(--background-color);
+}
+
+.writePlanIntro {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-bottom: var(--space-1, 1.5rem);
+
+  h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: var(--blue-900);
+  }
+
+  p {
+    margin: 0;
+    max-width: 48rem;
+    font-size: 0.875rem;
+    color: var(--gray-600);
+  }
+
+  .progressSummary {
+    margin-top: var(--space-3, 0.75rem);
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--blue-900);
+    font-variant-numeric: tabular-nums;
+
+    span {
+      font-weight: 400;
+      color: var(--gray-600);
+    }
+  }
+}
+
+.sectionsStack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8, 3rem);
+  padding-top: var(--space-4, 1rem);
+  padding-bottom: var(--space-8, 3rem);
+}

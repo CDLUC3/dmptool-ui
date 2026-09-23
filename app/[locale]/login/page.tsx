@@ -133,7 +133,7 @@ const LoginPage: React.FC = () => {
   }, [step]);
 
   useEffect(() => {
-    document.title = `${t('pageTitle')} | DMPTool`;
+    document.title = `${t('pageTitle')} | DMP Tool`;
   }, []);
 
   return (

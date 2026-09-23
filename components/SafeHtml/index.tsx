@@ -11,10 +11,43 @@ export type SafeHtmlProps = {
   plainTextWrapper?: keyof JSX.IntrinsicElements; // which element to wrap plain text with
 };
 
+type PurifyLike = {
+  sanitize?: (dirty: string) => string;
+};
+
+function resolvePurify(): PurifyLike | null {
+  const imported = DOMPurify as unknown as PurifyLike & { default?: PurifyLike };
+  const candidate =
+    typeof imported?.sanitize === "function"
+      ? imported
+      : imported?.default && typeof imported.default.sanitize === "function"
+        ? imported.default
+        : null;
+  return candidate;
+}
+
+/**
+ * DOMPurify needs a browser DOM. On the server (SSR) the default export often has
+ * no working `sanitize`, which previously crashed pages that render SafeHtml.
+ */
+function sanitizeHtml(html: string): string {
+  if (typeof window === "undefined") {
+    // Keep SSR stable; strip obvious script blocks only.
+    return html.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, "");
+  }
+
+  const purify = resolvePurify();
+  if (!purify?.sanitize) {
+    return html.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, "");
+  }
+
+  return purify.sanitize(html);
+}
+
 /**
  * SafeHtml
  * Renders sanitized HTML. If the string contains no HTML tags and wrapPlainText is true,
- * it wraps the content in a plainTextWrapper (defaults to <p>).</n*>
+ * it wraps the content in a plainTextWrapper (defaults to <p>).
  * Note: This is a client component because it uses DOMPurify.
  */
 export const SafeHtml: React.FC<SafeHtmlProps> = ({
@@ -26,7 +59,7 @@ export const SafeHtml: React.FC<SafeHtmlProps> = ({
 }) => {
   if (!html) return null;
 
-  const sanitized = DOMPurify.sanitize(html);
+  const sanitized = sanitizeHtml(html);
   if (!sanitized || sanitized.trim() === "") return null;
 
   const containsTag = /<[^>]+>/i.test(sanitized);

@@ -1,0 +1,70 @@
+{
+  "LandingPage": {
+    "dmpTool": "DMP Tool",
+    "templateInfoWithOrg": "This page describes a data management plan written for <orgLink>{orgName}</orgLink> using the <dmptoolLink>DMP Tool</dmptoolLink>.",
+    "templateInfoWithoutOrg": "This page describes a data management plan using the <dmptoolLink>DMP Tool</dmptoolLink>.",
+    "downloadPlan": "Download the plan <pdfLabel>(PDF)</pdfLabel>",
+    "viewAsJson": "View as JSON",
+    "opensInNewWindow": "Opens in a new window",
+    "projectStart": "Project start",
+    "projectEnd": "Project end",
+    "researchDomain": "Research domain",
+    "dmpCreated": "DMP created",
+    "dmpLastModified": "DMP last modified",
+    "dmpLastModifiedBy": "DMP last modified by",
+    "whenCitingThisDMP": "When citing this DMP use",
+    "dataManagementPlan": "Data Management Plan",
+    "dmpIdInfo": "When connecting to this DMP to related project outputs (such as datasets) use the ID: <dmpIdLink>{dmpId}</dmpIdLink>",
+    "fundingOpportunity": "Funding opportunity",
+    "registeredDMP": "Data Management plan (registered)",
+    "dmpId": "DMP ID",
+    "noCitationInfo": "No citation available.",
+    "DMPTool": "DMPTool",
+    "untitledPlan": "Untitled plan",
+    "primaryContact": "Primary contact",
+    "sectionHeadings": {
+      "plannedOutputs": "Planned outputs",
+      "projectDescription": "Project description",
+      "fundingStatusAndSources": "Funding status and sources",
+      "citation": "Citation",
+      "projectDetails": "Project details",
+      "contributors": "Contributors to this project",
+      "relatedWorks": "Other works associated with this project"
+    },
+    "output": {
+      "format": "Format",
+      "metaDataStandards": "Metadata standard(s)",
+      "anticipatedVolume": "Anticipated volume",
+      "releaseTimeline": "Release timeline",
+      "intendedRepository": "Intended repository",
+      "licenseForReuse": "License for reuse",
+      "UntitledOutput": "Untitled output"
+    },
+    "funding": {
+      "status": "Status",
+      "funder": "Funder",
+      "projectNumber": "Project number",
+      "grant": "Grant"
+    },
+    "errors": {
+      "failedToDownloadPDF": "Failed to download PDF",
+      "failedToDownloadWithStatus": "PDF download failed with status {status}",
+      "pdfNotAvailable": "PDF download is not available for this plan"
+    },
+    "messages": {
+      "versionNotFound": "Version Not Found",
+      "dmpNotFound": "Data Management Plan Not Found",
+      "cannotFindVersion": "We could not find version {version} of this data management plan.",
+      "planNotFound": "We could not find a published data management plan for {shortDoi}. This plan may be private, or the identifier may be incorrect."
+    },
+    "ariaLabel": {
+      "downloadPlan": "Download the data management plan (downloads a PDF, opens in a new tab)",
+      "viewAsJson": "View the data management plan as a JSON file",
+      "orcidProfile": "ORCID profile for ${member}"
+    },
+    "footer": {
+      "serviceOf": "This product is a service of the <uc3Link>University of California Curation Center</uc3Link> of the <cdlLink>California Digital Library</cdlLink>.",
+      "copyright": "Copyright 2010–{year} The Regents of the University of California."
+    }
+  }
+}

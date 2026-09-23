@@ -144,7 +144,13 @@
         "successfullyPublished": "Successfully published the plan",
         "successfullyUpdatedStatus": "Successfully updated the plan status"
       },
-      "readOnlyLinkMessage": "Only the Primary Owner of a plan can request feedback",
+      "readOnlyLinkMessage": "You do not have the proper permissions to perform this action on this plan.",
+      "readOnlyLinkMessagePublishStatus": "You do not have the proper permissions to change the publication status.",
+      "readOnlyLinkMessageFunding": "You do not have the proper permissions to adjust the funding for this plan.",
+      "readOnlyLinkMessageMembers": "You do not have the proper permissions to adjust the members for this plan.",
+      "readOnlyLinkMessageRelatedWorks": "You do not have the proper permissions to adjust the related works for this plan.",
+      "readOnlyLinkMessagePublish": "You do not have the proper permissions to publish this plan.",
+      "readOnlyLinkMessagePlanStatus": "You do not have the proper permissions to change the plan status.",
       "feedbackNotAvailable": "Feedback is currently not available"
     },
     "links": {

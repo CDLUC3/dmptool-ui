@@ -1,0 +1,117 @@
+{
+  "PlanAuthoring": {
+    "screen": {
+      "basedOn": "Este plano é baseado no \"{template}\" fornecido por {funder} — Versão: {version}.",
+      "fundingTitle": "Financiamento para este plano",
+      "membersTitle": "Membros do plano para este plano",
+      "relatedWorksTitle": "Trabalhos relacionados para este plano",
+      "adjustForPlan": "Ajustar para este plano",
+      "adjustFundingAria": "Ajustar financiamento para este plano",
+      "adjustMembersAria": "Ajustar membros para este plano",
+      "adjustRelatedWorksAria": "Ajustar trabalhos relacionados para este plano",
+      "template": "Modelo",
+      "affiliation": "Afiliação",
+      "progress": "Progresso",
+      "percentComplete": "{percent}% concluído",
+      "writeYourPlan": "Escreva seu plano",
+      "writePlanIntro": "Trabalhe em cada seção abaixo — as respostas são salvas automaticamente. Use Ir para seção para navegar entre as seções.",
+      "questionsAnswered": "{answered} de {total} perguntas respondidas"
+    },
+    "question": {
+      "resizeAria": "Redimensionar pergunta — arraste, ou clique duas vezes para redefinir",
+      "resizeHint": "Arraste para redimensionar · clique duas vezes para redefinir",
+      "answeredAria": "Respondida",
+      "requiredByFunder": "Necessário pelo financiador"
+    },
+    "answer": {
+      "notAnsweredYet": "Ainda não respondida.",
+      "editAnswer": "Editar resposta",
+      "label": "Resposta",
+      "numberLabel": "Número",
+      "dateLabel": "Data"
+    },
+    "saveStatus": {
+      "unsavedChanges": "Alterações não salvas",
+      "saving": "Salvando…",
+      "saved": "Salvo",
+      "saveFailed": "Falha ao salvar",
+      "unableToSave": "Não foi possível salvar a resposta."
+    },
+    "sidebar": {
+      "ariaLabel": "Orientação e comentários da pergunta",
+      "loadingGuidance": "Carregando orientação…",
+      "funderGuidance": "Orientação do financiador",
+      "selectGuidanceSource": "Selecione uma fonte de orientação.",
+      "comments": "Comentários",
+      "showComments": "Mostrar comentários",
+      "hideComments": "Ocultar comentários",
+      "newCount": "{count} novo(s)"
+    },
+    "guidance": {
+      "sourcesAria": "Fontes de orientação",
+      "customize": "+ Personalizar"
+    },
+    "comments": {
+      "loading": "Carregando comentários…",
+      "empty": "Ainda não há comentários.",
+      "listAria": "Comentários",
+      "admin": " (administrador)",
+      "edited": "editado",
+      "placeholder": "Adicionar um comentário…",
+      "addAria": "Adicionar um comentário",
+      "editAria": "Editar comentário",
+      "posting": "Publicando…",
+      "comment": "Comentar",
+      "saveBeforeCommenting": "Salve uma resposta antes de adicionar comentários."
+    },
+    "customizeDialog": {
+      "title": "Personalizar Melhores Práticas",
+      "currentlyDisplaying": "Exibindo atualmente",
+      "sourcesApplyAcrossPlan": "Essas fontes se aplicam a todo o plano, não apenas a esta pergunta.",
+      "requiredByOrganization": "Exigido pela sua organização",
+      "locked": "Bloqueado",
+      "removeOrgAria": "Remover {label}",
+      "addMore": "Adicionar mais",
+      "searchHelp": "Pesquise por organização de pesquisa, nome do financiador ou palavras-chave relacionadas.",
+      "searchByName": "Pesquisar por nome",
+      "enterNamePlaceholder": "Insira o nome…",
+      "noMatchingSources": "Nenhuma fonte correspondente.",
+      "saveGuidanceSources": "Salvar fontes de orientação"
+    },
+    "sectionPicker": {
+      "switchSectionAria": "Trocar seção",
+      "searchPlaceholder": "Pesquisar seções…",
+      "searchAria": "Pesquisar seções",
+      "current": "Atual",
+      "noSectionsMatch": "Nenhuma seção correspondente.",
+      "navigateHint": "↑↓ para navegar",
+      "jumpHint": "↵ para ir",
+      "escHint": "Esc para fechar"
+    },
+    "sectionNav": {
+      "ariaLabel": "Seções do plano",
+      "section": "Seção",
+      "ofTotal": "de {total}",
+      "openPickerAria": "Abrir seletor de seção",
+      "selectASection": "Selecione uma seção",
+      "clickTitleHint": "Clique em Ir para seção · {shortcut}",
+      "currentSectionAria": "Seção atual {index} de {total}: {title}",
+      "noSectionSelected": "Nenhuma seção selecionada",
+      "jumpToSection": "Ir para seção…",
+      "goToSectionAria": "Ir para a seção {index}: {title}",
+      "skipToFirstQuestion": "Pular para a primeira pergunta"
+    },
+    "section": {
+      "badge": "Seção {index}",
+      "ofTotal": "Seção {index} de {total}",
+      "backToTop": "Voltar ao topo da seção {title}"
+    },
+    "sampleAnswers": {
+      "viewSampleAnswer": "Ver amostra da resposta",
+      "viewSampleAnswersCount": "Ver amostras das respostas ({count})",
+      "useAnswer": "Usar resposta",
+      "organizationSampleText": "{org} texto de exemplo",
+      "sampleTextAdded": "Exemplo de texto adicionado"
+    }
+  }
+}

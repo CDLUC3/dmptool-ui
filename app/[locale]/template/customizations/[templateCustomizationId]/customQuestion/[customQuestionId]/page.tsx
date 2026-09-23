@@ -144,6 +144,12 @@ const CustomQuestionEdit = () => {
     setTimeout(() => setAnnouncement(''), 100);
   };
 
+  // Mark the form as dirty and indicate that there are unsaved changes, and clear all errors
+  const markDirty = () => {
+    setHasUnsavedChanges(true);
+    setErrors([]); // Clear all errors
+  };
+
   // Research Output Table Hooks
   const {
     buildResearchOutputFormState,
@@ -174,7 +180,7 @@ const CustomQuestionEdit = () => {
     handleDeleteAdditionalField,
     handleUpdateAdditionalField,
     updateStandardFieldProperty
-  } = useResearchOutputTable({ setHasUnsavedChanges, announce });
+  } = useResearchOutputTable({ markDirty, announce });
 
 
   // Initialize user updateCustomQuestion mutation
@@ -205,7 +211,7 @@ const CustomQuestionEdit = () => {
           ...prev,
           json: JSON.stringify(updatedJSON.data),
         }));
-        setHasUnsavedChanges(true);
+        markDirty();
       }
     }
   };
@@ -223,7 +229,7 @@ const CustomQuestionEdit = () => {
       ...prev,
       questionText: value
     }));
-    setHasUnsavedChanges(true);
+    markDirty();
   };
 
   // Update common input fields when any of them change
@@ -232,7 +238,7 @@ const CustomQuestionEdit = () => {
       ...prev,
       [field]: value === undefined ? '' : value, // Default to empty string if value is undefined
     }));
-    setHasUnsavedChanges(true);
+    markDirty();
   };
 
 
@@ -244,7 +250,7 @@ const CustomQuestionEdit = () => {
         ...prev,
         required: isRequired
       }));
-      setHasUnsavedChanges(true);
+      markDirty();
     }
   };
 
@@ -260,7 +266,7 @@ const CustomQuestionEdit = () => {
           ...prev,
           json: JSON.stringify(updatedParsed),
         }));
-        setHasUnsavedChanges(true);
+        markDirty();
       }
     }
   };
@@ -276,7 +282,7 @@ const CustomQuestionEdit = () => {
         ...prev,
         json: JSON.stringify(updatedParsed),
       }));
-      setHasUnsavedChanges(true);
+      markDirty();
     }
   };
 
@@ -292,7 +298,7 @@ const CustomQuestionEdit = () => {
           ...prev,
           json: JSON.stringify(updatedParsed),
         }));
-        setHasUnsavedChanges(true);
+        markDirty();
       }
     }
   };
@@ -355,6 +361,7 @@ const CustomQuestionEdit = () => {
     if (isSubmitting) return; // Prevent double submissions
     setIsSubmitting(true);
     setFormSubmitted(true);
+    setErrors([]); // Clear previous errors
 
     if (!question) {
       setIsSubmitting(false);
@@ -555,7 +562,7 @@ const CustomQuestionEdit = () => {
           json: JSON.stringify(qInfo.defaultJSON)
         }));
 
-        setHasUnsavedChanges(true);
+        markDirty();
 
         setQuestionType(questionTypeIdQueryParam)
 
@@ -735,7 +742,7 @@ const CustomQuestionEdit = () => {
                     ...prev,
                     requirementText: newValue
                   }));
-                  setHasUnsavedChanges(true);
+                  markDirty();
                 }}
               />
 
@@ -752,7 +759,7 @@ const CustomQuestionEdit = () => {
                     ...prev,
                     guidanceText: newValue
                   }));
-                  setHasUnsavedChanges(true);
+                  markDirty();
                 }}
                 helpMessage={t('helpText.guidanceText')}
               />
@@ -772,7 +779,7 @@ const CustomQuestionEdit = () => {
                         ...prev,
                         sampleText: newValue
                       }));
-                      setHasUnsavedChanges(true);
+                      markDirty();
                     }}
                   />
 
@@ -782,7 +789,7 @@ const CustomQuestionEdit = () => {
                         ...question,
                         useSampleTextAsDefault: !question?.useSampleTextAsDefault
                       });
-                      setHasUnsavedChanges(true);
+                      markDirty();
                     }}
                     isSelected={question?.useSampleTextAsDefault || false}
                   >

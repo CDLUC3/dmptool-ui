@@ -1,0 +1,12 @@
+mutation SaveQuestionDisplayLogic($input: SaveQuestionDisplayLogicInput!) {
+  saveQuestionDisplayLogic(input: $input) {
+    id
+    errors {
+      general
+    }
+  }
+}
+
+mutation RemoveQuestionDisplayLogic($questionId: Int!) {
+  removeQuestionDisplayLogic(questionId: $questionId)
+}

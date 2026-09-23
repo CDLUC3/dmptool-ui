@@ -34,7 +34,7 @@ const customJestConfig = {
     "<rootDir>/app/\\[locale\\]/styleguide/", // Exclude style guide
     "<rootDir>/app/types/index.ts", // Exclude types
     "<rootDir>/app/\\[locale\\]/healthcheck/page.tsx", // Exclude health check
-    ".*\\.server\\.(js|ts|tsx)$"  // Optional: Exclude files ending with .server.ts etc.
+    ".*\\.server\\.(js|ts|tsx)$",  // Optional: Exclude files ending with .server.ts etc.
   ],
   coverageThreshold: {
     global: {

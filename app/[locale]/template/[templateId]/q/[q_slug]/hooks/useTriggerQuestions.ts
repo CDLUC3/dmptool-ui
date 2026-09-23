@@ -13,11 +13,12 @@ interface RawTriggerQuestion {
 }
 
 /**
+ * Will calculate the list of trigger questions for a given question.
  * Trigger questions are a list of questions this question's Display Logic can trigger
- * off of: questions displayed earlier in the same section that are option-type 
+ * off of (i.e., questions displayed earlier in the same section that are option-type 
  * questions(["radioButtons", "checkBoxes", "multiselectBox", "selectBox"];)
  *
- * Takes the alist of section questions from QuestionsDocument query.
+ * Takes the list of section questions from QuestionsDocument query.
  *
  * @param questions - all questions in the current section (unfiltered)
  * @param currentQuestionId - excluded from the list
@@ -38,9 +39,9 @@ export function useTriggerQuestions(
       .filter((q): q is RawTriggerQuestion => q !== null && q.id != null) // Filters out nulls and questions with no id
       .filter((q) => q.id !== currentQuestionId) // Exclude the current question itself
       .filter((q) => // Only include questions with a lower displayOrder than the current question
-        currentDisplayOrder === undefined || q.displayOrder == null
-          ? true
-          : q.displayOrder < currentDisplayOrder
+        currentDisplayOrder === undefined
+          ? q.displayOrder != null  // if we don't know our own order, still require the candidate to have one
+          : q.displayOrder != null && q.displayOrder < currentDisplayOrder
       )
       .map((q) => {
         if (!q.json) return null;

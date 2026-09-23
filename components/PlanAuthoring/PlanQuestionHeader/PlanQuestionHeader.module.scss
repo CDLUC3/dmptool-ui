@@ -1,0 +1,68 @@
+.planQuestionHeader {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0 !important;
+  background: transparent !important;
+  color: inherit !important;
+
+  .titleRow {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+  }
+
+  h3 {
+    margin: 0;
+    padding: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    line-height: 1.35;
+    color: #171721;
+  }
+}
+
+.questionRequirement {
+  max-width: 48rem;
+  font-size: 0.8125rem;
+  line-height: 1.55;
+  color: #34343f;
+
+  p {
+    margin: 0;
+  }
+
+  &[data-expanded="false"] {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    overflow: hidden;
+  }
+}
+
+.requirementToggle {
+  align-self: flex-start;
+  margin-top: -0.25rem !important;
+  font-size: 0.75rem !important;
+  font-weight: 600 !important;
+}
+
+.answeredIcon {
+  display: inline-flex;
+  color: #067647;
+  flex-shrink: 0;
+}
+
+.requiredBadge {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.125rem 0.45rem;
+  border-radius: 0.25rem;
+  background: #fff3df;
+  color: #985a16;
+  font-size: 0.6875rem;
+  font-weight: 500;
+}

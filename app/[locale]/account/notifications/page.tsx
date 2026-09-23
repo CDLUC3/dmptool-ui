@@ -9,6 +9,7 @@ import Link from "next/link";
 import { useTranslations } from "next-intl";
 import styles from "./notifications.module.scss";
 import { routePath } from "@/utils/routes";
+import { useToast } from "@/context/ToastContext";
 
 interface NotificationType {
   id: string;
@@ -18,6 +19,7 @@ interface NotificationType {
 
 const NotificationsPage: React.FC = () => {
   const t = useTranslations("Notifications");
+  const toast = useToast();
 
   // Dummy array simulating database data
   const [notificationPreferences, setNotificationPreferences] = useState<NotificationType[]>([
@@ -46,6 +48,7 @@ const NotificationsPage: React.FC = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     console.log("Notification preferences updated:", notificationPreferences);
+    toast.add(t("messages.preferencesUpdateSuccess"), { type: "success", timeout: 3000 });
   };
 
   return (

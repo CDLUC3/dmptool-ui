@@ -1,0 +1,632 @@
+@use '@/styles/responsive' as r;
+@use '@/styles/variables' as *;
+
+.landingPage {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* ----------Top band - the dark title area-------- */
+.topBand {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, var(--blue-900) 0%, var(--blue-700) 100%);
+  color: var(--dmpui-brand-white, white);
+}
+
+.titleLogo {
+  display: inline-flex;
+  align-items: center;
+  line-height: 0;
+  opacity: 0.9;
+  margin-bottom: var(--space-3);
+}
+
+/* Title block - shares the topBand background */
+.titleBlock {
+  padding: var(--space-4) var(--space-5) var(--space-5);
+
+  @include r.device(md) {
+    padding: var(--space-5) var(--space-8) var(--space-6);
+  }
+}
+
+.titleInner {
+  max-width: 900px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 1; // stays above the chevron watermark
+}
+
+.titleTopRow {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-3);
+
+  @include r.device(md) {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: var(--space-4);
+  }
+}
+
+.subTitleWrapper {
+  display: flex;
+  flex-direction: column;  // Stack vertically on mobile
+  align-items: flex-start;
+  gap: var(--space-6);
+
+  @include r.device(md) {
+    flex-direction: row;    // Side-by-side on md and up
+    align-items: flex-start;
+  }
+}
+.titleActionsCorner {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-self: flex-end;
+  gap: var(--space-3);
+  width: 100%;
+
+  @include r.device(md) {
+    flex-direction: column;
+    align-items: flex-end;
+    width: auto;
+    gap: var(--space-2);
+    flex-shrink: 0;
+  }
+}
+
+.titleMain {
+  flex: 1;
+  min-width: 0;
+}
+
+.titleH1 {
+  font-size: var(--fs-2xl);
+  font-weight: var(--fw-bold);
+  color: white;
+  margin: 0;
+  line-height: var(--lh-tight);
+
+  @include r.device(md) {
+    font-size: var(--fs-3xl);
+  }
+}
+
+.titleSubtitle {
+  font-size: var(--fs-small);
+  font-weight: var(--fw-semibold);
+  color: rgba(255, 255, 255, 0.65);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin: var(--space-1) 0 0;
+}
+
+.pdfLink {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-3);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  border-radius: var(--button-radius, var(--border-radius-xl));
+  font-size: var(--fs-xsmall);
+  font-weight: var(--fw-semibold);
+  color: var(--blue-200);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background 150ms, border-color 150ms, color 150ms;
+  background: transparent;
+
+  @include r.device(md) {
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-4);
+    font-size: var(--fs-small);
+  }
+
+  &:visited {
+    color: var(--blue-200);
+  }
+
+  &:hover,
+  &:focus-visible {
+    color: var(--blue-50);
+    background: rgba(255, 255, 255, 0.1);
+    border-color: white;
+  }
+}
+
+.downloadIcon {
+  flex-shrink: 0;
+  --icon-fill: var(--blue-900);
+}
+
+.downloadButton {
+  font-size: 0.75rem;
+
+
+  &:hover:not(:disabled) {
+    background: var(--blue-200) !important;
+    color: var(--blue-900) !important;
+  }
+}
+.downloadText {
+  font-size: var(--fs-xsmall);
+}
+
+.jsonLink {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--fs-xsmall);
+  color: var(--blue-200);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  transition: color 150ms;
+  text-decoration:none;
+
+  @include r.device(md) {
+    font-size: var(--fs-small);
+  }
+
+  &:visited {
+    color: var(--blue-200);
+  }
+
+  &:hover,
+  &:focus-visible {
+    color: var(--blue-50);
+
+    .jsonLinkArrow {
+      transform: translate(2px, -2px);
+    }
+  }
+}
+
+.jsonLinkArrow {
+  display: inline-block;
+  transition: transform 150ms;
+}
+
+.titleTemplateInfo {
+  color: var(--gray-75);
+  font-size: var(--fs-small);
+  padding-right: var(--space-4);
+
+  a,
+  .templateInfoLink {
+    color: var(--blue-200);
+    transition: color 150ms;
+    white-space: nowrap;
+
+    &:hover,
+    &:focus-visible {
+      color: var(--blue-50);
+    }
+  }
+}
+
+.chevron {
+  display: inline-block;
+  width: 0;
+  height: 0;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 5px solid currentColor;
+  margin-left: var(--space-1);
+}
+
+/* ----------End Top band - the dark title area-------- */
+
+
+/* ----------Sub band - the light area below the title-------- */
+/* Light sub-band below the title, holding just the version dropdown and DOI */
+.subBand {
+  background: var(--slate-100);
+  border-bottom: 1px solid var(--gray-100);
+  padding: var(--space-2) var(--space-5);
+
+  @include r.device(md) {
+    padding: var(--space-2) var(--space-8);
+  }
+}
+
+.subBandInner {
+  max-width: 900px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+
+  @include r.device(sm) {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+.subBandDoi {
+  font-size: var(--fs-small);
+  color: var(--text-color);
+  margin: 0;
+
+  strong {
+    font-weight: var(--fw-semibold);
+    margin-right: var(--space-1);
+  }
+
+  a {
+    color: var(--link-color);
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+.versionsDropdown {
+  position: relative;
+}
+
+.versionsDropdownToggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-3);
+  background: white;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  font-size: var(--fs-small);
+  cursor: pointer;
+  color: var(--text-color);
+  transition: border-color 200ms;
+
+  strong {
+    font-weight: var(--fw-semibold);
+    margin-right: var(--space-1);
+  }
+
+  &:hover:not(:disabled) {
+    border-color: var(--border-color-hover);
+  }
+
+  &:disabled {
+    cursor: default;
+  }
+
+  &[aria-expanded='true'] {
+    border-color: var(--blue-500);
+    outline: 2px solid var(--blue-500);
+    outline-offset: 1px;
+  }
+}
+
+.versionsDropdownMenu {
+  width: var(--trigger-width);
+  min-width: 220px; // fallback floor if the trigger itself is narrow
+  background: white;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  box-shadow: var(--card-shadow);
+  overflow: hidden;
+}
+
+.versionsDropdownItem {
+  display: block;
+  padding: var(--space-2) var(--space-4);
+  font-size: var(--fs-small);
+  color: var(--text-color);
+  text-decoration: none;
+  cursor: pointer;
+  background: none;
+  border: none;
+  width: 100%;
+  text-align: left;
+
+  &:hover {
+    background: var(--slate-100);
+    color: var(--blue-600);
+  }
+}
+
+/* ----------End Sub band - the light area below the title-------- */
+
+/* ----------Main Content-------- */
+.landingContent {
+  flex: 1;
+  padding: var(--space-5) var(--space-5);
+
+  @include r.device(md) {
+    padding: var(--space-6) var(--space-8);
+  }
+}
+
+.contentInner {
+  max-width: 900px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.fundingItemWithBorder {
+  margin-bottom: var(--space-5);
+  padding-bottom: var(--space-5);
+  border-bottom: 1px solid var(--gray-100);
+}
+
+/* Dmp Section cards - title lives inside the card, no separate header bar */
+.dmpSection {
+  background: var(--bg-white, white);
+  border: none;
+  border-radius: var(--card-border-radius);
+  padding: var(--card-padding, var(--space-5));
+  box-shadow: var(--card-shadow);
+}
+
+.dmpSectionTitle {
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-bold);
+  color: var(--heading-color);
+  margin: 0 0 var(--space-3);
+}
+
+/* Data list (key-value pairs) */
+.dataList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.dataItem {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+
+  @include r.device(sm) {
+    flex-direction: row;
+    gap: var(--space-4);
+  }
+}
+
+.dataLabel {
+  font-weight: var(--fw-semibold);
+  color: var(--text-color);
+  font-size: var(--fs-small);
+  flex-shrink: 0;
+  min-width: 180px;
+}
+
+.dataValue {
+  color: var(--text-color);
+  font-size: var(--fs-small);
+}
+
+/* Contributors - compact list, one row per person */
+.contributorsList {
+  display: flex;
+  flex-direction: column;
+}
+
+.contributorRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-2);
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--gray-75);
+  font-size: var(--fs-small);
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.contributorName {
+  font-weight: var(--fw-semibold);
+  color: var(--heading-color);
+  font-size: var(--fs-small);
+}
+
+.contributorPrimaryBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px var(--space-2);
+  background: var(--blue-100);
+  color: var(--blue-600);
+  border-radius: var(--border-radius-xl);
+  font-size: var(--fs-xsmall);
+  font-weight: var(--fw-semibold);
+}
+
+.contributorMeta {
+  color: var(--gray-500);
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  align-items: center;
+
+  a {
+    color: var(--link-color);
+  }
+}
+
+/* Research output item title (reused for planned-outputs section) */
+.itemTitle {
+  font-weight: var(--fw-semibold);
+  color: var(--heading-color);
+  font-size: var(--fs-base);
+  margin: 0 0 var(--space-1);
+}
+
+/* Citation block */
+.citationBlock {
+  background: var(--slate-100);
+  border: 1px solid var(--gray-100);
+  border-radius: var(--border-radius-md);
+  padding: var(--space-4);
+  font-size: var(--fs-small);
+  line-height: var(--lh-loose);// Gives citation extra vertical room for readability
+  color: var(--text-color);
+}
+
+.citationLabel {
+  font-size: var(--fs-small);
+  margin-bottom: var(--space-2);
+}
+
+.citationDmpIdInfo {
+  font-size: var(--fs-small);
+  margin-top: var(--space-4);
+  margin-bottom: var(--space-2);
+}
+
+/* Status badge */
+.statusBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px var(--space-2);
+  border-radius: var(--border-radius-xl);
+  font-size: var(--fs-xsmall);
+  font-weight: var(--fw-semibold);
+  text-transform: capitalize;
+
+  &Granted {
+    background: var(--messaging-success);
+    color: var(--green-600);
+  }
+
+  &Denied {
+    background: var(--messaging-error);
+    color: var(--red-400);
+  }
+
+  &Planned {
+    background: var(--messaging-info);
+    color: var(--blue-600);
+  }
+}
+
+/* Works list */
+.worksCategory {
+  margin-bottom: var(--space-4);
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.worksCategoryTitle {
+  font-size: var(--fs-base);
+  font-weight: var(--fw-semibold);
+  color: var(--heading-color);
+  margin: 0 0 var(--space-2);
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--gray-100);
+  text-transform: capitalize;
+}
+
+.workItem {
+  padding: var(--space-2) 0;
+  font-size: var(--fs-small);
+  color: var(--text-color);
+  border-bottom: 1px solid var(--gray-75);
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  p {
+    margin: 0;
+  }
+
+  a {
+    color: var(--link-color);
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+.outputItem {
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.outputItemWithBorder {
+  margin-bottom: var(--space-5);
+  padding-bottom: var(--space-5);
+  border-bottom: 1px solid var(--gray-100);
+}
+
+/* Loading / empty state */
+.loadingState {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: var(--space-10);
+  color: var(--gray-400);
+  font-size: var(--fs-base);
+}
+
+.notFound {
+  text-align: center;
+  padding: var(--space-10);
+
+  h2 {
+    color: var(--heading-color);
+    margin-bottom: var(--space-3);
+  }
+
+  p {
+    color: var(--gray-500);
+  }
+}
+
+/* ----------Footer-------- */
+.landingFooter {
+  background: var(--slate-100);
+  border-top: 1px solid var(--gray-100);
+  padding: var(--space-5) var(--space-5);
+
+  @include r.device(md) {
+    padding: var(--space-5) var(--space-8);
+  }
+}
+
+.landingFooterInner {
+  max-width: 900px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  text-align: center;
+  font-size: var(--fs-small);
+  color: var(--gray-900);
+
+  a {
+    color: var(--link-color);
+    text-decoration: none;
+    font-weight: var(--fw-semibold);
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  p {
+    margin: 0;
+  }
+}

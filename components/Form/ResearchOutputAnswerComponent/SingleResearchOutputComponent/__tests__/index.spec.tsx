@@ -480,7 +480,29 @@ const mockColumns: (typeof DefaultResearchOutputTableQuestion)["columns"] = [
       meta: { schemaVersion: "1.0" },
       attributes: {}
     }
+  },
+  {
+    heading: "Custom Field",
+    help: "Explanation of what we expect the user to enter.",
+    content: {
+      meta: {
+        schemaVersion: "1.0"
+      },
+      type: "text",
+      attributes: {
+        help: "Custom Field Help Text",
+        label: "Custom Field",
+        pattern: "^.+$",
+        maxLength: 120,
+        minLength: 0,
+        defaultValue: "Custom Field Default Value"
+      }
+    },
+    enabled: true,
+    required: false,
+    commonStandardId: "custom"
   }
+
 ] as any as (typeof DefaultResearchOutputTableQuestion)["columns"];
 
 const createMockRow = (
@@ -493,7 +515,8 @@ const createMockRow = (
   licenses: any[] = [],
   accessLevel: string = '',
   releaseDate: string = '',
-  byteSize: { value: number, context: string } = { value: 0, context: 'kb' }
+  byteSize: { value: number, context: string } = { value: 0, context: 'kb' },
+  customField: string = ''
 ): ResearchOutputTable => ({
   columns: [
     { type: 'text', meta: { schemaVersion: '1.0' }, answer: title, commonStandardId: 'title' },
@@ -511,6 +534,7 @@ const createMockRow = (
     { type: 'radioButtons', meta: { schemaVersion: '1.0' }, answer: accessLevel, commonStandardId: 'data_access' },
     { type: 'date', meta: { schemaVersion: '1.0' }, answer: releaseDate, commonStandardId: 'issued' },
     { type: 'numberWithContext', meta: { schemaVersion: '1.0' }, answer: byteSize, commonStandardId: 'byte_size' },
+    { type: 'text', meta: { schemaVersion: '1.0' }, answer: customField, commonStandardId: 'custom' },
   ],
 });
 
@@ -1207,6 +1231,7 @@ describe('SingleResearchOutputComponent', () => {
             answer: { value: 0, context: "" },
             commonStandardId: "byte_size",
           },
+          { type: "text", meta: { schemaVersion: "1.0" }, answer: "", commonStandardId: "custom" },
         ],
       };
 
@@ -1257,6 +1282,7 @@ describe('SingleResearchOutputComponent', () => {
             answer: { value: 0, context: "" },
             commonStandardId: "byte_size",
           },
+          { type: "text", meta: { schemaVersion: "1.0" }, answer: "", commonStandardId: "custom" },
         ],
       };
 

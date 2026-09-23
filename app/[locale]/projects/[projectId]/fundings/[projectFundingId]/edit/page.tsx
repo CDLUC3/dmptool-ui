@@ -92,6 +92,9 @@ const ProjectsProjectFundingEdit = () => {
     funderProjectNumber: ''
   });
 
+  // Track whether the project should be in read-only mode based on the "readOnly" field 
+  // returned from the backend from ProjectDocument query
+  const [isReadOnly, setIsReadOnly] = useState<boolean>(false);
   const [errorMessages, setErrorMessages] = useState<string[]>([]);
 
   // Localization keys
@@ -293,6 +296,7 @@ const ProjectsProjectFundingEdit = () => {
         funderOpportunityNumber: data.projectFunding?.funderOpportunityNumber || '',
         funderProjectNumber: data.projectFunding?.funderProjectNumber || ''
       });
+      setIsReadOnly(data.projectFunding?.project?.readOnly || false);
     }
   }, [data]);
 
@@ -342,6 +346,7 @@ const ProjectsProjectFundingEdit = () => {
               isRequired
               name="fundingStatus"
               items={fundingStatuses}
+              isDisabled={isReadOnly}
               selectClasses={styles.fundingStatusSelect}
               onChange={selected => updateProjectFundingContent('fundingStatus', selected as ProjectFundingStatus)}
               selectedKey={projectFunding.fundingStatus}
@@ -359,6 +364,7 @@ const ProjectsProjectFundingEdit = () => {
               name="grantNumber"
               type="text"
               isRequired={false}
+              disabled={isReadOnly}
               label={EditFunding('labels.grantNumber')}
               value={projectFunding.funderGrantId}
               onChange={(e) => updateProjectFundingContent('funderGrantId', e.target.value)}
@@ -370,6 +376,7 @@ const ProjectsProjectFundingEdit = () => {
               name="projectNumber"
               type="text"
               isRequired={false}
+              disabled={isReadOnly}
               label={EditFunding('labels.projectNumber')}
               value={projectFunding.funderProjectNumber}
               onChange={(e) => updateProjectFundingContent('funderProjectNumber', e.target.value)}
@@ -381,28 +388,34 @@ const ProjectsProjectFundingEdit = () => {
               name="opportunityNumber"
               type="text"
               isRequired={false}
+              disabled={isReadOnly}
               label={EditFunding('labels.opportunity')}
               value={projectFunding.funderOpportunityNumber}
               onChange={(e) => updateProjectFundingContent('funderOpportunityNumber', e.target.value)}
             />
 
-            <div className={styles.buttonsContainer}>
-              <Button type="submit" className="submit-button">{Global('buttons.saveChanges')}</Button>
-              <Button type="button" className="secondary" onPress={handleAddFunding}>{Global('buttons.addAnother')}</Button>
-            </div>
+            {!isReadOnly && (
+              <div className={styles.buttonsContainer}>
+                <Button type="submit" className="submit-button">{Global('buttons.saveChanges')}</Button>
+                <Button type="button" className="secondary" onPress={handleAddFunding}>{Global('buttons.addAnother')}</Button>
+              </div>
+            )}
+
           </Form>
 
-          <div className={styles.deleteWrapper}>
-            <h2>{EditFunding('headings.deleteFunder')}</h2>
-            <p>
-              {EditFunding.rich('para1Delete', {
-                strong: (chunks) => <strong>{chunks}</strong>
-              })}
-            </p>
-            <p>{EditFunding('para2Delete')}</p>
+          {!isReadOnly && (
+            <div className={styles.deleteWrapper}>
+              <h2>{EditFunding('headings.deleteFunder')}</h2>
+              <p>
+                {EditFunding.rich('para1Delete', {
+                  strong: (chunks) => <strong>{chunks}</strong>
+                })}
+              </p>
+              <p>{EditFunding('para2Delete')}</p>
 
-            <Button type="button" className="danger" onPress={handleDeleteFunding}>{EditFunding('buttons.removeFunder')}</Button>
-          </div>
+              <Button type="button" className="danger" onPress={handleDeleteFunding}>{EditFunding('buttons.removeFunder')}</Button>
+            </div>
+          )}
         </ContentContainer>
       </LayoutContainer>
     </>

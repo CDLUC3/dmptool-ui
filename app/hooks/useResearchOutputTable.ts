@@ -62,7 +62,7 @@ const standardKeys = new Set([
 ]);
 
 // Custom hook for research output table
-export const useResearchOutputTable = ({ setHasUnsavedChanges, announce, initialData }: { setHasUnsavedChanges: React.Dispatch<React.SetStateAction<boolean>>, announce: (message: string) => void, initialData?: AnyParsedQuestion }) => {
+export const useResearchOutputTable = ({ markDirty, announce, initialData }: { markDirty: () => void, announce: (message: string) => void, initialData?: AnyParsedQuestion }) => {
 
   // Query request for all licenses
   const { data: licensesData } = useQuery(LicensesDocument, {
@@ -305,7 +305,7 @@ export const useResearchOutputTable = ({ setHasUnsavedChanges, announce, initial
       }
     }
 
-    setHasUnsavedChanges(true);
+    markDirty();
   };
 
   // Handle updates to MetaDataStandards component
@@ -327,7 +327,7 @@ export const useResearchOutputTable = ({ setHasUnsavedChanges, announce, initial
         announce(QuestionAdd('researchOutput.announcements.metadataStandardRemoved') || 'Metadata standard removed');
       }
     }
-    setHasUnsavedChanges(true);
+    markDirty();
   };
 
   // Shared function to update any property in standardFields, and handle auto-enabling logic for certain properties
@@ -381,7 +381,7 @@ export const useResearchOutputTable = ({ setHasUnsavedChanges, announce, initial
       })
     );
 
-    setHasUnsavedChanges(true);
+    markDirty();
   };
 
   // Handler for standard field checkbox changes (for enabled property)
@@ -598,7 +598,7 @@ export const useResearchOutputTable = ({ setHasUnsavedChanges, announce, initial
 
     setAdditionalFields(prev => [...prev, newField]);
     setExpandedFields(prev => [...prev, newId]); // Auto-expand for editing
-    setHasUnsavedChanges(true);
+    markDirty();
     announce(QuestionAdd('researchOutput.announcements.fieldAdded') || 'Field added');
   };
 
@@ -606,7 +606,7 @@ export const useResearchOutputTable = ({ setHasUnsavedChanges, announce, initial
   const handleDeleteAdditionalField = (fieldId: string) => {
     setAdditionalFields(prev => prev.filter(field => field.id !== fieldId));
     setExpandedFields(prev => prev.filter(id => id !== fieldId));
-    setHasUnsavedChanges(true);
+    markDirty();
     announce(QuestionAdd('researchOutput.announcements.fieldDeleted') || 'Field deleted');
   };
 
@@ -670,7 +670,7 @@ export const useResearchOutputTable = ({ setHasUnsavedChanges, announce, initial
         return { ...field, [propertyName]: value };
       })
     );
-    setHasUnsavedChanges(true);
+    markDirty();
   };
 
 
