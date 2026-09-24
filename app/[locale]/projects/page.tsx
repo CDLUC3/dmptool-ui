@@ -34,6 +34,7 @@ import {
 // Hooks
 import { useScrollToTop } from '@/hooks/scrollToTop';
 import { logECS, routePath } from '@/utils/index';
+import { handleApolloError } from '@/utils/index';
 
 import styles from './ProjectsListPage.module.scss';
 
@@ -75,7 +76,11 @@ const ProjectsListPage: React.FC = () => {
   const Project = useTranslations('ProjectsListPage');
   const ProjectOverview = useTranslations('ProjectOverview');
 
+
   const recordProjectsFetchFailure = (context: string, err?: unknown) => {
+    const { wasRealError } = handleApolloError(err, `ProjectsListPage.${context}`);
+    if (!wasRealError) return; // AbortError: superseded request, ignore silently
+
     setIsPageLoading(false);
     setFetchFailed(true);
     const message = Project('messages.errors.errorRetrievingProjects');

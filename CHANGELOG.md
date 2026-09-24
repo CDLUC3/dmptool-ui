@@ -150,6 +150,8 @@
 - Updated `RepoSelectorForAnswer` to wait to query `Re3byUrIsDocument` until we have `preferredReposURIs` because preferred repos don't display even though they eventually do to trigger the display of the "preferred repositories" checkbox [#118]
 
 ## Fixed
+- Fix additional type errors in CommentsDrawer test that was still breaking build, and fixed some type errors in questionTypeHandlers [#380]
+- Fixed broken build due to `type` errors, and `Abort` errors in `/projects` pages so that they don't load with errors [#380]
 - Fixed bug where owner's affiliation was displayed in subheader of landing page, rather than funder of plan [#365]
 - Fixed missing favicon in landing page [#339]
 - Fixed `View as JSON` url on landing page [#339]
