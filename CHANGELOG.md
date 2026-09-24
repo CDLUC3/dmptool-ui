@@ -1,7 +1,16 @@
+## v0.1.1
+
+### Added
+
+### Updated
+
+### Fixed
+
+### Removed
+
+### Chore
+
 ## Added
-- Added `PlanCard` with template and uploaded variants on the project overview, plus styleguide demos [#93]
-- Added plan authoring uploaded-document view with document card, update/replace dialog, and styleguide demo [#93]
-- Added `TriggerQuestionsForQuestion` query [#360]
 - Added missing tests for `PlanAuthoring` components, because the tests were not meeting coverage requirements [#339]
 - Added new `ArchivedPlanView` component that renders different versions, and simplified `DmpLandingPage` to mainly be a wrapper [#339]
 - Added new `useFormatDateWithMonth` to shared date utilities [#339]
@@ -44,11 +53,6 @@
 - Added `UpdateAffiliation` and `AffiliationById` queries [#203]
 
 ## Updated
-- Updated `PlanCard` section progress to prefer required counts (`X of Y required`), falling back to all-question counts (`X of Y`) when none are required [#93]
-- Redesigned `ProjectListItem` and project list pages (`/projects`, `/admin/projects`, `/admin/users/[userId]/projects`) with expandable plan details, skeleton loading, and GraphQL-backed plan and collaborator data
-- Updated `DisplayLogicComponent.tsx` to show condition joiner within condition groups as well as between condition groups [#360]
-- Updated `QuestionEdit` to call `TriggerQuestionsForQuestionDocument` to get the qualifying trigger questions [#360]
-- Updated `useTriggerQuestions` hook to remove currentDisplayOrder since the backend does those calculations before sending data [#360]
 - Updated plan title on landing page to expand across the full width [#339]
 - Updated `DmpLandingPage` to just use the new `PublicPlanVersionByDmpIdDocument` query, which calls on DynamoDB to get the data [#339]
 - Updated `ProjectsProjectFunding` page to display `View` button for funding if in `readOnly` mode [#246]
@@ -149,11 +153,6 @@
 - Updated `RepoSelectorForAnswer` to wait to query `Re3byUrIsDocument` until we have `preferredReposURIs` because preferred repos don't display even though they eventually do to trigger the display of the "preferred repositories" checkbox [#118]
 
 ## Fixed
-- Fix additional type errors in CommentsDrawer test that was still breaking build, and fixed some type errors in questionTypeHandlers [#380]
-- Fixed broken build due to `type` errors, and `Abort` errors in `/projects` pages so that they don't load with errors [#380]
-- Fixed bug where owner's affiliation was displayed in subheader of landing page, rather than funder of plan [#365]
-- Fixed missing favicon in landing page [#339]
-- Fixed `View as JSON` url on landing page [#339]
 - Fixed missing success toasts on Account pages: profile saves now show a toast for all field updates (not only language changes); adding and deleting secondary emails show success toasts when the GraphQL response has no real errors; update password and notifications save actions also show success toasts. Added `emailAddressDeleteSuccess` translations [#306]
 - Temporary fix for the alignment. I added some missing styles to `.cSubheader` in the `SubHeader` component, because the mobile styles for that just weren't being picked up by the browser. There might be another root cause, but this is a temporary fix [#340]
 - NextJS is using `Turbopack` css handling by default since `v16`, and we want to continue using `webpack` due to some known gaps. So updated the `build` script in `package.json` to pin to `--webpack` by default to fix inconsistencies between running locally and on other servers [#340]
@@ -171,13 +170,12 @@
 - Fixed issue with Feedback Notification headers displaying for any collaborator on the Plan Overview, Section and Question pages. It should only display to Org Admins and Super Admins. Added shared isOrgAdmin hook for pages. [#249]
 
 ## Chore
-- Updated `versioning.yml` to just copy `package.json` and `CHANGELOG.md` back to `development` branch [#341]
-- Updated `next` to `v16.3.3`, `js-yaml` to `v4.3.2` and `sharp` to `v0.35.4` due to high vulnerabilities [#341]
-- Updated `@types/react` to `v19.2.18` and `@types/react-dom` `19.2.5` and fixed new type errors resulting from that update [#333]
-- Updated version of `typescript` to `v6.0.3` and `@typescript-eslint/eslint-plugin` to `v8.68.0` and `@typescript-eslint/parser` to `v8.68.0` [#333]
 - Updated `versioning.yml` to create PRs to merge updated `package.json` and `CHANGELOG.md` into `stage` and `development` [#338]
 - Small tweak in CHANGELOG.md to test another merge to test automated versioning.
 - Updated `brace-expansion` to `v5.0.9`, `js-yaml` to `v4.3.1`, and `domPurify` to `v3.4.13` to address high vulnerabilities [#337]
+- Updated `versioning.yml` workflow file to just copy the exact file merged from `main` back to `stage` and `development` for PR.
+- Updated the `versioning.yml` github workflow file on `stage` to test that it works on merge to `main`.
+- Small tweak in CHANGELOG.md to test another merge to test automated versioning.
 - Updated `@types/react` to `v18.3.31`, `react` to `v19.2.8`, `react-dom` to `v19.2.8`, `postcss` to `v8.5.25`, `qs` to `v6.15.3`, `@apollo/client` to `v4.2.9`, `@types/node` to `v24.13.3`, `systeminformation` to `v5.31.17`, `dompurify` to `v3.4.12`, `eslint` to `v9.39.5`, `sanitize-html` to `v2.17.6`, `next` to `v16.2.12`. Also updated `jest.config.ts` to accommodate the recent update in `sanitize-html` and its dependencies to be `ESM-only`, so we had to specify that `jest` transform them to `Common JS` [#331]
 - Updated `brace-expansion` to `v5.0.8` to address high vulnerability [#303]
 - Updated `sharp` override to `v0.35.0` and `dompurify` to `v3.4.12` to address vulnerabilities [#304]
@@ -422,6 +420,7 @@
 - Updated `jws` to `3.2.3` due to vulnerability
 - Updated `next` version to `15.5.7` due to vulnerability
 - Ran `npm audit fix` to address `glob` vulnerability and `js-yaml` vulnerability
+- Updated `renovate` and `dependabot` configs for comparison purposes
 ====================================================================================================================================
 ## All changes above the line happened after the merge to the main branch on Nov 3, 2025
 ### Added
@@ -483,6 +482,7 @@
 - `small` button CSS class.
 - Added curl to the AWS Dockerfile for session manager access
 - Added bash to the AWS Dockerfile for session manager access
+- Added `CONTRIBUTING.md` and `CODE_OF_CONDUCT.md` files to the repo
 - Added shared `dmptool-network` to the `docker-compose.yaml` file to allow nextJS server side actions to be able to reach the local apollo server
 - Static Feedback page with translation and text [#750]
 - Added `RelatedWorks` page and associated components `RelatedWorksList`, `RelatedWorksListItem`, `ExpandableNameList` and `LinkFilter`. [#672][#673]
@@ -508,7 +508,6 @@
 - Created the static page for the org admin user dashboard. [#782]
 
 ### Updated
-
 - Removed some duplicate text from `template/[templateId]/access` under `External people` [#482]
 - Updated description on `template/[templateId]/access` and visibility text on template publish modal [#482]
 - Updated `/template/[templateId]` to include the `View history` link in the header description [#430]
@@ -526,6 +525,9 @@
 - Updated language used in RelatedWorks UI, moved accept and reject buttons into the cards out of the expand section and changed order of accept and reject buttons [#799]
 - Hooked up the `ProjectsProjectCollaboration` page. Added new `server actions` to handle access level changes, revoking collaborator and resending invite [#381]
 - Optimized the `graphqlServerActionHandler` so that we can normalize errors returned and simplify client-side handling [#381]
+=======
+- Updated the `CODE_OF_CONDUCT.md` to reflect CDLUC3's Code of Conduct
+- Updated the `CONTRIBUTING.md` to include steps for contributing to the repo
 - Updated the shared`RadioGroupComponent` and `CheckboxGroupComponent` components to be more like a wrapper to reduce duplicate of code and make it more flexible [#743]
 - Project over is now using sidebar to allow for collaboration [#750]
 - Sidebar is now using global styling rather than css modules [#750]
@@ -620,8 +622,12 @@
 - Deleted `__mocks__/mockQuestionTypes.json` as it is no longer needed [#322](https://github.com/CDLUC3/dmsp_backend_prototype/issues/322)
 
 ### Chore
+<<<<<<< HEAD
 - Fixed type error in `FormSelect` due to a change in `@types/react` versions when merging `stage` into `development`
 - Addressed `fast-redact` but upgrading `pino` version
+=======
+- Added `renovate.json` config file in order to get automatic PRs for dependency updates
+>>>>>>> main
 - Upgraded to `NextJS v15.5.2` to remove vulnerability and added `next-env.d.ts` to the ignore list for linting. [#751]
 
 ====================================================================================================================================
