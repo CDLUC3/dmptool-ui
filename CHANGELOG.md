@@ -1,3 +1,15 @@
+## v0.1.1
+
+### Added
+
+### Updated
+
+### Fixed
+
+### Removed
+
+### Chore
+
 ## Added
 - Added missing tests for `PlanAuthoring` components, because the tests were not meeting coverage requirements [#339]
 - Added new `ArchivedPlanView` component that renders different versions, and simplified `DmpLandingPage` to mainly be a wrapper [#339]
