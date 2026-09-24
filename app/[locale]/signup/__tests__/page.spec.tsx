@@ -420,12 +420,12 @@ describe('SignUpPage', () => {
     });
     fireEvent.click(screen.getByTestId("continue"));
 
-    // Nothing typed yet — every requirement should be unmet
-    expect(screen.getByTestId("requirement-minLength")).toHaveClass('unmet');
-    expect(screen.getByTestId("requirement-hasUppercase")).toHaveClass('unmet');
-    expect(screen.getByTestId("requirement-hasLowercase")).toHaveClass('unmet');
-    expect(screen.getByTestId("requirement-hasNumber")).toHaveClass('unmet');
-    expect(screen.getByTestId("requirement-hasSpecialChar")).toHaveClass('unmet');
+    // Nothing typed yet — requirements stay pending, not failed
+    expect(screen.getByTestId("requirement-minLength")).toHaveClass('pending');
+    expect(screen.getByTestId("requirement-hasUppercase")).toHaveClass('pending');
+    expect(screen.getByTestId("requirement-hasLowercase")).toHaveClass('pending');
+    expect(screen.getByTestId("requirement-hasNumber")).toHaveClass('pending');
+    expect(screen.getByTestId("requirement-hasSpecialChar")).toHaveClass('pending');
 
     // Type a password that satisfies every rule
     fireEvent.change(screen.getByTestId("pass"), {
