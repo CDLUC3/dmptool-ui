@@ -149,29 +149,40 @@ export const DEMO_CURRENT_USER_NAME = "Style Guide User";
 const DEMO_AMELIA_ID = 102;
 const DEMO_JENNIFER_ID = 103;
 
+function demoComment(
+  partial: Omit<PlanComment, "authorId" | "authorName" | "user"> & {
+    user: PlanComment["user"] & object;
+  }
+): PlanComment {
+  const { user } = partial;
+  return {
+    ...partial,
+    authorId: user.id,
+    authorName: `${user.givenName} ${user.surName}`.trim(),
+    user,
+  };
+}
+
 const sampleComments: PlanComment[] = [
-  {
+  demoComment({
     id: 1,
-    authorId: DEMO_AMELIA_ID,
-    authorName: "Amelia Snow",
+    user: { id: DEMO_AMELIA_ID, givenName: "Amelia", surName: "Snow" },
     createdLabel: "2 days ago",
     text: "Please quantify the expected volume for UAV imagery.",
-  },
-  {
+  }),
+  demoComment({
     id: 2,
-    authorId: DEMO_JENNIFER_ID,
-    authorName: "Jennifer Frost",
+    user: { id: DEMO_JENNIFER_ID, givenName: "Jennifer", surName: "Frost" },
     createdLabel: "1 day ago",
     text: "Added approximate gigabyte ranges for each product type.",
     isFeedback: true,
-  },
-  {
+  }),
+  demoComment({
     id: 3,
-    authorId: DEMO_CURRENT_USER_ID,
-    authorName: DEMO_CURRENT_USER_NAME,
+    user: { id: DEMO_CURRENT_USER_ID, givenName: "Style Guide", surName: "User" },
     createdLabel: "4 hours ago",
     text: "Looks good — please also mention the processing pipeline.",
-  },
+  }),
 ];
 
 function makeQuestion(
@@ -603,13 +614,12 @@ export function createPlanAuthoringDemo(): PlanAuthoringModel {
           answerJson: null,
           hasAnswer: false,
           comments: [
-            {
+            demoComment({
               id: 11,
-              authorId: DEMO_AMELIA_ID,
-              authorName: "Amelia Snow",
+              user: { id: DEMO_AMELIA_ID, givenName: "Amelia", surName: "Snow" },
               createdLabel: "3 days ago",
               text: "Can we estimate seasonal UAV volume separately?",
-            },
+            }),
           ],
           displayOrder: 2,
         }),
@@ -648,14 +658,13 @@ export function createPlanAuthoringDemo(): PlanAuthoringModel {
           hasAnswer: true,
           guidanceSources: richGuidanceCatalog,
           comments: [
-            {
+            demoComment({
               id: 21,
-              authorId: DEMO_JENNIFER_ID,
-              authorName: "Jennifer Frost",
+              user: { id: DEMO_JENNIFER_ID, givenName: "Jennifer", surName: "Frost" },
               createdLabel: "5 hours ago",
               text: "Please confirm Zenodo quotas cover the UAV mosaic volume.",
               isFeedback: true,
-            },
+            }),
           ],
           displayOrder: 4,
         }),
@@ -919,14 +928,13 @@ export function createPlanAuthoringDemo(): PlanAuthoringModel {
           hasAnswer: true,
           guidanceSources: richGuidanceCatalog,
           comments: [
-            {
+            demoComment({
               id: 21,
-              authorId: DEMO_JENNIFER_ID,
-              authorName: "Jennifer Frost",
+              user: { id: DEMO_JENNIFER_ID, givenName: "Jennifer", surName: "Frost" },
               createdLabel: "5 days ago",
               text: "CC BY keeps us compatible with the repository default.",
               isFeedback: true,
-            },
+            }),
           ],
           displayOrder: 1,
         }),
@@ -1020,13 +1028,12 @@ export function createPlanAuthoringDemo(): PlanAuthoringModel {
           answerJson: null,
           hasAnswer: false,
           comments: [
-            {
+            demoComment({
               id: 31,
-              authorId: DEMO_AMELIA_ID,
-              authorName: "Amelia Snow",
+              user: { id: DEMO_AMELIA_ID, givenName: "Amelia", surName: "Snow" },
               createdLabel: "6 hours ago",
               text: "IT can provide the standard DR statement for campus NAS.",
-            },
+            }),
           ],
           displayOrder: 3,
         }),
@@ -1178,13 +1185,12 @@ export function createPlanAuthoringDemo(): PlanAuthoringModel {
           answerJson: null,
           hasAnswer: false,
           comments: [
-            {
+            demoComment({
               id: 41,
-              authorId: DEMO_AMELIA_ID,
-              authorName: "Amelia Snow",
+              user: { id: DEMO_AMELIA_ID, givenName: "Amelia", surName: "Snow" },
               createdLabel: "1 day ago",
               text: "We should reference the cruise-report QA checklist here.",
-            },
+            }),
           ],
           displayOrder: 2,
         }),
@@ -1285,14 +1291,13 @@ export function createPlanAuthoringDemo(): PlanAuthoringModel {
           hasAnswer: true,
           guidanceSources: richGuidanceCatalog,
           comments: [
-            {
+            demoComment({
               id: 51,
-              authorId: DEMO_JENNIFER_ID,
-              authorName: "Jennifer Frost",
+              user: { id: DEMO_JENNIFER_ID, givenName: "Jennifer", surName: "Frost" },
               createdLabel: "2 weeks ago",
               text: "Arctic Data Center is required for NSF polar awards.",
               isFeedback: true,
-            },
+            }),
           ],
           displayOrder: 1,
         }),

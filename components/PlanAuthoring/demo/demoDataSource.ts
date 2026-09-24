@@ -153,6 +153,11 @@ export function createPlanAuthoringDemoDataSource(
         id: Date.now(),
         authorId: model.currentUserId,
         authorName: model.currentUserName,
+        user: {
+          id: model.currentUserId,
+          givenName: model.currentUserName,
+          surName: "",
+        },
         createdLabel: "Just now",
         text,
       };

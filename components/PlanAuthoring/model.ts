@@ -40,15 +40,21 @@ export interface PlanGuidanceOrgOption {
   orgURI: string;
 }
 
+
+export interface PlanCommentUser {
+  id: number;
+  givenName: string;
+  surName: string;
+}
+
 export interface PlanComment {
   id: number;
-  /** Author user id — compared to currentUserId for edit/delete (mirrors MergedComment.user.id). */
   authorId: number;
+  user?: PlanCommentUser;
   authorName: string;
   createdLabel: string;
   text: string;
   isFeedback?: boolean;
-  /** True when modified differs from created (mirrors CommentList edited indicator). */
   isEdited?: boolean;
 }
 

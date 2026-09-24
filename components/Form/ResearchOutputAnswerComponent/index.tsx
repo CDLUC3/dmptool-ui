@@ -1,8 +1,9 @@
 'use client'
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Button } from "react-aria-components";
+import { Button, DialogTrigger } from "react-aria-components";
 import { Link } from "@/i18n/routing";
+import { ModalOverlayComponent } from "@/components/ModalOverlayComponent";
 import {
   ResearchOutputTableQuestionType
 } from '@dmptool/types';
@@ -86,25 +87,19 @@ const ResearchOutputAnswerComponent: React.FC<ResearchOutputAnswerComponentProps
     setIsAddingNew(false); // Mark as editing existing
   }, []);
 
-  // Handle delete
+  // Handle delete after the confirmation dialog
   const handleDelete = useCallback(async (index: number) => {
-    const msg = t('messages.areYouSureYouWantToDelete');
-    if (confirm(msg)) {
-      // Calculate the new rows after deletion
-      const updatedRows = rows.filter((_, i) => i !== index);
-      setRows(updatedRows);
+    const updatedRows = rows.filter((_, i) => i !== index);
+    setRows(updatedRows);
 
-      // If we were editing this row, go back to list view
-      if (editingRowIndex === index) {
-        setEditingRowIndex(null);
-      }
-      // Trigger parent page save if onSave callback exists
-      if (onSave) {
-        await onSave(updatedRows, 'delete');
-        scrollToElement('.ro-form-wrapper');
-      }
+    if (editingRowIndex === index) {
+      setEditingRowIndex(null);
     }
-  }, [editingRowIndex, onSave, rows, t]);
+    if (onSave) {
+      await onSave(updatedRows, 'delete');
+      scrollToElement('.ro-form-wrapper');
+    }
+  }, [editingRowIndex, onSave, rows, scrollToElement]);
 
   // Handle done editing
   const handleDoneEditing = useCallback(async () => {
@@ -259,7 +254,7 @@ const ResearchOutputAnswerComponent: React.FC<ResearchOutputAnswerComponentProps
     <div className={`${styles.listView} ro-form-wrapper`}>
       <div className={styles.listHeader}>
         {rowNavigation ? (
-          <Link href={rowNavigation.addHref} className="primary small">
+          <Link href={rowNavigation.addHref} className="react-aria-Button primary small">
             + {t('buttons.addOutput')}
           </Link>
         ) : (
@@ -303,24 +298,33 @@ const ResearchOutputAnswerComponent: React.FC<ResearchOutputAnswerComponentProps
                 {rowNavigation ? (
                   <Link
                     href={rowNavigation.editHref(index)}
-                    className={`${styles.editBtn} small secondary`}
+                    className="react-aria-Button secondary small"
                   >
                     {Global('buttons.edit')}
                   </Link>
                 ) : (
                   <Button
-                    className={`${styles.editBtn} small secondary`}
+                    className="secondary small"
                     onPress={() => handleEdit(index)}
                   >
                     {Global('buttons.edit')}
                   </Button>
                 )}
-                <Button
-                  className={`${styles.deleteBtn} small danger`}
-                  onPress={() => handleDelete(index)}
-                >
-                  {Global('buttons.delete')}
-                </Button>
+                <DialogTrigger>
+                  <Button className="danger small">
+                    {Global('buttons.delete')}
+                  </Button>
+                  <ModalOverlayComponent
+                    heading={t('headings.confirmDelete')}
+                    content={t('messages.areYouSureYouWantToDelete')}
+                    btnSecondaryText={Global('buttons.cancel')}
+                    btnPrimaryText={Global('buttons.delete')}
+                    onPressAction={(_event, close) => {
+                      void handleDelete(index);
+                      close();
+                    }}
+                  />
+                </DialogTrigger>
               </div>
             </li>
           );

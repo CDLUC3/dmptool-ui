@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { NextIntlClientProvider } from 'next-intl';
 import ResearchOutputAnswerComponent from '../index';
@@ -61,6 +61,7 @@ const messages = {
     buttons: {
       edit: 'Edit',
       delete: 'Delete',
+      cancel: 'Cancel',
     },
   },
   QuestionEdit: {
@@ -70,6 +71,7 @@ const messages = {
     headings: {
       addResearchOutput: 'Add Research Output',
       editResearchOutput: 'Edit Research Output',
+      confirmDelete: 'Confirm delete',
     },
     definitions: {
       type: 'Type',
@@ -756,12 +758,7 @@ describe('ResearchOutputAnswerComponent', () => {
   });
 
   describe('Delete Research Output', () => {
-    beforeEach(() => {
-      // Mock window.confirm
-      global.confirm = jest.fn(() => true);
-    });
-
-    it('should delete row when delete button is clicked and confirmed', async () => {
+    it('should delete row when delete is confirmed in the dialog', async () => {
       const mockRows = [
         createMockRow('Dataset 1', 'dataset', []),
         createMockRow('Dataset 2', 'dataset', []),
@@ -775,15 +772,18 @@ describe('ResearchOutputAnswerComponent', () => {
         />
       );
 
-      const deleteButtons = screen.getAllByRole('button', { name: /delete/i });
-      await user.click(deleteButtons[0]);
+      await user.click(screen.getAllByRole('button', { name: /buttons\.delete/i })[0]);
 
-      expect(global.confirm).toHaveBeenCalledWith('messages.areYouSureYouWantToDelete');
+      const dialog = screen.getByRole('alertdialog');
+      expect(within(dialog).getByText('headings.confirmDelete')).toBeInTheDocument();
+      expect(within(dialog).getByText('messages.areYouSureYouWantToDelete')).toBeInTheDocument();
+      expect(mockSetRows).not.toHaveBeenCalled();
+
+      await user.click(within(dialog).getByRole('button', { name: /buttons\.delete/i }));
       expect(mockSetRows).toHaveBeenCalled();
     });
 
     it('should not delete row when delete is cancelled', async () => {
-      global.confirm = jest.fn(() => false);
       const mockRows = [createMockRow('Dataset 1', 'dataset', [])];
 
       renderWithProviders(
@@ -794,15 +794,16 @@ describe('ResearchOutputAnswerComponent', () => {
         />
       );
 
-      const deleteButton = screen.getByRole('button', { name: /delete/i });
-      await user.click(deleteButton);
+      await user.click(screen.getByRole('button', { name: /buttons\.delete/i }));
+      await user.click(
+        within(screen.getByRole('alertdialog')).getByRole('button', { name: /buttons\.cancel/i })
+      );
 
-      expect(global.confirm).toHaveBeenCalled();
       expect(mockSetRows).not.toHaveBeenCalled();
+      expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
     });
 
     it('should call onSave after successful deletion', async () => {
-      global.confirm = jest.fn(() => true);
       const mockRows = [createMockRow('Dataset 1', 'dataset', [])];
 
       renderWithProviders(
@@ -814,8 +815,10 @@ describe('ResearchOutputAnswerComponent', () => {
         />
       );
 
-      const deleteButton = screen.getByRole('button', { name: /delete/i });
-      await user.click(deleteButton);
+      await user.click(screen.getByRole('button', { name: /buttons\.delete/i }));
+      await user.click(
+        within(screen.getByRole('alertdialog')).getByRole('button', { name: /buttons\.delete/i })
+      );
 
       await waitFor(() => {
         expect(mockOnSave).toHaveBeenCalledWith([], 'delete');
@@ -958,7 +961,6 @@ describe('ResearchOutputAnswerComponent', () => {
     });
 
     it('should automatically add new form when all rows are deleted', async () => {
-      global.confirm = jest.fn(() => true);
       const mockRows = [createMockRow('Dataset 1', 'dataset', [])];
       const currentRows = [...mockRows];
 
@@ -977,8 +979,10 @@ describe('ResearchOutputAnswerComponent', () => {
 
       render(<CustomComponent />);
 
-      const deleteButton = screen.getByRole('button', { name: /delete/i });
-      await user.click(deleteButton);
+      await user.click(screen.getByRole('button', { name: /buttons\.delete/i }));
+      await user.click(
+        within(screen.getByRole('alertdialog')).getByRole('button', { name: /buttons\.delete/i })
+      );
 
       await waitFor(() => {
         expect(screen.getByTestId('single-research-output')).toBeInTheDocument();
