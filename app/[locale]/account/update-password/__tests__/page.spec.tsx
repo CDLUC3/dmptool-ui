@@ -191,6 +191,20 @@ describe("UpdatePasswordPage", () => {
     expect(mockToastAdd).not.toHaveBeenCalled();
   });
 
+  it("shows an error when updatePassword returns null", async () => {
+    mockUpdatePassword.mockResolvedValueOnce({
+      data: { updatePassword: null },
+    });
+
+    render(<UpdatePasswordPage />);
+
+    fillPasswordFields();
+    submitForm();
+
+    expect(await screen.findByText("messages.errors.errorUpdatingPassword")).toBeInTheDocument();
+    expect(mockToastAdd).not.toHaveBeenCalled();
+  });
+
   it("shows the thrown error message when the mutation fails", async () => {
     mockUpdatePassword.mockRejectedValueOnce(new Error("network error"));
 

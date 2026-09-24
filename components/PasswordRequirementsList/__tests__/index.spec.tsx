@@ -151,10 +151,10 @@ describe('PasswordRequirementsList', () => {
     );
   });
 
-  it('should mark the requirements list as an aria-live region so updates are announced', () => {
+  it('should not expose the requirements list as a live region', () => {
     render(<PasswordRequirementsList password="" />);
 
-    expect(screen.getByRole('list')).toHaveAttribute('aria-live', 'polite');
+    expect(screen.getByRole('list')).not.toHaveAttribute('aria-live');
   });
 
   it('should update requirement status when the password prop changes', () => {

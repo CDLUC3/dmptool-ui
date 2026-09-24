@@ -35,7 +35,7 @@ const PasswordRequirementsList: React.FC<PasswordRequirementsListProps> = ({ pas
   return (
     <div id="password-requirements">
       <p className={styles.heading}>{t('description')}</p>
-      <ul className={styles.requirementsList} aria-live="polite">
+      <ul className={styles.requirementsList}>
         {requirements.map(({ key, isMet }) => {
           const status = getRequirementStatus(password, isMet);
 

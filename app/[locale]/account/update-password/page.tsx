@@ -134,12 +134,13 @@ const UpdatePasswordPage: React.FC = () => {
         },
       });
 
-      const serverErrors = response.data?.updatePassword?.errors;
-      if (serverErrors?.password || serverErrors?.general) {
+      const updatedUser = response.data?.updatePassword;
+      const serverErrors = updatedUser?.errors;
+      if (!updatedUser || serverErrors?.password || serverErrors?.general) {
         setFieldErrors({
           ...EMPTY_FIELDS,
-          currentPassword: serverErrors.general ? t("messages.errors.incorrectCurrentPassword") : "",
-          newPassword: serverErrors.password || "",
+          currentPassword: serverErrors?.general ? t("messages.errors.incorrectCurrentPassword") : "",
+          newPassword: serverErrors?.password || "",
         });
         setErrors([t("messages.errors.errorUpdatingPassword")]);
         return;
