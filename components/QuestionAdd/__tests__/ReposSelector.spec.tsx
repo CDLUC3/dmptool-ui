@@ -23,6 +23,14 @@ import { ResearchOutputTableColumnsEnum } from "@dmptool/types";
 
 expect.extend(toHaveNoViolations);
 
+jest.mock('@/i18n/routing', () => ({
+  Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
+    <a href={href} {...props}>{children}</a>
+  ),
+  useRouter: jest.fn(() => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn() })),
+  usePathname: jest.fn(() => '/'),
+}));
+
 jest.mock('@/components/Pagination', () => {
   const MockPagination = () => <div data-testid="pagination">Pagination</div>;
   MockPagination.displayName = 'Pagination';

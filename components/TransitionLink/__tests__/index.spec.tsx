@@ -8,9 +8,25 @@ const mockPush = jest.fn()
 const mockStartTransition = jest.fn((cb: () => void) => cb())
 let mockIsPending = false
 
-jest.mock('next/navigation', () => ({
-  useRouter: () => ({ push: mockPush }),
-}))
+jest.mock('@/i18n/routing', () => ({
+  Link: ({
+    children,
+    onClick,
+    ...props
+  }: React.AnchorHTMLAttributes<HTMLAnchorElement>) => (
+    <a
+      {...props}
+      onClick={(e) => {
+        e.preventDefault()
+        onClick?.(e)
+      }}
+    >
+      {children}
+    </a>
+  ),
+  useRouter: jest.fn(() => ({ push: mockPush })),
+  usePathname: jest.fn(() => '/'),
+}));
 
 jest.mock('react', () => ({
   ...jest.requireActual('react'),
@@ -21,26 +37,6 @@ jest.mock('nprogress', () => ({
   start: jest.fn(),
   done: jest.fn(),
 }))
-
-jest.mock('next/link', () =>
-  function MockLink({
-    children,
-    onClick,
-    ...props
-  }: React.AnchorHTMLAttributes<HTMLAnchorElement>) {
-    return (
-      <a
-        {...props}
-        onClick={(e) => {
-          e.preventDefault()
-          onClick?.(e)
-        }}
-      >
-        {children}
-      </a>
-    )
-  }
-)
 
 jest.mock('./transitionLink.module.scss', () => ({
   pending: 'pending',

@@ -5,6 +5,14 @@ import Home from '../page';
 
 expect.extend(toHaveNoViolations);
 
+jest.mock('@/i18n/routing', () => ({
+  Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
+    <a href={href} {...props}>{children}</a>
+  ),
+  useRouter: jest.fn(() => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn() })),
+  usePathname: jest.fn(() => '/'),
+}));
+
 describe('Home Page', () => {
   beforeEach(() => {
     window.scrollTo = jest.fn();
@@ -41,10 +49,10 @@ describe('Home Page', () => {
     const accountSettingsLink = screen.getByText('sections.accountSettings.title').closest('a');
     const adminOverviewLink = screen.getByText('sections.adminOverview.title').closest('a');
 
-    expect(templateManagementLink).toHaveAttribute('href', '/en-US/template');
-    expect(projectManagementLink).toHaveAttribute('href', '/en-US/projects');
-    expect(accountSettingsLink).toHaveAttribute('href', '/en-US/account');
-    expect(adminOverviewLink).toHaveAttribute('href', '/en-US/admin');
+    expect(templateManagementLink).toHaveAttribute('href', '/template');
+    expect(projectManagementLink).toHaveAttribute('href', '/projects');
+    expect(accountSettingsLink).toHaveAttribute('href', '/account');
+    expect(adminOverviewLink).toHaveAttribute('href', '/admin');
   });
 
   it('should pass axe accessibility test', async () => {

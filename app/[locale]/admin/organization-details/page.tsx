@@ -1,9 +1,8 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
-import Link from "next/link";
 import { useTranslations } from "next-intl";
-import { useRouter } from "next/navigation";
+import { useRouter, Link } from "@/i18n/routing";
 import {
   Breadcrumb,
   Breadcrumbs,

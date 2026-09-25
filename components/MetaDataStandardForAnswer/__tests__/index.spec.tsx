@@ -17,9 +17,16 @@ import { MetadataStandardsByUrIsDocument } from '@/generated/graphql';
 const mockPush = jest.fn();
 jest.mock('next/navigation', () => ({
   useParams: jest.fn(() => ({ templateId: '123' })),
+}));
+
+jest.mock('@/i18n/routing', () => ({
+  Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
+    <a href={href} {...props}>{children}</a>
+  ),
   useRouter: jest.fn(() => ({
     push: mockPush,
   })),
+  usePathname: jest.fn(() => '/'),
 }));
 
 // Mock Apollo Client hooks

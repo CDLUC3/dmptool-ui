@@ -2,7 +2,9 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { axe, toHaveNoViolations } from 'jest-axe';
-import { useRouter, useParams, useSearchParams } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
+import { useRouter } from '@/i18n/routing';
+
 import { useLazyQuery, useMutation, useQuery } from '@apollo/client/react';
 import { mockScrollIntoView, mockScrollTo } from '@/__mocks__/common';
 import {
@@ -14,9 +16,15 @@ import ProjectsCreateProjectProjectSearch from '../page';
 expect.extend(toHaveNoViolations);
 
 jest.mock('next/navigation', () => ({
-  useRouter: jest.fn(),
   useParams: jest.fn(),
   useSearchParams: jest.fn(),
+}));
+
+jest.mock('@/i18n/routing', () => ({
+  Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
+    <a href={href} {...props}>{children}</a>
+  ),
+  useRouter: jest.fn(() => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn() })),
 }));
 
 jest.mock('@apollo/client/react', () => ({
@@ -246,7 +254,7 @@ describe('ProjectsCreateProjectProjectSearch', () => {
     });
 
     fireEvent.click(screen.getByRole('button', { name: /buttons.addProjectManually/i }));
-    expect(mockPush).toHaveBeenCalledWith('/en-US/projects/1/fundings/add');
+    expect(mockPush).toHaveBeenCalledWith('/projects/1/fundings/add');
   });
 
   it('should call projectImportMutation with correct variables when a project is selected', async () => {

@@ -7,6 +7,14 @@ import EmailPreferencesPage from "../page";
 
 expect.extend(toHaveNoViolations);
 
+jest.mock('@/i18n/routing', () => ({
+  Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
+    <a href={href} {...props}>{children}</a>
+  ),
+  useRouter: jest.fn(() => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn() })),
+  usePathname: jest.fn(() => '/admin/email-preferences'),
+}));
+
 // Minimal TinyMCE mock to prevent errors in tests
 Object.defineProperty(window, "tinymce", {
   value: {

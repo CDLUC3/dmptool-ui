@@ -6,7 +6,8 @@ import GuidanceGroupEditPage from "../page";
 import logECS from "@/utils/clientLogger";
 import { useTranslations } from "next-intl";
 import { MockedProvider } from "@apollo/client/testing/react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
+import { useRouter } from "@/i18n/routing";
 import { GuidanceGroupDocument } from "@/generated/graphql";
 import { updateGuidanceGroupAction } from "../actions";
 import { useToast } from "@/context/ToastContext";
@@ -17,8 +18,15 @@ expect.extend(toHaveNoViolations);
 
 // Mocks
 jest.mock("next/navigation", () => ({
-  useRouter: jest.fn(),
   useParams: jest.fn(),
+}));
+
+jest.mock('@/i18n/routing', () => ({
+  Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
+    <a href={href} {...props}>{children}</a>
+  ),
+  useRouter: jest.fn(() => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn() })),
+  usePathname: jest.fn(() => '/admin/guidance/groups/1/edit'),
 }));
 
 jest.mock("next-intl", () => ({
@@ -249,7 +257,7 @@ describe("GuidanceGroupEditPage", () => {
     (updateGuidanceGroupAction as jest.Mock).mockResolvedValue({
       success: true,
       data: { id: 2397, errors: {} },
-      redirect: "/en-US/admin/guidance/groups",
+      redirect: "/admin/guidance/groups",
     });
 
     render(
@@ -265,7 +273,7 @@ describe("GuidanceGroupEditPage", () => {
     fireEvent.click(saveButton);
 
     await waitFor(() => {
-      expect(mockRouter.push).toHaveBeenCalledWith("/en-US/admin/guidance/groups");
+      expect(mockRouter.push).toHaveBeenCalledWith("/admin/guidance/groups");
     });
   });
 

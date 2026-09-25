@@ -25,6 +25,10 @@ jest.mock('@/utils/server/logger', () => {
   };
 });
 
+const authHeaders = {
+  Cookie: 'dmspt=test-token',
+  Authorization: 'Bearer test-token',
+};
 import { createLogger } from '@/utils/server/logger';
 const logger = createLogger();
 
@@ -45,8 +49,9 @@ describe('GET /api/download-narrative', () => {
 
     // Setup default cookie store mock
     mockCookieStore = {
-      toString: jest.fn().mockReturnValue('session=abc123; user=test'),
+      get: jest.fn((name: string) => (name === 'dmspt' ? { value: 'test-token' } : undefined)),
     };
+
     (cookies as jest.Mock).mockResolvedValue(mockCookieStore);
 
     // Reset environment variables
@@ -98,7 +103,7 @@ describe('GET /api/download-narrative', () => {
         {
           headers: {
             Accept: 'application/pdf',
-            Cookie: 'session=abc123; user=test',
+            ...authHeaders,
           },
         }
       );
@@ -211,7 +216,7 @@ describe('GET /api/download-narrative', () => {
         {
           headers: {
             Accept: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-            Cookie: 'session=abc123; user=test',
+            ...authHeaders
           },
         }
       );
@@ -240,7 +245,7 @@ describe('GET /api/download-narrative', () => {
         {
           headers: {
             Accept: 'application/pdf',
-            Cookie: 'session=abc123; user=test',
+            ...authHeaders
           },
         }
       );
@@ -350,65 +355,43 @@ describe('GET /api/download-narrative', () => {
   });
 
   describe('Cookie handling', () => {
-    it('should pass cookies to narrative service', async () => {
-      mockCookieStore.toString.mockReturnValue('auth=token123; session=xyz789');
+    const okResponse = () => ({
+      ok: true,
+      blob: jest.fn().mockResolvedValue(new Blob(['content'])),
+      headers: { get: jest.fn(() => null) },
+    });
 
-      const mockBlob = new Blob(['content']);
-      const mockResponse = {
-        ok: true,
-        blob: jest.fn().mockResolvedValue(mockBlob),
-        headers: {
-          get: jest.fn(() => null),
-        },
-      };
 
-      (global.fetch as jest.Mock).mockResolvedValue(mockResponse);
-
-      const request = new NextRequest(
-        'http://localhost:3000/api/download-narrative?dmpId=test-id'
+    it('should forward only the dmspt token as a cookie and bearer token', async () => {
+      // Every other cookie returns a value too, to prove only dmspt is sent
+      mockCookieStore.get.mockImplementation((name: string) =>
+        name === 'dmspt' ? { value: 'token123' } : { value: 'should-not-be-sent' }
       );
+      (global.fetch as jest.Mock).mockResolvedValue(okResponse());
 
-      await GET(request);
+      await GET(new NextRequest('http://localhost:3000/api/download-narrative?dmpId=test-id'));
 
       expect(global.fetch).toHaveBeenCalledWith(
         expect.any(String),
         {
           headers: {
             Accept: 'application/pdf',
-            Cookie: 'auth=token123; session=xyz789',
+            Cookie: 'dmspt=token123',
+            Authorization: 'Bearer token123',
           },
         }
       );
     });
 
-    it('should handle empty cookie string', async () => {
-      mockCookieStore.toString.mockReturnValue('');
+    it('should send no auth headers when there is no dmspt cookie', async () => {
+      mockCookieStore.get.mockReturnValue(undefined);
+      (global.fetch as jest.Mock).mockResolvedValue(okResponse());
 
-      const mockBlob = new Blob(['content']);
-      const mockResponse = {
-        ok: true,
-        blob: jest.fn().mockResolvedValue(mockBlob),
-        headers: {
-          get: jest.fn(() => null),
-        },
-      };
-
-      (global.fetch as jest.Mock).mockResolvedValue(mockResponse);
-
-      const request = new NextRequest(
-        'http://localhost:3000/api/download-narrative?dmpId=test-id'
-      );
-
-      await GET(request);
+      await GET(new NextRequest('http://localhost:3000/api/download-narrative?dmpId=test-id'));
 
       expect(global.fetch).toHaveBeenCalledWith(
         expect.any(String),
-        {
-          headers: {
-            Accept: 'application/pdf',
-            Cookie: '',
-          },
-        }
+        { headers: { Accept: 'application/pdf' } }
       );
     });
   });

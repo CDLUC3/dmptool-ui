@@ -1,6 +1,7 @@
 import React from 'react';
 import { act, render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { useRouter, useParams } from 'next/navigation';
+import { useParams } from 'next/navigation';
+import { useRouter } from '@/i18n/routing';
 import '@testing-library/jest-dom';
 import { MockedProvider } from '@apollo/client/testing/react';
 import { axe, toHaveNoViolations } from 'jest-axe';
@@ -21,6 +22,13 @@ const mockPush = jest.fn();
 const mockToast = {
   add: jest.fn(),
 };
+
+jest.mock('@/i18n/routing', () => ({
+  Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
+    <a href={href} {...props}>{children}</a>
+  ),
+  useRouter: jest.fn(() => ({ push: mockPush, replace: jest.fn(), back: jest.fn() })),
+}));
 
 const mocks = [
   {
@@ -212,7 +220,7 @@ describe('ProjectsProjectFunding', () => {
     fireEvent.click(addButton);
     await waitFor(() => {
       // Should redirect to the Feeback page when modal is closed
-      expect(mockPush).toHaveBeenCalledWith('/en-US/projects/123/fundings/search');
+      expect(mockPush).toHaveBeenCalledWith('/projects/123/fundings/search');
     });
   });
 
@@ -232,7 +240,7 @@ describe('ProjectsProjectFunding', () => {
     });
 
     await waitFor(() => {
-      expect(mockPush).toHaveBeenCalledWith('/en-US/projects/123/fundings/1/edit');
+      expect(mockPush).toHaveBeenCalledWith('/projects/123/fundings/1/edit');
     });
 
   });

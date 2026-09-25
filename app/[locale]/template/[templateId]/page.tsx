@@ -2,7 +2,8 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
+import { useRouter } from "@/i18n/routing";
 import {
   Breadcrumb,
   Breadcrumbs,
@@ -127,6 +128,7 @@ const TemplateEditPage: React.FC = () => {
     refetch,
   } = useQuery(TemplateDocument, {
     variables: { templateId: Number(templateId) },
+    fetchPolicy: "network-only", // Always fetch fresh data for this page
   });
 
   const sortSections = (sections: Section[]) => {

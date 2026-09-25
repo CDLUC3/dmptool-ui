@@ -12,7 +12,8 @@ import {
   SectionDocument,
 } from "@/generated/graphql";
 import { useToast } from "@/context/ToastContext";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
+import { useRouter } from "@/i18n/routing";
 import logECS from "@/utils/clientLogger";
 import TemplateEditPage from "../page";
 import { updateTemplateAction, updateSectionDisplayOrderAction } from "../actions";
@@ -56,7 +57,13 @@ jest.mock("../actions/index", () => ({
 
 jest.mock("next/navigation", () => ({
   useParams: jest.fn(),
-  useRouter: jest.fn(),
+}));
+
+jest.mock('@/i18n/routing', () => ({
+  Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
+    <a href={href} {...props}>{children}</a>
+  ),
+  useRouter: jest.fn(() => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn() })),
 }));
 
 const mockToast = {
@@ -287,7 +294,7 @@ describe("TemplateEditPage", () => {
     expect(lastUpdatedText).toBeInTheDocument();
 
     const viewHistory = screen.getByRole("link", { name: "links.viewHistory" });
-    expect(viewHistory).toHaveAttribute("href", "/en-US/template/123/history");
+    expect(viewHistory).toHaveAttribute("href", "/template/123/history");
 
     // Find all section cards
     const sectionCards = screen.getAllByTestId("section-edit-card");
@@ -725,7 +732,7 @@ describe("TemplateEditPage", () => {
     });
 
     await waitFor(() => {
-      expect(mockUseRouter().push).toHaveBeenCalledWith("/en-US/template");
+      expect(mockUseRouter().push).toHaveBeenCalledWith("/template");
     });
   });
 
@@ -966,7 +973,7 @@ describe("TemplateEditPage", () => {
         "updateTemplate",
         expect.objectContaining({
           error: "templateId is null",
-          url: { path: "/en-US/template/unknown" },
+          url: { path: "/template/unknown" },
         }),
       );
     });

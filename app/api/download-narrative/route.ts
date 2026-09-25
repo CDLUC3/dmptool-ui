@@ -38,29 +38,20 @@ export async function GET(request: NextRequest) {
 
     // Get all cookies to pass in request header
     const cookieStore = await cookies();
-    const cookieString = cookieStore.toString();
 
     // Extract dmspt token from cookies
-    const dmsptMatch = cookieString.match(/dmspt=([^;]+)/);
-    const dmsptToken = dmsptMatch ? dmsptMatch[1] : null;
+    const dmsptToken = cookieStore.get('dmspt')?.value ?? null;
 
     // Build headers for the narrative service request
-    const headers: Record<string, string> = {
-      Accept: acceptHeader,
-      Cookie: cookieString,
-    };
+    const headers: Record<string, string> = { Accept: acceptHeader };
 
+    // If dmspt token exists, add it to the headers
     if (dmsptToken) {
+      headers['Cookie'] = `dmspt=${dmsptToken}`;
       headers['Authorization'] = `Bearer ${dmsptToken}`;
     }
 
-    logger.info({
-      acceptHeader,
-      cookieString,
-      dmsptToken,
-      headers,
-      narrativeUrl: narrativeUrl.toString(),
-    }, 'Making request to narrative service');
+    logger.info({ narrativeUrl: narrativeUrl.toString(), format }, 'Making request to narrative service');
 
     // Fetch from the narrative service
     const response = await fetch(narrativeUrl.toString(), {
@@ -72,7 +63,6 @@ export async function GET(request: NextRequest) {
         status: response.status,
         statusText: response.statusText,
         url: narrativeUrl.toString(),
-        headers,
       }, 'Narrative service returned error');
       return NextResponse.json(
         { error: `Narrative service error: ${response.statusText}` },

@@ -22,7 +22,8 @@ import {
 import { useTriggerQuestions } from '../hooks/useTriggerQuestions';
 
 import { axe, toHaveNoViolations } from 'jest-axe';
-import { useParams, useRouter, useSearchParams } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
+import { useRouter } from '@/i18n/routing';
 import { useToast } from '@/context/ToastContext';
 import logECS from '@/utils/clientLogger';
 import QuestionEdit from '../page';
@@ -210,9 +211,15 @@ jest.mock('@/components/QuestionAdd/InitialAccessLevel', () => ({
 
 jest.mock('next/navigation', () => ({
   useParams: jest.fn(),
-  useRouter: jest.fn(),
   useSearchParams: jest.fn()
 }))
+
+jest.mock('@/i18n/routing', () => ({
+  Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
+    <a href={href} {...props}>{children}</a>
+  ),
+  useRouter: jest.fn(() => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn() })),
+}));
 
 jest.mock('../hooks/useTriggerQuestions', () => ({
   useTriggerQuestions: jest.fn(),
@@ -646,7 +653,7 @@ describe("QuestionEditPage", () => {
     fireEvent.click(changeTypeButton);
 
     // Verify that router redirects to question types page
-    expect(mockRouter.push).toHaveBeenCalledWith('/en-US/template/123/q/new?section_id=67&step=1&questionId=67');
+    expect(mockRouter.push).toHaveBeenCalledWith('/template/123/q/new?section_id=67&step=1&questionId=67');
   })
 
   it('should call the updateQuestionAction when user clicks \'save\' button', async () => {
@@ -1170,7 +1177,7 @@ describe("QuestionEditPage", () => {
         'Parsing error',
         expect.objectContaining({
           error: expect.anything(),
-          url: { path: '/en-US/template/123/q/67' },
+          url: { path: '/template/123/q/67' },
         })
       );
     });
@@ -1328,7 +1335,7 @@ describe("QuestionEditPage", () => {
         'Parsing error',
         expect.objectContaining({
           error: expect.anything(),
-          url: { path: '/en-US/template/123/q/67' },
+          url: { path: '/template/123/q/67' },
         })
       );
     });

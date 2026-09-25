@@ -2,7 +2,8 @@ import React from 'react';
 import { render, screen, fireEvent, within } from '@testing-library/react';
 import { MockedProvider } from '@apollo/client/testing/react';
 import '@testing-library/jest-dom';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
+import { useRouter } from '@/i18n/routing';
 import { axe, toHaveNoViolations } from 'jest-axe';
 expect.extend(toHaveNoViolations);
 
@@ -13,8 +14,15 @@ import { useProjectMemberForm } from '../hooks/useProjectMemberForm';
 // Mock next/navigation
 jest.mock('next/navigation', () => ({
   useParams: jest.fn(),
-  useRouter: jest.fn(),
 }));
+
+jest.mock('@/i18n/routing', () => ({
+  Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
+    <a href={href} {...props}>{children}</a>
+  ),
+  useRouter: jest.fn(() => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn() })),
+}));
+
 
 // Mock the custom hooks
 jest.mock('../hooks/useCollaboratorSearch');

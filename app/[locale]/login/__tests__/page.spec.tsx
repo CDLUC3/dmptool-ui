@@ -4,13 +4,28 @@ import logECS from '@/utils/clientLogger';
 import LoginPage from '../page';
 
 //Need to import this useRouter after the jest.mock is in place
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/i18n/routing';
 import { fetchCsrfToken } from "@/utils/authHelper";
 import { useCsrf } from '@/context/CsrfContext';
+import { routePath } from '@/utils/index';
 
-jest.mock('next/navigation', () => ({
-  useRouter: jest.fn()
+jest.mock('@/i18n/routing', () => ({
+  Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
+    <a href={href} {...props}>{children}</a>
+  ),
+  useRouter: jest.fn(() => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn() })),
+  usePathname: jest.fn(() => '/login'),
 }));
+
+// Login redirects with window.location.assign(), which jsdom doesn't let us mock,
+// so spy on routePath to verify the home route is built for the redirect
+jest.mock('@/utils/index', () => {
+  const actual = jest.requireActual('@/utils/index');
+  return {
+    ...actual,
+    routePath: jest.fn(actual.routePath),
+  };
+});
 
 jest.mock('@/utils/clientLogger', () => ({
   __esModule: true,
@@ -161,7 +176,8 @@ describe('LoginPage', () => {
 
     // Check that user is redirected to home page
     await waitFor(() => {
-      expect(mockUseRouter().push).toHaveBeenCalledWith('/');
+      expect(routePath).toHaveBeenCalledWith('app.home');
+      expect(routePath).toHaveReturnedWith('/');
     });
   });
 
@@ -201,8 +217,9 @@ describe('LoginPage', () => {
 
     // Check that user is redirected to home page
     await waitFor(() => {
-      expect(mockUseRouter().push).toHaveBeenCalledWith('/');
-    })
+      expect(routePath).toHaveBeenCalledWith('app.home');
+      expect(routePath).toHaveReturnedWith('/');
+    });
   });
 
   it('should initially disable submit button after submitting form until response is returned ', async () => {

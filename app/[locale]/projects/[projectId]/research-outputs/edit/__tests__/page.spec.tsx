@@ -7,8 +7,12 @@ import ResearchOutputEdit from '../page';
 
 expect.extend(toHaveNoViolations);
 
-jest.mock('next/navigation', () => ({
-  useRouter: jest.fn(),
+jest.mock('@/i18n/routing', () => ({
+  Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
+    <a href={href} {...props}>{children}</a>
+  ),
+  useRouter: jest.fn(() => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn() })),
+  usePathname: jest.fn(() => '/projects/1/research-outputs/edit'),
 }));
 
 describe('ResearchOutputEdit', () => {

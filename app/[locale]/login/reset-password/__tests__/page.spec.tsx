@@ -2,7 +2,8 @@
 import { act, render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
+import { useRouter } from '@/i18n/routing';
 import { useTranslations } from 'next-intl';
 import { useQuery, useMutation } from '@apollo/client/react';
 import { useToast } from '@/context/ToastContext';
@@ -23,9 +24,9 @@ expect.extend(toHaveNoViolations);
 // ---------------------------------------------------------------------
 
 jest.mock('next/navigation', () => ({
-  useRouter: jest.fn(),
   useSearchParams: jest.fn(),
 }));
+
 
 jest.mock('next-intl', () => ({
   useTranslations: jest.fn(),
@@ -62,6 +63,10 @@ const mockToastAdd = jest.fn();
 const mockResetPasswordMutation = jest.fn<Promise<boolean>, []>();
 const mockUseQuery = useQuery as unknown as jest.Mock;
 const mockUseMutation = useMutation as unknown as jest.Mock;
+
+jest.mock('@/i18n/routing', () => ({
+  useRouter: jest.fn(() => ({ push: mockPush, replace: jest.fn(), back: jest.fn() })),
+}));
 
 const VALID_PASSWORD = 'ValidPass123!';
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { usePathname } from 'next/navigation';
+import { usePathname } from '@/i18n/routing';
 import styles from './leftsidebar.module.scss';
 
 const LeftSidebar: React.FC = () => {

@@ -1,7 +1,7 @@
 import React from 'react';
 import { act, render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { MockedProvider } from '@apollo/client/testing/react';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/i18n/routing';
 import { useToast } from '@/context/ToastContext';
 import { axe, toHaveNoViolations } from 'jest-axe';
 import { AddProjectDocument } from '@/generated/graphql';
@@ -142,8 +142,11 @@ const mocks = [
 
 
 // Mock next/navigation hooks
-jest.mock('next/navigation', () => ({
-  useRouter: jest.fn(),
+jest.mock('@/i18n/routing', () => ({
+  Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
+    <a href={href} {...props}>{children}</a>
+  ),
+  useRouter: jest.fn(() => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn() })),
 }));
 
 jest.mock('@/context/ToastContext', () => ({
@@ -206,7 +209,7 @@ describe('ProjectsCreateProject', () => {
 
     await waitFor(() => {
       expect(mockToast.add).toHaveBeenCalledWith('messages.success', { type: 'success' });
-      expect(mockRouter.push).toHaveBeenCalledWith('/en-US/projects/123/funding-search');
+      expect(mockRouter.push).toHaveBeenCalledWith('/projects/123/funding-search');
     });
   });
 
@@ -230,7 +233,7 @@ describe('ProjectsCreateProject', () => {
 
     await waitFor(() => {
       expect(mockToast.add).toHaveBeenCalledWith('messages.success', { type: 'success' });
-      expect(mockRouter.push).toHaveBeenCalledWith('/en-US/projects/123/funding-search');
+      expect(mockRouter.push).toHaveBeenCalledWith('/projects/123/funding-search');
     });
   });
 

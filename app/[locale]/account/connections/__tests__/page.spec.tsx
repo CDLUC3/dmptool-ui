@@ -9,6 +9,13 @@ jest.mock('@/context/ToastContext', () => ({
   useToast: jest.fn(() => ({ add: jest.fn() }))
 }));
 
+jest.mock('@/i18n/routing', () => ({
+  Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
+    <a href={href} {...props}>{children}</a>
+  ),
+  useRouter: jest.fn(() => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn() })),
+}));
+
 jest.mock('@/components/PageHeader', () => {
   const mockPageHeader = jest.fn(({ children }: { children: ReactNode, title: string }) => (
     <div data-testid="mock-page-wrapper">{children}</div>

@@ -194,25 +194,7 @@ export function routePath(
   name: keyof RoutesMap,
   params: Record<string, string | number> = {},
   query: Record<string, QueryParamValue> = {},
-  locale?: string
 ): string {
-
-  // Default to 'en-US' if no locale is provided
-  if (!locale) {
-    locale = 'en-US'; // Always set a default value
-  }
-
-  // Automatically detect and validate locale from URL if not provided or invalid
-  if (!supportedLocales.includes(locale as SupportedLocale) && typeof window !== 'undefined') {
-    // Only try to detect from URL on client-side, because NextJs also has server-side rendering
-    const segments = window.location.pathname.split('/');
-    const potentialLocale = segments[1];
-    if (supportedLocales.includes(potentialLocale as SupportedLocale)) {
-      locale = potentialLocale;
-    } else {
-      locale = 'en-US'; // explicit fallback
-    }
-  }
 
   // Get the path pattern
   const path_pattern = routes[name];
@@ -248,11 +230,7 @@ export function routePath(
     path += `?${queryString}`;
   }
 
-  if (path === '/') {
-    return `/${locale}`;
-  }
-
-  return `/${locale}${path}`;
+  return path;
 }
 
 // Type to get all available route names for better IDE support
