@@ -25,7 +25,6 @@
   "dependencies": {
     "@apollo/client": "4.2.9",
     "@apollo/client-integration-nextjs": "0.14.5",
-    "@apollo/client-react-streaming": "0.14.5",
     "@dmptool/types": "4.0.0",
     "@elastic/ecs-pino-format": "1.5.0",
     "@fortawesome/fontawesome-svg-core": "6.6.0",
