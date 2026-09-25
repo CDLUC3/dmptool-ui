@@ -1,7 +1,9 @@
 'use client'
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Button } from "react-aria-components";
+import { Button, DialogTrigger } from "react-aria-components";
+import { Link } from "@/i18n/routing";
+import { ModalOverlayComponent } from "@/components/ModalOverlayComponent";
 import {
   ResearchOutputTableQuestionType
 } from '@dmptool/types';
@@ -16,6 +18,11 @@ import { createEmptyResearchOutputRow, getRowDisplayInfo } from '@/utils/researc
 import { useScrollToElement } from './hooks/useScrollToElement';
 import styles from './researchOutputAnswer.module.scss';
 
+export type ResearchOutputRowNavigation = {
+  editHref: (rowIndex: number) => string;
+  addHref: string;
+};
+
 type ResearchOutputAnswerComponentProps = {
   columns: ResearchOutputTableQuestionType['columns'];
   rows: ResearchOutputTable[];
@@ -24,6 +31,8 @@ type ResearchOutputAnswerComponentProps = {
   initialViewMode?: 'list' | 'form'; // Control initial view - 'form' for preview, 'list' for normal use
   isDisabled?: boolean; // Whether the component is in read-only mode (e.g., for preview or if question is disabled)
   onEditingStateChange?: (isEditing: boolean) => void; // Notify parent when entering/leaving single-edit view
+  /** When set, Edit/Add navigate via href and the list never auto-opens the inline form. */
+  rowNavigation?: ResearchOutputRowNavigation;
 };
 
 const ResearchOutputAnswerComponent: React.FC<ResearchOutputAnswerComponentProps> = ({
@@ -34,10 +43,14 @@ const ResearchOutputAnswerComponent: React.FC<ResearchOutputAnswerComponentProps
   initialViewMode = 'list',
   isDisabled = false,
   onEditingStateChange,
+  rowNavigation,
 }) => {
   // State to track which row is being edited (null means showing list view)
-  // If preview mode, start in form view immediately (no flash)
+  // If preview mode, start in form view immediately (no flash). rowNavigation stays list-only.
   const [editingRowIndex, setEditingRowIndex] = useState<number | null>(() => {
+    if (rowNavigation) {
+      return null;
+    }
     if (initialViewMode === 'form') {
       return 0;
     }
@@ -46,7 +59,9 @@ const ResearchOutputAnswerComponent: React.FC<ResearchOutputAnswerComponentProps
   // To track that the page was rendered once
   const hasInitialized = useRef(false);
   // State to track if we're adding a new entry
-  const [isAddingNew, setIsAddingNew] = useState(initialViewMode === 'form');
+  const [isAddingNew, setIsAddingNew] = useState(
+    !rowNavigation && initialViewMode === 'form'
+  );
 
   // Localization
   const Global = useTranslations('Global');
@@ -72,25 +87,19 @@ const ResearchOutputAnswerComponent: React.FC<ResearchOutputAnswerComponentProps
     setIsAddingNew(false); // Mark as editing existing
   }, []);
 
-  // Handle delete
+  // Handle delete after the confirmation dialog
   const handleDelete = useCallback(async (index: number) => {
-    const msg = t('messages.areYouSureYouWantToDelete');
-    if (confirm(msg)) {
-      // Calculate the new rows after deletion
-      const updatedRows = rows.filter((_, i) => i !== index);
-      setRows(updatedRows);
+    const updatedRows = rows.filter((_, i) => i !== index);
+    setRows(updatedRows);
 
-      // If we were editing this row, go back to list view
-      if (editingRowIndex === index) {
-        setEditingRowIndex(null);
-      }
-      // Trigger parent page save if onSave callback exists
-      if (onSave) {
-        await onSave(updatedRows, 'delete');
-        scrollToElement('.ro-form-wrapper');
-      }
+    if (editingRowIndex === index) {
+      setEditingRowIndex(null);
     }
-  }, [editingRowIndex, onSave, rows, t]);
+    if (onSave) {
+      await onSave(updatedRows, 'delete');
+      scrollToElement('.ro-form-wrapper');
+    }
+  }, [editingRowIndex, onSave, rows, scrollToElement]);
 
   // Handle done editing
   const handleDoneEditing = useCallback(async () => {
@@ -149,8 +158,13 @@ const ResearchOutputAnswerComponent: React.FC<ResearchOutputAnswerComponentProps
   }, [editingRowIndex, rows.length]);
 
   // Automatically show form when there are no rows (i.e., first time adding an answer)
-  // Only use delayed effect for normal list mode
+  // Only use delayed effect for normal list mode. Skip when rowNavigation owns Add/Edit.
   useEffect(() => {
+    if (rowNavigation) {
+      hasInitialized.current = true;
+      return;
+    }
+
     if (hasInitialized.current) return;
 
     if (initialViewMode === 'form') {
@@ -182,15 +196,18 @@ const ResearchOutputAnswerComponent: React.FC<ResearchOutputAnswerComponentProps
     }, 50);
 
     return () => clearTimeout(timer);
-  }, [rows.length, editingRowIndex, columns, initialViewMode]);
+  }, [rows.length, editingRowIndex, columns, initialViewMode, rowNavigation]);
 
   // Handle when all items are deleted
   useEffect(() => {
+    if (rowNavigation) {
+      return;
+    }
     // If we've initialized before, rows is now empty, and we're not editing
     if (hasInitialized.current && rows.length === 0 && editingRowIndex === null) {
       handleAddNew();
     }
-  }, [rows.length, editingRowIndex]);
+  }, [rows.length, editingRowIndex, rowNavigation]);
 
   // Notify parent when entering/leaving single-edit view, so that it can
   // hide its own save button, preventing multiple CTAs in the SingleResearchOutputComponent
@@ -236,17 +253,30 @@ const ResearchOutputAnswerComponent: React.FC<ResearchOutputAnswerComponentProps
   return (
     <div className={`${styles.listView} ro-form-wrapper`}>
       <div className={styles.listHeader}>
-        <Button
-          className="primary small"
-          onPress={handleAddNew}
-        >
-          + {t('buttons.addOutput')}
-        </Button>
+        {rowNavigation ? (
+          <Link href={rowNavigation.addHref} className="react-aria-Button primary small">
+            + {t('buttons.addOutput')}
+          </Link>
+        ) : (
+          <Button
+            className="primary small"
+            onPress={handleAddNew}
+          >
+            + {t('buttons.addOutput')}
+          </Button>
+        )}
       </div>
 
       <ul className={styles.outputList}>
         {rows.map((row, index) => {
-          const { title, outputType, repositories } = getRowDisplayInfo(row, columns);
+          const { title, outputType, repositories } = getRowDisplayInfo(
+            row,
+            columns,
+            t('messages.untitledResearchOutput')
+          );
+
+          const editLabel = `${Global('buttons.edit')} ${title}`;
+          const deleteLabel = `${Global('buttons.delete')} ${title}`;
 
           return (
             <li key={index} className={styles.outputItem}>
@@ -272,18 +302,38 @@ const ResearchOutputAnswerComponent: React.FC<ResearchOutputAnswerComponentProps
               </div>
 
               <div className={styles.outputActions}>
-                <Button
-                  className={`${styles.editBtn} small secondary`}
-                  onPress={() => handleEdit(index)}
-                >
-                  {Global('buttons.edit')}
-                </Button>
-                <Button
-                  className={`${styles.deleteBtn} small danger`}
-                  onPress={() => handleDelete(index)}
-                >
-                  {Global('buttons.delete')}
-                </Button>
+                {rowNavigation ? (
+                  <Link
+                    href={rowNavigation.editHref(index)}
+                    className="react-aria-Button secondary small"
+                    aria-label={editLabel}
+                  >
+                    {Global('buttons.edit')}
+                  </Link>
+                ) : (
+                  <Button
+                    className="secondary small"
+                    onPress={() => handleEdit(index)}
+                    aria-label={editLabel}
+                  >
+                    {Global('buttons.edit')}
+                  </Button>
+                )}
+                <DialogTrigger>
+                  <Button className="danger small" aria-label={deleteLabel}>
+                    {Global('buttons.delete')}
+                  </Button>
+                  <ModalOverlayComponent
+                    heading={t('headings.confirmDelete')}
+                    content={`${t('messages.areYouSureYouWantToDelete')} ${title}`}
+                    btnSecondaryText={Global('buttons.cancel')}
+                    btnPrimaryText={Global('buttons.delete')}
+                    onPressAction={(_event, close) => {
+                      void handleDelete(index);
+                      close();
+                    }}
+                  />
+                </DialogTrigger>
               </div>
             </li>
           );

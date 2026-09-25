@@ -988,7 +988,7 @@ const SingleResearchOutputComponent = ({
         <div className={styles.btnContainer}>
           {(!isNewEntry || hasOtherRows) && onCancel && (
             <Button
-              className={`${styles.editBtn} small secondary`}
+              className="secondary small"
               onPress={handleCancelClick}
               isDisabled={isDisabled}
             >

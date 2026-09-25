@@ -33,3 +33,4 @@ export type {
 };
 
 export { default as PlanAuthoring } from "./PlanAuthoringScreen";
+export { default as PlanResearchOutputEditScreen } from "./PlanResearchOutputEditScreen";

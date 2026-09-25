@@ -1,12 +1,19 @@
 "use client";
 
-import React, { useId } from "react";
+import React, { useEffect, useId, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "react-aria-components";
-import { TEXT_AREA_QUESTION_TYPE } from "@/lib/constants";
+import {
+  RESEARCH_OUTPUT_QUESTION_TYPE,
+  TEXT_AREA_QUESTION_TYPE,
+} from "@/lib/constants";
 import { useRenderQuestionField } from "@/components/hooks/useRenderQuestionField";
+import ResearchOutputAnswerComponent, {
+  type ResearchOutputRowNavigation,
+} from "@/components/Form/ResearchOutputAnswerComponent";
 import FormTextArea from "@/components/Form/FormTextArea";
 import SafeHtml from "@/components/SafeHtml";
+import type { ResearchOutputTable } from "@/app/types";
 import type { PlanQuestionDefinition } from "../model";
 import { questionKey } from "../model";
 import {
@@ -15,6 +22,11 @@ import {
   withAdditionalComment,
 } from "../answerUtils";
 import { buildPlanRenderQuestionProps } from "../buildPlanRenderQuestionProps";
+import {
+  buildResearchOutputAnswer,
+  getResearchOutputColumns,
+  getResearchOutputRows,
+} from "../researchOutputAnswer";
 import styles from "./PlanQuestionAnswer.module.scss";
 
 interface PlanQuestionAnswerProps {
@@ -24,6 +36,8 @@ interface PlanQuestionAnswerProps {
   disabled?: boolean;
   onChange: (answerJson: unknown) => void;
   onStartEditing: () => void;
+  onSaveNow?: () => Promise<boolean>;
+  rowNavigation?: ResearchOutputRowNavigation;
   className?: string;
 }
 
@@ -34,6 +48,8 @@ export default function PlanQuestionAnswer({
   disabled = false,
   onChange,
   onStartEditing,
+  onSaveNow,
+  rowNavigation,
   className,
 }: PlanQuestionAnswerProps) {
   const t = useTranslations("PlanAuthoring");
@@ -46,15 +62,21 @@ export default function PlanQuestionAnswer({
   const showAdditionalCommentField =
     question.parsedJson.showCommentField === true;
 
+  const researchOutputColumns = getResearchOutputColumns(question.parsedJson);
+  const isResearchOutput =
+    question.questionType === RESEARCH_OUTPUT_QUESTION_TYPE &&
+    researchOutputColumns !== null;
+
+  const [researchOutputRows, setResearchOutputRows] = useState<
+    ResearchOutputTable[]
+  >(() => getResearchOutputRows(draftAnswer));
+
+  useEffect(() => {
+    setResearchOutputRows(getResearchOutputRows(draftAnswer));
+  }, [draftAnswer]);
+
   // Always call — mode early-return must not violate Rules of Hooks.
-  //
-  // TODO(follow-up PR): researchOutputTable parity via useRenderQuestionField.
-  // Hold local `rows`/`setRows` (seed from draft or createEmptyResearchOutputRow),
-  // pass researchOutputTableAnswerProps with onSave that emits
-  // { type, columnHeadings, answer: rows, meta } like PlanOverviewQuestionPageShared,
-  // then call saveNow. Disable autosave for this type; surface
-  // onEditingStateChange so PlanQuestion can hide its Save button while a row
-  // form is open. Affiliation search needs a similar special case.
+  // Ignore output for researchOutputTable; that type renders below directly.
   const questionField = useRenderQuestionField(
     buildPlanRenderQuestionProps({
       questionType: question.questionType,
@@ -65,6 +87,15 @@ export default function PlanQuestionAnswer({
       onChange,
     })
   );
+
+  const persistResearchOutputRows = async (rows: ResearchOutputTable[]) => {
+    setResearchOutputRows(rows);
+    const answerJson = buildResearchOutputAnswer(question.parsedJson, rows);
+    onChange(answerJson);
+    if (onSaveNow) {
+      await onSaveNow();
+    }
+  };
 
   if (mode === "view") {
     return (
@@ -96,7 +127,18 @@ export default function PlanQuestionAnswer({
 
   return (
     <div className={[styles.answerEditor, className].filter(Boolean).join(" ")}>
-      {questionField}
+      {isResearchOutput && researchOutputColumns ? (
+        <ResearchOutputAnswerComponent
+          columns={researchOutputColumns}
+          rows={researchOutputRows}
+          setRows={setResearchOutputRows}
+          onSave={persistResearchOutputRows}
+          isDisabled={disabled}
+          rowNavigation={rowNavigation}
+        />
+      ) : (
+        questionField
+      )}
       {showAdditionalCommentField ? (
         <FormTextArea
           name="additionalComment"

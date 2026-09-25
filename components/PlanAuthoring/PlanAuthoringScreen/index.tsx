@@ -11,11 +11,13 @@ import {
   LayoutWithPanel,
   SidebarPanel,
 } from "@/components/Container";
+import type { ResearchOutputRowNavigation } from "@/components/Form/ResearchOutputAnswerComponent";
 import type { PlanAuthoringDataSource } from "../dataSource";
 import type {
   PlanAuthoringModel,
   PlanAuthoringVariant,
   PlanDocument,
+  PlanQuestionDefinition,
 } from "../model";
 import {
   collectLockedGuidanceOrgIds,
@@ -39,6 +41,9 @@ interface PlanAuthoringProps {
   variant?: PlanAuthoringVariant;
   planDocument?: PlanDocument;
   idPrefix?: string;
+  getResearchOutputRowNavigation?: (
+    question: PlanQuestionDefinition
+  ) => ResearchOutputRowNavigation | undefined;
 }
 
 function fileTypeFromName(fileName: string): string {
@@ -51,6 +56,7 @@ export default function PlanAuthoring({
   variant = "questions",
   planDocument: initialPlanDocument,
   idPrefix = "plan-authoring",
+  getResearchOutputRowNavigation,
 }: PlanAuthoringProps) {
   const t = useTranslations("PlanAuthoring");
   const Global = useTranslations("Global");
@@ -247,6 +253,7 @@ export default function PlanAuthoring({
                       currentUserId={model.currentUserId}
                       dataSource={dataSource}
                       onCustomizeGuidance={() => setCustomizeOpen(true)}
+                      rowNavigation={getResearchOutputRowNavigation?.(question)}
                     />
                   ))}
                 </PlanSection>

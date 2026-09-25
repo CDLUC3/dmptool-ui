@@ -33,6 +33,7 @@ jest.mock('react-aria-components', () => ({
 // --- @/lib/constants ---
 jest.mock('@/lib/constants', () => ({
   TEXT_AREA_QUESTION_TYPE: 'textArea',
+  RESEARCH_OUTPUT_QUESTION_TYPE: 'researchOutputTable',
 }));
 
 // --- @/context/ToastContext ---
@@ -98,8 +99,13 @@ jest.mock('../../PlanSampleAnswers', () => {
 });
 
 jest.mock('../../PlanQuestionAnswer', () => {
-  const MockPlanQuestionAnswer = ({ mode, disabled, onStartEditing }: any) => (
-    <div data-testid="question-answer" data-mode={mode} data-disabled={String(disabled)}>
+  const MockPlanQuestionAnswer = ({ mode, disabled, onStartEditing, rowNavigation }: any) => (
+    <div
+      data-testid="question-answer"
+      data-mode={mode}
+      data-disabled={String(disabled)}
+      data-add-href={rowNavigation?.addHref ?? ''}
+    >
       <button type="button" onClick={onStartEditing}>
         Start editing
       </button>
@@ -348,6 +354,45 @@ describe('PlanQuestion', () => {
       await user.click(screen.getByRole('button', { name: 'Global.buttons.save' }));
 
       expect(mockSaveNow).toHaveBeenCalledTimes(1);
+    });
+
+    it('passes research-output row navigation through to the answer', () => {
+      const rowNavigation = {
+        editHref: (index: number) => `/edit/${index}`,
+        addHref: '/edit/new',
+      };
+
+      render(
+        <PlanQuestion
+          {...defaultProps}
+          question={{
+            ...baseQuestion,
+            questionType: 'researchOutputTable',
+          }}
+          rowNavigation={rowNavigation}
+        />
+      );
+
+      expect(screen.getByTestId('question-answer')).toHaveAttribute(
+        'data-add-href',
+        '/edit/new'
+      );
+    });
+
+    it('hides the Save button for researchOutputTable questions', () => {
+      render(
+        <PlanQuestion
+          {...defaultProps}
+          question={{
+            ...baseQuestion,
+            questionType: 'researchOutputTable',
+          }}
+        />
+      );
+
+      expect(
+        screen.queryByRole('button', { name: 'Global.buttons.save' })
+      ).not.toBeInTheDocument();
     });
   });
 

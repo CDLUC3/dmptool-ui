@@ -443,6 +443,7 @@
     },
     "messages": {
       "areYouSureYouWantToDelete": "Are you sure you want to delete this research output?",
+      "untitledResearchOutput": "Untitled Research Output",
       "errors": {
         "questionTextRequired": "Question text field is required.",
         "questionUpdateError": "Error when updating question",

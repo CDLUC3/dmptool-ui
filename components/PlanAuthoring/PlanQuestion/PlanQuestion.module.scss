@@ -10,6 +10,21 @@
   min-height: 0;
 }
 
+// Standalone add/edit page: grow with content, no resize handle.
+.planQuestionAuto {
+  height: auto;
+  align-self: stretch;
+  margin-top: var(--space-6);
+
+  .planQuestionBody {
+    flex: none;
+  }
+
+  .planQuestionMain {
+    overflow: visible;
+  }
+}
+
 .planQuestionBody {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 20rem;

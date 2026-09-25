@@ -1,3 +1,4 @@
+import { RESEARCH_OUTPUT_QUESTION_TYPE } from "@/lib/constants";
 import { createPlanAuthoringDemo } from "./demoData";
 import type { PlanAuthoringDataSource } from "../dataSource";
 import {
@@ -6,11 +7,14 @@ import {
   computeProgress,
   questionKey,
 } from "../model";
+import { getResearchOutputRows } from "../researchOutputAnswer";
 
 export interface DemoDataSourceOptions {
   initialModel?: PlanAuthoringModel;
   failSaveOnce?: boolean;
   delayMs?: number;
+  /** When set, hydrate/save the model in sessionStorage (SSR-safe). */
+  persistKey?: string;
 }
 
 function wait(ms: number): Promise<void> {
@@ -19,17 +23,63 @@ function wait(ms: number): Promise<void> {
   });
 }
 
+function readPersistedModel(persistKey: string): PlanAuthoringModel | null {
+  if (typeof window === "undefined") {
+    return null;
+  }
+  try {
+    const raw = window.sessionStorage.getItem(persistKey);
+    if (!raw) {
+      return null;
+    }
+    return JSON.parse(raw) as PlanAuthoringModel;
+  } catch {
+    return null;
+  }
+}
+
+function writePersistedModel(
+  persistKey: string,
+  model: PlanAuthoringModel
+): void {
+  if (typeof window === "undefined") {
+    return;
+  }
+  try {
+    window.sessionStorage.setItem(persistKey, JSON.stringify(model));
+  } catch {
+    // Quota or private mode — demo still works in-memory.
+  }
+}
+
+function hasAnswerForQuestion(
+  questionType: string,
+  answerJson: unknown
+): boolean {
+  if (questionType === RESEARCH_OUTPUT_QUESTION_TYPE) {
+    const rows = getResearchOutputRows(answerJson);
+    return rows.length > 0;
+  }
+  return answerJson != null && answerJson !== "";
+}
+
 export function createPlanAuthoringDemoDataSource(
   options: DemoDataSourceOptions = {}
 ): PlanAuthoringDataSource {
   const delayMs = options.delayMs ?? 350;
+  const persistKey = options.persistKey;
+  const persisted =
+    persistKey !== undefined ? readPersistedModel(persistKey) : null;
   let model: PlanAuthoringModel = structuredClone(
-    options.initialModel ?? createPlanAuthoringDemo()
+    persisted ?? options.initialModel ?? createPlanAuthoringDemo()
   );
   let failSaveOnce = Boolean(options.failSaveOnce);
   const listeners = new Set<() => void>();
 
   const notify = () => {
+    if (persistKey !== undefined) {
+      writePersistedModel(persistKey, model);
+    }
     listeners.forEach((listener) => listener());
   };
 
@@ -67,7 +117,10 @@ export function createPlanAuthoringDemoDataSource(
       }
 
       question.answerJson = answerJson;
-      question.hasAnswer = answerJson != null && answerJson !== "";
+      question.hasAnswer = hasAnswerForQuestion(
+        question.questionType,
+        answerJson
+      );
       model = {
         ...model,
         progress: computeProgress(model.sections),
@@ -100,6 +153,11 @@ export function createPlanAuthoringDemoDataSource(
         id: Date.now(),
         authorId: model.currentUserId,
         authorName: model.currentUserName,
+        user: {
+          id: model.currentUserId,
+          givenName: model.currentUserName,
+          surName: "",
+        },
         createdLabel: "Just now",
         text,
       };

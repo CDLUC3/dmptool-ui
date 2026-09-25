@@ -142,6 +142,12 @@
       "useAnswer": "Usar resposta",
       "organizationSampleText": "{org} texto de exemplo",
       "sampleTextAdded": "Exemplo de texto adicionado"
+    },
+    "researchOutput": {
+      "backToPlan": "Voltar para a elaboração do plano",
+      "notFoundTitle": "Resultado de pesquisa não encontrado",
+      "notFoundBody": "Essa pergunta ou linha de resultado de pesquisa não está no plano de demonstração.",
+      "saveFailed": "Não foi possível salvar o resultado de pesquisa."
     }
   }
 }
