@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import PageHeader from "@/components/PageHeader";
 import { ContentContainer, LayoutContainer } from "@/components/Container";
@@ -46,6 +47,7 @@ export default function PlanResearchOutputEditScreen({
   planHref,
 }: PlanResearchOutputEditScreenProps) {
   const locale = useLocale();
+  const router = useRouter();
   const t = useTranslations("PlanAuthoring");
   const tEdit = useTranslations("QuestionEdit");
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -110,7 +112,7 @@ export default function PlanResearchOutputEditScreen({
     : `/${locale}${planHref}`;
 
   const navigateBack = () => {
-    window.location.assign(returnHref);
+    router.push(returnHref);
   };
 
   if (
