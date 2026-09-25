@@ -1,14 +1,17 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { act, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
+import { axe, toHaveNoViolations } from 'jest-axe';
 import { useRouter } from 'next/navigation';
 import { RESEARCH_OUTPUT_QUESTION_TYPE } from '@/lib/constants';
 import type { PlanAuthoringDataSource } from '../../dataSource';
 import type { PlanAuthoringModel, PlanQuestionDefinition } from '../../model';
 import { questionAnchorId, questionKey } from '../../model';
 import PlanResearchOutputEditScreen from '../index';
+
+expect.extend(toHaveNoViolations);
 
 jest.mock('next-intl', () => ({
   useLocale: () => 'en-US',
@@ -43,13 +46,37 @@ jest.mock('../../PlanQuestionHeader', () => {
 });
 
 jest.mock('../../PlanQuestionSidebar', () => {
-  const MockPlanQuestionSidebar = () => <aside>sidebar</aside>;
+  const MockPlanQuestionSidebar = (props: any) => (
+    <aside>
+      <span data-testid="sidebar-can-comment">{String(props.canComment)}</span>
+      <button type="button" onClick={() => props.loadGuidance()}>Load guidance</button>
+      <button type="button" onClick={() => props.loadComments()}>Load comments</button>
+      <button type="button" onClick={() => props.onAddComment('new comment')}>Add comment</button>
+      <button type="button" onClick={() => props.onUpdateComment(7, 'updated')}>Update comment</button>
+      <button type="button" onClick={() => props.onDeleteComment(7)}>Delete comment</button>
+      <button type="button" onClick={() => props.onCustomize()}>Customize guidance</button>
+    </aside>
+  );
   MockPlanQuestionSidebar.displayName = 'MockPlanQuestionSidebar';
   return MockPlanQuestionSidebar;
 });
 
 jest.mock('../../PlanGuidanceCustomizeDialog', () => {
-  const MockPlanGuidanceCustomizeDialog = () => null;
+  const MockPlanGuidanceCustomizeDialog = ({ isOpen, onSearch, onSave, onOpenChange }: any) =>
+    isOpen ? (
+      <div role="dialog" aria-label="customize-guidance">
+        <button type="button" onClick={() => onSearch('nih')}>Search orgs</button>
+        <button
+          type="button"
+          onClick={async () => {
+            await onSave(['org-1']);
+            onOpenChange(false);
+          }}
+        >
+          Save orgs
+        </button>
+      </div>
+    ) : null;
   MockPlanGuidanceCustomizeDialog.displayName = 'MockPlanGuidanceCustomizeDialog';
   return MockPlanGuidanceCustomizeDialog;
 });
@@ -143,18 +170,18 @@ function buildModel(): PlanAuthoringModel {
 }
 
 function buildDataSource(
-  saveAnswer: PlanAuthoringDataSource['saveAnswer'] = jest.fn().mockResolvedValue({ success: true })
+  saveAnswer: PlanAuthoringDataSource['saveAnswer'] = jest.fn().mockResolvedValue({ success: true }),
+  model: PlanAuthoringModel = buildModel()
 ): PlanAuthoringDataSource {
-  const current = buildModel();
   return {
-    getModel: () => current,
-    subscribe: () => () => undefined,
+    getModel: () => model,
+    subscribe: jest.fn(() => () => undefined),
     saveAnswer,
     loadGuidance: jest.fn().mockResolvedValue([]),
     loadComments: jest.fn().mockResolvedValue([]),
-    addComment: jest.fn(),
-    updateComment: jest.fn(),
-    deleteComment: jest.fn(),
+    addComment: jest.fn().mockResolvedValue({ id: 8 }),
+    updateComment: jest.fn().mockResolvedValue({ id: 7 }),
+    deleteComment: jest.fn().mockResolvedValue(undefined),
     searchGuidanceOrgs: jest.fn().mockResolvedValue([]),
     setSelectedGuidanceOrgs: jest.fn().mockResolvedValue([]),
   };
@@ -296,5 +323,111 @@ describe('PlanResearchOutputEditScreen', () => {
     await user.click(screen.getByRole('button', { name: 'Cancel output' }));
 
     expect(mockPush).toHaveBeenCalledWith(returnHref);
+  });
+
+  it('re-reads the model when the data source notifies subscribers', () => {
+    let notify: () => void = () => undefined;
+    const dataSource = buildDataSource();
+    (dataSource.subscribe as jest.Mock).mockImplementation((listener: () => void) => {
+      notify = listener;
+      return () => undefined;
+    });
+
+    render(
+      <PlanResearchOutputEditScreen
+        dataSource={dataSource}
+        questionKeyParam={questionKeyParam}
+        rowIndexParam="0"
+        planHref={planHref}
+      />
+    );
+
+    expect(dataSource.subscribe).toHaveBeenCalledTimes(1);
+    act(() => notify());
+    expect(screen.getByRole('heading', { name: 'QuestionEdit.headings.editResearchOutput' })).toBeInTheDocument();
+  });
+
+  it('wires the sidebar guidance and comment actions to the data source', async () => {
+    const user = userEvent.setup();
+    const dataSource = buildDataSource();
+
+    render(
+      <PlanResearchOutputEditScreen
+        dataSource={dataSource}
+        questionKeyParam={questionKeyParam}
+        rowIndexParam="0"
+        planHref={planHref}
+      />
+    );
+
+    expect(screen.getByTestId('sidebar-can-comment')).toHaveTextContent('true');
+
+    await user.click(screen.getByRole('button', { name: 'Load guidance' }));
+    await user.click(screen.getByRole('button', { name: 'Load comments' }));
+    await user.click(screen.getByRole('button', { name: 'Add comment' }));
+    await user.click(screen.getByRole('button', { name: 'Update comment' }));
+    await user.click(screen.getByRole('button', { name: 'Delete comment' }));
+
+    expect(dataSource.loadGuidance).toHaveBeenCalledWith(questionKeyParam);
+    expect(dataSource.loadComments).toHaveBeenCalledWith(questionKeyParam);
+    expect(dataSource.addComment).toHaveBeenCalledWith(questionKeyParam, 'new comment');
+    expect(dataSource.updateComment).toHaveBeenCalledWith(questionKeyParam, 7, 'updated');
+    expect(dataSource.deleteComment).toHaveBeenCalledWith(questionKeyParam, 7);
+  });
+
+  it('opens the customize guidance dialog and saves the selected orgs', async () => {
+    const user = userEvent.setup();
+    const dataSource = buildDataSource();
+
+    render(
+      <PlanResearchOutputEditScreen
+        dataSource={dataSource}
+        questionKeyParam={questionKeyParam}
+        rowIndexParam="0"
+        planHref={planHref}
+      />
+    );
+
+    expect(screen.queryByRole('dialog', { name: 'customize-guidance' })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Customize guidance' }));
+    const dialog = screen.getByRole('dialog', { name: 'customize-guidance' });
+
+    await user.click(within(dialog).getByRole('button', { name: 'Search orgs' }));
+    expect(dataSource.searchGuidanceOrgs).toHaveBeenCalledWith('nih');
+
+    await user.click(within(dialog).getByRole('button', { name: 'Save orgs' }));
+    expect(dataSource.setSelectedGuidanceOrgs).toHaveBeenCalledWith(['org-1']);
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog', { name: 'customize-guidance' })).not.toBeInTheDocument();
+    });
+  });
+
+  it('has no accessibility violations on the edit screen', async () => {
+    const { container } = render(
+      <PlanResearchOutputEditScreen
+        dataSource={buildDataSource()}
+        questionKeyParam={questionKeyParam}
+        rowIndexParam="0"
+        planHref={planHref}
+      />
+    );
+
+    const results = await axe(container);
+    expect(results).toHaveNoViolations();
+  });
+
+  it('has no accessibility violations on the not-found screen', async () => {
+    const { container } = render(
+      <PlanResearchOutputEditScreen
+        dataSource={buildDataSource()}
+        questionKeyParam="base-question-999"
+        rowIndexParam="0"
+        planHref={planHref}
+      />
+    );
+
+    const results = await axe(container);
+    expect(results).toHaveNoViolations();
   });
 });
