@@ -1,7 +1,7 @@
 import React from "react";
 import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { MockedProvider } from "@apollo/client/testing/react";
-import { MyProjectsDocument } from "@/generated/graphql";
+import { AllProjectsDocument } from "@/generated/graphql";
 import { axe, toHaveNoViolations } from "jest-axe";
 import OrganizationProjectsListPage from "../page";
 import { useFormatter, useTranslations } from "next-intl";
@@ -27,16 +27,17 @@ const mocks = [
   // Initial load mock
   {
     request: {
-      query: MyProjectsDocument,
+      query: AllProjectsDocument,
       variables: {
         paginationOptions: {
           limit: 10,
         },
+        filterOptions: {},
       },
     },
     result: {
       data: {
-        myProjects: {
+        allProjects: {
           totalCount: 9,
           nextCursor: "2025-08-05_00:00:004",
           items: [
@@ -108,16 +109,17 @@ const mocks = [
   // Second call
   {
     request: {
-      query: MyProjectsDocument,
+      query: AllProjectsDocument,
       variables: {
         paginationOptions: {
           limit: 10,
         },
+        filterOptions: {},
       },
     },
     result: {
       data: {
-        myProjects: {
+        allProjects: {
           totalCount: 9,
           nextCursor: "2025-08-05_00:00:004",
           items: [
@@ -189,7 +191,7 @@ const mocks = [
   // Search results with cursor
   {
     request: {
-      query: MyProjectsDocument,
+      query: AllProjectsDocument,
       variables: {
         paginationOptions: {
           type: "CURSOR",
@@ -197,11 +199,12 @@ const mocks = [
           limit: 10,
         },
         term: "reef",
+        filterOptions: {},
       },
     },
     result: {
       data: {
-        myProjects: {
+        allProjects: {
           totalCount: 9,
           nextCursor: "2025-08-05_00:00:004",
           items: [
@@ -273,18 +276,19 @@ const mocks = [
   // Load more results
   {
     request: {
-      query: MyProjectsDocument,
+      query: AllProjectsDocument,
       variables: {
         paginationOptions: {
           type: "CURSOR",
           cursor: "2025-08-05_00:00:004",
           limit: 10,
         },
+        filterOptions: {},
       },
     },
     result: {
       data: {
-        myProjects: {
+        allProjects: {
           totalCount: 9,
           nextCursor: "2025-08-05_00:00:004",
           items: [
@@ -356,18 +360,19 @@ const mocks = [
   // Search results
   {
     request: {
-      query: MyProjectsDocument,
+      query: AllProjectsDocument,
       variables: {
         paginationOptions: {
           limit: 10,
           type: "CURSOR",
         },
         term: "reef",
+        filterOptions: {},
       },
     },
     result: {
       data: {
-        myProjects: {
+        allProjects: {
           totalCount: 9,
           nextCursor: "2025-08-05_00:00:004",
           items: [
@@ -399,18 +404,19 @@ const mocks = [
   // Search results
   {
     request: {
-      query: MyProjectsDocument,
+      query: AllProjectsDocument,
       variables: {
         paginationOptions: {
           limit: 10,
           type: "CURSOR",
         },
         term: "throw",
+        filterOptions: {},
       },
     },
     result: {
       data: {
-        myProjects: {
+        allProjects: {
           totalCount: 9,
           nextCursor: "2025-08-05_00:00:004",
           items: [
@@ -444,7 +450,7 @@ const mocks = [
   // Search returns an error
   {
     request: {
-      query: MyProjectsDocument,
+      query: AllProjectsDocument,
       variables: {
         paginationOptions: {
           type: "CURSOR",
@@ -452,11 +458,12 @@ const mocks = [
           cursor: "2025-08-05_00:00:004",
         },
         term: "throw",
+        filterOptions: {},
       },
     },
     result: {
       data: {
-        myProjects: {
+        allProjects: {
           totalCount: 9,
           nextCursor: "2025-08-05_00:00:004",
           items: [
@@ -490,17 +497,18 @@ const mocks = [
   // With paginationOptions type
   {
     request: {
-      query: MyProjectsDocument,
+      query: AllProjectsDocument,
       variables: {
         paginationOptions: {
           limit: 10,
           type: "CURSOR",
         },
+        filterOptions: {},
       },
     },
     result: {
       data: {
-        myProjects: {
+        allProjects: {
           totalCount: 9,
           nextCursor: "2025-08-05_00:00:004",
           items: [
@@ -532,18 +540,19 @@ const mocks = [
   // Empty search results mock
   {
     request: {
-      query: MyProjectsDocument,
+      query: AllProjectsDocument,
       variables: {
         paginationOptions: {
           type: "CURSOR",
           limit: 10,
         },
         term: "nonexistent project",
+        filterOptions: {},
       },
     },
     result: {
       data: {
-        myProjects: {
+        allProjects: {
           items: [],
           nextCursor: null,
           totalCount: 0,
@@ -554,17 +563,18 @@ const mocks = [
   // Clear-filter refetch (term: "")
   {
     request: {
-      query: MyProjectsDocument,
+      query: AllProjectsDocument,
       variables: {
         paginationOptions: {
           limit: 10,
         },
         term: "",
+        filterOptions: {},
       },
     },
     result: {
       data: {
-        myProjects: {
+        allProjects: {
           totalCount: 9,
           nextCursor: "2025-08-05_00:00:004",
           items: [
@@ -598,16 +608,17 @@ const mocks = [
 const emptyProjectsMocks = [
   {
     request: {
-      query: MyProjectsDocument,
+      query: AllProjectsDocument,
       variables: {
         paginationOptions: {
           limit: 10,
         },
+        filterOptions: {},
       },
     },
     result: {
       data: {
-        myProjects: {
+        allProjects: {
           items: [],
           nextCursor: null,
           totalCount: 0,
@@ -620,16 +631,17 @@ const emptyProjectsMocks = [
 const emptyProjectsNullTotalCountMocks = [
   {
     request: {
-      query: MyProjectsDocument,
+      query: AllProjectsDocument,
       variables: {
         paginationOptions: {
           limit: 10,
         },
+        filterOptions: {},
       },
     },
     result: {
       data: {
-        myProjects: {
+        allProjects: {
           items: [],
           nextCursor: null,
           totalCount: null,
@@ -642,16 +654,17 @@ const emptyProjectsNullTotalCountMocks = [
 const delayedEmptyProjectsMocks = [
   {
     request: {
-      query: MyProjectsDocument,
+      query: AllProjectsDocument,
       variables: {
         paginationOptions: {
           limit: 10,
         },
+        filterOptions: {},
       },
     },
     result: {
       data: {
-        myProjects: {
+        allProjects: {
           items: [],
           nextCursor: null,
           totalCount: 0,
@@ -665,11 +678,12 @@ const delayedEmptyProjectsMocks = [
 const initialLoadErrorMocks = [
   {
     request: {
-      query: MyProjectsDocument,
+      query: AllProjectsDocument,
       variables: {
         paginationOptions: {
           limit: 10,
         },
+        filterOptions: {},
       },
     },
     error: new Error("Network error"),
@@ -679,16 +693,17 @@ const initialLoadErrorMocks = [
 const hungInitialLoadMocks = [
   {
     request: {
-      query: MyProjectsDocument,
+      query: AllProjectsDocument,
       variables: {
         paginationOptions: {
           limit: 10,
         },
+        filterOptions: {},
       },
     },
     result: {
       data: {
-        myProjects: {
+        allProjects: {
           items: [],
           nextCursor: null,
           totalCount: 0,
@@ -702,16 +717,17 @@ const hungInitialLoadMocks = [
 const searchErrorMocks = [
   {
     request: {
-      query: MyProjectsDocument,
+      query: AllProjectsDocument,
       variables: {
         paginationOptions: {
           limit: 10,
         },
+        filterOptions: {},
       },
     },
     result: {
       data: {
-        myProjects: {
+        allProjects: {
           totalCount: 9,
           nextCursor: "2025-08-05_00:00:004",
           items: [
@@ -727,13 +743,14 @@ const searchErrorMocks = [
   },
   {
     request: {
-      query: MyProjectsDocument,
+      query: AllProjectsDocument,
       variables: {
         paginationOptions: {
           type: "CURSOR",
           limit: 10,
         },
         term: "reef",
+        filterOptions: {},
       },
     },
     error: new Error("Network error"),
@@ -743,16 +760,17 @@ const searchErrorMocks = [
 const resetSearchErrorMocks = [
   {
     request: {
-      query: MyProjectsDocument,
+      query: AllProjectsDocument,
       variables: {
         paginationOptions: {
           limit: 10,
         },
+        filterOptions: {},
       },
     },
     result: {
       data: {
-        myProjects: {
+        allProjects: {
           totalCount: 9,
           nextCursor: "2025-08-05_00:00:004",
           items: [
@@ -778,18 +796,19 @@ const resetSearchErrorMocks = [
   },
   {
     request: {
-      query: MyProjectsDocument,
+      query: AllProjectsDocument,
       variables: {
         paginationOptions: {
           limit: 10,
           type: "CURSOR",
         },
         term: "reef",
+        filterOptions: {},
       },
     },
     result: {
       data: {
-        myProjects: {
+        allProjects: {
           totalCount: 9,
           nextCursor: "2025-08-05_00:00:004",
           items: [
@@ -815,12 +834,13 @@ const resetSearchErrorMocks = [
   },
   {
     request: {
-      query: MyProjectsDocument,
+      query: AllProjectsDocument,
       variables: {
         paginationOptions: {
           limit: 10,
         },
         term: "",
+        filterOptions: {},
       },
     },
     error: new Error("Network error"),
@@ -830,16 +850,17 @@ const resetSearchErrorMocks = [
 const searchLoadMoreNetworkErrorMocks = [
   {
     request: {
-      query: MyProjectsDocument,
+      query: AllProjectsDocument,
       variables: {
         paginationOptions: {
           limit: 10,
         },
+        filterOptions: {},
       },
     },
     result: {
       data: {
-        myProjects: {
+        allProjects: {
           totalCount: 9,
           nextCursor: "2025-08-05_00:00:004",
           items: [
@@ -865,18 +886,19 @@ const searchLoadMoreNetworkErrorMocks = [
   },
   {
     request: {
-      query: MyProjectsDocument,
+      query: AllProjectsDocument,
       variables: {
         paginationOptions: {
           limit: 10,
           type: "CURSOR",
         },
         term: "reef",
+        filterOptions: {},
       },
     },
     result: {
       data: {
-        myProjects: {
+        allProjects: {
           totalCount: 9,
           nextCursor: "2025-08-05_00:00:004",
           items: [
@@ -902,7 +924,7 @@ const searchLoadMoreNetworkErrorMocks = [
   },
   {
     request: {
-      query: MyProjectsDocument,
+      query: AllProjectsDocument,
       variables: {
         paginationOptions: {
           type: "CURSOR",
@@ -910,6 +932,7 @@ const searchLoadMoreNetworkErrorMocks = [
           limit: 10,
         },
         term: "reef",
+        filterOptions: {},
       },
     },
     error: new Error("Network error"),
@@ -919,16 +942,17 @@ const searchLoadMoreNetworkErrorMocks = [
 const loadMoreNetworkErrorMocks = [
   {
     request: {
-      query: MyProjectsDocument,
+      query: AllProjectsDocument,
       variables: {
         paginationOptions: {
           limit: 10,
         },
+        filterOptions: {},
       },
     },
     result: {
       data: {
-        myProjects: {
+        allProjects: {
           totalCount: 9,
           nextCursor: "2025-08-05_00:00:004",
           items: [
@@ -954,13 +978,14 @@ const loadMoreNetworkErrorMocks = [
   },
   {
     request: {
-      query: MyProjectsDocument,
+      query: AllProjectsDocument,
       variables: {
         paginationOptions: {
           type: "CURSOR",
           cursor: "2025-08-05_00:00:004",
           limit: 10,
         },
+        filterOptions: {},
       },
     },
     error: new Error("Network error"),
@@ -970,16 +995,17 @@ const loadMoreNetworkErrorMocks = [
 const titleOnlyItemErrorMocks = [
   {
     request: {
-      query: MyProjectsDocument,
+      query: AllProjectsDocument,
       variables: {
         paginationOptions: {
           limit: 10,
         },
+        filterOptions: {},
       },
     },
     result: {
       data: {
-        myProjects: {
+        allProjects: {
           totalCount: 1,
           nextCursor: null,
           items: [
@@ -1008,22 +1034,24 @@ const titleOnlyItemErrorMocks = [
 const datesAndPlansMocks = [
   {
     request: {
-      query: MyProjectsDocument,
+      query: AllProjectsDocument,
       variables: {
         paginationOptions: {
           limit: 10,
         },
+        filterOptions: {},
       },
     },
     result: {
       data: {
-        myProjects: {
+        allProjects: {
           totalCount: 2,
           nextCursor: null,
           items: [
             {
               title: "Dated Project",
               id: 50,
+              myAccessLevel: "OWN",
               startDate: "2025-01-01",
               endDate: "2027-12-31",
               modified: "1785236348000",
@@ -1069,6 +1097,63 @@ const datesAndPlansMocks = [
       },
     },
   },
+];
+
+const filteredProjectsMock = (filterOptions: Record<string, string>, items: unknown[]) => ({
+  request: {
+    query: AllProjectsDocument,
+    variables: {
+      paginationOptions: {
+        type: "CURSOR",
+        limit: 10,
+      },
+      filterOptions,
+    },
+  },
+  result: {
+    data: {
+      allProjects: {
+        totalCount: items.length,
+        nextCursor: null,
+        items,
+      },
+    },
+  },
+});
+
+const statusFilterMocks = [
+  mocks[0],
+  filteredProjectsMock({ status: "DRAFT" }, [
+    {
+      ...mocks[0].result.data.allProjects.items[0],
+      plans: [
+        { id: 31, title: "Draft Plan", dmpId: "dmp-31", status: "DRAFT", modified: "1785236348000" },
+        { id: 32, title: "Complete Plan", dmpId: "dmp-32", status: "COMPLETE", modified: "1785236348000" },
+      ],
+    },
+  ]),
+];
+
+// Refetch sent by "Clear filters": no search term and no filter options
+const clearFiltersMock = {
+  request: {
+    query: AllProjectsDocument,
+    variables: {
+      paginationOptions: {
+        limit: 10,
+      },
+      term: "",
+      filterOptions: {},
+    },
+  },
+  result: mocks[0].result,
+};
+
+const clearFiltersMocks = [...statusFilterMocks, clearFiltersMock];
+
+const roleFilterNoResultsMocks = [
+  mocks[0],
+  filteredProjectsMock({ accessLevel: "COMMENT" }, []),
 ];
 
 describe("OrganizationProjectsListPage", () => {
@@ -1627,6 +1712,10 @@ describe("OrganizationProjectsListPage", () => {
 
     expect(screen.getByText("Visible Plan")).toBeInTheDocument();
     expect(screen.queryByText("Skipped")).not.toBeInTheDocument();
+    // Plans have no role of their own, so the project's myAccessLevel is shown translated
+    expect(
+      screen.getAllByText("ProjectsProjectCollaboration.accessLevels.own").length,
+    ).toBeGreaterThan(0);
   });
 
   it("should pass axe accessibility test", async () => {
@@ -1642,5 +1731,101 @@ describe("OrganizationProjectsListPage", () => {
       const results = await axe(container);
       expect(results).toHaveNoViolations();
     });
+  });
+  it("should refetch with the selected status filter", async () => {
+    await act(async () => {
+      render(
+        <MockedProvider mocks={statusFilterMocks}>
+          <OrganizationProjectsListPage />
+        </MockedProvider>,
+      );
+    });
+
+    await waitFor(() => {
+      expect(screen.getAllByText("Global.buttons.linkExpand").length).toBeGreaterThan(1);
+    });
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: /ProjectListFilters.statusLabel/i }));
+    });
+    const listbox = screen.getByRole("listbox");
+    expect(within(listbox).getByRole("option", { name: "ProjectListFilters.allStatuses" })).toBeInTheDocument();
+    await act(async () => {
+      fireEvent.click(within(listbox).getByRole("option", { name: "ProjectOverview.planStatus.DRAFT" }));
+    });
+
+    await waitFor(() => {
+      expect(screen.getAllByText("Global.buttons.linkExpand")).toHaveLength(1);
+      expect(screen.getByRole("heading", {
+        name: /Reef Havens: Exploring the Role of Reef Ecosystems in Sustaining Eel Populations/i,
+      })).toBeInTheDocument();
+    });
+
+    // Only plans matching the selected status are shown in the project card
+    fireEvent.click(screen.getByRole("button", { name: /Global.messaging.detailsToggleAria/i }));
+    expect(screen.getByText("Draft Plan")).toBeInTheDocument();
+    expect(screen.queryByText("Complete Plan")).not.toBeInTheDocument();
+  });
+
+  it("should clear the status and role filters and show all projects when Clear filters is clicked", async () => {
+    await act(async () => {
+      render(
+        <MockedProvider mocks={clearFiltersMocks}>
+          <OrganizationProjectsListPage />
+        </MockedProvider>,
+      );
+    });
+
+    await waitFor(() => {
+      expect(screen.getAllByText("Global.buttons.linkExpand").length).toBeGreaterThan(1);
+    });
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: /ProjectListFilters.statusLabel/i }));
+    });
+    await act(async () => {
+      fireEvent.click(within(screen.getByRole("listbox")).getByRole("option", { name: "ProjectOverview.planStatus.DRAFT" }));
+    });
+    await waitFor(() => {
+      expect(screen.getAllByText("Global.buttons.linkExpand")).toHaveLength(1);
+    });
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "ProjectListFilters.clearFilters" }));
+    });
+
+    await waitFor(() => {
+      expect(screen.getAllByText("Global.buttons.linkExpand").length).toBeGreaterThan(1);
+    });
+    expect(screen.getByRole("button", { name: /ProjectListFilters.statusLabel/i }))
+      .toHaveTextContent("ProjectListFilters.allStatuses");
+  });
+
+  it("should show no items found instead of the empty state when a role filter has no matches", async () => {
+    await act(async () => {
+      render(
+        <MockedProvider mocks={roleFilterNoResultsMocks}>
+          <OrganizationProjectsListPage />
+        </MockedProvider>,
+      );
+    });
+
+    await waitFor(() => {
+      expect(screen.getAllByText("Global.buttons.linkExpand").length).toBeGreaterThan(1);
+    });
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: /ProjectListFilters.roleLabel/i }));
+    });
+    await act(async () => {
+      fireEvent.click(within(screen.getByRole("listbox")).getByRole("option", {
+        name: "ProjectsProjectCollaboration.accessLevels.comment",
+      }));
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText("Global.messaging.noItemsFound")).toBeInTheDocument();
+    });
+    expect(screen.queryByText(/messages.info.noProjectsHeading/)).not.toBeInTheDocument();
   });
 });

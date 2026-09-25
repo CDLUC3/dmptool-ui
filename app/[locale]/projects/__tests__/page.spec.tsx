@@ -32,6 +32,7 @@ const mocks = [
         paginationOptions: {
           limit: 3,
         },
+        filterOptions: {},
       },
     },
     result: {
@@ -43,6 +44,7 @@ const mocks = [
             {
               title: "Reef Havens: Exploring the Role of Reef Ecosystems in Sustaining Eel Populations",
               id: 1,
+              myAccessLevel: "PRIMARY",
               startDate: "2025-09-01",
               endDate: "2028-12-31",
               fundings: [
@@ -140,6 +142,7 @@ const mocks = [
         paginationOptions: {
           limit: 3,
         },
+        filterOptions: {},
       },
     },
     result: {
@@ -251,6 +254,7 @@ const mocks = [
           limit: 3,
         },
         term: "reef",
+        filterOptions: {},
       },
     },
     result: {
@@ -361,6 +365,7 @@ const mocks = [
           cursor: "2025-08-05_00:00:004",
           limit: 3,
         },
+        filterOptions: {},
       },
     },
     result: {
@@ -471,6 +476,7 @@ const mocks = [
           type: "CURSOR",
         },
         term: "reef",
+        filterOptions: {},
       },
     },
     result: {
@@ -523,6 +529,7 @@ const mocks = [
           type: "CURSOR",
         },
         term: "throw",
+        filterOptions: {},
       },
     },
     result: {
@@ -578,6 +585,7 @@ const mocks = [
           cursor: "2025-08-05_00:00:004",
         },
         term: "throw",
+        filterOptions: {},
       },
     },
     result: {
@@ -631,6 +639,7 @@ const mocks = [
           limit: 3,
           type: "CURSOR",
         },
+        filterOptions: {},
       },
     },
     result: {
@@ -683,6 +692,7 @@ const mocks = [
           limit: 3,
         },
         term: "nonexistent project",
+        filterOptions: {},
       },
     },
     result: {
@@ -704,6 +714,7 @@ const mocks = [
           limit: 3,
         },
         term: "",
+        filterOptions: {},
       },
     },
     result: {
@@ -756,6 +767,7 @@ const emptyProjectsMocks = [
         paginationOptions: {
           limit: 3,
         },
+        filterOptions: {},
       },
     },
     result: {
@@ -778,6 +790,7 @@ const emptyProjectsNullTotalCountMocks = [
         paginationOptions: {
           limit: 3,
         },
+        filterOptions: {},
       },
     },
     result: {
@@ -800,6 +813,7 @@ const delayedEmptyProjectsMocks = [
         paginationOptions: {
           limit: 3,
         },
+        filterOptions: {},
       },
     },
     result: {
@@ -823,6 +837,7 @@ const initialLoadErrorMocks = [
         paginationOptions: {
           limit: 3,
         },
+        filterOptions: {},
       },
     },
     error: new Error("Network error"),
@@ -837,6 +852,7 @@ const hungInitialLoadMocks = [
         paginationOptions: {
           limit: 3,
         },
+        filterOptions: {},
       },
     },
     result: {
@@ -863,6 +879,7 @@ const searchErrorMocks = [
           limit: 3,
         },
         term: "reef",
+        filterOptions: {},
       },
     },
     error: new Error("Network error"),
@@ -877,6 +894,7 @@ const resetSearchErrorMocks = [
         paginationOptions: {
           limit: 3,
         },
+        filterOptions: {},
       },
     },
     result: {
@@ -917,6 +935,7 @@ const resetSearchErrorMocks = [
           limit: 3,
         },
         term: "reef",
+        filterOptions: {},
       },
     },
     result: {
@@ -956,6 +975,7 @@ const resetSearchErrorMocks = [
           limit: 3,
         },
         term: "",
+        filterOptions: {},
       },
     },
     error: new Error("Network error"),
@@ -976,6 +996,7 @@ const searchLoadMoreErrorMocks = [
           limit: 3,
         },
         term: "reef",
+        filterOptions: {},
       },
     },
     error: new Error("Network error"),
@@ -994,6 +1015,7 @@ const defaultLoadMoreErrorMocks = [
           cursor: "2025-08-05_00:00:004",
           limit: 3,
         },
+        filterOptions: {},
       },
     },
     error: new Error("Network error"),
@@ -1007,6 +1029,7 @@ const titleOnlyErrorMock = {
       paginationOptions: {
         limit: 3,
       },
+      filterOptions: {},
     },
   },
   result: {
@@ -1034,6 +1057,7 @@ const plansTransformMock = {
       paginationOptions: {
         limit: 3,
       },
+      filterOptions: {},
     },
   },
   result: {
@@ -1069,6 +1093,63 @@ const plansTransformMock = {
 };
 
 const plansTransformMocks = [plansTransformMock, { ...plansTransformMock }];
+
+const filteredProjectsMock = (filterOptions: Record<string, string>, items: unknown[]) => ({
+  request: {
+    query: MyProjectsDocument,
+    variables: {
+      paginationOptions: {
+        type: "CURSOR",
+        limit: 3,
+      },
+      filterOptions,
+    },
+  },
+  result: {
+    data: {
+      myProjects: {
+        totalCount: items.length,
+        nextCursor: null,
+        items,
+      },
+    },
+  },
+});
+
+const statusFilterMocks = [
+  mocks[0],
+  filteredProjectsMock({ status: "DRAFT" }, [
+    {
+      ...mocks[0].result.data.myProjects.items[0],
+      plans: [
+        { id: 31, title: "Draft Plan", dmpId: "dmp-31", status: "DRAFT", modified: "1785236348000" },
+        { id: 32, title: "Complete Plan", dmpId: "dmp-32", status: "COMPLETE", modified: "1785236348000" },
+      ],
+    },
+  ]),
+];
+
+// Refetch sent by "Clear filters": no search term and no filter options
+const clearFiltersMock = {
+  request: {
+    query: MyProjectsDocument,
+    variables: {
+      paginationOptions: {
+        limit: 3,
+      },
+      term: "",
+      filterOptions: {},
+    },
+  },
+  result: mocks[0].result,
+};
+
+const clearFiltersMocks = [...statusFilterMocks, clearFiltersMock];
+
+const roleFilterNoResultsMocks = [
+  mocks[0],
+  filteredProjectsMock({ accessLevel: "COMMENT" }, []),
+];
 
 describe("ProjectsListPage", () => {
   beforeEach(() => {
@@ -1406,6 +1487,10 @@ describe("ProjectsListPage", () => {
 
     expect(screen.getByText("Visible Plan")).toBeInTheDocument();
     expect(screen.queryByText("Skipped")).not.toBeInTheDocument();
+    // Plans have no role of their own, so the project's myAccessLevel is shown translated
+    expect(
+      screen.getAllByText("ProjectsProjectCollaboration.accessLevels.primary").length,
+    ).toBeGreaterThan(0);
   });
 
   it("should display empty state with CTA when user has no projects", async () => {
@@ -1645,6 +1730,7 @@ describe("ProjectsListPage", () => {
           paginationOptions: {
             limit: 3,
           },
+          filterOptions: {},
         },
       },
       result: {
@@ -1702,5 +1788,101 @@ describe("ProjectsListPage", () => {
       const results = await axe(container);
       expect(results).toHaveNoViolations();
     });
+  });
+  it("should refetch with the selected status filter", async () => {
+    await act(async () => {
+      render(
+        <MockedProvider mocks={statusFilterMocks}>
+          <ProjectsListPage />
+        </MockedProvider>,
+      );
+    });
+
+    await waitFor(() => {
+      expect(screen.getAllByText("Global.buttons.linkExpand").length).toBeGreaterThan(1);
+    });
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: /ProjectListFilters.statusLabel/i }));
+    });
+    const listbox = screen.getByRole("listbox");
+    expect(within(listbox).getByRole("option", { name: "ProjectListFilters.allStatuses" })).toBeInTheDocument();
+    await act(async () => {
+      fireEvent.click(within(listbox).getByRole("option", { name: "ProjectOverview.planStatus.DRAFT" }));
+    });
+
+    await waitFor(() => {
+      expect(screen.getAllByText("Global.buttons.linkExpand")).toHaveLength(1);
+      expect(screen.getByRole("heading", {
+        name: /Reef Havens: Exploring the Role of Reef Ecosystems in Sustaining Eel Populations/i,
+      })).toBeInTheDocument();
+    });
+
+    // Only plans matching the selected status are shown in the project card
+    fireEvent.click(screen.getByRole("button", { name: /Global.messaging.detailsToggleAria/i }));
+    expect(screen.getByText("Draft Plan")).toBeInTheDocument();
+    expect(screen.queryByText("Complete Plan")).not.toBeInTheDocument();
+  });
+
+  it("should clear the status and role filters and show all projects when Clear filters is clicked", async () => {
+    await act(async () => {
+      render(
+        <MockedProvider mocks={clearFiltersMocks}>
+          <ProjectsListPage />
+        </MockedProvider>,
+      );
+    });
+
+    await waitFor(() => {
+      expect(screen.getAllByText("Global.buttons.linkExpand").length).toBeGreaterThan(1);
+    });
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: /ProjectListFilters.statusLabel/i }));
+    });
+    await act(async () => {
+      fireEvent.click(within(screen.getByRole("listbox")).getByRole("option", { name: "ProjectOverview.planStatus.DRAFT" }));
+    });
+    await waitFor(() => {
+      expect(screen.getAllByText("Global.buttons.linkExpand")).toHaveLength(1);
+    });
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "ProjectListFilters.clearFilters" }));
+    });
+
+    await waitFor(() => {
+      expect(screen.getAllByText("Global.buttons.linkExpand").length).toBeGreaterThan(1);
+    });
+    expect(screen.getByRole("button", { name: /ProjectListFilters.statusLabel/i }))
+      .toHaveTextContent("ProjectListFilters.allStatuses");
+  });
+
+  it("should show no items found instead of the empty state when a role filter has no matches", async () => {
+    await act(async () => {
+      render(
+        <MockedProvider mocks={roleFilterNoResultsMocks}>
+          <ProjectsListPage />
+        </MockedProvider>,
+      );
+    });
+
+    await waitFor(() => {
+      expect(screen.getAllByText("Global.buttons.linkExpand").length).toBeGreaterThan(1);
+    });
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: /ProjectListFilters.roleLabel/i }));
+    });
+    await act(async () => {
+      fireEvent.click(within(screen.getByRole("listbox")).getByRole("option", {
+        name: "ProjectsProjectCollaboration.accessLevels.comment",
+      }));
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText("Global.messaging.noItemsFound")).toBeInTheDocument();
+    });
+    expect(screen.queryByText(/messages.info.noProjectsHeading/)).not.toBeInTheDocument();
   });
 });

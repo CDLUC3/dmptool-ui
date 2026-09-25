@@ -18,6 +18,12 @@ import {
 } from "react-aria-components";
 import PageHeader from "@/components/PageHeader";
 import ProjectListItem from "@/components/ProjectListItem";
+import ProjectListFilters, {
+  DEFAULT_PROJECT_LIST_FILTERS,
+  ProjectListFilterValues,
+  hasActiveProjectFilters,
+  toProjectFilterOptions,
+} from "@/components/ProjectListFilters";
 import { ContentContainer, LayoutContainer } from "@/components/Container";
 import ErrorMessages from "@/components/ErrorMessages";
 import SkeletonListLoading from "@/components/SkeletonListLoading";
@@ -25,7 +31,7 @@ import { TransitionLink } from "@/components/Form";
 
 //GraphQL
 // TODO: Change to organization-scoped GraphQL query instead of MyProjectsDocument
-import { MyProjectsDocument, MyProjectsQuery } from "@/generated/graphql";
+import { AllProjectsDocument, AllProjectsQuery } from "@/generated/graphql";
 
 import {
   ProjectItemPlanProps,
@@ -43,7 +49,7 @@ const LIMIT = 10;
 const LIST_LOAD_TIMEOUT_MS = 30000;
 
 type OrgProject = NonNullable<
-  NonNullable<NonNullable<MyProjectsQuery["myProjects"]>["items"]>[number]
+  NonNullable<NonNullable<AllProjectsQuery["allProjects"]>["items"]>[number]
 >;
 
 const OrganizationProjectsListPage: React.FC = () => {
@@ -56,12 +62,13 @@ const OrganizationProjectsListPage: React.FC = () => {
   const [errors, setErrors] = useState<string[]>([]);
   const [isPageLoading, setIsPageLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState<string>("");
+  const [filters, setFilters] = useState<ProjectListFilterValues>(DEFAULT_PROJECT_LIST_FILTERS);
   const [searchButtonClicked, setSearchButtonClicked] = useState(false);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
 
   const [totalCount, setTotalCount] = useState<number | null>(0);
   const [fetchFailed, setFetchFailed] = useState(false);
-  const [fetchProjects, { data: projectData, loading: projectsLoading, error: projectsError }] = useLazyQuery(MyProjectsDocument, {
+  const [fetchProjects, { data: projectData, loading: projectsLoading, error: projectsError }] = useLazyQuery(AllProjectsDocument, {
     notifyOnNetworkStatusChange: true,
     fetchPolicy: "no-cache",
   });
@@ -91,7 +98,7 @@ const OrganizationProjectsListPage: React.FC = () => {
     });
   };
 
-  const resetSearch = async () => {
+  const resetList = async (nextFilters: ProjectListFilterValues) => {
     setSearchTerm("");
     setIsSearchFetch(false);
     isSearchFetchRef.current = false;
@@ -109,12 +116,48 @@ const OrganizationProjectsListPage: React.FC = () => {
           },
           // Distinct from the mount query (no term key) so Apollo does not reuse that result.
           term: "",
+          filterOptions: toProjectFilterOptions(nextFilters),
         },
       });
     } catch (err) {
       recordProjectsFetchFailure("resetSearch", err);
     }
     scrollToTop(topRef);
+  };
+
+  const resetSearch = () => resetList(filters);
+
+  // Clears the status and role filters and any search term, so all projects are shown
+  const clearFilters = () => {
+    setFilters(DEFAULT_PROJECT_LIST_FILTERS);
+    setErrors([]);
+    return resetList(DEFAULT_PROJECT_LIST_FILTERS);
+  };
+
+  // Refetch from the first page when the status or role filter changes, keeping any active search term
+  const handleFilterChange = async (newFilters: ProjectListFilterValues) => {
+    setFilters(newFilters);
+    setErrors([]);
+    setFetchFailed(false);
+    setProjects([]);
+    setSearchResults([]);
+    setNextCursor(null);
+    setSearchNextCursor(null);
+
+    try {
+      await fetchProjects({
+        variables: {
+          paginationOptions: {
+            type: "CURSOR",
+            limit: LIMIT,
+          },
+          ...(isSearchFetchRef.current ? { term: searchTerm.toLowerCase() } : {}),
+          filterOptions: toProjectFilterOptions(newFilters),
+        },
+      });
+    } catch (err) {
+      recordProjectsFetchFailure("handleFilterChange", err);
+    }
   };
 
   //Update searchTerm state whenever entry in the search field changes
@@ -144,6 +187,7 @@ const OrganizationProjectsListPage: React.FC = () => {
             limit: LIMIT,
           },
           term: searchTerm.toLowerCase(),
+          filterOptions: toProjectFilterOptions(filters),
         },
       });
     } catch (err) {
@@ -165,6 +209,7 @@ const OrganizationProjectsListPage: React.FC = () => {
             limit: LIMIT,
           },
           term: searchTerm.toLowerCase(),
+          filterOptions: toProjectFilterOptions(filters),
         },
       });
     } catch (err) {
@@ -189,6 +234,7 @@ const OrganizationProjectsListPage: React.FC = () => {
             cursor: nextCursor,
             limit: LIMIT,
           },
+          filterOptions: toProjectFilterOptions(filters),
         },
       });
     } catch (err) {
@@ -255,6 +301,9 @@ const OrganizationProjectsListPage: React.FC = () => {
 
     const plans: ProjectItemPlanProps[] = (project.plans ?? []).flatMap((plan) => {
       if (!plan?.id) return [];
+      // The status filter matches projects with at least one plan in that status, but the API
+      // still returns all of the project's plans, so hide the ones that don't match
+      if (filters.status && plan.status !== filters.status) return [];
       return [{
         name: plan.title || ProjectOverview("plan"),
         dmpId: plan.dmpId,
@@ -263,7 +312,7 @@ const OrganizationProjectsListPage: React.FC = () => {
           dmpId: String(plan.id),
         }),
         status: plan.status ?? null,
-        // TODO(api): PlanSearchResult has no current-user role. Request myAccessLevel (or similar) on plans in myProjects.
+        // TODO(api): PlanSearchResult has no current-user role. Request myAccessLevel (or similar) on plans in allProjects.
         role: null,
         modified: formatPlanUpdatedDate(plan.modified) || null,
       }];
@@ -272,6 +321,7 @@ const OrganizationProjectsListPage: React.FC = () => {
     return {
       id: project.id,
       title: project.title || "",
+      myAccessLevel: project.myAccessLevel ?? null,
       link: `/projects/${project.id}`,
       funding: funderNames.join(", "),
       defaultExpanded: false,
@@ -301,6 +351,7 @@ const OrganizationProjectsListPage: React.FC = () => {
         paginationOptions: {
           limit: LIMIT,
         },
+        filterOptions: toProjectFilterOptions(filters),
       },
     }).catch((err) => {
       recordProjectsFetchFailure("fetchProjects", err);
@@ -328,12 +379,12 @@ const OrganizationProjectsListPage: React.FC = () => {
 
   // Transform project data when projectData updates
   useEffect(() => {
-    if (!projectData || !projectData.myProjects) return;
+    if (!projectData || !projectData.allProjects) return;
 
     setIsPageLoading(false);
     setFetchFailed(false);
 
-    const items = (projectData.myProjects.items ?? [])
+    const items = (projectData.allProjects.items ?? [])
       .filter((item): item is OrgProject => item != null);
     const transformed = items.map(transformProject);
     const searching = isSearchFetchRef.current;
@@ -344,8 +395,8 @@ const OrganizationProjectsListPage: React.FC = () => {
       } else {
         setSearchResults((prev) => [...prev, ...transformed]);
       }
-      setSearchNextCursor(projectData.myProjects?.nextCursor ?? null);
-      setSearchTotalCount(projectData?.myProjects?.totalCount ?? null);
+      setSearchNextCursor(projectData.allProjects?.nextCursor ?? null);
+      setSearchTotalCount(projectData?.allProjects?.totalCount ?? null);
     } else {
       if (projects.length === 0) {
         setProjects(transformed);
@@ -353,8 +404,8 @@ const OrganizationProjectsListPage: React.FC = () => {
         setProjects((prev) => [...prev, ...transformed]);
       }
 
-      setNextCursor(projectData.myProjects?.nextCursor ?? null);
-      setTotalCount(projectData?.myProjects?.totalCount ?? null);
+      setNextCursor(projectData.allProjects?.nextCursor ?? null);
+      setTotalCount(projectData?.allProjects?.totalCount ?? null);
     }
 
     const projectErrors = items
@@ -403,15 +454,17 @@ const OrganizationProjectsListPage: React.FC = () => {
 
   // Empty list once GraphQL has responded; totalCount may be omitted (null) when there are no items.
   const showEmptyProjectsState =
-    Boolean(projectData?.myProjects) &&
+    Boolean(projectData?.allProjects) &&
     !searchButtonClicked &&
+    !hasActiveProjectFilters(filters) &&
     projects.length === 0 &&
     (totalCount === 0 || totalCount == null);
 
   const showListSkeleton =
     !fetchFailed &&
     (isPageLoading ||
-      (isSearchFetch && searchResults.length === 0 && projectsLoading));
+      (isSearchFetch && searchResults.length === 0 && projectsLoading) ||
+      (!isSearchFetch && projects.length === 0 && projectsLoading));
 
   return (
     <>
@@ -466,6 +519,12 @@ const OrganizationProjectsListPage: React.FC = () => {
                 {Global("helpText.searchHelpText")}
               </Text>
             </SearchField>
+            <ProjectListFilters
+              filters={filters}
+              onChange={handleFilterChange}
+              onClear={clearFilters}
+              isDisabled={projectsLoading}
+            />
           </div>
 
           {isSearchFetch && (
@@ -536,7 +595,7 @@ const OrganizationProjectsListPage: React.FC = () => {
                 {Global("buttons.createNewPlan")}
               </TransitionLink>
             </div>
-          ) : searchTerm && searchButtonClicked ? (
+          ) : (searchTerm && searchButtonClicked) || (hasActiveProjectFilters(filters) && projects.length === 0) ? (
             <p>{Global("messaging.noItemsFound")}</p>
           ) : (
             <>

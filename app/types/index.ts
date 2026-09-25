@@ -311,6 +311,7 @@ export interface ProjectSearchResultInterface {
 export interface ProjectItemProps {
   id?: number | null;
   title: string;
+  myAccessLevel?: string | null;
   description?: string;
   link?: LinkHref;
   defaultExpanded: boolean;

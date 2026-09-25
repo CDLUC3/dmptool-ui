@@ -1,10 +1,52 @@
-query MyProjects($term: String, $paginationOptions: PaginationOptions) {
-  myProjects(term: $term, paginationOptions: $paginationOptions) {
+query MyProjects($term: String, $paginationOptions: PaginationOptions, $filterOptions: ProjectFilterOptions) {
+  myProjects(term: $term, paginationOptions: $paginationOptions, filterOptions: $filterOptions) {
     totalCount
     nextCursor
     items {
       title
       id
+      myAccessLevel
+      startDate
+      endDate
+      modified
+      fundings {
+        name
+        grantId
+      }
+      members {
+        name
+        role
+        orcid
+      }
+      collaborators {
+        name
+        accessLevel
+        orcid
+      }
+      plans {
+        id
+        title
+        dmpId
+        status
+        modified
+        # TODO(api): add myAccessLevel (or currentUserRole) on PlanSearchResult so the dashboard can show "Your role" without guessing from Me + collaborator names.
+      }
+      errors {
+        general
+        title
+      }
+    }
+  }
+}
+
+query AllProjects($term: String, $paginationOptions: PaginationOptions, $filterOptions: ProjectFilterOptions) {
+  allProjects(term: $term, paginationOptions: $paginationOptions, filterOptions: $filterOptions) {
+    totalCount
+    nextCursor
+    items {
+      title
+      id
+      myAccessLevel
       startDate
       endDate
       modified

@@ -567,5 +567,12 @@
       "addProjectMember": "Adicionar membro",
       "projectMemberSearch": "Busca de membros"
     }
+  },
+  "ProjectListFilters": {
+    "statusLabel": "Status",
+    "roleLabel": "Sua função",
+    "allStatuses": "Todos os status",
+    "allRoles": "Todas as funções",
+    "clearFilters": "Limpar filtros"
   }
 }

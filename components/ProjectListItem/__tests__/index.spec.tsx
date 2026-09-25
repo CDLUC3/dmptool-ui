@@ -291,6 +291,45 @@ describe("ProjectListItem", () => {
     expect(screen.getByRole("link", { name: /openPlan Legacy plan/ })).toBeInTheDocument();
   });
 
+  it("should fall back to the translated project access level when a plan has no role", () => {
+    render(
+      <ProjectListItem
+        item={{
+          ...mockProjectItem,
+          myAccessLevel: "PRIMARY",
+          defaultExpanded: true,
+          plans: [
+            { name: "Plan without role", role: null, status: "DRAFT", modified: "1 Jan" },
+            { name: "Plan with role", role: "Editor", status: "DRAFT", modified: "2 Jan" },
+          ],
+        }}
+      />,
+    );
+
+    const rows = within(screen.getByRole("table")).getAllByRole("row").slice(1);
+    expect(within(rows[0]).getByText("primary")).toBeInTheDocument();
+    // A plan-level role takes precedence over the project access level
+    expect(within(rows[1]).getByText("Editor")).toBeInTheDocument();
+    expect(within(rows[1]).queryByText("primary")).not.toBeInTheDocument();
+  });
+
+  it("should show an empty role cell when there is no plan role or project access level", () => {
+    render(
+      <ProjectListItem
+        item={{
+          ...mockProjectItem,
+          myAccessLevel: null,
+          defaultExpanded: true,
+          plans: [{ name: "Plan without role", role: null, status: "DRAFT", modified: "1 Jan" }],
+        }}
+      />,
+    );
+
+    const row = within(screen.getByRole("table")).getAllByRole("row")[1];
+    const roleCell = within(row).getAllByRole("cell")[2];
+    expect(roleCell).toHaveTextContent("—");
+  });
+
   it("hides the create-plan link when no project id or createPlanLink is available", () => {
     render(
       <ProjectListItem

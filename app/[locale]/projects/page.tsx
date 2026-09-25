@@ -18,6 +18,12 @@ import {
 } from "react-aria-components";
 import PageHeader from "@/components/PageHeader";
 import ProjectListItem from "@/components/ProjectListItem";
+import ProjectListFilters, {
+  DEFAULT_PROJECT_LIST_FILTERS,
+  ProjectListFilterValues,
+  hasActiveProjectFilters,
+  toProjectFilterOptions,
+} from '@/components/ProjectListFilters';
 import { ContentContainer, LayoutContainer } from '@/components/Container';
 import ErrorMessages from '@/components/ErrorMessages';
 import SkeletonListLoading from '@/components/SkeletonListLoading';
@@ -35,7 +41,6 @@ import {
 import { useScrollToTop } from '@/hooks/scrollToTop';
 import { logECS, routePath } from '@/utils/index';
 import { handleApolloError } from '@/utils/index';
-
 import styles from './ProjectsListPage.module.scss';
 
 const LIMIT = 3;
@@ -55,6 +60,7 @@ const ProjectsListPage: React.FC = () => {
   const [errors, setErrors] = useState<string[]>([]);
   const [isPageLoading, setIsPageLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState<string>('');
+  const [filters, setFilters] = useState<ProjectListFilterValues>(DEFAULT_PROJECT_LIST_FILTERS);
   const [searchButtonClicked, setSearchButtonClicked] = useState(false);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
 
@@ -91,7 +97,7 @@ const ProjectsListPage: React.FC = () => {
     });
   };
 
-  const resetSearch = async () => {
+  const resetList = async (nextFilters: ProjectListFilterValues) => {
     setSearchTerm('');
     setIsSearchFetch(false);
     isSearchFetchRef.current = false;
@@ -109,6 +115,7 @@ const ProjectsListPage: React.FC = () => {
           },
           // Distinct from the mount query (no term key) so Apollo does not reuse that result.
           term: '',
+          filterOptions: toProjectFilterOptions(nextFilters),
         },
       });
     } catch (err) {
@@ -116,6 +123,41 @@ const ProjectsListPage: React.FC = () => {
     }
     scrollToTop(topRef);
   }
+
+  const resetSearch = () => resetList(filters);
+
+  // Clears the status and role filters and any search term, so all projects are shown
+  const clearFilters = () => {
+    setFilters(DEFAULT_PROJECT_LIST_FILTERS);
+    setErrors([]);
+    return resetList(DEFAULT_PROJECT_LIST_FILTERS);
+  };
+
+  // Refetch from the first page when the status or role filter changes, keeping any active search term
+  const handleFilterChange = async (newFilters: ProjectListFilterValues) => {
+    setFilters(newFilters);
+    setErrors([]);
+    setFetchFailed(false);
+    setProjects([]);
+    setSearchResults([]);
+    setNextCursor(null);
+    setSearchNextCursor(null);
+
+    try {
+      await fetchProjects({
+        variables: {
+          paginationOptions: {
+            type: "CURSOR",
+            limit: LIMIT,
+          },
+          ...(isSearchFetchRef.current ? { term: searchTerm.toLowerCase() } : {}),
+          filterOptions: toProjectFilterOptions(newFilters),
+        },
+      });
+    } catch (err) {
+      recordProjectsFetchFailure('handleFilterChange', err);
+    }
+  };
 
   //Update searchTerm state whenever entry in the search field changes
   const handleSearchInput = (value: string) => {
@@ -145,6 +187,7 @@ const ProjectsListPage: React.FC = () => {
             limit: LIMIT,
           },
           term: searchTerm.toLowerCase(),
+          filterOptions: toProjectFilterOptions(filters),
         },
       });
     } catch (err) {
@@ -167,6 +210,7 @@ const ProjectsListPage: React.FC = () => {
             limit: LIMIT,
           },
           term: searchTerm.toLowerCase(),
+          filterOptions: toProjectFilterOptions(filters),
         },
       });
     } catch (err) {
@@ -192,6 +236,7 @@ const ProjectsListPage: React.FC = () => {
             cursor: nextCursor,
             limit: LIMIT,
           },
+          filterOptions: toProjectFilterOptions(filters),
         },
       });
 
@@ -259,6 +304,9 @@ const ProjectsListPage: React.FC = () => {
 
     const plans: ProjectItemPlanProps[] = (project.plans ?? []).flatMap((plan) => {
       if (!plan?.id) return [];
+      // The status filter matches projects with at least one plan in that status, but the API
+      // still returns all of the project's plans, so hide the ones that don't match
+      if (filters.status && plan.status !== filters.status) return [];
       return [{
         name: plan.title || ProjectOverview('plan'),
         dmpId: plan.dmpId,
@@ -276,6 +324,7 @@ const ProjectsListPage: React.FC = () => {
     return {
       id: project.id,
       title: project.title || '',
+      myAccessLevel: project.myAccessLevel ?? null,
       link: `/projects/${project.id}`,
       funding: funderNames.join(', '),
       defaultExpanded: false,
@@ -305,6 +354,7 @@ const ProjectsListPage: React.FC = () => {
         paginationOptions: {
           limit: LIMIT,
         },
+        filterOptions: toProjectFilterOptions(filters),
       },
     }).catch((err) => {
       recordProjectsFetchFailure('fetchProjects', err);
@@ -333,7 +383,7 @@ const ProjectsListPage: React.FC = () => {
   // Transform project data when projectData updates
   useEffect(() => {
     if (!projectData || !projectData.myProjects) return;
-
+    console.log("***ProjectData", projectData);
     setIsPageLoading(false);
     setFetchFailed(false);
 
@@ -410,13 +460,15 @@ const ProjectsListPage: React.FC = () => {
   const showEmptyProjectsState =
     Boolean(projectData?.myProjects) &&
     !searchButtonClicked &&
+    !hasActiveProjectFilters(filters) &&
     projects.length === 0 &&
     (totalCount === 0 || totalCount == null);
 
   const showListSkeleton =
     !fetchFailed &&
     (isPageLoading ||
-      (isSearchFetch && searchResults.length === 0 && projectsLoading));
+      (isSearchFetch && searchResults.length === 0 && projectsLoading) ||
+      (!isSearchFetch && projects.length === 0 && projectsLoading));
 
   return (
     <>
@@ -448,7 +500,7 @@ const ProjectsListPage: React.FC = () => {
 
       <LayoutContainer>
         <ContentContainer>
-          <div className="searchSection" role="search" ref={topRef}>
+          <div className={`searchSection ${styles.searchSection}`} role="search" ref={topRef}>
             <SearchField>
               <Label>{Global('labels.searchByKeyword')}</Label>
               <Input value={searchTerm} onChange={e => handleSearchInput(e.target.value)} />
@@ -464,6 +516,12 @@ const ProjectsListPage: React.FC = () => {
                 {Global('helpText.searchHelpText')}
               </Text>
             </SearchField>
+            <ProjectListFilters
+              filters={filters}
+              onChange={handleFilterChange}
+              onClear={clearFilters}
+              isDisabled={projectsLoading}
+            />
           </div>
 
           {isSearchFetch && (
@@ -518,7 +576,7 @@ const ProjectsListPage: React.FC = () => {
                 {Global('buttons.createNewPlan')}
               </TransitionLink>
             </div>
-          ) : searchTerm && searchButtonClicked ? (
+          ) : (searchTerm && searchButtonClicked) || (hasActiveProjectFilters(filters) && projects.length === 0) ? (
             <p>{Global('messaging.noItemsFound')}</p>
           ) : (
             <>

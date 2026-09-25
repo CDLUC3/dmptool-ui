@@ -22,6 +22,7 @@ type ProjectListItemProps = {
 function ProjectListItem({ item, isReadOnly, ...rest }: ProjectListItemProps) {
   const [expanded, setExpanded] = useState<boolean>(item.defaultExpanded);
   const t = useTranslations("ProjectOverview");
+  const AccessLevels = useTranslations("ProjectsProjectCollaboration.accessLevels");
   const Global = useTranslations("Global");
   const generatedId = useId().replace(/:/g, "");
   const instanceId = item.id != null ? `project-${item.id}` : `project-${generatedId}`;
@@ -133,74 +134,76 @@ function ProjectListItem({ item, isReadOnly, ...rest }: ProjectListItemProps) {
       >
         <div className={styles.expandedClip}>
           <div className={styles.expandedContent}>
-        <section className={styles.plansBlock} aria-labelledby={plansHeadingId}>
-          <div className={styles.plansHead}>
-            <h3 id={plansHeadingId} className={styles.plansHeading}>
-              {t("plansInProject")}
-            </h3>
-            {createPlanLink && !isReadOnly && (
-              <>
-                <span className={styles.plansHeadSep} aria-hidden="true">•</span>
-                <TransitionLink href={createPlanLink} className={styles.createPlanLink}>
-                  {t("createNewDmpInProject")}
-                </TransitionLink>
-              </>
-            )}
-          </div>
+            <section className={styles.plansBlock} aria-labelledby={plansHeadingId}>
+              <div className={styles.plansHead}>
+                <h3 id={plansHeadingId} className={styles.plansHeading}>
+                  {t("plansInProject")}
+                </h3>
+                {createPlanLink && !isReadOnly && (
+                  <>
+                    <span className={styles.plansHeadSep} aria-hidden="true">•</span>
+                    <TransitionLink href={createPlanLink} className={styles.createPlanLink}>
+                      {t("createNewDmpInProject")}
+                    </TransitionLink>
+                  </>
+                )}
+              </div>
 
-          {plans.length === 0 ? (
-            <p className={styles.noPlans}>{t("noPlansYet")}</p>
-          ) : (
-            <table className={styles.plansTable}>
-              <thead>
-                <tr>
-                  <th scope="col">{t("plan")}</th>
-                  <th scope="col">{t("statusColumn")}</th>
-                  <th scope="col">{t("yourRole")}</th>
-                  <th scope="col">{t("updated")}</th>
-                  <th scope="col">{t("actions")}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {plans.map((plan, index) => {
-                  const statusKey = plan.status?.toUpperCase() ?? "";
-                  const statusClass = PLAN_STATUS_CLASS[statusKey] ?? styles.planStatusDraft;
-                  return (
-                    <tr key={plan.link ?? `${plan.name}-${index}`}>
-                      <td data-label={t("plan")}>{renderPlanName(plan)}</td>
-                      <td data-label={t("statusColumn")}>
-                        {plan.status ? (
-                          <span className={`${styles.planStatus} ${statusClass}`}>
-                            {planStatusLabel(plan.status)}
-                          </span>
-                        ) : (
-                          <span className={styles.cellEmpty}>—</span>
-                        )}
-                      </td>
-                      <td data-label={t("yourRole")}>
-                        {plan.role ?? <span className={styles.cellEmpty}>—</span>}
-                      </td>
-                      <td data-label={t("updated")}>
-                        {plan.modified ?? <span className={styles.cellEmpty}>—</span>}
-                      </td>
-                      <td data-label={t("actions")} className={styles.planActionsCell}>
-                        {plan.link && (
-                          <TransitionLink
-                            href={plan.link}
-                            className={styles.openPlanLink}
-                            aria-label={`${t("openPlan")} ${plan.name}`}
-                          >
-                            {t("openPlan")}
-                          </TransitionLink>
-                        )}
-                      </td>
+              {plans.length === 0 ? (
+                <p className={styles.noPlans}>{t("noPlansYet")}</p>
+              ) : (
+                <table className={styles.plansTable}>
+                  <thead>
+                    <tr>
+                      <th scope="col">{t("plan")}</th>
+                      <th scope="col">{t("statusColumn")}</th>
+                      <th scope="col">{t("yourRole")}</th>
+                      <th scope="col">{t("updated")}</th>
+                      <th scope="col">{t("actions")}</th>
                     </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          )}
-        </section>
+                  </thead>
+                  <tbody>
+                    {plans.map((plan, index) => {
+                      const statusKey = plan.status?.toUpperCase() ?? "";
+                      const statusClass = PLAN_STATUS_CLASS[statusKey] ?? styles.planStatusDraft;
+                      return (
+                        <tr key={plan.link ?? `${plan.name}-${index}`}>
+                          <td data-label={t("plan")}>{renderPlanName(plan)}</td>
+                          <td data-label={t("statusColumn")}>
+                            {plan.status ? (
+                              <span className={`${styles.planStatus} ${statusClass}`}>
+                                {planStatusLabel(plan.status)}
+                              </span>
+                            ) : (
+                              <span className={styles.cellEmpty}>—</span>
+                            )}
+                          </td>
+                          <td data-label={t("yourRole")}>
+                            {plan.role ?? (item.myAccessLevel
+                              ? AccessLevels(item.myAccessLevel.toLowerCase())
+                              : <span className={styles.cellEmpty}>—</span>)}
+                          </td>
+                          <td data-label={t("updated")}>
+                            {plan.modified ?? <span className={styles.cellEmpty}>—</span>}
+                          </td>
+                          <td data-label={t("actions")} className={styles.planActionsCell}>
+                            {plan.link && (
+                              <TransitionLink
+                                href={plan.link}
+                                className={styles.openPlanLink}
+                                aria-label={`${t("openPlan")} ${plan.name}`}
+                              >
+                                {t("openPlan")}
+                              </TransitionLink>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              )}
+            </section>
           </div>
         </div>
       </div>
