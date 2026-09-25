@@ -1,5 +1,6 @@
 ## Added
-- Added Plan Authoring styleguide research-output Add/Edit as a separate page, with optional `rowNavigation` on `ResearchOutputAnswerComponent` so production inline edit stays unchanged when the prop is omitted
+- Added Plan Authoring styleguide research-output Add/Edit as a separate page (`PlanResearchOutputEditScreen`), with optional `rowNavigation` on `ResearchOutputAnswerComponent` so production inline edit stays unchanged when the prop is omitted. Frontend stub only — saves go through the demo data source [#334]
+- Added tests for `PlanResearchOutputEditScreen`, `PlanQuestionAnswer`, and the research-output list, including `jest-axe` accessibility checks [#334]
 - Added `PlanCard` with template and uploaded variants on the project overview, plus styleguide demos [#93]
 - Added plan authoring uploaded-document view with document card, update/replace dialog, and styleguide demo [#93]
 - Added `TriggerQuestionsForQuestion` query [#360]
@@ -45,6 +46,7 @@
 - Added `UpdateAffiliation` and `AffiliationById` queries [#203]
 
 ## Updated
+- Updated `ResearchOutputAnswerComponent` list to use the standard button styles and the shared `ModalOverlayComponent` delete confirmation instead of `window.confirm`; Edit and Delete controls now include the output title in their accessible name, and the empty-title fallback is translated [#334]
 - Updated `PlanCard` section progress to prefer required counts (`X of Y required`), falling back to all-question counts (`X of Y`) when none are required [#93]
 - Redesigned `ProjectListItem` and project list pages (`/projects`, `/admin/projects`, `/admin/users/[userId]/projects`) with expandable plan details, skeleton loading, and GraphQL-backed plan and collaborator data
 - Updated `DisplayLogicComponent.tsx` to show condition joiner within condition groups as well as between condition groups [#360]

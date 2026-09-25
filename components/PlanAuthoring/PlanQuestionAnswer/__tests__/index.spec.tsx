@@ -83,7 +83,7 @@ const researchOutputRow = {
   ],
 };
 
-const researchOutputQuestion = {
+const researchOutputQuestion: PlanQuestionDefinition = {
   identity: { kind: 'base', versionedQuestionId: 104 },
   sectionIdentity: { kind: 'base', versionedSectionId: 1 },
   title: 'Research outputs for this award',
@@ -95,16 +95,16 @@ const researchOutputQuestion = {
   guidanceSources: [],
   comments: [],
   displayOrder: 1,
-} as PlanQuestionDefinition;
+};
 
-const textQuestion = {
+const textQuestion: PlanQuestionDefinition = {
   ...researchOutputQuestion,
   identity: { kind: 'base', versionedQuestionId: 101 },
   title: 'Describe your data',
   questionType: TEXT_FIELD_QUESTION_TYPE,
   parsedJson: { type: TEXT_FIELD_QUESTION_TYPE },
   answerJson: { type: TEXT_FIELD_QUESTION_TYPE, answer: 'Some text' },
-} as PlanQuestionDefinition;
+};
 
 const defaultProps = {
   onChange: jest.fn(),
