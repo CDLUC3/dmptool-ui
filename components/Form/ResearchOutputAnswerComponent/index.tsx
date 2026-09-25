@@ -269,7 +269,14 @@ const ResearchOutputAnswerComponent: React.FC<ResearchOutputAnswerComponentProps
 
       <ul className={styles.outputList}>
         {rows.map((row, index) => {
-          const { title, outputType, repositories } = getRowDisplayInfo(row, columns);
+          const { title, outputType, repositories } = getRowDisplayInfo(
+            row,
+            columns,
+            t('messages.untitledResearchOutput')
+          );
+
+          const editLabel = `${Global('buttons.edit')} ${title}`;
+          const deleteLabel = `${Global('buttons.delete')} ${title}`;
 
           return (
             <li key={index} className={styles.outputItem}>
@@ -299,6 +306,7 @@ const ResearchOutputAnswerComponent: React.FC<ResearchOutputAnswerComponentProps
                   <Link
                     href={rowNavigation.editHref(index)}
                     className="react-aria-Button secondary small"
+                    aria-label={editLabel}
                   >
                     {Global('buttons.edit')}
                   </Link>
@@ -306,17 +314,18 @@ const ResearchOutputAnswerComponent: React.FC<ResearchOutputAnswerComponentProps
                   <Button
                     className="secondary small"
                     onPress={() => handleEdit(index)}
+                    aria-label={editLabel}
                   >
                     {Global('buttons.edit')}
                   </Button>
                 )}
                 <DialogTrigger>
-                  <Button className="danger small">
+                  <Button className="danger small" aria-label={deleteLabel}>
                     {Global('buttons.delete')}
                   </Button>
                   <ModalOverlayComponent
                     heading={t('headings.confirmDelete')}
-                    content={t('messages.areYouSureYouWantToDelete')}
+                    content={`${t('messages.areYouSureYouWantToDelete')} ${title}`}
                     btnSecondaryText={Global('buttons.cancel')}
                     btnPrimaryText={Global('buttons.delete')}
                     onPressAction={(_event, close) => {

@@ -122,7 +122,8 @@ export const createEmptyResearchOutputRow = (
  */
 export const getRowDisplayInfo = (
   row: ResearchOutputTable,
-  columns: ResearchOutputTableQuestionType['columns']
+  columns: ResearchOutputTableQuestionType['columns'],
+  untitledTitle = 'Untitled Research Output'
 ): { title: string; outputType: string; repositories: string[] } => {
   const titleIndex = columns.findIndex(col =>
     col.heading.toLowerCase() === 'title'
@@ -137,7 +138,7 @@ export const getRowDisplayInfo = (
   );
 
   // Extract title
-  let title = 'Untitled Research Output';
+  let title = untitledTitle;
   if (titleIndex !== -1 && row.columns[titleIndex]) {
     const titleAnswer = row.columns[titleIndex].answer;
     if (typeof titleAnswer === 'string' && titleAnswer.trim()) {

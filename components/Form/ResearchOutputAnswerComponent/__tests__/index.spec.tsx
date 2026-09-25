@@ -1,5 +1,6 @@
 import React from 'react';
 import { render, screen, waitFor, within } from '@testing-library/react';
+import { axe, toHaveNoViolations } from 'jest-axe';
 import userEvent from '@testing-library/user-event';
 import { NextIntlClientProvider } from 'next-intl';
 import ResearchOutputAnswerComponent from '../index';
@@ -11,6 +12,8 @@ import {
   LicenseSearchAnswerType,
   AnyTableColumnAnswerType
 } from '@dmptool/types';
+
+expect.extend(toHaveNoViolations);
 
 // Define props interface for the mock component
 interface MockSingleResearchOutputComponentProps {
@@ -595,7 +598,7 @@ describe('ResearchOutputAnswerComponent', () => {
       expect(screen.queryByText('Figshare')).not.toBeInTheDocument();
     });
 
-    it('should show "Untitled Research Output" for rows without title', () => {
+    it('should show the untitled label for rows without title', () => {
       const mockRows = [createMockRow('', '', [])];
 
       renderWithProviders(
@@ -606,7 +609,7 @@ describe('ResearchOutputAnswerComponent', () => {
         />
       );
 
-      expect(screen.getByText('Untitled Research Output')).toBeInTheDocument();
+      expect(screen.getByText('messages.untitledResearchOutput')).toBeInTheDocument();
     });
 
     it('should render Add Output button', () => {
@@ -776,7 +779,8 @@ describe('ResearchOutputAnswerComponent', () => {
 
       const dialog = screen.getByRole('alertdialog');
       expect(within(dialog).getByText('headings.confirmDelete')).toBeInTheDocument();
-      expect(within(dialog).getByText('messages.areYouSureYouWantToDelete')).toBeInTheDocument();
+      expect(within(dialog).getByText(/messages\.areYouSureYouWantToDelete/)).toBeInTheDocument();
+      expect(within(dialog).getByText(/Dataset 1/)).toBeInTheDocument();
       expect(mockSetRows).not.toHaveBeenCalled();
 
       await user.click(within(dialog).getByRole('button', { name: /buttons\.delete/i }));
@@ -1004,7 +1008,7 @@ describe('ResearchOutputAnswerComponent', () => {
       );
 
       // Should still render without errors
-      expect(screen.getByText('Untitled Research Output')).toBeInTheDocument();
+      expect(screen.getByText('messages.untitledResearchOutput')).toBeInTheDocument();
     });
   });
 
@@ -1691,6 +1695,75 @@ describe('ResearchOutputAnswerComponent', () => {
       await user.click(screen.getByRole('button', { name: /edit/i }));
 
       expect(screen.getByTestId('single-research-output')).toBeInTheDocument();
+    });
+  });
+
+  describe('row action names', () => {
+    it('names each Edit and Delete control with that output title', () => {
+      const mockRows = [
+        createMockRow('Dataset 1', 'dataset', []),
+        createMockRow('Dataset 2', 'dataset', []),
+      ];
+
+      renderWithProviders(
+        <ResearchOutputAnswerComponent
+          columns={mockColumns}
+          rows={mockRows}
+          setRows={mockSetRows}
+        />
+      );
+
+      expect(screen.getByRole('button', { name: 'buttons.edit Dataset 1' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'buttons.edit Dataset 2' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'buttons.delete Dataset 1' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'buttons.delete Dataset 2' })).toBeInTheDocument();
+    });
+
+    it('names Edit links with the output title when row navigation is set', () => {
+      renderWithProviders(
+        <ResearchOutputAnswerComponent
+          columns={mockColumns}
+          rows={[createMockRow('Dataset 1', 'dataset', [])]}
+          setRows={mockSetRows}
+          rowNavigation={{
+            editHref: (index: number) => `/edit/${index}`,
+            addHref: '/edit/new',
+          }}
+        />
+      );
+
+      expect(screen.getByRole('link', { name: 'buttons.edit Dataset 1' })).toHaveAttribute('href', '/edit/0');
+      expect(screen.getByRole('button', { name: 'buttons.delete Dataset 1' })).toBeInTheDocument();
+    });
+
+    it('has no accessibility violations on the list', async () => {
+      const { container } = renderWithProviders(
+        <ResearchOutputAnswerComponent
+          columns={mockColumns}
+          rows={[
+            createMockRow('Dataset 1', 'dataset', []),
+            createMockRow('Dataset 2', 'dataset', []),
+          ]}
+          setRows={mockSetRows}
+        />
+      );
+
+      const results = await axe(container);
+      expect(results).toHaveNoViolations();
+    });
+
+    it('has no accessibility violations with the delete confirm open', async () => {
+      renderWithProviders(
+        <ResearchOutputAnswerComponent
+          columns={mockColumns}
+          rows={[createMockRow('Dataset 1', 'dataset', [])]}
+          setRows={mockSetRows}
+        />
+      );
+
+      await user.click(screen.getByRole('button', { name: 'buttons.delete Dataset 1' }));
+      const results = await axe(document.body);
+      expect(results).toHaveNoViolations();
     });
   });
 });
