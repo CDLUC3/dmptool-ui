@@ -70,7 +70,6 @@ query AllProjects($term: String, $paginationOptions: PaginationOptions, $filterO
         dmpId
         status
         modified
-        # TODO(api): add myAccessLevel (or currentUserRole) on PlanSearchResult so the dashboard can show "Your role" without guessing from Me + collaborator names.
       }
       errors {
         general

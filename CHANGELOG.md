@@ -1,4 +1,5 @@
 ## Added
+- Added `ProjectListFilters` component to be used for filtering statuses and roles in Project dashboards [#379]
 - Added `AriaRouterProvider` wrapper for React Aria Components that contain `href` props to assure that links include the correct locale [#367]
 - Added `PlanCard` with template and uploaded variants on the project overview, plus styleguide demos [#93]
 - Added plan authoring uploaded-document view with document card, update/replace dialog, and styleguide demo [#93]
@@ -45,6 +46,8 @@
 - Added `UpdateAffiliation` and `AffiliationById` queries [#203]
 
 ## Updated
+- Updated `OrganizationProjectsListPage` and `ProjectsListPage` with filters for `roles` and `statuses`. Also updated `OrganizationProjectsListPage` to use `allProjects` query, and updated both `allProjects` and `myProjects` queries to use `filterOptions`[#379]
+- Updated `ProjectListItems` component to use `AccessLevels` for the `role` column in the cards [#379]
 - Updated `routes.ts` to not require `locale` to be passed in because it was defaulting to `en-US` and changing the language for a user that had a `languageId` of `pt-BR` [#367]
 - Updated all pages to use `useRouter` from `@/i18n/routing` so that it would retain the `locale` specified in the `path`. Also, updated `proxy.ts` so that it accurately applies `locale` to a path that does not contain one. [#367]
 - Updated `README.md` to include more info on localization [#367]
@@ -173,6 +176,9 @@
 - Updated the `project` graphql query to include `email` and `created` field so we can display info for invited project collaborators who haven't accepted invite [#287]
 - Fixed `type` errors resulting from deprecated `errorPolicy` in unit tests [#252]
 - Fixed issue with Feedback Notification headers displaying for any collaborator on the Plan Overview, Section and Question pages. It should only display to Org Admins and Super Admins. Added shared isOrgAdmin hook for pages. [#249]
+
+## Removed
+- Removed the ununused `app/[locale]/users/[userId]/projects` page, since we no longer link to it since we updated the `app/[locale]/users/[userId]/manage` page to link to `projects` instead of `plans` [#379]
 
 ## Chore
 - Updated `versioning.yml` to just copy `package.json` and `CHANGELOG.md` back to `development` branch [#341]

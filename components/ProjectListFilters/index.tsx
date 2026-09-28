@@ -49,6 +49,12 @@ interface ProjectListFiltersProps {
   isDisabled?: boolean;
 }
 
+/**
+ * A component for filtering a list of projects.
+ * @param param0 
+ * @returns 
+ */
+
 function ProjectListFilters({ filters, onChange, onClear, isDisabled = false }: ProjectListFiltersProps) {
   const t = useTranslations('ProjectListFilters');
   const PlanStatusLabels = useTranslations('ProjectOverview.planStatus');

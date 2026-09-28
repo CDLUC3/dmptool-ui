@@ -304,8 +304,9 @@ const ProjectsListPage: React.FC = () => {
 
     const plans: ProjectItemPlanProps[] = (project.plans ?? []).flatMap((plan) => {
       if (!plan?.id) return [];
-      // The status filter matches projects with at least one plan in that status, but the API
-      // still returns all of the project's plans, so hide the ones that don't match
+      /* We need to determine which plans to show within each project based on the current status filter,
+      since the backend sends back all plans in a project that meets one of the filterOptions, even if the plan 
+      itself doesn't meet the filter. */
       if (filters.status && plan.status !== filters.status) return [];
       return [{
         name: plan.title || ProjectOverview('plan'),
@@ -315,8 +316,6 @@ const ProjectsListPage: React.FC = () => {
           dmpId: String(plan.id),
         }),
         status: plan.status ?? null,
-        // TODO(api): PlanSearchResult has no current-user role. Request myAccessLevel (or similar) on plans in myProjects.
-        role: null,
         modified: formatPlanUpdatedDate(plan.modified) || null,
       }];
     });
@@ -383,7 +382,6 @@ const ProjectsListPage: React.FC = () => {
   // Transform project data when projectData updates
   useEffect(() => {
     if (!projectData || !projectData.myProjects) return;
-    console.log("***ProjectData", projectData);
     setIsPageLoading(false);
     setFetchFailed(false);
 

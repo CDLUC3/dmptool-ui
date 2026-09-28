@@ -179,9 +179,9 @@ function ProjectListItem({ item, isReadOnly, ...rest }: ProjectListItemProps) {
                             )}
                           </td>
                           <td data-label={t("yourRole")}>
-                            {plan.role ?? (item.myAccessLevel
+                            {item.myAccessLevel
                               ? AccessLevels(item.myAccessLevel.toLowerCase())
-                              : <span className={styles.cellEmpty}>—</span>)}
+                              : <span className={styles.cellEmpty}>—</span>}
                           </td>
                           <td data-label={t("updated")}>
                             {plan.modified ?? <span className={styles.cellEmpty}>—</span>}

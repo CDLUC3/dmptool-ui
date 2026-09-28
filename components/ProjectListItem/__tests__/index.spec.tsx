@@ -28,6 +28,7 @@ const mockProjectItem: ProjectItemProps = {
   funding: "National Science Foundation (nsf.gov), European Research Council",
   grantId: "252552-255",
   defaultExpanded: false,
+  myAccessLevel: "OWN",
   modified: "12 Aug 2026",
   collaboratorCount: 3,
   relatedWorksCount: 3,
@@ -41,7 +42,6 @@ const mockProjectItem: ProjectItemProps = {
       dmpId: "10.4832/DIB57N",
       link: "/projects/coastal-ocean-greenland/plans/1",
       status: "DRAFT",
-      role: "Owner",
       modified: "14 Aug",
     },
     {
@@ -49,7 +49,6 @@ const mockProjectItem: ProjectItemProps = {
       dmpId: null,
       link: "/projects/coastal-ocean-greenland/plans/2",
       status: "COMPLETE",
-      role: "Editor",
       modified: "2 Jul",
     },
   ],
@@ -106,7 +105,7 @@ describe("ProjectListItem", () => {
     const firstRow = within(rows[0]);
     expect(firstRow.getByRole("link", { name: "Ocean Processes of Greenland" })).toBeInTheDocument();
     expect(firstRow.getByText("planStatus.DRAFT")).toBeInTheDocument();
-    expect(firstRow.getByText("Owner")).toBeInTheDocument();
+    expect(firstRow.getByText("own")).toBeInTheDocument();
     expect(firstRow.getByText("14 Aug")).toBeInTheDocument();
     expect(firstRow.getByRole("link", { name: /openPlan Ocean Processes of Greenland/ })).toHaveAttribute(
       "href",
@@ -247,6 +246,7 @@ describe("ProjectListItem", () => {
           ...mockProjectItem,
           id: undefined,
           createPlanLink: "/custom/create-plan",
+          myAccessLevel: null,
           defaultExpanded: true,
           modified: undefined,
           relatedWorksCount: 0,
@@ -254,20 +254,17 @@ describe("ProjectListItem", () => {
             {
               name: "Untitled draft",
               status: null,
-              role: null,
               modified: null,
             },
             {
               name: "Legacy plan",
               status: "UNKNOWN_STATUS",
-              role: "Viewer",
               modified: "1 Jan",
               link: "/projects/legacy/plans/9",
             },
             {
               name: "Archived plan",
               status: "ARCHIVED",
-              role: "Owner",
               modified: "3 Mar",
               link: "/projects/legacy/plans/10",
             },
@@ -291,7 +288,7 @@ describe("ProjectListItem", () => {
     expect(screen.getByRole("link", { name: /openPlan Legacy plan/ })).toBeInTheDocument();
   });
 
-  it("should fall back to the translated project access level when a plan has no role", () => {
+  it("should show the translated project access level as the role for each plan", () => {
     render(
       <ProjectListItem
         item={{
@@ -299,8 +296,8 @@ describe("ProjectListItem", () => {
           myAccessLevel: "PRIMARY",
           defaultExpanded: true,
           plans: [
-            { name: "Plan without role", role: null, status: "DRAFT", modified: "1 Jan" },
-            { name: "Plan with role", role: "Editor", status: "DRAFT", modified: "2 Jan" },
+            { name: "First plan", status: "DRAFT", modified: "1 Jan" },
+            { name: "Second plan", status: "DRAFT", modified: "2 Jan" },
           ],
         }}
       />,
@@ -308,19 +305,17 @@ describe("ProjectListItem", () => {
 
     const rows = within(screen.getByRole("table")).getAllByRole("row").slice(1);
     expect(within(rows[0]).getByText("primary")).toBeInTheDocument();
-    // A plan-level role takes precedence over the project access level
-    expect(within(rows[1]).getByText("Editor")).toBeInTheDocument();
-    expect(within(rows[1]).queryByText("primary")).not.toBeInTheDocument();
+    expect(within(rows[1]).getByText("primary")).toBeInTheDocument();
   });
 
-  it("should show an empty role cell when there is no plan role or project access level", () => {
+  it("should show an empty role cell when there is no project access level", () => {
     render(
       <ProjectListItem
         item={{
           ...mockProjectItem,
           myAccessLevel: null,
           defaultExpanded: true,
-          plans: [{ name: "Plan without role", role: null, status: "DRAFT", modified: "1 Jan" }],
+          plans: [{ name: "Plan", status: "DRAFT", modified: "1 Jan" }],
         }}
       />,
     );

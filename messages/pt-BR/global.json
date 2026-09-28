@@ -1213,20 +1213,5 @@
         "formSubmittalFailed": "Falha ao enviar o formulário. Tente novamente mais tarde."
       }
     }
-  },
-  "OrganizationUserProjects": {
-    "title": "Projetos e planos do usuário",
-    "intro": "Os planos deste usuário estão agrupados em projetos de pesquisa. Use a Pesquisa para encontrar planos em seus projetos.",
-    "projectsList": "Projetos do usuário",
-    "messages": {
-      "info": {
-        "noProjectsHeading": "Este usuário ainda não tem projetos",
-        "noProjectsDescription": "Quando este usuário criar planos de gerenciamento de dados, eles serão listados aqui, agrupados em projetos."
-      },
-      "errors": {
-        "errorRetrievingProjects": "Algo deu errado ao recuperar projetos. Por favor, tente novamente mais tarde.",
-        "failedToLoadMore": "Falha ao carregar mais projetos"
-      }
-    }
   }
 }

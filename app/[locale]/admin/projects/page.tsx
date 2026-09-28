@@ -30,7 +30,6 @@ import SkeletonListLoading from "@/components/SkeletonListLoading";
 import { TransitionLink } from "@/components/Form";
 
 //GraphQL
-// TODO: Change to organization-scoped GraphQL query instead of MyProjectsDocument
 import { AllProjectsDocument, AllProjectsQuery } from "@/generated/graphql";
 
 import {
@@ -301,8 +300,9 @@ const OrganizationProjectsListPage: React.FC = () => {
 
     const plans: ProjectItemPlanProps[] = (project.plans ?? []).flatMap((plan) => {
       if (!plan?.id) return [];
-      // The status filter matches projects with at least one plan in that status, but the API
-      // still returns all of the project's plans, so hide the ones that don't match
+      /* We need to determine which plans to show within each project based on the current status filter,
+      since the backend sends back all plans in a project that meets one of the filterOptions, even if the plan 
+      itself doesn't meet the filter. */
       if (filters.status && plan.status !== filters.status) return [];
       return [{
         name: plan.title || ProjectOverview("plan"),
@@ -312,8 +312,6 @@ const OrganizationProjectsListPage: React.FC = () => {
           dmpId: String(plan.id),
         }),
         status: plan.status ?? null,
-        // TODO(api): PlanSearchResult has no current-user role. Request myAccessLevel (or similar) on plans in allProjects.
-        role: null,
         modified: formatPlanUpdatedDate(plan.modified) || null,
       }];
     });
@@ -494,7 +492,7 @@ const OrganizationProjectsListPage: React.FC = () => {
       <LayoutContainer>
         <ContentContainer>
           <div
-            className="searchSection"
+            className={`searchSection ${styles.searchSection}`}
             role="search"
             ref={topRef}
           >
