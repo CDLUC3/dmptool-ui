@@ -1189,7 +1189,7 @@
   },
   "Contact": {
     "title": "Contate-nos",
-    "contactDescription": "A Ferramenta DMP é fornecida pelo Centro de Curação da Universidade da Califórnia (UC3). Você pode saber mais sobre nós no nosso <link />site.",
+    "contactDescription": "A Ferramenta DMP é fornecida pelo Centro de Curação da Universidade da Califórnia (UC3). Você pode saber mais sobre nós no nosso <link>site da UC3</link>.",
     "contactDescriptionLoggedIn": "Se você gostaria de nos contatar sobre a Ferramenta DMP, por favor preencha o formulário abaixo.",
     "contactDescriptionLoggedOut": "Se você gostaria de saber mais sobre a Ferramenta DMP, gostaria de se tornar uma organização participante, ou está tendo dificuldade para acessar sua conta, por favor, envie um e-mail para o nosso helpdesk: dmptool [at] ucop [dot] edu.",
     "form": {
