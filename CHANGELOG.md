@@ -1,4 +1,5 @@
 ## Added
+- Added `AUTH_ENDPOINT`, `NEXT_PUBLIC_AUTH_ENDPOINT`, `TOKEN_ISSUER`, `TOKEN_AUDIENCE`, `ACCESS_TOKEN_NAME`, `REFRESH_TOKEN`, and `SSO_PENDING_TOKEN_NAME` env variables and removed `JWT_SECRET`
 - Added `PlanCard` with template and uploaded variants on the project overview, plus styleguide demos [#93]
 - Added plan authoring uploaded-document view with document card, update/replace dialog, and styleguide demo [#93]
 - Added `TriggerQuestionsForQuestion` query [#360]
@@ -44,6 +45,12 @@
 - Added `UpdateAffiliation` and `AffiliationById` queries [#203]
 
 ## Updated
+- Updated the Forgot Password page to call the new Auth service's password reset endpoint
+- Updated the Reset Password page to immediately verify the password reset token with the Auth service and then post the changed password to the Auth Service's reset password endpoint
+- Replaced all references of `apollo-signin` to `sign-in`, `apollo-signup` to `sign-up` and `apollo-signout` to `sign-out`
+- Replaced all hard-coded `dmspt` and `dmpsr` references with new ENV variables
+- Removed the old password reset mutation
+- Removed the old getSecret helper function
 - Updated `PlanCard` section progress to prefer required counts (`X of Y required`), falling back to all-question counts (`X of Y`) when none are required [#93]
 - Redesigned `ProjectListItem` and project list pages (`/projects`, `/admin/projects`, `/admin/users/[userId]/projects`) with expandable plan details, skeleton loading, and GraphQL-backed plan and collaborator data
 - Updated `DisplayLogicComponent.tsx` to show condition joiner within condition groups as well as between condition groups [#360]
