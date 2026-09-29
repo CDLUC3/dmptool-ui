@@ -80,8 +80,7 @@ const mockFetchCsrfToken = fetchCsrfToken as jest.Mock;
 // Mock fetch globally
 global.fetch = jest.fn() as jest.MockedFunction<typeof fetch>;
 
-const serverEndpoint = process.env.NEXT_PUBLIC_SERVER_ENDPOINT as string;
-const signUpUrl = `${serverEndpoint}/apollo-signup`;
+const signUpUrl = `${process.env.NEXT_PUBLIC_AUTH_ENDPOINT}/sign-up`;
 
 describe('SignUpPage', () => {
   const signupData = {
@@ -537,7 +536,7 @@ describe('SignUpPage', () => {
         'Signup error',
         expect.objectContaining({
           error: expect.anything(),
-          url: { path: '/apollo-signup' },
+          url: { path: '/sign-up' },
         })
       )
     });

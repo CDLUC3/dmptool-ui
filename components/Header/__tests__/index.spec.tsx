@@ -142,7 +142,7 @@ describe("Header", () => {
 
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining("/apollo-signout"),
+        expect.stringContaining("/sign-out"),
         expect.objectContaining({
           method: "POST",
           credentials: "include",

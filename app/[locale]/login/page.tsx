@@ -55,7 +55,7 @@ const LoginPage: React.FC = () => {
     setErrors([]);  // Clear previous errors
 
     const loginRequest = async (token: string | null) => {
-      return await fetch(`${process.env.NEXT_PUBLIC_SERVER_ENDPOINT}/apollo-signin`, {
+      return await fetch(`${process.env.NEXT_PUBLIC_AUTH_ENDPOINT}/sign-in`, {
         method: 'POST',
         credentials: 'include',
         headers: {
@@ -85,7 +85,7 @@ const LoginPage: React.FC = () => {
     } catch (err: any) {
       logECS('error', 'Login error', {
         error: err,
-        url: { path: '/apollo-signin' }
+        url: { path: '/sign-in' }
       });
       setErrors([t('loginError')]);
     } finally {

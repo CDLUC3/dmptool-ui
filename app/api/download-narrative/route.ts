@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from "next/headers";
 import { createLogger } from '@/utils/server/logger';
+import { ACCESS_TOKEN_NAME } from "@/utils/authHelper";
 
 const logger = createLogger();
 
@@ -40,9 +41,10 @@ export async function GET(request: NextRequest) {
     const cookieStore = await cookies();
     const cookieString = cookieStore.toString();
 
-    // Extract dmspt token from cookies
-    const dmsptMatch = cookieString.match(/dmspt=([^;]+)/);
-    const dmsptToken = dmsptMatch ? dmsptMatch[1] : null;
+    // Extract access token from cookies
+    const accessTokenRegex = new RegExp(`(?:^|; )${ACCESS_TOKEN_NAME}=([^;]*)`);
+    const accessTokenMatch = cookieString.match(accessTokenRegex);
+    const accessToken = accessTokenMatch ? accessTokenMatch[1] : null;
 
     // Build headers for the narrative service request
     const headers: Record<string, string> = {
@@ -50,17 +52,20 @@ export async function GET(request: NextRequest) {
       Cookie: cookieString,
     };
 
-    if (dmsptToken) {
-      headers['Authorization'] = `Bearer ${dmsptToken}`;
+    if (accessToken) {
+      headers["Authorization"] = `Bearer ${accessToken}`;
     }
 
-    logger.info({
-      acceptHeader,
-      cookieString,
-      dmsptToken,
-      headers,
-      narrativeUrl: narrativeUrl.toString(),
-    }, 'Making request to narrative service');
+    logger.info(
+      {
+        acceptHeader,
+        cookieString,
+        accessToken,
+        headers,
+        narrativeUrl: narrativeUrl.toString(),
+      },
+      "Making request to narrative service",
+    );
 
     // Fetch from the narrative service
     const response = await fetch(narrativeUrl.toString(), {

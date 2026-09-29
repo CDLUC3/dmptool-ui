@@ -3,13 +3,13 @@ import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import ForgotPassword from "../page";
 
-import { useMutation } from "@apollo/client/react";
 import { useRouter } from "next/navigation";
+import { useCsrf } from "@/context/CsrfContext";
 import { axe, toHaveNoViolations } from "jest-axe";
+import React from "react";
 
 expect.extend(toHaveNoViolations);
 
-jest.mock("@apollo/client/react");
 jest.mock("next/navigation", () => ({
   useRouter: jest.fn(),
 }));
@@ -25,8 +25,13 @@ jest.mock("next-intl", () => ({
   },
 }));
 
-const sendPasswordResetEmailMutation = jest.fn();
+jest.mock("@/context/CsrfContext", () => ({
+  CsrfProvider: ({ children }: { children: React.ReactNode }) => <div data-testid="mock-csrf-provider">{children}</div>,
+  useCsrf: jest.fn(),
+}));
+
 const push = jest.fn();
+const passwordResetTokenUrl = `${process.env.NEXT_PUBLIC_AUTH_ENDPOINT}/password-reset/token`;
 
 describe("ForgotPassword Component", () => {
 
@@ -36,18 +41,11 @@ describe("ForgotPassword Component", () => {
     (useRouter as jest.Mock).mockReturnValue({
       push,
     });
-
-    (useMutation as jest.Mock).mockReturnValue([
-      sendPasswordResetEmailMutation,
-      {
-        loading: false,
-      },
-    ]);
+    (useCsrf as jest.Mock).mockReturnValue({ csrfToken: "mocked-csrf-token" });
+    global.fetch = jest.fn().mockResolvedValue({ ok: true });
   });
 
   it("should submit a valid email", async () => {
-    sendPasswordResetEmailMutation.mockResolvedValue({});
-
     render(<ForgotPassword />);
 
     await userEvent.type(
@@ -57,13 +55,18 @@ describe("ForgotPassword Component", () => {
 
     await userEvent.click(screen.getByTestId("actionContinue"));
 
-    await waitFor(() =>
-      expect(sendPasswordResetEmailMutation).toHaveBeenCalledWith({
-        variables: {
-          email: "test@example.com",
+    await waitFor(() => expect(global.fetch).toHaveBeenCalledWith(
+      passwordResetTokenUrl,
+      {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRF-TOKEN": "mocked-csrf-token",
         },
-      })
-    );
+        body: JSON.stringify({ email: "test@example.com" }),
+      }
+    ));
   });
 
   it("should not submit an invalid email", async () => {
@@ -76,7 +79,7 @@ describe("ForgotPassword Component", () => {
 
     await userEvent.click(screen.getByTestId("actionContinue"));
 
-    expect(sendPasswordResetEmailMutation).not.toHaveBeenCalled();
+    expect(global.fetch).not.toHaveBeenCalled();
 
     expect(
       screen.getByText("invalidEmail")
@@ -96,12 +99,11 @@ describe("ForgotPassword Component", () => {
   });
 
   it("should show the sending state while submitting", async () => {
-    let resolvePromise: () => void;
-
-    sendPasswordResetEmailMutation.mockImplementation(
+    let resolveRequest: (response: { ok: boolean }) => void;
+    global.fetch = jest.fn().mockImplementation(
       () =>
-        new Promise<void>((resolve) => {
-          resolvePromise = resolve;
+        new Promise<{ ok: boolean }>((resolve) => {
+          resolveRequest = resolve;
         })
     );
 
@@ -120,11 +122,9 @@ describe("ForgotPassword Component", () => {
       })
     ).toBeDisabled();
 
-    resolvePromise!();
+    resolveRequest!({ ok: true });
 
-    await waitFor(() =>
-      expect(sendPasswordResetEmailMutation).toHaveBeenCalled()
-    );
+    await waitFor(() => expect(global.fetch).toHaveBeenCalled());
   });
 
   it("should render the help link", () => {

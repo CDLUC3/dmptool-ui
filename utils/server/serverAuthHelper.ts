@@ -3,6 +3,7 @@
 import { cookies } from "next/headers";
 import jwt, { JwtPayload } from 'jsonwebtoken';
 import logger from "@/utils/server/logger";
+import { ACCESS_TOKEN_NAME } from "@/utils/authHelper";
 
 export interface JWTAccessToken extends JwtPayload {
   id: number,
@@ -65,7 +66,7 @@ export const serverRefreshAuthTokens = async () => {
     const cookieString = cookieStore.toString();
 
     // Refresh auth tokens
-    const response = await fetch(`${process.env.SERVER_ENDPOINT}/apollo-refresh`, {
+    const response = await fetch(`${process.env.AUTH_ENDPOINT}/refresh-token`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -108,7 +109,7 @@ export const serverFetchCsrfToken = async () => {
     const cookieStore = await cookies();
     const cookieString = cookieStore.toString();
 
-    const response = await fetch(`${process.env.SERVER_ENDPOINT}/apollo-csrf`, {
+    const response = await fetch(`${process.env.AUTH_ENDPOINT}/csrf`, {
       headers: {
         Cookie: cookieString, // Attach all cookies
       },
@@ -126,7 +127,7 @@ export const serverFetchCsrfToken = async () => {
 export const serverFetchAccessToken = async (): Promise<JWTAccessToken | undefined> => {
   try {
     const cookieStore = await cookies();
-    const cookie = cookieStore.get("dmspt");
+    const cookie = cookieStore.get(ACCESS_TOKEN_NAME);
     if (!cookie || !cookie.value) return undefined;
 
     const secret = process.env.JWT_SECRET ?? "";

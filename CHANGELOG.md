@@ -509,6 +509,7 @@
 
 ### Updated
 
+- Updated all old calls to sign in/up/out, password reset and CSRF token to the new auth service endpoints [#318](https://github.com/CDLUC3/dmptool-doc/issues/318)
 - Removed some duplicate text from `template/[templateId]/access` under `External people` [#482]
 - Updated description on `template/[templateId]/access` and visibility text on template publish modal [#482]
 - Updated `/template/[templateId]` to include the `View history` link in the header description [#430]

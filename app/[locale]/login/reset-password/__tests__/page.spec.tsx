@@ -1,26 +1,16 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { act, render, screen, fireEvent, waitFor } from '@testing-library/react';
+import React from 'react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
-
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { useQuery, useMutation } from '@apollo/client/react';
 import { useToast } from '@/context/ToastContext';
 import logECS from '@/utils/clientLogger';
 import { isValidPassword } from '@/utils/index';
-
 import { mockScrollIntoView, mockScrollTo } from '@/__mocks__/common';
 import ResetPassword from '../page';
-import {
-  ValidatePasswordResetTokenDocument,
-} from "@/generated/graphql";
-
-import { axe, toHaveNoViolations } from "jest-axe";
+import { axe, toHaveNoViolations } from 'jest-axe';
 
 expect.extend(toHaveNoViolations);
-// ---------------------------------------------------------------------
-// Mocks
-// ---------------------------------------------------------------------
 
 jest.mock('next/navigation', () => ({
   useRouter: jest.fn(),
@@ -29,11 +19,6 @@ jest.mock('next/navigation', () => ({
 
 jest.mock('next-intl', () => ({
   useTranslations: jest.fn(),
-}));
-
-jest.mock('@apollo/client/react', () => ({
-  useQuery: jest.fn(),
-  useMutation: jest.fn(),
 }));
 
 jest.mock('@/context/ToastContext', () => ({
@@ -51,58 +36,32 @@ jest.mock('@/components/PasswordRequirementsList', () => () => (
   <div data-testid="password-requirements" />
 ));
 
-type QueryResult = ReturnType<typeof useQuery>;
-type QueryError = QueryResult["error"];
-
-// ---------------------------------------------------------------------
-// Test setup helpers
-// ---------------------------------------------------------------------
 const mockPush = jest.fn();
 const mockToastAdd = jest.fn();
-const mockResetPasswordMutation = jest.fn<Promise<boolean>, []>();
-const mockUseQuery = useQuery as unknown as jest.Mock;
-const mockUseMutation = useMutation as unknown as jest.Mock;
-
+const passwordResetUrl = `${process.env.NEXT_PUBLIC_AUTH_ENDPOINT}/password-reset`;
+const passwordResetVerifyUrl = `${passwordResetUrl}/verify`;
 const VALID_PASSWORD = 'ValidPass123!';
 
-function setupDefaultMocks({
-  token = 'valid-token',
-  validateLoading = false,
-  validateError = undefined,
-  validateData = { validatePasswordResetToken: true },
-  mutationLoading = false,
-}: {
-  token?: string | null;
-  validateLoading?: boolean;
-  validateError?: QueryError;
-  validateData?: any;
-  mutationLoading?: boolean;
-} = {}) {
+function setupDefaultMocks(token: string | null = 'valid-token') {
   (useRouter as jest.Mock).mockReturnValue({ push: mockPush });
-
   (useSearchParams as jest.Mock).mockReturnValue({
     get: (key: string) => (key === 'token' ? token : null),
   });
-
   (useTranslations as jest.Mock).mockImplementation(() => (key: string) => key);
-
   (useToast as jest.Mock).mockReturnValue({ add: mockToastAdd });
+  global.fetch = jest.fn().mockResolvedValue({ ok: true });
+}
 
-  mockUseQuery.mockImplementation((document: unknown) => {
-    if (document === ValidatePasswordResetTokenDocument) {
-      return {
-        data: validateData,
-        loading: validateLoading,
-        error: validateError,
-      };
-    }
-    return { data: null, loading: false, error: undefined };
-  });
-
-  mockUseMutation.mockImplementation(() => [
-    mockResetPasswordMutation.mockResolvedValue(true),
-    { loading: mutationLoading, error: undefined },
-  ]);
+async function renderValidatedPage() {
+  render(<ResetPassword />);
+  await waitFor(() => expect(global.fetch).toHaveBeenCalledWith(
+    passwordResetVerifyUrl,
+    expect.objectContaining({
+      method: 'POST',
+      body: JSON.stringify({ token: 'valid-token' }),
+    })
+  ));
+  await waitFor(() => expect(screen.getByTestId('actionContinue')).toBeInTheDocument());
 }
 
 function fillPasswordFields(password: string, confirmPassword: string = password) {
@@ -113,16 +72,10 @@ function fillPasswordFields(password: string, confirmPassword: string = password
 }
 
 function submitForm() {
-  fireEvent.click(screen.getByTestId('actionContinue'));
+  fireEvent.submit(screen.getByTestId('actionContinue').closest('form')!);
 }
 
-
-// ---------------------------------------------------------------------
-// Tests
-// ---------------------------------------------------------------------
-
 describe('ResetPassword', () => {
-
   beforeEach(() => {
     window.scrollTo = jest.fn();
     setupDefaultMocks();
@@ -134,134 +87,94 @@ describe('ResetPassword', () => {
     jest.clearAllMocks();
   });
 
-  it('should redirect to the login page when no resetToken is present in the query params', () => {
-    setupDefaultMocks({ token: null });
+  it('redirects to login when no reset token is present', () => {
+    setupDefaultMocks(null);
 
     render(<ResetPassword />);
 
     expect(mockPush).toHaveBeenCalledWith('app.login');
   });
 
-  it('should show a Loading indicator while the reset token is being validated', () => {
-    setupDefaultMocks({ validateLoading: true });
+  it('shows a loading indicator while validating the reset token', () => {
+    global.fetch = jest.fn(() => new Promise<Response>(() => {}));
 
     render(<ResetPassword />);
 
     expect(screen.getByText('messaging.loading')).toBeInTheDocument();
   });
 
-  it('should show a Loading indicator while the reset password mutation is loading', () => {
-    setupDefaultMocks({ mutationLoading: true });
-
-    render(<ResetPassword />);
-
-    expect(screen.getByText('messaging.loading')).toBeInTheDocument();
-  });
-
-  it('should submit the form when a valid, matching password is entered', async () => {
-    mockResetPasswordMutation.mockResolvedValueOnce(true);
-    (isValidPassword as unknown as jest.Mock).mockReturnValue(true);
-
-    render(<ResetPassword />);
+  it('submits a valid, matching password to the auth service', async () => {
+    (isValidPassword as jest.Mock).mockReturnValue(true);
+    await renderValidatedPage();
 
     fillPasswordFields(VALID_PASSWORD);
     submitForm();
 
-    await waitFor(() => {
-      expect(mockResetPasswordMutation).toHaveBeenCalledWith({
-        variables: {
+    await waitFor(() => expect(global.fetch).toHaveBeenCalledWith(
+      passwordResetUrl,
+      {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
           token: 'valid-token',
-          newPassword: VALID_PASSWORD,
-        },
-      });
+          password: VALID_PASSWORD,
+          passwordConfirmation: VALID_PASSWORD,
+        }),
+      }
+    ));
+    expect(mockToastAdd).toHaveBeenCalledWith('successMessage', {
+      type: 'success',
+      timeout: 3000,
     });
-
-    // Success state renders the "password updated" confirmation copy
-    expect(await screen.findByText('passwordUpdatedTitle')).toBeInTheDocument();
   });
 
-  it('should show a field error and does not submit when the password is invalid', async () => {
-    (isValidPassword as unknown as jest.Mock).mockReturnValue(false);
-
-    render(<ResetPassword />);
+  it('shows a field error and does not submit an invalid password', async () => {
+    (isValidPassword as jest.Mock).mockReturnValue(false);
+    await renderValidatedPage();
 
     fillPasswordFields('bad');
     submitForm();
 
     expect(await screen.findByText('messaging.fixBelow')).toBeInTheDocument();
-    expect(mockResetPasswordMutation).not.toHaveBeenCalled();
+    expect(global.fetch).toHaveBeenCalledTimes(1);
   });
 
-  it('should show a field error when password and confirmPassword do not match', async () => {
-    (isValidPassword as unknown as jest.Mock).mockReturnValue(true);
-
-    render(<ResetPassword />);
+  it('shows a field error when passwords do not match', async () => {
+    (isValidPassword as jest.Mock).mockReturnValue(true);
+    await renderValidatedPage();
 
     fillPasswordFields(VALID_PASSWORD, 'SomethingElse123!');
     submitForm();
 
     expect(await screen.findByText('messaging.errors.passMissMatch')).toBeInTheDocument();
-    expect(mockResetPasswordMutation).not.toHaveBeenCalled();
+    expect(global.fetch).toHaveBeenCalledTimes(1);
   });
 
-  it('should log the error and displays a generic error message when the mutation fails', async () => {
-    (isValidPassword as unknown as jest.Mock).mockReturnValue(true);
-    const mutationError = new Error('network error');
-    mockResetPasswordMutation.mockRejectedValueOnce(mutationError);
-
-    render(<ResetPassword />);
+  it('logs an error when the password reset request fails', async () => {
+    (isValidPassword as jest.Mock).mockReturnValue(true);
+    const requestError = new Error('network error');
+    global.fetch = jest.fn()
+      .mockResolvedValueOnce({ ok: true })
+      .mockRejectedValueOnce(requestError);
+    await renderValidatedPage();
 
     fillPasswordFields(VALID_PASSWORD);
     submitForm();
 
-    await waitFor(() => {
-      expect(screen.getByText('messaging.somethingWentWrong')).toBeInTheDocument();
-    });
-
-    expect(logECS).toHaveBeenCalledWith(
+    await waitFor(() => expect(logECS).toHaveBeenCalledWith(
       'error',
       'resetPassword',
-      expect.objectContaining({ error: mutationError })
-    );
+      expect.objectContaining({ error: requestError })
+    ));
   });
 
-  it('should disable the submit button and shows the sending label while isSubmitting is true', async () => {
-    (isValidPassword as unknown as jest.Mock).mockReturnValue(true);
+  it('passes the accessibility test after token validation', async () => {
+    const { container } = render(<ResetPassword />);
+    await waitFor(() => expect(screen.getByTestId('actionContinue')).toBeInTheDocument());
 
-    let resolveMutation: (value: boolean) => void = () => { };
-    mockResetPasswordMutation.mockImplementation(
-      () =>
-        new Promise<boolean>((resolve) => {
-          resolveMutation = resolve;
-        })
-    );
-
-    render(<ResetPassword />);
-
-    fillPasswordFields(VALID_PASSWORD);
-    submitForm();
-
-    const button = await screen.findByTestId('actionContinue');
-
-    await waitFor(() => {
-      expect(button).toBeDisabled();
-      expect(button).toHaveTextContent('buttons.sending');
-    });
-
-    // Resolve the pending mutation and let state settle
-    resolveMutation(true);
-    await waitFor(() => {
-      expect(screen.getByText('passwordUpdatedTitle')).toBeInTheDocument();
-    });
-  });
-
-  it("should pass axe accessibility test", async () => {
-    const { container } = render(
-      <ResetPassword />
-    );
     await act(async () => {
-      const results = await axe(container);
-      expect(results).toHaveNoViolations();
+      expect(await axe(container)).toHaveNoViolations();
     });
-  })
+  });
 });

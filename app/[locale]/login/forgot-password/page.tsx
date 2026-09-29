@@ -10,12 +10,6 @@ import {
   Link,
 } from "react-aria-components";
 
-// GraphQL
-import { useMutation } from "@apollo/client/react";
-import {
-  SendPasswordResetEmailDocument,
-} from "@/generated/graphql";
-
 import {
   ContentContainer,
   LayoutContainer,
@@ -23,6 +17,7 @@ import {
 import { FormInput } from '@/components/Form';
 import styles from './forgotPassword.module.scss';
 import { routePath, isValidEmail } from "@/utils/index";
+import { useCsrf } from "@/context/CsrfContext";
 
 const ForgotPassword: React.FC = () => {
   //hooks
@@ -35,17 +30,45 @@ const ForgotPassword: React.FC = () => {
 
   //States
   const [email, setEmail] = useState("");
+  const { csrfToken } = useCsrf();
   const [emailFieldError, setEmailFieldError] = useState<string | undefined>(undefined);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-
-  //initialize the mutation hook for sending password reset email
-  const [sendPasswordResetEmailMutation, { loading: sendPasswordResetEmailLoading }] = useMutation(SendPasswordResetEmailDocument);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setEmailFieldError(undefined);
     setEmail(e.target.value);
   };
+
+  const handlePasswordResetRequest = async (token: string | null, email: string) => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_AUTH_ENDPOINT}/password-reset/token`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRF-TOKEN": token || "",
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      if (response.ok) {
+        logECS("info", "sendPasswordResetEmail", {
+          email,
+          url: { path: routePath("login.forgotPassword") },
+        });
+
+      }
+    } catch (error) {
+      logECS('error', 'sendPasswordResetEmail', {
+        error,
+        url: { path: routePath('login.forgotPassword') }
+      });
+    } finally {
+      setIsSubmitting(false);
+      setSubmitted(true);
+    }
+  }
 
   async function handleSendResetPasswordEmail(ev: React.FormEvent<HTMLFormElement>) {
     ev.preventDefault();
@@ -57,23 +80,12 @@ const ForgotPassword: React.FC = () => {
     setIsSubmitting(true);
 
     try {
-      await sendPasswordResetEmailMutation({
-        variables: {
-          email
-        }
-      });
-      logECS('info', 'sendPasswordResetEmail', {
-        email,
-        url: { path: routePath('login.forgotPassword') }
-      });
+      await handlePasswordResetRequest(csrfToken, email);
     } catch (error) {
       logECS('error', 'sendPasswordResetEmail', {
         error,
         url: { path: routePath('login.forgotPassword') }
       });
-    } finally {
-      setIsSubmitting(false);
-      setSubmitted(true);
     }
   }
 
@@ -123,10 +135,10 @@ const ForgotPassword: React.FC = () => {
               <div className={styles.formActions}>
                 <Button
                   type="submit"
-                  isDisabled={isSubmitting || sendPasswordResetEmailLoading}
+                  isDisabled={isSubmitting}
                   data-testid="actionContinue"
                 >
-                  {isSubmitting || sendPasswordResetEmailLoading ? t('buttons.sending') : t('buttons.sendReset')}
+                  {isSubmitting ? t('buttons.sending') : t('buttons.sendReset')}
                 </Button>
               </div>
 
