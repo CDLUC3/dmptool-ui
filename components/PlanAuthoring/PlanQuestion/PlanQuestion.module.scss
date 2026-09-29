@@ -39,6 +39,15 @@
   padding-top: 0.25rem;
 }
 
+.questionError {
+  margin: 0;
+  padding: 0.75rem 1rem;
+  border-left: 3px solid var(--error-600, #b91c1c);
+  background: #fef3f2;
+  color: var(--error-600, #b91c1c);
+  font-size: 0.875rem;
+}
+
 .resizeHandle {
   display: flex;
   align-items: center;

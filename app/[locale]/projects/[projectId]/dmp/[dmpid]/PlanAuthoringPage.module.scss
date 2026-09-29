@@ -1,0 +1,5 @@
+// The layoutContainer mixin's overflow: auto would make this a scroll
+// container and break position: sticky on the plan section navigation.
+.layout {
+  overflow: visible;
+}

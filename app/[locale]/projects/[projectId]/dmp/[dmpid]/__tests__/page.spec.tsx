@@ -32,6 +32,17 @@ jest.mock('@apollo/client/react', () => {
   };
 });
 
+const mockPlanAuthoringDataSource = {};
+const mockPlanAuthoring = jest.fn();
+
+jest.mock('@/components/PlanAuthoring', () => ({
+  usePlanAuthoringDataSource: () => mockPlanAuthoringDataSource,
+  PlanAuthoring: (props: { overview: React.ReactNode; dataSource: unknown }) => {
+    mockPlanAuthoring(props);
+    return <div data-testid="plan-authoring">{props.overview}</div>;
+  },
+}));
+
 jest.mock('../actions/index', () => ({
   publishPlanAction: jest.fn(),
   updatePlanStatusAction: jest.fn(),
@@ -230,9 +241,21 @@ describe('PlanOverviewPage', () => {
     mockUseQuery.mockClear();
   });
 
+  const originalEnv = process.env;
+
   afterEach(() => {
     jest.clearAllMocks();
+    process.env = originalEnv;
   });
+
+  // The narrative preview only uses the local narrative port when the app itself runs on localhost.
+  const setLocalhostBaseUrl = () => {
+    process.env = {
+      ...originalEnv,
+      NEXT_PUBLIC_BASE_URL: 'http://localhost:3000',
+      NEXT_PUBLIC_NARRATIVE_ENDPOINT: undefined,
+    };
+  };
 
 
   it('should render NotificationHeader when planFeedbackStatus.status is REQUESTED and user is an Org Admin', async () => {
@@ -515,13 +538,6 @@ describe('PlanOverviewPage', () => {
     expect(screen.getByText('relatedWorks.title')).toBeInTheDocument();
     expect(screen.getByText('relatedWorks.publish')).toBeInTheDocument();
 
-    // Check that sections rendered
-    expect(screen.getByRole('heading', { name: 'Roles & Responsibilities' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Metadata' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Sharing/Copyright Issues' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Long Term Storage' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Research Products' })).toBeInTheDocument();
-
     // // Check sidebar items
     const sidebar = screen.getByTestId('sidebar-panel');
     expect(sidebar).toBeInTheDocument();
@@ -588,13 +604,6 @@ describe('PlanOverviewPage', () => {
     expect(screen.getByText('members.edit')).toBeInTheDocument();
     expect(screen.getByText('relatedWorks.title')).toBeInTheDocument();
     expect(screen.getByText('relatedWorks.publish')).toBeInTheDocument();
-
-    // Check that sections rendered
-    expect(screen.getByRole('heading', { name: 'Roles & Responsibilities' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Metadata' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Sharing/Copyright Issues' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Long Term Storage' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Research Products' })).toBeInTheDocument();
 
     // Check sidebar items
     const sidebar = screen.getByTestId('sidebar-panel');
@@ -893,59 +902,16 @@ describe('PlanOverviewPage', () => {
     });
   });
 
-  it('should use \'Start\' for section buttons if no questions in that section have been answered, otherwise it should use \'Update\'', async () => {
-    const { container } = render(<PlanOverviewPage />);
-
-    const sectionWithSomeAnswers = container.querySelector('section[aria-labelledby="section-title-8"]') as HTMLElement;
-    if (sectionWithSomeAnswers) {
-      const button = within(sectionWithSomeAnswers).getByText('sections.update');
-      expect(button).toBeInTheDocument();
-    }
-
-    const sectionWithNoAnswers = container.querySelector('section[aria-labelledby="section-title-11"]') as HTMLElement;
-    if (sectionWithNoAnswers) {
-      const button = within(sectionWithNoAnswers).getByText('sections.start');
-      expect(button).toBeInTheDocument();
-    }
-  });
-
-  it('should keep section actions editable for EDIT collaborators when plan is read-only', async () => {
-    const meId = 77;
-
-    const planQueryReturn = {
-      data: {
-        plan: {
-          ...mockPlanData.plan,
-          readOnly: true,
-          project: {
-            collaborators: [{ accessLevel: 'EDIT', user: { id: meId } }],
-          },
-        },
-      },
-      loading: false,
-      error: null,
-      refetch: jest.fn(),
-    };
-
-    const meQueryReturn = {
-      data: { me: { id: meId, affiliation: { uri: 'mock-org-id' }, role: UserRole.Admin } },
-      loading: false,
-      error: null,
-    };
-
-    mockUseQuery.mockImplementation((document) => {
-      if (document === PlanDocument) return planQueryReturn;
-      if (document === MeDocument) return meQueryReturn;
-      return { data: null, loading: false, error: undefined } as any;
-    });
-
+  it('should mount the plan authoring one-pager with the overview and data source', () => {
     render(<PlanOverviewPage />);
 
-    await waitFor(() => {
-      expect(screen.getAllByText('sections.update').length).toBeGreaterThan(0);
-      expect(screen.getAllByText('sections.start').length).toBeGreaterThan(0);
-      expect(screen.queryByText('sections.view')).not.toBeInTheDocument();
-    });
+    const planAuthoring = screen.getByTestId('plan-authoring');
+    expect(within(planAuthoring).getByTestId('layout-with-panel')).toBeInTheDocument();
+    expect(within(planAuthoring).getByRole('heading', { name: 'funding.title' })).toBeInTheDocument();
+    expect(within(planAuthoring).getByTestId('sidebar-panel')).toBeInTheDocument();
+    expect(mockPlanAuthoring).toHaveBeenLastCalledWith(
+      expect.objectContaining({ dataSource: mockPlanAuthoringDataSource })
+    );
   });
 
   it('should show read-only popover message for disabled OverviewSection edit control', async () => {
@@ -1627,6 +1593,7 @@ describe('PlanOverviewPage', () => {
   });
 
   it('should include correct link href for Preview button', async () => {
+    setLocalhostBaseUrl();
     const updatedMockPlanData = {
       ...mockPlanData.plan,
       id: null,
@@ -1680,6 +1647,7 @@ describe('PlanOverviewPage', () => {
   });
 
   it('should include correct link href for Preview button when DOI is not in a common format', async () => {
+    setLocalhostBaseUrl();
     const updatedMockPlanData = {
       ...mockPlanData.plan,
       id: null,
@@ -1732,10 +1700,11 @@ describe('PlanOverviewPage', () => {
     expect(previewLink).toHaveAttribute('href', 'http://localhost:3030/dmps/10.1234/abcd/narrative.html?includeCoverSheet=false&includeResearchOutputs=false&includeRelatedWorks=false');
   });
 
-  it('should pass accessibility tests', async () => {
+  it('should pass accessibility tests for the page header and plan overview', async () => {
     const { container } = render(<PlanOverviewPage />);
-    const results = await axe(container);
-    expect(results).toHaveNoViolations();
+    const header = container.querySelector('.template-editor-header') as Element;
+    expect(await axe(header)).toHaveNoViolations();
+    expect(await axe(screen.getByTestId('layout-with-panel'))).toHaveNoViolations();
   });
 
   it("should display 'No feedback' when planFeedbackStatus is NONE", async () => {

@@ -1,539 +1,592 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import '@testing-library/jest-dom';
-import { axe, toHaveNoViolations } from 'jest-axe';
-import PlanQuestion from '../index';
-import { TEXT_AREA_QUESTION_TYPE } from '@/lib/constants';
-import { questionAnchorId, questionKey } from '../../model';
+import React from "react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { axe, toHaveNoViolations } from "jest-axe";
+import { NextIntlClientProvider } from "next-intl";
+import { useToast } from "@/context/ToastContext";
+import globalMessages from "@/messages/en-US/global.json";
+import planOverviewMessages from "@/messages/en-US/planBuilderPlanOverview.json";
+import planAuthoringMessages from "@/messages/en-US/planAuthoring.json";
+import PlanQuestion from "../index";
+import type { PlanCapabilities, PlanQuestionDefinition } from "../../model";
 import {
-  buildSampleAnswerDraft,
-  getPlanSampleAnswers,
-  resolveInitialAnswer,
-} from '../../sampleAnswers';
-import { usePlanQuestionController } from '../../usePlanQuestionController';
+  createMockDataSource,
+  makeModel,
+  makeQuestion as makeSharedQuestion,
+  makeSection,
+} from "../../mocks";
+import {
+  spyOnDataSource,
+  type SpiedMockDataSource,
+} from "../../mocks/spyOnDataSource";
 
 expect.extend(toHaveNoViolations);
 
-// --- next-intl ---
-jest.mock('next-intl', () => ({
-  useTranslations: jest.fn((namespace: string) => (key: string) => `${namespace}.${key}`),
-}));
+jest.mock("next-intl", () => jest.requireActual("next-intl"));
 
-// --- react-aria-components ---
-jest.mock('react-aria-components', () => ({
-  Button: ({ children, onPress, ...rest }: any) => (
-    <button type="button" onClick={onPress} {...rest}>
-      {children}
-    </button>
+jest.mock("@/components/TinyMCEEditor", () => ({
+  __esModule: true,
+  default: ({
+    id,
+    content,
+    setContent,
+    disabled,
+  }: {
+    id: string;
+    content: string;
+    setContent: (value: string) => void;
+    disabled?: boolean;
+  }) => (
+    <textarea
+      id={id}
+      aria-label="Answer editor"
+      value={content}
+      disabled={disabled}
+      onChange={(event) => setContent(event.target.value)}
+    />
   ),
 }));
 
-// --- @/lib/constants ---
-jest.mock('@/lib/constants', () => ({
-  TEXT_AREA_QUESTION_TYPE: 'textArea',
+global.ResizeObserver = jest.fn().mockImplementation(() => ({
+  observe: jest.fn(),
+  unobserve: jest.fn(),
+  disconnect: jest.fn(),
 }));
 
-// --- @/context/ToastContext ---
-const mockToastAdd = jest.fn();
-jest.mock('@/context/ToastContext', () => ({
-  useToast: jest.fn(() => ({ add: mockToastAdd })),
-}));
-
-// --- ../model ---
-jest.mock('../../model', () => ({
-  questionKey: jest.fn((identity: any) => `key-${identity?.id ?? 'unknown'}`),
-  questionAnchorId: jest.fn((identity: any) => `question-${identity?.id ?? 'unknown'}`),
-}));
-
-// --- ../sampleAnswers ---
-jest.mock('../../sampleAnswers', () => ({
-  buildSampleAnswerDraft: jest.fn((_type: string, html: string, _current: unknown) => ({
-    fromSample: true,
-    html,
-  })),
-  getPlanSampleAnswers: jest.fn(() => []),
-  resolveInitialAnswer: jest.fn(() => ({ initial: true })),
-}));
-
-// --- ../usePlanQuestionController ---
-const mockSaveNow = jest.fn().mockResolvedValue(undefined);
-const mockSetDraftAnswer = jest.fn();
-const mockSetMode = jest.fn();
-const defaultControllerReturn = {
-  mode: 'viewing',
-  draftAnswer: { initial: true },
-  saveState: 'idle',
-  errorMessage: undefined,
-  setDraftAnswer: mockSetDraftAnswer,
-  setMode: mockSetMode,
-  saveNow: mockSaveNow,
+const messages = {
+  ...globalMessages,
+  ...planOverviewMessages,
+  ...planAuthoringMessages,
 };
-jest.mock('../../usePlanQuestionController', () => ({
-  usePlanQuestionController: jest.fn(() => defaultControllerReturn),
-}));
 
-// --- child components ---
-jest.mock('../../PlanQuestionHeader', () => {
-  const MockPlanQuestionHeader = ({ question }: any) => (
-    <div data-testid="question-header">{question?.title ?? 'header'}</div>
-  );
-  MockPlanQuestionHeader.displayName = 'MockPlanQuestionHeader';
-  return MockPlanQuestionHeader;
-});
+const QUESTION_KEY = "base-question-101";
 
-jest.mock('../../PlanSampleAnswers', () => {
-  const MockPlanSampleAnswers = ({ samples, onUseSample }: any) => (
-    <div data-testid="sample-answers">
-      {samples.map((s: any, i: number) => (
-        <button key={i} type="button" onClick={() => onUseSample(s.html ?? '<p>sample</p>')}>
-          Use sample {i}
-        </button>
-      ))}
-    </div>
-  );
-  MockPlanSampleAnswers.displayName = 'MockPlanSampleAnswers';
-  return MockPlanSampleAnswers;
-});
-
-jest.mock('../../PlanQuestionAnswer', () => {
-  const MockPlanQuestionAnswer = ({ mode, disabled, onStartEditing }: any) => (
-    <div data-testid="question-answer" data-mode={mode} data-disabled={String(disabled)}>
-      <button type="button" onClick={onStartEditing}>
-        Start editing
-      </button>
-    </div>
-  );
-  MockPlanQuestionAnswer.displayName = 'MockPlanQuestionAnswer';
-  return MockPlanQuestionAnswer;
-});
-
-jest.mock('../../PlanQuestionSaveStatus', () => {
-  const MockPlanQuestionSaveStatus = ({ state, errorMessage }: any) => (
-    <div data-testid="save-status">
-      {state}
-      {errorMessage ? `:${errorMessage}` : ''}
-    </div>
-  );
-  MockPlanQuestionSaveStatus.displayName = 'MockPlanQuestionSaveStatus';
-  return MockPlanQuestionSaveStatus;
-});
-
-jest.mock('../../PlanQuestionSidebar', () => {
-  const MockPlanQuestionSidebar = (props: any) => (
-    <div data-testid="question-sidebar">
-      <button type="button" onClick={() => props.onAddComment('a new comment')}>
-        Add comment
-      </button>
-      <button type="button" onClick={() => props.onUpdateComment(1, 'updated text')}>
-        Update comment
-      </button>
-      <button type="button" onClick={() => props.onDeleteComment(1)}>
-        Delete comment
-      </button>
-      <button type="button" onClick={() => props.loadGuidance()}>
-        Load guidance
-      </button>
-      <button type="button" onClick={() => props.loadComments()}>
-        Load comments
-      </button>
-      <span data-testid="sidebar-can-comment">{String(props.canComment)}</span>
-      <span data-testid="sidebar-can-customize">{String(props.canCustomize)}</span>
-    </div>
-  );
-  MockPlanQuestionSidebar.displayName = 'MockPlanQuestionSidebar';
-  return MockPlanQuestionSidebar;
-});
-
-const baseQuestion = {
-  identity: { id: 42 },
-  title: 'What is your data management approach?',
-  questionType: 'textArea',
-  answerJson: null,
-  sampleText: null,
-  useSampleTextAsDefault: false,
-  guidanceSources: [],
-  comments: [],
-  hasAnswer: true,
-} as any;
-
-const baseCapabilities = {
+const editableCapabilities: PlanCapabilities = {
   canEditAnswers: true,
-  canCustomizeGuidance: true,
   canComment: true,
   canModerateComments: false,
-} as any;
-
-const mockDataSource = {
-  loadGuidance: jest.fn().mockResolvedValue(undefined),
-  loadComments: jest.fn().mockResolvedValue(undefined),
-  addComment: jest.fn().mockResolvedValue({ id: 99 }),
-  updateComment: jest.fn().mockResolvedValue(undefined),
-  deleteComment: jest.fn().mockResolvedValue(undefined),
-} as any;
-
-const defaultProps = {
-  question: baseQuestion,
-  capabilities: baseCapabilities,
-  currentUserId: 1,
-  dataSource: mockDataSource,
-  onCustomizeGuidance: jest.fn(),
+  canCustomizeGuidance: false,
 };
 
-describe('PlanQuestion', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-    (usePlanQuestionController as jest.Mock).mockReturnValue(defaultControllerReturn);
-    (getPlanSampleAnswers as jest.Mock).mockReturnValue([]);
-    (resolveInitialAnswer as jest.Mock).mockReturnValue({ initial: true });
+const readOnlyCapabilities: PlanCapabilities = {
+  ...editableCapabilities,
+  canEditAnswers: false,
+};
+
+function makeQuestion(
+  overrides: Partial<PlanQuestionDefinition> = {}
+): PlanQuestionDefinition {
+  return makeSharedQuestion({
+    sectionIdentity: { kind: "base", versionedSectionId: 11 },
+    title: "<p>What data will <strong>you</strong> collect</p>",
+    ...overrides,
   });
+}
 
-  it('renders the question header and answer components', () => {
-    render(<PlanQuestion {...defaultProps} />);
+const textAreaJson = { type: "textArea", attributes: {} };
 
-    expect(screen.getByTestId('question-header')).toHaveTextContent(baseQuestion.title);
-    expect(screen.getByTestId('question-answer')).toBeInTheDocument();
+function createDataSource(
+  question: PlanQuestionDefinition = makeQuestion()
+): SpiedMockDataSource {
+  const section = makeSection({
+    identity: question.sectionIdentity,
+    questions: [question],
   });
+  return spyOnDataSource(
+    createMockDataSource({ model: makeModel({ sections: [section] }) })
+  );
+}
 
-  it('sets the article id and aria-labelledby using questionAnchorId', () => {
-    render(<PlanQuestion {...defaultProps} />);
-
-    const article = screen.getByRole('article');
-    expect(article).toHaveAttribute('id', 'question-42');
-    expect(article).toHaveAttribute('aria-labelledby', 'question-42-title');
-    expect(questionAnchorId).toHaveBeenCalledWith(baseQuestion.identity);
-  });
-
-  it('calls questionKey with the question identity', () => {
-    render(<PlanQuestion {...defaultProps} />);
-
-    expect(questionKey).toHaveBeenCalledWith(baseQuestion.identity);
-  });
-
-  it('resolves the initial answer via resolveInitialAnswer', () => {
-    render(<PlanQuestion {...defaultProps} />);
-
-    expect(resolveInitialAnswer).toHaveBeenCalledWith(baseQuestion);
-  });
-
-  it('passes disabled=true to the answer component when canEditAnswers is false', () => {
-    render(
+function renderQuestion({
+  question = makeQuestion(),
+  capabilities = editableCapabilities,
+  dataSource = createDataSource(question),
+}: {
+  question?: PlanQuestionDefinition;
+  capabilities?: PlanCapabilities;
+  dataSource?: SpiedMockDataSource;
+} = {}) {
+  const view = render(
+    <NextIntlClientProvider locale="en-US" messages={messages} timeZone="UTC">
       <PlanQuestion
-        {...defaultProps}
-        capabilities={{ ...baseCapabilities, canEditAnswers: false }}
+        question={question}
+        capabilities={capabilities}
+        dataSource={dataSource}
+        onCustomizeGuidance={jest.fn()}
       />
-    );
+    </NextIntlClientProvider>
+  );
+  return { ...view, dataSource };
+}
 
-    expect(screen.getByTestId('question-answer')).toHaveAttribute('data-disabled', 'true');
+describe("PlanQuestion", () => {
+  const toastAdd = jest.fn();
+
+  beforeEach(() => {
+    toastAdd.mockReset();
+    (useToast as jest.Mock).mockReturnValue({ add: toastAdd });
   });
 
-  it('passes disabled=false to the answer component when canEditAnswers is true', () => {
-    render(<PlanQuestion {...defaultProps} />);
+  describe("header", () => {
+    it("shows the question title without HTML tags", () => {
+      renderQuestion();
 
-    expect(screen.getByTestId('question-answer')).toHaveAttribute('data-disabled', 'false');
-  });
-
-  it('calls controller.setMode("editing") when the answer signals onStartEditing', async () => {
-    const user = userEvent.setup();
-    render(<PlanQuestion {...defaultProps} />);
-
-    await user.click(screen.getByRole('button', { name: 'Start editing' }));
-
-    expect(mockSetMode).toHaveBeenCalledWith('editing');
-  });
-
-  describe('sample answers', () => {
-    it('shows sample answers when question is textArea, editing is allowed, and samples exist', () => {
-      (getPlanSampleAnswers as jest.Mock).mockReturnValue([{ html: '<p>a</p>' }]);
-
-      render(
-        <PlanQuestion
-          {...defaultProps}
-          question={{ ...baseQuestion, questionType: TEXT_AREA_QUESTION_TYPE }}
-        />
+      expect(
+        screen.getByRole("heading", { level: 3, name: "What data will you collect" })
+      ).toBeInTheDocument();
+      expect(screen.getByRole("article")).toHaveAccessibleName(
+        "What data will you collect"
       );
-
-      expect(screen.getByTestId('sample-answers')).toBeInTheDocument();
     });
 
-    it('hides sample answers when the question type is not textArea', () => {
-      (getPlanSampleAnswers as jest.Mock).mockReturnValue([{ html: '<p>a</p>' }]);
-
-      render(
-        <PlanQuestion
-          {...defaultProps}
-          question={{ ...baseQuestion, questionType: 'radioButtons' }}
-        />
-      );
-
-      expect(screen.queryByTestId('sample-answers')).not.toBeInTheDocument();
-    });
-
-    it('hides sample answers when canEditAnswers is false', () => {
-      (getPlanSampleAnswers as jest.Mock).mockReturnValue([{ html: '<p>a</p>' }]);
-
-      render(
-        <PlanQuestion
-          {...defaultProps}
-          question={{ ...baseQuestion, questionType: TEXT_AREA_QUESTION_TYPE }}
-          capabilities={{ ...baseCapabilities, canEditAnswers: false }}
-        />
-      );
-
-      expect(screen.queryByTestId('sample-answers')).not.toBeInTheDocument();
-    });
-
-    it('hides sample answers when there are no samples', () => {
-      (getPlanSampleAnswers as jest.Mock).mockReturnValue([]);
-
-      render(
-        <PlanQuestion
-          {...defaultProps}
-          question={{ ...baseQuestion, questionType: TEXT_AREA_QUESTION_TYPE }}
-        />
-      );
-
-      expect(screen.queryByTestId('sample-answers')).not.toBeInTheDocument();
-    });
-
-    it('builds a sample answer draft and shows a success toast when a sample is used', async () => {
-      (getPlanSampleAnswers as jest.Mock).mockReturnValue([{ html: '<p>sample html</p>' }]);
+    it("opens the funder message from the required badge", async () => {
       const user = userEvent.setup();
+      renderQuestion({ question: makeQuestion({ required: true }) });
 
-      render(
-        <PlanQuestion
-          {...defaultProps}
-          question={{ ...baseQuestion, questionType: TEXT_AREA_QUESTION_TYPE }}
-        />
-      );
+      await user.click(screen.getByRole("button", { name: "Required by funder" }));
 
-      await user.click(screen.getByRole('button', { name: 'Use sample 0' }));
-
-      expect(buildSampleAnswerDraft).toHaveBeenCalledWith(
-        TEXT_AREA_QUESTION_TYPE,
-        '<p>sample html</p>',
-        defaultControllerReturn.draftAnswer
-      );
-      expect(mockSetDraftAnswer).toHaveBeenCalledWith({ fromSample: true, html: '<p>sample html</p>' });
-      expect(mockToastAdd).toHaveBeenCalledWith(
-        'PlanAuthoring.sampleAnswers.sampleTextAdded',
-        { type: 'success', timeout: 3000 }
+      expect(await screen.findByRole("dialog", { name: "Required by funder" })).toHaveTextContent(
+        "The funder has marked this as a required question on their template. You can leave it blank in the tool but should complete it before submitting your grant."
       );
     });
-  });
 
-  describe('save button', () => {
-    it('shows the Save button when canEditAnswers is true', () => {
-      render(<PlanQuestion {...defaultProps} />);
+    it("labels requirement text with the organization that set it", () => {
+      renderQuestion({
+        question: makeQuestion({
+          requirementHtml: "<p>Name the steward.</p>",
+          requirementOrgLabel: "National Science Foundation",
+        }),
+      });
 
-      expect(screen.getByRole('button', { name: 'Global.buttons.save' })).toBeInTheDocument();
+      expect(screen.getByText("Requirements by National Science Foundation")).toBeInTheDocument();
     });
 
-    it('hides the Save button when canEditAnswers is false', () => {
-      render(
-        <PlanQuestion
-          {...defaultProps}
-          capabilities={{ ...baseCapabilities, canEditAnswers: false }}
-        />
-      );
+    it("has no requirements label without requirement text", () => {
+      renderQuestion({ question: makeQuestion({ requirementOrgLabel: "National Science Foundation" }) });
 
-      expect(screen.queryByRole('button', { name: 'Global.buttons.save' })).not.toBeInTheDocument();
+      expect(screen.queryByText(/Requirements by/)).not.toBeInTheDocument();
     });
 
-    it('calls controller.saveNow when Save is clicked', async () => {
+    it("has no required badge for an optional question", () => {
+      renderQuestion();
+
+      expect(
+        screen.queryByRole("button", { name: "Required by funder" })
+      ).not.toBeInTheDocument();
+    });
+
+    it("shows the answered icon when the question has an answer", () => {
+      renderQuestion({ question: makeQuestion({ hasAnswer: true }) });
+
+      expect(screen.getByRole("img", { name: "Answered" })).toBeInTheDocument();
+      expect(screen.queryByRole("img", { name: "Not answered" })).not.toBeInTheDocument();
+    });
+
+    it("shows the not-answered icon when the question has no answer", () => {
+      renderQuestion({ question: makeQuestion({ hasAnswer: false }) });
+
+      expect(screen.getByRole("img", { name: "Not answered" })).toBeInTheDocument();
+      expect(screen.queryByRole("img", { name: "Answered" })).not.toBeInTheDocument();
+    });
+
+    it("renders requirement text and toggles Expand/Collapse when it overflows", async () => {
+      jest.spyOn(HTMLElement.prototype, "scrollHeight", "get").mockReturnValue(300);
+      jest.spyOn(HTMLElement.prototype, "clientHeight", "get").mockReturnValue(80);
       const user = userEvent.setup();
-      render(<PlanQuestion {...defaultProps} />);
+      renderQuestion({
+        question: makeQuestion({
+          requirementHtml: "<p><strong>Requirements</strong> from the funder</p>",
+        }),
+      });
 
-      await user.click(screen.getByRole('button', { name: 'Global.buttons.save' }));
+      expect(screen.getByText("Requirements").tagName).toBe("STRONG");
 
-      expect(mockSaveNow).toHaveBeenCalledTimes(1);
+      const expand = screen.getByRole("button", { name: "Expand" });
+      expect(expand).toHaveAttribute("aria-expanded", "false");
+
+      await user.click(expand);
+      const collapse = screen.getByRole("button", { name: "Collapse" });
+      expect(collapse).toHaveAttribute("aria-expanded", "true");
+
+      await user.click(collapse);
+      expect(screen.getByRole("button", { name: "Expand" })).toBeInTheDocument();
+    });
+
+    it("has no Expand toggle when the requirement text fits", () => {
+      renderQuestion({
+        question: makeQuestion({ requirementHtml: "<p>Short</p>" }),
+      });
+
+      expect(screen.getByText("Short")).toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: "Expand" })).not.toBeInTheDocument();
     });
   });
 
-  it("renders the save status with the controller's current state and error message", () => {
-    (usePlanQuestionController as jest.Mock).mockReturnValue({
-      ...defaultControllerReturn,
-      saveState: 'error',
-      errorMessage: 'Something went wrong',
-    });
+  describe("editing", () => {
+    it("prefills the field from the stored answer", () => {
+      renderQuestion({
+        question: makeQuestion({
+          answerJson: { type: "text", answer: "Survey responses" },
+          hasAnswer: true,
+        }),
+      });
 
-    render(<PlanQuestion {...defaultProps} />);
-
-    expect(screen.getByTestId('save-status')).toHaveTextContent('error:Something went wrong');
-  });
-
-  describe('sidebar wiring', () => {
-    it('passes canComment=true only when capabilities.canComment and question.hasAnswer are both true', () => {
-      render(
-        <PlanQuestion
-          {...defaultProps}
-          question={{ ...baseQuestion, hasAnswer: true }}
-          capabilities={{ ...baseCapabilities, canComment: true }}
-        />
+      expect(screen.getByRole("textbox", { name: "text" })).toHaveValue(
+        "Survey responses"
       );
-
-      expect(screen.getByTestId('sidebar-can-comment')).toHaveTextContent('true');
     });
 
-    it('passes canComment=false when the question has no answer yet', () => {
-      render(
-        <PlanQuestion
-          {...defaultProps}
-          question={{ ...baseQuestion, hasAnswer: false }}
-          capabilities={{ ...baseCapabilities, canComment: true }}
-        />
+    it("saves the draft through saveAnswer when Save is pressed", async () => {
+      const user = userEvent.setup();
+      const { dataSource } = renderQuestion();
+
+      await user.type(screen.getByRole("textbox", { name: "text" }), "Logs");
+      expect(screen.getByRole("status")).toHaveTextContent("Unsaved changes");
+
+      await user.click(screen.getByRole("button", { name: "Save" }));
+
+      expect(dataSource.saveAnswer).toHaveBeenCalledTimes(1);
+      expect(dataSource.saveAnswer).toHaveBeenCalledWith(QUESTION_KEY, {
+        type: "text",
+        answer: "Logs",
+      });
+      await waitFor(() => {
+        expect(screen.getByRole("status")).toHaveTextContent(/^Saved$/);
+      });
+    });
+
+    it("shows the save error messages of an invalid save", async () => {
+      const user = userEvent.setup();
+      const dataSource = createDataSource();
+      dataSource.saveAnswer.mockResolvedValue({
+        kind: "invalid",
+        messages: ["The answer is not in the proper format."],
+      });
+      renderQuestion({ dataSource });
+
+      await user.type(screen.getByRole("textbox", { name: "text" }), "x");
+      await user.click(screen.getByRole("button", { name: "Save" }));
+
+      await waitFor(() => {
+        expect(screen.getByRole("status")).toHaveTextContent(
+          "The answer is not in the proper format."
+        );
+      });
+    });
+
+    it("prefills the editor with sample text when that is the default", () => {
+      renderQuestion({
+        question: makeQuestion({
+          questionType: "textArea",
+          parsedJson: textAreaJson,
+          sampleText: "<p>Default sample</p>",
+          useSampleTextAsDefault: true,
+        }),
+      });
+
+      expect(screen.getByRole("textbox", { name: "Answer editor" })).toHaveValue(
+        "<p>Default sample</p>"
       );
-
-      expect(screen.getByTestId('sidebar-can-comment')).toHaveTextContent('false');
     });
 
-    it('passes canComment=false when capabilities.canComment is false', () => {
-      render(
-        <PlanQuestion
-          {...defaultProps}
-          question={{ ...baseQuestion, hasAnswer: true }}
-          capabilities={{ ...baseCapabilities, canComment: false }}
-        />
-      );
+    it("does not prefill sample text once an answer exists, even an empty one", () => {
+      renderQuestion({
+        question: makeQuestion({
+          questionType: "textArea",
+          parsedJson: textAreaJson,
+          answerJson: { type: "textArea", answer: "" },
+          sampleText: "<p>Default sample</p>",
+          useSampleTextAsDefault: true,
+        }),
+      });
 
-      expect(screen.getByTestId('sidebar-can-comment')).toHaveTextContent('false');
-    });
-
-    it('passes canCustomize through from capabilities.canCustomizeGuidance', () => {
-      render(
-        <PlanQuestion
-          {...defaultProps}
-          capabilities={{ ...baseCapabilities, canCustomizeGuidance: false }}
-        />
-      );
-
-      expect(screen.getByTestId('sidebar-can-customize')).toHaveTextContent('false');
-    });
-
-    it('calls dataSource.loadGuidance with the question key when requested', async () => {
-      const user = userEvent.setup();
-      render(<PlanQuestion {...defaultProps} />);
-
-      await user.click(screen.getByRole('button', { name: 'Load guidance' }));
-
-      expect(mockDataSource.loadGuidance).toHaveBeenCalledWith('key-42');
-    });
-
-    it('calls dataSource.loadComments with the question key when requested', async () => {
-      const user = userEvent.setup();
-      render(<PlanQuestion {...defaultProps} />);
-
-      await user.click(screen.getByRole('button', { name: 'Load comments' }));
-
-      expect(mockDataSource.loadComments).toHaveBeenCalledWith('key-42');
-    });
-
-    it('calls dataSource.addComment with the question key and text when a comment is added', async () => {
-      const user = userEvent.setup();
-      render(<PlanQuestion {...defaultProps} />);
-
-      await user.click(screen.getByRole('button', { name: 'Add comment' }));
-
-      expect(mockDataSource.addComment).toHaveBeenCalledWith('key-42', 'a new comment');
-    });
-
-    it('calls dataSource.updateComment with the question key, comment id, and text', async () => {
-      const user = userEvent.setup();
-      render(<PlanQuestion {...defaultProps} />);
-
-      await user.click(screen.getByRole('button', { name: 'Update comment' }));
-
-      expect(mockDataSource.updateComment).toHaveBeenCalledWith('key-42', 1, 'updated text');
-    });
-
-    it('calls dataSource.deleteComment with the question key and comment id', async () => {
-      const user = userEvent.setup();
-      render(<PlanQuestion {...defaultProps} />);
-
-      await user.click(screen.getByRole('button', { name: 'Delete comment' }));
-
-      expect(mockDataSource.deleteComment).toHaveBeenCalledWith('key-42', 1);
+      expect(screen.getByRole("textbox", { name: "Answer editor" })).toHaveValue("");
     });
   });
 
-  describe('resize handle', () => {
-    it('renders a separator with the resize aria-label and title', () => {
-      render(<PlanQuestion {...defaultProps} />);
+  describe("sample answers", () => {
+    it("fills the draft with the sample when Use answer is pressed", async () => {
+      const user = userEvent.setup();
+      renderQuestion({
+        question: makeQuestion({
+          questionType: "textArea",
+          parsedJson: textAreaJson,
+          sampleText: "<p>Sample from CDL</p>",
+          sampleTextOrgLabel: "CDL",
+        }),
+      });
 
-      const handle = screen.getByRole('separator');
-      expect(handle).toHaveAttribute('aria-label', 'PlanAuthoring.question.resizeAria');
-      expect(handle).toHaveAttribute('title', 'PlanAuthoring.question.resizeHint');
-      expect(handle).toHaveAttribute('aria-orientation', 'horizontal');
+      await user.click(screen.getByRole("button", { name: "View sample answer" }));
+      expect(screen.getByRole("heading", { name: "CDL sample text" })).toBeInTheDocument();
+
+      await user.click(screen.getByRole("button", { name: "Use answer" }));
+
+      expect(screen.getByRole("textbox", { name: "Answer editor" })).toHaveValue(
+        "<p>Sample from CDL</p>"
+      );
+      expect(screen.getByRole("status")).toHaveTextContent("Unsaved changes");
+      expect(toastAdd).toHaveBeenCalledWith("Sample text added", {
+        type: "success",
+        timeout: 3000,
+      });
     });
 
-    it('sets height to the 280px floor when starting from a zero-height shell (ArrowDown)', () => {
-      render(<PlanQuestion {...defaultProps} />);
+    it("shows both the template and customization samples", async () => {
+      const user = userEvent.setup();
+      renderQuestion({
+        question: makeQuestion({
+          questionType: "textArea",
+          parsedJson: textAreaJson,
+          sampleText: "<p>Base sample</p>",
+          sampleTextOrgLabel: "NSF",
+          customizationSampleText: "<p>Custom sample</p>",
+          customizationSampleOrgLabel: "CDL",
+        }),
+      });
 
-      const article = screen.getByRole('article');
-      const handle = screen.getByRole('separator');
+      await user.click(
+        screen.getByRole("button", { name: "View sample answers (2)" })
+      );
+      await user.click(screen.getAllByRole("button", { name: "Use answer" })[1]);
 
-      fireEvent.keyDown(handle, { key: 'ArrowDown' });
-
-      expect(article).toHaveAttribute('data-resized', 'true');
-      expect(article.getAttribute('style')).toContain('height: 280px');
+      expect(screen.getByRole("textbox", { name: "Answer editor" })).toHaveValue(
+        "<p>Custom sample</p>"
+      );
     });
 
-    it('stays at the 280px floor when starting from a zero-height shell (ArrowUp)', () => {
-      render(<PlanQuestion {...defaultProps} />);
+    it("offers only the customization sample when the template has none", async () => {
+      const user = userEvent.setup();
+      renderQuestion({
+        question: makeQuestion({
+          questionType: "textArea",
+          parsedJson: textAreaJson,
+          customizationSampleText: "<p>Custom only</p>",
+          customizationSampleOrgLabel: "CDL",
+        }),
+      });
 
-      const article = screen.getByRole('article');
-      const handle = screen.getByRole('separator');
+      await user.click(screen.getByRole("button", { name: "View sample answer" }));
 
-      fireEvent.keyDown(handle, { key: 'ArrowUp' });
-
-      expect(article.getAttribute('style')).toContain('height: 280px');
+      expect(screen.getByRole("heading", { name: "CDL sample text" })).toBeInTheDocument();
+      expect(screen.getAllByRole("button", { name: "Use answer" })).toHaveLength(1);
     });
 
-    it('resets the height on double-click', () => {
-      render(<PlanQuestion {...defaultProps} />);
+    it("offers no samples for a question that is not a text area", () => {
+      renderQuestion({
+        question: makeQuestion({ sampleText: "<p>Sample</p>" }),
+      });
 
-      const article = screen.getByRole('article');
-      const handle = screen.getByRole('separator');
+      expect(
+        screen.queryByRole("button", { name: "View sample answer" })
+      ).not.toBeInTheDocument();
+    });
 
-      fireEvent.keyDown(handle, { key: 'ArrowDown' });
-      expect(article).toHaveAttribute('data-resized', 'true');
+    it("offers no samples when answers are read-only", () => {
+      renderQuestion({
+        capabilities: readOnlyCapabilities,
+        question: makeQuestion({
+          questionType: "textArea",
+          parsedJson: textAreaJson,
+          sampleText: "<p>Sample</p>",
+        }),
+      });
 
+      expect(
+        screen.queryByRole("button", { name: "View sample answer" })
+      ).not.toBeInTheDocument();
+    });
+  });
+
+  describe("read-only", () => {
+    it("disables the field and hides Save and the save status", () => {
+      renderQuestion({
+        capabilities: readOnlyCapabilities,
+        question: makeQuestion({
+          answerJson: { type: "text", answer: "Survey responses" },
+          hasAnswer: true,
+          lastSavedAt: String(Date.now() - 60 * 60 * 1000),
+        }),
+      });
+
+      const field = screen.getByRole("textbox", { name: "text" });
+      expect(field).toBeDisabled();
+      expect(field).toHaveValue("Survey responses");
+
+      fireEvent.change(field, { target: { value: "changed" } });
+      expect(field).toHaveValue("Survey responses");
+
+      expect(screen.queryByRole("button", { name: "Save" })).not.toBeInTheDocument();
+      expect(screen.queryByRole("status")).not.toBeInTheDocument();
+    });
+
+    it("disables choice fields", () => {
+      renderQuestion({
+        capabilities: readOnlyCapabilities,
+        question: makeQuestion({
+          questionType: "radioButtons",
+          parsedJson: {
+            type: "radioButtons",
+            options: [
+              { label: "Yes", value: "yes" },
+              { label: "No", value: "no" },
+            ],
+          },
+          answerJson: { type: "radioButtons", answer: "no" },
+          hasAnswer: true,
+        }),
+      });
+
+      expect(screen.getByRole("radio", { name: "Yes" })).toBeDisabled();
+      expect(screen.getByRole("radio", { name: "No" })).toBeDisabled();
+      expect(screen.getByRole("radio", { name: "No" })).toBeChecked();
+    });
+
+    it("renders a text area answer as sanitized HTML instead of an editor", () => {
+      const { container } = renderQuestion({
+        capabilities: readOnlyCapabilities,
+        question: makeQuestion({
+          questionType: "textArea",
+          parsedJson: textAreaJson,
+          answerJson: {
+            type: "textArea",
+            answer: '<p>Stored <strong>answer</strong><script>window.hacked = true</script><img src="x" onerror="window.hacked = true"></p>',
+          },
+          hasAnswer: true,
+        }),
+      });
+
+      expect(screen.queryByRole("textbox", { name: "Answer editor" })).not.toBeInTheDocument();
+      expect(screen.getByText("answer").tagName).toBe("STRONG");
+      expect(container.querySelector("script")).toBeNull();
+      expect(container.querySelector("img")).not.toHaveAttribute("onerror");
+    });
+
+    it('shows "Not answered yet." for an empty text area answer', () => {
+      renderQuestion({
+        capabilities: readOnlyCapabilities,
+        question: makeQuestion({
+          questionType: "textArea",
+          parsedJson: textAreaJson,
+        }),
+      });
+
+      expect(screen.getByText("Not answered yet.")).toBeInTheDocument();
+    });
+  });
+
+  describe("invalid question JSON", () => {
+    it("shows an inline error instead of the field, Save and samples", () => {
+      renderQuestion({
+        question: makeQuestion({
+          questionType: "textArea",
+          parsedJson: {},
+          jsonError: "parseFailed",
+          sampleText: "<p>Sample</p>",
+        }),
+      });
+
+      expect(screen.getByText("JSON.parse failed.")).toBeInTheDocument();
+      expect(screen.queryByRole("textbox", { name: "Answer editor" })).not.toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: "Save" })).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole("button", { name: "View sample answer" })
+      ).not.toBeInTheDocument();
+    });
+
+    it("keeps the title visible so the question can still be identified", () => {
+      renderQuestion({
+        question: makeQuestion({ parsedJson: {}, jsonError: "unexpectedFormat" }),
+      });
+
+      expect(screen.getByText("Unexpected format for question.json.")).toBeInTheDocument();
+      expect(
+        screen.getByRole("heading", { level: 3, name: "What data will you collect" })
+      ).toBeInTheDocument();
+    });
+  });
+
+  describe("comments", () => {
+    it("tells the user to save an answer before commenting", async () => {
+      const user = userEvent.setup();
+      renderQuestion({ question: makeQuestion({ hasAnswer: false }) });
+
+      await user.click(screen.getByRole("button", { name: /Show comments/ }));
+
+      expect(
+        await screen.findByText("Save an answer before adding comments.")
+      ).toBeInTheDocument();
+      expect(
+        screen.queryByRole("textbox", { name: "Add a comment" })
+      ).not.toBeInTheDocument();
+    });
+
+    it("adds a comment for this question through the data source", async () => {
+      const user = userEvent.setup();
+      const dataSource = createDataSource();
+      dataSource.addComment.mockResolvedValue({
+        id: "answer-1",
+        authorId: 1,
+        authorName: "Ada",
+        createdLabel: "just now",
+        text: "Looks good",
+        canEdit: true,
+        canDelete: true,
+      });
+      renderQuestion({ question: makeQuestion({ hasAnswer: true }), dataSource });
+
+      await user.click(screen.getByRole("button", { name: /Show comments/ }));
+      await user.type(
+        await screen.findByRole("textbox", { name: "Add a comment" }),
+        "Looks good"
+      );
+      await user.click(screen.getByRole("button", { name: "Comment" }));
+
+      await waitFor(() => {
+        expect(dataSource.addComment).toHaveBeenCalledWith(QUESTION_KEY, "Looks good");
+      });
+    });
+  });
+
+  describe("resize handle", () => {
+    it("resizes with the keyboard and resets with Home", () => {
+      renderQuestion();
+      const article = screen.getByRole("article");
+      const handle = screen.getByRole("separator", {
+        name: "Resize question — drag, or double-click to reset",
+      });
+
+      expect(article).toHaveAttribute("data-resized", "false");
+
+      fireEvent.keyDown(handle, { key: "ArrowDown" });
+      expect(article).toHaveAttribute("data-resized", "true");
+      expect(article).toHaveStyle({ height: "280px" });
+
+      fireEvent.keyDown(handle, { key: "Home" });
+      expect(article).toHaveAttribute("data-resized", "false");
+    });
+
+    it("resets the height on double-click", () => {
+      renderQuestion();
+      const article = screen.getByRole("article");
+      const handle = screen.getByRole("separator");
+
+      fireEvent.keyDown(handle, { key: "ArrowDown" });
       fireEvent.doubleClick(handle);
-      expect(article).toHaveAttribute('data-resized', 'false');
-    });
 
-    it('resets the height on Home key press', () => {
-      render(<PlanQuestion {...defaultProps} />);
-
-      const article = screen.getByRole('article');
-      const handle = screen.getByRole('separator');
-
-      fireEvent.keyDown(handle, { key: 'ArrowDown' });
-      expect(article).toHaveAttribute('data-resized', 'true');
-
-      fireEvent.keyDown(handle, { key: 'Home' });
-      expect(article).toHaveAttribute('data-resized', 'false');
-    });
-
-    it('does not have a resized style before any interaction', () => {
-      render(<PlanQuestion {...defaultProps} />);
-
-      const article = screen.getByRole('article');
-      expect(article).toHaveAttribute('data-resized', 'false');
-      expect(article).not.toHaveAttribute('style');
+      expect(article).toHaveAttribute("data-resized", "false");
     });
   });
 
-  it('applies an additional className alongside the base styles', () => {
-    render(<PlanQuestion {...defaultProps} className="extra-class" />);
+  it("has no accessibility violations", async () => {
+    const { container } = renderQuestion({
+      question: makeQuestion({
+        required: true,
+        hasAnswer: true,
+        answerJson: { type: "text", answer: "Survey responses" },
+      }),
+    });
 
-    expect(screen.getByRole('article')).toHaveClass('extra-class');
-  });
-
-  it('passes accessibility tests', async () => {
-    const { container } = render(<PlanQuestion {...defaultProps} />);
-    const results = await axe(container);
-    expect(results).toHaveNoViolations();
+    expect(within(container).getByRole("article")).toBeInTheDocument();
+    expect(await axe(container)).toHaveNoViolations();
   });
 });

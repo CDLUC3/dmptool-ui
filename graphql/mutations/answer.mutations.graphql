@@ -3,6 +3,13 @@ mutation AddAnswer($planId: Int!, $versionedSectionId: Int, $versionedQuestionId
     id
     json
     modified
+    errors {
+      general
+      versionedSectionId
+      versionedQuestionId
+      planId
+      json
+    }
   }
 }
 

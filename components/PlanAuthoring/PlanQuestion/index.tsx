@@ -6,7 +6,11 @@ import { Button } from "react-aria-components";
 import { TEXT_AREA_QUESTION_TYPE } from "@/lib/constants";
 import { useToast } from "@/context/ToastContext";
 import type { PlanAuthoringDataSource } from "../dataSource";
-import type { PlanCapabilities, PlanQuestionDefinition } from "../model";
+import type {
+  PlanCapabilities,
+  PlanQuestionDefinition,
+  PlanQuestionJsonError,
+} from "../model";
 import { questionAnchorId, questionKey } from "../model";
 import {
   buildSampleAnswerDraft,
@@ -14,6 +18,7 @@ import {
   resolveInitialAnswer,
 } from "../sampleAnswers";
 import { usePlanQuestionController } from "../usePlanQuestionController";
+import type { RegisterUnsavedChange } from "../useUnsavedChangesRegistry";
 import PlanQuestionHeader from "../PlanQuestionHeader";
 import PlanSampleAnswers from "../PlanSampleAnswers";
 import PlanQuestionAnswer from "../PlanQuestionAnswer";
@@ -21,21 +26,27 @@ import PlanQuestionSaveStatus from "../PlanQuestionSaveStatus";
 import PlanQuestionSidebar from "../PlanQuestionSidebar";
 import styles from "./PlanQuestion.module.scss";
 
+const JSON_ERROR_KEYS: Record<PlanQuestionJsonError, string> = {
+  missing: "messaging.errors.invalidQuestionType",
+  parseFailed: "messaging.errors.questionJSONFParseFailed",
+  unexpectedFormat: "messaging.errors.questionUnexpectedFormat",
+};
+
 interface PlanQuestionProps {
   question: PlanQuestionDefinition;
   capabilities: PlanCapabilities;
-  currentUserId: number;
   dataSource: PlanAuthoringDataSource;
   onCustomizeGuidance: () => void;
+  registerUnsavedChange?: RegisterUnsavedChange;
   className?: string;
 }
 
 export default function PlanQuestion({
   question,
   capabilities,
-  currentUserId,
   dataSource,
   onCustomizeGuidance,
+  registerUnsavedChange,
   className,
 }: PlanQuestionProps) {
   const t = useTranslations("PlanAuthoring");
@@ -52,19 +63,20 @@ export default function PlanQuestion({
     ]
   );
   const sampleAnswers = getPlanSampleAnswers(question);
+  const canEditAnswer = capabilities.canEditAnswers && !question.jsonError;
   const controller = usePlanQuestionController({
     questionKeyValue: key,
     initialAnswer,
     dataSource,
-    canEdit: capabilities.canEditAnswers,
+    canEdit: canEditAnswer,
+    registerUnsavedChange,
   });
   const shellRef = useRef<HTMLElement | null>(null);
   const [heightPx, setHeightPx] = useState<number | null>(null);
 
-  const mode = controller.mode;
   const showSampleAnswers =
     question.questionType === TEXT_AREA_QUESTION_TYPE &&
-    capabilities.canEditAnswers &&
+    canEditAnswer &&
     sampleAnswers.length > 0;
 
   const onResizePointerDown = useCallback(
@@ -124,40 +136,47 @@ export default function PlanQuestion({
               }}
             />
           ) : null}
-          <PlanQuestionAnswer
-            question={question}
-            mode={mode}
-            draftAnswer={controller.draftAnswer}
-            disabled={!capabilities.canEditAnswers}
-            onChange={controller.setDraftAnswer}
-            onStartEditing={() => controller.setMode("editing")}
-          />
-          <div className={styles.questionActions}>
-            <PlanQuestionSaveStatus
-              state={controller.saveState}
-              errorMessage={controller.errorMessage}
-            />
-            {/* TODO(follow-up PR): for researchOutputTable, hide this Save
-                button while ResearchOutputAnswerComponent is in single-row
-                edit (onEditingStateChange), matching PlanOverviewQuestionPageShared. */}
-            {capabilities.canEditAnswers ? (
-              <Button
-                onPress={() => {
-                  void controller.saveNow();
-                }}
-              >
-                {Global("buttons.save")}
-              </Button>
-            ) : null}
-          </div>
+          {question.jsonError ? (
+            <p className={styles.questionError}>
+              {Global(JSON_ERROR_KEYS[question.jsonError])}
+            </p>
+          ) : (
+            <>
+              <PlanQuestionAnswer
+                question={question}
+                draftAnswer={controller.draftAnswer}
+                disabled={!canEditAnswer}
+                onChange={controller.setDraftAnswer}
+              />
+              <div className={styles.questionActions}>
+                {canEditAnswer ? (
+                  <PlanQuestionSaveStatus
+                    state={controller.saveState}
+                    lastSavedAt={question.lastSavedAt}
+                  />
+                ) : null}
+                {/* TODO(follow-up PR): for researchOutputTable, hide this Save
+                    button while ResearchOutputAnswerComponent is in single-row
+                    edit (onEditingStateChange), matching PlanOverviewQuestionPageShared. */}
+                {canEditAnswer ? (
+                  <Button
+                    onPress={() => {
+                      void controller.saveNow();
+                    }}
+                  >
+                    {Global("buttons.save")}
+                  </Button>
+                ) : null}
+              </div>
+            </>
+          )}
         </div>
         <PlanQuestionSidebar
+          questionTitleId={`${questionAnchorId(question.identity)}-title`}
           sources={question.guidanceSources}
           comments={question.comments}
           canCustomize={capabilities.canCustomizeGuidance}
           canComment={capabilities.canComment && question.hasAnswer}
-          currentUserId={currentUserId}
-          canModerateComments={capabilities.canModerateComments}
           loadGuidance={() => dataSource.loadGuidance(key)}
           loadComments={() => dataSource.loadComments(key)}
           onAddComment={(text) =>

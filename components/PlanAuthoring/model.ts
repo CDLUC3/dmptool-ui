@@ -6,14 +6,13 @@ export type PlanQuestionIdentity =
   | { kind: "base"; versionedQuestionId: number }
   | { kind: "custom"; customQuestionId: number };
 
-export type PlanQuestionMode = "view" | "editing";
-
 export type PlanQuestionSaveState =
-  | "clean"
-  | "dirty"
-  | "saving"
-  | "saved"
-  | "error";
+  | { status: "clean" }
+  | { status: "dirty" }
+  | { status: "saving" }
+  | { status: "saved" }
+  | { status: "invalid"; messages: string[] }
+  | { status: "failed"; message?: string };
 
 export interface PlanCapabilities {
   canEditAnswers: boolean;
@@ -21,11 +20,17 @@ export interface PlanCapabilities {
   /** Plan owners / moderators can delete any comment (mirrors planOwners in useComments). */
   canModerateComments: boolean;
   canCustomizeGuidance: boolean;
-  canPublish: boolean;
 }
+
+export type PlanGuidanceSourceType =
+  | "BEST_PRACTICE"
+  | "TEMPLATE_OWNER"
+  | "USER_AFFILIATION"
+  | "USER_SELECTED";
 
 export interface PlanGuidanceSource {
   id: string;
+  type: PlanGuidanceSourceType;
   label: string;
   shortName: string;
   orgURI?: string;
@@ -41,27 +46,36 @@ export interface PlanGuidanceOrgOption {
 }
 
 export interface PlanComment {
-  id: number;
-  /** Author user id — compared to currentUserId for edit/delete (mirrors MergedComment.user.id). */
+  /** Opaque key; answer and feedback comment ids come from separate tables and can collide. */
+  id: string;
   authorId: number;
   authorName: string;
   createdLabel: string;
   text: string;
   isFeedback?: boolean;
+  canEdit: boolean;
+  canDelete: boolean;
   /** True when modified differs from created (mirrors CommentList edited indicator). */
   isEdited?: boolean;
 }
+
+export type PlanQuestionJsonError = "missing" | "parseFailed" | "unexpectedFormat";
 
 export interface PlanQuestionDefinition {
   identity: PlanQuestionIdentity;
   sectionIdentity: PlanSectionIdentity;
   title: string;
   requirementHtml?: string;
+  requirementOrgLabel?: string;
   required: boolean;
   questionType: string;
   parsedJson: Record<string, unknown>;
+  /** Set when the question JSON can't be rendered; parsedJson is then empty. */
+  jsonError?: PlanQuestionJsonError;
   answerJson: unknown | null;
   hasAnswer: boolean;
+  /** Epoch milliseconds as a string, like the API's timestamps. */
+  lastSavedAt?: string;
   guidanceSources: PlanGuidanceSource[];
   comments: PlanComment[];
   displayOrder: number;
@@ -105,7 +119,6 @@ export interface PlanAuthoringModel {
   templateVersion: string;
   funderName: string;
   membersLabel: string;
-  relatedWorksLabel: string;
   /** Signed-in user id — mirrors me.me.id for comment ownership checks. */
   currentUserId: number;
   currentUserName: string;

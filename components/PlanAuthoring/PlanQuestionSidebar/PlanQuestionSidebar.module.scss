@@ -10,6 +10,12 @@
     height: 0;
     min-height: 100%;
     overflow: hidden;
+
+    // The row height follows the answer column, so a short answer would leave
+    // no room to read comments. The open panel gets a minimum height.
+    &[data-comments-expanded="true"] {
+      min-height: max(100%, 28rem);
+    }
   }
 }
 
@@ -19,6 +25,21 @@
   flex-direction: column;
   min-height: 0;
   overflow: hidden;
+}
+
+.commentsPanel {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+
+  &[hidden] {
+    display: none;
+  }
+
+  @media (max-width: 1023px) {
+    max-height: min(32rem, 70vh);
+  }
 }
 
 .commentsTab {
@@ -104,6 +125,20 @@
     font-size: 0.9375rem;
     font-weight: 600;
     color: #171721;
+  }
+}
+
+.loadError {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  font-size: 0.8125rem;
+  color: var(--error-600, #b91c1c);
+
+  p {
+    margin: 0;
   }
 }
 

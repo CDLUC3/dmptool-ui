@@ -12,6 +12,7 @@ import {
   ModalOverlay,
   TextField,
 } from "react-aria-components";
+import ErrorMessages from "@/components/ErrorMessages";
 import { DmpIcon } from "@/components/Icons";
 import type { PlanGuidanceOrgOption } from "../model";
 import styles from "./PlanGuidanceCustomizeDialog.module.scss";
@@ -39,19 +40,43 @@ export default function PlanGuidanceCustomizeDialog({
   const Global = useTranslations("Global");
   const [term, setTerm] = useState("");
   const [results, setResults] = useState<PlanGuidanceOrgOption[]>([]);
+  const [searchedOrgs, setSearchedOrgs] = useState<PlanGuidanceOrgOption[]>([]);
   const [draftIds, setDraftIds] = useState<string[]>(selectedOrgIds);
   const [searching, setSearching] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (isOpen) {
       setDraftIds(selectedOrgIds);
       setResults(availableOrgs.filter((org) => !selectedOrgIds.includes(org.id)));
+      setSearchedOrgs([]);
       setTerm("");
+      setError(null);
     }
   }, [availableOrgs, isOpen, selectedOrgIds]);
 
-  const selectedOrgs = availableOrgs.filter((org) => draftIds.includes(org.id));
+  const knownOrgs = new Map(
+    [...availableOrgs, ...searchedOrgs].map((org) => [org.id, org])
+  );
+  const selectedOrgs = [...knownOrgs.values()].filter((org) =>
+    draftIds.includes(org.id)
+  );
+
+  const search = async () => {
+    setSearching(true);
+    setError(null);
+    try {
+      const next = await onSearch(term);
+      setSearchedOrgs((current) => [...current, ...next]);
+      setResults(next.filter((org) => !draftIds.includes(org.id)));
+    } catch (searchError) {
+      console.error("Failed to search guidance organizations", searchError);
+      setError(t("customizeDialog.searchFailed"));
+    } finally {
+      setSearching(false);
+    }
+  };
 
   return (
     <ModalOverlay
@@ -82,6 +107,11 @@ export default function PlanGuidanceCustomizeDialog({
               {Global("buttons.close")}
             </Button>
           </div>
+
+          <ErrorMessages
+            errors={error ? [error] : []}
+            noScroll
+          />
 
           <div className={styles.dialogBody}>
             <section className={styles.dialogSection}>
@@ -150,34 +180,14 @@ export default function PlanGuidanceCustomizeDialog({
                     onKeyDown={(event) => {
                       if (event.key === "Enter") {
                         event.preventDefault();
-                        void (async () => {
-                          setSearching(true);
-                          try {
-                            const next = await onSearch(term);
-                            setResults(
-                              next.filter((org) => !draftIds.includes(org.id))
-                            );
-                          } finally {
-                            setSearching(false);
-                          }
-                        })();
+                        void search();
                       }
                     }}
                   />
                 </TextField>
                 <Button
                   className="react-aria-Button react-aria-Button--secondary"
-                  onPress={async () => {
-                    setSearching(true);
-                    try {
-                      const next = await onSearch(term);
-                      setResults(
-                        next.filter((org) => !draftIds.includes(org.id))
-                      );
-                    } finally {
-                      setSearching(false);
-                    }
-                  }}
+                  onPress={() => void search()}
                   isDisabled={searching}
                 >
                   {searching
@@ -221,9 +231,13 @@ export default function PlanGuidanceCustomizeDialog({
             <Button
               onPress={async () => {
                 setSaving(true);
+                setError(null);
                 try {
                   await onSave(draftIds);
                   onOpenChange(false);
+                } catch (saveError) {
+                  console.error("Failed to save guidance sources", saveError);
+                  setError(t("customizeDialog.saveFailed"));
                 } finally {
                   setSaving(false);
                 }

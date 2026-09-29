@@ -1,0 +1,1212 @@
+"use client";
+
+import { useEffect, useState, useRef, useMemo, useCallback } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { useFormatter, useTranslations } from "next-intl";
+// next/link is faster for basic links
+import NextLink from "next/link";
+import {
+  Breadcrumb,
+  Breadcrumbs,
+  Button,
+  Dialog,
+  Form,
+  Heading,
+  Link,
+  ListBoxItem,
+  Modal,
+  Radio,
+  Text,
+  DialogTrigger,
+  Popover
+} from "react-aria-components";
+
+// GraphQL
+import { useQuery, useMutation } from '@apollo/client/react';
+import {
+  CompleteFeedbackDocument,
+  MeDocument,
+  PlanStatus,
+  PlanVisibility,
+  PlanDocument,
+  PlanFeedbackStatusDocument,
+  RelatedWorksByPlanStatsDocument,
+} from "@/generated/graphql";
+import {
+  publishPlanAction,
+  updatePlanStatusAction,
+  updatePlanTitleAction
+} from "./actions";
+
+//Components
+import { ContentContainer, LayoutWithPanel, SidebarPanel } from "@/components/Container";
+import ErrorMessages from "@/components/ErrorMessages";
+import { DmpIcon } from "@/components/Icons";
+import { FormSelect, RadioGroupComponent, TransitionLink } from "@/components/Form";
+import PageHeaderWithTitleChange from "@/components/PageHeaderWithTitleChange";
+import OverviewSection from "@/components/OverviewSection";
+import NotificationHeader from "@/components/Notification";
+
+// Utils and other
+import { routePath } from "@/utils/routes";
+import { toTitleCase } from "@/utils/general";
+import { extractErrors } from "@/utils/errorHandler";
+import { useToast } from "@/context/ToastContext";
+import {
+  PlanMember,
+  PlanOverviewInterface,
+} from "@/app/types";
+import { DOI_REGEX } from "@/lib/constants";
+import styles from "./PlanOverviewPage.module.scss";
+import { logECS } from "@/utils/index";
+import { useIsOrgAdmin } from "@/app/hooks/useIsOrgAdmin";
+
+const PUBLISHED = "Published";
+const UNPUBLISHED = "Unpublished";
+
+// Status options for dropdown
+const planStatusOptions = Object.entries(PlanStatus).map(([name, id]) => ({
+  id,
+  name,
+}));
+
+type UpdateTitleErrors = {
+  general?: string;
+  title?: string;
+};
+
+type UpdateStatusErrors = {
+  general?: string;
+  status?: string;
+};
+
+type PublishPlanErrors = {
+  general?: string;
+  visibility?: string;
+  status?: string;
+};
+
+
+
+// Extract the dmpId from the DOI URL - moved outside component to prevent recreation
+function extractDOI(value: string): string {
+  if (!value) return "";
+  // decode percent-encoding if someone passed a URL-encoded DOI
+  const decoded = decodeURIComponent(value.trim());
+  const match = DOI_REGEX.exec(decoded);
+  return match ? match[1] : "";
+}
+
+// Construct the narrative URL based on environment - moved outside component to prevent recreation
+// When running narrative generator locally, it uses port 3030, so we need a separate domain for that
+const getNarrativeUrl = (dmpId: string): string => {
+  let narrativeUrl = "";
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
+  const localBaseUrl = process.env.NEXT_PUBLIC_NARRATIVE_ENDPOINT || "http://localhost:3030";
+  const isLocalhost = baseUrl?.includes("localhost");
+
+  narrativeUrl = isLocalhost ? localBaseUrl || "" : baseUrl || "";
+
+  return `${narrativeUrl}/dmps/${dmpId}/narrative.html?includeCoverSheet=false&includeResearchOutputs=false&includeRelatedWorks=false`;
+};
+
+// Format date utility - moved outside component to prevent recreation
+const formatPublishDate = (date: string | null, formatter: ReturnType<typeof useFormatter>): string | null => {
+  if (!date) return null;
+
+  let dateObj: Date;
+
+  // Check if date is a timestamp (numeric string) or ISO string
+  if (/^\d+$/.test(date)) {
+    // It's a timestamp, convert to number
+    dateObj = new Date(Number(date));
+  } else {
+    // It's likely an ISO string or other format
+    dateObj = new Date(date);
+  }
+
+  // Check if the date is valid
+  if (isNaN(dateObj.getTime())) {
+    return date; // Return original if invalid
+  }
+
+  const formattedDate = formatter.dateTime(dateObj, {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
+
+  // Replace slashes with hyphens
+  return formattedDate.replace(/\//g, "-");
+};
+
+interface PlanOverviewProps {
+  children: (overview: React.ReactNode) => React.ReactNode;
+}
+
+const PlanOverview = ({ children }: PlanOverviewProps) => {
+  const formatter = useFormatter();
+  // State hooks
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Submitting feedback request
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  // Submitting publish request
+  const [isPublishSubmitting, setIsPublishSubmitting] = useState(false);
+  // Plan status submitting
+  const [isPlanStatusSubmitting, setIsPlanStatusSubmitting] = useState(false);
+  const [errorMessages, setErrorMessages] = useState<string[]>([]);
+  const [modalErrors, setModalErrors] = useState<string[]>([]);
+  const [planVisibility, setPlanVisibility] = useState<PlanVisibility>(PlanVisibility.Private);
+  const [planStatus, setPlanStatus] = useState<PlanStatus | null>(null);
+  const [step, setStep] = useState(1);
+  const [isEditingPlanStatus, setIsEditingPlanStatus] = useState(false);
+  // Track whether the question should be read-only based on plan status and user role
+  const [isReadOnly, setIsReadOnly] = useState<boolean>(false);
+  const [isFeedbackRequested, setIsFeedbackRequested] = useState<boolean>(false);
+  const [planData, setPlanData] = useState<PlanOverviewInterface>({
+    id: null,
+    dmpId: "",
+    registered: "",
+    title: "",
+    status: "",
+    funderName: "",
+    primaryContact: "",
+    members: [] as PlanMember[],
+    affiliationName: "",
+    sourceTemplate: "",
+    templateVersion: "",
+    templatePublished: "",
+    percentageAnswered: 0,
+  });
+
+  // Get projectId and planId params
+  const params = useParams();
+  const router = useRouter();
+  const projectId = String(params.projectId);
+  const dmpId = String(params.dmpid);
+  const planId = Number(dmpId);
+  const errorRef = useRef<HTMLDivElement | null>(null);
+  const modalErrorRef = useRef<HTMLDivElement | null>(null);
+
+  const toastState = useToast();
+
+  // Localization keys
+  const t = useTranslations("PlanOverview");
+  const Global = useTranslations("Global");
+
+  // Get Plan using planId
+  const {
+    data,
+    loading,
+    error: queryError,
+    refetch,
+  } = useQuery(PlanDocument, {
+    variables: { planId: Number(planId) },
+    skip: isNaN(planId), // prevents the query from running when id is not a number
+    notifyOnNetworkStatusChange: true,
+  });
+
+  // Query data
+  const {
+    data: relatedWorksByPlanStats,
+    refetch: relatedWorksByProjectStatsRefetch,
+  } = useQuery(RelatedWorksByPlanStatsDocument, {
+    variables: {
+      planId,
+    },
+  });
+  const rwPlanStats = relatedWorksByPlanStats?.relatedWorksByPlanStats;
+
+  const {
+    data: feedbackData,
+    loading: feedbackLoading,
+    error: feedbackError,
+    refetch: refetchFeedbackStatus
+  } = useQuery(PlanFeedbackStatusDocument, {
+    variables: { planId: Number(planId) },
+    skip: isNaN(planId),
+  });
+
+  // Run me query to get user's name
+  const { data: me } = useQuery(MeDocument);
+
+  // Initialize completed feedbackmutation
+  const [completeFeedbackMutation, { error: completeFeedbackError }] = useMutation(CompleteFeedbackDocument);
+
+  // Check for returned GraphQL errors from feedback queries and mutations, and set error messages in state to be displayed in UI 
+  useEffect(() => {
+    const newErrors: string[] = [];
+    if (feedbackError) newErrors.push(feedbackError.message);
+    if (completeFeedbackError) newErrors.push(completeFeedbackError.message);
+    if (newErrors.length > 0) {
+      setErrorMessages(prev => [...prev, ...newErrors]);
+    }
+  }, [feedbackError, completeFeedbackError]);
+
+  // Memoize URLs to prevent unnecessary recalculations
+  const urls = useMemo(() => ({
+    FUNDINGS_URL: routePath("projects.dmp.fundings", { projectId, dmpId: planId }),
+    MEMBERS_URL: routePath("projects.dmp.members", { projectId, dmpId: planId }),
+    DOWNLOAD_URL: routePath("projects.dmp.download", { projectId, dmpId: planId }),
+    FEEDBACK_URL: routePath("projects.dmp.feedback", { projectId, dmpId: planId }),
+    CHANGE_PRIMARY_CONTACT_URL: routePath("projects.dmp.members", { projectId, dmpId: planId }),
+    RELATED_WORKS_URL: routePath("projects.dmp.related-works", { projectId, dmpId: planId }),
+  }), [projectId, planId]);
+
+  const isPrimaryCollaborator = useMemo(() => {
+    const myId = me?.me?.id;
+    if (!myId || !data?.plan?.project?.collaborators) return false;
+
+    return data.plan.project.collaborators.some(
+      (collaborator) =>
+        collaborator?.user?.id === myId &&
+        collaborator?.accessLevel === "PRIMARY"
+    );
+  }, [me?.me?.id, data?.plan?.project?.collaborators]);
+
+  // Determine if user is an Org Admin that can see feedback request notifications
+  const isOrgAdmin = useIsOrgAdmin(
+    me?.me,
+    data?.plan?.project?.collaborators
+  );
+
+
+  const { FUNDINGS_URL, MEMBERS_URL, DOWNLOAD_URL, FEEDBACK_URL, CHANGE_PRIMARY_CONTACT_URL, RELATED_WORKS_URL } = urls;
+
+  // Format the publish date - no memoization needed since date doesn't change after load
+  const formattedPublishDate = formatPublishDate(planData?.templatePublished ?? null, formatter);
+
+  // Handle changes from RadioGroup
+  const handleRadioChange = (value: string) => {
+    const selection = value.toUpperCase();
+    setPlanVisibility(selection as PlanVisibility);
+  };
+
+  const handlePlanStatusChange = () => {
+    setIsEditingPlanStatus(true);
+  };
+
+  const handleDialogCloseBtn = () => {
+    handleModalOpenChange(false);
+  };
+
+  const handleModalOpenChange = useCallback((open: boolean) => {
+    setIsModalOpen(open);
+    if (!open) {
+      setStep(1);
+      setModalErrors([]);
+      setIsPublishSubmitting(false);
+    }
+  }, []);
+
+
+  // Call Server Action updatePlanStatusAction to run the updatePlanStatusMutation
+  const updateStatus = useCallback(async (status: PlanStatus) => {
+    // Don't need a try-catch block here, as the error is handled in the action
+    const response = await updatePlanStatusAction({
+      planId: Number(planId),
+      status,
+    });
+
+    if (response.redirect) {
+      router.push(response.redirect);
+    }
+
+    return {
+      success: response.success,
+      errors: response.errors,
+      data: response.data,
+    };
+  }, [planId, router]);
+
+  const handlePlanStatusForm = useCallback(async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    setIsEditingPlanStatus(false);
+    setIsPlanStatusSubmitting(true);
+
+    const status = planStatus ?? (planData.status as PlanStatus);
+
+    const result = await updateStatus(status);
+
+    if (!result.success) {
+      const errors = result.errors;
+
+      //Check if errors is an array or an object
+      if (Array.isArray(errors)) {
+        //Handle errors as an array
+        setErrorMessages(errors);
+      }
+    } else {
+      if (result?.data?.errors) {
+        const errs = extractErrors<UpdateStatusErrors>(result?.data?.errors, ["general", "status"]);
+        if (errs.length > 0) {
+          setErrorMessages(errs);
+        } else {
+          // Optimistically update status so UI reflects it smoothly
+          setPlanStatus(status);
+
+          // ALSO update the planData.status so the display paragraph updates
+          setPlanData(prev => ({
+            ...prev,
+            status,
+          }));
+          setIsPlanStatusSubmitting(false);
+          const successMessage = t("messages.success.successfullyUpdatedStatus");
+          toastState.add(successMessage, { type: "success" });
+        }
+      }
+    }
+  }, [planStatus, planData.status, updateStatus, t, toastState]);
+
+  // Call Server Action publishPlanAction to run the publishPlanMutation
+  const publishPlan = useCallback(async (visibility: PlanVisibility) => {
+    const response = await publishPlanAction({
+      planId: Number(planId),
+      visibility,
+    });
+
+    if (response.redirect) {
+      router.push(response.redirect);
+    }
+
+    return {
+      success: response.success,
+      errors: response.errors,
+      data: response.data,
+    };
+  }, [planId, router]);
+
+  // Items in the required checklist that must be completed before publishing. Memoize to prevent recalculation on every render.
+  const requiredCheckListItems = useMemo(() => [
+    {
+      id: 1,
+      content: (
+        <>
+          <strong>
+            {t("publishModal.publish.checklistItem.primaryContact")}{" "}
+            <Link
+              href={CHANGE_PRIMARY_CONTACT_URL}
+              onPress={() => handleModalOpenChange(true)}
+            >
+              {planData.primaryContact}
+            </Link>
+          </strong>
+        </>
+      ),
+      completed: planData.members.some((member) => member.isPrimaryContact),
+    },
+    {
+      id: 2,
+      content: (
+        <>
+          <strong>
+            {t("publishModal.publish.checklistItem.mockProject")}{" "}
+            <Link
+              href={routePath("projects.project.info", { projectId })}
+              onPress={() => setIsModalOpen(false)}
+            >
+              {t("links.projectDetailsPage")}
+            </Link>
+          </strong></>
+      ),
+      completed: planData.isTestProject === false,
+    }
+  ], [planData]);
+
+
+  // Items recommended for publishing. Memoize to prevent recalculation on every render
+  const recommendedCheckListItems = useMemo(() => [
+    {
+      id: 3,
+      content: <>{t("publishModal.publish.checklistItem.complete")}</>,
+      completed: planData.status === "COMPLETE",
+    },
+    {
+      id: 4,
+      content: (
+        <>
+          {t("publishModal.publish.checklistItem.percentageAnswered", {
+            percentage: planData.percentageAnswered,
+          })}
+        </>
+      ),
+      completed: planData.percentageAnswered >= 50,
+    },
+    {
+      id: 5,
+      content: (
+        <>
+          {t("publishModal.publish.checklistItem.fundingText")} (
+          <Link
+            href={FUNDINGS_URL}
+            onPress={() => setIsModalOpen(false)}
+          >
+            {t("publishModal.publish.checklistItem.funding")}
+          </Link>
+          )
+        </>
+      ),
+      completed: !!planData.funderName, // Check if funderName exists
+    },
+    {
+      id: 6,
+      content: <>{t("publishModal.publish.checklistItem.requiredFields")}</>,
+      completed: planData.completedAllRequiredQuestions
+    },
+    {
+      id: 7,
+      content: (
+        <>
+          {t("publishModal.publish.checklistItem.orcidText")}{" "}
+          <Link
+            href={MEMBERS_URL}
+            onPress={() => setIsModalOpen(false)}
+          >
+            {t("publishModal.publish.checklistItem.projectMembers")}
+          </Link>
+        </>
+      ),
+      completed: planData.members.some((member) => member.orcid), // Check if any member has an ORCiD
+    },
+  ], [planData, CHANGE_PRIMARY_CONTACT_URL, FUNDINGS_URL, MEMBERS_URL]);
+
+  const handlePublishSubmit = useCallback(async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    // Clear stale modal errors before running validation/submission.
+    setModalErrors([]);
+
+    // Block publishing if required checklist items aren't complete
+    const hasIncompleteRequiredItems = requiredCheckListItems.some(
+      (item) => !item.completed
+    );
+
+    if (hasIncompleteRequiredItems) {
+      setStep(1);
+      setModalErrors([t("messages.errors.requiredItemsIncomplete")]);
+      setIsPublishSubmitting(false);
+      return;
+    }
+
+    // Set submitting state to true to disable the publish button and show loading state
+    setIsPublishSubmitting(true);
+
+    const form = event.target as HTMLFormElement;
+    const formData = new FormData(form);
+
+    // Extract the selected radio button value, and make it upper case to match TemplateVisibility enum values
+    const visibility = formData.get("visibility")?.toString().toUpperCase() as PlanVisibility;
+
+    try {
+      const result = await publishPlan(visibility);
+
+      if (!result.success) {
+        const errors = result.errors;
+
+        //Check if errors is an array or an object
+        if (Array.isArray(errors)) {
+          //Handle errors as an array
+          setErrorMessages(errors.length > 0 ? errors : [Global("messaging.somethingWentWrong")]);
+        }
+        return;
+      }
+
+      if (result?.data?.errors) {
+        const errs = extractErrors<PublishPlanErrors>(result?.data?.errors, ["general", "visibility", "status"]);
+        if (errs.length > 0) {
+          setErrorMessages(errs);
+          return;
+        }
+      }
+
+      const successMessage = t("messages.success.successfullyPublished");
+      toastState.add(successMessage, { type: "success" });
+
+      // Close modal only on successful publish with no field-level errors.
+      handleModalOpenChange(false);
+
+      //Need to refetch plan data to refresh the info that was changed
+      await refetch();
+
+      // Need to refetch related works project stats data
+      await relatedWorksByProjectStatsRefetch();
+    } finally {
+      setIsPublishSubmitting(false);
+    }
+  }, [publishPlan, Global, t, toastState, refetch, relatedWorksByProjectStatsRefetch, requiredCheckListItems, handleModalOpenChange]);
+
+  // Call Server Action updatePlanTitleAction to run the updatePlanTitleMutation
+  const updateTitle = useCallback(async (title: string) => {
+    // Don't need a try-catch block here, as the error is handled in the action
+    const response = await updatePlanTitleAction({
+      planId: Number(planId),
+      title,
+    });
+
+    if (response.redirect) {
+      router.push(response.redirect);
+    }
+
+    return {
+      success: response.success,
+      errors: response.errors,
+      data: response.data,
+    };
+  }, [planId, router]);
+
+  const handleTitleChange = useCallback(async (newTitle: string) => {
+    const result = await updateTitle(newTitle);
+
+    if (!result.success) {
+      setErrorMessages(prev => [...prev, t("messages.errors.updateTitleError")]);
+    } else {
+      if (result.data?.errors) {
+        // Handle errors as an object with general or field-level errors
+        const errs = extractErrors<UpdateTitleErrors>(result?.data?.errors, ["general", "title"]);
+        if (errs.length > 0) {
+          setErrorMessages(errs);
+          return;
+        }
+
+        // Optimistically update state so UI reflects it smoothly
+        setPlanData(prev => ({
+          ...prev,
+          title: newTitle,
+        }));
+
+        const successMessage = t("messages.success.successfullyUpdatedTitle");
+        toastState.add(successMessage, { type: "success" });
+      }
+    }
+  }, [updateTitle, t, toastState]);
+
+
+  const markFeedbackAsDone = async (sendEmail: boolean) => {
+    setErrorMessages([]);
+    setIsSubmitting(true);
+
+    try {
+      await completeFeedbackMutation({
+        variables: {
+          planId: Number(planId),
+          planFeedbackId: Number(feedbackData?.planFeedbackStatus?.id),
+          sendEmail
+        }
+      });
+      // Success so try and refetch feedback status to update UI
+      try {
+        await refetchFeedbackStatus();
+        const successMessage = t("feedbackNotification.markAsDoneSuccess");
+        toastState.add(successMessage, { type: "success" });
+      } catch (error) {
+        setErrorMessages([Global('messaging.somethingWentWrong')]);
+        logECS('error', 'markFeedbackAsDone', {
+          error,
+          url: { path: routePath('projects.dmp.show', { projectId, planId }) }
+        });
+      }
+    } catch (error) {
+      setErrorMessages([Global('messaging.somethingWentWrong')]);
+      logECS('error', 'markFeedbackAsDone', {
+        error,
+        url: { path: routePath('projects.dmp.show', { projectId, planId }) }
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  useEffect(() => {
+    // When data from backend changes, set project data in state
+    if (data && data.plan) {
+      setPlanData({
+        id: Number(data?.plan.id) ?? null,
+        dmpId: extractDOI(data?.plan.dmpId ?? ""),
+        registered: data?.plan.registered ?? "",
+        title: data?.plan?.title ?? "",
+        status: data?.plan?.status ?? "",
+        funderName:
+          data?.plan?.fundings
+            ?.map((f) => f?.projectFunding?.affiliation?.displayName)
+            .filter(Boolean)
+            .join(", ") ?? "",
+        primaryContact:
+          data.plan.members
+            ?.filter((member) => member?.isPrimaryContact === true)
+            ?.map((member) => member?.projectMember?.givenName + " " + member?.projectMember?.surName)
+            ?.join(", ") ?? "",
+        members:
+          data.plan.members
+            ?.filter((member) => member !== null) // Filter out null
+            .map((member) => ({
+              fullname: `${member?.projectMember?.givenName} ${member?.projectMember?.surName}`,
+              email: member?.projectMember?.email ?? "",
+              orcid: member?.projectMember?.orcid ?? "",
+              isPrimaryContact: member?.isPrimaryContact ?? false,
+              role: (member?.projectMember?.memberRoles ?? []).map((role) => role.label),
+            })) ?? [],
+        sourceTemplate: data?.plan?.versionedTemplate?.template?.name ?? "",
+        affiliationName: data?.plan?.versionedTemplate?.owner?.displayName ?? "",
+        templateVersion: data?.plan?.versionedTemplate?.version ?? "",
+        templatePublished: data?.plan?.versionedTemplate?.created ?? "",
+        percentageAnswered: data?.plan?.progress?.percentComplete ?? 0,
+        completedAllRequiredQuestions: data?.plan?.versionedSections?.every((section) => section.answeredRequiredQuestions === section.totalRequiredQuestions) ?? false,
+        orgId: data?.plan?.versionedTemplate?.owner?.uri ?? "",
+        feedbackStatus: data?.plan?.feedbackStatus?.status ?? "NONE",
+        isTestProject: data?.plan?.project?.isTestProject || false,
+      });
+      setPlanVisibility(data.plan.visibility as PlanVisibility);
+      setIsReadOnly(data?.plan?.readOnly || false);
+    }
+  }, [data]);
+
+  useEffect(() => {
+    if (queryError) {
+      setErrorMessages(prev => [...prev, queryError.message]);
+    }
+  }, [queryError]);
+
+  useEffect(() => {
+    setIsFeedbackRequested(planData?.feedbackStatus === 'REQUESTED');
+  }, [planData]);
+
+
+  // Memoize computed descriptions to prevent recalculation on every render
+  const { pageDescription, pageDescriptionWithVersion } = useMemo(() => {
+    const description = (planData?.sourceTemplate && planData?.affiliationName)
+      ? t('description', { source: planData?.sourceTemplate, affiliationName: planData?.affiliationName })
+      : t('page.pageDescription');
+    const descriptionWithVersion = `${description} - ${Global("version")}: ${planData?.templateVersion}, ${Global("published")}: ${formattedPublishDate}`;
+
+    return {
+      pageDescription: description,
+      pageDescriptionWithVersion: descriptionWithVersion,
+    };
+  }, [planData?.sourceTemplate, planData?.affiliationName, planData?.templateVersion, formattedPublishDate, t, Global]);
+
+  const isFeedbackEnabled = useMemo(() => {
+    const affiliation = me?.me?.affiliation;
+    if (!affiliation) return false;
+    return affiliation.feedbackEnabled === true && (affiliation.feedbackEmails?.length ?? 0) > 0;
+  }, [me?.me?.affiliation]);
+
+
+  if (loading) {
+    return <div>{Global("messaging.loading")}...</div>;
+  }
+
+  // Calculate the number of checklist items that are not completed
+  const itemsToBeFixed = requiredCheckListItems.filter(item => !item.completed).length + recommendedCheckListItems.filter(item => !item.completed).length;
+
+  return (
+    <>
+      <PageHeaderWithTitleChange
+        title={planData.title}
+        description={(planData?.templateVersion && planData?.templatePublished) ? pageDescriptionWithVersion : pageDescription}
+        linkText={t("links.editTitle")}
+        labelText={t("labels.planTitle")}
+        placeholder={t("page.planTitlePlaceholder")}
+        showBackButton={false}
+        breadcrumbs={
+          <Breadcrumbs aria-label={Global("breadcrumbs.navigation")}>
+            <Breadcrumb>
+              <Link href={routePath("app.home")}>{Global("breadcrumbs.home")}</Link>
+            </Breadcrumb>
+            <Breadcrumb>
+              <Link href={routePath("projects.index")}>{Global("breadcrumbs.projects")}</Link>
+            </Breadcrumb>
+            <Breadcrumb>
+              <Link href={routePath("projects.show", { projectId })}>{Global("breadcrumbs.projectOverview")}</Link>
+            </Breadcrumb>
+            <Breadcrumb>{Global("breadcrumbs.planOverview")}</Breadcrumb>
+          </Breadcrumbs>
+        }
+        onTitleChange={handleTitleChange}
+      />
+
+      <ErrorMessages
+        errors={errorMessages}
+        ref={errorRef}
+      />
+
+      {children(
+        <LayoutWithPanel>
+          {isFeedbackRequested && isOrgAdmin && (
+            <NotificationHeader
+              title={t("feedbackNotification.title")}
+              actionButtonText={t("feedbackNotification.markAsDone")}
+              modal={{
+                title: t("feedbackNotification.confirmModal.title"),
+                content: (
+                  <p>
+                    {t("feedbackNotification.confirmModal.description")}
+                  </p>
+                ),
+                cancelButtonText: Global("buttons.close"),
+                confirmButtonText: t("feedbackNotification.markAsDone"),
+                emailPromptLabel: t("feedbackNotification.confirmModal.emailPromptLabel"),
+                emailPromptYes: t("feedbackNotification.confirmModal.emailPromptYes"),
+                emailPromptNo: t("feedbackNotification.confirmModal.emailPromptNo"),
+                isSubmitting,
+                submittingText: Global('buttons.saving')
+              }}
+              onMarkAsDone={markFeedbackAsDone}
+            >
+              <p>{t("feedbackNotification.description1")}</p>
+              <p>{t("feedbackNotification.description2")}</p>
+            </NotificationHeader>
+          )}
+
+          <ContentContainer>
+            <div className={"container"}>
+              <div className="project-overview">
+                <OverviewSection
+                  heading={t("funding.title")}
+                  headingId="funding-title"
+                  linkHref={FUNDINGS_URL}
+                  linkText={t("funding.edit")}
+                  linkAriaLabel={t("funding.edit")}
+                  disabled={isReadOnly}
+                  hoverMessage={t('messages.readOnlyLinkMessageFunding')}
+                >
+                  <p>{planData.funderName || t("funding.noFunderSelected")}</p>
+                </OverviewSection>
+
+                <OverviewSection
+                  heading={t("members.title")}
+                  headingId="members-title"
+                  linkHref={MEMBERS_URL}
+                  linkText={t("members.edit")}
+                  linkAriaLabel={t("members.edit")}
+                  disabled={isReadOnly}
+                  hoverMessage={t('messages.readOnlyLinkMessageMembers')}
+                >
+                  <p>
+                    {planData.members.map((member, index) => (
+                      <span key={member.email}>
+                        {t("members.info", {
+                          name: member.fullname,
+                          role: member.role.map((role) => role).join(", "),
+                        })}
+                        {index < planData.members.length - 1 ? "; " : ""}
+                      </span>
+                    ))}
+                  </p>
+                </OverviewSection>
+
+                <OverviewSection
+                  heading={t("relatedWorks.title")}
+                  headingId="related-works-title"
+                  linkHref={RELATED_WORKS_URL}
+                  linkText={t("relatedWorks.edit")}
+                  linkAriaLabel={t("relatedWorks.edit")}
+                  includeLink={!!rwPlanStats?.hasPublishedPlan || !isReadOnly}
+                  disabled={isReadOnly}
+                  hoverMessage={t('messages.readOnlyLinkMessageRelatedWorks')}
+                >
+                  {!rwPlanStats?.hasPublishedPlan && <p>{t("relatedWorks.publish")}</p>}
+                  {rwPlanStats?.hasPublishedPlan && rwPlanStats?.pendingCount != null && <p>{t("relatedWorks.pendingCount", { count: rwPlanStats?.pendingCount })}</p>}
+                  {rwPlanStats?.hasPublishedPlan && rwPlanStats?.acceptedCount != null && <p>{t("relatedWorks.acceptedCount", { count: rwPlanStats?.acceptedCount })}</p>}
+                </OverviewSection>
+              </div>
+            </div>
+          </ContentContainer>
+
+          <SidebarPanel>
+            <div className="status-panel-content side-panel">
+              <div className={`buttonContainer withBorder  mb-5`}>
+                {planData.dmpId && (
+                  <NextLink
+                    href={getNarrativeUrl(planData.dmpId)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="button-secondary"
+                  >
+                    {Global("buttons.preview")}
+                  </NextLink>
+                )}
+                {!isReadOnly ? (
+                  <Button
+                    onPress={() => setIsModalOpen(true)}
+                  >
+                    {Global("buttons.publish")}
+                  </Button>
+                ) : (
+                  <DialogTrigger>
+                    <Button
+                      aria-disabled={isReadOnly}
+                      type="button"
+                      className="link-disabled"
+                    >
+                      {Global("buttons.publish")}
+                    </Button>
+                    <Popover placement="bottom" className="popover--inverse">
+                      <Dialog aria-label={t('messages.readOnlyLinkMessagePublish')} className="popoverContent">
+                        {t('messages.readOnlyLinkMessagePublish')}
+                      </Dialog>
+                    </Popover>
+                  </DialogTrigger>
+                )}
+              </div>
+              <div className="side-panel-content">
+                <div className={`panelRow mb-5`}>
+                  <div>
+                    <h3>{t("status.feedback.title")}</h3>
+                    <p>
+                      {feedbackLoading
+                        ? `${Global("messaging.loading")}...`
+                        : (() => {
+                          const raw = feedbackData?.planFeedbackStatus?.status ?? "NONE";
+                          const key = `status.feedback.${String(raw).toLowerCase()}`;
+                          return t(key);
+                        })()
+                      }
+                    </p>
+                  </div>
+                  {isPrimaryCollaborator && isFeedbackEnabled ? (
+                    <TransitionLink
+                      href={FEEDBACK_URL}
+                      className="side-panel-link"
+                      aria-label={Global("links.request")}
+                    >
+                      {Global("links.request")}
+                    </TransitionLink>
+                  ) : (
+                    (() => {
+                      const disabledMessage = isReadOnly
+                        ? t('status.feedback.disabledTooltip')
+                        : !isFeedbackEnabled
+                          ? t('messages.feedbackNotAvailable')
+                          : t('status.feedback.disabledTooltip');
+                      return (
+                        <DialogTrigger>
+                          <Button
+                            className="link-disabled"
+                            type="button"
+                            aria-disabled={true}
+                          >
+                            {Global("links.request")}
+                          </Button>
+                          <Popover placement="bottom" className="popover--inverse">
+                            <Dialog aria-label={disabledMessage} className="popoverContent">
+                              {disabledMessage}
+                            </Dialog>
+
+                          </Popover>
+                        </DialogTrigger>
+                      )
+                    })()
+
+                  )}
+
+                </div>
+                {isEditingPlanStatus ? (
+                  <div>
+                    <Form
+                      onSubmit={handlePlanStatusForm}
+                      className="statusForm"
+                    >
+                      <FormSelect
+                        label={t("status.title")}
+                        ariaLabel={t("status.select.label")}
+                        isRequired
+                        name="planStatus"
+                        items={planStatusOptions}
+                        onChange={(selected) => setPlanStatus(selected as PlanStatus)}
+                        selectedKey={planStatus ?? planData.status}
+
+                      >
+                        {(item) => <ListBoxItem key={item.id}>{item.name}</ListBoxItem>}
+                      </FormSelect>
+                      {isEditingPlanStatus && (
+                        <Button
+                          type="submit"
+                          isDisabled={isPlanStatusSubmitting}
+                        >
+                          {isPlanStatusSubmitting ? Global("buttons.saving") : Global("buttons.save")}
+                        </Button>
+                      )}
+                    </Form>
+                  </div>
+                ) : (
+                  <div className={`panelRow mb-5`}>
+                    <div>
+                      <h3>{t("status.title")}</h3>
+                      <p>{toTitleCase(planData.status)}</p>
+                    </div>
+                    {!isReadOnly ? (
+                      <Button
+                        className="button-as-link"
+                        data-testid="updateLink"
+                        onPress={handlePlanStatusChange}
+                        aria-label={t("status.select.changeLabel")}
+                      >
+                        {Global("buttons.linkUpdate")}
+                      </Button>
+                    ) : (
+                      <DialogTrigger>
+                        <Button
+                          className="link-disabled"
+                          type="button"
+                          aria-disabled={true}
+                        >
+                          {Global("buttons.linkUpdate")}
+                        </Button>
+                        <Popover placement="bottom" className="popover--inverse">
+                          <Dialog aria-label={t('messages.readOnlyLinkMessage')} className="popoverContent">
+                            {t('messages.readOnlyLinkMessagePlanStatus')}
+                          </Dialog>
+                        </Popover>
+                      </DialogTrigger>
+                    )}
+                  </div>
+                )}
+
+                <div className={`panelRow mb-5`}>
+                  <div>
+                    <h3>{t("status.publish.title")}</h3>
+                    <p>{planData.registered ? PUBLISHED : UNPUBLISHED}</p>
+                  </div>
+                  {!isReadOnly ? (
+                    <Link
+                      href="#"
+                      className="side-panel-link"
+                      onPress={() => setIsModalOpen(true)}
+                      aria-label={t("status.publish.label")}
+                    >
+                      {t("status.publish.label")}
+                    </Link>
+                  ) : (
+                    <DialogTrigger>
+                      <Button
+                        className="link-disabled"
+                        type="button"
+                        aria-disabled={true}
+                      >
+                        {t("status.publish.label")}
+                      </Button>
+                      <Popover placement="bottom" className="popover--inverse">
+                        <Dialog aria-label={t('messages.readOnlyLinkMessagePublishStatus')} className="popoverContent">
+                          {t('messages.readOnlyLinkMessagePublishStatus')}
+                        </Dialog>
+                      </Popover>
+                    </DialogTrigger>
+                  )}
+                </div>
+                <div className={`panelRow mb-5`}>
+                  <div>
+                    <h3>{t("status.download.title")}</h3>
+                  </div>
+                  {/**Any user who can access the plan can download the plan */}
+                  <NextLink
+                    href={DOWNLOAD_URL}
+                    className="side-panel-link"
+                    aria-label={t("status.download.title")}
+                  >
+                    {t("status.download.title")}
+                  </NextLink>
+                </div>
+              </div>
+            </div>
+          </SidebarPanel>
+        </LayoutWithPanel>
+      )}
+
+      <Modal
+        isDismissable
+        isOpen={isModalOpen}
+        onOpenChange={handleModalOpenChange}
+        data-testid="modal"
+      >
+        {step === 1 && (
+          <Dialog>
+            <div className={`${styles.publishModal} ${styles.dialogWrapper}`}>
+              <ErrorMessages
+                errors={modalErrors}
+                ref={modalErrorRef}
+              />
+              <Heading slot="title">{t("publishModal.publish.title")}</Heading>
+
+              <p>{t("publishModal.publish.description1")}</p>
+
+              <p>{t("publishModal.publish.description2")}</p>
+
+              <Heading level={2}>{t("publishModal.publish.checklistTitle")}</Heading>
+
+              <h3 id="required-checklist-heading">{t("publishModal.publish.required")}</h3>
+              <ul
+                className={styles.checkList}
+                data-testid="required-checklist"
+                aria-labelledby="required-checklist-heading"
+              >
+                {/* Render completed items first */}
+                {requiredCheckListItems
+                  .filter((item) => item.completed)
+                  .map((item) => (
+                    <li
+                      key={item.id}
+                      className={styles.iconTextListItem}
+                    >
+                      <div className={styles.iconWrapper}>
+                        <DmpIcon icon="check_circle_black" />
+                      </div>
+                      <div className={styles.textWrapper}>{item.content}</div>
+                    </li>
+                  ))}
+                {/* Render incomplete items next */}
+                {requiredCheckListItems
+                  .filter((item) => !item.completed)
+                  .map((item) => (
+                    <li
+                      key={item.id}
+                      className={styles.iconTextListItem}
+                    >
+                      <div className={styles.iconWrapper}>
+                        <DmpIcon icon="error_circle" />
+                      </div>
+                      <div className={styles.textWrapper}>{item.content}</div>
+                    </li>
+                  ))}
+              </ul>
+
+              <h3 id="recommended-checklist-heading">{t("publishModal.publish.recommended")}</h3>
+              <ul
+                className={styles.checkList}
+                data-testid="recommended-checklist"
+                aria-labelledby="recommended-checklist-heading"
+              >
+                {/* Render completed items first */}
+                {recommendedCheckListItems
+                  .filter((item) => item.completed)
+                  .map((item) => (
+                    <li
+                      key={item.id}
+                      className={styles.iconTextListItem}
+                    >
+                      <div className={styles.iconWrapper}>
+                        <DmpIcon icon="check_circle_black" />
+                      </div>
+                      <div className={styles.textWrapper}>{item.content}</div>
+                    </li>
+                  ))}
+
+                {/* Render incomplete items next */}
+                {recommendedCheckListItems
+                  .filter((item) => !item.completed)
+                  .map((item) => (
+                    <li
+                      key={item.id}
+                      className={styles.iconTextListItem}
+                    >
+                      <div className={styles.iconWrapper}>
+                        <DmpIcon icon="error_circle" />
+                      </div>
+                      <div className={styles.textWrapper}>{item.content}</div>
+                    </li>
+                  ))}
+              </ul>
+
+              <p>
+                <strong>
+                  {t("publishModal.publish.checklistInfo", { count: itemsToBeFixed })}
+                </strong>
+              </p>
+
+              <div className="modal-actions">
+                <div>
+                  <Button
+                    type="button"
+                    onPress={() => setStep(2)}
+                  >
+                    {t("publishModal.publish.buttonNext")}{' '}&gt;
+                  </Button>
+                </div>
+                <div>
+                  <Button
+                    data-secondary
+                    className="secondary"
+                    onPress={handleDialogCloseBtn}
+                  >
+                    {Global("buttons.close")}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </Dialog>
+        )}
+
+        {/* Step 2: Visibility Settings & Publish Plan button*/}
+        {step === 2 && (
+          <Dialog>
+            <div className={`${styles.publishModal} ${styles.dialogWrapper}`}>
+              <Form
+                onSubmit={(e) => handlePublishSubmit(e)}
+                data-testid="publishForm"
+              >
+                <Heading slot="title">{t("publishModal.publish.visibilityTitle")}</Heading>
+
+                <p>{t("publishModal.publish.visibilityDescription")}</p>
+
+                <Heading level={2}>{t("publishModal.publish.visibilityOptionsTitle")}</Heading>
+
+                <RadioGroupComponent
+                  name="visibility"
+                  value={planVisibility.toLowerCase()}
+                  radioGroupLabel={t("publishModal.publish.visibilityOptionsTitle")}
+                  onChange={handleRadioChange}
+                >
+                  <div>
+                    <Radio value="public">{t("publishModal.publish.visibilityOptions.public.label")}</Radio>
+                    <Text slot="description">
+                      <strong>{t("publishModal.publish.visibilityOptions.public.description")}</strong>
+                    </Text>
+                  </div>
+
+                  <div>
+                    <Radio value="organizational">
+                      {t("publishModal.publish.visibilityOptions.organization.label")}
+                    </Radio>
+                    <Text slot="description">
+                      {t.rich("publishModal.publish.visibilityOptions.organization.description", {
+                        strong: (chunks) => <strong>{chunks}</strong>,
+                      })}
+                    </Text>
+                  </div>
+
+                  <div>
+                    <Radio value="private">{t("publishModal.publish.visibilityOptions.private.label")}</Radio>
+                    <Text slot="description">{t("publishModal.publish.visibilityOptions.private.description")}</Text>
+                  </div>
+                </RadioGroupComponent>
+
+                <div className="modal-actions">
+                  <div>
+                    <Button
+                      type="submit"
+                      isDisabled={isPublishSubmitting}
+                    >
+                      {isPublishSubmitting ? Global('buttons.publishing') : Global("buttons.publish")}
+                    </Button>
+                  </div>
+                  <div>
+                    <Button
+                      data-secondary
+                      className="secondary"
+                      onPress={handleDialogCloseBtn}
+                    >
+                      {Global("buttons.close")}
+                    </Button>
+                  </div>
+                </div>
+              </Form>
+            </div>
+          </Dialog>
+        )}
+      </Modal>
+    </>
+  );
+};
+
+export default PlanOverview;

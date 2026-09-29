@@ -13,7 +13,7 @@ type ParsedQuestionResult<T extends keyof QuestionTypeMap = keyof QuestionTypeMa
 
 // Type guard to check if parsed object has valid question type
 /*eslint-disable @typescript-eslint/no-explicit-any */
-const isValidQuestionType = (obj: any): obj is QuestionTypeMap[keyof QuestionTypeMap] => {
+export const isValidQuestionType = (obj: any): obj is QuestionTypeMap[keyof QuestionTypeMap] => {
   return obj &&
     typeof obj === 'object' &&
     'type' in obj &&

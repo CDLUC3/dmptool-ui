@@ -8,12 +8,15 @@ import type {
   PlanGuidanceSource,
   PlanQuestionDefinition,
   PlanQuestionIdentity,
-  PlanQuestionMode,
   PlanQuestionSaveState,
   PlanSectionDefinition,
   PlanSectionIdentity,
 } from "./model";
-import type { PlanAuthoringDataSource } from "./dataSource";
+import type {
+  PlanAuthoringDataSource,
+  PlanAuthoringState,
+  SaveAnswerResult,
+} from "./dataSource";
 
 export type {
   PlanAuthoringModel,
@@ -25,11 +28,30 @@ export type {
   PlanGuidanceSource,
   PlanQuestionDefinition,
   PlanQuestionIdentity,
-  PlanQuestionMode,
   PlanQuestionSaveState,
   PlanSectionDefinition,
   PlanSectionIdentity,
   PlanAuthoringDataSource,
+  PlanAuthoringState,
+  SaveAnswerResult,
 };
 
 export { default as PlanAuthoring } from "./PlanAuthoringScreen";
+export {
+  deriveCommentCapabilities,
+  type CommentPermissionFacts,
+  type NewCommentTarget,
+} from "./commentCapabilities";
+export {
+  createPlanAuthoringDataSource,
+  type PlanAuthoringDataSourceParams,
+} from "./planAuthoringDataSource";
+export { usePlanAuthoringDataSource } from "./usePlanAuthoringDataSource";
+export {
+  EMPTY_PLAN_AUTHORING_VIEWER,
+  toPlanAuthoringModel,
+  toPlanAuthoringViewer,
+  toStoredAnswerJson,
+  type PlanAuthoringPlan,
+  type PlanAuthoringViewer,
+} from "./toPlanAuthoringModel";

@@ -4,6 +4,8 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "react-aria-components";
 import OverviewSection from "@/components/OverviewSection";
+import Loading from "@/components/Loading";
+import NotificationHeader from "@/components/Notification";
 import {
   ContentContainer,
   FullWidthSection,
@@ -11,11 +13,11 @@ import {
   LayoutWithPanel,
   SidebarPanel,
 } from "@/components/Container";
-import type { PlanAuthoringDataSource } from "../dataSource";
+import type { PlanAuthoringDataSource, PlanAuthoringState } from "../dataSource";
 import type {
-  PlanAuthoringModel,
   PlanAuthoringVariant,
   PlanDocument,
+  PlanSectionDefinition,
 } from "../model";
 import {
   collectLockedGuidanceOrgIds,
@@ -24,6 +26,7 @@ import {
 } from "../model";
 import { usePlanSectionNavigation } from "../usePlanSectionNavigation";
 import { useSectionPickerShortcut } from "../useSectionPickerShortcut";
+import { useUnsavedChangesRegistry } from "../useUnsavedChangesRegistry";
 import PlanSectionNavigation from "../PlanSectionNavigation";
 import PlanSectionPickerDialog from "../PlanSectionPickerDialog";
 import PlanSection from "../PlanSection";
@@ -39,7 +42,10 @@ interface PlanAuthoringProps {
   variant?: PlanAuthoringVariant;
   planDocument?: PlanDocument;
   idPrefix?: string;
+  overview?: React.ReactNode;
 }
+
+const NO_SECTIONS: PlanSectionDefinition[] = [];
 
 function fileTypeFromName(fileName: string): string {
   return fileName.split(".").pop()?.toUpperCase() || "FILE";
@@ -51,12 +57,13 @@ export default function PlanAuthoring({
   variant = "questions",
   planDocument: initialPlanDocument,
   idPrefix = "plan-authoring",
+  overview,
 }: PlanAuthoringProps) {
   const t = useTranslations("PlanAuthoring");
   const Global = useTranslations("Global");
   const isDocument = variant === "document";
-  const [model, setModel] = useState<PlanAuthoringModel>(() =>
-    dataSource.getModel()
+  const [state, setState] = useState<PlanAuthoringState>(() =>
+    dataSource.getState()
   );
   const [pickerOpen, setPickerOpen] = useState(false);
   const [customizeOpen, setCustomizeOpen] = useState(false);
@@ -66,10 +73,15 @@ export default function PlanAuthoring({
   );
 
   useEffect(() => {
+    setState(dataSource.getState());
     return dataSource.subscribe(() => {
-      setModel(dataSource.getModel());
+      setState(dataSource.getState());
     });
   }, [dataSource]);
+
+  const model = state.status === "ready" ? state.model : null;
+  const sections = model?.sections ?? NO_SECTIONS;
+  const registerUnsavedChange = useUnsavedChangesRegistry();
 
   useEffect(() => {
     setPlanDocument(initialPlanDocument);
@@ -83,106 +95,112 @@ export default function PlanAuthoring({
     }, [isDocument])
   );
 
-  const navigation = usePlanSectionNavigation({ sections: model.sections });
+  const navigation = usePlanSectionNavigation({ sections });
 
   const lockedOrgIds = useMemo(
-    () => collectLockedGuidanceOrgIds(model.sections),
-    [model.sections]
+    () => collectLockedGuidanceOrgIds(sections),
+    [sections]
   );
 
   return (
     <div className={[styles.planAuthoring, className].filter(Boolean).join(" ")}>
       <LayoutSplitPanel>
-        <LayoutWithPanel>
-          <ContentContainer>
-            <div className="container">
-              <div className={styles.planTitleBlock}>
-                <h1 className={styles.planTitle}>{model.title}</h1>
-                <p className={styles.planTemplateMeta}>
-                  {t("screen.basedOn", {
-                    template: model.templateName,
-                    funder: model.funderName,
-                    version: model.templateVersion,
-                  })}
-                </p>
-              </div>
-              <div className="project-overview">
-                <OverviewSection
-                  heading={t("screen.fundingTitle")}
-                  headingId={`${idPrefix}-funding`}
-                  linkHref="#"
-                  linkText={t("screen.adjustForPlan")}
-                  linkAriaLabel={t("screen.adjustFundingAria")}
-                  includeLink={false}
-                >
-                  <p>{model.funderName}</p>
-                </OverviewSection>
-                <OverviewSection
-                  heading={t("screen.membersTitle")}
-                  headingId={`${idPrefix}-members`}
-                  linkHref="#"
-                  linkText={t("screen.adjustForPlan")}
-                  linkAriaLabel={t("screen.adjustMembersAria")}
-                  includeLink={false}
-                >
-                  <p>{model.membersLabel}</p>
-                </OverviewSection>
-                <OverviewSection
-                  heading={t("screen.relatedWorksTitle")}
-                  headingId={`${idPrefix}-related-works`}
-                  linkHref="#"
-                  linkText={t("screen.adjustForPlan")}
-                  linkAriaLabel={t("screen.adjustRelatedWorksAria")}
-                  includeLink={false}
-                >
-                  <p>{model.relatedWorksLabel}</p>
-                </OverviewSection>
-              </div>
-            </div>
-          </ContentContainer>
-
-          <SidebarPanel>
-            <div className="status-panel-content side-panel">
-              <div className="buttonContainer withBorder mb-5">
-                <Button
-                  className="react-aria-Button react-aria-Button--secondary"
-                  isDisabled
-                >
-                  {Global("buttons.preview")}
-                </Button>
-                <Button isDisabled={!model.capabilities.canPublish}>
-                  {Global("buttons.publish")}
-                </Button>
-              </div>
-              <div className="side-panel-content">
-                <div className="panelRow mb-5">
-                  <div>
-                    <h3>{t("screen.template")}</h3>
-                    <p>
-                      {model.templateName} · {model.templateVersion}
-                    </p>
-                  </div>
-                </div>
-                <div className="panelRow mb-5">
-                  <div>
-                    <h3>{t("screen.affiliation")}</h3>
-                    <p>{model.affiliationName}</p>
-                  </div>
-                </div>
-                <div className="panelRow mb-5">
-                  <div>
-                    <h3>{t("screen.progress")}</h3>
-                    <p>
-                      {t("screen.percentComplete", {
-                        percent: model.progress.percentComplete,
+        {overview ?? (
+          <LayoutWithPanel>
+            <ContentContainer>
+              <div className="container">
+                <div className={styles.planTitleBlock}>
+                  <h1 className={styles.planTitle}>{model?.title}</h1>
+                  {model ? (
+                    <p className={styles.planTemplateMeta}>
+                      {t("screen.basedOn", {
+                        template: model.templateName,
+                        funder: model.funderName,
+                        version: model.templateVersion,
                       })}
                     </p>
+                  ) : null}
+                </div>
+                <div className="project-overview">
+                  <OverviewSection
+                    heading={t("screen.fundingTitle")}
+                    headingId={`${idPrefix}-funding`}
+                    linkHref="#"
+                    linkText={t("screen.adjustForPlan")}
+                    linkAriaLabel={t("screen.adjustFundingAria")}
+                    includeLink={false}
+                  >
+                    <p>{model?.funderName}</p>
+                  </OverviewSection>
+                  <OverviewSection
+                    heading={t("screen.membersTitle")}
+                    headingId={`${idPrefix}-members`}
+                    linkHref="#"
+                    linkText={t("screen.adjustForPlan")}
+                    linkAriaLabel={t("screen.adjustMembersAria")}
+                    includeLink={false}
+                  >
+                    <p>{model?.membersLabel}</p>
+                  </OverviewSection>
+                  <OverviewSection
+                    heading={t("screen.relatedWorksTitle")}
+                    headingId={`${idPrefix}-related-works`}
+                    linkHref="#"
+                    linkText={t("screen.adjustForPlan")}
+                    linkAriaLabel={t("screen.adjustRelatedWorksAria")}
+                    includeLink={false}
+                  >
+                    <p>{t("screen.relatedWorksEmpty")}</p>
+                  </OverviewSection>
+                </div>
+              </div>
+            </ContentContainer>
+
+            <SidebarPanel>
+              <div className="status-panel-content side-panel">
+                <div className="buttonContainer withBorder mb-5">
+                  <Button
+                    className="react-aria-Button react-aria-Button--secondary"
+                    isDisabled
+                  >
+                    {Global("buttons.preview")}
+                  </Button>
+                  <Button isDisabled>
+                    {Global("buttons.publish")}
+                  </Button>
+                </div>
+                <div className="side-panel-content">
+                  <div className="panelRow mb-5">
+                    <div>
+                      <h3>{t("screen.template")}</h3>
+                      <p>
+                        {model
+                          ? `${model.templateName} · ${model.templateVersion}`
+                          : null}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="panelRow mb-5">
+                    <div>
+                      <h3>{t("screen.affiliation")}</h3>
+                      <p>{model?.affiliationName}</p>
+                    </div>
+                  </div>
+                  <div className="panelRow mb-5">
+                    <div>
+                      <h3>{t("screen.progress")}</h3>
+                      <p>
+                        {t("screen.percentComplete", {
+                          percent: model?.progress.percentComplete ?? 0,
+                        })}
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          </SidebarPanel>
-        </LayoutWithPanel>
+            </SidebarPanel>
+          </LayoutWithPanel>
+        )}
 
         {isDocument ? (
           <FullWidthSection className={`${styles.writePlanRegion} ${styles.documentRegion}`}>
@@ -207,56 +225,89 @@ export default function PlanAuthoring({
           </FullWidthSection>
         ) : (
           <FullWidthSection className={styles.writePlanRegion}>
+            {model && !model.capabilities.canEditAnswers ? (
+              <div className={styles.readOnlyNotice}>
+                <NotificationHeader title={t("screen.readOnlyTitle")}>
+                  <p>{t("screen.readOnlyNotice")}</p>
+                </NotificationHeader>
+              </div>
+            ) : null}
             <div className={styles.writePlanIntro}>
               <h2>{t("screen.writeYourPlan")}</h2>
               <p>{t("screen.writePlanIntro")}</p>
-              <p className={styles.progressSummary}>
-                {t("screen.questionsAnswered", {
-                  answered: model.progress.answeredQuestions,
-                  total: model.progress.totalQuestions,
-                })}
-                <span>
-                  {" "}
-                  · {model.progress.percentComplete}%
-                </span>
-              </p>
+              {model ? (
+                <p className={styles.progressSummary}>
+                  {t("screen.questionsAnswered", {
+                    answered: model.progress.answeredQuestions,
+                    total: model.progress.totalQuestions,
+                  })}
+                  <span>
+                    {" "}
+                    · {model.progress.percentComplete}%
+                  </span>
+                </p>
+              ) : null}
             </div>
 
-            <PlanSectionNavigation
-              sections={model.sections}
-              activeSection={navigation.activeSection}
-              activeIndex={navigation.activeIndex}
-              activeSectionProgress={navigation.activeSectionProgress}
-              onOpenPicker={() => setPickerOpen(true)}
-              onSelectSection={navigation.jumpToSection}
-            />
+            {state.status === "loading" ? (
+              <Loading
+                variant="inline"
+                message={t("screen.loadingPlan")}
+              />
+            ) : null}
 
-            <div className={styles.sectionsStack}>
-              {model.sections.map((section, index) => (
-                <PlanSection
-                  key={sectionKey(section.identity)}
-                  section={section}
-                  index={index}
-                  total={model.sections.length}
-                >
-                  {section.questions.map((question) => (
-                    <PlanQuestion
-                      key={questionKey(question.identity)}
-                      question={question}
-                      capabilities={model.capabilities}
-                      currentUserId={model.currentUserId}
-                      dataSource={dataSource}
-                      onCustomizeGuidance={() => setCustomizeOpen(true)}
-                    />
+            {state.status === "error" ? (
+              <div
+                className={styles.loadError}
+                role="alert"
+              >
+                <p>{t("screen.loadFailed")}</p>
+                <p className={styles.loadErrorDetail}>{state.message}</p>
+                <Button onPress={() => dataSource.reload()}>
+                  {t("common.retry")}
+                </Button>
+              </div>
+            ) : null}
+
+            {model ? (
+              <>
+                <PlanSectionNavigation
+                  sections={model.sections}
+                  activeSection={navigation.activeSection}
+                  activeIndex={navigation.activeIndex}
+                  activeSectionProgress={navigation.activeSectionProgress}
+                  onOpenPicker={() => setPickerOpen(true)}
+                  onSelectSection={navigation.jumpToSection}
+                />
+
+                <div className={styles.sectionsStack}>
+                  {model.sections.map((section, index) => (
+                    <PlanSection
+                      key={sectionKey(section.identity)}
+                      section={section}
+                      index={index}
+                      total={model.sections.length}
+                    >
+                      {section.questions.map((question) => (
+                        <PlanQuestion
+                          key={questionKey(question.identity)}
+                          question={question}
+                          capabilities={model.capabilities}
+                          dataSource={dataSource}
+                          onCustomizeGuidance={() => setCustomizeOpen(true)}
+                          registerUnsavedChange={registerUnsavedChange}
+                        />
+                      ))}
+                    </PlanSection>
                   ))}
-                </PlanSection>
-              ))}
-            </div>
+                </div>
+              </>
+            ) : null}
           </FullWidthSection>
         )}
       </LayoutSplitPanel>
 
-      {!isDocument && (
+      {!isDocument && model ? (
         <>
           <PlanSectionPickerDialog
             isOpen={pickerOpen}
@@ -278,7 +329,7 @@ export default function PlanAuthoring({
             }}
           />
         </>
-      )}
+      ) : null}
 
       {isDocument && planDocument ? (
         <PlanDocumentUploadDialog

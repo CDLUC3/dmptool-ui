@@ -2,23 +2,18 @@ import React from "react";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { axe, toHaveNoViolations } from "jest-axe";
 import type { PlanSectionDefinition } from "../../model";
+import { makeSection } from "../../mocks";
 import PlanSectionNavigation from "../index";
 
 expect.extend(toHaveNoViolations);
 
 const sections: PlanSectionDefinition[] = [
-  {
-    identity: { kind: "base", versionedSectionId: 1 },
-    title: "Products of research",
-    displayOrder: 1,
-    questions: [],
-  },
-  {
+  makeSection({ title: "Products of research" }),
+  makeSection({
     identity: { kind: "base", versionedSectionId: 2 },
     title: "Access and sharing",
     displayOrder: 2,
-    questions: [],
-  },
+  }),
 ];
 
 describe("PlanSectionNavigation", () => {

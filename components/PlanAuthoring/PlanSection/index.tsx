@@ -53,7 +53,13 @@ export default function PlanSection({
           {t("section.ofTotal", { index: index + 1, total })}
         </p>
       </div>
-      <div className={styles.planSectionQuestions}>{children}</div>
+      <div className={styles.planSectionQuestions}>
+        {section.questions.length > 0 ? (
+          children
+        ) : (
+          <p className={styles.emptySection}>{t("section.noQuestions")}</p>
+        )}
+      </div>
       <p className={styles.backToTop}>
         <a href={`#${sectionAnchorId(section.identity)}`}>
           <span aria-hidden="true">↑</span>{" "}

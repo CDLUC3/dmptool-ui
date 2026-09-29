@@ -2,7 +2,6 @@
 
 import React, { useId } from "react";
 import { useTranslations } from "next-intl";
-import { Button } from "react-aria-components";
 import { TEXT_AREA_QUESTION_TYPE } from "@/lib/constants";
 import { useRenderQuestionField } from "@/components/hooks/useRenderQuestionField";
 import FormTextArea from "@/components/Form/FormTextArea";
@@ -19,21 +18,17 @@ import styles from "./PlanQuestionAnswer.module.scss";
 
 interface PlanQuestionAnswerProps {
   question: PlanQuestionDefinition;
-  mode: "view" | "editing";
   draftAnswer: unknown;
   disabled?: boolean;
   onChange: (answerJson: unknown) => void;
-  onStartEditing: () => void;
   className?: string;
 }
 
 export default function PlanQuestionAnswer({
   question,
-  mode,
   draftAnswer,
   disabled = false,
   onChange,
-  onStartEditing,
   className,
 }: PlanQuestionAnswerProps) {
   const t = useTranslations("PlanAuthoring");
@@ -45,9 +40,10 @@ export default function PlanQuestionAnswer({
   // Question JSON flag (legacy). Distinct from collaborative PlanComments.
   const showAdditionalCommentField =
     question.parsedJson.showCommentField === true;
+  // TinyMCE's disabled mode injects the answer HTML unsanitized.
+  const showSanitizedRichText =
+    disabled && question.questionType === TEXT_AREA_QUESTION_TYPE;
 
-  // Always call — mode early-return must not violate Rules of Hooks.
-  //
   // TODO(follow-up PR): researchOutputTable parity via useRenderQuestionField.
   // Hold local `rows`/`setRows` (seed from draft or createEmptyResearchOutputRow),
   // pass researchOutputTableAnswerProps with onSave that emits
@@ -66,37 +62,19 @@ export default function PlanQuestionAnswer({
     })
   );
 
-  if (mode === "view") {
-    return (
-      <div className={[styles.answerView, className].filter(Boolean).join(" ")}>
-        {question.questionType === TEXT_AREA_QUESTION_TYPE &&
-        typeof value === "string" ? (
-          <SafeHtml html={value} />
-        ) : value == null || value === "" ? (
-          <p>{t("answer.notAnsweredYet")}</p>
-        ) : (
-          <p>{Array.isArray(value) ? value.join(", ") : String(value)}</p>
-        )}
-        {additionalCommentValue ? (
-          <div className={styles.additionalCommentView}>
-            <p className={styles.additionalCommentLabel}>
-              {tGlobal("labels.additionalComments")}
-            </p>
-            <p>{additionalCommentValue}</p>
-          </div>
-        ) : null}
-        {!disabled ? (
-          <Button className="button-as-link" onPress={onStartEditing}>
-            {t("answer.editAnswer")}
-          </Button>
-        ) : null}
-      </div>
-    );
-  }
-
   return (
     <div className={[styles.answerEditor, className].filter(Boolean).join(" ")}>
-      {questionField}
+      {showSanitizedRichText ? (
+        <div className={styles.readOnlyRichText}>
+          {typeof value === "string" && value.trim() ? (
+            <SafeHtml html={value} />
+          ) : (
+            <p>{t("answer.notAnsweredYet")}</p>
+          )}
+        </div>
+      ) : (
+        questionField
+      )}
       {showAdditionalCommentField ? (
         <FormTextArea
           name="additionalComment"

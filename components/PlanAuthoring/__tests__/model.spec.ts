@@ -85,6 +85,7 @@ describe("PlanAuthoring model helpers", () => {
             guidanceSources: [
               {
                 id: "nih",
+                type: "TEMPLATE_OWNER",
                 label: "NIH",
                 shortName: "NIH",
                 locked: true,
@@ -92,6 +93,7 @@ describe("PlanAuthoring model helpers", () => {
               },
               {
                 id: "uci",
+                type: "USER_AFFILIATION",
                 label: "UCI",
                 shortName: "UCI",
                 locked: false,
@@ -113,6 +115,7 @@ describe("PlanAuthoring model helpers", () => {
             guidanceSources: [
               {
                 id: "nih",
+                type: "TEMPLATE_OWNER",
                 label: "NIH",
                 shortName: "NIH",
                 locked: true,
@@ -120,6 +123,7 @@ describe("PlanAuthoring model helpers", () => {
               },
               {
                 id: "stanford",
+                type: "USER_SELECTED",
                 label: "Stanford",
                 shortName: "SU",
                 locked: true,

@@ -2,7 +2,8 @@
   font-size: 0.875rem;
   color: var(--gray-600);
 
-  &[data-state="error"] {
+  &[data-state="invalid"],
+  &[data-state="failed"] {
     color: var(--error-600, #b91c1c);
   }
 

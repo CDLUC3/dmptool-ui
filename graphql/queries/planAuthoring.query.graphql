@@ -1,0 +1,111 @@
+query PlanAuthoring($planId: Int!) {
+  plan(planId: $planId) {
+    id
+    title
+    readOnly
+    createdById
+    planCreator {
+      affiliation {
+        uri
+      }
+    }
+    project {
+      collaborators {
+        accessLevel
+        user {
+          id
+        }
+      }
+    }
+    feedback {
+      id
+      completed
+    }
+    members {
+      projectMember {
+        givenName
+        surName
+      }
+      memberRoles {
+        label
+      }
+    }
+    versionedTemplate {
+      id
+      name
+      version
+      owner {
+        name
+        uri
+      }
+    }
+    fundings {
+      projectFunding {
+        affiliation {
+          displayName
+        }
+      }
+    }
+    sections {
+      sectionType
+      versionedSectionId
+      customSectionId
+      displayOrder
+      title
+      introduction
+      requirements
+      questions {
+        questionType
+        versionedQuestionId
+        customQuestionId
+        required
+        questionText
+        requirementText
+        sampleText
+        useSampleTextAsDefault
+        hasAnswer
+        json
+        guidanceSources {
+          id
+          type
+          label
+          shortName
+          orgURI
+          items {
+            id
+            title
+            guidanceText
+            sampleText
+          }
+        }
+        answer {
+          id
+          json
+          modified
+          comments {
+            id
+            commentText
+            created
+            modified
+            user {
+              id
+              givenName
+              surName
+            }
+          }
+          feedbackComments {
+            id
+            commentText
+            created
+            modified
+            user {
+              id
+              givenName
+              surName
+            }
+          }
+        }
+      }
+    }
+  }
+}

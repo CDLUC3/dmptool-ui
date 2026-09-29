@@ -1,24 +1,22 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useTranslations } from "next-intl";
-import type { PlanAuthoringDataSource } from "./dataSource";
-import type { PlanQuestionMode, PlanQuestionSaveState } from "./model";
+import type { PlanAuthoringDataSource, SaveAnswerResult } from "./dataSource";
+import type { PlanQuestionSaveState } from "./model";
+import type { RegisterUnsavedChange } from "./useUnsavedChangesRegistry";
 
 interface UsePlanQuestionControllerArgs {
   questionKeyValue: string;
   initialAnswer: unknown;
   dataSource: PlanAuthoringDataSource;
   canEdit: boolean;
+  registerUnsavedChange?: RegisterUnsavedChange;
   autosaveMs?: number;
 }
 
 interface UsePlanQuestionControllerResult {
-  mode: PlanQuestionMode;
   saveState: PlanQuestionSaveState;
   draftAnswer: unknown;
-  errorMessage: string | null;
-  setMode: (mode: PlanQuestionMode) => void;
   setDraftAnswer: (answer: unknown) => void;
   saveNow: () => Promise<boolean>;
 }
@@ -28,37 +26,48 @@ export function usePlanQuestionController({
   initialAnswer,
   dataSource,
   canEdit,
+  registerUnsavedChange,
   autosaveMs = 1200,
 }: UsePlanQuestionControllerArgs): UsePlanQuestionControllerResult {
-  const t = useTranslations("PlanAuthoring");
-  const [mode, setMode] = useState<PlanQuestionMode>(
-    canEdit ? "editing" : "view"
-  );
-  const [saveState, setSaveState] = useState<PlanQuestionSaveState>("clean");
+  const [saveState, setSaveState] = useState<PlanQuestionSaveState>({
+    status: "clean",
+  });
   const [draftAnswer, setDraftAnswerState] = useState<unknown>(initialAnswer);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const draftRef = useRef(draftAnswer);
+  const initialAnswerRef = useRef(initialAnswer);
+  const saveStatusRef = useRef<PlanQuestionSaveState["status"]>("clean");
   const generationRef = useRef(0);
   const inFlightRef = useRef(false);
   const queuedRef = useRef(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const persistRef = useRef<() => Promise<boolean>>(async () => false);
 
   useEffect(() => {
     draftRef.current = draftAnswer;
   }, [draftAnswer]);
 
   useEffect(() => {
-    setDraftAnswerState(initialAnswer);
-    setSaveState("clean");
-    setErrorMessage(null);
-  }, [questionKeyValue, initialAnswer]);
+    saveStatusRef.current = saveState.status;
+  }, [saveState.status]);
 
   useEffect(() => {
-    setMode(canEdit ? "editing" : "view");
-  }, [canEdit, questionKeyValue]);
+    initialAnswerRef.current = initialAnswer;
+    // A successful save feeds the saved answer back in as initialAnswer, so
+    // only adopt it when there are no local edits it would overwrite.
+    if (saveStatusRef.current === "clean") {
+      draftRef.current = initialAnswer;
+      setDraftAnswerState(initialAnswer);
+    }
+  }, [initialAnswer]);
 
-  const persist = useCallback(async () => {
+  useEffect(() => {
+    draftRef.current = initialAnswerRef.current;
+    setDraftAnswerState(initialAnswerRef.current);
+    setSaveState({ status: "clean" });
+  }, [questionKeyValue]);
+
+  const persist = useCallback(async (): Promise<boolean> => {
     if (!canEdit) {
       return false;
     }
@@ -70,38 +79,46 @@ export function usePlanQuestionController({
 
     inFlightRef.current = true;
     const generation = ++generationRef.current;
-    setSaveState("saving");
-    setErrorMessage(null);
+    setSaveState({ status: "saving" });
 
-    const result = await dataSource.saveAnswer(
-      questionKeyValue,
-      draftRef.current
-    );
-
-    inFlightRef.current = false;
+    let result: SaveAnswerResult;
+    try {
+      result = await dataSource.saveAnswer(questionKeyValue, draftRef.current);
+    } catch (error) {
+      console.error("Failed to save plan answer", error);
+      result = { kind: "failed" };
+    } finally {
+      inFlightRef.current = false;
+    }
 
     if (generation !== generationRef.current) {
       return false;
     }
 
-    if (!result.success) {
-      setSaveState("error");
-      setErrorMessage(result.error ?? t("saveStatus.unableToSave"));
+    if (result.kind === "saved") {
+      setSaveState({ status: "saved" });
       if (queuedRef.current) {
         queuedRef.current = false;
+        return persist();
       }
-      return false;
+      return true;
     }
 
-    setSaveState("saved");
-
-    if (queuedRef.current) {
-      queuedRef.current = false;
-      return persist();
+    queuedRef.current = false;
+    switch (result.kind) {
+      case "invalid":
+        setSaveState({ status: "invalid", messages: result.messages });
+        break;
+      case "failed":
+        setSaveState({ status: "failed", message: result.message });
+        break;
     }
+    return false;
+  }, [canEdit, dataSource, questionKeyValue]);
 
-    return true;
-  }, [canEdit, dataSource, questionKeyValue, t]);
+  useEffect(() => {
+    persistRef.current = persist;
+  }, [persist]);
 
   const setDraftAnswer = useCallback(
     (answer: unknown) => {
@@ -111,15 +128,14 @@ export function usePlanQuestionController({
 
       draftRef.current = answer;
       setDraftAnswerState(answer);
-      setSaveState("dirty");
-      setErrorMessage(null);
-      setMode("editing");
+      setSaveState({ status: "dirty" });
 
       if (timerRef.current) {
         clearTimeout(timerRef.current);
       }
 
       timerRef.current = setTimeout(() => {
+        timerRef.current = null;
         void persist();
       }, autosaveMs);
     },
@@ -134,20 +150,29 @@ export function usePlanQuestionController({
     return persist();
   }, [persist]);
 
+  const hasUnsavedChanges =
+    saveState.status !== "clean" && saveState.status !== "saved";
+
+  useEffect(() => {
+    if (!hasUnsavedChanges || !registerUnsavedChange) {
+      return;
+    }
+    return registerUnsavedChange(questionKeyValue);
+  }, [hasUnsavedChanges, questionKeyValue, registerUnsavedChange]);
+
   useEffect(() => {
     return () => {
       if (timerRef.current) {
         clearTimeout(timerRef.current);
+        timerRef.current = null;
+        void persistRef.current();
       }
     };
   }, []);
 
   return {
-    mode,
     saveState,
     draftAnswer,
-    errorMessage,
-    setMode,
     setDraftAnswer,
     saveNow,
   };

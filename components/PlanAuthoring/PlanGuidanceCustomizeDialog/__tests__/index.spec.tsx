@@ -6,6 +6,7 @@ import '@testing-library/jest-dom';
 import { axe, toHaveNoViolations } from 'jest-axe';
 import PlanGuidanceCustomizeDialog from '../index';
 import type { PlanGuidanceOrgOption } from '../../model';
+import { makeGuidanceOrg } from '../../mocks';
 
 expect.extend(toHaveNoViolations);
 
@@ -60,9 +61,9 @@ jest.mock('react-aria-components', () => ({
   TextField: ({ children, className }: any) => <div className={className}>{children}</div>,
 }));
 
-const org1: PlanGuidanceOrgOption = { id: 'org-1', label: 'University of Example' } as any;
-const org2: PlanGuidanceOrgOption = { id: 'org-2', label: 'Example Institute' } as any;
-const org3: PlanGuidanceOrgOption = { id: 'org-3', label: 'Third Org' } as any;
+const org1 = makeGuidanceOrg();
+const org2 = makeGuidanceOrg({ id: 'org-2', label: 'Example Institute' });
+const org3 = makeGuidanceOrg({ id: 'org-3', label: 'Third Org' });
 
 const defaultProps = {
   isOpen: true,
@@ -274,6 +275,61 @@ describe('PlanGuidanceCustomizeDialog', () => {
       expect(screen.queryByRole('button', { name: '+ University of Example' })).not.toBeInTheDocument();
     });
 
+    it('adds an org found by search (not in availableOrgs) as a chip', async () => {
+      const user = userEvent.setup();
+      const searched = makeGuidanceOrg({
+        id: 'org-9',
+        label: 'Searched University',
+        shortName: 'SU',
+        orgURI: 'https://ror.org/org-9',
+      });
+      const onSave = jest.fn().mockResolvedValue(undefined);
+      render(
+        <PlanGuidanceCustomizeDialog
+          {...defaultProps}
+          onSearch={jest.fn().mockResolvedValue([searched])}
+          onSave={onSave}
+          selectedOrgIds={['org-1']}
+        />
+      );
+
+      await user.type(
+        screen.getByPlaceholderText('PlanAuthoring.customizeDialog.enterNamePlaceholder'),
+        'Searched'
+      );
+      await user.click(screen.getByRole('button', { name: 'Global.buttons.search' }));
+      await user.click(await screen.findByRole('button', { name: '+ Searched University' }));
+
+      const selectedSection = screen
+        .getByText('PlanAuthoring.customizeDialog.currentlyDisplaying')
+        .closest('section')!;
+      expect(within(selectedSection).getByText('Searched University')).toBeInTheDocument();
+
+      await user.click(
+        screen.getByRole('button', { name: 'PlanAuthoring.customizeDialog.saveGuidanceSources' })
+      );
+      await waitFor(() => {
+        expect(onSave).toHaveBeenCalledWith(['org-1', 'org-9']);
+      });
+    });
+
+    it('shows an error when the search fails', async () => {
+      jest.spyOn(console, 'error').mockImplementation(() => undefined);
+      const user = userEvent.setup();
+      render(
+        <PlanGuidanceCustomizeDialog
+          {...defaultProps}
+          onSearch={jest.fn().mockRejectedValue(new Error('offline'))}
+        />
+      );
+
+      await user.click(screen.getByRole('button', { name: 'Global.buttons.search' }));
+
+      expect(await screen.findByRole('alert')).toHaveTextContent(
+        'PlanAuthoring.customizeDialog.searchFailed'
+      );
+    });
+
     it('shows "searching" label and disables the search button while a search is in flight', async () => {
       let resolveSearch: (value: PlanGuidanceOrgOption[]) => void = () => { };
       const onSearch = jest.fn(
@@ -361,6 +417,7 @@ describe('PlanGuidanceCustomizeDialog', () => {
     });
 
     it('re-enables the save button and does not close the dialog if onSave rejects', async () => {
+      jest.spyOn(console, 'error').mockImplementation(() => undefined);
       const user = userEvent.setup();
       const onSave = jest.fn().mockRejectedValue(new Error('save failed'));
       render(
@@ -377,6 +434,8 @@ describe('PlanGuidanceCustomizeDialog', () => {
         ).not.toBeDisabled();
       });
       expect(defaultProps.onOpenChange).not.toHaveBeenCalledWith(false);
+      expect(screen.getByRole('alert')).toHaveTextContent('PlanAuthoring.customizeDialog.saveFailed');
+      expect(screen.getByRole('dialog')).toBeInTheDocument();
     });
   });
 

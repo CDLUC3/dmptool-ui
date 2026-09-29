@@ -5,6 +5,7 @@
       "fundingTitle": "Financiamento para este plano",
       "membersTitle": "Planejar membros para este plano",
       "relatedWorksTitle": "Trabalhos relacionados para este plano",
+      "relatedWorksEmpty": "Publique seu plano para começar a adicionar saídas publicadas no seu DMP.",
       "adjustForPlan": "Ajustar para este plano",
       "adjustFundingAria": "Ajustar para este plano",
       "adjustMembersAria": "Planejar membros para este plano",
@@ -17,7 +18,11 @@
       "writePlanIntro": "Trabalhe em cada seção abaixo — as respostas são salvas automaticamente. Use Ir para seção para navegar entre as seções.",
       "questionsAnswered": "{answered} de {total} perguntas respondidas",
       "planDocument": "Documento do plano",
-      "planDocumentIntro": "Este plano é representado por um único documento DMP enviado. Use <strong>Atualizar documento</strong> para substituí-lo por um novo arquivo."
+      "planDocumentIntro": "Este plano é representado por um único documento DMP enviado. Use <strong>Atualizar documento</strong> para substituí-lo por um novo arquivo.",
+      "loadingPlan": "Carregando plano…",
+      "loadFailed": "Não é possível carregar este plano.",
+      "readOnlyTitle": "Somente visualização",
+      "readOnlyNotice": "Você não tem as permissões necessárias para editar as respostas deste plano."
     },
     "document": {
       "download": "Baixar",
@@ -51,11 +56,11 @@
       "resizeAria": "Redimensionar pergunta — arraste, ou duplo-clique para redefinir",
       "resizeHint": "Arraste para redimensionar · clique duplo para resetar",
       "answeredAria": "Respondido",
-      "requiredByFunder": "Necessário pelo financiador"
+      "requiredByFunder": "Necessário pelo financiador",
+      "requirementsBy": "Requisitos de {funder}"
     },
     "answer": {
       "notAnsweredYet": "Não atendida.",
-      "editAnswer": "Editar resposta",
       "label": "Resposta",
       "numberLabel": "Número",
       "dateLabel": "Encontro"
@@ -64,18 +69,24 @@
       "unsavedChanges": "Alterações não Salvas",
       "saving": "Salvando…",
       "saved": "Salvo",
+      "lastSaved": "Salvo pela última vez {relative}",
       "saveFailed": "Gravação falhou",
       "unableToSave": "Não é possível salvar resposta."
     },
     "sidebar": {
       "ariaLabel": "Orientação e comentários para perguntas",
       "loadingGuidance": "Carregando orientação…",
-      "funderGuidance": "Funder guidance",
+      "guidanceHeading": {
+        "templateOwner": "Orientação do proprietário do modelo",
+        "userAffiliation": "Orientação da sua organização",
+        "userSelected": "Orientação adicional"
+      },
       "selectGuidanceSource": "Selecionar fonte de orientação.",
       "comments": "Comments",
       "showComments": "Mostrar comentários",
       "hideComments": "Ocultar comentários",
-      "newCount": "{count} novos"
+      "commentCount": "{count, plural, one {# comentário} other {# comentários}}",
+      "guidanceLoadFailed": "Não é possível carregar a orientação."
     },
     "guidance": {
       "sourcesAria": "Salvar fontes de orientação",
@@ -92,7 +103,11 @@
       "editAria": "Editar comentário",
       "posting": "Publicando…",
       "comment": "Comentário",
-      "saveBeforeCommenting": "Salve uma resposta antes de adicionar comentários."
+      "saveBeforeCommenting": "Salve uma resposta antes de adicionar comentários.",
+      "loadFailed": "Não é possível carregar os comentários.",
+      "addFailed": "Não é possível adicionar o comentário. Tente novamente.",
+      "updateFailed": "Não é possível atualizar o comentário. Tente novamente.",
+      "deleteFailed": "Não é possível excluir o comentário. Tente novamente."
     },
     "customizeDialog": {
       "title": "Personalizar melhor prática",
@@ -106,7 +121,9 @@
       "searchByName": "Pesquisar por nome",
       "enterNamePlaceholder": "Inserir nome\"…\"…",
       "noMatchingSources": "Sem fontes correspondentes.",
-      "saveGuidanceSources": "Salvar fontes de orientação"
+      "saveGuidanceSources": "Salvar fontes de orientação",
+      "saveFailed": "Não foi possível atualizar as fontes de orientação. Tente novamente.",
+      "searchFailed": "Não foi possível pesquisar organizações. Tente novamente."
     },
     "sectionPicker": {
       "switchSectionAria": "Alternar seção",
@@ -134,7 +151,8 @@
     "section": {
       "badge": "Seção {index}",
       "ofTotal": "Seção {index} de {total}",
-      "backToTop": "Voltar para o topo da seção {title}"
+      "backToTop": "Voltar para o topo da seção {title}",
+      "noQuestions": "Não há perguntas disponíveis nesta seção."
     },
     "sampleAnswers": {
       "viewSampleAnswer": "Ver amostra da resposta",
@@ -142,6 +160,9 @@
       "useAnswer": "Usar resposta",
       "organizationSampleText": "{org} texto de exemplo",
       "sampleTextAdded": "Exemplo de texto adicionado"
+    },
+    "common": {
+      "retry": "Tentar novamente"
     }
   }
 }

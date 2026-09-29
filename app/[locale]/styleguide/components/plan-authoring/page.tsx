@@ -1,25 +1,25 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import { ContentContainer, LayoutContainer } from "@/components/Container";
 import { PlanAuthoring } from "@/components/PlanAuthoring";
 import {
-  createPlanAuthoringDemoDataSource,
-  DEMO_PLAN_DOCUMENT,
-} from "@/components/PlanAuthoring/demo";
+  createScenarioDataSource,
+  scenarios,
+} from "@/components/PlanAuthoring/mocks";
 import "../../shared/styleguide.scss";
 
-const questionsDataSource = createPlanAuthoringDemoDataSource({
-  failSaveOnce: true,
-  delayMs: 450,
-});
-
-const documentDataSource = createPlanAuthoringDemoDataSource({
-  delayMs: 0,
-});
+const documentScenario = scenarios.documentVariant();
 
 export default function PlanAuthoringStyleGuidePage() {
+  const [questionsDataSource] = useState(() =>
+    createScenarioDataSource("saveFails", { delayMs: 450 })
+  );
+  const [documentDataSource] = useState(() =>
+    createScenarioDataSource("documentVariant")
+  );
+
   return (
     <LayoutContainer className="plan-authoring-layout">
       <ContentContainer>
@@ -36,8 +36,9 @@ export default function PlanAuthoringStyleGuidePage() {
 
         <h1>Plan Authoring</h1>
         <p className="lead">
-          Demo-data showcase of the single-page plan authoring UI. Saves,
-          guidance load, comments, and customize guidance are simulated — the
+          The single-page plan authoring UI, running on its real GraphQL data
+          source against a fake in-memory API. Saves, comments, and customize
+          guidance send the same queries and mutations as a real plan. The
           first Save on any question fails once, then succeeds.
         </p>
       </ContentContainer>
@@ -58,8 +59,7 @@ export default function PlanAuthoringStyleGuidePage() {
 
       <PlanAuthoring
         dataSource={documentDataSource}
-        variant="document"
-        planDocument={DEMO_PLAN_DOCUMENT}
+        {...documentScenario.props}
         idPrefix="plan-document"
       />
     </LayoutContainer>
