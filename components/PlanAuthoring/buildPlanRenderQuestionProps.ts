@@ -3,12 +3,7 @@ import type {
   ParsedQuestion,
   RenderQuestionFieldProps,
 } from "@/components/hooks/useRenderQuestionField";
-import {
-  ADDITIONAL_COMMENT_JSON_KEY,
-  getAnswerValue,
-  getAdditionalCommentValue,
-  hasAdditionalCommentKey,
-} from "./answerUtils";
+import { getAnswerValue, withAnswer } from "./answerUtils";
 
 interface BuildPlanRenderQuestionPropsArgs {
   questionType: string;
@@ -20,21 +15,11 @@ interface BuildPlanRenderQuestionPropsArgs {
 }
 
 /**
- * TEMPORARY bridge: maps PlanAuthoring's current `{ type, answer }` draft shape
- * into the prop bags `useRenderQuestionField` already understands.
+ * Maps a `{ type, answer }` draft into the per-type props `useRenderQuestionField`
+ * expects, and emits edits back as `{ type, answer }`.
  *
- * Expect this to shrink or be replaced once the real plan-answer / question
- * data structure lands and PlanAuthoring can feed the shared renderer more
- * directly (same path as PlanOverviewQuestionPageShared). Do not treat the
- * mapping details here as the long-term answer contract.
- *
- * Keeps PlanQuestionAnswer from re-implementing the question-type switch.
- *
- * TODO(follow-up PR): researchOutputTable (+ affiliationSearch) are NOT mapped
- * here. Those need React row/search state and an explicit onSave, matching
- * PlanOverviewQuestionPageShared — not a scalar `{ type, answer }` emit.
- * Wire `researchOutputTableAnswerProps` / `typeaheadSearchProps` in
- * PlanQuestionAnswer (or a dedicated wrapper), not in this adapter.
+ * TODO(follow-up PR): researchOutputTable needs row state and an explicit save,
+ * so wire `researchOutputTableAnswerProps` in PlanQuestionAnswer, not here.
  */
 export function buildPlanRenderQuestionProps({
   questionType,
@@ -46,17 +31,8 @@ export function buildPlanRenderQuestionProps({
 }: BuildPlanRenderQuestionPropsArgs): RenderQuestionFieldProps {
   const value = getAnswerValue(draftAnswer);
 
-  const emit = (answer: unknown) => {
-    const base = { type: questionType, answer };
-    if (hasAdditionalCommentKey(draftAnswer)) {
-      onChange({
-        ...base,
-        [ADDITIONAL_COMMENT_JSON_KEY]: getAdditionalCommentValue(draftAnswer),
-      });
-      return;
-    }
-    onChange(base);
-  };
+  const emit = (answer: unknown) =>
+    onChange(withAnswer(draftAnswer, questionType, answer));
 
   const stringValue = typeof value === "string" ? value : "";
   const numberValue = typeof value === "number" ? value : null;
@@ -179,6 +155,6 @@ export function buildPlanRenderQuestionProps({
     },
     // TODO(follow-up PR): researchOutputTableAnswerProps — rows/setRows/onSave
     // parity with PlanOverviewQuestionPageShared (columnHeadings + meta +
-    // createEmptyResearchOutputRow). Same for typeaheadSearchProps.
+    // createEmptyResearchOutputRow).
   };
 }

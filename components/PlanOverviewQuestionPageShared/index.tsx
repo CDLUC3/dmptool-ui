@@ -760,14 +760,15 @@ export const PlanOverviewQuestionPageShared: React.FC<{ config: QuestionPageConf
     switch (type) {
       case TYPEAHEAD_QUESTION_TYPE:
         if (answer) {
+          const isOther = answer.affiliationId === 'other';
           setFormData(prev => ({
             ...prev,
             affiliationData: {
               affiliationId: answer.affiliationId,
-              affiliationName: answer.affiliationName
+              affiliationName: isOther ? 'Other' : answer.affiliationName
             },
-            otherField: answer.isOther,
-            otherAffiliationName: ''
+            otherField: isOther,
+            otherAffiliationName: isOther ? answer.affiliationName : ''
           }));
         }
         break;

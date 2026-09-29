@@ -30,6 +30,15 @@ jest.mock("@/components/TinyMCEEditor", () => ({
   ),
 }));
 
+jest.mock("@/components/Form/TypeAheadWithOther/useAffiliationSearch", () => ({
+  useAffiliationSearch: () => ({
+    suggestions: [{ id: 1, uri: "https://ror.org/01an7q238", displayName: "UC Berkeley" }],
+    handleSearch: jest.fn(),
+    isSearching: false,
+    searchError: null,
+  }),
+}));
+
 const messages = { ...globalMessages, ...planAuthoringMessages };
 
 function makeQuestion(
@@ -180,6 +189,69 @@ describe("PlanQuestionAnswer", () => {
       type: "radioButtons",
       answer: "Alex",
       comment: "Because of reasons",
+    });
+  });
+
+  describe("affiliation search", () => {
+    const affiliationQuestion = () =>
+      makeQuestion("affiliationSearch", { attributes: { label: "Institution" } });
+
+    it("shows the stored affiliation and emits a chosen suggestion", async () => {
+      const user = userEvent.setup();
+      const { onChange } = renderAnswer(affiliationQuestion(), {
+        type: "affiliationSearch",
+        answer: { affiliationId: "https://ror.org/03yrm5c26", affiliationName: "CDL" },
+      });
+
+      const field = screen.getByRole("textbox", { name: /Institution/ });
+      expect(field).toHaveValue("CDL");
+
+      fireEvent.change(field, { target: { value: "Berk" } });
+      await user.click(screen.getByRole("option", { name: "UC Berkeley" }));
+      expect(onChange).toHaveBeenLastCalledWith({
+        type: "affiliationSearch",
+        answer: { affiliationId: "https://ror.org/01an7q238", affiliationName: "UC Berkeley" },
+      });
+    });
+
+    it("saves the free text as the name when Other is chosen", async () => {
+      const user = userEvent.setup();
+      const { onChange } = renderAnswer(affiliationQuestion(), null);
+
+      fireEvent.change(screen.getByRole("textbox", { name: /Institution/ }), {
+        target: { value: "Tiny" },
+      });
+      await user.click(screen.getByRole("option", { name: "Other" }));
+      fireEvent.change(screen.getByRole("textbox", { name: "Other institution" }), {
+        target: { value: "Tiny Institute" },
+      });
+
+      expect(onChange).toHaveBeenLastCalledWith({
+        type: "affiliationSearch",
+        answer: { affiliationId: "other", affiliationName: "Tiny Institute" },
+      });
+    });
+
+    it("reloads a saved Other answer into the other field", () => {
+      renderAnswer(affiliationQuestion(), {
+        type: "affiliationSearch",
+        answer: { affiliationId: "other", affiliationName: "Tiny Institute" },
+      });
+
+      expect(screen.getByRole("textbox", { name: /Institution/ })).toHaveValue("Other");
+      expect(screen.getByRole("textbox", { name: "Other institution" })).toHaveValue(
+        "Tiny Institute"
+      );
+    });
+
+    it("disables the search when disabled", () => {
+      renderAnswer(
+        affiliationQuestion(),
+        { type: "affiliationSearch", answer: { affiliationId: "x", affiliationName: "CDL" } },
+        { disabled: true }
+      );
+
+      expect(screen.getByRole("textbox", { name: /Institution/ })).toBeDisabled();
     });
   });
 

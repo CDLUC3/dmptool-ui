@@ -7,11 +7,6 @@ import type { PlanComment } from "../model";
 import type { PlanCommentMutationError } from "../usePlanComments";
 import styles from "./PlanComments.module.scss";
 
-/**
- * Presentational comments list + composer.
- * Edit/delete UX mirrors components/Comments/CommentList.tsx so a later
- * migration can swap PlanComment ↔ MergedComment and wire useComments handlers.
- */
 interface PlanCommentsProps {
   comments: PlanComment[];
   canAdd: boolean;

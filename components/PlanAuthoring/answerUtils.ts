@@ -49,6 +49,17 @@ export function hasAdditionalCommentKey(answerJson: unknown): boolean {
   );
 }
 
+export function withAnswer(
+  draftAnswer: unknown,
+  questionType: string,
+  answer: unknown
+): unknown {
+  const base = { type: questionType, answer };
+  return hasAdditionalCommentKey(draftAnswer)
+    ? { ...base, [ADDITIONAL_COMMENT_JSON_KEY]: getAdditionalCommentValue(draftAnswer) }
+    : base;
+}
+
 export function withAdditionalComment(
   answerJson: unknown,
   questionType: string,

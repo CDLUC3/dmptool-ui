@@ -3,10 +3,6 @@
 import { useCallback, useEffect, useState } from "react";
 import type { PlanComment } from "./model";
 
-/**
- * Comment edit/delete state + handlers, shaped like app/hooks/useComments
- * so PlanComments can mirror CommentList and later swap in real mutations.
- */
 export type PlanCommentMutationError = "updateFailed" | "deleteFailed";
 
 export interface UsePlanCommentsArgs {

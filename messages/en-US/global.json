@@ -73,6 +73,12 @@
     "ucopHomepage": "UCOP homepage",
     "uc3Helpdesk": "UC3 Helpdesk"
   },
+  "AffiliationSearchQuestion": {
+    "label": "Institution",
+    "helpText": "Search for your institution",
+    "otherLabel": "Other institution",
+    "otherPlaceholder": "Enter other institution name"
+  },
   "UserProfile": {
     "breadcrumbHome": "Home",
     "headingUpdateProfile": "Update profile",

@@ -14,6 +14,7 @@ import {
   withAdditionalComment,
 } from "../answerUtils";
 import { buildPlanRenderQuestionProps } from "../buildPlanRenderQuestionProps";
+import { useAffiliationSearchAnswer } from "../useAffiliationSearchAnswer";
 import styles from "./PlanQuestionAnswer.module.scss";
 
 interface PlanQuestionAnswerProps {
@@ -50,17 +51,23 @@ export default function PlanQuestionAnswer({
   // { type, columnHeadings, answer: rows, meta } like PlanOverviewQuestionPageShared,
   // then call saveNow. Disable autosave for this type; surface
   // onEditingStateChange so PlanQuestion can hide its Save button while a row
-  // form is open. Affiliation search needs a similar special case.
-  const questionField = useRenderQuestionField(
-    buildPlanRenderQuestionProps({
+  // form is open.
+  const typeaheadSearchProps = useAffiliationSearchAnswer({
+    questionType: question.questionType,
+    draftAnswer,
+    onChange,
+  });
+  const questionField = useRenderQuestionField({
+    ...buildPlanRenderQuestionProps({
       questionType: question.questionType,
       parsedJson: question.parsedJson,
       draftAnswer,
       disabled,
       editorId,
       onChange,
-    })
-  );
+    }),
+    typeaheadSearchProps,
+  });
 
   return (
     <div className={[styles.answerEditor, className].filter(Boolean).join(" ")}>
