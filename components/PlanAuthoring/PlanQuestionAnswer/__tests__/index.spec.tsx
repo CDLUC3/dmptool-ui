@@ -1,5 +1,5 @@
 import React from "react";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { NextIntlClientProvider } from "next-intl";
 import globalMessages from "@/messages/en-US/global.json";
@@ -71,6 +71,9 @@ function renderAnswer(
   );
   return { onChange };
 }
+
+const namedValues = (value: string) =>
+  screen.getAllByDisplayValue(value).map((input) => input.getAttribute("name"));
 
 const choiceOptions = [
   { label: "Alex", value: "Alex" },
@@ -189,6 +192,111 @@ describe("PlanQuestionAnswer", () => {
       type: "radioButtons",
       answer: "Alex",
       comment: "Because of reasons",
+    });
+  });
+
+  it("shows the stored select option and emits a new choice", async () => {
+    const user = userEvent.setup();
+    const { onChange } = renderAnswer(
+      makeQuestion("selectBox", { options: choiceOptions, attributes: {} }),
+      { type: "selectBox", answer: "Barbara" }
+    );
+
+    const selectButton = screen.getByTestId("select-button");
+    expect(within(selectButton).getByText("Barbara")).toBeInTheDocument();
+
+    await user.click(selectButton);
+    await user.click(screen.getByRole("option", { name: "Charlie" }));
+    expect(onChange).toHaveBeenCalledWith({ type: "selectBox", answer: "Charlie" });
+  });
+
+  it("marks the stored multiselect options and emits the new selection", async () => {
+    const user = userEvent.setup();
+    const { onChange } = renderAnswer(
+      makeQuestion("multiselectBox", { options: choiceOptions, attributes: {} }),
+      { type: "multiselectBox", answer: ["Alex", "Charlie"] }
+    );
+
+    const [alex, barbara, charlie] = screen.getAllByRole("option");
+    expect(alex).toHaveAttribute("aria-selected", "true");
+    expect(barbara).toHaveAttribute("aria-selected", "false");
+    expect(charlie).toHaveAttribute("aria-selected", "true");
+
+    await user.click(barbara);
+    expect(onChange).toHaveBeenCalledWith({
+      type: "multiselectBox",
+      answer: expect.arrayContaining(["Alex", "Barbara", "Charlie"]),
+    });
+  });
+
+  it("shows the stored currency amount and emits a number", async () => {
+    const user = userEvent.setup();
+    const { onChange } = renderAnswer(
+      makeQuestion("currency", { attributes: { denomination: "USD", min: 0 } }),
+      { type: "currency", answer: 250 }
+    );
+
+    const field = screen.getByRole("textbox");
+    expect(field).toHaveValue("250");
+
+    await user.clear(field);
+    await user.type(field, "1200");
+    await user.tab();
+    expect(onChange).toHaveBeenLastCalledWith({ type: "currency", answer: 1200 });
+  });
+
+  it("shows both ends of a stored number range and changes one end only", async () => {
+    const user = userEvent.setup();
+    const { onChange } = renderAnswer(
+      makeQuestion("numberRange", {
+        attributes: {},
+        columns: { start: { label: "From" }, end: { label: "To" } },
+      }),
+      { type: "numberRange", answer: { startNumber: 10, endNumber: 20 } }
+    );
+
+    const start = screen.getByPlaceholderText("start");
+    expect(start).toHaveValue("10");
+    expect(screen.getByPlaceholderText("end")).toHaveValue("20");
+
+    await user.clear(start);
+    await user.type(start, "15");
+    await user.tab();
+    expect(onChange).toHaveBeenLastCalledWith({
+      type: "numberRange",
+      answer: { startNumber: 15, endNumber: 20 },
+    });
+  });
+
+  it("shows a stored date", () => {
+    renderAnswer(makeQuestion("date", { attributes: {} }), {
+      type: "date",
+      answer: "2025-05-15",
+    });
+
+    expect(namedValues("2025-05-15")).toContain("startDate");
+  });
+
+  it("shows both ends of a stored date range and changes one end only", async () => {
+    const user = userEvent.setup();
+    const { onChange } = renderAnswer(
+      makeQuestion("dateRange", {
+        attributes: {},
+        columns: { start: { label: "Starts" }, end: { label: "Ends" } },
+      }),
+      { type: "dateRange", answer: { startDate: "2025-01-01", endDate: "2025-12-31" } }
+    );
+
+    expect(screen.getByText("Starts")).toBeInTheDocument();
+    expect(screen.getByText("Ends")).toBeInTheDocument();
+    expect(namedValues("2025-01-01")).toContain("startDate");
+    expect(namedValues("2025-12-31")).toContain("endDate");
+
+    await user.click(screen.getAllByLabelText("Calendar")[0]);
+    await user.click(await screen.findByRole("button", { name: /15/ }));
+    expect(onChange).toHaveBeenLastCalledWith({
+      type: "dateRange",
+      answer: { startDate: "2025-01-15", endDate: "2025-12-31" },
     });
   });
 

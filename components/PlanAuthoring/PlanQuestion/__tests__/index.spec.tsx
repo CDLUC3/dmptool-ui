@@ -1,5 +1,5 @@
 import React from "react";
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { axe, toHaveNoViolations } from "jest-axe";
 import { NextIntlClientProvider } from "next-intl";
@@ -545,6 +545,56 @@ describe("PlanQuestion", () => {
         expect(dataSource.addComment).toHaveBeenCalledWith(QUESTION_KEY, "Looks good");
       });
     });
+
+    const existingComment = {
+      id: "answer-7",
+      authorId: 1,
+      authorName: "Ada",
+      createdLabel: "yesterday",
+      text: "First draft",
+      canEdit: true,
+      canDelete: true,
+    };
+
+    it("edits a comment for this question through the data source", async () => {
+      const user = userEvent.setup();
+      const question = makeQuestion({ hasAnswer: true, comments: [existingComment] });
+      const dataSource = createDataSource(question);
+      renderQuestion({ question, dataSource });
+
+      await user.click(screen.getByRole("button", { name: /Show comments/ }));
+      await user.click(await screen.findByRole("button", { name: "Edit" }));
+      const editor = screen.getByRole("textbox", { name: "Edit comment" });
+      await user.clear(editor);
+      await user.type(editor, "Second draft");
+      await user.click(
+        within(screen.getByRole("list", { name: "Comments" })).getByRole("button", {
+          name: "Save",
+        })
+      );
+
+      await waitFor(() => {
+        expect(dataSource.updateComment).toHaveBeenCalledWith(
+          QUESTION_KEY,
+          "answer-7",
+          "Second draft"
+        );
+      });
+    });
+
+    it("deletes a comment for this question through the data source", async () => {
+      const user = userEvent.setup();
+      const question = makeQuestion({ hasAnswer: true, comments: [existingComment] });
+      const dataSource = createDataSource(question);
+      renderQuestion({ question, dataSource });
+
+      await user.click(screen.getByRole("button", { name: /Show comments/ }));
+      await user.click(await screen.findByRole("button", { name: "Delete" }));
+
+      await waitFor(() => {
+        expect(dataSource.deleteComment).toHaveBeenCalledWith(QUESTION_KEY, "answer-7");
+      });
+    });
   });
 
   describe("resize handle", () => {
@@ -563,6 +613,47 @@ describe("PlanQuestion", () => {
 
       fireEvent.keyDown(handle, { key: "Home" });
       expect(article).toHaveAttribute("data-resized", "false");
+    });
+
+    it("resizes by dragging, never below 280px, and stops when released", () => {
+      renderQuestion();
+      const article = screen.getByRole("article");
+      jest
+        .spyOn(article, "getBoundingClientRect")
+        .mockReturnValue(new DOMRect(0, 0, 0, 400));
+      const drag = (type: string, clientY: number) =>
+        act(() => {
+          window.dispatchEvent(new MouseEvent(type, { clientY }));
+        });
+
+      fireEvent(
+        screen.getByRole("separator"),
+        new MouseEvent("pointerdown", { bubbles: true, clientY: 100 })
+      );
+      drag("pointermove", 160);
+      expect(article).toHaveStyle({ height: "460px" });
+
+      drag("pointermove", -500);
+      expect(article).toHaveStyle({ height: "280px" });
+
+      drag("pointerup", -500);
+      drag("pointermove", 300);
+      expect(article).toHaveStyle({ height: "280px" });
+    });
+
+    it("grows with ArrowDown from the current height and shrinks with ArrowUp", () => {
+      renderQuestion();
+      const article = screen.getByRole("article");
+      jest
+        .spyOn(article, "getBoundingClientRect")
+        .mockReturnValue(new DOMRect(0, 0, 0, 400));
+      const handle = screen.getByRole("separator");
+
+      fireEvent.keyDown(handle, { key: "ArrowDown" });
+      expect(article).toHaveStyle({ height: "424px" });
+      fireEvent.keyDown(handle, { key: "ArrowUp" });
+      expect(article).toHaveStyle({ height: "400px" });
+      expect(handle).toHaveAttribute("aria-valuenow", "400");
     });
 
     it("resets the height on double-click", () => {
