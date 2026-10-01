@@ -1,3 +1,5 @@
+@use '@/styles/responsive' as r;
+
 .loadBtnContainer {
   display: flex;
   flex-direction: column;
@@ -12,4 +14,14 @@
 
 .searchMatchText {
   margin-bottom: var(--space-2);
+}
+
+// Overrides the global .searchSection grid (styles/_elements.scss) on desktop so the
+// search field and filters sit in one row. :global(.searchSection) raises specificity
+// so this wins regardless of stylesheet load order.
+.searchSection:global(.searchSection) {
+  @include r.device(md) {
+    display: flex;
+    align-items: center;
+  }
 }
