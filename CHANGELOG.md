@@ -1,4 +1,5 @@
 ## Added
+- Added `sectionMoveConflict.ts` and `questionMoveConflict.ts` files, whose functions `findSectionMoveConflicts` and `findQuestionMoveConflicts ` help determine whether a `question` or `section` display order can be updated. `TemplateEditPage` and `SectionEditContainer` pages were updated to use these functions [#986]
 - Added `AriaRouterProvider` wrapper for React Aria Components that contain `href` props to assure that links include the correct locale [#367]
 - Added `PlanCard` with template and uploaded variants on the project overview, plus styleguide demos [#93]
 - Added plan authoring uploaded-document view with document card, update/replace dialog, and styleguide demo [#93]
@@ -45,6 +46,7 @@
 - Added `UpdateAffiliation` and `AffiliationById` queries [#203]
 
 ## Updated
+- Updated `apollo-wrapper.tsx` and added `displayLogicTypePolicies.ts` to prevent cache warnings for `conditionGroups` [#986]
 - Updated `routes.ts` to not require `locale` to be passed in because it was defaulting to `en-US` and changing the language for a user that had a `languageId` of `pt-BR` [#367]
 - Updated all pages to use `useRouter` from `@/i18n/routing` so that it would retain the `locale` specified in the `path`. Also, updated `proxy.ts` so that it accurately applies `locale` to a path that does not contain one. [#367]
 - Updated `README.md` to include more info on localization [#367]

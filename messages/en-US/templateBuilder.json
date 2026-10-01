@@ -107,7 +107,8 @@
       "updateDisplayOrderError": "Error updating display order",
       "cannotMoveFurtherDown": "Cannot move section further down",
       "displayOrderAlreadyAtTop": "Section is already at top of order",
-      "cannotMoveFurtherUpOrDown": "Cannot move section further up or down"
+      "cannotMoveFurtherUpOrDown": "Cannot move section further up or down",
+      "displayLogicOrderConflict": "This section contains questions used in display logic. Remove the display logic condition before moving the section so that each trigger question stays before the question it controls."
     },
     "messages": {
       "successfullyArchived": "Successfully archived the template",
@@ -202,7 +203,8 @@
         "updateDisplayOrderError": "Error updating display order",
         "cannotMoveFurtherDown": "Cannot move question further down",
         "displayOrderAlreadyAtTop": "Question is already at top of order",
-        "cannotMoveFurtherUpOrDown": "Cannot move question further up or down"
+        "cannotMoveFurtherUpOrDown": "Cannot move question further up or down",
+        "displayLogicOrderConflict": "This question is used in display logic. Remove the display logic condition before moving it so that the trigger question stays before the question it controls."
       },
       "questionMoved": "Question moved to position {displayOrder}",
       "sectionMoved": "Section moved to position {displayOrder}"

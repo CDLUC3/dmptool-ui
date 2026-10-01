@@ -631,6 +631,39 @@ describe("SectionUpdatePage", () => {
       });
     });
 
+    it('should not redirect and should show the server error when the server refuses to delete the section', async () => {
+      const serverError = 'This section contains trigger questions used in the display logic of questions in other sections.';
+      const mockRemoveSection = jest.fn().mockResolvedValueOnce({
+        data: { removeSection: { id: 123, name: 'Test Section', errors: { general: serverError } } }
+      });
+
+      mockUseMutation.mockImplementation((document) => {
+        if (document === RemoveSectionDocument) {
+          /* eslint-disable @typescript-eslint/no-explicit-any */
+          return [mockRemoveSection, { loading: false, error: undefined }] as any;
+        }
+        /* eslint-disable @typescript-eslint/no-explicit-any */
+        return [jest.fn(), { loading: false, error: undefined }] as any;
+      });
+
+      await act(async () => {
+        render(<SectionUpdatePage />);
+      });
+
+      fireEvent.click(screen.getByRole('button', { name: /buttons.deleteSection/i }));
+
+      await waitFor(() => {
+        expect(screen.getByText('deleteModal.title')).toBeInTheDocument();
+      });
+
+      fireEvent.click(screen.getByRole('button', { name: /deleteModal.deleteButton/i }));
+
+      await waitFor(() => {
+        expect(screen.getByText(serverError)).toBeInTheDocument();
+      });
+      expect(mockUseRouter().push).not.toHaveBeenCalled();
+    });
+
     it('should show error message when delete section fails', async () => {
       const mockRemoveSection = jest.fn().mockRejectedValueOnce(new Error('Delete failed'));
 

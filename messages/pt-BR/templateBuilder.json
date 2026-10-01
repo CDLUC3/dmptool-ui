@@ -107,7 +107,8 @@
       "updateDisplayOrderError": "Erro ao atualizar ordem de exibição",
       "cannotMoveFurtherDown": "Não é possível mover a seção mais para baixo",
       "displayOrderAlreadyAtTop": "A seção já está no topo da ordem",
-      "cannotMoveFurtherUpOrDown": "Não é possível mover a seção mais para baixo"
+      "cannotMoveFurtherUpOrDown": "Não é possível mover a seção mais para baixo",
+      "displayLogicOrderConflict": "Esta seção contém perguntas usadas na lógica de exibição. Remova a condição da lógica de exibição antes de mover a seção, para que cada pergunta de acionamento permaneça antes da pergunta que ela controla."
     },
     "messages": {
       "successfullyArchived": "Modelo arquivado com sucesso",
@@ -202,7 +203,8 @@
         "updateDisplayOrderError": "Erro ao atualizar ordem de exibição",
         "cannotMoveFurtherDown": "Não é possível mover a seção mais para baixo",
         "displayOrderAlreadyAtTop": "A seção já está no topo da ordem",
-        "cannotMoveFurtherUpOrDown": "Não é possível mover a seção mais para baixo"
+        "cannotMoveFurtherUpOrDown": "Não é possível mover a seção mais para baixo",
+        "displayLogicOrderConflict": "Esta pergunta é usada na lógica de exibição. Remova a condição da lógica de exibição antes de movê-la, para que a pergunta de acionamento permaneça antes da pergunta que ela controla."
       },
       "questionMoved": "Seção movida para a posição {displayOrder}",
       "sectionMoved": "Seção movida para a posição {displayOrder}"

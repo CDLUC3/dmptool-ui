@@ -395,23 +395,21 @@ describe("QuestionEditPage", () => {
     (updateQuestionAction as jest.Mock).mockResolvedValue({
       success: true,
       data: {
+        id: 3699,
+        guidanceText: "<p>Research output guidance</p>",
         errors: {
-          id: 3699,
-          guidanceText: "<p>Research output guidance</p>",
-          errors: {
-            general: null,
-            questionText: null
-          },
-          isDirty: true,
-          required: false,
-          json: RESEARCH_OUTPUT_TABLE_JSON,
-          requirementText: "<p>Research Output requirements</p>",
-          sampleText: "",
-          useSampleTextAsDefault: false,
-          sectionId: 300,
-          templateId: 73,
-          questionText: "Research Output question"
+          general: null,
+          questionText: null
         },
+        isDirty: true,
+        required: false,
+        json: RESEARCH_OUTPUT_TABLE_JSON,
+        requirementText: "<p>Research Output requirements</p>",
+        sampleText: "",
+        useSampleTextAsDefault: false,
+        sectionId: 300,
+        templateId: 73,
+        questionText: "Research Output question"
       }
     });
 
@@ -1122,6 +1120,129 @@ describe("QuestionEditPage", () => {
     expect(screen.getByText('There was an error')).toBeInTheDocument();
   });
 
+  it('should not redirect or report success when the server refuses the update', async () => {
+    const serverError = 'One or more of this question\'s options are used in the display logic of another question.';
+    const mockToastAdd = jest.fn();
+    (useToast as jest.Mock).mockReturnValue({ add: mockToastAdd });
+
+    mockUseQuery.mockImplementation((document) => {
+      if (document === QuestionDocument) {
+        return { data: mockQuestionDataForNumberRange, loading: false, error: undefined } as any;
+      }
+      return {
+        data: null,
+        loading: false,
+        error: undefined
+      };
+    });
+
+    (updateQuestionAction as jest.Mock).mockResolvedValue({
+      success: true,
+      data: {
+        id: 67,
+        errors: {
+          general: serverError,
+          questionText: null,
+        }
+      }
+    });
+
+    (useSearchParams as jest.MockedFunction<typeof useSearchParams>).mockImplementation(() => {
+      return {
+        get: (key: string) => {
+          const params: Record<string, string> = { questionTypeId: 'textArea' };
+          return params[key] || null;
+        },
+        getAll: () => [],
+        has: (key: string) => key in { questionTypeId: 'textArea' },
+        keys() { },
+        values() { },
+        entries() { },
+        forEach() { },
+        toString() { return ''; },
+      } as unknown as ReturnType<typeof useSearchParams>;
+    });
+
+    await act(async () => {
+      render(
+        <QuestionEdit />
+      );
+    });
+
+    fireEvent.change(screen.getByLabelText(/labels.questionText/i), { target: { value: 'New Question' } });
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /buttons.saveAndUpdate/i }));
+    });
+
+    expect(screen.getByText(serverError)).toBeInTheDocument();
+    expect(mockRouter.push).not.toHaveBeenCalled();
+    expect(mockToastAdd).not.toHaveBeenCalledWith('messages.success.questionUpdated', { type: 'success' });
+  });
+
+  it('should show the error and stay on the page when the server refuses a change to the question options', async () => {
+    const jsonError = 'Your changes were not saved. One or more of this question\'s options are used in the display logic of another question.';
+
+    // The saved question is a radio button question with Yes, No and Maybe options
+    mockUseQuery.mockImplementation((document) => {
+      if (document === QuestionDocument) {
+        return { data: mockRadioQuestion, loading: false, error: undefined } as any;
+      }
+      return {
+        data: null,
+        loading: false,
+        error: undefined
+      };
+    });
+
+    (updateQuestionAction as jest.Mock).mockResolvedValue({
+      success: true,
+      data: {
+        id: 67,
+        errors: {
+          general: null,
+          questionText: null,
+          json: jsonError,
+        }
+      }
+    });
+
+    (useSearchParams as jest.MockedFunction<typeof useSearchParams>).mockImplementation(() => {
+      return {
+        get: () => null,
+        getAll: () => [],
+        has: () => false,
+        keys() { },
+        values() { },
+        entries() { },
+        forEach() { },
+        toString() { return ''; },
+      } as unknown as ReturnType<typeof useSearchParams>;
+    });
+
+    await act(async () => {
+      render(<QuestionEdit />);
+    });
+
+    // Delete the "Maybe" option (the third option) and confirm
+    await act(async () => {
+      fireEvent.click(screen.getAllByRole('button', { name: 'buttons.deleteRow' })[2]);
+    });
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'buttons.confirmRemove' }));
+    });
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /buttons.saveAndUpdate/i }));
+    });
+
+    expect(screen.getByText(jsonError)).toBeInTheDocument();
+    expect(mockRouter.push).not.toHaveBeenCalled();
+
+    // The draft is left as the user edited it
+    expect(screen.queryByDisplayValue('Maybe')).not.toBeInTheDocument();
+  });
+
   it('should call logECS if call to getParsedQuestionJSON returns error', async () => {
     const mockGetParsed = getParsedJSONModule.getParsedQuestionJSON as jest.Mock;
 
@@ -1542,23 +1663,21 @@ describe('QuestionEditPage Delete Functionality', () => {
     (updateQuestionAction as jest.Mock).mockResolvedValue({
       success: true,
       data: {
+        id: 3699,
+        guidanceText: "<p>Research output guidance</p>",
         errors: {
-          id: 3699,
-          guidanceText: "<p>Research output guidance</p>",
-          errors: {
-            general: null,
-            questionText: null
-          },
-          isDirty: true,
-          required: false,
-          json: RESEARCH_OUTPUT_TABLE_JSON,
-          requirementText: "<p>Research Output requirements</p>",
-          sampleText: "",
-          useSampleTextAsDefault: false,
-          sectionId: 300,
-          templateId: 73,
-          questionText: "Research Output question"
+          general: null,
+          questionText: null
         },
+        isDirty: true,
+        required: false,
+        json: RESEARCH_OUTPUT_TABLE_JSON,
+        requirementText: "<p>Research Output requirements</p>",
+        sampleText: "",
+        useSampleTextAsDefault: false,
+        sectionId: 300,
+        templateId: 73,
+        questionText: "Research Output question"
       }
     });
 
@@ -1646,6 +1765,37 @@ describe('QuestionEditPage Delete Functionality', () => {
       });
       expect(mockRouter.push).toHaveBeenCalledWith(routePath('template.show', { templateId: '123' }));
     });
+  });
+
+  it('should not redirect and should show the server error when the server refuses to delete the question', async () => {
+    const serverError = 'This question is a trigger question in the display logic of another question.';
+    (removeQuestionAction as jest.Mock).mockResolvedValue({
+      success: true,
+      data: {
+        id: 67,
+        errors: {
+          general: serverError,
+          guidanceText: null,
+          json: null,
+          questionText: null,
+          requirementText: null,
+          sampleText: null
+        }
+      }
+    });
+    render(<QuestionEdit />);
+    fireEvent.click(screen.getByText('buttons.deleteQuestion'));
+
+    await waitFor(() => {
+      expect(screen.getByText('headings.confirmDelete')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByText('buttons.confirm'));
+
+    await waitFor(() => {
+      expect(screen.getByText(serverError)).toBeInTheDocument();
+    });
+    expect(mockRouter.push).not.toHaveBeenCalled();
   });
 
   it('should display error message when removeQuestionMutation returns an error', async () => {
@@ -1741,23 +1891,21 @@ describe('Options questions', () => {
     (updateQuestionAction as jest.Mock).mockResolvedValue({
       success: true,
       data: {
+        id: 3699,
+        guidanceText: "<p>Research output guidance</p>",
         errors: {
-          id: 3699,
-          guidanceText: "<p>Research output guidance</p>",
-          errors: {
-            general: null,
-            questionText: null
-          },
-          isDirty: true,
-          required: false,
-          json: RESEARCH_OUTPUT_TABLE_JSON,
-          requirementText: "<p>Research Output requirements</p>",
-          sampleText: "",
-          useSampleTextAsDefault: false,
-          sectionId: 300,
-          templateId: 73,
-          questionText: "Research Output question"
+          general: null,
+          questionText: null
         },
+        isDirty: true,
+        required: false,
+        json: RESEARCH_OUTPUT_TABLE_JSON,
+        requirementText: "<p>Research Output requirements</p>",
+        sampleText: "",
+        useSampleTextAsDefault: false,
+        sectionId: 300,
+        templateId: 73,
+        questionText: "Research Output question"
       }
     });
 
@@ -2084,23 +2232,21 @@ describe("Research Output Question Type - Edit", () => {
     (updateQuestionAction as jest.Mock).mockResolvedValue({
       success: true,
       data: {
+        id: 3699,
+        guidanceText: "<p>Research output guidance</p>",
         errors: {
-          id: 3699,
-          guidanceText: "<p>Research output guidance</p>",
-          errors: {
-            general: null,
-            questionText: null
-          },
-          isDirty: true,
-          required: false,
-          json: RESEARCH_OUTPUT_TABLE_JSON,
-          requirementText: "<p>Research Output requirements</p>",
-          sampleText: "",
-          useSampleTextAsDefault: false,
-          sectionId: 300,
-          templateId: 73,
-          questionText: "Research Output question"
+          general: null,
+          questionText: null
         },
+        isDirty: true,
+        required: false,
+        json: RESEARCH_OUTPUT_TABLE_JSON,
+        requirementText: "<p>Research Output requirements</p>",
+        sampleText: "",
+        useSampleTextAsDefault: false,
+        sectionId: 300,
+        templateId: 73,
+        questionText: "Research Output question"
       }
     });
 

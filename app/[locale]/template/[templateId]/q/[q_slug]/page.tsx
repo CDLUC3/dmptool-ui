@@ -554,10 +554,13 @@ const QuestionEdit = () => {
           }
         } else {
           if (response?.data?.errors) {
-            const errs = extractErrors<UpdateQuestionErrors>(response?.data?.errors, ["general", "questionText"]);
+            const errs = extractErrors<UpdateQuestionErrors>(response?.data?.errors, ["general", "questionText", "json"]);
             if (errs.length > 0) {
+              // The server refused the update, so show the errors and stay on the page instead of reporting success
               setIsSubmitting(false);
               setErrors(errs);
+              announce(QuestionAdd('researchOutput.announcements.errorOccurred') || 'An error occurred. Please check the form.');
+              return;
             }
           }
           setHasUnsavedQuestionChanges(false);
@@ -885,7 +888,7 @@ const QuestionEdit = () => {
 
       <div className="template-editor-container">
         <div className="main-content">
-          <Tabs>
+          <Tabs defaultSelectedKey="edit">
             <TabList aria-label="Question editing">
               <Tab id="edit">{t('tabs.editQuestion')}</Tab>
               <Tab id="options">{t('tabs.options')}</Tab>

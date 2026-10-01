@@ -27,3 +27,9 @@ export interface TriggerQuestionOption {
   isMultiValue: boolean;      // true for checkbox-type questions
   options: { value: string; label: string }[];
 }
+
+// A display logic rule that would break if a question or section were moved
+export interface DisplayLogicOrderConflict {
+  questionId: number; // The question whose display logic would break
+  triggerQuestionId: number; // The question its display logic depends on
+}

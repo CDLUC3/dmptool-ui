@@ -58,6 +58,10 @@ query Template($templateId: Int!) {
         questionText
         sectionId
         templateId
+        conditionGroups {
+          id
+          triggerQuestionId
+        }
       }
     },
     owner {

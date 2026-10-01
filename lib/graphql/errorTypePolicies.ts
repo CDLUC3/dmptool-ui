@@ -23,6 +23,7 @@ export const TYPES_WITH_ERRORS = [
 // Map of typeName to additional fields needing merge: false
 const EXTRA_FIELDS: Record<string, string[]> = {
   Section: ['questions'],
+  Question: ['conditionGroups'], // Display logic groups are always returned as the complete list
   Template: ['sections'],
   SectionCustomizationOverview: ['questions'], // Added for cache policy
 };

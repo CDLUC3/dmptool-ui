@@ -5,13 +5,16 @@ import { useQuery } from '@apollo/client/react';
 
 import {
   SectionDocument,
-  Question,
+  SectionQuery,
 } from '@/generated/graphql';
 import { useToast } from '@/context/ToastContext';
 import SectionHeaderEdit from '@/components/SectionHeaderEdit';
 import QuestionEditCard from '@/components/QuestionEditCard';
 import AddQuestionButton from '@/components/AddQuestionButton';
 import { updateQuestionDisplayOrderAction } from './actions';
+import { findQuestionMoveConflicts } from './questionMoveConflicts';
+
+type Question = NonNullable<NonNullable<SectionQuery['section']>['questions']>[number];
 
 interface SectionEditContainerProps {
   sectionId: number;
@@ -93,6 +96,12 @@ const SectionEditContainer: React.FC<SectionEditContainerProps> = ({
       return { isValid: false, message: errorMsg }
     }
 
+    // If the move would put a question above a trigger question its display logic depends on
+    if (findQuestionMoveConflicts(localQuestions, questionId, newDisplayOrder).length > 0) {
+      const errorMsg = t('messages.errors.displayLogicOrderConflict');
+      return { isValid: false, message: errorMsg }
+    }
+
     return { isValid: true };
   };
 
@@ -161,6 +170,10 @@ const SectionEditContainer: React.FC<SectionEditContainerProps> = ({
       return;
     }
 
+    // Keep the current order so the optimistic update can be reverted. Refetching alone won't revert it,
+    // because when the server rejects the move the refetched data is unchanged and doesn't reset localQuestions
+    const previousQuestions = localQuestions;
+
     // First, optimistically update the UI immediately for smoother reshuffling
     updateLocalQuestionOrder(questionId, newDisplayOrder);
     setIsReordering(true);
@@ -170,9 +183,11 @@ const SectionEditContainer: React.FC<SectionEditContainerProps> = ({
         questionId,
         newDisplayOrder
       );
+      const moveFailed = !result.success || !!result.data?.errors?.general;
 
       if (!result.success) {
         // Revert optimistic update on failure
+        setLocalQuestions(previousQuestions);
         await refetch();
         const errors = result.errors;
 
@@ -184,6 +199,7 @@ const SectionEditContainer: React.FC<SectionEditContainerProps> = ({
         }
       } else if (result.data?.errors?.general) {
         // Revert on server errors
+        setLocalQuestions(previousQuestions);
         await refetch();
         setErrorMessages(prev => [...prev, result.data?.errors?.general || t('messages.errors.updateQuestionOrder')]);
       }
@@ -201,11 +217,13 @@ const SectionEditContainer: React.FC<SectionEditContainerProps> = ({
         });
       }
 
-      // After successful update
-      const message = t('messages.questionMoved', { displayOrder: newDisplayOrder })
-      setAnnouncement(message);
+      // Only announce the move if it succeeded. Failures are announced by the parent's ErrorMessages
+      // (role="alert"), so clear the announcement to avoid a stale or conflicting message
+      setAnnouncement(moveFailed ? '' : t('messages.questionMoved', { displayOrder: newDisplayOrder }));
     } catch {
       // Revert optimistic update on network error
+      setAnnouncement('');
+      setLocalQuestions(previousQuestions);
       await refetch();
       setErrorMessages(prev => [...prev, t('messages.errors.updateQuestionOrder')]);
     } finally {

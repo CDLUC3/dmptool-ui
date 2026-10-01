@@ -77,6 +77,7 @@ export const errorLink = new ErrorLink(({ error, operation, forward }) => {
             }
           } catch (error) {
             logECS('error', 'Fetching csrf token failed', { error });
+            observer.error(error);// Propagate the error to the component so that it doesn't stay in loading state indefinitely
             navigateTo('/login');
           }
         })();

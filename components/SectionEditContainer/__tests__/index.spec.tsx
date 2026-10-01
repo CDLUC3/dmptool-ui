@@ -119,6 +119,9 @@ describe('SectionEditContainer', () => {
       data: null,
     });
     jest.clearAllMocks();
+
+    // Prevent errors in test from scrollIntoView not existing
+    Element.prototype.scrollIntoView = jest.fn();
   });
 
   it('should render loading state', async () => {
@@ -861,5 +864,136 @@ describe('Success Announcement', () => {
       // Check that the announcement appears in the live region
       expect(screen.getByText('messages.questionMoved')).toBeInTheDocument();
     });
+  });
+
+  const renderAndMoveQ2Down = async () => {
+    mockUseQuery.mockImplementation((document) => {
+      if (document === SectionDocument) {
+        return { data: sectionData, loading: false, error: undefined, refetch: jest.fn() } as any;
+      }
+      return {
+        data: null,
+        loading: false,
+        error: undefined
+      };
+    });
+
+    render(
+      <SectionEditContainer
+        sectionId={1}
+        templateId={123}
+        displayOrder={2}
+        setErrorMessages={mockSetErrorMessages}
+        onMoveUp={jest.fn()}
+        onMoveDown={jest.fn()}
+      />
+    );
+
+    const q2Card = screen.getAllByTestId('question-edit-card').find(card => within(card).queryByText('Q2'));
+    await act(async () => {
+      fireEvent.click(within(q2Card!).getByRole('button', { name: 'buttons.moveDown' }));
+    });
+  };
+
+  it('should not announce a move that the server rejects', async () => {
+    (updateQuestionDisplayOrderAction as jest.Mock).mockResolvedValue({
+      success: true,
+      errors: [],
+      data: { errors: { general: 'This question is used in display logic.' } },
+    });
+
+    await renderAndMoveQ2Down();
+
+    await waitFor(() => {
+      expect(updateQuestionDisplayOrderAction).toHaveBeenCalled();
+    });
+    expect(screen.queryByText('messages.questionMoved')).not.toBeInTheDocument();
+  });
+
+  it('should not announce a move that fails with a network error', async () => {
+    (updateQuestionDisplayOrderAction as jest.Mock).mockRejectedValue(new Error('Network error'));
+
+    await renderAndMoveQ2Down();
+
+    await waitFor(() => {
+      expect(updateQuestionDisplayOrderAction).toHaveBeenCalled();
+    });
+    expect(screen.queryByText('messages.questionMoved')).not.toBeInTheDocument();
+  });
+});
+describe('Display logic order', () => {
+  // Q2 (id 11) is the trigger question for Q1 (id 10), which comes right after it
+  const displayLogicSectionData = {
+    section: {
+      id: 1,
+      name: 'Section 1',
+      displayOrder: 1,
+      questions: [
+        { id: 11, questionText: 'Q2', displayOrder: 1, conditionGroups: [] },
+        { id: 10, questionText: 'Q1', displayOrder: 2, conditionGroups: [{ id: 1, triggerQuestionId: 11 }] },
+      ],
+    },
+  };
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    (useToast as jest.Mock).mockReturnValue(mockToast);
+
+    const mockSectionQuery = {
+      data: displayLogicSectionData,
+      loading: false,
+      error: undefined,
+      refetch: jest.fn(),
+    };
+
+    mockUseQuery.mockImplementation((document) => {
+      if (document === SectionDocument) {
+        return mockSectionQuery as any;
+      }
+      return {
+        data: null,
+        loading: false,
+        error: undefined
+      };
+    });
+  });
+
+  const renderContainer = () => render(
+    <SectionEditContainer
+      sectionId={1}
+      templateId={123}
+      displayOrder={1}
+      setErrorMessages={mockSetErrorMessages}
+      onMoveUp={jest.fn()}
+      onMoveDown={jest.fn()}
+    />
+  );
+
+  const getCard = (text: string) => {
+    const card = screen.getAllByTestId('question-edit-card').find(c => within(c).queryByText(text));
+    expect(card).toBeTruthy();
+    return card!;
+  };
+
+  it('should not move a question above its trigger question and should show an error toast', async () => {
+    renderContainer();
+
+    await act(async () => {
+      fireEvent.click(within(getCard('Q1')).getByRole('button', { name: 'buttons.moveUp' }));
+    });
+
+    expect(updateQuestionDisplayOrderAction).not.toHaveBeenCalled();
+    expect(mockToast.add).toHaveBeenCalledWith('messages.errors.displayLogicOrderConflict', { type: 'error' });
+  });
+
+  it('should not move a trigger question below a question that depends on it and should show an error toast', async () => {
+    renderContainer();
+
+    await act(async () => {
+      fireEvent.click(within(getCard('Q2')).getByRole('button', { name: 'buttons.moveDown' }));
+    });
+
+    expect(updateQuestionDisplayOrderAction).not.toHaveBeenCalled();
+    expect(mockToast.add).toHaveBeenCalledWith('messages.errors.displayLogicOrderConflict', { type: 'error' });
   });
 });

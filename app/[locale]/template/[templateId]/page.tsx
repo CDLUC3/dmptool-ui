@@ -34,6 +34,7 @@ import {
 } from "@/generated/graphql";
 import Loading from "@/components/Loading";
 import { updateTemplateAction, updateSectionDisplayOrderAction } from "./actions";
+import { findSectionMoveConflicts } from "./sectionMoveConflicts";
 
 // Components
 import {
@@ -419,6 +420,12 @@ const TemplateEditPage: React.FC = () => {
       return { isValid: false, message: errorMsg };
     }
 
+    // If the move would put a question above a trigger question its display logic depends on
+    if (findSectionMoveConflicts(localSections, sectionId, newDisplayOrder).length > 0) {
+      const errorMsg = EditTemplate("errors.displayLogicOrderConflict");
+      return { isValid: false, message: errorMsg };
+    }
+
     return { isValid: true };
   };
 
@@ -430,28 +437,38 @@ const TemplateEditPage: React.FC = () => {
 
     const { isValid, message } = validateSectionMove(sectionId, newDisplayOrder);
     if (!isValid && message) {
-      // Deliver toast error messages
-      toastState.add(message, { type: "error" });
+      // Deliver toast error messages. Use a longer timeout so there is time to read the display logic message
+      toastState.add(message, { type: "error", timeout: 10000 });
       return;
     }
 
-    // First, optimistically update the UI immediately for smoother reshuffling
-    updateLocalSectionOrder(sectionId, newDisplayOrder);
+    // Wait for the server to accept the move before reordering the sections, so that a move the server
+    // rejects (e.g. because it would break display logic) never appears to happen
     setIsReordering(true);
 
     const result = await updateSectionDisplayOrder(sectionId, newDisplayOrder);
+    const moveFailed = !result.success || !!result.data?.errors?.general;
 
     if (!result.success) {
-      // Revert optimistic update on failure
       await refetch();
       const errors = result.errors;
       if (Array.isArray(errors)) {
         setErrorMessages((prev) => [...prev, ...errors]);
       }
     } else if (result.data?.errors?.general) {
-      // Revert on server errors
-      await refetch();
-      setErrorMessages((prev) => [...prev, result.data?.errors?.general || ""]);
+      // The server can reject a move that the check above allowed, e.g. when display logic was added after the
+      // page loaded. Check the latest display logic so the same message is shown as for the check above
+      const refetched = await refetch();
+      const latestSections = (refetched?.data?.template?.sections ?? [])
+        .filter((section): section is Section => section !== null);
+
+      if (findSectionMoveConflicts(latestSections, sectionId, newDisplayOrder).length > 0) {
+        toastState.add(EditTemplate("errors.displayLogicOrderConflict"), { type: "error", timeout: 10000 });
+      } else {
+        setErrorMessages((prev) => [...prev, result.data?.errors?.general || ""]);
+      }
+    } else {
+      updateLocalSectionOrder(sectionId, newDisplayOrder);
     }
     // After successful update
 
@@ -467,9 +484,9 @@ const TemplateEditPage: React.FC = () => {
         inline: "nearest",
       });
     }
-    // Set accessible announcement
-    const accessibleMessage = EditTemplate("messages.sectionMoved", { displayOrder: newDisplayOrder });
-    setAnnouncement(accessibleMessage);
+    // Only announce the move if it succeeded. Failures are announced by ErrorMessages or the error toast (both
+    // role="alert"), so clear the announcement to avoid a stale or conflicting message
+    setAnnouncement(moveFailed ? "" : EditTemplate("messages.sectionMoved", { displayOrder: newDisplayOrder }));
     setIsReordering(false);
   };
 
