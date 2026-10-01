@@ -13,6 +13,9 @@ import QuestionEditCard from '@/components/QuestionEditCard';
 import AddQuestionButton from '@/components/AddQuestionButton';
 import { updateQuestionDisplayOrderAction } from './actions';
 import { findQuestionMoveConflicts } from './questionMoveConflicts';
+import { ErrorMessage } from '@/components/ErrorMessages';
+import { buildDisplayLogicConflictError } from '@/utils/displayLogicConflictError';
+import { DisplayLogicOrderConflict } from '@/app/types/displayLogic';
 
 type Question = NonNullable<NonNullable<SectionQuery['section']>['questions']>[number];
 
@@ -20,7 +23,7 @@ interface SectionEditContainerProps {
   sectionId: number;
   templateId: string | number;
   displayOrder: number;
-  setErrorMessages: React.Dispatch<React.SetStateAction<string[]>>;
+  setErrorMessages: React.Dispatch<React.SetStateAction<ErrorMessage[]>>;
   onMoveUp: (() => void) | undefined;
   onMoveDown: (() => void) | undefined;
 }
@@ -37,6 +40,7 @@ const SectionEditContainer: React.FC<SectionEditContainerProps> = ({
   const toastState = useToast();
   const t = useTranslations('Sections');
   const Global = useTranslations('Global');
+  const DisplayLogicConflict = useTranslations('DisplayLogicConflictMessage');
 
   const { data, loading, error, refetch } = useQuery(SectionDocument, {
     variables: { sectionId: Number(sectionId) },
@@ -68,7 +72,10 @@ const SectionEditContainer: React.FC<SectionEditContainerProps> = ({
     return [...questions].sort((a, b) => (a.displayOrder!) - (b.displayOrder!));
   };
 
-  const validateQuestionMove = (questionId: number, newDisplayOrder: number): { isValid: boolean, message?: string } => {
+  const validateQuestionMove = (
+    questionId: number,
+    newDisplayOrder: number
+  ): { isValid: boolean, message?: string, conflicts?: DisplayLogicOrderConflict[] } => {
     const currentQuestion = localQuestions.find(q => q.id === questionId);
 
     // If current question doesn't exist in localQuestions
@@ -97,9 +104,9 @@ const SectionEditContainer: React.FC<SectionEditContainerProps> = ({
     }
 
     // If the move would put a question above a trigger question its display logic depends on
-    if (findQuestionMoveConflicts(localQuestions, questionId, newDisplayOrder).length > 0) {
-      const errorMsg = t('messages.errors.displayLogicOrderConflict');
-      return { isValid: false, message: errorMsg }
+    const conflicts = findQuestionMoveConflicts(localQuestions, questionId, newDisplayOrder);
+    if (conflicts.length > 0) {
+      return { isValid: false, conflicts };
     }
 
     return { isValid: true };
@@ -157,13 +164,31 @@ const SectionEditContainer: React.FC<SectionEditContainerProps> = ({
     };
   }
 
+  // Show the questions whose display logic is blocking a move, with links to edit them
+  const showDisplayLogicConflict = (conflicts: DisplayLogicOrderConflict[], questions: Question[]) => {
+    setErrorMessages([
+      buildDisplayLogicConflictError({
+        conflicts,
+        questions,
+        templateId,
+        message: t('messages.errors.displayLogicOrderConflict'),
+        linksHeading: DisplayLogicConflict('questionsHeading'),
+        untitledQuestion: (id) => DisplayLogicConflict('untitledQuestion', { id }),
+      }),
+    ]);
+  };
+
   const handleDisplayOrderChange = async (questionId: number, newDisplayOrder: number) => {
     // Remove all current errors
     setErrorMessages([]);
 
     if (isReordering) return; // Prevent concurrent operations
 
-    const { isValid, message } = validateQuestionMove(questionId, newDisplayOrder);
+    const { isValid, message, conflicts } = validateQuestionMove(questionId, newDisplayOrder);
+    if (conflicts) {
+      showDisplayLogicConflict(conflicts, localQuestions);
+      return;
+    }
     if (!isValid && message) {
       // Deliver toast error messages
       toastState.add(message, { type: 'error' });
@@ -200,8 +225,18 @@ const SectionEditContainer: React.FC<SectionEditContainerProps> = ({
       } else if (result.data?.errors?.general) {
         // Revert on server errors
         setLocalQuestions(previousQuestions);
-        await refetch();
-        setErrorMessages(prev => [...prev, result.data?.errors?.general || t('messages.errors.updateQuestionOrder')]);
+        const refetched = await refetch();
+
+        // The server can reject a move that the check above allowed, e.g. when display logic was added after the
+        // page loaded. Check the latest display logic so the same message is shown as for the check above
+        const latestQuestions = (refetched?.data?.section?.questions ?? [])
+          .filter((question): question is Question => question !== null);
+        const latestConflicts = findQuestionMoveConflicts(latestQuestions, questionId, newDisplayOrder);
+        if (latestConflicts.length > 0) {
+          showDisplayLogicConflict(latestConflicts, latestQuestions);
+        } else {
+          setErrorMessages(prev => [...prev, result.data?.errors?.general || t('messages.errors.updateQuestionOrder')]);
+        }
       }
 
       // Scroll user to the reordered section

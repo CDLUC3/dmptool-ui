@@ -533,6 +533,7 @@
         "warnings": {
           "triggerQuestionUnavailable": "Esta questão de gatilho não está disponível."
         },
+        "blockingTriggerQuestion": "Esta pergunta de acionamento está bloqueando uma alteração que você tentou fazer. Remova esta condição para continuar.",
         "removedUnavailableTriggerQuestions": "Algumas lógicas de exibição foram removidas porque uma pergunta da qual dependia já não está disponível.",
         "allMatchTypeRule": "Quando o tipo de correspondência é tudo, cada condição em um grupo deve usar um valor de opção diferente.",
         "anyMatchTypeRule": "Quando o tipo de correspondência é Any, cada condição em um grupo deve ser única (nenhum operador duplicado + pares de opções)."
@@ -884,5 +885,9 @@
         "noCollaborators": "Nenhuma pessoa externa foi adicionada ainda"
       }
     }
+  },
+  "DisplayLogicConflictMessage": {
+    "questionsHeading": "Edite a lógica de exibição em:",
+    "untitledQuestion": "Pergunta {id}"
   }
 }

@@ -952,4 +952,50 @@ describe('DisplayLogicComponent', () => {
       expect(mockToastAdd).not.toHaveBeenCalled();
     });
   });
+
+  describe('highlighted trigger questions', () => {
+    // Two groups, triggered by 3691 and 3692
+    const twoGroupLogic = makeDisplayLogic({
+      groups: [
+        {
+          id: 'group-1',
+          triggerQuestionId: 3691,
+          conditions: [{ id: 'cond-1', operator: 'is', optionValue: 'Observational (e.g., sensor data, surveys, field notes)' }],
+        },
+        {
+          id: 'group-2',
+          triggerQuestionId: 3692,
+          conditions: [{ id: 'cond-2', operator: 'is', optionValue: 'CSV' }],
+        },
+      ],
+    });
+
+    it('should highlight, scroll to and focus the trigger questions that are blocking a change', () => {
+      render(
+        <DisplayLogicComponent {...defaultProps} displayLogic={twoGroupLogic} highlightedTriggerQuestionIds={[3692]} />
+      );
+
+      const highlighted = screen.getAllByTestId('highlighted-trigger-question');
+      expect(highlighted).toHaveLength(1);
+      expect(highlighted[0]).toHaveTextContent('tabPanel.messages.blockingTriggerQuestion');
+      expect(highlighted[0]).toHaveFocus();
+      expect(mockScrollIntoView).toHaveBeenCalled();
+    });
+
+    it('should not highlight anything when no trigger questions are highlighted', () => {
+      render(<DisplayLogicComponent {...defaultProps} displayLogic={twoGroupLogic} />);
+
+      expect(screen.queryByTestId('highlighted-trigger-question')).not.toBeInTheDocument();
+      expect(screen.queryByText('tabPanel.messages.blockingTriggerQuestion')).not.toBeInTheDocument();
+    });
+
+    it('should pass axe accessibility test with a highlighted trigger question', async () => {
+      const { container } = render(
+        <DisplayLogicComponent {...defaultProps} displayLogic={twoGroupLogic} highlightedTriggerQuestionIds={[3691]} />
+      );
+      await act(async () => {
+        expect(await axe(container)).toHaveNoViolations();
+      });
+    });
+  });
 });

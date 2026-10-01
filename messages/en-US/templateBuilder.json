@@ -533,6 +533,7 @@
         "warnings": {
           "triggerQuestionUnavailable": "This trigger question is not available."
         },
+        "blockingTriggerQuestion": "This trigger question is blocking a change you tried to make. Remove this condition to continue.",
         "removedUnavailableTriggerQuestions": "Some display logic was removed because a question it depended on is no longer available.",
         "allMatchTypeRule": "When match type is All, each condition in a group must use a different option value.",
         "anyMatchTypeRule": "When match type is Any, each condition in a group must be unique (no duplicate operator + option pairs)."
@@ -884,5 +885,9 @@
         "noCollaborators": "No external people have been added yet"
       }
     }
+  },
+  "DisplayLogicConflictMessage": {
+    "questionsHeading": "Edit the display logic on:",
+    "untitledQuestion": "Question {id}"
   }
 }

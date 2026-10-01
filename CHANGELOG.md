@@ -1,5 +1,6 @@
 ## Added
 - Added `sectionMoveConflict.ts` and `questionMoveConflict.ts` files, whose functions `findSectionMoveConflicts` and `findQuestionMoveConflicts ` help determine whether a `question` or `section` display order can be updated. `TemplateEditPage` and `SectionEditContainer` pages were updated to use these functions [#986]
+- Added `utils/displayLogicConflictErrors.ts` file which turns conflicts into an `ErrorMessageItem` with links, and updated `ErrorMessages` with option to pass in link header and url [#986]
 - Added `AriaRouterProvider` wrapper for React Aria Components that contain `href` props to assure that links include the correct locale [#367]
 - Added `PlanCard` with template and uploaded variants on the project overview, plus styleguide demos [#93]
 - Added plan authoring uploaded-document view with document card, update/replace dialog, and styleguide demo [#93]

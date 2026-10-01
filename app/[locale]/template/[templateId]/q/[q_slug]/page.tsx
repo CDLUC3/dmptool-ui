@@ -122,6 +122,14 @@ const QuestionEdit = () => {
   const templateId = String(params.templateId);
   const questionId = String(params.q_slug); //question id
   const questionTypeIdQueryParam = searchParams.get('questionType') || null;
+  // Links can open a specific tab, and highlight trigger questions in the Display Logic tab, e.g. from the message
+  // shown when a move is blocked by this question's display logic
+  const tabQueryParam = searchParams.get('tab');
+  const defaultTab = tabQueryParam && ['edit', 'options', 'logic'].includes(tabQueryParam) ? tabQueryParam : 'edit';
+  const highlightedTriggerQuestionIds = (searchParams.get('trigger') ?? '')
+    .split(',')
+    .map(Number)
+    .filter((id) => Number.isInteger(id) && id > 0);
 
   //For scrolling to error in page
   const errorRef = useRef<HTMLDivElement | null>(null);
@@ -888,7 +896,7 @@ const QuestionEdit = () => {
 
       <div className="template-editor-container">
         <div className="main-content">
-          <Tabs defaultSelectedKey="edit">
+          <Tabs defaultSelectedKey={defaultTab}>
             <TabList aria-label="Question editing">
               <Tab id="edit">{t('tabs.editQuestion')}</Tab>
               <Tab id="options">{t('tabs.options')}</Tab>
@@ -1176,6 +1184,7 @@ const QuestionEdit = () => {
               <h2>{t('tabPanel.headings.logic')}</h2>
               <DisplayLogicComponent
                 triggerQuestions={triggerQuestions}
+                highlightedTriggerQuestionIds={highlightedTriggerQuestionIds}
                 displayLogic={displayLogic}
                 hasSavedDisplayLogic={hasSavedDisplayLogic}
                 onDisplayLogicChange={handleDisplayLogicChange}

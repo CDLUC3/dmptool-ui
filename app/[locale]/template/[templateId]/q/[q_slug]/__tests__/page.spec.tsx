@@ -1243,6 +1243,43 @@ describe("QuestionEditPage", () => {
     expect(screen.queryByDisplayValue('Maybe')).not.toBeInTheDocument();
   });
 
+  it.each([
+    [{ tab: 'logic' }, 'tabs.logic'],
+    [{ tab: 'options' }, 'tabs.options'],
+    [{}, 'tabs.editQuestion'],
+    [{ tab: 'unknown' }, 'tabs.editQuestion'],
+  ])('should open the tab given by the tab query param %j', async (params: Record<string, string>, selectedTab) => {
+    mockUseQuery.mockImplementation((document) => {
+      if (document === QuestionDocument) {
+        return { data: mockRadioQuestion, loading: false, error: undefined } as any;
+      }
+      return {
+        data: null,
+        loading: false,
+        error: undefined
+      };
+    });
+
+    (useSearchParams as jest.MockedFunction<typeof useSearchParams>).mockImplementation(() => {
+      return {
+        get: (key: string) => params[key] || null,
+        getAll: () => [],
+        has: (key: string) => key in params,
+        keys() { },
+        values() { },
+        entries() { },
+        forEach() { },
+        toString() { return ''; },
+      } as unknown as ReturnType<typeof useSearchParams>;
+    });
+
+    await act(async () => {
+      render(<QuestionEdit />);
+    });
+
+    expect(screen.getByRole('tab', { name: selectedTab })).toHaveAttribute('aria-selected', 'true');
+  });
+
   it('should call logECS if call to getParsedQuestionJSON returns error', async () => {
     const mockGetParsed = getParsedJSONModule.getParsedQuestionJSON as jest.Mock;
 

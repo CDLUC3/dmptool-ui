@@ -975,7 +975,7 @@ describe('Display logic order', () => {
     return card!;
   };
 
-  it('should not move a question above its trigger question and should show an error toast', async () => {
+  it('should not move a question above its trigger question and should show an error', async () => {
     renderContainer();
 
     await act(async () => {
@@ -983,10 +983,12 @@ describe('Display logic order', () => {
     });
 
     expect(updateQuestionDisplayOrderAction).not.toHaveBeenCalled();
-    expect(mockToast.add).toHaveBeenCalledWith('messages.errors.displayLogicOrderConflict', { type: 'error' });
+    expect(mockSetErrorMessages).toHaveBeenLastCalledWith([
+      expect.objectContaining({ message: 'messages.errors.displayLogicOrderConflict' }),
+    ]);
   });
 
-  it('should not move a trigger question below a question that depends on it and should show an error toast', async () => {
+  it('should not move a trigger question below a question that depends on it and should show an error', async () => {
     renderContainer();
 
     await act(async () => {
@@ -994,6 +996,110 @@ describe('Display logic order', () => {
     });
 
     expect(updateQuestionDisplayOrderAction).not.toHaveBeenCalled();
-    expect(mockToast.add).toHaveBeenCalledWith('messages.errors.displayLogicOrderConflict', { type: 'error' });
+    expect(mockSetErrorMessages).toHaveBeenLastCalledWith([
+      expect.objectContaining({ message: 'messages.errors.displayLogicOrderConflict' }),
+    ]);
+  });
+});
+
+describe('Display logic conflict error', () => {
+  // Q2 (id 11) is the trigger question for Q1 (id 10), which comes right after it
+  const conflictSectionData = {
+    section: {
+      id: 1,
+      name: 'Section 1',
+      displayOrder: 1,
+      questions: [
+        { id: 11, questionText: 'Q2', displayOrder: 1, conditionGroups: [] },
+        { id: 10, questionText: 'Q1', displayOrder: 2, conditionGroups: [{ id: 1, triggerQuestionId: 11 }] },
+      ],
+    },
+  };
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    (useToast as jest.Mock).mockReturnValue(mockToast);
+    Element.prototype.scrollIntoView = jest.fn();
+  });
+
+  const renderWithSection = (data: unknown, refetch = jest.fn()) => {
+    mockUseQuery.mockImplementation((document) => {
+      if (document === SectionDocument) {
+        return { data, loading: false, error: undefined, refetch } as any;
+      }
+      return {
+        data: null,
+        loading: false,
+        error: undefined
+      };
+    });
+
+    render(
+      <SectionEditContainer
+        sectionId={1}
+        templateId={123}
+        displayOrder={1}
+        setErrorMessages={mockSetErrorMessages}
+        onMoveUp={jest.fn()}
+        onMoveDown={jest.fn()}
+      />
+    );
+  };
+
+  const clickMove = async (text: string, direction: 'buttons.moveUp' | 'buttons.moveDown') => {
+    const card = screen.getAllByTestId('question-edit-card').find(c => within(c).queryByText(text));
+    await act(async () => {
+      fireEvent.click(within(card!).getByRole('button', { name: direction }));
+    });
+  };
+
+  it('should show an error linking to the question whose display logic is blocking the move', async () => {
+    renderWithSection(conflictSectionData);
+
+    await clickMove('Q1', 'buttons.moveUp');
+
+    expect(updateQuestionDisplayOrderAction).not.toHaveBeenCalled();
+    expect(mockToast.add).not.toHaveBeenCalled();
+    expect(mockSetErrorMessages).toHaveBeenLastCalledWith([{
+      message: 'messages.errors.displayLogicOrderConflict',
+      linksHeading: 'questionsHeading',
+      links: [{ href: '/template/123/q/10?tab=logic&trigger=11', label: 'Q1' }],
+    }]);
+  });
+
+  it('should link to the blocking question from the latest data when the server refuses the move', async () => {
+    // The page loaded before the display logic existed, so the frontend check allows the move
+    const loadedData = {
+      section: {
+        ...conflictSectionData.section,
+        questions: conflictSectionData.section.questions.map(q => ({ ...q, conditionGroups: [] })),
+      },
+    };
+    const refetch = jest.fn(async () => ({ data: conflictSectionData }));
+    (updateQuestionDisplayOrderAction as jest.Mock).mockResolvedValue({
+      success: true,
+      errors: [],
+      data: { errors: { general: 'This question is used in display logic.' } },
+    });
+
+    renderWithSection(loadedData, refetch);
+
+    await clickMove('Q1', 'buttons.moveUp');
+
+    expect(updateQuestionDisplayOrderAction).toHaveBeenCalled();
+    expect(refetch).toHaveBeenCalled();
+    expect(mockSetErrorMessages).toHaveBeenLastCalledWith([{
+      message: 'messages.errors.displayLogicOrderConflict',
+      linksHeading: 'questionsHeading',
+      links: [{ href: '/template/123/q/10?tab=logic&trigger=11', label: 'Q1' }],
+    }]);
+  });
+
+  it('should clear a previous display logic error when another move is attempted', async () => {
+    renderWithSection(conflictSectionData);
+
+    await clickMove('Q1', 'buttons.moveDown');
+
+    expect(mockSetErrorMessages).toHaveBeenCalledWith([]);
   });
 });

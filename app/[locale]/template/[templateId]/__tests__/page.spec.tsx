@@ -1178,7 +1178,11 @@ describe("TemplateEditPage", () => {
     });
 
     expect(updateSectionDisplayOrderAction).not.toHaveBeenCalled();
-    expect(mockToast.add).toHaveBeenCalledWith("errors.displayLogicOrderConflict", { type: "error", timeout: 10000 });
+    // The questions whose display logic is blocking the move are listed, with links to edit them
+    const conflictMessage = screen.getByTestId("error-messages");
+    expect(conflictMessage).toHaveTextContent("errors.displayLogicOrderConflict");
+    expect(within(conflictMessage).getByRole("link", { name: "Dependent question" })).toHaveAttribute("href", "/template/123/q/105?tab=logic&trigger=104");
+    expect(mockToast.add).not.toHaveBeenCalled();
   });
 
   it("should display error if calling updateSectionDisplayOrderAction returns errors", async () => {
@@ -1298,20 +1302,20 @@ describe("TemplateEditPage", () => {
     });
   });
 
-  it("should not move a section when the server rejects it for display logic and should show the display logic toast", async () => {
+  it("should not move a section when the server rejects it for display logic and should show the display logic message", async () => {
     const mockUseParams = useParams as jest.Mock;
     mockUseParams.mockReturnValue({ templateId: "123" });
 
     // The page loaded before any display logic existed, so the frontend check allows the move
     const mockedSections = [
       { id: 25, name: "Products of the research", bestPractice: false, displayOrder: 1, isDirty: false, questions: [{ id: 104, conditionGroups: [] }] },
-      { id: 26, name: "Data format", bestPractice: false, displayOrder: 2, isDirty: false, questions: [{ id: 105, conditionGroups: [] }] },
+      { id: 26, name: "Data format", bestPractice: false, displayOrder: 2, isDirty: false, questions: [{ id: 105, questionText: "Dependent question", conditionGroups: [] }] },
     ];
 
     // Since then, question 105 in Data format was given display logic triggered by question 104
     const latestSections = [
       mockedSections[0],
-      { ...mockedSections[1], questions: [{ id: 105, conditionGroups: [{ id: 1, triggerQuestionId: 104 }] }] },
+      { ...mockedSections[1], questions: [{ id: 105, questionText: "Dependent question", conditionGroups: [{ id: 1, triggerQuestionId: 104 }] }] },
     ];
 
     const stableTemplateQueryReturn = {
@@ -1371,8 +1375,12 @@ describe("TemplateEditPage", () => {
     expect(updateSectionDisplayOrderAction).toHaveBeenNthCalledWith(1, { sectionId: 26, newDisplayOrder: 1 });
     expect(updateSectionDisplayOrderAction).toHaveBeenNthCalledWith(2, { sectionId: 26, newDisplayOrder: 1 });
 
-    // The same toast as the frontend check is shown instead of the server's message
-    expect(mockToast.add).toHaveBeenCalledWith("errors.displayLogicOrderConflict", { type: "error", timeout: 10000 });
+    // The same message as the frontend check is shown instead of the server's message, listing the questions whose
+    // display logic is blocking the move, with links to edit them
+    const conflictMessage = screen.getByTestId("error-messages");
+    expect(conflictMessage).toHaveTextContent("errors.displayLogicOrderConflict");
+    expect(within(conflictMessage).getByRole("link", { name: "Dependent question" })).toHaveAttribute("href", "/template/123/q/105?tab=logic&trigger=104");
+    expect(mockToast.add).not.toHaveBeenCalled();
     expect(screen.queryByText("This section contains questions used in display logic.")).not.toBeInTheDocument();
 
     // The rejected move should not be announced to screen readers
@@ -1616,7 +1624,7 @@ describe("TemplateEditPage", () => {
 
     expect(updateSectionDisplayOrderAction).not.toHaveBeenCalled();
 
-    expect(mockToast.add).toHaveBeenCalledWith("errors.displayOrderAlreadyAtTop", { type: "error", timeout: 10000 });
+    expect(mockToast.add).toHaveBeenCalledWith("errors.displayOrderAlreadyAtTop", { type: "error" });
   });
 
   it("should optimistically update section order when a section is moved (updateLocalSectionOrder)", async () => {

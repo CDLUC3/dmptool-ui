@@ -20,6 +20,10 @@ describe('display logic type policies', () => {
     expect(buildCache().policies.getMergeFunction('Query', 'questionConditionGroups', undefined)).toBeDefined();
   });
 
+  it('should define a merge function for Query.triggerQuestionsForQuestion', () => {
+    expect(buildCache().policies.getMergeFunction('Query', 'triggerQuestionsForQuestion', undefined)).toBeDefined();
+  });
+
   it('should define a merge function for Question.conditionGroups', () => {
     expect(buildCache().policies.getMergeFunction('Question', 'conditionGroups', undefined)).toBeDefined();
   });

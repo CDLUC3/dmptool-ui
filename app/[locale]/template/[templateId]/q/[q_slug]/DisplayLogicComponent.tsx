@@ -40,6 +40,9 @@ interface DisplayLogicComponentProps {
   // Lets "Remove all" skip the backend call when there's nothing there yet
   // to delete — the user is just discarding a local, never-saved draft.
   hasSavedDisplayLogic?: boolean;
+  // Trigger questions to highlight, e.g. when linked from a message about a move that this question's display logic
+  // is blocking. The first highlighted trigger question is scrolled into view and focused
+  highlightedTriggerQuestionIds?: number[];
 }
 
 const MAX_OPTION_LABEL_LENGTH = 60; // Max length for a select option label before truncating with ellipsis.
@@ -207,6 +210,7 @@ const DisplayLogicComponent = ({
   isSaving = false,
   isLoadingExistingLogic = false,
   hasSavedDisplayLogic = false,
+  highlightedTriggerQuestionIds = [],
 }: DisplayLogicComponentProps) => {
   // hooks
   const t = useTranslations('QuestionEdit');
@@ -455,6 +459,20 @@ const DisplayLogicComponent = ({
     }
   }, [triggerQuestions, displayLogic, triggerQuestionMap, onDisplayLogicChange, toastState, t]);
 
+  // Scroll to and focus the first highlighted trigger question once it is shown, so the user is taken straight to it
+  const firstHighlightedGroupId = displayLogic?.groups.find(
+    (g) => triggerQuestionMap.has(g.triggerQuestionId) && highlightedTriggerQuestionIds.includes(g.triggerQuestionId)
+  )?.id;
+  const firstHighlightedGroupRef = useRef<HTMLDivElement | null>(null);
+  const hasFocusedHighlightedGroup = useRef(false);
+  useEffect(() => {
+    if (hasFocusedHighlightedGroup.current || !firstHighlightedGroupId || !firstHighlightedGroupRef.current) return;
+
+    hasFocusedHighlightedGroup.current = true;
+    firstHighlightedGroupRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    firstHighlightedGroupRef.current.focus({ preventScroll: true });
+  }, [firstHighlightedGroupId]);
+
   // If there's no display logic yet, show the "Add display logic" button (or a message if there are no trigger questions)
   if (!displayLogic) {
     return (
@@ -548,6 +566,8 @@ const DisplayLogicComponent = ({
           const tq = triggerQuestionMap.get(group.triggerQuestionId);
           if (!tq) return null;
 
+          const isHighlighted = highlightedTriggerQuestionIds.includes(group.triggerQuestionId);
+
           // Determine which operator items to show based on whether the trigger question is multi-value or single-value
           const operatorItems = tq.isMultiValue ? OPERATOR_ITEMS_MULTI : OPERATOR_ITEMS_SINGLE;
 
@@ -563,7 +583,15 @@ const DisplayLogicComponent = ({
                   {displayLogic.matchType === 'all' ? 'AND' : 'OR'}
                 </div>
               )}
-              <div className={styles.conditionsWrapper}>
+              <div
+                className={`${styles.conditionsWrapper} ${isHighlighted ? styles.highlightedGroup : ''}`}
+                ref={group.id === firstHighlightedGroupId ? firstHighlightedGroupRef : undefined}
+                tabIndex={isHighlighted ? -1 : undefined}
+                data-testid={isHighlighted ? 'highlighted-trigger-question' : undefined}
+              >
+                {isHighlighted && (
+                  <p className={styles.highlightedGroupMessage}>{t('tabPanel.messages.blockingTriggerQuestion')}</p>
+                )}
                 <Button
                   className={`react-aria-Button ${styles.removeGroupButton}`}
                   type="button"
