@@ -1,6 +1,6 @@
 ## Added
-- Added `sectionMoveConflict.ts` and `questionMoveConflict.ts` files, whose functions `findSectionMoveConflicts` and `findQuestionMoveConflicts ` help determine whether a `question` or `section` display order can be updated. `TemplateEditPage` and `SectionEditContainer` pages were updated to use these functions [#986]
-- Added `utils/displayLogicConflictErrors.ts` file which turns conflicts into an `ErrorMessageItem` with links, and updated `ErrorMessages` with option to pass in link header and url [#986]
+ - Added `sectionMoveConflicts.ts` and `questionMoveConflicts.ts` files, whose functions `findSectionMoveConflicts` and `findQuestionMoveConflicts` help determine whether a `question` or `section` display order can be updated. `TemplateEditPage` and `SectionEditContainer` pages were updated to use these functions [#986]
+ - Added `utils/displayLogicConflictError.ts`, which turns conflicts into an `ErrorMessageItem` with links, and updated `ErrorMessages` with an option to pass in a link heading and URLs [#986]
 - Added `ProjectListFilters` component to be used for filtering statuses and roles in Project dashboards [#379]
 - Added `AriaRouterProvider` wrapper for React Aria Components that contain `href` props to assure that links include the correct locale [#367]
 - Added `PlanCard` with template and uploaded variants on the project overview, plus styleguide demos [#93]
