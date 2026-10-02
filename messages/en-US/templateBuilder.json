@@ -108,7 +108,7 @@
       "cannotMoveFurtherDown": "Cannot move section further down",
       "displayOrderAlreadyAtTop": "Section is already at top of order",
       "cannotMoveFurtherUpOrDown": "Cannot move section further up or down",
-      "displayLogicOrderConflict": "This section contains questions used in display logic. Remove the display logic condition before moving the section so that each trigger question stays before the question it controls."
+      "displayLogicOrderConflict": "Remove the display logic condition(s) before moving this section. The section must appear before any questions it shows or hides."
     },
     "messages": {
       "successfullyArchived": "Successfully archived the template",
@@ -204,7 +204,7 @@
         "cannotMoveFurtherDown": "Cannot move question further down",
         "displayOrderAlreadyAtTop": "Question is already at top of order",
         "cannotMoveFurtherUpOrDown": "Cannot move question further up or down",
-        "displayLogicOrderConflict": "This question is used in display logic. Remove the display logic condition before moving it so that the trigger question stays before the question it controls."
+        "displayLogicOrderConflict": "This question is used in display logic. Remove the display logic condition before moving this question. The question must appear before the question it shows or hides."
       },
       "questionMoved": "Question moved to position {displayOrder}",
       "sectionMoved": "Section moved to position {displayOrder}"
