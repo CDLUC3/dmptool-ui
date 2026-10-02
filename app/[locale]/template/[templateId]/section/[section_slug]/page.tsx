@@ -216,11 +216,20 @@ const SectionUpdatePage: React.FC = () => {
   const handleDeleteSection = async (close: () => void) => {
     setIsDeleting(true);
     try {
-      await removeSectionMutation({
+      const result = await removeSectionMutation({
         variables: {
           sectionId: Number(sectionId)
         }
       });
+
+      // The server can refuse to delete the section (e.g. when its questions are used in display logic)
+      const generalError = result.data?.removeSection?.errors?.general;
+      if (generalError) {
+        setErrorMessages([generalError]);
+        close(); // Close the modal so the error message is visible
+        return;
+      }
+
       // Show success message and redirect to template page
       toastState.add(SectionUpdatePage('messages.successDeletingSection'), { type: 'success' });
       close(); // Close the modal
