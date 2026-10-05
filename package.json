@@ -100,6 +100,6 @@
     "qs": "6.16.0",
     "js-yaml": "4.3.2",
     "systeminformation": "5.31.17",
-    "sharp": "0.35.4"
+    "sharp": "0.35.5"
   }
 }
