@@ -21,7 +21,7 @@ import Loading from "@/components/Loading";
 
 // Utils and other
 import { useToast } from "@/context/ToastContext";
-import { routePath, isValidPassword } from "@/utils/index";
+import { routePath, isValidPassword, handleErrors } from "@/utils/index";
 
 type fieldErrorsMap = {
   password: string;
@@ -83,23 +83,25 @@ const ResetPassword: React.FC = () => {
 
   // Function to handle token verification
   async function handleTokenVerification(): Promise<void> {
+    const verificationRequest = async () => {
+      return await fetch(`${process.env.NEXT_PUBLIC_AUTH_ENDPOINT}/password-reset/verify`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ token: resetToken }),
+      });
+    };
+
     try {
       if (resetToken) {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_AUTH_ENDPOINT}/password-reset/verify`, {
-          method: "POST",
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ token: resetToken }),
-        });
+        const response = await verificationRequest();
 
         if (response.ok) {
           setValidatedToken(true);
-          logECS("info", "resetPassword", {
-            token: resetToken,
-            url: { path: routePath("login.resetPassword") },
-          });
+        } else {
+          await handleErrors(response, verificationRequest, setErrors, router, routePath("login.resetPassword"));
         }
       }
     } catch (error) {
@@ -119,28 +121,30 @@ const ResetPassword: React.FC = () => {
     setErrors([]);
     setIsSubmitting(true);
 
+    const resetRequest = async () => {
+      return await fetch(`${process.env.NEXT_PUBLIC_AUTH_ENDPOINT}/password-reset`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          token: resetToken,
+          password,
+          passwordConfirmation: confirmPassword,
+        }),
+      });
+    };
+
     try {
       if (isValid()) {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_AUTH_ENDPOINT}/password-reset`, {
-          method: "POST",
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            token: resetToken,
-            password,
-            passwordConfirmation: confirmPassword,
-          }),
-        });
+        const response = await resetRequest();
 
         if (response.ok) {
-          logECS("info", "resetPassword", {
-            token: resetToken,
-            url: { path: routePath("login.resetPassword") },
-          });
           toastState.add(t("successMessage"), { type: "success", timeout: 3000 });
           setSubmitted(true);
+        } else {
+          await handleErrors(response, resetRequest, setErrors, router, routePath("login.resetPassword"));
         }
       }
     } catch (error) {
