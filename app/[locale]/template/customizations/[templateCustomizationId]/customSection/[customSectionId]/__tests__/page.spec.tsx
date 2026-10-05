@@ -8,7 +8,8 @@ import {
 } from '@/generated/graphql';
 
 import { axe, toHaveNoViolations } from 'jest-axe';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
+import { useRouter } from '@/i18n/routing';
 import logECS from '@/utils/clientLogger';
 import CustomSectionEdit from '../page';
 import { mockScrollIntoView, mockScrollTo } from "@/__mocks__/common";
@@ -16,8 +17,15 @@ import { mockScrollIntoView, mockScrollTo } from "@/__mocks__/common";
 expect.extend(toHaveNoViolations);
 
 jest.mock('next/navigation', () => ({
-  useRouter: jest.fn(),
   useParams: jest.fn(),
+}));
+
+jest.mock('@/i18n/routing', () => ({
+  Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
+    <a href={href} {...props}>{children}</a>
+  ),
+  useRouter: jest.fn(() => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn() })),
+  usePathname: jest.fn(() => '/template/customizations/1/customSection/1'),
 }));
 
 // Mock Apollo Client hooks
@@ -263,7 +271,7 @@ describe("CustomSectionEdit", () => {
 
     await waitFor(() => {
       expect(mockUseRouter().push).toHaveBeenCalledWith(
-        expect.stringContaining('/en-US/template/customizations/16')
+        expect.stringContaining('/template/customizations/16')
       );
     });
   });
@@ -480,7 +488,7 @@ describe("CustomSectionEdit", () => {
           })
         );
         expect(mockUseRouter().push).toHaveBeenCalledWith(
-          expect.stringContaining('/en-US/template/customizations/16')
+          expect.stringContaining('/template/customizations/16')
         );
       });
     });

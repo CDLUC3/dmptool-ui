@@ -10,7 +10,8 @@ import {
 } from '@/generated/graphql';
 import { axe, toHaveNoViolations } from 'jest-axe';
 import { addMetaDataStandardsAction } from '@/app/actions';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
+import { useRouter } from '@/i18n/routing';
 
 import MetaDataStandardsSelector from '../MetaDataStandards';
 import mockMetaDataStandards from '../__mocks__/mockMetaDataStandards.json';
@@ -27,7 +28,14 @@ jest.mock('@/components/Pagination', () => {
 // Mock Next.js hooks
 jest.mock('next/navigation', () => ({
   useParams: jest.fn(),
-  useRouter: jest.fn(),
+}));
+
+jest.mock('@/i18n/routing', () => ({
+  Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
+    <a href={href} {...props}>{children}</a>
+  ),
+  useRouter: jest.fn(() => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn() })),
+  usePathname: jest.fn(() => '/'),
 }));
 
 // Mock useToast hook

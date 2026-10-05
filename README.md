@@ -69,11 +69,40 @@ npm install
 ```
 
 ### Localization
-The app is using `next-intl` for internationalization (i18n) with prefix-based routing (i.e., a dynamic [locale] segment will be included in the path, like `/en-US/account/connectsion`). We will be using the four-letter locales, meaning a combination of the two-letter language code and the two-letter country code(i.e., `en_US`).
+The app is using `next-intl` for internationalization (i18n) with prefix-based routing (i.e., a dynamic [locale] segment will be included in the path, like `/en-US/account/connections`). We will be using the four-letter locales, meaning a combination of the two-letter language code and the two-letter country code (i.e., `en-US`).
 
-The `i18n/request.js` loads translation files, and `i18n/routing.js` tells `next-intl` which locales shall be supported.
+The `i18n/request.ts` loads translation files, and `i18n/routing.ts` tells `next-intl` which locales shall be supported. The list of supported locales and the default locale are defined in `config/i18nConfig.ts`.
 
 All content to be translated will be located under the `messages` directory, with content being separated out under locales, `messages/en-US/errors.json` and files being organized by components, `messages/en-US/home.json`.
+
+#### How the locale is determined
+The middleware (`proxy.ts`) determines which locale to use for each request, using the following priority of checks:
+
+1. **Locale in the URL** - If the path starts with a supported locale (e.g., `/pt-BR/projects`), that locale is used.
+2. **Logged-in user's saved language** - The `languageId` from the user's JWT in the `dmspt` cookie.
+3. **The `NEXT_LOCALE` cookie** - `next-intl` sets this to the last locale the user visited.
+4. **The browser language** - The `Accept-Language` header. An exact match (e.g., `pt-BR`) is preferred, otherwise it falls back to a match on the language only (e.g., `pt`).
+5. **The default locale** - From `config/i18nConfig.ts`, which is currently `en-US`.
+
+If the URL does not already include a locale, the middleware redirects to the same path prefixed with the resolved locale (e.g., `/projects` → `/en-US/projects`), preserving any query string.
+
+#### Preserving the locale when navigating
+To keep the user in their current locale, import the navigation helpers from `@/i18n/routing` instead of from `next/link` or `next/navigation`:
+
+```
+import { Link, redirect, usePathname, useRouter, getPathname } from '@/i18n/routing';
+```
+
+These are locale-aware wrappers created by `next-intl`'s `createNavigation`, so paths should be written **without** a locale prefix and the current locale will be added automatically:
+
+```
+const router = useRouter();
+router.push('/projects'); // navigates to /pt-BR/projects when the current locale is pt-BR
+
+<Link href="/projects">{t('projects')}</Link>
+```
+
+Using `next/link` or `next/navigation`'s `useRouter` with an unprefixed path will drop the locale, causing the middleware to re-resolve it (and possibly switch the user to a different locale). To switch locales explicitly, pass the `locale` option, e.g., `router.replace(pathname, { locale: 'pt-BR' })`.
 
 The `NextIntlClientProvider` is wrapped around the children in layout.tsx
 ```

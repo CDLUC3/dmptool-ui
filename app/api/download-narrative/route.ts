@@ -39,27 +39,20 @@ export async function GET(request: NextRequest) {
 
     // Get all cookies to pass in request header
     const cookieStore = await cookies();
-    const cookieString = cookieStore.toString();
 
     // Extract access token from cookies
-    const accessTokenRegex = new RegExp(`(?:^|; )${ACCESS_TOKEN_NAME}=([^;]*)`);
-    const accessTokenMatch = cookieString.match(accessTokenRegex);
-    const accessToken = accessTokenMatch ? accessTokenMatch[1] : null;
+    const accessToken = cookieStore.get(ACCESS_TOKEN_NAME)?.value;
 
     // Build headers for the narrative service request
-    const headers: Record<string, string> = {
-      Accept: acceptHeader,
-      Cookie: cookieString,
-    };
+    const headers: Record<string, string> = { Accept: acceptHeader };
 
     if (accessToken) {
-      headers["Authorization"] = `Bearer ${accessToken}`;
+      headers["Cookie"] = `${ACCESS_TOKEN_NAME}=${accessToken}`;
     }
 
     logger.info(
       {
         acceptHeader,
-        cookieString,
         accessToken,
         headers,
         narrativeUrl: narrativeUrl.toString(),
@@ -77,7 +70,6 @@ export async function GET(request: NextRequest) {
         status: response.status,
         statusText: response.statusText,
         url: narrativeUrl.toString(),
-        headers,
       }, 'Narrative service returned error');
       return NextResponse.json(
         { error: `Narrative service error: ${response.statusText}` },

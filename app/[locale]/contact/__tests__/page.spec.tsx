@@ -20,6 +20,14 @@ import ContactUsPage from "../page";
 
 expect.extend(toHaveNoViolations);
 
+jest.mock('@/i18n/routing', () => ({
+  Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
+    <a href={href} {...props}>{children}</a>
+  ),
+  useRouter: jest.fn(() => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn() })),
+  usePathname: jest.fn(() => '/contact'),
+}));
+
 type RichTranslationValues = Record<string, unknown>;
 
 type MockUseTranslations = {

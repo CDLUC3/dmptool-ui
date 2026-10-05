@@ -1,7 +1,7 @@
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { MockedProvider } from '@apollo/client/testing/react';
 import { ReactNode } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/i18n/routing';
 import { useProjectMemberForm } from '../useProjectMemberForm';
 import { MemberRolesDocument, MemberRole } from '@/generated/graphql';
 import { addProjectMemberAction } from '@/app/actions';
@@ -25,9 +25,13 @@ const mockRouter = {
   push: jest.fn(),
 };
 
-jest.mock('next/navigation', () => ({
-  useRouter: jest.fn(),
+jest.mock('@/i18n/routing', () => ({
+  Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
+    <a href={href} {...props}>{children}</a>
+  ),
+  useRouter: jest.fn(() => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn() })),
 }));
+
 
 // Mock toast context
 const mockToast = {
@@ -799,7 +803,7 @@ describe('useProjectMemberForm', () => {
         'messaging.success.addedProjectMember John Doe',
         { type: 'success' }
       );
-      expect(mockRouter.push).toHaveBeenCalledWith('/en-US/projects/123/members');
+      expect(mockRouter.push).toHaveBeenCalledWith('/projects/123/members');
     });
 
     it('should handle default error message when no specific errors provided', async () => {
@@ -1023,7 +1027,7 @@ describe('useProjectMemberForm', () => {
         'messaging.success.addedProjectMember John Doe',
         { type: 'success' }
       );
-      expect(mockRouter.push).toHaveBeenCalledWith('/en-US/projects/123/members');
+      expect(mockRouter.push).toHaveBeenCalledWith('/projects/123/members');
     });
 
     it('should handle error recovery workflow', async () => {

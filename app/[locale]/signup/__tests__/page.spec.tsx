@@ -6,7 +6,7 @@ import logECS from '@/utils/clientLogger';
 import { useCsrf } from '@/context/CsrfContext';
 
 //Need to import this useRouter after the jest.mock is in place
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/i18n/routing';
 import { fetchCsrfToken } from "@/utils/authHelper";
 import mocksAffiliations from '@/__mocks__/common/mockAffiliations.json';
 
@@ -38,8 +38,12 @@ jest.mock('@/components/Form/TypeAheadWithOther', () => ({
   })),
 }));
 
-jest.mock('next/navigation', () => ({
-  useRouter: jest.fn()
+
+jest.mock('@/i18n/routing', () => ({
+  Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
+    <a href={href} {...props}>{children}</a>
+  ),
+  useRouter: jest.fn(() => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn() })),
 }));
 
 

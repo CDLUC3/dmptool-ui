@@ -5,22 +5,18 @@ import CustomizedQuestionEdit from '../index';
 
 expect.extend(toHaveNoViolations);
 
+jest.mock('@/i18n/routing', () => ({
+  Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
+    <a href={href} {...props}>{children}</a>
+  ),
+  useRouter: jest.fn(() => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn() })),
+  usePathname: jest.fn(() => '/'),
+}));
+
 // Mock next-intl
 jest.mock('next-intl', () => ({
   useTranslations: () => (key: string) => key,
 }));
-
-jest.mock('next/link', () => {
-  return {
-    __esModule: true,
-    /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-    default: ({ href, children, className, 'aria-label': ariaLabel }: any) => (
-      <a href={href} className={className} aria-label={ariaLabel}>
-        {children}
-      </a>
-    ),
-  };
-});
 
 
 describe('CustomizedQuestionEdit', () => {

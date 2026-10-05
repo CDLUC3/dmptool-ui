@@ -86,24 +86,23 @@ jest.mock('next-intl', () => ({
   useLocale: () => 'en-US',
 }));
 
-jest.mock('@/i18n/routing', () => ({
-  usePathname: () => '/admin/users/1',
-}));
-
 const mockPush = jest.fn();
 const mockReplace = jest.fn();
 
 jest.mock('next/navigation', () => ({
-  useRouter: () => ({
-    push: mockPush,
-    replace: mockReplace,
-  }),
   useParams: () => ({ userId: '1' }),
   useSearchParams: () => ({
     get: jest.fn().mockReturnValue(null),
   }),
 }));
 
+jest.mock('@/i18n/routing', () => ({
+  Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
+    <a href={href} {...props}>{children}</a>
+  ),
+  useRouter: jest.fn(() => ({ push: mockPush, replace: mockReplace, back: jest.fn() })),
+  usePathname: () => '/admin/users/1',
+}));
 
 jest.mock('@/utils/clientLogger', () => jest.fn());
 

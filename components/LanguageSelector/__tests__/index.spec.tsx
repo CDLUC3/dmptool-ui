@@ -2,32 +2,15 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import LanguageSelector from '../index';
 
 jest.mock('@/i18n/routing', () => ({
+  Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
+    <a href={href} {...props}>{children}</a>
+  ),
+  useRouter: jest.fn(() => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn() })),
   usePathname: jest.fn(() => '/'),
 }));
 
-// Mock Link component
-jest.mock("next/link", () => {
-  /* eslint-disable @typescript-eslint/no-explicit-any */
-  return function MockLink({ children, href, ...props }: any) {
-    return (
-      <a
-        href={href}
-        {...props}
-      >
-        {children}
-      </a>
-    );
-  };
-});
-
 jest.mock('next-intl', () => ({
   useLocale: jest.fn(() => 'en'),
-}));
-
-jest.mock('next/navigation', () => ({
-  useRouter: jest.fn(() => ({
-    push: jest.fn(),
-  })),
 }));
 
 jest.mock('@/hooks/switchLanguage', () => ({

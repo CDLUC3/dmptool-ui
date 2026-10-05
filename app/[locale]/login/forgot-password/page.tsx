@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useRef, useState } from "react";
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/i18n/routing';
 import logECS from '@/utils/clientLogger';
 import { useTranslations } from "next-intl";
 import {

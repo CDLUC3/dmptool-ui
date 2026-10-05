@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/i18n/routing';
 import { Breadcrumb, Breadcrumbs, Button, Link } from "react-aria-components";
 import PageHeader from "@/components/PageHeader";
 import {

@@ -9,15 +9,19 @@ import {
   PublishedTemplatesDocument,
   TemplatesDocument
 } from '@/generated/graphql';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/i18n/routing';
 import logECS from '@/utils/clientLogger';
 import mockMyTemplates from '../__mocks__/mockTemplates.json';
 import mockPublishedTemplates from '../__mocks__/mockPublishedTemplates.json';
 
 expect.extend(toHaveNoViolations);
 
-jest.mock('next/navigation', () => ({
-  useRouter: jest.fn()
+jest.mock('@/i18n/routing', () => ({
+  Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
+    <a href={href} {...props}>{children}</a>
+  ),
+  useRouter: jest.fn(() => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn() })),
+  usePathname: jest.fn(() => '/'),
 }));
 
 jest.mock('@/context/ToastContext', () => ({
@@ -61,11 +65,6 @@ jest.mock('@/components/PageHeader', () => ({
 jest.mock('@apollo/client/react', () => ({
   useMutation: jest.fn(),
   useLazyQuery: jest.fn(),
-}));
-
-// Mock the Next.js router
-jest.mock('next/navigation', () => ({
-  useRouter: jest.fn(),
 }));
 
 // Mock useFormatter from next-intl
@@ -636,7 +635,7 @@ describe('TemplateSelectTemplatePage', () => {
       'handleClick',
       expect.objectContaining({
         error: expect.anything(),
-        url: { path: '/en-US/template/create' },
+        url: { path: '/template/create' },
       })
     )
   });
@@ -739,7 +738,7 @@ describe('TemplateSelectTemplatePage', () => {
       'handleStartNew',
       expect.objectContaining({
         error: expect.anything(),
-        url: { path: '/en-US/template/create' },
+        url: { path: '/template/create' },
       })
     )
   });

@@ -3,15 +3,17 @@ import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import ForgotPassword from "../page";
 
-import { useRouter } from "next/navigation";
 import { useCsrf } from "@/context/CsrfContext";
+import { useRouter } from '@/i18n/routing';
 import { axe, toHaveNoViolations } from "jest-axe";
 import React from "react";
 
 expect.extend(toHaveNoViolations);
 
-jest.mock("next/navigation", () => ({
-  useRouter: jest.fn(),
+jest.mock("@apollo/client/react");
+
+jest.mock('@/i18n/routing', () => ({
+  useRouter: jest.fn(() => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn() })),
 }));
 
 jest.mock("next-intl", () => ({
@@ -37,6 +39,8 @@ describe("ForgotPassword Component", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+
+    window.scrollTo = jest.fn();
 
     (useRouter as jest.Mock).mockReturnValue({
       push,
@@ -81,9 +85,7 @@ describe("ForgotPassword Component", () => {
 
     expect(global.fetch).not.toHaveBeenCalled();
 
-    expect(
-      screen.getByText("invalidEmail")
-    ).toBeInTheDocument();
+    expect(screen.getByRole("alert")).toHaveTextContent("invalidEmail");
   });
 
   it("should navigate back to login", async () => {
@@ -95,7 +97,7 @@ describe("ForgotPassword Component", () => {
       })
     );
 
-    expect(push).toHaveBeenCalledWith("/en-US/login");
+    expect(push).toHaveBeenCalledWith("/login");
   });
 
   it("should show the sending state while submitting", async () => {
@@ -133,7 +135,7 @@ describe("ForgotPassword Component", () => {
     const link = screen.getByRole("link");
 
     expect(link).toBeInTheDocument();
-    expect(link).toHaveAttribute("href", "/en-US/contact");
+    expect(link).toHaveAttribute("href", "/contact");
     expect(
       screen.getByRole("link", {
         name: /help/i,

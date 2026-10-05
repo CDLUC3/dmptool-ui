@@ -1,7 +1,7 @@
 import React from 'react';
 import { fireEvent, render, screen, waitFor } from '@/utils/test-utils';
 import '@testing-library/jest-dom';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/i18n/routing';
 import TemplateCreatePage from '../page';
 import { useQueryStep } from '../useQueryStep';
 import { mockScrollTo } from '@/__mocks__/common';
@@ -17,8 +17,13 @@ jest.mock('@/hooks/debounce', () => ({
 }));
 
 // Mock the Next.js router
-jest.mock('next/navigation', () => ({
-  useRouter: jest.fn(),
+
+jest.mock('@/i18n/routing', () => ({
+  Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
+    <a href={href} {...props}>{children}</a>
+  ),
+  useRouter: jest.fn(() => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn() })),
+  usePathname: jest.fn(() => '/template/create'),
 }));
 
 jest.mock('@/components/SelectExistingTemplate', () => ({

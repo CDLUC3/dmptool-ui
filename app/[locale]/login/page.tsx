@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useEffect, useRef, useState } from "react";
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/i18n/routing';
 import logECS from '@/utils/clientLogger';
 import { useCsrf } from '@/context/CsrfContext';
 import { handleErrors } from '@/utils/errorHandler';
@@ -77,7 +77,9 @@ const LoginPage: React.FC = () => {
         // Clear any cached data
         await clearCache();
         setIsAuthenticated(true);
-        router.push('/')
+        // Full navigation to a URL with no locale, so the middleware can choose
+        // the user's saved language from their new JWT (languageId)
+        window.location.assign(routePath('app.home'));
       } else {
         await handleErrors(response, loginRequest, setErrors, router, '/login');
       }

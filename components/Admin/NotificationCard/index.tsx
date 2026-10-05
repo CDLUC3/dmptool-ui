@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import Link from "next/link";
+import { Link } from "@/i18n/routing";
 import styles from './adminNotification.module.scss';
 import { TransitionLink } from "@/components/Form";
 import { useTranslations } from "next-intl";

@@ -10,7 +10,8 @@ import {
 } from '../actions';
 import { MockedProvider } from "@apollo/client/testing/react";
 import { useFormatter, useTranslations } from "next-intl";
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
+import { useRouter } from "@/i18n/routing";
 import logECS from '@/utils/clientLogger';
 import { useToast } from '@/context/ToastContext';
 import { mockScrollIntoView } from '@/__mocks__/common';
@@ -18,15 +19,6 @@ import { mockScrollIntoView } from '@/__mocks__/common';
 import mockMeData from "../../../__mocks__/mockMeData.json";
 import GuidanceGroupCreatePage from "../page";
 
-// Mock Next.js navigation
-jest.mock("next/navigation", () => ({
-  useRouter: () => ({
-    back: jest.fn(),
-    push: jest.fn(),
-    replace: jest.fn(),
-    refresh: jest.fn(),
-  }),
-}));
 
 jest.mock('../actions/index', () => ({
   addGuidanceGroupAction: jest.fn(),
@@ -39,8 +31,12 @@ jest.mock("next-intl", () => ({
 }));
 
 jest.mock('next/navigation', () => ({
-  useRouter: jest.fn(),
   useParams: jest.fn()
+}));
+
+
+jest.mock('@/i18n/routing', () => ({
+  useRouter: jest.fn(() => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn() })),
 }));
 
 const mockRouter = {
@@ -212,7 +208,7 @@ describe("GuidanceGroupCreatePage", () => {
         'creating Guidance Group',
         expect.objectContaining({
           errors: expect.anything(),
-          url: { path: '/en-US/admin/guidance/groups/create' },
+          url: { path: '/admin/guidance/groups/create' },
         })
       )
     });
@@ -253,7 +249,7 @@ describe("GuidanceGroupCreatePage", () => {
         'creating Guidance Group',
         expect.objectContaining({
           errors: expect.anything(),
-          url: { path: '/en-US/admin/guidance/groups/create' },
+          url: { path: '/admin/guidance/groups/create' },
         })
       )
     });
@@ -268,7 +264,7 @@ describe("GuidanceGroupCreatePage", () => {
           general: null
         }
       },
-      redirect: "/en-US/admin/guidance/groups",
+      redirect: "/admin/guidance/groups",
     });
 
     render(
@@ -287,7 +283,7 @@ describe("GuidanceGroupCreatePage", () => {
     const createButton = screen.getByRole("button", { name: "Guidance.actions.createGroup" });
     fireEvent.click(createButton);
     await waitFor(() => {
-      expect(mockRouter.push).toHaveBeenCalledWith("/en-US/admin/guidance/groups");
+      expect(mockRouter.push).toHaveBeenCalledWith("/admin/guidance/groups");
       expect(addGuidanceGroupAction).toHaveBeenCalledWith({
         affiliationId: "https://ror.org/03yrm5c12",
         bestPractice: false,

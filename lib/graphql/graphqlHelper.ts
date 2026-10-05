@@ -72,11 +72,14 @@ export const errorLink = new ErrorLink(({ error, operation, forward }) => {
                 complete: observer.complete.bind(observer)
               });
             } else {
+              // fetchCsrfToken returns null (rather than throwing) when the request fails or the response is not OK
               logECS('error', 'Token refresh failed with no result', { errorCode: 'FORBIDDEN' });
+              observer.error(new Error('CSRF token refresh failed'));// Propagate the error to the component so that it doesn't stay in loading state indefinitely
               navigateTo('/login');
             }
           } catch (error) {
             logECS('error', 'Fetching csrf token failed', { error });
+            observer.error(error);// Propagate the error to the component so that it doesn't stay in loading state indefinitely
             navigateTo('/login');
           }
         })();

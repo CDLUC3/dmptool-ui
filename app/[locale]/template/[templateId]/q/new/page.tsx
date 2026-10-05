@@ -1,8 +1,9 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useTranslations } from 'next-intl';
-import { useParams, useRouter, useSearchParams } from 'next/navigation';
+import { useLocale, useTranslations } from 'next-intl';
+import { useParams, useSearchParams } from 'next/navigation';
+import { useRouter, getPathname } from '@/i18n/routing';
 import {
   Breadcrumb,
   Breadcrumbs,
@@ -55,6 +56,7 @@ const QuestionTypeSelectPage: React.FC = () => {
   // Get templateId param
   const params = useParams();
   const router = useRouter();
+  const locale = useLocale();
   const searchParams = useSearchParams();
   const topRef = useRef<HTMLDivElement>(null);
   //For scrolling to error in page
@@ -125,7 +127,10 @@ const QuestionTypeSelectPage: React.FC = () => {
       //If the user came from editing an existing question, we want to return them to that page with the new questionTypeId
       // We need to use a full page reload to ensure all state is reset so that 'beforeunload' events are properly handled in the next page
       // to display unsaved changes warning if needed
-      window.location.href = routePath('template.q.slug', { templateId, q_slug: questionId }, { questionType });
+      window.location.href = getPathname({
+        href: routePath('template.q.slug', { templateId, q_slug: questionId }, { questionType }),
+        locale,
+      });
 
     } else {
       // redirect to the Question Edit page if a user is adding a new question

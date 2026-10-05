@@ -12,7 +12,8 @@ import {
   SectionDocument,
 } from "@/generated/graphql";
 import { useToast } from "@/context/ToastContext";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
+import { useRouter } from "@/i18n/routing";
 import logECS from "@/utils/clientLogger";
 import TemplateEditPage from "../page";
 import { updateTemplateAction, updateSectionDisplayOrderAction } from "../actions";
@@ -56,7 +57,13 @@ jest.mock("../actions/index", () => ({
 
 jest.mock("next/navigation", () => ({
   useParams: jest.fn(),
-  useRouter: jest.fn(),
+}));
+
+jest.mock('@/i18n/routing', () => ({
+  Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
+    <a href={href} {...props}>{children}</a>
+  ),
+  useRouter: jest.fn(() => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn() })),
 }));
 
 const mockToast = {
@@ -287,7 +294,7 @@ describe("TemplateEditPage", () => {
     expect(lastUpdatedText).toBeInTheDocument();
 
     const viewHistory = screen.getByRole("link", { name: "links.viewHistory" });
-    expect(viewHistory).toHaveAttribute("href", "/en-US/template/123/history");
+    expect(viewHistory).toHaveAttribute("href", "/template/123/history");
 
     // Find all section cards
     const sectionCards = screen.getAllByTestId("section-edit-card");
@@ -725,7 +732,7 @@ describe("TemplateEditPage", () => {
     });
 
     await waitFor(() => {
-      expect(mockUseRouter().push).toHaveBeenCalledWith("/en-US/template");
+      expect(mockUseRouter().push).toHaveBeenCalledWith("/template");
     });
   });
 
@@ -966,7 +973,7 @@ describe("TemplateEditPage", () => {
         "updateTemplate",
         expect.objectContaining({
           error: "templateId is null",
-          url: { path: "/en-US/template/unknown" },
+          url: { path: "/template/unknown" },
         }),
       );
     });
@@ -1090,6 +1097,92 @@ describe("TemplateEditPage", () => {
         newDisplayOrder: 1,
       });
     });
+
+    // The successful move should be announced to screen readers
+    expect(screen.getByText("messages.sectionMoved")).toBeInTheDocument();
+  });
+
+  it("should not move a section above the section containing its display logic trigger question", async () => {
+    const mockUseParams = useParams as jest.Mock;
+    mockUseParams.mockReturnValue({ templateId: "123" });
+
+    // Question 105 in section 26 has display logic that is triggered by question 104 in section 25
+    const mockedSections = [
+      {
+        id: 25,
+        name: "Products of the research",
+        bestPractice: false,
+        displayOrder: 1,
+        isDirty: false,
+        questions: [
+          { displayOrder: 1, id: 104, questionText: "Trigger question", sectionId: 25, templateId: 5, conditionGroups: [] },
+        ],
+      },
+      {
+        id: 26,
+        name: "Data format",
+        bestPractice: false,
+        displayOrder: 2,
+        isDirty: false,
+        questions: [
+          {
+            displayOrder: 1,
+            id: 105,
+            questionText: "Dependent question",
+            sectionId: 26,
+            templateId: 5,
+            conditionGroups: [{ id: 1, triggerQuestionId: 104 }],
+          },
+        ],
+      },
+    ];
+
+    const stableTemplateQueryReturn = {
+      data: { template: { ...mockTemplateData, sections: mockedSections } },
+      loading: false,
+      error: null,
+      refetch: jest.fn(),
+    };
+
+    const stableSectionQueryReturn = {
+      data: {
+        section: mockedSections,
+      },
+      loading: false,
+      error: null,
+      refetch: jest.fn(),
+    };
+    mockUseQuery.mockImplementation((document) => {
+      if (document === TemplateDocument) {
+        return stableTemplateQueryReturn as any;
+      }
+
+      if (document === SectionDocument) {
+        return stableSectionQueryReturn as any;
+      }
+      return {
+        data: null,
+        loading: false,
+        error: undefined
+      };
+    });
+
+    await act(async () => {
+      render(<TemplateEditPage />);
+    });
+
+    // Click "Move Up" for the second section (Data format)
+    const moveUpButtons = screen.getAllByLabelText("buttons.moveUp");
+    await act(async () => {
+      fireEvent.click(moveUpButtons[1]);
+    });
+
+    expect(updateSectionDisplayOrderAction).not.toHaveBeenCalled();
+    // The questions whose display logic is blocking the move are listed, with links to edit them
+    const conflictMessage = screen.getByTestId("error-messages");
+    expect(conflictMessage).toHaveTextContent("errors.displayLogicOrderConflict");
+    expect(within(conflictMessage).getByRole("link", { name: "Dependent question" })).toHaveAttribute("href", "/template/123/q/105?tab=logic&trigger=104");
+    expect(mockToast.add).not.toHaveBeenCalled();
   });
 
   it("should display error if calling updateSectionDisplayOrderAction returns errors", async () => {
@@ -1207,6 +1300,91 @@ describe("TemplateEditPage", () => {
     await waitFor(() => {
       expect(screen.getByText("There was an error moving the section")).toBeInTheDocument();
     });
+  });
+
+  it("should not move a section when the server rejects it for display logic and should show the display logic message", async () => {
+    const mockUseParams = useParams as jest.Mock;
+    mockUseParams.mockReturnValue({ templateId: "123" });
+
+    // The page loaded before any display logic existed, so the frontend check allows the move
+    const mockedSections = [
+      { id: 25, name: "Products of the research", bestPractice: false, displayOrder: 1, isDirty: false, questions: [{ id: 104, conditionGroups: [] }] },
+      { id: 26, name: "Data format", bestPractice: false, displayOrder: 2, isDirty: false, questions: [{ id: 105, questionText: "Dependent question", conditionGroups: [] }] },
+    ];
+
+    // Since then, question 105 in Data format was given display logic triggered by question 104
+    const latestSections = [
+      mockedSections[0],
+      { ...mockedSections[1], questions: [{ id: 105, questionText: "Dependent question", conditionGroups: [{ id: 1, triggerQuestionId: 104 }] }] },
+    ];
+
+    const stableTemplateQueryReturn = {
+      data: { template: { ...mockTemplateData, sections: mockedSections } },
+      loading: false,
+      error: null,
+      refetch: jest.fn(async () => ({ data: { template: { ...mockTemplateData, sections: latestSections } } })),
+    };
+
+    const stableSectionQueryReturn = {
+      data: {
+        section: mockedSections,
+      },
+      loading: false,
+      error: null,
+      refetch: jest.fn(),
+    };
+    mockUseQuery.mockImplementation((document) => {
+      if (document === TemplateDocument) {
+        return stableTemplateQueryReturn as any;
+      }
+
+      if (document === SectionDocument) {
+        return stableSectionQueryReturn as any;
+      }
+      return {
+        data: null,
+        loading: false,
+        error: undefined
+      };
+    });
+
+    (updateSectionDisplayOrderAction as jest.Mock).mockResolvedValue({
+      success: true,
+      errors: [],
+      data: {
+        errors: {
+          general: "This section contains questions used in display logic.",
+        },
+      },
+    });
+
+    await act(async () => {
+      render(<TemplateEditPage />);
+    });
+
+    // Try to move the second section (Data format) up twice. If the rejected move never appeared to happen,
+    // the second button still belongs to Data format, so both attempts should be for section 26
+    await act(async () => {
+      fireEvent.click(screen.getAllByLabelText("buttons.moveUp")[1]);
+    });
+    await act(async () => {
+      fireEvent.click(screen.getAllByLabelText("buttons.moveUp")[1]);
+    });
+
+    expect(updateSectionDisplayOrderAction).toHaveBeenCalledTimes(2);
+    expect(updateSectionDisplayOrderAction).toHaveBeenNthCalledWith(1, { sectionId: 26, newDisplayOrder: 1 });
+    expect(updateSectionDisplayOrderAction).toHaveBeenNthCalledWith(2, { sectionId: 26, newDisplayOrder: 1 });
+
+    // The same message as the frontend check is shown instead of the server's message, listing the questions whose
+    // display logic is blocking the move, with links to edit them
+    const conflictMessage = screen.getByTestId("error-messages");
+    expect(conflictMessage).toHaveTextContent("errors.displayLogicOrderConflict");
+    expect(within(conflictMessage).getByRole("link", { name: "Dependent question" })).toHaveAttribute("href", "/template/123/q/105?tab=logic&trigger=104");
+    expect(mockToast.add).not.toHaveBeenCalled();
+    expect(screen.queryByText("This section contains questions used in display logic.")).not.toBeInTheDocument();
+
+    // The rejected move should not be announced to screen readers
+    expect(screen.queryByText("messages.sectionMoved")).not.toBeInTheDocument();
   });
 
   it("should display error if updateSectionDisplayOrderAction returns general error", async () => {

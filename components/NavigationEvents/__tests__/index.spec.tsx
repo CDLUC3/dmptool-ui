@@ -7,9 +7,13 @@ const mockDone = jest.fn()
 
 let mockPathname = '/initial'
 
-jest.mock('next/navigation', () => ({
-  usePathname: () => mockPathname,
-}))
+jest.mock('@/i18n/routing', () => ({
+  Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
+    <a href={href} {...props}>{children}</a>
+  ),
+  useRouter: jest.fn(() => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn() })),
+  usePathname: jest.fn(() => mockPathname),
+}));
 
 jest.mock('next-intl', () => ({
   useTranslations: () => (key: string) => key,

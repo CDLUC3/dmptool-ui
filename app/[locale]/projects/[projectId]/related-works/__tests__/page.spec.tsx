@@ -1,7 +1,8 @@
 import React from "react";
 import { render, screen } from "@testing-library/react";
 import "@testing-library/jest-dom";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
+import { useRouter } from "@/i18n/routing";
 import { axe, toHaveNoViolations } from "jest-axe";
 import RelatedWorksProjectPage from "../page";
 import userEvent from "@testing-library/user-event";
@@ -17,8 +18,15 @@ import {
 expect.extend(toHaveNoViolations);
 
 jest.mock("next/navigation", () => ({
-  useRouter: jest.fn(),
   useParams: jest.fn(),
+}));
+
+jest.mock('@/i18n/routing', () => ({
+  Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
+    <a href={href} {...props}>{children}</a>
+  ),
+  useRouter: jest.fn(() => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn() })),
+  usePathname: jest.fn(() => '/projects/1/related-works'),
 }));
 
 // Mock Apollo Client hooks

@@ -1,6 +1,8 @@
 import React from 'react';
 import { act, fireEvent, render, screen, within, waitFor } from '@testing-library/react';
-import { useParams, useRouter, useSearchParams } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
+import { useRouter } from '@/i18n/routing';
+
 import { useQuery, useMutation, useLazyQuery } from '@apollo/client/react';
 import {
   ChildResearchDomainsDocument,
@@ -18,8 +20,14 @@ expect.extend(toHaveNoViolations);
 
 jest.mock('next/navigation', () => ({
   useParams: jest.fn(),
-  useRouter: jest.fn(),
   useSearchParams: jest.fn()
+}));
+
+jest.mock('@/i18n/routing', () => ({
+  Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
+    <a href={href} {...props}>{children}</a>
+  ),
+  useRouter: jest.fn(() => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn() })),
 }));
 
 // Mock Apollo Client hooks
@@ -273,7 +281,7 @@ describe('ProjectsProjectDetail', () => {
 
 
     // Verify that router.push was called with "/login"
-    expect(mockRouter.push).toHaveBeenCalledWith('/en-US/projects/1');
+    expect(mockRouter.push).toHaveBeenCalledWith('/projects/1');
     expect(mockUpdateProjectMutation).toHaveBeenCalledWith({
       variables: {
         input: {
@@ -416,7 +424,7 @@ describe('ProjectsProjectDetail', () => {
     render(<ProjectsProjectDetail />);
     const searchBtn = screen.getByTestId('search-projects-button');
     fireEvent.click(searchBtn);
-    expect(mockRouter.push).toHaveBeenCalledWith('/en-US/projects/1/projects-search');
+    expect(mockRouter.push).toHaveBeenCalledWith('/projects/1/projects-search');
   });
 
   it('should hide search projects button when project has no fundings', () => {

@@ -1,10 +1,9 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+import { usePathname, useRouter, Link } from "@/i18n/routing";
 import { useLocale, useTranslations } from "next-intl";
-import { usePathname } from "@/i18n/routing";
 import { Breadcrumb, Breadcrumbs, Button, Form, ListBoxItem, Text } from "react-aria-components";
 
 // GraphQL queries and mutations
@@ -74,16 +73,9 @@ const ProfilePage: React.FC = () => {
 
   const switchLanguage = async (newLocale: string, showToast = false): Promise<boolean> => {
     if (newLocale !== currentLocale) {
-      const params = new URLSearchParams();
-      // There was an issue with the toast message disappearing when switching languages,
-      // so we added a query parameter to the URL to indicate that the profile was updated
-      if (showToast) {
-        params.set("profileUpdated", "true");
-      }
-      const queryString = params.toString();
-      const basePath = `/${newLocale}${pathname}`;
-      const newPath = queryString ? `${basePath}?${queryString}` : basePath;
-      router.push(newPath);
+      // Query param keeps the success toast from getting lost during the locale switch
+      const href = showToast ? `${pathname}?profileUpdated=true` : pathname;
+      router.push(href, { locale: newLocale });
       return true;
     }
     return false;
@@ -368,14 +360,13 @@ const ProfilePage: React.FC = () => {
     if (profileUpdated === "true") {
       hasShownToastRef.current = true; // Prevent showing the toast again
       showSuccessToast();
-      // Clean up the URL parameter
+      // Clean up the URL parameter. pathname has no locale; next-intl adds the current one.
       const newParams = new URLSearchParams(searchParams);
       newParams.delete("profileUpdated");
-      const basePath = `/${currentLocale}${pathname}`;
-      const newUrl = `${basePath}${newParams.toString() ? `?${newParams.toString()}` : ""}`;
-      router.replace(newUrl);
+      const query = newParams.toString();
+      router.replace(query ? `${pathname}?${query}` : pathname);
     }
-  }, [searchParams, currentLocale, pathname]);
+  }, [searchParams, pathname]);
 
   // Handle errors from loading of user data
   useEffect(() => {

@@ -22,13 +22,18 @@ jest.mock("next-intl", () => ({
 }));
 
 // Mock Next.js navigation
-jest.mock("next/navigation", () => ({
-  useRouter: () => ({
+
+jest.mock('@/i18n/routing', () => ({
+  Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
+    <a href={href} {...props}>{children}</a>
+  ),
+  useRouter: jest.fn(() => ({
     back: jest.fn(),
     push: jest.fn(),
     replace: jest.fn(),
     refresh: jest.fn(),
-  }),
+  })),
+  usePathname: jest.fn(() => '/admin/guidance'),
 }));
 
 expect.extend(toHaveNoViolations);

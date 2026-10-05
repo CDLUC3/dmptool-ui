@@ -11,6 +11,14 @@ jest.mock('@/utils/general', () => ({
   scrollToTop: jest.fn(),
 }));
 
+jest.mock('@/i18n/routing', () => ({
+  Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
+    <a href={href} {...props}>{children}</a>
+  ),
+  useRouter: jest.fn(() => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn() })),
+  usePathname: jest.fn(() => '/'),
+}));
+
 describe('ErrorMessages', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -74,6 +82,56 @@ describe('ErrorMessages', () => {
     await act(async () => {
       const results = await axe(container);
       expect(results).toHaveNoViolations();
+    });
+  });
+
+  describe('errors with links', () => {
+    const errorWithLinks = {
+      message: 'This section contains questions used in display logic.',
+      linksHeading: 'Edit the display logic on:',
+      links: [
+        { href: '/template/123/q/10?tab=logic&trigger=3', label: 'Do you have pets?' },
+        { href: '/template/123/q/11?tab=logic&trigger=3', label: 'Which pets?' },
+      ],
+    };
+
+    it('should render the message, links heading and links', () => {
+      render(<ErrorMessages errors={[errorWithLinks]} />);
+
+      const errorMessages = screen.getByTestId('error-messages');
+      expect(errorMessages).toHaveAttribute('role', 'alert');
+      expect(errorMessages).toHaveTextContent('This section contains questions used in display logic.');
+      expect(errorMessages).toHaveTextContent('Edit the display logic on:');
+      expect(screen.getByRole('link', { name: 'Do you have pets?' })).toHaveAttribute('href', '/template/123/q/10?tab=logic&trigger=3');
+      expect(screen.getByRole('link', { name: 'Which pets?' })).toHaveAttribute('href', '/template/123/q/11?tab=logic&trigger=3');
+    });
+
+    it('should render errors with links alongside plain string errors in one alert', () => {
+      render(<ErrorMessages errors={['A plain error', errorWithLinks]} />);
+
+      expect(screen.getAllByRole('alert')).toHaveLength(1);
+      expect(screen.getByText('A plain error')).toBeInTheDocument();
+      expect(screen.getByRole('link', { name: 'Which pets?' })).toBeInTheDocument();
+    });
+
+    it('should render an error without links as just its message', () => {
+      render(<ErrorMessages errors={[{ message: 'Just a message', linksHeading: 'Unused heading' }]} />);
+
+      expect(screen.getByText('Just a message')).toBeInTheDocument();
+      expect(screen.queryByText('Unused heading')).not.toBeInTheDocument();
+      expect(screen.queryByRole('list')).not.toBeInTheDocument();
+    });
+
+    it('should not render an error with an empty message', () => {
+      const { container } = render(<ErrorMessages errors={[{ message: '  ' }]} />);
+      expect(container.firstChild).toBeNull();
+    });
+
+    it('should pass axe accessibility test', async () => {
+      const { container } = render(<ErrorMessages errors={[errorWithLinks]} />);
+      await act(async () => {
+        expect(await axe(container)).toHaveNoViolations();
+      });
     });
   });
 });

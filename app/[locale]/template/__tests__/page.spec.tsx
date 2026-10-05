@@ -16,6 +16,13 @@ import {
 
 expect.extend(toHaveNoViolations);
 
+jest.mock('@/i18n/routing', () => ({
+  Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
+    <a href={href} {...props}>{children}</a>
+  ),
+  useRouter: jest.fn(() => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn() })),
+}));
+
 // Mock useFormatter and useTranslations  next-intl
 jest.mock('next-intl', () => ({
   useFormatter: jest.fn(() => ({
@@ -91,7 +98,7 @@ describe('TemplateListPage', () => {
     // MockedProvider requires await for requests to resolve
     const createLink = await screen.findByText('actionCreate');
     expect(createLink).toBeInTheDocument();
-    expect(createLink).toHaveAttribute('href', '/en-US/template/create');
+    expect(createLink).toHaveAttribute('href', '/template/create');
   });
 
   it('should render the search field with correct label and help text', async () => {
@@ -165,8 +172,8 @@ describe('TemplateListPage', () => {
     const homeLink = await screen.findByRole('link', { name: 'breadcrumbs.home' });
     const templatesLink = await screen.findByRole('link', { name: 'breadcrumbs.templates' });
 
-    expect(homeLink).toHaveAttribute('href', '/en-US');
-    expect(templatesLink).toHaveAttribute('href', '/en-US/template');
+    expect(homeLink).toHaveAttribute('href', '/');
+    expect(templatesLink).toHaveAttribute('href', '/template');
   });
 
   it('should render error when graphql query returns as error', async () => {

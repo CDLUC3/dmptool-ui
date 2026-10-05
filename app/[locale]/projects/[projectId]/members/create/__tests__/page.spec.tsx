@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, waitFor } from '@/utils/test-utils';
 import userEvent from '@testing-library/user-event';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
+import { useRouter } from '@/i18n/routing';
 import { useToast } from '@/context/ToastContext';
 import logECS from '@/utils/clientLogger';
 import { useQuery } from '@apollo/client/react';
@@ -35,6 +36,13 @@ const mockRouter = {
 const mockToast = {
   add: jest.fn(),
 };
+
+jest.mock('@/i18n/routing', () => ({
+  Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
+    <a href={href} {...props}>{children}</a>
+  ),
+  useRouter: jest.fn(() => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn() })),
+}));
 
 const mockAddProjectMemberAction = addProjectMemberAction as jest.MockedFunction<typeof addProjectMemberAction>;
 
@@ -75,7 +83,7 @@ describe("ProjectsProjectMemberCreate", () => {
     // Mock the addProjectMemberAction to return success
     mockAddProjectMemberAction.mockResolvedValue({
       success: true,
-      redirect: '/en-US/projects/1/members',
+      redirect: '/projects/1/members',
       data: undefined,
       errors: []
     });
@@ -159,7 +167,7 @@ describe("ProjectsProjectMemberCreate", () => {
   it("should handle form submission", async () => {
     mockAddProjectMemberAction.mockResolvedValue({
       success: true,
-      redirect: '/en-US/projects/1/members',
+      redirect: '/projects/1/members',
       data: addProjectMemberRresponseMock,
       errors: []
     });
@@ -186,7 +194,7 @@ describe("ProjectsProjectMemberCreate", () => {
     fireEvent.submit(form);
 
     await waitFor(() => {
-      expect(mockRouter.push).toHaveBeenCalledWith('/en-US/projects/1/members');
+      expect(mockRouter.push).toHaveBeenCalledWith('/projects/1/members');
       expect(mockToast.add).toHaveBeenCalledWith('messaging.success.memberAdded', { type: 'success' });
     });
   });
@@ -195,7 +203,7 @@ describe("ProjectsProjectMemberCreate", () => {
 
     mockAddProjectMemberAction.mockResolvedValue({
       success: true,
-      redirect: '/en-US/projects/1/members',
+      redirect: '/projects/1/members',
       data: addProjectMemberRresponseMock,
       errors: []
     });
@@ -233,7 +241,7 @@ describe("ProjectsProjectMemberCreate", () => {
   it("should display error if form submitted without entering a first name", async () => {
     mockAddProjectMemberAction.mockResolvedValue({
       success: true,
-      redirect: '/en-US/projects/1/members',
+      redirect: '/projects/1/members',
       data: addProjectMemberRresponseMock,
       errors: []
     });
@@ -266,7 +274,7 @@ describe("ProjectsProjectMemberCreate", () => {
   it("should display error if form submitted without entering a last name", async () => {
     mockAddProjectMemberAction.mockResolvedValue({
       success: true,
-      redirect: '/en-US/projects/1/members',
+      redirect: '/projects/1/members',
       data: addProjectMemberRresponseMock,
       errors: []
     });
@@ -299,7 +307,7 @@ describe("ProjectsProjectMemberCreate", () => {
   it("should display error if form submitted without entering a last name", async () => {
     mockAddProjectMemberAction.mockResolvedValue({
       success: true,
-      redirect: '/en-US/projects/1/members',
+      redirect: '/projects/1/members',
       data: addProjectMemberRresponseMock,
       errors: []
     });
@@ -332,7 +340,7 @@ describe("ProjectsProjectMemberCreate", () => {
   it("should display error if field-level errors returned", async () => {
     mockAddProjectMemberAction.mockResolvedValue({
       success: true,
-      redirect: '/en-US/projects/1/members',
+      redirect: '/projects/1/members',
       data: {
         id: 38,
         givenName: "John",
@@ -417,7 +425,7 @@ describe("ProjectsProjectMemberCreate", () => {
         'addProjectMember',
         expect.objectContaining({
           errors: expect.anything(),
-          url: { path: '/en-US/projects/1/members' },
+          url: { path: '/projects/1/members' },
         })
       );
     });

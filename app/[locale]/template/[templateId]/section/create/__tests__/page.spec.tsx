@@ -1,5 +1,6 @@
 import React from "react";
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
+import { useRouter } from '@/i18n/routing';
 import { act, fireEvent, render, screen, waitFor } from '@/utils/test-utils';
 import { useQuery, useMutation } from '@apollo/client/react';
 
@@ -24,9 +25,16 @@ jest.mock('@apollo/client/react', () => ({
 
 
 jest.mock('next/navigation', () => ({
-  useRouter: jest.fn(),
   useParams: jest.fn(),
 }))
+
+jest.mock('@/i18n/routing', () => ({
+  Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
+    <a href={href} {...props}>{children}</a>
+  ),
+  useRouter: jest.fn(() => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn() })),
+  usePathname: jest.fn(() => '/template/1/section/create'),
+}));
 
 const mockUseRouter = useRouter as jest.Mock;
 

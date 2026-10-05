@@ -9,7 +9,8 @@ import {
 } from '@/generated/graphql';
 
 import { axe, toHaveNoViolations } from 'jest-axe';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
+import { useRouter } from '@/i18n/routing';
 import logECS from '@/utils/clientLogger';
 import SectionUpdatePage from '../page';
 import { mockScrollIntoView, mockScrollTo } from "@/__mocks__/common";
@@ -17,10 +18,16 @@ import { mockScrollIntoView, mockScrollTo } from "@/__mocks__/common";
 expect.extend(toHaveNoViolations);
 
 jest.mock('next/navigation', () => ({
-  useRouter: jest.fn(),
   useParams: jest.fn()
 }));
 
+jest.mock('@/i18n/routing', () => ({
+  Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
+    <a href={href} {...props}>{children}</a>
+  ),
+  useRouter: jest.fn(() => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn() })),
+  usePathname: jest.fn(() => '/template/1/section/1'),
+}));
 
 // Mock Apollo Client hooks
 jest.mock('@apollo/client/react', () => ({
@@ -425,7 +432,7 @@ describe("SectionUpdatePage", () => {
         'updateSection',
         expect.objectContaining({
           error: expect.anything(),
-          url: { path: '/en-US/template/123/section/123' },
+          url: { path: '/template/123/section/123' },
         })
       );
     });
@@ -516,7 +523,7 @@ describe("SectionUpdatePage", () => {
     fireEvent.click(saveAndAdd);
 
     await waitFor(() => {
-      expect(mockUseRouter().push).toHaveBeenCalledWith('/en-US/template/123');
+      expect(mockUseRouter().push).toHaveBeenCalledWith('/template/123');
     });
   });
 
@@ -620,8 +627,41 @@ describe("SectionUpdatePage", () => {
         expect(mockRemoveSection).toHaveBeenCalledWith({
           variables: { sectionId: 123 }
         });
-        expect(mockUseRouter().push).toHaveBeenCalledWith('/en-US/template/123');
+        expect(mockUseRouter().push).toHaveBeenCalledWith('/template/123');
       });
+    });
+
+    it('should not redirect and should show the server error when the server refuses to delete the section', async () => {
+      const serverError = 'This section contains trigger questions used in the display logic of questions in other sections.';
+      const mockRemoveSection = jest.fn().mockResolvedValueOnce({
+        data: { removeSection: { id: 123, name: 'Test Section', errors: { general: serverError } } }
+      });
+
+      mockUseMutation.mockImplementation((document) => {
+        if (document === RemoveSectionDocument) {
+          /* eslint-disable @typescript-eslint/no-explicit-any */
+          return [mockRemoveSection, { loading: false, error: undefined }] as any;
+        }
+        /* eslint-disable @typescript-eslint/no-explicit-any */
+        return [jest.fn(), { loading: false, error: undefined }] as any;
+      });
+
+      await act(async () => {
+        render(<SectionUpdatePage />);
+      });
+
+      fireEvent.click(screen.getByRole('button', { name: /buttons.deleteSection/i }));
+
+      await waitFor(() => {
+        expect(screen.getByText('deleteModal.title')).toBeInTheDocument();
+      });
+
+      fireEvent.click(screen.getByRole('button', { name: /deleteModal.deleteButton/i }));
+
+      await waitFor(() => {
+        expect(screen.getByText(serverError)).toBeInTheDocument();
+      });
+      expect(mockUseRouter().push).not.toHaveBeenCalled();
     });
 
     it('should show error message when delete section fails', async () => {
@@ -656,7 +696,7 @@ describe("SectionUpdatePage", () => {
           'deleteSection',
           expect.objectContaining({
             error: expect.anything(),
-            url: { path: '/en-US/template/123/section/123' },
+            url: { path: '/template/123/section/123' },
           })
         );
       });

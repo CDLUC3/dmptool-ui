@@ -1,5 +1,9 @@
 ## Added
 - Added `AUTH_ENDPOINT`, `NEXT_PUBLIC_AUTH_ENDPOINT`, `TOKEN_ISSUER`, `TOKEN_AUDIENCE`, `ACCESS_TOKEN_NAME`, `REFRESH_TOKEN`, and `SSO_PENDING_TOKEN_NAME` env variables and removed `JWT_SECRET`
+ - Added `sectionMoveConflicts.ts` and `questionMoveConflicts.ts` files, whose functions `findSectionMoveConflicts` and `findQuestionMoveConflicts` help determine whether a `question` or `section` display order can be updated. `TemplateEditPage` and `SectionEditContainer` pages were updated to use these functions [#986]
+ - Added `utils/displayLogicConflictError.ts`, which turns conflicts into an `ErrorMessageItem` with links, and updated `ErrorMessages` with an option to pass in a link heading and URLs [#986]
+- Added `ProjectListFilters` component to be used for filtering statuses and roles in Project dashboards [#379]
+- Added `AriaRouterProvider` wrapper for React Aria Components that contain `href` props to assure that links include the correct locale [#367]
 - Added `PlanCard` with template and uploaded variants on the project overview, plus styleguide demos [#93]
 - Added plan authoring uploaded-document view with document card, update/replace dialog, and styleguide demo [#93]
 - Added `TriggerQuestionsForQuestion` query [#360]
@@ -51,6 +55,11 @@
 - Replaced all hard-coded `dmspt` and `dmpsr` references with new ENV variables
 - Removed the old password reset mutation
 - Removed the old getSecret helper function
+- Updated `OrganizationProjectsListPage` and `ProjectsListPage` with filters for `roles` and `statuses`. Also updated `OrganizationProjectsListPage` to use `allProjects` query, and updated both `allProjects` and `myProjects` queries to use `filterOptions`[#379]
+- Updated `ProjectListItems` component to use `AccessLevels` for the `role` column in the cards [#379]
+- Updated `routes.ts` to not require `locale` to be passed in because it was defaulting to `en-US` and changing the language for a user that had a `languageId` of `pt-BR` [#367]
+- Updated all pages to use `useRouter` from `@/i18n/routing` so that it would retain the `locale` specified in the `path`. Also, updated `proxy.ts` so that it accurately applies `locale` to a path that does not contain one. [#367]
+- Updated `README.md` to include more info on localization [#367]
 - Updated `PlanCard` section progress to prefer required counts (`X of Y required`), falling back to all-question counts (`X of Y`) when none are required [#93]
 - Redesigned `ProjectListItem` and project list pages (`/projects`, `/admin/projects`, `/admin/users/[userId]/projects`) with expandable plan details, skeleton loading, and GraphQL-backed plan and collaborator data
 - Updated `DisplayLogicComponent.tsx` to show condition joiner within condition groups as well as between condition groups [#360]
@@ -156,6 +165,8 @@
 - Updated `RepoSelectorForAnswer` to wait to query `Re3byUrIsDocument` until we have `preferredReposURIs` because preferred repos don't display even though they eventually do to trigger the display of the "preferred repositories" checkbox [#118]
 
 ## Fixed
+- Updated `dompurify` to `v3.4.16`, `next` to `v16.3.8` and `brace-expansion` to `v5.0.12` to address high vulnerabilities [#451]
+- Fixed broken translation key for `link` in the `contactDescription` translation value, and also updated `buildspec.yaml to use the `$HELPDESK_EMAIL` during build, which will be available [#303]
 - Fix additional type errors in CommentsDrawer test that was still breaking build, and fixed some type errors in questionTypeHandlers [#380]
 - Fixed broken build due to `type` errors, and `Abort` errors in `/projects` pages so that they don't load with errors [#380]
 - Fixed bug where owner's affiliation was displayed in subheader of landing page, rather than funder of plan [#365]
@@ -176,6 +187,9 @@
 - Updated the `project` graphql query to include `email` and `created` field so we can display info for invited project collaborators who haven't accepted invite [#287]
 - Fixed `type` errors resulting from deprecated `errorPolicy` in unit tests [#252]
 - Fixed issue with Feedback Notification headers displaying for any collaborator on the Plan Overview, Section and Question pages. It should only display to Org Admins and Super Admins. Added shared isOrgAdmin hook for pages. [#249]
+
+## Removed
+- Removed the ununused `app/[locale]/users/[userId]/projects` page, since we no longer link to it since we updated the `app/[locale]/users/[userId]/manage` page to link to `projects` instead of `plans` [#379]
 
 ## Chore
 - Updated `versioning.yml` to just copy `package.json` and `CHANGELOG.md` back to `development` branch [#341]

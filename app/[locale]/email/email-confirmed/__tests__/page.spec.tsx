@@ -1,13 +1,12 @@
 import { fireEvent, render, screen } from '@testing-library/react';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/i18n/routing';
 import { axe, toHaveNoViolations } from 'jest-axe';
 import EmailConfirmed from '../page';
 
 expect.extend(toHaveNoViolations);
 
-// Mock the useRouter from next/navigation
-jest.mock('next/navigation', () => ({
-  useRouter: jest.fn(),
+jest.mock('@/i18n/routing', () => ({
+  useRouter: jest.fn(() => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn() })),
 }));
 
 describe('EmailConfirmed', () => {

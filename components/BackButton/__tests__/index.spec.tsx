@@ -2,11 +2,15 @@ import { render, screen, fireEvent, act } from '@testing-library/react';
 import { axe, toHaveNoViolations } from 'jest-axe';
 
 import BackButton from '../index';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/i18n/routing';
 expect.extend(toHaveNoViolations);
 
-jest.mock('next/navigation', () => ({
-  useRouter: jest.fn(),
+jest.mock('@/i18n/routing', () => ({
+  Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
+    <a href={href} {...props}>{children}</a>
+  ),
+  useRouter: jest.fn(() => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn() })),
+  usePathname: jest.fn(() => '/'),
 }));
 
 describe('BackButton', () => {

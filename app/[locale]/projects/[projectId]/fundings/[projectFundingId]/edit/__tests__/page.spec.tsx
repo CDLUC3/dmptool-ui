@@ -1,6 +1,7 @@
 import React from 'react';
 import { act, fireEvent, render, screen, within, waitFor } from '@testing-library/react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
+import { useRouter } from '@/i18n/routing';
 import { useQuery, useMutation } from '@apollo/client/react';
 import {
   ProjectFundingDocument,
@@ -24,7 +25,13 @@ jest.mock('../actions/index', () => ({
 
 jest.mock('next/navigation', () => ({
   useParams: jest.fn(),
-  useRouter: jest.fn()
+}));
+
+jest.mock('@/i18n/routing', () => ({
+  Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
+    <a href={href} {...props}>{children}</a>
+  ),
+  useRouter: jest.fn(() => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn() })),
 }));
 
 // Mock Apollo Client hooks
@@ -389,8 +396,8 @@ describe('ProjectsProjectFundingEdit', () => {
 
     const addAnotherBtn = screen.getByRole('button', { name: 'buttons.addAnother' });
     fireEvent.click(addAnotherBtn);
-    // Verify that router.push was called with "/en-US/projects/1/fundings/add"
-    expect(mockRouter.push).toHaveBeenCalledWith('/en-US/projects/1/fundings/add');
+    // Verify that router.push was called with "/projects/1/fundings/add"
+    expect(mockRouter.push).toHaveBeenCalledWith('/projects/1/fundings/add');
   });
 
   it('should call removeProjectFunding and redirect user when the \'Remove funder\' button is clicked', async () => {
@@ -423,7 +430,7 @@ describe('ProjectsProjectFundingEdit', () => {
         projectFundingId: expect.any(Number),
       });
       expect(mockToast.add).toHaveBeenCalledWith('messages.success.removedFunding', { type: 'success' });
-      expect(mockRouter.push).toHaveBeenCalledWith('/en-US/projects/1/fundings');
+      expect(mockRouter.push).toHaveBeenCalledWith('/projects/1/fundings');
     });
   });
 

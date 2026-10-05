@@ -2,7 +2,7 @@
 
 import React from 'react'
 import Image from 'next/image';
-import Link from 'next/link';
+import { Link } from '@/i18n/routing';
 import { Button } from 'react-aria-components';
 import styles from './buttonWithImage.module.scss';
 

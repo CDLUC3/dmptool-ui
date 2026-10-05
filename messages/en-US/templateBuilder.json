@@ -107,7 +107,8 @@
       "updateDisplayOrderError": "Error updating display order",
       "cannotMoveFurtherDown": "Cannot move section further down",
       "displayOrderAlreadyAtTop": "Section is already at top of order",
-      "cannotMoveFurtherUpOrDown": "Cannot move section further up or down"
+      "cannotMoveFurtherUpOrDown": "Cannot move section further up or down",
+      "displayLogicOrderConflict": "Remove the display logic condition(s) before moving this section. The section must appear before any questions it shows or hides."
     },
     "messages": {
       "successfullyArchived": "Successfully archived the template",
@@ -202,7 +203,8 @@
         "updateDisplayOrderError": "Error updating display order",
         "cannotMoveFurtherDown": "Cannot move question further down",
         "displayOrderAlreadyAtTop": "Question is already at top of order",
-        "cannotMoveFurtherUpOrDown": "Cannot move question further up or down"
+        "cannotMoveFurtherUpOrDown": "Cannot move question further up or down",
+        "displayLogicOrderConflict": "This question is used in display logic. Remove the display logic condition before moving this question. The question must appear before the question it shows or hides."
       },
       "questionMoved": "Question moved to position {displayOrder}",
       "sectionMoved": "Section moved to position {displayOrder}"
@@ -531,6 +533,7 @@
         "warnings": {
           "triggerQuestionUnavailable": "This trigger question is not available."
         },
+        "blockingTriggerQuestion": "This trigger question is blocking a change you tried to make. Remove this condition to continue.",
         "removedUnavailableTriggerQuestions": "Some display logic was removed because a question it depended on is no longer available.",
         "allMatchTypeRule": "When match type is All, each condition in a group must use a different option value.",
         "anyMatchTypeRule": "When match type is Any, each condition in a group must be unique (no duplicate operator + option pairs)."
@@ -882,5 +885,9 @@
         "noCollaborators": "No external people have been added yet"
       }
     }
+  },
+  "DisplayLogicConflictMessage": {
+    "questionsHeading": "Edit the display logic on:",
+    "untitledQuestion": "Question {id}"
   }
 }

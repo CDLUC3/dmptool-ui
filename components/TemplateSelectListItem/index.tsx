@@ -1,6 +1,6 @@
 import { type TransitionStartFunction } from "react";
 import { useTranslations } from "next-intl";
-import Link from "next/link";
+import { Link } from "@/i18n/routing";
 import classNames from "classnames";
 import { Button, Dialog, DialogTrigger, Popover } from "react-aria-components";
 import styles from "./TemplateSelectListItem.module.scss";

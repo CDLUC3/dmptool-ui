@@ -14,7 +14,8 @@ import {
 import { addMetaDataStandardsAction } from '@/app/actions';
 
 import { axe, toHaveNoViolations } from 'jest-axe';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
+import { useRouter } from '@/i18n/routing';
 import { useToast } from '@/context/ToastContext';
 import QuestionAdd from '@/components/QuestionAdd';
 import { AffiliationSearchQuestionType } from "@dmptool/types";
@@ -67,9 +68,15 @@ jest.mock('@apollo/client/react', () => ({
 }));
 
 jest.mock('next/navigation', () => ({
-  useParams: jest.fn(),
-  useRouter: jest.fn()
-}))
+  useParams: jest.fn(),}))
+
+jest.mock('@/i18n/routing', () => ({
+  Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
+    <a href={href} {...props}>{children}</a>
+  ),
+  useRouter: jest.fn(() => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn() })),
+  usePathname: jest.fn(() => '/'),
+}));
 
 jest.mock('@/context/ToastContext', () => ({
   useToast: jest.fn(() => ({
@@ -404,7 +411,7 @@ describe("QuestionAdd", () => {
 
     await waitFor(() => {
       expect(mockRouter.push).toHaveBeenCalledTimes(1);
-      expect(mockRouter.push).toHaveBeenCalledWith('/en-US/template/123/q/new?section_id=1&step=1');
+      expect(mockRouter.push).toHaveBeenCalledWith('/template/123/q/new?section_id=1&step=1');
     });
   });
 
@@ -2279,6 +2286,6 @@ describe("Error handling", () => {
     });
 
     expect(mockToast.add).toHaveBeenCalledWith('messaging.somethingWentWrong', { type: 'error' });
-    expect(mockRouter.push).toHaveBeenCalledWith('/en-US/template/123');
+    expect(mockRouter.push).toHaveBeenCalledWith('/template/123');
   })
 });

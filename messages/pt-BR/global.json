@@ -1189,7 +1189,7 @@
   },
   "Contact": {
     "title": "Contate-nos",
-    "contactDescription": "A Ferramenta DMP é fornecida pelo Centro de Curação da Universidade da Califórnia (UC3). Você pode saber mais sobre nós no nosso <link />site.",
+    "contactDescription": "A Ferramenta DMP é fornecida pelo Centro de Curação da Universidade da Califórnia (UC3). Você pode saber mais sobre nós no nosso <link>site da UC3</link>.",
     "contactDescriptionLoggedIn": "Se você gostaria de nos contatar sobre a Ferramenta DMP, por favor preencha o formulário abaixo.",
     "contactDescriptionLoggedOut": "Se você gostaria de saber mais sobre a Ferramenta DMP, gostaria de se tornar uma organização participante, ou está tendo dificuldade para acessar sua conta, por favor, envie um e-mail para o nosso helpdesk: dmptool [at] ucop [dot] edu.",
     "form": {
@@ -1211,21 +1211,6 @@
         "invalidSubject": "A senha deve ter pelo menos 2 caracteres",
         "invalidMessage": "O nome deve ter no m&iacute;nimo 2 caracteres",
         "formSubmittalFailed": "Falha ao enviar o formulário. Tente novamente mais tarde."
-      }
-    }
-  },
-  "OrganizationUserProjects": {
-    "title": "Projetos e planos do usuário",
-    "intro": "Os planos deste usuário estão agrupados em projetos de pesquisa. Use a Pesquisa para encontrar planos em seus projetos.",
-    "projectsList": "Projetos do usuário",
-    "messages": {
-      "info": {
-        "noProjectsHeading": "Este usuário ainda não tem projetos",
-        "noProjectsDescription": "Quando este usuário criar planos de gerenciamento de dados, eles serão listados aqui, agrupados em projetos."
-      },
-      "errors": {
-        "errorRetrievingProjects": "Algo deu errado ao recuperar projetos. Por favor, tente novamente mais tarde.",
-        "failedToLoadMore": "Falha ao carregar mais projetos"
       }
     }
   }

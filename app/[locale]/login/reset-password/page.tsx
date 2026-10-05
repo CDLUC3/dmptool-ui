@@ -1,7 +1,8 @@
 'use client'
 
 import React, { useEffect, useRef, useState } from "react";
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
+import { useRouter } from '@/i18n/routing';
 import logECS from '@/utils/clientLogger';
 import { useTranslations } from "next-intl";
 import {

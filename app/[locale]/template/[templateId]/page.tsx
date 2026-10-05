@@ -2,7 +2,8 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
+import { useRouter } from "@/i18n/routing";
 import {
   Breadcrumb,
   Breadcrumbs,
@@ -33,6 +34,9 @@ import {
 } from "@/generated/graphql";
 import Loading from "@/components/Loading";
 import { updateTemplateAction, updateSectionDisplayOrderAction } from "./actions";
+import { findSectionMoveConflicts } from "./sectionMoveConflicts";
+import { DisplayLogicOrderConflict } from "@/app/types/displayLogic";
+import { buildDisplayLogicConflictError } from "@/utils/displayLogicConflictError";
 
 // Components
 import {
@@ -42,7 +46,7 @@ import {
 } from "@/components/Container";
 import PageHeaderWithTitleChange from "@/components/PageHeaderWithTitleChange";
 import AddSectionButton from "@/components/AddSectionButton";
-import ErrorMessages from "@/components/ErrorMessages";
+import ErrorMessages, { ErrorMessage } from "@/components/ErrorMessages";
 import SectionEditContainer from "@/components/SectionEditContainer";
 import { TransitionButton, TransitionLink } from "@/components/Form";
 
@@ -72,7 +76,7 @@ const TemplateEditPage: React.FC = () => {
 
   const [isPublishModalOpen, setPublishModalOpen] = useState(false);
   const toastState = useToast();
-  const [errorMessages, setErrorMessages] = useState<string[]>([]);
+  const [errorMessages, setErrorMessages] = useState<ErrorMessage[]>([]);
   const [templateInfo, setTemplateInfoState] = useState<TemplateInfoInterface>({
     templateId: null,
     name: "",
@@ -93,6 +97,7 @@ const TemplateEditPage: React.FC = () => {
   // localization keys
   const BreadCrumbs = useTranslations("Breadcrumbs");
   const EditTemplate = useTranslations("EditTemplates");
+  const DisplayLogicConflict = useTranslations("DisplayLogicConflictMessage");
   const PublishTemplate = useTranslations("PublishTemplate");
   const Messaging = useTranslations("Messaging");
   const Global = useTranslations("Global");
@@ -127,6 +132,7 @@ const TemplateEditPage: React.FC = () => {
     refetch,
   } = useQuery(TemplateDocument, {
     variables: { templateId: Number(templateId) },
+    fetchPolicy: "network-only", // Always fetch fresh data for this page
   });
 
   const sortSections = (sections: Section[]) => {
@@ -389,7 +395,10 @@ const TemplateEditPage: React.FC = () => {
     });
   };
 
-  const validateSectionMove = (sectionId: number, newDisplayOrder: number): { isValid: boolean; message?: string } => {
+  const validateSectionMove = (
+    sectionId: number,
+    newDisplayOrder: number
+  ): { isValid: boolean; message?: string; conflicts?: DisplayLogicOrderConflict[] } => {
     const currentSection = localSections.find((s) => s.id === sectionId);
 
     // If current section doesn't exist in localSections
@@ -417,7 +426,26 @@ const TemplateEditPage: React.FC = () => {
       return { isValid: false, message: errorMsg };
     }
 
+    // If the move would put a question above a trigger question its display logic depends on
+    const conflicts = findSectionMoveConflicts(localSections, sectionId, newDisplayOrder);
+    if (conflicts.length > 0) {
+      return { isValid: false, conflicts };
+    }
+
     return { isValid: true };
+  };
+
+  // Build the error for a section move that would break display logic, with links to each question whose display
+  // logic is blocking it
+  const toDisplayLogicConflictError = (conflicts: DisplayLogicOrderConflict[], sections: Section[]): ErrorMessage => {
+    return buildDisplayLogicConflictError({
+      conflicts,
+      questions: sections.flatMap((section) => section.questions ?? []),
+      templateId,
+      message: EditTemplate("errors.displayLogicOrderConflict"),
+      linksHeading: DisplayLogicConflict("questionsHeading"),
+      untitledQuestion: (id) => DisplayLogicConflict("untitledQuestion", { id }),
+    });
   };
 
   const handleSectionMove = async (sectionId: number, newDisplayOrder: number) => {
@@ -426,30 +454,46 @@ const TemplateEditPage: React.FC = () => {
     // Remove all current errors
     setErrorMessages([]);
 
-    const { isValid, message } = validateSectionMove(sectionId, newDisplayOrder);
+    const { isValid, message, conflicts } = validateSectionMove(sectionId, newDisplayOrder);
+    if (conflicts) {
+      // Show the questions whose display logic is blocking the move, with links to edit them
+      setErrorMessages([toDisplayLogicConflictError(conflicts, localSections)]);
+      return;
+    }
     if (!isValid && message) {
       // Deliver toast error messages
       toastState.add(message, { type: "error" });
       return;
     }
 
-    // First, optimistically update the UI immediately for smoother reshuffling
-    updateLocalSectionOrder(sectionId, newDisplayOrder);
+    // Wait for the server to accept the move before reordering the sections, so that a move the server
+    // rejects (e.g. because it would break display logic) never appears to happen
     setIsReordering(true);
 
     const result = await updateSectionDisplayOrder(sectionId, newDisplayOrder);
+    const moveFailed = !result.success || !!result.data?.errors?.general;
 
     if (!result.success) {
-      // Revert optimistic update on failure
       await refetch();
       const errors = result.errors;
       if (Array.isArray(errors)) {
         setErrorMessages((prev) => [...prev, ...errors]);
       }
     } else if (result.data?.errors?.general) {
-      // Revert on server errors
-      await refetch();
-      setErrorMessages((prev) => [...prev, result.data?.errors?.general || ""]);
+      // The server can reject a move that the check above allowed, e.g. when display logic was added after the
+      // page loaded. Check the latest display logic so the same message is shown as for the check above
+      const refetched = await refetch();
+      const latestSections = (refetched?.data?.template?.sections ?? [])
+        .filter((section): section is Section => section !== null);
+
+      const latestConflicts = findSectionMoveConflicts(latestSections, sectionId, newDisplayOrder);
+      if (latestConflicts.length > 0) {
+        setErrorMessages([toDisplayLogicConflictError(latestConflicts, latestSections)]);
+      } else {
+        setErrorMessages((prev) => [...prev, result.data?.errors?.general || ""]);
+      }
+    } else {
+      updateLocalSectionOrder(sectionId, newDisplayOrder);
     }
     // After successful update
 
@@ -465,9 +509,9 @@ const TemplateEditPage: React.FC = () => {
         inline: "nearest",
       });
     }
-    // Set accessible announcement
-    const accessibleMessage = EditTemplate("messages.sectionMoved", { displayOrder: newDisplayOrder });
-    setAnnouncement(accessibleMessage);
+    // Only announce the move if it succeeded. Failures are announced by ErrorMessages (role="alert"), so clear the
+    // announcement to avoid a stale or conflicting message
+    setAnnouncement(moveFailed ? "" : EditTemplate("messages.sectionMoved", { displayOrder: newDisplayOrder }));
     setIsReordering(false);
   };
 

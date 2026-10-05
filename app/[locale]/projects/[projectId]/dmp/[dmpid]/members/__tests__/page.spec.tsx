@@ -25,6 +25,14 @@ jest.mock('../actions/addPlanMemberAction', () => ({
   addPlanMemberAction: jest.fn()
 }));
 
+
+jest.mock('@/i18n/routing', () => ({
+  Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
+    <a href={href} {...props}>{children}</a>
+  ),
+  useRouter: jest.fn(() => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn() })),
+}));
+
 // Mock Apollo Client hooks
 jest.mock('@apollo/client/react', () => ({
   useQuery: jest.fn(),
@@ -33,7 +41,6 @@ jest.mock('@apollo/client/react', () => ({
 
 
 jest.mock('next/navigation', () => ({
-  useRouter: jest.fn(),
   useParams: jest.fn()
 }));
 
@@ -306,7 +313,7 @@ describe('ProjectsProjectPlanAdjustMembers', () => {
         'removePlanMember',
         expect.objectContaining({
           error: expect.anything(),
-          url: { path: '/en-US/projects/1/dmp/1/members' },
+          url: { path: '/projects/1/dmp/1/members' },
         })
       );
     });

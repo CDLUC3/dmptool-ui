@@ -1,7 +1,8 @@
 import React from 'react';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
+import { useRouter } from '@/i18n/routing';
 import { useTranslations } from 'next-intl';
 import { useToast } from '@/context/ToastContext';
 import logECS from '@/utils/clientLogger';
@@ -13,9 +14,9 @@ import { axe, toHaveNoViolations } from 'jest-axe';
 expect.extend(toHaveNoViolations);
 
 jest.mock('next/navigation', () => ({
-  useRouter: jest.fn(),
   useSearchParams: jest.fn(),
 }));
+
 
 jest.mock('next-intl', () => ({
   useTranslations: jest.fn(),
@@ -40,6 +41,11 @@ const mockPush = jest.fn();
 const mockToastAdd = jest.fn();
 const passwordResetUrl = `${process.env.NEXT_PUBLIC_AUTH_ENDPOINT}/password-reset`;
 const passwordResetVerifyUrl = `${passwordResetUrl}/verify`;
+
+jest.mock('@/i18n/routing', () => ({
+  useRouter: jest.fn(() => ({ push: mockPush, replace: jest.fn(), back: jest.fn() })),
+}));
+
 const VALID_PASSWORD = 'ValidPass123!';
 
 function setupDefaultMocks(token: string | null = 'valid-token') {
