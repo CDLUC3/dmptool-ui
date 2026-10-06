@@ -44,9 +44,9 @@ export const refreshAuthTokens = async (cookies?: string) => {
   // Use AUTH_ENDPOINT for server-side (middleware), NEXT_PUBLIC_AUTH_ENDPOINT for client-side
   const endpoint = cookies ? process.env.AUTH_ENDPOINT : process.env.NEXT_PUBLIC_AUTH_ENDPOINT;
   try {
+
     // Get CSRF token first using GET request (doesn't require CSRF validation)
     const csrfFetchResponse = await fetchCsrfToken(cookies, endpoint);
-
     if (!csrfFetchResponse || !csrfFetchResponse.ok) {
       throw new AuthError({
         status: csrfFetchResponse?.status || 500,

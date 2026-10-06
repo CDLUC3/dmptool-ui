@@ -142,7 +142,7 @@ const ResetPassword: React.FC = () => {
         const response = await resetRequest();
 
         if (response.ok) {
-          toastState.add(t("successMessage"), { type: "success", timeout: 3000 });
+          toastState.add(t("passwordUpdatedTitle"), { type: "success", timeout: 3000 });
           setSubmitted(true);
         } else {
           await handleErrors(response, resetRequest, setErrors, router, routePath("login.resetPassword"));

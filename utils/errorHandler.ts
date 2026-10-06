@@ -65,6 +65,7 @@ export const handleErrors = async (
             if (csrfToken) {
               // Retry request
               const newResponse = await retryRequest(csrfToken);
+
               if (newResponse.ok) {
                 router.push("/");
               } else {

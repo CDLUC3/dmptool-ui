@@ -129,10 +129,7 @@ describe('ResetPassword', () => {
         }),
       }
     ));
-    expect(mockToastAdd).toHaveBeenCalledWith('successMessage', {
-      type: 'success',
-      timeout: 3000,
-    });
+    expect(mockToastAdd).toHaveBeenCalledWith("passwordUpdatedTitle", { timeout: 3000, type: "success" });
   });
 
   it('shows a field error and does not submit an invalid password', async () => {

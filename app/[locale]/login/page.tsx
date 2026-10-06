@@ -3,7 +3,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useRouter } from '@/i18n/routing';
 import logECS from '@/utils/clientLogger';
-import { useCsrf } from '@/context/CsrfContext';
+import { useCsrf } from "@/context/CsrfContext";
 import { handleErrors } from '@/utils/errorHandler';
 import { useAuthContext } from '@/context/AuthContext';
 import { useTranslations } from "next-intl";
