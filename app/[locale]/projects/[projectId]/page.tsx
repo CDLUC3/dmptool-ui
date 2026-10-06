@@ -88,6 +88,7 @@ const ProjectOverviewPage: React.FC = () => {
   const { data, loading, error } = useQuery(ProjectDocument, {
     variables: { projectId: Number(projectId) },
     notifyOnNetworkStatusChange: true,
+    fetchPolicy: "cache-and-network", // Use cache first, then network
   });
 
   // Run me query to get user's info to determine if they are a collaborator with edit access
