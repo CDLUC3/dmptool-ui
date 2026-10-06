@@ -48,6 +48,7 @@
 - Added `UpdateAffiliation` and `AffiliationById` queries [#203]
 
 ## Updated
+- Updated the `PublishedQuestion` query to accept an optional `planId` so the plan's question customizations are returned 
 - Updated `OrganizationProjectsListPage` and `ProjectsListPage` with filters for `roles` and `statuses`. Also updated `OrganizationProjectsListPage` to use `allProjects` query, and updated both `allProjects` and `myProjects` queries to use `filterOptions`[#379]
 - Updated `ProjectListItems` component to use `AccessLevels` for the `role` column in the cards [#379]
 - Updated `routes.ts` to not require `locale` to be passed in because it was defaulting to `en-US` and changing the language for a user that had a `languageId` of `pt-BR` [#367]
@@ -158,6 +159,7 @@
 - Updated `RepoSelectorForAnswer` to wait to query `Re3byUrIsDocument` until we have `preferredReposURIs` because preferred repos don't display even though they eventually do to trigger the display of the "preferred repositories" checkbox [#118]
 
 ## Fixed
+- Fixed bug in `PlanOverviewQuestionPageShared` where default option selections (radio buttons, select box, checkboxes, multi-select) were displayed as selected but saved as an empty answer. Defaults are now prefilled into the form data when there is no saved answer.[#388]
 - Updated `dompurify` to `v3.4.16`, `next` to `v16.3.8` and `brace-expansion` to `v5.0.12` to address high vulnerabilities [#451]
 - Fixed broken translation key for `link` in the `contactDescription` translation value, and also updated `buildspec.yaml to use the `$HELPDESK_EMAIL` during build, which will be available [#303]
 - Fix additional type errors in CommentsDrawer test that was still breaking build, and fixed some type errors in questionTypeHandlers [#380]
