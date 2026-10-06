@@ -165,6 +165,7 @@
 - Updated `RepoSelectorForAnswer` to wait to query `Re3byUrIsDocument` until we have `preferredReposURIs` because preferred repos don't display even though they eventually do to trigger the display of the "preferred repositories" checkbox [#118]
 
 ## Fixed
+- Fixed `@graphql-tools/utils` and `sharp` vulnerabilities by updating their versions in `overrides` [#460]
 - Updated `dompurify` to `v3.4.16`, `next` to `v16.3.8` and `brace-expansion` to `v5.0.12` to address high vulnerabilities [#451]
 - Fixed broken translation key for `link` in the `contactDescription` translation value, and also updated `buildspec.yaml to use the `$HELPDESK_EMAIL` during build, which will be available [#303]
 - Fix additional type errors in CommentsDrawer test that was still breaking build, and fixed some type errors in questionTypeHandlers [#380]
