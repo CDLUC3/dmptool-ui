@@ -10,7 +10,6 @@ interface CsrfContextProps {
 
 const CsrfContext = createContext<CsrfContextProps | undefined>(undefined);
 
-
 export function CsrfProvider({ children }: {
   children: React.ReactNode;
 }) {
@@ -21,7 +20,6 @@ export function CsrfProvider({ children }: {
       const response = await fetchCsrfToken();
       if (response) {
         const csrfToken = response.headers.get('X-CSRF-TOKEN');
-
         if (csrfToken) {
           setCsrfToken(csrfToken);
           return csrfToken;
@@ -35,7 +33,7 @@ export function CsrfProvider({ children }: {
         return null
       }
     } catch (err) {
-      logECS('error', `Error getting csrf token from backend: ${err}`, {
+      logECS('error', `Error getting csrf token from auth service: ${err}`, {
         source: 'CsrfProvider'
       });
       setCsrfToken(null);

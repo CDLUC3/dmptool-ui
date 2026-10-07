@@ -6,7 +6,7 @@ import createMiddleware from 'next-intl/middleware';
 import { routing } from './i18n/routing';
 import { verifyJwtToken } from './lib/server/auth';
 import logECS from '@/utils/clientLogger';
-import { refreshAuthTokens } from "@/utils/authHelper";
+import { ACCESS_TOKEN_NAME, REFRESH_TOKEN_NAME, refreshAuthTokens, SSO_PENDING_TOKEN_NAME } from "@/utils/authHelper";
 import { locales, defaultLocale } from './config/i18nConfig';
 
 interface JWTAccessToken extends JwtPayload {
@@ -90,7 +90,6 @@ export async function proxy(request: NextRequest) {
   /* TODO: might want to add a 'redirect' query param to url to redirect user after
    login to the original page they were trying to get to.*/
 
-
   // Exclude paths from authentication checks
   const isExcludedPath = excludedPaths.some((path) => pathname.includes(path));
 
@@ -103,9 +102,21 @@ export async function proxy(request: NextRequest) {
     .map(({ name, value }) => `${name}=${value}`)
     .join("; ");
 
-  const accessToken = request.cookies.get('dmspt');
-  const refreshToken = request.cookies.get('dmspr');
+  const accessToken = request.cookies.get(ACCESS_TOKEN_NAME);
+  const refreshToken = request.cookies.get(REFRESH_TOKEN_NAME);
+  // TODO: We need to implement SSO soon, so leaving this here for now. The SSO_PENDING_TOKEN_NAME is used to store a
+  //       temporary token in the browser when a user successfully signs in via SSO but they do not yet have an account
+  //       in the DMPTool. This token is used to help create a new account for the user after they fill out the account
+  //       creation form. Once the account is created, the SSO_PENDING_TOKEN_NAME is deleted from the browser.
+  // eslint-disable-next-line unused-imports/no-unused-vars, @typescript-eslint/no-unused-vars
+  const ssoPendingToken = request.cookies.get(SSO_PENDING_TOKEN_NAME);
+
   const jwtResult = await getLocaleFromJWT(accessToken?.value);
+
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set("x-is-authenticated", jwtResult.user ? "true" : "false");
+
+  const response = NextResponse.next({ request: { headers: requestHeaders } });
 
   // Locale already in the URL (e.g. /pt-BR/projects), if any
   const firstSegment = pathname.split('/')[1];
@@ -132,8 +143,8 @@ export async function proxy(request: NextRequest) {
 
           // Copy Set-Cookie headers from backend response to NextResponse
           backendResponse.headers.forEach((value, key) => {
-            if (key.toLowerCase() === 'set-cookie') {
-              newResponse.headers.append('set-cookie', value);
+            if (key.toLowerCase() === "set-cookie") {
+              newResponse.headers.append("set-cookie", value);
             }
           });
 
@@ -144,22 +155,21 @@ export async function proxy(request: NextRequest) {
         if (refreshResult?.shouldRedirect) {
           const redirectResponse = NextResponse.redirect(new URL(`/${locale}/login`, request.url));
           // Clear the expired refresh token so subsequent requests don't keep trying to refresh
-          redirectResponse.cookies.set('dmspr', '', { maxAge: 0 });
+          redirectResponse.cookies.set(REFRESH_TOKEN_NAME, "", { maxAge: 0 });
           return redirectResponse;
         }
       } catch (error) {
-        logECS('error', 'refreshing', {
+        logECS("error", "refreshing", {
           error,
-          url: { path: 'middleware' }
+          url: { path: "middleware" },
         });
         const redirectResponse = NextResponse.redirect(new URL(`/${locale}/login`, request.url));
         // Clear the expired refresh token so subsequent requests don't keep trying to refresh
-        redirectResponse.cookies.set('dmspr', '', { maxAge: 0 });
+        redirectResponse.cookies.set(REFRESH_TOKEN_NAME, "", { maxAge: 0 });
         return redirectResponse;
       }
     }
   }
-
 
   if (!urlLocale) {
     const newUrl = new URL(`/${locale}${pathname === '/' ? '' : pathname}`, request.url);
@@ -167,6 +177,17 @@ export async function proxy(request: NextRequest) {
       newUrl.search = request.nextUrl.search;
     }
     return NextResponse.redirect(newUrl);
+  }
+
+  const i18nResponse = handleI18nRouting(request);
+  if (i18nResponse) {
+    i18nResponse.headers.set("x-is-authenticated", jwtResult.user ? "true" : "false");
+    return i18nResponse;
+  }
+
+  // Add url info to custom header. Need this for just the /dmps landing page
+  if (request.nextUrl.pathname.startsWith("/en-US/dmps")) {
+    response.headers.set("x-url", request.nextUrl.href);
   }
 
   return handleI18nRouting(request);

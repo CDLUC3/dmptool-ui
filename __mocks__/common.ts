@@ -1,4 +1,3 @@
-
 // Create a mock for scrollIntoView and focus
 export const mockScrollIntoView = jest.fn();
 

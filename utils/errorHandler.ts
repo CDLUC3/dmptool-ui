@@ -65,6 +65,7 @@ export const handleErrors = async (
             if (csrfToken) {
               // Retry request
               const newResponse = await retryRequest(csrfToken);
+
               if (newResponse.ok) {
                 router.push("/");
               } else {
@@ -83,7 +84,7 @@ export const handleErrors = async (
 
     case 500:
       logECS('error', 'Internal server error', {
-        url: { path: '/apollo-signin' }
+        url: { path: '/sign-in' }
       });
       router.push('/500-error');
       break;
