@@ -70,6 +70,7 @@ const ProjectsListPage: React.FC = () => {
     notifyOnNetworkStatusChange: true,
     fetchPolicy: 'no-cache',
   });
+
   const [searchResults, setSearchResults] = useState<ProjectItemProps[]>([]);
   const [isSearchFetch, setIsSearchFetch] = useState(false);
   const [firstNewIndex, setFirstNewIndex] = useState<number | null>(null);
@@ -342,7 +343,7 @@ const ProjectsListPage: React.FC = () => {
         ? project.collaborators.length
         : null,
       plans,
-      // relatedWorksCount omitted until the list API exposes it
+      relatedWorksCount: project.relatedWorksCount ?? null,
     };
   };
 
