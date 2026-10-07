@@ -31,6 +31,7 @@ query MyProjects($term: String, $paginationOptions: PaginationOptions, $filterOp
         modified
         # TODO(api): add myAccessLevel (or currentUserRole) on PlanSearchResult so the dashboard can show "Your role" without guessing from Me + collaborator names.
       }
+      relatedWorksCount
       errors {
         general
         title
@@ -71,6 +72,7 @@ query AllProjects($term: String, $paginationOptions: PaginationOptions, $filterO
         status
         modified
       }
+      relatedWorksCount
       errors {
         general
         title
