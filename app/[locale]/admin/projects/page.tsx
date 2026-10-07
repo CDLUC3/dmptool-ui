@@ -338,7 +338,7 @@ const OrganizationProjectsListPage: React.FC = () => {
         ? project.collaborators.length
         : null,
       plans,
-      // relatedWorksCount omitted until the list API exposes it
+      relatedWorksCount: project.relatedWorksCount ?? null,
     };
   };
 

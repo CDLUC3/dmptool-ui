@@ -55,6 +55,7 @@
 - Replaced all hard-coded `dmspt` and `dmpsr` references with new ENV variables
 - Removed the old password reset mutation
 - Removed the old getSecret helper function
+- Updated `myProjects` and `allProjects` queries to include `relatedWorksCount` and updated the `ProjectsListPage` and `OrganizationProjectsListPage` to use `relatedWorksCount` [#378]
 - Updated `OrganizationProjectsListPage` and `ProjectsListPage` with filters for `roles` and `statuses`. Also updated `OrganizationProjectsListPage` to use `allProjects` query, and updated both `allProjects` and `myProjects` queries to use `filterOptions`[#379]
 - Updated `ProjectListItems` component to use `AccessLevels` for the `role` column in the cards [#379]
 - Updated `routes.ts` to not require `locale` to be passed in because it was defaulting to `en-US` and changing the language for a user that had a `languageId` of `pt-BR` [#367]
