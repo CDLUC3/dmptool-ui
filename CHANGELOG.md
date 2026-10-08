@@ -1,4 +1,5 @@
 ## Added
+- Added `NEXT_PUBLIC_AUTH_SERVICE_URL` env variable to Dockerfile.prod and the buildspec.yaml
 - Added `AUTH_ENDPOINT`, `NEXT_PUBLIC_AUTH_ENDPOINT`, `TOKEN_ISSUER`, `TOKEN_AUDIENCE`, `ACCESS_TOKEN_NAME`, `REFRESH_TOKEN`, and `SSO_PENDING_TOKEN_NAME` env variables and removed `JWT_SECRET`
  - Added `sectionMoveConflicts.ts` and `questionMoveConflicts.ts` files, whose functions `findSectionMoveConflicts` and `findQuestionMoveConflicts` help determine whether a `question` or `section` display order can be updated. `TemplateEditPage` and `SectionEditContainer` pages were updated to use these functions [#986]
  - Added `utils/displayLogicConflictError.ts`, which turns conflicts into an `ErrorMessageItem` with links, and updated `ErrorMessages` with an option to pass in a link heading and URLs [#986]

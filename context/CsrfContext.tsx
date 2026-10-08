@@ -20,8 +20,6 @@ export function CsrfProvider({ children }: {
       const response = await fetchCsrfToken();
       if (response) {
         const csrfToken = response.headers.get('X-CSRF-TOKEN');
-        logECS('info', 'CsrfContext: Fetched new CSRF token', { csrfToken });
-
         if (csrfToken) {
           setCsrfToken(csrfToken);
           return csrfToken;

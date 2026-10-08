@@ -134,12 +134,6 @@ export const fetchCsrfToken = async (cookies?: string, endpoint?: string) => {
       fetchOptions.credentials = 'include';
     }
 
-    logECS('info', `authHelper: Fetching CSRF token from ${serverUrl}/csrf`, {
-      cookies,
-      server: process.env.AUTH_ENDPOINT,
-      client: process.env.NEXT_PUBLIC_AUTH_ENDPOINT,
-    })
-
     const response = await fetch(`${serverUrl}/csrf`, fetchOptions);
     if (!response.ok) {
       const errorText = await response.text().catch(() => 'Could not read error body');
