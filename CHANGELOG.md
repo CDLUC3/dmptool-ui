@@ -50,6 +50,7 @@
 - Added `UpdateAffiliation` and `AffiliationById` queries [#203]
 
 ## Updated
+- Updated the `PublishedQuestion` query to accept an optional `planId` so the plan's question customizations are returned [#388]
 - Updated the Forgot Password page to call the new Auth service's password reset endpoint
 - Updated the Reset Password page to immediately verify the password reset token with the Auth service and then post the changed password to the Auth Service's reset password endpoint
 - Replaced all references of `apollo-signin` to `sign-in`, `apollo-signup` to `sign-up` and `apollo-signout` to `sign-out`
@@ -167,6 +168,7 @@
 - Updated `RepoSelectorForAnswer` to wait to query `Re3byUrIsDocument` until we have `preferredReposURIs` because preferred repos don't display even though they eventually do to trigger the display of the "preferred repositories" checkbox [#118]
 
 ## Fixed
+- Fixed bug in `PlanOverviewQuestionPageShared` where default option selections (radio buttons, select box, checkboxes, multi-select) were displayed as selected but saved as an empty answer. Defaults are now prefilled into the form data when there is no saved answer.[#388]
 - Fixed `@graphql-tools/utils` and `sharp` vulnerabilities by updating their versions in `overrides` [#460]
 - Updated `dompurify` to `v3.4.16`, `next` to `v16.3.8` and `brace-expansion` to `v5.0.12` to address high vulnerabilities [#451]
 - Fixed broken translation key for `link` in the `contactDescription` translation value, and also updated `buildspec.yaml to use the `$HELPDESK_EMAIL` during build, which will be available [#303]
