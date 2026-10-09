@@ -21,7 +21,7 @@ interface JWTAccessToken extends JwtPayload {
 }
 
 // TODO: These routes will need to be updated.
-const excludedPaths = ['/email', '/favicon.ico', '/_next', '/api', '/login', '/signup', '/styleguide', '/contact', '/dmps'];
+const excludedPaths = ['/email', '/favicon.ico', '/_next', '/api', '/login', '/signup', '/styleguide', '/contact', '/dmps', 'healthcheck'];
 
 // Check if the request is for a server action
 function isServerAction(request: NextRequest): boolean {
