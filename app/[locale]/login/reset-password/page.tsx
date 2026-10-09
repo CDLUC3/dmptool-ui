@@ -10,13 +10,6 @@ import {
   Form,
 } from "react-aria-components";
 
-// GraphQL
-import { useQuery, useMutation } from "@apollo/client/react";
-import {
-  ResetPasswordDocument,
-  ValidatePasswordResetTokenDocument,
-} from "@/generated/graphql";
-
 // Components
 import {
   ContentContainer,
@@ -29,7 +22,7 @@ import Loading from "@/components/Loading";
 
 // Utils and other
 import { useToast } from "@/context/ToastContext";
-import { routePath, isValidPassword } from "@/utils/index";
+import { routePath, isValidPassword, handleErrors } from "@/utils/index";
 
 type fieldErrorsMap = {
   password: string;
@@ -54,6 +47,8 @@ const ResetPassword: React.FC = () => {
   const Global = useTranslations('Global');
 
   //States
+  const [validatedToken, setValidatedToken] = useState<boolean>(false);
+  const [validatingToken, setValidatingToken] = useState<boolean>(true);
   const [password, setPassword] = useState<string>("");
   const [confirmPassword, setConfirmPassword] = useState<string>("");
   const [errors, setErrors] = useState<string[]>([]);
@@ -63,16 +58,6 @@ const ResetPassword: React.FC = () => {
   const [fieldErrors, setFieldErrors] = useState<fieldErrorsMap>({
     password: "",
     confirmPassword: "",
-  });
-
-  //initialize the mutation hook for resetting password
-  const [resetPasswordMutation, { loading: resetPasswordLoading }] = useMutation(ResetPasswordDocument);
-
-  const { data: validatePasswordResetTokenData, loading: validatePasswordResetTokenLoading, error: validatePasswordResetTokenError } = useQuery(ValidatePasswordResetTokenDocument, {
-    variables: {
-      token: resetToken
-    },
-    skip: !resetToken, // Skip the query if resetToken is empty
   });
 
   function isValid(): boolean {
@@ -97,28 +82,77 @@ const ResetPassword: React.FC = () => {
     return !hasErrors;
   }
 
-  async function handleResetPassword(ev: React.FormEvent<HTMLFormElement>) {
-    ev.preventDefault();
-    setErrors([]);  // Clear previous errors
-
-    if (!isValid()) {
-      return; // don't fire the mutation
-    }
-    setIsSubmitting(true);
+  // Function to handle token verification
+  async function handleTokenVerification(): Promise<void> {
+    const verificationRequest = async () => {
+      return await fetch(`${process.env.NEXT_PUBLIC_AUTH_ENDPOINT}/password-reset/verify`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ token: resetToken }),
+      });
+    };
 
     try {
-      await resetPasswordMutation({
-        variables: {
-          token: resetToken,
-          newPassword: password
+      if (resetToken) {
+        const response = await verificationRequest();
+
+        if (response.ok) {
+          setValidatedToken(true);
+        } else {
+          await handleErrors(response, verificationRequest, setErrors, router, routePath("login.resetPassword"));
         }
+      }
+    } catch (error) {
+      logECS("error", "resetPassword", {
+        error,
+        url: { path: routePath("login.forgotPassword") },
       });
-      setSubmitted(true);
+    } finally {
+      setValidatingToken(false);
+      setIsSubmitting(false);
+    }
+  }
+
+  // Function to handle password reset
+  async function handleResetPassword(ev: React.FormEvent<HTMLFormElement>) {
+    ev.preventDefault();
+    setErrors([]);
+    setIsSubmitting(true);
+
+    const resetRequest = async () => {
+      return await fetch(`${process.env.NEXT_PUBLIC_AUTH_ENDPOINT}/password-reset`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          token: resetToken,
+          password,
+          passwordConfirmation: confirmPassword,
+        }),
+      });
+    };
+
+    try {
+      if (isValid()) {
+        const response = await resetRequest();
+
+        if (response.ok) {
+          toastState.add(t("passwordUpdatedTitle"), { type: "success", timeout: 3000 });
+          setSubmitted(true);
+        } else {
+          await handleErrors(response, resetRequest, setErrors, router, routePath("login.resetPassword"));
+        }
+      }
     } catch (error) {
       setErrors([Global('messaging.somethingWentWrong')]);
-      logECS('error', 'resetPassword', {
+      logECS("error", "resetPassword", {
         error,
-        url: { path: routePath('login.resetPassword') }
+        url: { path: routePath("login.resetPassword") },
       });
     } finally {
       setIsSubmitting(false);
@@ -129,18 +163,26 @@ const ResetPassword: React.FC = () => {
     router.push(routePath('app.login'));
   }
 
-  // If the validation fails, redirect to login page with an error message
+  // Verify the token when the component mounts
   useEffect(() => {
-    if (validatePasswordResetTokenLoading) return; // wait for it to resolve
-
-    if (validatePasswordResetTokenError || !validatePasswordResetTokenData?.validatePasswordResetToken) {
-      toastState.add(Global('messaging.somethingWentWrong'), { type: "error", timeout: 3000 });
-      router.push(routePath('app.login'));
+    if (resetToken) {
+      handleTokenVerification();
     }
-  }, [validatePasswordResetTokenLoading, validatePasswordResetTokenData, validatePasswordResetTokenError]);
+  }, [resetToken]);
+
+  // If the validation fails, redirect to login page or the forgot password page with an error message
+  useEffect(() => {
+    if (validatingToken) return; // wait for it to resolve
+
+    if (!validatedToken) {
+      // If the reset token was present, redirect to the forgot password because it was no longer valid
+      toastState.add(t("expiredTokenMessage"), { type: "error", timeout: 3000 });
+      router.push(routePath("login.forgotPassword"));
+    }
+  }, [validatingToken, validatedToken]);
 
 
-  if (validatePasswordResetTokenLoading || resetPasswordLoading) {
+  if (validatingToken) {
     return <Loading message={Global('messaging.loading')} />;
   }
 

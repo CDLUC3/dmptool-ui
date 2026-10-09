@@ -61,7 +61,7 @@ const mockFetchCsrfToken = fetchCsrfToken as jest.Mock;
 // Mock fetch globally
 global.fetch = jest.fn() as jest.MockedFunction<typeof fetch>;
 
-const signInUrl = `${process.env.NEXT_PUBLIC_SERVER_ENDPOINT}/apollo-signin`;
+const signInUrl = `${process.env.NEXT_PUBLIC_AUTH_ENDPOINT}/sign-in`;
 
 describe('LoginPage', () => {
   const doSteps = async () => {
@@ -310,7 +310,7 @@ describe('LoginPage', () => {
         'Login error',
         expect.objectContaining({
           error: expect.anything(),
-          url: { path: '/apollo-signin' },
+          url: { path: '/sign-in' },
         })
       )
     })

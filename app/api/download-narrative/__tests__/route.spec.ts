@@ -25,12 +25,17 @@ jest.mock('@/utils/server/logger', () => {
   };
 });
 
-const authHeaders = {
-  Cookie: 'dmspt=test-token',
-  Authorization: 'Bearer test-token',
-};
 import { createLogger } from '@/utils/server/logger';
 const logger = createLogger();
+
+process.env.ACCESS_TOKEN_NAME = 'dmptool_access';
+process.env.TOKEN_AUDIENCE = 'dmptool-ui';
+
+import { ACCESS_TOKEN_NAME } from "@/utils/authHelper";
+
+const authHeaders = {
+  Cookie: `${ACCESS_TOKEN_NAME}=test-token`,
+};
 
 // Mock the cookies function
 jest.mock('next/headers', () => ({
@@ -49,7 +54,7 @@ describe('GET /api/download-narrative', () => {
 
     // Setup default cookie store mock
     mockCookieStore = {
-      get: jest.fn((name: string) => (name === 'dmspt' ? { value: 'test-token' } : undefined)),
+      get: jest.fn((name: string) => (name === ACCESS_TOKEN_NAME ? { value: 'test-token' } : undefined)),
     };
 
     (cookies as jest.Mock).mockResolvedValue(mockCookieStore);
@@ -362,10 +367,10 @@ describe('GET /api/download-narrative', () => {
     });
 
 
-    it('should forward only the dmspt token as a cookie and bearer token', async () => {
-      // Every other cookie returns a value too, to prove only dmspt is sent
+    it('should forward only the access token as a cookie and bearer token', async () => {
+      // Every other cookie returns a value too, to prove only access is sent
       mockCookieStore.get.mockImplementation((name: string) =>
-        name === 'dmspt' ? { value: 'token123' } : { value: 'should-not-be-sent' }
+        name === ACCESS_TOKEN_NAME ? { value: 'token123' } : { value: 'should-not-be-sent' }
       );
       (global.fetch as jest.Mock).mockResolvedValue(okResponse());
 
@@ -376,14 +381,13 @@ describe('GET /api/download-narrative', () => {
         {
           headers: {
             Accept: 'application/pdf',
-            Cookie: 'dmspt=token123',
-            Authorization: 'Bearer token123',
+            Cookie: `${ACCESS_TOKEN_NAME}=token123`,
           },
         }
       );
     });
 
-    it('should send no auth headers when there is no dmspt cookie', async () => {
+    it('should send no auth headers when there is no access token cookie', async () => {
       mockCookieStore.get.mockReturnValue(undefined);
       (global.fetch as jest.Mock).mockResolvedValue(okResponse());
 

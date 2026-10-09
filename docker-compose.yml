@@ -17,6 +17,8 @@ services:
     environment:
       - SERVER_ENDPOINT=http://apollo-server:4000
       - LOCALSTACK_ENDPOINT=http://localstack:4566
+      - AUTH_ENDPOINT=http://auth:4646
+      - TOKEN_ISSUER=http://auth:4646
     volumes:
     - .:/app
     - /app/node_modules

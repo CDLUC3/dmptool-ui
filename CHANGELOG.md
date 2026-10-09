@@ -1,4 +1,6 @@
 ## Added
+- Added `NEXT_PUBLIC_AUTH_SERVICE_URL` env variable to Dockerfile.prod and the buildspec.yaml
+- Added `AUTH_ENDPOINT`, `NEXT_PUBLIC_AUTH_ENDPOINT`, `TOKEN_ISSUER`, `TOKEN_AUDIENCE`, `ACCESS_TOKEN_NAME`, `REFRESH_TOKEN`, and `SSO_PENDING_TOKEN_NAME` env variables and removed `JWT_SECRET`
  - Added `sectionMoveConflicts.ts` and `questionMoveConflicts.ts` files, whose functions `findSectionMoveConflicts` and `findQuestionMoveConflicts` help determine whether a `question` or `section` display order can be updated. `TemplateEditPage` and `SectionEditContainer` pages were updated to use these functions [#986]
  - Added `utils/displayLogicConflictError.ts`, which turns conflicts into an `ErrorMessageItem` with links, and updated `ErrorMessages` with an option to pass in a link heading and URLs [#986]
 - Added `ProjectListFilters` component to be used for filtering statuses and roles in Project dashboards [#379]
@@ -49,6 +51,13 @@
 
 ## Updated
 - Updated the `PublishedQuestion` query to accept an optional `planId` so the plan's question customizations are returned [#388]
+- Updated the Forgot Password page to call the new Auth service's password reset endpoint
+- Updated the Reset Password page to immediately verify the password reset token with the Auth service and then post the changed password to the Auth Service's reset password endpoint
+- Replaced all references of `apollo-signin` to `sign-in`, `apollo-signup` to `sign-up` and `apollo-signout` to `sign-out`
+- Replaced all hard-coded `dmspt` and `dmpsr` references with new ENV variables
+- Removed the old password reset mutation
+- Removed the old getSecret helper function
+- Updated `myProjects` and `allProjects` queries to include `relatedWorksCount` and updated the `ProjectsListPage` and `OrganizationProjectsListPage` to use `relatedWorksCount` [#378]
 - Updated `OrganizationProjectsListPage` and `ProjectsListPage` with filters for `roles` and `statuses`. Also updated `OrganizationProjectsListPage` to use `allProjects` query, and updated both `allProjects` and `myProjects` queries to use `filterOptions`[#379]
 - Updated `ProjectListItems` component to use `AccessLevels` for the `role` column in the cards [#379]
 - Updated `routes.ts` to not require `locale` to be passed in because it was defaulting to `en-US` and changing the language for a user that had a `languageId` of `pt-BR` [#367]
@@ -160,6 +169,7 @@
 
 ## Fixed
 - Fixed bug in `PlanOverviewQuestionPageShared` where default option selections (radio buttons, select box, checkboxes, multi-select) were displayed as selected but saved as an empty answer. Defaults are now prefilled into the form data when there is no saved answer.[#388]
+- Fixed `@graphql-tools/utils` and `sharp` vulnerabilities by updating their versions in `overrides` [#460]
 - Updated `dompurify` to `v3.4.16`, `next` to `v16.3.8` and `brace-expansion` to `v5.0.12` to address high vulnerabilities [#451]
 - Fixed broken translation key for `link` in the `contactDescription` translation value, and also updated `buildspec.yaml to use the `$HELPDESK_EMAIL` during build, which will be available [#303]
 - Fix additional type errors in CommentsDrawer test that was still breaking build, and fixed some type errors in questionTypeHandlers [#380]
@@ -525,6 +535,7 @@
 
 ### Updated
 
+- Updated all old calls to sign in/up/out, password reset and CSRF token to the new auth service endpoints [#318](https://github.com/CDLUC3/dmptool-doc/issues/318)
 - Removed some duplicate text from `template/[templateId]/access` under `External people` [#482]
 - Updated description on `template/[templateId]/access` and visibility text on template publish modal [#482]
 - Updated `/template/[templateId]` to include the `View history` link in the header description [#430]

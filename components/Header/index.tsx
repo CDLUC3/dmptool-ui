@@ -46,7 +46,7 @@ function Header() {
   const handleLogout = async () => {
     setShowMobileMenu(false);
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_SERVER_ENDPOINT}/apollo-signout`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_AUTH_ENDPOINT}/sign-out`, {
         method: "POST",
         credentials: "include",
         headers: {

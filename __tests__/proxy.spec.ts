@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { proxy } from '../proxy';
 import { verifyJwtToken } from '@/lib/server/auth';
 import { getAuthTokenServer } from '@/utils/getAuthTokenServer';
+import { ACCESS_TOKEN_NAME, REFRESH_TOKEN_NAME } from "@/utils/authHelper";
 
 const mockHandleI18nRouting = jest.fn();
 
@@ -71,13 +72,13 @@ describe('proxy', () => {
     request = {
       cookies: {
         get: jest.fn().mockImplementation((key: string) => {
-          if (key === 'dmspt') return { name: 'dmspt', value: 'accessToken' };
-          if (key === 'dmspr') return { name: 'dmspr', value: 'refreshTokenValue' };
+          if (key === ACCESS_TOKEN_NAME) return { name: ACCESS_TOKEN_NAME, value: 'accessToken' };
+          if (key === REFRESH_TOKEN_NAME) return { name: REFRESH_TOKEN_NAME, value: 'refreshTokenValue' };
           return undefined;
         }),
         getAll: jest.fn().mockReturnValue([
-          { name: 'dmspt', value: 'accessToken' },
-          { name: 'dmspr', value: 'refreshTokenValue' }
+          { name: ACCESS_TOKEN_NAME, value: 'accessToken' },
+          { name: REFRESH_TOKEN_NAME, value: 'refreshTokenValue' }
         ]),
       },
       headers: new Headers({
@@ -128,6 +129,10 @@ describe('proxy', () => {
 
   it('should hand off to next-intl when the URL has a locale and a token is present', async () => {
     request.nextUrl.pathname = '/en-US/protected';
+    request.cookies.get = jest.fn().mockImplementation((key) => {
+      if (key === ACCESS_TOKEN_NAME) return 'accessToken'; // Simulate accessToken is present
+      return undefined;
+    });
 
     const result = await proxy(request);
 

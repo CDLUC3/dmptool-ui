@@ -111,7 +111,7 @@ const SignUpPage: React.FC = () => {
     };
 
     const signupRequest = async (token: string | null) => {
-      return await fetch(`${process.env.NEXT_PUBLIC_SERVER_ENDPOINT}/apollo-signup`, {
+      return await fetch(`${process.env.NEXT_PUBLIC_AUTH_ENDPOINT}/sign-up`, {
         method: 'POST',
         credentials: 'include',
         headers: {
@@ -135,7 +135,7 @@ const SignUpPage: React.FC = () => {
     } catch (err: any) {
       logECS('error', 'Signup error', {
         error: err,
-        url: { path: '/apollo-signup' }
+        url: { path: '/sign-up' }
       });
       setErrors(['An unexpected error occurred. Please try again.']);
     } finally {

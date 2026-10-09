@@ -75,7 +75,7 @@ describe('GET Function', () => {
     }, "Token verification failed");
   })
 
-  it('should return false for "authenticated" if there is no "dmspt" auth cookie/token', async () => {
+  it('should return false for "authenticated" if there is no access token auth cookie/token', async () => {
     (getAuthTokenServer as jest.Mock).mockResolvedValue(null);
     const response = await GET();
     const data = await response.json();
