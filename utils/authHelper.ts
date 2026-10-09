@@ -104,8 +104,8 @@ export const refreshAuthTokens = async (cookies?: string) => {
     if (err instanceof AuthError) {
       throw err;
     }
-    logECS('error', `Error refreshing auth token: ${err}`, {
-      source: 'refreshAuthTokens'
+    logECS("error", `authHelper: Error refreshing auth token: ${err}`, {
+      source: "refreshAuthTokens",
     });
     // Return redirect for any auth-related errors
     return { shouldRedirect: true, redirectTo: '/login' };
@@ -137,7 +137,7 @@ export const fetchCsrfToken = async (cookies?: string, endpoint?: string) => {
     const response = await fetch(`${serverUrl}/csrf`, fetchOptions);
     if (!response.ok) {
       const errorText = await response.text().catch(() => 'Could not read error body');
-      logECS('error', `Failed to fetch CSRF token: ${response.status} ${response.statusText} - ${errorText}`, {
+      logECS('error', `authHelper: Failed to fetch CSRF token: ${response.status} ${response.statusText} - ${errorText}`, {
         source: 'fetchCsrfToken'
       });
       return null;
@@ -145,8 +145,8 @@ export const fetchCsrfToken = async (cookies?: string, endpoint?: string) => {
 
     return response;
   } catch (err) {
-    logECS('error', `Error getting csrf token from auth service: ${err}, ${endpoint}, ${cookies}`, {
-      source: 'fetchCsrfToken'
+    logECS("error", `authHelper: Error getting csrf token from auth service: ${err}, ${endpoint}, ${cookies}`, {
+      source: "fetchCsrfToken",
     });
     return null;
   }
