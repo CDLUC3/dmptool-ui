@@ -6,7 +6,19 @@ const AUDIENCE = process.env.TOKEN_AUDIENCE || "my-ui";
 const JWKS_URL = new URL(`${ISSUER}/jwks`);
 
 // createRemoteJWKSet automatically caches keys and refetches when a key rotates
-const JWKS = createRemoteJWKSet(JWKS_URL);
+let cachedJWKSClient: any = null;
+
+/**
+ * Get the cached JWK client or create a new one if it doesn't exist.
+ *
+ * @returns the JWK client for verifying JWTs
+ */
+function getJWKClient() {
+  if (!cachedJWKSClient) {
+    cachedJWKSClient = createRemoteJWKSet(new URL(JWKS_URL));
+  }
+  return cachedJWKSClient;
+}
 
 /**
  * Verify a JWT against the public keys fetched from the Auth Service's JWKS endpoint.
@@ -16,7 +28,8 @@ const JWKS = createRemoteJWKSet(JWKS_URL);
  */
 export async function verifyJwtToken(token: string): Promise<JWTPayload | null> {
   try {
-    const { payload } = await jwtVerify(token, JWKS, {
+    const client = getJWKClient();
+    const { payload } = await jwtVerify(token, client, {
       issuer: ISSUER,
       audience: AUDIENCE,
       algorithms: ['RS256'],

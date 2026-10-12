@@ -91,7 +91,7 @@ export async function proxy(request: NextRequest) {
   if (pathname === "/healthcheck" || pathname.startsWith("/healthcheck/")) {
     return NextResponse.next();
   }
-  
+
   /* TODO: might want to add a 'redirect' query param to url to redirect user after
    login to the original page they were trying to get to.*/
 
