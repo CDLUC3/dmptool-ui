@@ -195,6 +195,5 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   // Don't run middleware for api endpoints, static files, anything in our pubic folder or _next files
-  matcher: ['/((?!api|_next|static|.*\\.(?:ico|png|jpg|jpeg|gif|svg|css|js|json|woff2?|ttf|map|txt|xml)$).*)'],
+  matcher: ['/((?!api|healthcheck|_next|static|.*\\.(?:ico|png|jpg|jpeg|gif|svg|css|js|json|woff2?|ttf|map|txt|xml)$).*)'],
 };
-
