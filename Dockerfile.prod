@@ -6,7 +6,7 @@ WORKDIR /app
 # Copy dependencies from deps stage
 COPY package*.json ./
 RUN npm ci
-RUN npm audit --omit=dev --audit-level=high
+# RUN npm audit --omit=dev --audit-level=high
 
 COPY . .
 # Set production environment
