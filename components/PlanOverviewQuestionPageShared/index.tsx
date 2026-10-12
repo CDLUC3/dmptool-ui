@@ -351,7 +351,7 @@ export const PlanOverviewQuestionPageShared: React.FC<{ config: QuestionPageConf
     loading: questionLoading,
     error: questionError,
   } = useQuery(questionDocument, {
-    variables: { [questionVariableKey]: Number(versionedQuestionId) },
+    variables: { [questionVariableKey]: Number(versionedQuestionId), planId: Number(dmpId) },
     skip: !versionedQuestionId,
   });
 
@@ -754,6 +754,30 @@ export const PlanOverviewQuestionPageShared: React.FC<{ config: QuestionPageConf
   useEffect(() => {
     researchOutputRowsRef.current = researchOutputRows;
   }, [researchOutputRows]);
+
+  // Questions with options can have default selections set by the template author. The question
+  // components display those defaults when there is no answer, so set them in formData too.
+  // Otherwise the defaults are shown as selected but saved as an empty answer.
+  const prefillDefaultOptions = (parsedQuestion: AnyParsedQuestion | null, type: string) => {
+    const options = ((parsedQuestion as { options?: { value: string; selected?: boolean }[] } | null)?.options) ?? [];
+    const defaults = options.filter(opt => opt.selected).map(opt => opt.value);
+    if (defaults.length === 0) return;
+
+    switch (type) {
+      case RADIOBUTTONS_QUESTION_TYPE:
+        setFormData(prev => ({ ...prev, selectedRadioValue: defaults[0] }));
+        break;
+      case SELECTBOX_QUESTION_TYPE:
+        setFormData(prev => ({ ...prev, selectedSelectValue: defaults[0] }));
+        break;
+      case CHECKBOXES_QUESTION_TYPE:
+        setFormData(prev => ({ ...prev, selectedCheckboxValues: defaults }));
+        break;
+      case MULTISELECTBOX_QUESTION_TYPE:
+        setFormData(prev => ({ ...prev, selectedMultiSelectValues: new Set(defaults) }));
+        break;
+    }
+  };
 
   // Prefill the current question with existing answer
   /*eslint-disable @typescript-eslint/no-explicit-any*/
@@ -1334,21 +1358,31 @@ export const PlanOverviewQuestionPageShared: React.FC<{ config: QuestionPageConf
   useEffect(() => {
     //Wait for answerData and questionType, then prefill the question with existing answer
     const json = answerData?.answerByVersionedQuestionId?.json;
-    if (json && questionType) {
-      const parsed = JSON.parse(json);
+    const parsedAnswer = json ? JSON.parse(json) : null;
+    const savedAnswer = parsedAnswer?.answer;
+    // An empty string or empty array means nothing was actually selected/entered
+    const hasSavedAnswer = savedAnswer !== undefined && savedAnswer !== null && savedAnswer !== ''
+      && !(Array.isArray(savedAnswer) && savedAnswer.length === 0);
 
+    if (parsedAnswer && questionType) {
       // Prefill the main answer
-      if (parsed?.answer !== undefined) {
-        prefillAnswer(parsed.answer, questionType);
+      if (savedAnswer !== undefined) {
+        prefillAnswer(savedAnswer, questionType);
       }
 
       // Also prefill comment field if it exists
-      if (parsed?.comment !== undefined) {
+      if (parsedAnswer?.comment !== undefined) {
         setFormData(prev => ({
           ...prev,
-          commentValue: parsed.comment
+          commentValue: parsedAnswer.comment
         }))
       }
+    }
+
+    // No answer saved yet, so start from the question's default option selections (if any).
+    // Wait until the answer query has finished so we don't overwrite an answer that is still loading.
+    if (questionType && !answerLoading && !hasSavedAnswer) {
+      prefillDefaultOptions(parsed ?? null, questionType);
     }
 
     // Combine both answerComments and feedbackComments into one, and save in state after ordering
@@ -1360,7 +1394,7 @@ export const PlanOverviewQuestionPageShared: React.FC<{ config: QuestionPageConf
 
     setAnswerId(answerData?.answerByVersionedQuestionId?.id ?? null);
 
-  }, [answerData, questionType]);
+  }, [answerData, answerLoading, questionType, parsed]);
 
   // Auto-save logic
   useEffect(() => {

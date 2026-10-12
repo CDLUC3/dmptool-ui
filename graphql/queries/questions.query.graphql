@@ -122,8 +122,8 @@ query PublishedCustomQuestions($planId: Int!, $versionedCustomSectionId: Int!) {
 }
 
 
-query PublishedQuestion($versionedQuestionId: Int!) {
-  publishedQuestion(versionedQuestionId: $versionedQuestionId) {
+query PublishedQuestion($versionedQuestionId: Int!, $planId: Int) {
+  publishedQuestion(versionedQuestionId: $versionedQuestionId, planId: $planId) {
     id
     guidanceText
     errors {
