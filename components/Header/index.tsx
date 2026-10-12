@@ -25,7 +25,7 @@ function Header() {
     clearAuthData
   } = useAuthContext();
   const router = useRouter();
-  const { csrfToken } = useCsrf();
+  const { getCsrfToken } = useCsrf();
   const t = useTranslations("Header");
 
   const locales = [
@@ -46,6 +46,7 @@ function Header() {
   const handleLogout = async () => {
     setShowMobileMenu(false);
     try {
+      const csrfToken = await getCsrfToken();
       const response = await fetch(`${process.env.NEXT_PUBLIC_AUTH_ENDPOINT}/sign-out`, {
         method: "POST",
         credentials: "include",

@@ -25,8 +25,9 @@ export const handleErrors = async (
   retryRequest: RetryRequestType,
   setErrors: React.Dispatch<React.SetStateAction<string[]>>,
   router: CustomRouter,
-  path: string
-
+  path: string,
+  // Called when the retried request succeeds. Defaults to navigating home.
+  onRetrySuccess?: (response: Response) => void | Promise<void>
 ) => {
 
   const { message } = await safeJsonParse(response);
@@ -67,7 +68,11 @@ export const handleErrors = async (
               const newResponse = await retryRequest(csrfToken);
 
               if (newResponse.ok) {
-                router.push("/");
+                if (onRetrySuccess) {
+                  await onRetrySuccess(newResponse);
+                } else {
+                  router.push("/");
+                }
               } else {
                 const errorMessage = await newResponse.json();
                 setErrors(prevErrors => [...prevErrors, errorMessage]);

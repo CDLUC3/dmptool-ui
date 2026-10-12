@@ -9,6 +9,7 @@ import { routing } from '@/i18n/routing';
 import { notFound } from 'next/navigation'; // Replace require with import
 import { headers, cookies } from 'next/headers';
 import { verifyJwtToken } from '@/lib/server/auth';
+import { ACCESS_TOKEN_NAME } from '@/utils/authHelper';
 
 
 // Mock next-intl/middleware BEFORE importing middleware
@@ -153,7 +154,7 @@ describe('LocaleLayout', () => {
   });
   it('passes initialIsAuthenticated=true to AuthProvider when the access token cookie is valid', async () => {
     (cookies as jest.Mock).mockResolvedValue({
-      get: jest.fn((name: string) => (name === 'dmspt' ? { value: 'valid-token' } : undefined)),
+      get: jest.fn((name: string) => (name === ACCESS_TOKEN_NAME ? { value: 'valid-token' } : undefined)),
     });
     (verifyJwtToken as jest.Mock).mockResolvedValue({ id: 1 });
 

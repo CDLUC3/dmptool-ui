@@ -32,7 +32,7 @@ const ForgotPassword: React.FC = () => {
 
   //States
   const [email, setEmail] = useState("");
-  const { csrfToken } = useCsrf();
+  const { getCsrfToken } = useCsrf();
   const [errors, setErrors] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -59,7 +59,7 @@ const ForgotPassword: React.FC = () => {
     };
 
     try {
-      const response = await resetRequest(csrfToken).then(res => res.json());
+      const response = await resetRequest(await getCsrfToken()).then(res => res.json());
 
       if (response.status === 502) {
         // There was a fatal error in the auth service

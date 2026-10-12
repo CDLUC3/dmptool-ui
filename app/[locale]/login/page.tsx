@@ -41,13 +41,22 @@ const LoginPage: React.FC = () => {
 
   const [errors, setErrors] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
-  const { csrfToken } = useCsrf();
+  const { getCsrfToken } = useCsrf();
   const router = useRouter();
 
   const { setIsAuthenticated, clearCache } = useAuthContext();
 
   const returnToEmail = () => {
     setStep("email");
+  };
+
+  const onLoginSuccess = async () => {
+    // Clear any cached data
+    await clearCache();
+    setIsAuthenticated(true);
+    // Full navigation to a URL with no locale, so the middleware can choose
+    // the user's saved language from their new JWT (languageId)
+    window.location.assign(routePath('app.home'));
   };
 
   const handleLogin = async () => {
@@ -71,17 +80,14 @@ const LoginPage: React.FC = () => {
 
     /* eslint-disable @typescript-eslint/no-explicit-any */
     try {
-      const response = await loginRequest(csrfToken);
+      const response = await loginRequest(await getCsrfToken());
 
       if (response.ok) {
-        // Clear any cached data
-        await clearCache();
-        setIsAuthenticated(true);
-        // Full navigation to a URL with no locale, so the middleware can choose
-        // the user's saved language from their new JWT (languageId)
-        window.location.assign(routePath('app.home'));
+        await onLoginSuccess();
       } else {
-        await handleErrors(response, loginRequest, setErrors, router, '/login');
+        // CSRF tokens are single-use, so a token already used by sign-up or logout gets a 403 here.
+        // handleErrors retries with a fresh token, and must finish the login the same way on success.
+        await handleErrors(response, loginRequest, setErrors, router, '/login', onLoginSuccess);
       }
 
     } catch (err: any) {

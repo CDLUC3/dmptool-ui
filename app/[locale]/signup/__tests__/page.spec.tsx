@@ -139,7 +139,7 @@ describe('SignUpPage', () => {
     HTMLElement.prototype.scrollIntoView = mockScrollIntoView;
     HTMLElement.prototype.focus = mockFocus;
 
-    (useCsrf as jest.Mock).mockReturnValue({ csrfToken: 'mocked-csrf-token' });
+    (useCsrf as jest.Mock).mockReturnValue({ getCsrfToken: jest.fn().mockResolvedValue('mocked-csrf-token') });
 
     mockUseRouter.mockReturnValue({
       push: jest.fn(),

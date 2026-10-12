@@ -5,6 +5,8 @@ import { NextResponse } from 'next/server';
 import { GET } from '../route';
 import { getAuthTokenServer } from '@/utils/getAuthTokenServer';
 import { verifyJwtToken } from '@/lib/server/auth';
+import { cookies } from 'next/headers';
+import { refreshAuthTokens } from '@/utils/authHelper';
 
 jest.mock('@/utils/server/logger', () => {
   // Define the mock before using it in the factory
@@ -38,12 +40,29 @@ jest.mock('@/lib/server/auth', () => ({
   verifyJwtToken: jest.fn(),
 }));
 
+jest.mock('next/headers', () => ({
+  cookies: jest.fn(),
+}));
+
+jest.mock('@/utils/authHelper', () => ({
+  REFRESH_TOKEN_NAME: 'refresh_token',
+  refreshAuthTokens: jest.fn(),
+}));
+
+const mockCookieStore = (cookieList: { name: string, value: string }[]) => {
+  (cookies as jest.Mock).mockResolvedValue({
+    get: jest.fn((name: string) => cookieList.find(c => c.name === name)),
+    getAll: jest.fn(() => cookieList),
+  });
+};
+
 
 describe('GET Function', () => {
   let redirectSpy: jest.SpyInstance;
   beforeEach(() => {
     redirectSpy = jest.spyOn(NextResponse, 'redirect');
     jest.clearAllMocks();
+    mockCookieStore([]);
   });
 
   afterEach(() => {
@@ -108,4 +127,51 @@ describe('GET Function', () => {
     expect(redirectSpy).toHaveBeenCalledWith('http://localhost:3000/login');
   })
 
+  it('should refresh tokens and return true for "authenticated" if there is no access token but a refresh token exists', async () => {
+    (getAuthTokenServer as jest.Mock).mockResolvedValue(null);
+    mockCookieStore([{ name: 'refresh_token', value: 'refresh-value' }]);
+    const backendHeaders = new Headers();
+    backendHeaders.append('set-cookie', 'access_token=new-access; Path=/; HttpOnly');
+    (refreshAuthTokens as jest.Mock).mockResolvedValue({ response: { headers: backendHeaders } });
+
+    const response = await GET();
+    const data = await response.json();
+
+    expect(refreshAuthTokens).toHaveBeenCalledWith('refresh_token=refresh-value');
+    expect(data).toEqual({ authenticated: true });
+    expect(response.headers.get('set-cookie')).toContain('access_token=new-access');
+  })
+
+  it('should refresh tokens if the access token fails verification but a refresh token exists', async () => {
+    (getAuthTokenServer as jest.Mock).mockResolvedValue('expired-token');
+    (verifyJwtToken as jest.Mock).mockResolvedValue(null);
+    mockCookieStore([{ name: 'refresh_token', value: 'refresh-value' }]);
+    (refreshAuthTokens as jest.Mock).mockResolvedValue({ response: { headers: new Headers() } });
+
+    const response = await GET();
+    const data = await response.json();
+
+    expect(data).toEqual({ authenticated: true });
+  })
+
+  it('should return false for "authenticated" if the token refresh fails', async () => {
+    (getAuthTokenServer as jest.Mock).mockResolvedValue(null);
+    mockCookieStore([{ name: 'refresh_token', value: 'refresh-value' }]);
+    (refreshAuthTokens as jest.Mock).mockResolvedValue({ shouldRedirect: true, redirectTo: '/login' });
+
+    const response = await GET();
+    const data = await response.json();
+
+    expect(data).toEqual({ authenticated: false });
+  })
+
+  it('should not try to refresh if there is no refresh token', async () => {
+    (getAuthTokenServer as jest.Mock).mockResolvedValue(null);
+
+    const response = await GET();
+    const data = await response.json();
+
+    expect(refreshAuthTokens).not.toHaveBeenCalled();
+    expect(data).toEqual({ authenticated: false });
+  })
 });

@@ -45,7 +45,7 @@ describe("ForgotPassword Component", () => {
     (useRouter as jest.Mock).mockReturnValue({
       push,
     });
-    (useCsrf as jest.Mock).mockReturnValue({ csrfToken: "mocked-csrf-token" });
+    (useCsrf as jest.Mock).mockReturnValue({ getCsrfToken: jest.fn().mockResolvedValue("mocked-csrf-token") });
     global.fetch = jest.fn().mockResolvedValue({ ok: true });
   });
 

@@ -7,6 +7,7 @@ import LoginPage from '../page';
 import { useRouter } from '@/i18n/routing';
 import { fetchCsrfToken } from "@/utils/authHelper";
 import { useCsrf } from '@/context/CsrfContext';
+import { useAuthContext } from '@/context/AuthContext';
 import { routePath } from '@/utils/index';
 
 jest.mock('@/i18n/routing', () => ({
@@ -86,7 +87,7 @@ describe('LoginPage', () => {
       push: jest.fn(),
     });
 
-    (useCsrf as jest.Mock).mockReturnValue({ csrfToken: 'mocked-csrf-token' });
+    (useCsrf as jest.Mock).mockReturnValue({ getCsrfToken: jest.fn().mockResolvedValue('mocked-csrf-token') });
 
     jest.spyOn(console, 'error').mockImplementation(() => { });
   });
@@ -268,6 +269,42 @@ describe('LoginPage', () => {
     await waitFor(() => {
       expect(mockFetchCsrfToken).toHaveBeenCalled();
     })
+  });
+
+  it('should finish logging in when the sign-in succeeds on retry after a stale CSRF token', async () => {
+    const mockSetIsAuthenticated = jest.fn();
+    (useAuthContext as jest.Mock).mockReturnValue({
+      setIsAuthenticated: mockSetIsAuthenticated,
+      clearCache: jest.fn().mockResolvedValue(undefined),
+    });
+    mockFetchCsrfToken.mockResolvedValueOnce({
+      headers: { get: () => 'fresh-csrf-token' },
+    });
+
+    jest.spyOn(global, 'fetch')
+      .mockResolvedValueOnce({
+        ok: false,
+        status: 403,
+        json: () => Promise.resolve({ success: false, message: 'Invalid CSRF token' }),
+      } as unknown as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve({ success: true, message: 'ok' }),
+      } as unknown as Response);
+
+    render(<LoginPage />);
+
+    doSteps();
+    fireEvent.click(screen.getByTestId("actionSubmit"));
+
+    await waitFor(() => {
+      expect(global.fetch).toHaveBeenLastCalledWith(signInUrl, expect.objectContaining({
+        headers: expect.objectContaining({ 'X-CSRF-TOKEN': 'fresh-csrf-token' }),
+      }));
+      expect(mockSetIsAuthenticated).toHaveBeenCalledWith(true);
+      expect(routePath).toHaveBeenCalledWith('app.home');
+    });
   });
 
   it('should handle 500 error', async () => {

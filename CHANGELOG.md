@@ -168,6 +168,11 @@
 - Updated `RepoSelectorForAnswer` to wait to query `Re3byUrIsDocument` until we have `preferredReposURIs` because preferred repos don't display even though they eventually do to trigger the display of the "preferred repositories" checkbox [#118]
 
 ## Fixed
+- Fixed header showing "Login/Sign Up" for logged-in users. `app/[locale]/layout.tsx` was still reading the old `dmspt` cookie instead of `ACCESS_TOKEN_NAME`, so the server always rendered the header as logged out [#471]
+- Fixed login after a fresh sign-up leaving the header in a logged-out state. The Auth service's CSRF tokens are single-use, so the login request was rejected with `Invalid CSRF token` and retried by `handleErrors`, which then navigated home without updating the auth state. `handleErrors` now accepts an optional `onRetrySuccess` callback, which the login and signup pages use to finish the same way as a first-try success [#471]
+- Updated `/api/check-auth` to refresh the auth tokens with the Auth service when the access token is missing or invalid but a refresh token exists, since `/api` routes and some excluded paths (e.g. `/dmps`) are not covered by the token refresh in `proxy.ts`[#471]
+- `CsrfContext.tsx`: instead of fetching one token when the page loads and storing it, the context now provides getCsrfToken(), which fetches and returns a new token each time it's called.[#471]
+- `login`, `signup`, `forgot-password` and the `logout` in Header component now call `await getCsrfToken()` just before their request.[#471]
 - Fixed bug in `PlanOverviewQuestionPageShared` where default option selections (radio buttons, select box, checkboxes, multi-select) were displayed as selected but saved as an empty answer. Defaults are now prefilled into the form data when there is no saved answer.[#388]
 - Fixed `@graphql-tools/utils` and `sharp` vulnerabilities by updating their versions in `overrides` [#460]
 - Updated `dompurify` to `v3.4.16`, `next` to `v16.3.8` and `brace-expansion` to `v5.0.12` to address high vulnerabilities [#451]

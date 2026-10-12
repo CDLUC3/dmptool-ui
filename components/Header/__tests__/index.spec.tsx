@@ -87,7 +87,7 @@ describe("Header", () => {
       clearAuthData: jest.fn().mockResolvedValue(undefined),
     });
     (useCsrf as jest.Mock).mockReturnValue({
-      csrfToken: "mock-csrf-token",
+      getCsrfToken: jest.fn().mockResolvedValue("mock-csrf-token"),
     });
   });
 
