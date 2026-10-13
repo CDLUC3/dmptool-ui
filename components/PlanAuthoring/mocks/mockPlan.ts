@@ -16,7 +16,7 @@ import {
   makeRawSection,
 } from "./builders";
 
-export const MOCK_CURRENT_USER_ID = 101;
+const MOCK_CURRENT_USER_ID = 101;
 
 const NSF = "https://ror.org/021nxhr62";
 const CDL = "https://ror.org/03yrm5c26";
@@ -71,6 +71,16 @@ const GUIDANCE: PlanAuthoringGuidanceSource[] = [
     items: [
       { guidanceText: "<p>Less restrictive licensing travels further; CC0 is a good default.</p>" },
     ],
+  },
+  // Apollo sends an org selected for the plan on every question, with no items
+  // where it has no guidance for that question.
+  {
+    id: `affiliation-${UCB}`,
+    type: GuidanceSourceType.UserSelected,
+    label: "UC Berkeley",
+    shortName: "UCB",
+    orgURI: UCB,
+    items: [],
   },
 ];
 
@@ -136,10 +146,14 @@ export const mockPlan = makeRawPlan({
   fundings: [
     { projectFunding: { affiliation: { displayName: "National Science Foundation (nsf.gov)" } } },
   ],
+  // Apollo lists orgs selected for the plan as OTHER_AFFILIATION here.
   availableGuidanceSources: GUIDANCE.map(
     ({ id, type, label, shortName, orgURI }) => ({
       id,
-      type,
+      type:
+        type === GuidanceSourceType.UserSelected
+          ? GuidanceSourceType.OtherAffiliation
+          : type,
       label,
       shortName,
       orgURI,

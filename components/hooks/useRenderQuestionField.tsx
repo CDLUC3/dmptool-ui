@@ -66,6 +66,8 @@ export interface RenderQuestionFieldProps {
   editorId?: string;
   /** Native input name. Unique per question when several questions share a page. */
   fieldName?: string;
+  /** Id of the question title. When set, it names the field in place of the type label ("text", "email", …). */
+  labelledBy?: string;
 
   radioProps?: {
     selectedRadioValue: string;
@@ -167,6 +169,7 @@ export function useRenderQuestionField({
   questionType,
   editorId = 'question-text-editor',
   fieldName,
+  labelledBy,
   radioProps,
   checkBoxProps,
   multiSelectBoxProps,
@@ -256,6 +259,8 @@ export function useRenderQuestionField({
             name={fieldName ?? "textField"}
             type="text"
             label="text"
+            labelClasses={labelledBy ? "hidden-accessibly" : undefined}
+            aria-labelledby={labelledBy}
             placeholder="Enter text"
             value={textFieldProps?.textValue ?? ''
             }
@@ -273,6 +278,7 @@ export function useRenderQuestionField({
         return (
           <TinyMCEEditor
             id={editorId}
+            labelId={labelledBy}
             content={textAreaProps?.content ?? ''}
             setContent={(value) => textAreaProps?.setContent && textAreaProps?.setContent(value)}
             onChange={textAreaProps?.handleTextAreaChange}
@@ -291,7 +297,8 @@ export function useRenderQuestionField({
             value={getCalendarDateValue(dateProps?.dateValue)}
             onChange={(newDate) => dateProps?.handleDateChange(newDate)
             }
-            label="Date"
+            label={labelledBy ? "" : "Date"}
+            aria-labelledby={labelledBy}
             minValue={minValue}
             maxValue={maxValue}
             isDisabled={readOnly}
@@ -319,7 +326,8 @@ export function useRenderQuestionField({
         const { min: minValue, max: maxValue, step } = parsed.attributes || {};
         return (
           <NumberComponent
-            label="number"
+            label={labelledBy ? "" : "number"}
+            aria-labelledby={labelledBy}
             value={numberProps?.numberValue ?? undefined
             }
             onChange={numberProps?.handleNumberChange}
@@ -369,6 +377,8 @@ export function useRenderQuestionField({
             name={fieldName ?? "urlInput"}
             type="url"
             label="url"
+            labelClasses={labelledBy ? "hidden-accessibly" : undefined}
+            aria-labelledby={labelledBy}
             placeholder="url"
             value={urlProps?.urlValue ?? ''
             }
@@ -390,6 +400,8 @@ export function useRenderQuestionField({
             name={fieldName ?? "emailInput"}
             type="email"
             label="email"
+            labelClasses={labelledBy ? "hidden-accessibly" : undefined}
+            aria-labelledby={labelledBy}
             placeholder="email"
             value={emailProps?.emailValue ?? ''
             }

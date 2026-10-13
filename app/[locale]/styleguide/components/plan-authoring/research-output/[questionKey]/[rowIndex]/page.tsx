@@ -5,12 +5,12 @@ import { useParams } from "next/navigation";
 import { MockedProvider } from "@apollo/client/testing/react";
 import { useLocale } from "next-intl";
 import { Link } from "@/i18n/routing";
-import { MOCK_RESEARCH_OUTPUT_APOLLO_MOCKS } from "@/components/PlanAuthoring/mocks";
 import PlanResearchOutputEditScreen from "@/components/PlanAuthoring/PlanResearchOutputEditScreen";
 import {
   getStyleguidePlanAuthoringDataSource,
   STYLEGUIDE_PLAN_HREF,
 } from "../../../styleguideDataSource";
+import { MOCK_RESEARCH_OUTPUT_APOLLO_MOCKS } from "../../../researchOutputApolloMocks";
 import "../../../../../shared/styleguide.scss";
 
 export default function PlanAuthoringResearchOutputEditPage() {

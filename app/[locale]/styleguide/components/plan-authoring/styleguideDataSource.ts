@@ -11,7 +11,8 @@ let shared: PlanAuthoringDataSource | null = null;
 
 /** One instance for the plan and research output pages, so a saved row is there on return. */
 export function getStyleguidePlanAuthoringDataSource(): PlanAuthoringDataSource {
-  shared ??= createScenarioDataSource("saveFails", {
+  shared ??= createScenarioDataSource({
+    failSaveOnce: true,
     delayMs: 450,
     plan: mockPlanWithResearchOutputs,
   });

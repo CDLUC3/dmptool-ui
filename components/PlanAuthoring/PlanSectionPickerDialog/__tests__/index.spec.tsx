@@ -1,6 +1,7 @@
 import React from "react";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { axe, toHaveNoViolations } from "jest-axe";
 import { NextIntlClientProvider } from "next-intl";
 import globalMessages from "@/messages/en-US/global.json";
 import planAuthoringMessages from "@/messages/en-US/planAuthoring.json";
@@ -11,6 +12,8 @@ import { makeQuestion, makeSection } from "../../mocks";
 jest.mock("next-intl", () => jest.requireActual("next-intl"));
 
 const messages = { ...globalMessages, ...planAuthoringMessages };
+
+expect.extend(toHaveNoViolations);
 
 function section(id: number, title: string, answered: boolean[] = []) {
   return makeSection({
@@ -60,6 +63,12 @@ beforeAll(() => {
 });
 
 describe("PlanSectionPickerDialog", () => {
+  it("has no accessibility violations", async () => {
+    renderPicker();
+
+    expect(await axe(document.body)).toHaveNoViolations();
+  });
+
   it("lists every section with its answered count and marks the current one", () => {
     renderPicker();
 

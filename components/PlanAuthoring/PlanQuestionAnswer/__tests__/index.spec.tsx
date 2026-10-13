@@ -1,6 +1,7 @@
 import React from "react";
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { axe, toHaveNoViolations } from "jest-axe";
 import { NextIntlClientProvider } from "next-intl";
 import globalMessages from "@/messages/en-US/global.json";
 import planAuthoringMessages from "@/messages/en-US/planAuthoring.json";
@@ -70,6 +71,8 @@ jest.mock("@/components/Form/ResearchOutputAnswerComponent", () => {
 
 const messages = { ...globalMessages, ...planAuthoringMessages };
 
+expect.extend(toHaveNoViolations);
+
 function makeQuestion(
   questionType: string,
   parsedJson: Record<string, unknown>
@@ -96,10 +99,12 @@ function renderAnswer(
   } = {}
 ) {
   const onChange = jest.fn();
-  render(
+  const { container } = render(
     <NextIntlClientProvider locale="en-US" messages={messages} timeZone="UTC">
+      <h3 id="question-title">{question.title}</h3>
       <PlanQuestionAnswer
         question={question}
+        titleId="question-title"
         draftAnswer={draftAnswer}
         disabled={disabled}
         onChange={onChange}
@@ -108,7 +113,7 @@ function renderAnswer(
       />
     </NextIntlClientProvider>
   );
-  return { onChange };
+  return { onChange, container };
 }
 
 const namedValues = (value: string) =>
@@ -121,13 +126,45 @@ const choiceOptions = [
 ];
 
 describe("PlanQuestionAnswer", () => {
+  it.each<[string, Record<string, unknown>, unknown]>([
+    ["text", { attributes: {} }, "Surveys"],
+    ["textArea", { attributes: {} }, "<p>Plan</p>"],
+    ["email", { attributes: {} }, "ada@example.com"],
+    ["url", { attributes: {} }, "https://example.com"],
+    ["number", { attributes: {} }, 42],
+    ["numberRange", { attributes: {}, columns: { start: { label: "From" }, end: { label: "To" } } }, { startNumber: 10, endNumber: 20 }],
+    ["currency", { attributes: { denomination: "USD", min: 0 } }, 250],
+    ["date", { attributes: {} }, "2025-05-15"],
+    ["dateRange", { attributes: {}, columns: { start: { label: "Starts" }, end: { label: "Ends" } } }, { startDate: "2025-01-01", endDate: "2025-12-31" }],
+    ["radioButtons", { options: choiceOptions, showCommentField: true }, "Barbara"],
+    ["checkBoxes", { options: choiceOptions }, ["Barbara"]],
+    ["selectBox", { options: choiceOptions, attributes: {} }, "Barbara"],
+    ["multiselectBox", { options: choiceOptions, attributes: {} }, ["Alex"]],
+    ["boolean", { attributes: {} }, true],
+    ["affiliationSearch", { attributes: { label: "Institution" } }, { affiliationId: "https://ror.org/03yrm5c26", affiliationName: "CDL" }],
+  ])("has no accessibility violations for a %s answer", async (questionType, parsedJson, answer) => {
+    const { container } = renderAnswer(makeQuestion(questionType, parsedJson), { type: questionType, answer });
+
+    expect(await axe(container)).toHaveNoViolations();
+  });
+
+  it("names the answer by the question title for screen readers", () => {
+    renderAnswer(makeQuestion("radioButtons", { options: choiceOptions }), {
+      type: "radioButtons",
+      answer: "Barbara",
+    });
+
+    const group = screen.getByRole("group", { name: "Question" });
+    expect(within(group).getByRole("radio", { name: "Barbara" })).toBeChecked();
+  });
+
   it("renders a text answer and emits typed text", () => {
     const { onChange } = renderAnswer(makeQuestion("text", { attributes: {} }), {
       type: "text",
       answer: "Surveys",
     });
 
-    const field = screen.getByRole("textbox", { name: "text" });
+    const field = screen.getByRole("textbox", { name: "Question" });
     expect(field).toHaveValue("Surveys");
 
     fireEvent.change(field, { target: { value: "Surveys and logs" } });
@@ -205,6 +242,7 @@ describe("PlanQuestionAnswer", () => {
               ...makeQuestion(questionType, parsedJson),
               identity: { kind: "base", versionedQuestionId },
             }}
+            titleId={`question-${versionedQuestionId}-title`}
             draftAnswer={{ type: questionType, answer }}
             disabled={false}
             onChange={jest.fn()}
@@ -234,6 +272,7 @@ describe("PlanQuestionAnswer", () => {
             ...makeQuestion("text", { attributes: {} }),
             identity: { kind: "base", versionedQuestionId },
           }}
+          titleId={`question-${versionedQuestionId}-title`}
           draftAnswer={{ type: "text", answer: "hello" }}
           disabled={false}
           onChange={jest.fn()}
@@ -255,15 +294,15 @@ describe("PlanQuestionAnswer", () => {
   });
 
   it.each([
-    ["email", "email", "ada@example.com", "grace@example.com"],
-    ["url", "url", "https://example.com", "https://dmptool.org"],
-  ])("renders a %s answer and emits edits", (questionType, label, stored, next) => {
+    ["email", "ada@example.com", "grace@example.com"],
+    ["url", "https://example.com", "https://dmptool.org"],
+  ])("renders a %s answer and emits edits", (questionType, stored, next) => {
     const { onChange } = renderAnswer(makeQuestion(questionType, { attributes: {} }), {
       type: questionType,
       answer: stored,
     });
 
-    const field = screen.getByRole("textbox", { name: label });
+    const field = screen.getByRole("textbox", { name: "Question" });
     expect(field).toHaveValue(stored);
 
     fireEvent.change(field, { target: { value: next } });
@@ -276,7 +315,7 @@ describe("PlanQuestionAnswer", () => {
       answer: 42,
     });
 
-    expect(screen.getByRole("textbox", { name: "number" })).toHaveValue("42");
+    expect(screen.getByRole("textbox", { name: "Question" })).toHaveValue("42");
   });
 
   it("shows the additional comment field when the question asks for it and keeps the answer", () => {

@@ -1,9 +1,5 @@
 import { isFilledAnswer } from "../answerUtils";
-import type {
-  PlanAuthoringDataSource,
-  PlanAuthoringState,
-  SaveAnswerResult,
-} from "../dataSource";
+import type { PlanAuthoringDataSource, PlanAuthoringState } from "../dataSource";
 import {
   computeProgress,
   questionKey,
@@ -12,35 +8,15 @@ import {
   type PlanQuestionDefinition,
 } from "../model";
 import { makeComment, makeModel } from "./builders";
-import {
-  MOCK_COMMENTS_ERROR,
-  MOCK_GUIDANCE_ERROR,
-  MOCK_SAVE_ERROR,
-} from "./fakePlanAuthoringClient";
 
 export interface MockDataSourceOptions {
   model?: PlanAuthoringModel;
   initialState?: PlanAuthoringState;
-  delayMs?: number;
-  failSaveOnce?: boolean;
-  /** Returned by every save that doesn't fail; a "saved" result still updates the model. */
-  saveResult?: SaveAnswerResult;
-  commentsFail?: boolean;
-  guidanceFail?: boolean;
 }
 
 export interface MockPlanAuthoringDataSource extends PlanAuthoringDataSource {
   /** Replaces the state and notifies subscribers, like a finished load would. */
   setState(state: PlanAuthoringState): void;
-}
-
-function wait(ms: number): Promise<void> {
-  if (ms <= 0) {
-    return Promise.resolve();
-  }
-  return new Promise((resolve) => {
-    setTimeout(resolve, ms);
-  });
 }
 
 /**
@@ -50,9 +26,7 @@ function wait(ms: number): Promise<void> {
 export function createMockDataSource(
   options: MockDataSourceOptions = {}
 ): MockPlanAuthoringDataSource {
-  const delayMs = options.delayMs ?? 0;
   const initialModel = options.model ?? makeModel();
-  let failSaveOnce = Boolean(options.failSaveOnce);
   let nextCommentId = 0;
   const listeners = new Set<() => void>();
 
@@ -101,18 +75,6 @@ export function createMockDataSource(
     });
   };
 
-  const assertComments = () => {
-    if (options.commentsFail) {
-      throw new Error(MOCK_COMMENTS_ERROR);
-    }
-  };
-
-  const assertGuidance = () => {
-    if (options.guidanceFail) {
-      throw new Error(MOCK_GUIDANCE_ERROR);
-    }
-  };
-
   return {
     getState() {
       return state;
@@ -122,20 +84,12 @@ export function createMockDataSource(
 
     reload() {
       setState({ status: "loading" });
-      void wait(delayMs).then(() =>
+      void Promise.resolve().then(() =>
         setState({ status: "ready", model: initialModel })
       );
     },
 
     async saveAnswer(key, answerJson) {
-      await wait(delayMs);
-      if (failSaveOnce) {
-        failSaveOnce = false;
-        return { kind: "failed", message: MOCK_SAVE_ERROR };
-      }
-      if (options.saveResult && options.saveResult.kind !== "saved") {
-        return options.saveResult;
-      }
       if (!findQuestion(key)) {
         return { kind: "failed", message: "Question not found." };
       }
@@ -149,8 +103,6 @@ export function createMockDataSource(
     },
 
     async addComment(key, text) {
-      await wait(delayMs);
-      assertComments();
       requireQuestion(key);
       nextCommentId += 1;
       const comment = makeComment({
@@ -167,8 +119,6 @@ export function createMockDataSource(
     },
 
     async updateComment(key, commentId, text) {
-      await wait(delayMs);
-      assertComments();
       const existing = requireQuestion(key).comments.find(
         (comment) => comment.id === commentId
       );
@@ -186,8 +136,6 @@ export function createMockDataSource(
     },
 
     async deleteComment(key, commentId) {
-      await wait(delayMs);
-      assertComments();
       requireQuestion(key);
       updateQuestion(key, (question) => ({
         ...question,
@@ -196,8 +144,6 @@ export function createMockDataSource(
     },
 
     async searchGuidanceOrgs(term) {
-      await wait(delayMs);
-      assertGuidance();
       const orgs = currentModel()?.availableGuidanceOrgs ?? [];
       const normalized = term.trim().toLowerCase();
       if (!normalized) {
@@ -211,8 +157,6 @@ export function createMockDataSource(
     },
 
     async setSelectedGuidanceOrgs(orgIds) {
-      await wait(delayMs);
-      assertGuidance();
       const availableIds = new Set(
         (currentModel()?.availableGuidanceOrgs ?? []).map((org) => org.id)
       );

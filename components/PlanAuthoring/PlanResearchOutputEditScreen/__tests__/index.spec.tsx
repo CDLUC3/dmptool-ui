@@ -1,5 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import React from 'react';
+import React, { type ComponentProps } from 'react';
 import { act, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
@@ -18,6 +17,19 @@ import {
 } from '../../mocks';
 import { spyOnDataSource, type SpiedMockDataSource } from '../../mocks/spyOnDataSource';
 import PlanResearchOutputEditScreen from '../index';
+import type PageHeader from '@/components/PageHeader';
+import type ErrorMessages from '@/components/ErrorMessages';
+import type PlanQuestionHeader from '../../PlanQuestionHeader';
+import type PlanQuestionSidebar from '../../PlanQuestionSidebar';
+import type PlanGuidanceCustomizeDialog from '../../PlanGuidanceCustomizeDialog';
+import type SingleResearchOutputComponent from '@/components/Form/ResearchOutputAnswerComponent/SingleResearchOutputComponent';
+
+type MockPageHeaderProps = ComponentProps<typeof PageHeader>;
+type MockErrorMessagesProps = ComponentProps<typeof ErrorMessages>;
+type MockPlanQuestionHeaderProps = ComponentProps<typeof PlanQuestionHeader>;
+type MockPlanQuestionSidebarProps = ComponentProps<typeof PlanQuestionSidebar>;
+type MockPlanGuidanceCustomizeDialogProps = ComponentProps<typeof PlanGuidanceCustomizeDialog>;
+type MockSingleResearchOutputProps = ComponentProps<typeof SingleResearchOutputComponent>;
 
 expect.extend(toHaveNoViolations);
 
@@ -26,7 +38,7 @@ jest.mock('next-intl', () => ({
 }));
 
 jest.mock('@/components/PageHeader', () => {
-  const MockPageHeader = ({ title, breadcrumbs }: any) => (
+  const MockPageHeader = ({ title, breadcrumbs }: MockPageHeaderProps) => (
     <header>
       {breadcrumbs}
       <h1>{title}</h1>
@@ -37,19 +49,19 @@ jest.mock('@/components/PageHeader', () => {
 });
 
 jest.mock('@/components/ErrorMessages', () => {
-  const MockErrorMessages = ({ errors }: any) => <div role="alert">{errors.join(' ')}</div>;
+  const MockErrorMessages = ({ errors }: MockErrorMessagesProps) => <div role="alert">{Object.values(errors).join(' ')}</div>;
   MockErrorMessages.displayName = 'MockErrorMessages';
   return MockErrorMessages;
 });
 
 jest.mock('../../PlanQuestionHeader', () => {
-  const MockPlanQuestionHeader = ({ question }: any) => <h2>{question.title}</h2>;
+  const MockPlanQuestionHeader = ({ question }: MockPlanQuestionHeaderProps) => <h2>{question.title}</h2>;
   MockPlanQuestionHeader.displayName = 'MockPlanQuestionHeader';
   return MockPlanQuestionHeader;
 });
 
 jest.mock('../../PlanQuestionSidebar', () => {
-  const MockPlanQuestionSidebar = (props: any) => (
+  const MockPlanQuestionSidebar = (props: MockPlanQuestionSidebarProps) => (
     <div>
       <span data-testid="sidebar-can-comment">{String(props.canComment)}</span>
       <button type="button" onClick={() => props.onAddComment('new comment')}>Add comment</button>
@@ -63,7 +75,7 @@ jest.mock('../../PlanQuestionSidebar', () => {
 });
 
 jest.mock('../../PlanGuidanceCustomizeDialog', () => {
-  const MockPlanGuidanceCustomizeDialog = ({ isOpen, onSearch, onSave, onOpenChange }: any) =>
+  const MockPlanGuidanceCustomizeDialog = ({ isOpen, onSearch, onSave, onOpenChange }: MockPlanGuidanceCustomizeDialogProps) =>
     isOpen ? (
       <div role="dialog" aria-label="customize-guidance">
         <button type="button" onClick={() => onSearch('nih')}>Search orgs</button>
@@ -85,7 +97,7 @@ jest.mock('../../PlanGuidanceCustomizeDialog', () => {
 jest.mock(
   '@/components/Form/ResearchOutputAnswerComponent/SingleResearchOutputComponent',
   () => {
-    const MockSingleResearchOutput = ({ onSave, onCancel, isNewEntry, isDisabled, showButtons, setRows }: any) => (
+    const MockSingleResearchOutput = ({ onSave, onCancel, isNewEntry, isDisabled, showButtons, setRows }: MockSingleResearchOutputProps) => (
       <div>
         <span data-testid="entry-mode">{isNewEntry ? 'new' : 'edit'}</span>
         <span data-testid="entry-disabled">{String(isDisabled)}</span>

@@ -12,8 +12,8 @@ import {
 
 /**
  * Apollo mocks for research-output form widgets used by the Plan Authoring
- * styleguide (and reusable in Jest). Keeps the public styleguide off the real
- * GraphQL auth path — login is not required for /styleguide.
+ * styleguide. Keeps the public styleguide off the real GraphQL auth path —
+ * login is not required for /styleguide.
  */
 export const MOCK_RESEARCH_OUTPUT_APOLLO_MOCKS: MockedResponse[] = [
   {

@@ -6,7 +6,6 @@ import '@testing-library/jest-dom';
 import { axe, toHaveNoViolations } from 'jest-axe';
 import PlanGuidanceCustomizeDialog from '../index';
 import type { PlanGuidanceOrgOption } from '../../model';
-import { makeGuidanceOrg } from '../../mocks';
 
 expect.extend(toHaveNoViolations);
 
@@ -61,9 +60,9 @@ jest.mock('react-aria-components', () => ({
   TextField: ({ children, className }: any) => <div className={className}>{children}</div>,
 }));
 
-const org1 = makeGuidanceOrg();
-const org2 = makeGuidanceOrg({ id: 'org-2', label: 'Example Institute' });
-const org3 = makeGuidanceOrg({ id: 'org-3', label: 'Third Org' });
+const org1: PlanGuidanceOrgOption = { id: 'org-1', label: 'University of Example', shortName: 'UoE' };
+const org2: PlanGuidanceOrgOption = { ...org1, id: 'org-2', label: 'Example Institute' };
+const org3: PlanGuidanceOrgOption = { ...org1, id: 'org-3', label: 'Third Org' };
 
 const defaultProps = {
   isOpen: true,
@@ -277,11 +276,11 @@ describe('PlanGuidanceCustomizeDialog', () => {
 
     it('adds an org found by search (not in availableOrgs) as a chip', async () => {
       const user = userEvent.setup();
-      const searched = makeGuidanceOrg({
+      const searched: PlanGuidanceOrgOption = {
         id: 'org-9',
         label: 'Searched University',
         shortName: 'SU',
-      });
+      };
       const onSave = jest.fn().mockResolvedValue(undefined);
       render(
         <PlanGuidanceCustomizeDialog

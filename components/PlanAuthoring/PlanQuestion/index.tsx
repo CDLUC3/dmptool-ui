@@ -59,6 +59,7 @@ export default function PlanQuestion({
   const Global = useTranslations("Global");
   const toast = useToast();
   const key = questionKey(question.identity);
+  const titleId = `${questionAnchorId(question.identity)}-title`;
   const isResearchOutput =
     question.questionType === RESEARCH_OUTPUT_QUESTION_TYPE;
   const initialAnswer = useMemo(
@@ -122,7 +123,7 @@ export default function PlanQuestion({
       ref={shellRef}
       id={questionAnchorId(question.identity)}
       className={[styles.planQuestion, className].filter(Boolean).join(" ")}
-      aria-labelledby={`${questionAnchorId(question.identity)}-title`}
+      aria-labelledby={titleId}
       data-resized={heightPx !== null}
       style={heightPx ? { height: `${heightPx}px` } : undefined}
     >
@@ -155,6 +156,7 @@ export default function PlanQuestion({
             <>
               <PlanQuestionAnswer
                 question={question}
+                titleId={titleId}
                 draftAnswer={controller.draftAnswer}
                 disabled={!canEditAnswer}
                 onChange={controller.setDraftAnswer}
@@ -182,7 +184,7 @@ export default function PlanQuestion({
           )}
         </div>
         <PlanQuestionSidebar
-          questionTitleId={`${questionAnchorId(question.identity)}-title`}
+          questionTitleId={titleId}
           sources={question.guidanceSources}
           comments={question.comments}
           canCustomize={capabilities.canCustomizeGuidance}

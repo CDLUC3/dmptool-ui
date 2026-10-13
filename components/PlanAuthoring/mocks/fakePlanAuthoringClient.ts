@@ -21,8 +21,6 @@ import { MOCK_GUIDANCE_ORGS, mockMe, mockPlan } from "./mockPlan";
 
 export const MOCK_LOAD_ERROR = "Simulated load failure.";
 export const MOCK_SAVE_ERROR = "Simulated save failure. Try again.";
-export const MOCK_COMMENTS_ERROR = "Simulated comments failure.";
-export const MOCK_GUIDANCE_ERROR = "Simulated guidance failure.";
 
 export interface FakeGuidanceOrg {
   uri: string;
@@ -41,8 +39,6 @@ export interface FakePlanAuthoringOptions {
   loadFails?: boolean;
   /** The first AddAnswer/UpdateAnswer returns a GraphQL error. */
   failSaveOnce?: boolean;
-  commentsFail?: boolean;
-  guidanceFail?: boolean;
 }
 
 type Variables = Record<string, unknown>;
@@ -120,16 +116,6 @@ export function createFakePlanAuthoringClient(
     if (failSaveOnce) {
       failSaveOnce = false;
       fail(MOCK_SAVE_ERROR);
-    }
-  };
-  const assertComments = () => {
-    if (options.commentsFail) {
-      fail(MOCK_COMMENTS_ERROR);
-    }
-  };
-  const assertGuidance = () => {
-    if (options.guidanceFail) {
-      fail(MOCK_GUIDANCE_ERROR);
     }
   };
   const commentUser = () => ({ id: me?.id, givenName: me?.givenName, surName: me?.surName });
@@ -211,48 +197,36 @@ export function createFakePlanAuthoringClient(
       };
     },
 
-    AddAnswerComment: ({ answerId, commentText }) => {
-      assertComments();
-      const comment = newComment(commentText);
+    AddAnswerComment: ({ answerId, commentText }) => {      const comment = newComment(commentText);
       const answer = requireAnswer(answerId);
       answer.comments = [...(answer.comments ?? []), comment];
       return { addAnswerComment: { id: comment.id, answerId, commentText, errors: null } };
     },
 
-    UpdateAnswerComment: ({ answerId, answerCommentId, commentText }) => {
-      assertComments();
-      editComment(findComment(answerId, answerCommentId), commentText);
+    UpdateAnswerComment: ({ answerId, answerCommentId, commentText }) => {      editComment(findComment(answerId, answerCommentId), commentText);
       return { updateAnswerComment: { id: answerCommentId, answerId, commentText, errors: null } };
     },
 
-    RemoveAnswerComment: ({ answerId, answerCommentId }) => {
-      assertComments();
-      const answer = requireAnswer(answerId);
+    RemoveAnswerComment: ({ answerId, answerCommentId }) => {      const answer = requireAnswer(answerId);
       answer.comments = (answer.comments ?? []).filter(
         (comment) => comment.id !== answerCommentId
       );
       return { removeAnswerComment: { id: answerCommentId, answerId, commentText: null, errors: null } };
     },
 
-    AddFeedbackComment: ({ answerId, commentText }) => {
-      assertComments();
-      const comment = newComment(commentText);
+    AddFeedbackComment: ({ answerId, commentText }) => {      const comment = newComment(commentText);
       const answer = requireAnswer(answerId);
       answer.feedbackComments = [...(answer.feedbackComments ?? []), comment];
       return { addFeedbackComment: { id: comment.id, answerId, commentText, errors: null } };
     },
 
-    UpdateFeedbackComment: ({ planFeedbackCommentId, commentText }) => {
-      assertComments();
-      editComment(findFeedbackComment(planFeedbackCommentId), commentText);
+    UpdateFeedbackComment: ({ planFeedbackCommentId, commentText }) => {      editComment(findFeedbackComment(planFeedbackCommentId), commentText);
       return {
         updateFeedbackComment: { id: planFeedbackCommentId, answerId: null, commentText, errors: null },
       };
     },
 
-    RemoveFeedbackComment: ({ planFeedbackCommentId }) => {
-      assertComments();
-      answers().forEach((answer) => {
+    RemoveFeedbackComment: ({ planFeedbackCommentId }) => {      answers().forEach((answer) => {
         answer.feedbackComments = (answer.feedbackComments ?? []).filter(
           (comment) => comment.id !== planFeedbackCommentId
         );
@@ -262,9 +236,7 @@ export function createFakePlanAuthoringClient(
       };
     },
 
-    ManagedAffiliationsWithGuidance: ({ name }) => {
-      assertGuidance();
-      const term = String(name ?? "").toLowerCase();
+    ManagedAffiliationsWithGuidance: ({ name }) => {      const term = String(name ?? "").toLowerCase();
       const items = guidanceOrgs
         .filter(
           (org) =>
@@ -291,9 +263,7 @@ export function createFakePlanAuthoringClient(
       };
     },
 
-    AddPlanGuidance: ({ affiliationId }) => {
-      assertGuidance();
-      const org =
+    AddPlanGuidance: ({ affiliationId }) => {      const org =
         guidanceOrgs.find((item) => item.uri === affiliationId) ??
         fail("Affiliation not found.");
       questions()
@@ -318,9 +288,7 @@ export function createFakePlanAuthoringClient(
       return { addPlanGuidance: { id: nextId++, planId: plan?.id, affiliationId } };
     },
 
-    RemovePlanGuidance: ({ affiliationId }) => {
-      assertGuidance();
-      questions().forEach((question) => {
+    RemovePlanGuidance: ({ affiliationId }) => {      questions().forEach((question) => {
         question.guidanceSources = (question.guidanceSources ?? []).filter(
           (source) => source.orgURI !== affiliationId
         );

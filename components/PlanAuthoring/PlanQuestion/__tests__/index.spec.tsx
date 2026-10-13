@@ -92,6 +92,9 @@ function makeQuestion(
   });
 }
 
+const answerField = () =>
+  screen.getByRole("textbox", { name: "What data will you collect" });
+
 const textAreaJson = { type: "textArea", attributes: {} };
 
 function createDataSource(
@@ -255,7 +258,7 @@ describe("PlanQuestion", () => {
         }),
       });
 
-      expect(screen.getByRole("textbox", { name: "text" })).toHaveValue(
+      expect(answerField()).toHaveValue(
         "Survey responses"
       );
     });
@@ -264,7 +267,7 @@ describe("PlanQuestion", () => {
       const user = userEvent.setup();
       const { dataSource } = renderQuestion();
 
-      await user.type(screen.getByRole("textbox", { name: "text" }), "Logs");
+      await user.type(answerField(), "Logs");
       expect(screen.getByRole("status")).toHaveTextContent("Unsaved changes");
 
       await user.click(screen.getByRole("button", { name: "Save" }));
@@ -288,7 +291,7 @@ describe("PlanQuestion", () => {
       });
       renderQuestion({ dataSource });
 
-      await user.type(screen.getByRole("textbox", { name: "text" }), "x");
+      await user.type(answerField(), "x");
       await user.click(screen.getByRole("button", { name: "Save" }));
 
       await waitFor(() => {
@@ -482,7 +485,7 @@ describe("PlanQuestion", () => {
         }),
       });
 
-      const field = screen.getByRole("textbox", { name: "text" });
+      const field = answerField();
       expect(field).toBeDisabled();
       expect(field).toHaveValue("Survey responses");
 

@@ -20,7 +20,6 @@ import {
   makeRawPlan,
   makeRawQuestion,
   makeRawSection,
-  makeViewer,
 } from "../mocks";
 
 const NSF = "https://ror.org/nsf";
@@ -146,7 +145,7 @@ describe("toPlanAuthoringModel structure", () => {
           { projectMember: { givenName: "Amelia", surName: "Snow" }, memberRoles: [] },
         ],
       }),
-      makeViewer({ affiliationName: "CDL" })
+      { ...EMPTY_PLAN_AUTHORING_VIEWER, affiliationName: "CDL" }
     );
 
     expect(model).toMatchObject({
@@ -435,10 +434,11 @@ describe("toPlanAuthoringModel comments", () => {
     }),
   });
 
-  const viewer: PlanAuthoringViewer = makeViewer({
+  const viewer: PlanAuthoringViewer = {
+    ...EMPTY_PLAN_AUTHORING_VIEWER,
     currentUserId: 3,
     formatCommentCreated: (created) => `at ${created}`,
-  });
+  };
 
   it("merges answer and feedback comments oldest first, undated last, with per-comment actions", () => {
     const [question] = mapQuestions([answerWithComments], viewer);

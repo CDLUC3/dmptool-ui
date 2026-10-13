@@ -3,13 +3,19 @@ import {
   deriveCommentCapabilities,
   type CommentPermissionFacts,
 } from "../commentCapabilities";
-import { makeCommentPermissionPlan } from "../mocks";
-
 const CLOSED_ROUNDS = [{ id: 30, requested: "1751900000000", completed: "1751929006000" }];
 const UNREQUESTED_ROUNDS = [{ id: 32, requested: null, completed: null }];
 
 function capabilities(role: string, plan: Partial<CommentPermissionFacts> = {}) {
-  return deriveCommentCapabilities(makeCommentPermissionPlan({ role, ...plan }));
+  return deriveCommentCapabilities({
+    myAccessLevel: "EDIT",
+    feedbackRounds: [
+      ...CLOSED_ROUNDS,
+      { id: 31, requested: "1751950000000", completed: null },
+    ],
+    role,
+    ...plan,
+  });
 }
 
 describe("deriveCommentCapabilities canModerateComments", () => {

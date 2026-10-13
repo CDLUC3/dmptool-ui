@@ -8,7 +8,7 @@ import planAuthoringMessages from "@/messages/en-US/planAuthoring.json";
 import { GuidanceSourceType } from "@/generated/graphql";
 import PlanQuestionSidebar from "../index";
 import type { PlanGuidanceSource } from "../../model";
-import { makeComment, makeGuidanceSource } from "../../mocks";
+import { makeComment } from "../../mocks";
 
 expect.extend(toHaveNoViolations);
 
@@ -27,13 +27,13 @@ function source(
   type: GuidanceSourceType,
   shortName: string
 ): PlanGuidanceSource {
-  return makeGuidanceSource({
+  return {
     id,
     type,
     label: `${shortName} guidance label`,
     shortName,
     bodyHtml: `<p>${shortName} says hello</p>`,
-  });
+  };
 }
 
 const bestPractice = source("dmptool", GuidanceSourceType.BestPractice, "DMP Tool");

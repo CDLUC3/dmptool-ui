@@ -2,7 +2,7 @@ import type { ResearchOutputTable } from "@/app/types";
 import { RESEARCH_OUTPUT_QUESTION_TYPE } from "@/lib/constants";
 import { buildResearchOutputAnswer } from "../researchOutputAnswer";
 import type { PlanAuthoringPlan } from "../toPlanAuthoringModel";
-import { makeRawAnswer, makeRawQuestion } from "./builders";
+import { makeRawQuestion } from "./builders";
 import { mockPlan } from "./mockPlan";
 
 /** Column headings match SingleResearchOutputComponent / getRowDisplayInfo checks. */
@@ -356,8 +356,6 @@ export const MOCK_RESEARCH_OUTPUT_ROWS = [
   },
 ] as unknown as ResearchOutputTable[];
 
-export const MOCK_RESEARCH_OUTPUT_QUESTION_KEY = "base-question-105";
-
 const researchOutputQuestion = makeRawQuestion({
   versionedQuestionId: 105,
   questionText: "Research outputs for this award",
@@ -366,12 +364,14 @@ const researchOutputQuestion = makeRawQuestion({
     "<p>List each anticipated research output (datasets, software, samples, or other products). Include repository, license, access level, and release timing where known.</p>",
   json: JSON.stringify(MOCK_RESEARCH_OUTPUT_PARSED_JSON),
   hasAnswer: true,
-  answer: makeRawAnswer(RESEARCH_OUTPUT_QUESTION_TYPE, MOCK_RESEARCH_OUTPUT_ROWS, {
+  answer: {
     id: 105,
     json: JSON.stringify(
       buildResearchOutputAnswer(MOCK_RESEARCH_OUTPUT_PARSED_JSON, MOCK_RESEARCH_OUTPUT_ROWS)
     ),
-  }),
+    comments: [],
+    feedbackComments: [],
+  },
 });
 
 /** mockPlan plus a research output table question at the end of its first section. */

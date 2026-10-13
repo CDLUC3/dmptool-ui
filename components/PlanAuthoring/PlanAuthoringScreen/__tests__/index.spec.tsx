@@ -128,10 +128,8 @@ describe("PlanAuthoringScreen load states", () => {
     expect(
       screen.getByRole("heading", { level: 3, name: "Who can access the data?" })
     ).toBeInTheDocument();
-    expect(screen.getAllByRole("textbox", { name: "text" }).map((field) => (field as HTMLInputElement).value)).toEqual([
-      "Surveys",
-      "",
-    ]);
+    expect(screen.getByRole("textbox", { name: "What data will you collect?" })).toHaveValue("Surveys");
+    expect(screen.getByRole("textbox", { name: "Who can access the data?" })).toHaveValue("");
     expect(screen.queryByText("screen.loadingPlan")).not.toBeInTheDocument();
   });
 
@@ -208,9 +206,8 @@ describe("PlanAuthoringScreen load states", () => {
     expect(screen.getByText("screen.readOnlyTitle")).toBeInTheDocument();
     expect(screen.getByText("screen.readOnlyNotice")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "buttons.save" })).not.toBeInTheDocument();
-    screen
-      .getAllByRole("textbox", { name: "text" })
-      .forEach((field) => expect(field).toBeDisabled());
+    expect(screen.getByRole("textbox", { name: "What data will you collect?" })).toBeDisabled();
+    expect(screen.getByRole("textbox", { name: "Who can access the data?" })).toBeDisabled();
   });
 
   it("has no read-only notice when answers can be edited", () => {
@@ -250,8 +247,10 @@ describe("PlanAuthoringScreen load states", () => {
     };
     expect(unload()).toBe(false);
 
-    const [, emptyField] = screen.getAllByRole("textbox", { name: "text" });
-    await user.type(emptyField, "Only the team");
+    await user.type(
+      screen.getByRole("textbox", { name: "Who can access the data?" }),
+      "Only the team"
+    );
     expect(unload()).toBe(true);
 
     const saveButtons = screen.getAllByRole("button", { name: "buttons.save" });
@@ -267,7 +266,7 @@ describe("PlanAuthoringScreen load states", () => {
 
 describe("PlanAuthoringScreen", () => {
   it("loads the plan over GraphQL and renders the title, header and section navigation", async () => {
-    const dataSource = createScenarioDataSource("editable");
+    const dataSource = createScenarioDataSource();
     render(<PlanAuthoring dataSource={dataSource} />);
 
     expect(
@@ -291,7 +290,7 @@ describe("PlanAuthoringScreen", () => {
   });
 
   it("replaces the built-in top block with the overview node", async () => {
-    const dataSource = createScenarioDataSource("editable");
+    const dataSource = createScenarioDataSource();
     render(
       <PlanAuthoring
         dataSource={dataSource}
@@ -433,8 +432,66 @@ describe("PlanAuthoringScreen", () => {
     expect(results).toHaveNoViolations();
   });
 
+  it("opens the section picker from the section navigation and with Ctrl+K", async () => {
+    Element.prototype.scrollIntoView = jest.fn();
+    const user = userEvent.setup();
+    const { dataSource } = createDataSource({ status: "ready", model: makeModel() });
+    render(<PlanAuthoring dataSource={dataSource} />);
+
+    await user.click(screen.getByRole("button", { name: "sectionNav.openPickerAria" }));
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+
+    await user.keyboard("{Escape}");
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+
+    await user.keyboard("{Control>}k{/Control}");
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+  });
+
+  it("ignores Ctrl+K on the document variant", async () => {
+    const user = userEvent.setup();
+    render(
+      <PlanAuthoring
+        dataSource={createMockDataSource()}
+        variant="document"
+        planDocument={MOCK_PLAN_DOCUMENT}
+      />
+    );
+
+    await user.keyboard("{Control>}k{/Control}");
+
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
+  it("searches and saves guidance sources from a question's Customize button", async () => {
+    const user = userEvent.setup();
+    const model = makeModel();
+    const { dataSource } = createDataSource({
+      status: "ready",
+      model: { ...model, capabilities: { ...model.capabilities, canCustomizeGuidance: true } },
+    });
+    render(<PlanAuthoring dataSource={dataSource} />);
+
+    await user.click(screen.getAllByRole("button", { name: "guidance.customize" })[0]);
+    const dialog = screen.getByRole("dialog", { name: "customizeDialog.title" });
+
+    await user.type(
+      within(dialog).getByLabelText("customizeDialog.searchByName"),
+      "nih{Enter}"
+    );
+    expect(dataSource.searchGuidanceOrgs).toHaveBeenCalledWith("nih");
+
+    await user.click(
+      within(dialog).getByRole("button", { name: "customizeDialog.saveGuidanceSources" })
+    );
+    expect(dataSource.setSelectedGuidanceOrgs).toHaveBeenCalledWith(
+      model.selectedGuidanceOrgIds
+    );
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
   it("has no accessibility violations for the questions variant", async () => {
-    const dataSource = createScenarioDataSource("editable");
+    const dataSource = createScenarioDataSource();
     const { container } = render(<PlanAuthoring dataSource={dataSource} />);
     await screen.findByText("Products of research");
 

@@ -30,6 +30,8 @@ import styles from "./PlanQuestionAnswer.module.scss";
 
 interface PlanQuestionAnswerProps {
   question: PlanQuestionDefinition;
+  /** Id of the question title, which names the answer for screen readers. */
+  titleId: string;
   draftAnswer: unknown;
   disabled?: boolean;
   onChange: (answerJson: unknown) => void;
@@ -40,6 +42,7 @@ interface PlanQuestionAnswerProps {
 
 export default function PlanQuestionAnswer({
   question,
+  titleId,
   draftAnswer,
   disabled = false,
   onChange,
@@ -88,6 +91,7 @@ export default function PlanQuestionAnswer({
       onChange,
     }),
     fieldName,
+    labelledBy: titleId,
     typeaheadSearchProps,
   });
 
@@ -98,7 +102,11 @@ export default function PlanQuestionAnswer({
   };
 
   return (
-    <div className={[styles.answerEditor, className].filter(Boolean).join(" ")}>
+    <div
+      role="group"
+      aria-labelledby={titleId}
+      className={[styles.answerEditor, className].filter(Boolean).join(" ")}
+    >
       {researchOutputColumns ? (
         <ResearchOutputAnswerComponent
           columns={researchOutputColumns}

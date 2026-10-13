@@ -1,23 +1,18 @@
 import { CURRENT_SCHEMA_VERSION } from "@dmptool/types";
 import { GuidanceSourceType, UserRole } from "@/generated/graphql";
-import type { CommentPermissionFacts } from "../commentCapabilities";
 import type {
   PlanAuthoringModel,
   PlanComment,
-  PlanGuidanceOrgOption,
-  PlanGuidanceSource,
   PlanQuestionDefinition,
   PlanSectionDefinition,
 } from "../model";
-import {
-  EMPTY_PLAN_AUTHORING_VIEWER,
-  type PlanAuthoringAnswer,
-  type PlanAuthoringGuidanceSource,
-  type PlanAuthoringMe,
-  type PlanAuthoringPlan,
-  type PlanAuthoringQuestion,
-  type PlanAuthoringSection,
-  type PlanAuthoringViewer,
+import type {
+  PlanAuthoringAnswer,
+  PlanAuthoringGuidanceSource,
+  PlanAuthoringMe,
+  PlanAuthoringPlan,
+  PlanAuthoringQuestion,
+  PlanAuthoringSection,
 } from "../toPlanAuthoringModel";
 
 export function makeQuestion(
@@ -98,12 +93,6 @@ export function makeModel(
   };
 }
 
-export function makeViewer(
-  overrides: Partial<PlanAuthoringViewer> = {}
-): PlanAuthoringViewer {
-  return { ...EMPTY_PLAN_AUTHORING_VIEWER, ...overrides };
-}
-
 export function makeComment(overrides: Partial<PlanComment> = {}): PlanComment {
   return {
     id: "answer-1",
@@ -113,30 +102,6 @@ export function makeComment(overrides: Partial<PlanComment> = {}): PlanComment {
     text: "First comment",
     canEdit: true,
     canDelete: true,
-    ...overrides,
-  };
-}
-
-export function makeGuidanceSource(
-  overrides: Partial<PlanGuidanceSource> = {}
-): PlanGuidanceSource {
-  return {
-    id: "nsf",
-    type: GuidanceSourceType.TemplateOwner,
-    label: "NSF guidance label",
-    shortName: "NSF",
-    bodyHtml: "<p>NSF says hello</p>",
-    ...overrides,
-  };
-}
-
-export function makeGuidanceOrg(
-  overrides: Partial<PlanGuidanceOrgOption> = {}
-): PlanGuidanceOrgOption {
-  return {
-    id: "org-1",
-    label: "University of Example",
-    shortName: "UoE",
     ...overrides,
   };
 }
@@ -250,19 +215,6 @@ export function makeRawMe(
       uri: "https://ror.org/03yrm5c26",
       feedbackEnabled: false,
     },
-    ...overrides,
-  };
-}
-
-export function makeCommentPermissionPlan(
-  overrides: Partial<CommentPermissionFacts> = {}
-): CommentPermissionFacts {
-  return {
-    myAccessLevel: "EDIT",
-    feedbackRounds: [
-      { id: 30, requested: "1751900000000", completed: "1751929006000" },
-      { id: 31, requested: "1751950000000", completed: null },
-    ],
     ...overrides,
   };
 }

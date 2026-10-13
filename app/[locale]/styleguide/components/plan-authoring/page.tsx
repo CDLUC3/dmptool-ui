@@ -7,7 +7,7 @@ import { ContentContainer, LayoutContainer } from "@/components/Container";
 import { PlanAuthoring } from "@/components/PlanAuthoring";
 import {
   createScenarioDataSource,
-  scenarios,
+  MOCK_PLAN_DOCUMENT,
 } from "@/components/PlanAuthoring/mocks";
 import {
   getStyleguidePlanAuthoringDataSource,
@@ -15,14 +15,10 @@ import {
 } from "./styleguideDataSource";
 import "../../shared/styleguide.scss";
 
-const documentScenario = scenarios.documentVariant();
-
 export default function PlanAuthoringStyleGuidePage() {
   const locale = useLocale();
   const questionsDataSource = getStyleguidePlanAuthoringDataSource();
-  const [documentDataSource] = useState(() =>
-    createScenarioDataSource("documentVariant")
-  );
+  const [documentDataSource] = useState(() => createScenarioDataSource());
 
   return (
     <LayoutContainer className="plan-authoring-layout">
@@ -69,7 +65,8 @@ export default function PlanAuthoringStyleGuidePage() {
 
       <PlanAuthoring
         dataSource={documentDataSource}
-        {...documentScenario.props}
+        variant="document"
+        planDocument={MOCK_PLAN_DOCUMENT}
         idPrefix="plan-document"
       />
     </LayoutContainer>
