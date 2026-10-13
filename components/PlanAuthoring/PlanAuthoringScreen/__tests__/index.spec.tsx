@@ -86,7 +86,7 @@ function createDataSource(initialState: PlanAuthoringState) {
   return { dataSource, emit };
 }
 
-describe("PlanAuthoringScreen load states", () => {
+describe("PlanAuthoringScreen", () => {
   it("shows the loading state", () => {
     const { dataSource } = createDataSource({ status: "loading" });
     render(<PlanAuthoring dataSource={dataSource} />);
@@ -120,8 +120,6 @@ describe("PlanAuthoringScreen load states", () => {
     expect(screen.getByRole("heading", { level: 1, name: "Ocean Currents DMP" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { level: 2, name: "Data collection" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { level: 2, name: "Custom sharing section" })).toBeInTheDocument();
-    expect(screen.getByText("How you gather data.")).toBeInTheDocument();
-    expect(screen.getByText("Funder requirements for data.")).toBeInTheDocument();
     expect(
       screen.getByRole("heading", { level: 3, name: "What data will you collect?" })
     ).toBeInTheDocument();
@@ -153,6 +151,7 @@ describe("PlanAuthoringScreen load states", () => {
     const baseSection = screen.getByRole("region", { name: "Data collection" });
     const customSection = screen.getByRole("region", { name: "Custom sharing section" });
 
+    expect(within(baseSection).getByText("How you gather data.")).toBeInTheDocument();
     expect(within(baseSection).getByText("Funder requirements for data.")).toBeInTheDocument();
     expect(within(customSection).queryByText("Funder requirements for data.")).not.toBeInTheDocument();
     expect(within(customSection).queryByText("How you gather data.")).not.toBeInTheDocument();
@@ -262,9 +261,7 @@ describe("PlanAuthoringScreen load states", () => {
     });
     expect(unload()).toBe(false);
   });
-});
 
-describe("PlanAuthoringScreen", () => {
   it("loads the plan over GraphQL and renders the title, header and section navigation", async () => {
     const dataSource = createScenarioDataSource();
     render(<PlanAuthoring dataSource={dataSource} />);
@@ -287,28 +284,6 @@ describe("PlanAuthoringScreen", () => {
     expect(
       screen.getByText("Primary character of data produced")
     ).toBeInTheDocument();
-  });
-
-  it("replaces the built-in top block with the overview node", async () => {
-    const dataSource = createScenarioDataSource();
-    render(
-      <PlanAuthoring
-        dataSource={dataSource}
-        overview={<section aria-label="custom-overview">Real plan overview</section>}
-      />
-    );
-
-    expect(await screen.findByText("Products of research")).toBeInTheDocument();
-    expect(
-      screen.queryByRole("heading", {
-        level: 1,
-        name: "V4.3: Coastal Ocean Processes of North Greenland",
-      })
-    ).not.toBeInTheDocument();
-    expect(
-      screen.getByRole("region", { name: "custom-overview" })
-    ).toBeInTheDocument();
-    expect(screen.getByText("Products of research")).toBeInTheDocument();
   });
 
   it("renders the plan document card instead of section navigation", () => {

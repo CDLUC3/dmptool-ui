@@ -1,23 +1,14 @@
 import { act, renderHook } from "@testing-library/react";
 import { usePlanComments, type UsePlanCommentsArgs } from "../usePlanComments";
 import type { PlanComment } from "../model";
+import { makeComment } from "../mocks";
 
-const comment = (id: string, text: string): PlanComment => ({
-  id,
-  authorId: 1,
-  authorName: "Ada",
-  createdLabel: "today",
-  text,
-  canEdit: true,
-  canDelete: true,
-});
-
-const first = comment("c1", "First");
-const second = comment("c2", "Second");
+const first = makeComment({ id: "c1", authorName: "Ada", createdLabel: "today", text: "First" });
+const second = makeComment({ id: "c2", authorName: "Ada", createdLabel: "today", text: "Second" });
 
 function setup({
   onUpdateComment = jest.fn(async (id: string, text: string) => ({
-    ...comment(id, text),
+    ...makeComment({ id, authorName: "Ada", createdLabel: "today", text }),
     isEdited: true,
   })),
   onDeleteComment = jest.fn(async () => {}),
@@ -31,13 +22,8 @@ function setup({
 
 const texts = (comments: PlanComment[]) => comments.map((item) => item.text);
 
-beforeEach(() => {
+const silenceConsoleError = () =>
   jest.spyOn(console, "error").mockImplementation(() => {});
-});
-
-afterEach(() => {
-  jest.restoreAllMocks();
-});
 
 describe("usePlanComments", () => {
   it("saves an edit and replaces the comment with the saved one", async () => {
@@ -68,6 +54,7 @@ describe("usePlanComments", () => {
   });
 
   it("restores the original text and reports an error when the update fails", async () => {
+    silenceConsoleError();
     const { result } = setup({
       onUpdateComment: jest.fn(async () => {
         throw new Error("nope");
@@ -85,6 +72,7 @@ describe("usePlanComments", () => {
   });
 
   it("cancels an edit and clears a previous error", async () => {
+    silenceConsoleError();
     const { result } = setup({
       onUpdateComment: jest.fn(async () => {
         throw new Error("nope");
@@ -121,6 +109,7 @@ describe("usePlanComments", () => {
   });
 
   it("puts the comment back and reports an error when the delete fails", async () => {
+    silenceConsoleError();
     const { result } = setup({
       onDeleteComment: jest.fn(async () => {
         throw new Error("nope");
@@ -161,7 +150,9 @@ describe("usePlanComments", () => {
     const { result, rerender } = setup();
 
     act(() => result.current.handleEditComment(first));
-    rerender({ comments: [comment("c3", "Fresh")] });
+    rerender({
+      comments: [makeComment({ id: "c3", authorName: "Ada", createdLabel: "today", text: "Fresh" })],
+    });
 
     expect(texts(result.current.localComments)).toEqual(["Fresh"]);
     expect(result.current.editingCommentId).toBeNull();

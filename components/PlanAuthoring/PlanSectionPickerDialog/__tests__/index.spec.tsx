@@ -55,8 +55,11 @@ function renderPicker({
 }
 
 const option = (title: string) => screen.getByRole("button", { name: new RegExp(title) });
-const highlighted = () =>
-  document.querySelector<HTMLElement>('[data-highlighted="true"]')?.textContent;
+const highlighted = () => {
+  const search = screen.getByRole("textbox", { name: "Search sections" });
+  const activeId = search.getAttribute("aria-activedescendant");
+  return activeId ? document.getElementById(activeId)?.textContent : undefined;
+};
 
 beforeAll(() => {
   Element.prototype.scrollIntoView = jest.fn();

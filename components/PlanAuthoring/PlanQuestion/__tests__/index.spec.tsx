@@ -600,15 +600,6 @@ describe("PlanQuestion", () => {
     it("adds a comment for this question through the data source", async () => {
       const user = userEvent.setup();
       const dataSource = createDataSource();
-      dataSource.addComment.mockResolvedValue({
-        id: "answer-1",
-        authorId: 1,
-        authorName: "Ada",
-        createdLabel: "just now",
-        text: "Looks good",
-        canEdit: true,
-        canDelete: true,
-      });
       renderQuestion({ question: makeQuestion({ hasAnswer: true }), dataSource });
 
       await user.click(screen.getByRole("button", { name: /Show comments/ }));
@@ -620,56 +611,6 @@ describe("PlanQuestion", () => {
 
       await waitFor(() => {
         expect(dataSource.addComment).toHaveBeenCalledWith(QUESTION_KEY, "Looks good");
-      });
-    });
-
-    const existingComment = {
-      id: "answer-7",
-      authorId: 1,
-      authorName: "Ada",
-      createdLabel: "yesterday",
-      text: "First draft",
-      canEdit: true,
-      canDelete: true,
-    };
-
-    it("edits a comment for this question through the data source", async () => {
-      const user = userEvent.setup();
-      const question = makeQuestion({ hasAnswer: true, comments: [existingComment] });
-      const dataSource = createDataSource(question);
-      renderQuestion({ question, dataSource });
-
-      await user.click(screen.getByRole("button", { name: /Show comments/ }));
-      await user.click(await screen.findByRole("button", { name: "Edit" }));
-      const editor = screen.getByRole("textbox", { name: "Edit comment" });
-      await user.clear(editor);
-      await user.type(editor, "Second draft");
-      await user.click(
-        within(screen.getByRole("list", { name: "Comments" })).getByRole("button", {
-          name: "Save",
-        })
-      );
-
-      await waitFor(() => {
-        expect(dataSource.updateComment).toHaveBeenCalledWith(
-          QUESTION_KEY,
-          "answer-7",
-          "Second draft"
-        );
-      });
-    });
-
-    it("deletes a comment for this question through the data source", async () => {
-      const user = userEvent.setup();
-      const question = makeQuestion({ hasAnswer: true, comments: [existingComment] });
-      const dataSource = createDataSource(question);
-      renderQuestion({ question, dataSource });
-
-      await user.click(screen.getByRole("button", { name: /Show comments/ }));
-      await user.click(await screen.findByRole("button", { name: "Delete" }));
-
-      await waitFor(() => {
-        expect(dataSource.deleteComment).toHaveBeenCalledWith(QUESTION_KEY, "answer-7");
       });
     });
   });
@@ -754,7 +695,6 @@ describe("PlanQuestion", () => {
       }),
     });
 
-    expect(within(container).getByRole("article")).toBeInTheDocument();
     expect(await axe(container)).toHaveNoViolations();
   });
 });

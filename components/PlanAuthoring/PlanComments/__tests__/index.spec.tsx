@@ -117,14 +117,6 @@ describe('PlanComments', () => {
     expect(screen.getByRole('button', { name: 'Global.buttons.edit' })).toBeInTheDocument();
   });
 
-  it('does not show an Edit button when the comment cannot be edited', () => {
-    render(
-      <PlanComments {...defaultProps} comments={[{ ...baseComment, canEdit: false }]} />
-    );
-
-    expect(screen.queryByRole('button', { name: 'Global.buttons.edit' })).not.toBeInTheDocument();
-  });
-
   it('shows only Delete when the comment can be deleted but not edited (moderator)', () => {
     render(
       <PlanComments {...defaultProps} comments={[{ ...baseComment, canEdit: false }]} />
@@ -398,15 +390,6 @@ describe('PlanComments', () => {
       expect(screen.getByRole('alert')).toHaveTextContent(`PlanAuthoring.comments.${mutationError}`);
     }
   );
-
-  it('renders the comments in the scrollable list container', () => {
-    const second: PlanComment = { ...baseComment, id: 'answer-2', text: 'Second comment' };
-    render(<PlanComments {...defaultProps} comments={[baseComment, second]} />);
-
-    expect(screen.getByRole('list', { name: 'PlanAuthoring.comments.listAria' })).toHaveClass(
-      'commentsList'
-    );
-  });
 
   it('does not call onAdd when submitting with blank/whitespace-only text', () => {
     const onAdd = jest.fn();

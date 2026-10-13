@@ -351,22 +351,20 @@ describe('PlanResearchOutputEditScreen', () => {
 
   it('warns before the page unloads only while the row has unsaved changes', async () => {
     const user = userEvent.setup();
-    const addListener = jest.spyOn(window, 'addEventListener');
-    const removeListener = jest.spyOn(window, 'removeEventListener');
-    const beforeUnloadCalls = (spy: jest.SpyInstance) =>
-      spy.mock.calls.filter(([type]) => type === 'beforeunload').length;
     renderScreen();
 
-    expect(beforeUnloadCalls(addListener)).toBe(0);
+    const unload = () => {
+      const event = new Event('beforeunload', { cancelable: true });
+      window.dispatchEvent(event);
+      return event.defaultPrevented;
+    };
+    expect(unload()).toBe(false);
 
     await user.click(screen.getByRole('button', { name: 'Change output' }));
-    expect(beforeUnloadCalls(addListener)).toBe(1);
+    expect(unload()).toBe(true);
 
     await user.click(screen.getByRole('button', { name: 'Save output' }));
-    await waitFor(() => expect(beforeUnloadCalls(removeListener)).toBe(1));
-
-    addListener.mockRestore();
-    removeListener.mockRestore();
+    await waitFor(() => expect(unload()).toBe(false));
   });
 
   it('returns to the plan when cancel is pressed', async () => {

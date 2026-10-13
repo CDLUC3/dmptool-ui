@@ -611,7 +611,7 @@ describe("toStoredAnswerJson", () => {
 
 describe("toPlanAuthoringModel question JSON", () => {
   it("flags only the malformed question and still maps the rest of the plan", () => {
-    const consoleError = jest.spyOn(console, "error").mockImplementation(() => {});
+    jest.spyOn(console, "error").mockImplementation(() => {});
 
     const [broken, unknownType, missing, valid] = mapQuestions([
       makeRawQuestion({ versionedQuestionId: 1, json: "{not json" }),
@@ -633,7 +633,6 @@ describe("toPlanAuthoringModel question JSON", () => {
       answerJson: { type: "text", answer: "hi" },
       lastSavedAt: 1758800000000,
     });
-    consoleError.mockRestore();
   });
 
   it("treats an unparseable answer as empty and logs it", () => {
@@ -649,6 +648,5 @@ describe("toPlanAuthoringModel question JSON", () => {
       "Failed to parse plan answer JSON",
       expect.any(SyntaxError)
     );
-    consoleError.mockRestore();
   });
 });

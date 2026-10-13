@@ -156,10 +156,6 @@ beforeEach(() => {
   jest.spyOn(Date, "now").mockReturnValue(NOW);
 });
 
-afterEach(() => {
-  jest.restoreAllMocks();
-});
-
 describe("planAuthoringDataSource loading", () => {
   it("loads the plan and the viewer, maps them to ready and notifies subscribers", async () => {
     const { dataSource, query } = setup();

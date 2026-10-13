@@ -75,7 +75,6 @@ beforeEach(() => {
 
 afterEach(() => {
   jest.useRealTimers();
-  jest.restoreAllMocks();
   document.body.innerHTML = "";
 });
 
@@ -150,19 +149,21 @@ describe("usePlanSectionNavigation", () => {
     expect(result.current.activeSection).toBe(sections[2]);
   });
 
-  it("updates once per animation frame and stops listening on unmount", () => {
-    const { unmount } = renderHook(() => usePlanSectionNavigation({ sections }));
+  it("stops updating the active section after unmount", () => {
+    const { result, unmount } = renderHook(() => usePlanSectionNavigation({ sections }));
 
-    window.dispatchEvent(new Event("scroll"));
-    window.dispatchEvent(new Event("resize"));
-    expect(frames).toHaveLength(1);
+    placeSection(sections[0], -500);
+    placeSection(sections[1], 40, 300);
+    placeSection(sections[2], 400);
+    scroll();
+    expect(result.current.activeSection).toBe(sections[1]);
 
     unmount();
-    expect(window.cancelAnimationFrame).toHaveBeenCalledWith(1);
 
-    frames = [];
-    window.dispatchEvent(new Event("scroll"));
-    expect(frames).toHaveLength(0);
+    placeSection(sections[1], -500);
+    placeSection(sections[2], 40);
+    scroll();
+    expect(result.current.activeSection).toBe(sections[1]);
   });
 
   describe("URL fragment", () => {

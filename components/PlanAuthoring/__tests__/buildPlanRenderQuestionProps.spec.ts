@@ -2,13 +2,31 @@ import type React from "react";
 import { CalendarDate } from "@internationalized/date";
 import { buildPlanRenderQuestionProps } from "../buildPlanRenderQuestionProps";
 
-function build(questionType: string, answer: unknown) {
+function build(
+  questionType: string,
+  answer?: unknown,
+  options?: {
+    parsedJson?: Record<string, unknown>;
+    draftExtras?: Record<string, unknown>;
+    disabled?: boolean;
+    editorId?: string;
+  }
+) {
   const onChange = jest.fn();
+  const draftAnswer =
+    answer === undefined && !options?.draftExtras
+      ? null
+      : {
+          type: questionType,
+          ...(answer !== undefined ? { answer } : {}),
+          ...options?.draftExtras,
+        };
   const props = buildPlanRenderQuestionProps({
     questionType,
-    parsedJson: { type: questionType },
-    draftAnswer: answer === undefined ? null : { type: questionType, answer },
-    editorId: "editor",
+    parsedJson: options?.parsedJson ?? { type: questionType },
+    draftAnswer,
+    disabled: options?.disabled,
+    editorId: options?.editorId ?? "editor",
     onChange,
   });
   const emitted = () => onChange.mock.lastCall?.[0];
@@ -23,16 +41,22 @@ const inputEvent = (value: string) => {
 };
 
 describe("buildPlanRenderQuestionProps", () => {
-  it.each([
-    ["text", "textFieldProps", "handleTextChange"],
-    ["url", "urlProps", "handleUrlChange"],
-    ["email", "emailProps", "handleEmailChange"],
-  ] as const)("emits typed %s input", (type, bag, handler) => {
-    const { props, emitted } = build(type, "old");
-    (props[bag] as Record<string, (e: React.ChangeEvent<HTMLInputElement>) => void>)[
-      handler
-    ](inputEvent("new"));
-    expect(emitted()).toEqual({ type, answer: "new" });
+  it("emits typed text input", () => {
+    const { props, emitted } = build("text", "old");
+    props.textFieldProps?.handleTextChange?.(inputEvent("new"));
+    expect(emitted()).toEqual({ type: "text", answer: "new" });
+  });
+
+  it("emits typed url input", () => {
+    const { props, emitted } = build("url", "old");
+    props.urlProps?.handleUrlChange?.(inputEvent("new"));
+    expect(emitted()).toEqual({ type: "url", answer: "new" });
+  });
+
+  it("emits typed email input", () => {
+    const { props, emitted } = build("email", "old");
+    props.emailProps?.handleEmailChange?.(inputEvent("new"));
+    expect(emitted()).toEqual({ type: "email", answer: "new" });
   });
 
   it("emits rich text from the editor", () => {
@@ -45,7 +69,7 @@ describe("buildPlanRenderQuestionProps", () => {
   it("emits the checkbox selection and ignores non-string stored values", () => {
     const { props, emitted } = build("checkBoxes", ["a", 3, "b"]);
     expect(props.checkBoxProps?.selectedCheckboxValues).toEqual(["a", "b"]);
-    props.checkBoxProps?.handleCheckboxGroupChange(["c"]);
+    props.checkBoxProps?.handleCheckboxGroupChange?.(["c"]);
     expect(emitted()).toEqual({ type: "checkBoxes", answer: ["c"] });
   });
 
@@ -61,26 +85,29 @@ describe("buildPlanRenderQuestionProps", () => {
   });
 
   it("leaves an empty select unselected", () => {
-    const { props } = build("selectBox", undefined);
+    const { props } = build("selectBox");
     expect(props.selectBoxProps?.selectedSelectValue).toBeUndefined();
   });
 
   it("maps a multiselect answer to a Set and emits an array", () => {
     const { props, emitted } = build("multiselectBox", ["a", "b"]);
     expect(props.multiSelectBoxProps?.selectedMultiSelectValues).toEqual(new Set(["a", "b"]));
-    props.multiSelectBoxProps?.handleMultiSelectChange(new Set(["b", "c"]));
+    props.multiSelectBoxProps?.handleMultiSelectChange?.(new Set(["b", "c"]));
     expect(emitted()).toEqual({ type: "multiselectBox", answer: ["b", "c"] });
   });
 
-  it.each([
-    ["number", "numberProps", "numberValue", "handleNumberChange"],
-    ["currency", "currencyProps", "inputCurrencyValue", "handleCurrencyChange"],
-  ] as const)("maps and emits a %s answer", (type, bag, valueKey, handler) => {
-    const { props, emitted } = build(type, 12.5);
-    const bagProps = props[bag] as unknown as Record<string, unknown>;
-    expect(bagProps[valueKey]).toBe(12.5);
-    (bagProps[handler] as (value: number) => void)(40);
-    expect(emitted()).toEqual({ type, answer: 40 });
+  it("maps and emits a number answer", () => {
+    const { props, emitted } = build("number", 12.5);
+    expect(props.numberProps?.numberValue).toBe(12.5);
+    props.numberProps?.handleNumberChange?.(40);
+    expect(emitted()).toEqual({ type: "number", answer: 40 });
+  });
+
+  it("maps and emits a currency answer", () => {
+    const { props, emitted } = build("currency", 12.5);
+    expect(props.currencyProps?.inputCurrencyValue).toBe(12.5);
+    props.currencyProps?.handleCurrencyChange?.(40);
+    expect(emitted()).toEqual({ type: "currency", answer: 40 });
   });
 
   it("treats a non-number stored value as empty for number fields", () => {
@@ -92,13 +119,13 @@ describe("buildPlanRenderQuestionProps", () => {
     const { props, emitted } = build("date", "2025-01-01");
     expect(props.dateProps?.dateValue).toBe("2025-01-01");
 
-    props.dateProps?.handleDateChange(new CalendarDate(2025, 5, 15));
+    props.dateProps?.handleDateChange?.(new CalendarDate(2025, 5, 15));
     expect(emitted()).toEqual({ type: "date", answer: "2025-05-15" });
 
-    props.dateProps?.handleDateChange("2025-06-01");
+    props.dateProps?.handleDateChange?.("2025-06-01");
     expect(emitted()).toEqual({ type: "date", answer: "2025-06-01" });
 
-    props.dateProps?.handleDateChange(null);
+    props.dateProps?.handleDateChange?.(null);
     expect(emitted()).toEqual({ type: "date", answer: null });
   });
 
@@ -112,19 +139,19 @@ describe("buildPlanRenderQuestionProps", () => {
       endDate: "2025-12-31",
     });
 
-    props.dateRangeProps?.handleDateRangeChange("startDate", new CalendarDate(2025, 2, 1));
+    props.dateRangeProps?.handleDateRangeChange?.("startDate", new CalendarDate(2025, 2, 1));
     expect(emitted()).toEqual({
       type: "dateRange",
       answer: { startDate: "2025-02-01", endDate: "2025-12-31" },
     });
 
-    props.dateRangeProps?.handleDateRangeChange("endDate", null);
+    props.dateRangeProps?.handleDateRangeChange?.("endDate", null);
     expect(emitted()).toEqual({
       type: "dateRange",
       answer: { startDate: "2025-01-01", endDate: null },
     });
 
-    props.dateRangeProps?.handleDateRangeChange("endDate", "2026-01-01");
+    props.dateRangeProps?.handleDateRangeChange?.("endDate", "2026-01-01");
     expect(emitted()).toEqual({
       type: "dateRange",
       answer: { startDate: "2025-01-01", endDate: "2026-01-01" },
@@ -132,9 +159,9 @@ describe("buildPlanRenderQuestionProps", () => {
   });
 
   it("starts an unanswered date range with both ends empty", () => {
-    const { props, emitted } = build("dateRange", undefined);
+    const { props, emitted } = build("dateRange");
     expect(props.dateRangeProps?.dateRange).toEqual({ startDate: null, endDate: null });
-    props.dateRangeProps?.handleDateRangeChange("endDate", "2025-03-01");
+    props.dateRangeProps?.handleDateRangeChange?.("endDate", "2025-03-01");
     expect(emitted()).toEqual({
       type: "dateRange",
       answer: { startDate: null, endDate: "2025-03-01" },
@@ -145,7 +172,7 @@ describe("buildPlanRenderQuestionProps", () => {
     const { props, emitted } = build("numberRange", { startNumber: 1, endNumber: 9 });
     expect(props.numberRangeProps?.numberRange).toEqual({ startNumber: 1, endNumber: 9 });
 
-    props.numberRangeProps?.handleNumberRangeChange("endNumber", 20);
+    props.numberRangeProps?.handleNumberRangeChange?.("endNumber", 20);
     expect(emitted()).toEqual({
       type: "numberRange",
       answer: { startNumber: 1, endNumber: 20 },
@@ -153,9 +180,9 @@ describe("buildPlanRenderQuestionProps", () => {
   });
 
   it("starts an unanswered number range with both ends empty", () => {
-    const { props, emitted } = build("numberRange", undefined);
+    const { props, emitted } = build("numberRange");
     expect(props.numberRangeProps?.numberRange).toEqual({ startNumber: null, endNumber: null });
-    props.numberRangeProps?.handleNumberRangeChange("startNumber", 3);
+    props.numberRangeProps?.handleNumberRangeChange?.("startNumber", 3);
     expect(emitted()).toEqual({
       type: "numberRange",
       answer: { startNumber: 3, endNumber: null },
@@ -168,78 +195,34 @@ describe("buildPlanRenderQuestionProps", () => {
   });
 
   it("marks the fields read-only when disabled", () => {
-    const props = buildPlanRenderQuestionProps({
-      questionType: "text",
-      parsedJson: { type: "text" },
-      draftAnswer: null,
-      disabled: true,
-      editorId: "editor",
-      onChange: jest.fn(),
-    });
+    const { props } = build("text", undefined, { disabled: true });
     expect(props.readOnly).toBe(true);
   });
 
-  it("maps a draft answer into useRenderQuestionField prop bags", () => {
-    const onChange = jest.fn();
-    const props = buildPlanRenderQuestionProps({
-      questionType: "radioButtons",
-      parsedJson: {
-        type: "radioButtons",
-        options: [{ label: "A", value: "a" }],
-      },
-      draftAnswer: { type: "radioButtons", answer: "a" },
-      editorId: "editor-1",
-      onChange,
-    });
-
-    expect(props.questionType).toBe("radioButtons");
-    expect(props.editorId).toBe("editor-1");
+  it("emits a radio selection change", () => {
+    const { props, emitted } = build("radioButtons", "a");
     expect(props.radioProps?.selectedRadioValue).toBe("a");
-
-    props.radioProps?.handleRadioChange("b");
-    expect(onChange).toHaveBeenCalledWith({
-      type: "radioButtons",
-      answer: "b",
-    });
+    props.radioProps?.handleRadioChange?.("b");
+    expect(emitted()).toEqual({ type: "radioButtons", answer: "b" });
   });
 
   it("converts boolean yes/no strings to boolean answers", () => {
-    const onChange = jest.fn();
-    const props = buildPlanRenderQuestionProps({
-      questionType: "boolean",
+    const { props, emitted } = build("boolean", false, {
       parsedJson: { type: "boolean", attributes: { value: false } },
-      draftAnswer: { type: "boolean", answer: false },
-      editorId: "editor-2",
-      onChange,
     });
 
     expect(props.booleanProps?.yesNoValue).toBe("no");
-    props.booleanProps?.handleBooleanChange("yes");
-    expect(onChange).toHaveBeenCalledWith({
-      type: "boolean",
-      answer: true,
-    });
+    props.booleanProps?.handleBooleanChange?.("yes");
+    expect(emitted()).toEqual({ type: "boolean", answer: true });
   });
 
   it("preserves an existing additional-comment JSON key when the main answer changes", () => {
-    const onChange = jest.fn();
-    const props = buildPlanRenderQuestionProps({
-      questionType: "radioButtons",
-      parsedJson: {
-        type: "radioButtons",
-        options: [{ label: "A", value: "a" }],
-      },
-      draftAnswer: {
-        type: "radioButtons",
-        answer: "a",
-        comment: "kept note",
-      },
-      editorId: "editor-3",
-      onChange,
+    const { props, emitted } = build("radioButtons", "a", {
+      draftExtras: { comment: "kept note" },
     });
 
-    props.radioProps?.handleRadioChange("b");
-    expect(onChange).toHaveBeenCalledWith({
+    props.radioProps?.handleRadioChange?.("b");
+    expect(emitted()).toEqual({
       type: "radioButtons",
       answer: "b",
       comment: "kept note",
@@ -247,20 +230,10 @@ describe("buildPlanRenderQuestionProps", () => {
   });
 
   it("omits additional comment from emit when the draft has no comment key", () => {
-    const onChange = jest.fn();
-    const props = buildPlanRenderQuestionProps({
-      questionType: "radioButtons",
-      parsedJson: {
-        type: "radioButtons",
-        options: [{ label: "A", value: "a" }],
-      },
-      draftAnswer: { type: "radioButtons", answer: "a" },
-      editorId: "editor-4",
-      onChange,
-    });
+    const { props, emitted } = build("radioButtons", "a");
 
-    props.radioProps?.handleRadioChange("b");
-    expect(onChange).toHaveBeenCalledWith({
+    props.radioProps?.handleRadioChange?.("b");
+    expect(emitted()).toEqual({
       type: "radioButtons",
       answer: "b",
     });
