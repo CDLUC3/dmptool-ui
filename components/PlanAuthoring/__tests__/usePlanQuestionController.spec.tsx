@@ -89,12 +89,11 @@ describe("usePlanQuestionController", () => {
         result.current.setDraftAnswer({ type: "text", answer: "now" });
       });
 
-      let saved: boolean | undefined;
       await act(async () => {
-        saved = await result.current.saveNow();
+        await result.current.saveNow();
       });
 
-      expect(saved).toBe(true);
+      expect(result.current.saveState).toEqual({ status: "saved" });
       expect(dataSource.saveAnswer).toHaveBeenCalledTimes(1);
       expect(dataSource.saveAnswer).toHaveBeenCalledWith(KEY, {
         type: "text",
@@ -127,11 +126,9 @@ describe("usePlanQuestionController", () => {
       act(() => {
         result.current.setDraftAnswer({ type: "text", answer: "two" });
       });
-      let queuedResult: boolean | undefined;
       await act(async () => {
-        queuedResult = await result.current.saveNow();
+        await result.current.saveNow();
       });
-      expect(queuedResult).toBe(false);
       expect(dataSource.saveAnswer).toHaveBeenCalledTimes(1);
 
       await act(async () => {
@@ -154,11 +151,10 @@ describe("usePlanQuestionController", () => {
   });
 
   describe("save results", () => {
-    it("reports failed when saveAnswer throws, and the next save still runs", async () => {
-      jest.spyOn(console, "error").mockImplementation(() => undefined);
+    it("reports failed, and the next save still runs", async () => {
       const dataSource = createDataSource();
       dataSource.saveAnswer
-        .mockRejectedValueOnce(new Error("network down"))
+        .mockResolvedValueOnce({ kind: "failed" })
         .mockResolvedValueOnce({ kind: "saved" });
       const { result } = renderController({ dataSource });
 
@@ -191,12 +187,10 @@ describe("usePlanQuestionController", () => {
       act(() => {
         result.current.setDraftAnswer({ type: "text", answer: "x" });
       });
-      let saved: boolean | undefined;
       await act(async () => {
-        saved = await result.current.saveNow();
+        await result.current.saveNow();
       });
 
-      expect(saved).toBe(false);
       expect(result.current.saveState).toEqual({
         status: "invalid",
         messages: ["The answer is not in the proper format.", "Too long."],
@@ -407,16 +401,14 @@ describe("usePlanQuestionController", () => {
       });
       expect(result.current.saveState).toEqual({ status: "clean" });
 
-      let saved: boolean | undefined;
       await act(async () => {
-        saved = await result.current.saveNow();
+        await result.current.saveNow();
       });
       act(() => {
         jest.advanceTimersByTime(AUTOSAVE_MS * 3);
       });
       unmount();
 
-      expect(saved).toBe(false);
       expect(dataSource.saveAnswer).not.toHaveBeenCalled();
       expect(registerUnsavedChange).not.toHaveBeenCalled();
     });

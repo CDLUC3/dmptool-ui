@@ -75,20 +75,17 @@
     },
     "sidebar": {
       "ariaLabel": "Question guidance and comments",
-      "loadingGuidance": "Loading guidance…",
       "selectGuidanceSource": "Select a guidance source.",
       "comments": "Comments",
       "showComments": "Show comments",
       "hideComments": "Hide comments",
-      "commentCount": "{count, plural, one {# comment} other {# comments}}",
-      "guidanceLoadFailed": "Unable to load guidance."
+      "commentCount": "{count, plural, one {# comment} other {# comments}}"
     },
     "guidance": {
       "sourcesAria": "Guidance sources",
       "customize": "+ Customize"
     },
     "comments": {
-      "loading": "Loading comments…",
       "empty": "No comments yet.",
       "listAria": "Comments",
       "admin": " (admin)",
@@ -99,7 +96,6 @@
       "posting": "Posting…",
       "comment": "Comment",
       "saveBeforeCommenting": "Save an answer before adding comments.",
-      "loadFailed": "Unable to load comments.",
       "addFailed": "Unable to add comment. Try again.",
       "updateFailed": "Unable to update comment. Try again.",
       "deleteFailed": "Unable to delete comment. Try again."

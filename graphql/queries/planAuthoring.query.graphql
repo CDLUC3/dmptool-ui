@@ -66,8 +66,6 @@ query PlanAuthoring($planId: Int!) {
           shortName
           orgURI
           items {
-            id
-            title
             guidanceText
             sampleText
           }

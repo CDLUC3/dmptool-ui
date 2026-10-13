@@ -3,15 +3,13 @@ export type NewCommentTarget =
   | { kind: "feedback"; planFeedbackId: number };
 
 export interface CommentPermissionFacts {
-  me: { role?: string | null };
-  plan: {
-    myAccessLevel?: string | null;
-    feedbackRounds: {
-      id?: number | null;
-      requested?: string | null;
-      completed?: string | null;
-    }[];
-  };
+  role?: string | null;
+  myAccessLevel?: string | null;
+  feedbackRounds: {
+    id?: number | null;
+    requested?: string | null;
+    completed?: string | null;
+  }[];
 }
 
 export interface CommentCapabilities {
@@ -22,17 +20,18 @@ export interface CommentCapabilities {
 const ADMIN_ROLES = new Set(["ADMIN", "SUPERADMIN"]);
 
 export function deriveCommentCapabilities({
-  me,
-  plan,
+  role,
+  myAccessLevel,
+  feedbackRounds,
 }: CommentPermissionFacts): CommentCapabilities {
-  const openRoundId = plan.feedbackRounds.find(
+  const openRoundId = feedbackRounds.find(
     (round) => round.requested != null && round.completed == null
   )?.id;
 
   return {
-    canModerateComments: plan.myAccessLevel === "PRIMARY",
+    canModerateComments: myAccessLevel === "PRIMARY",
     newCommentTarget:
-      ADMIN_ROLES.has(me.role ?? "") && openRoundId != null
+      ADMIN_ROLES.has(role ?? "") && openRoundId != null
         ? { kind: "feedback", planFeedbackId: openRoundId }
         : { kind: "answer" },
   };

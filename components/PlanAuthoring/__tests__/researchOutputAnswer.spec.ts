@@ -1,32 +1,10 @@
-import { CURRENT_SCHEMA_VERSION } from "@dmptool/types";
 import { RESEARCH_OUTPUT_QUESTION_TYPE } from "@/lib/constants";
-import { parseQuestionKey } from "../model";
 import {
   buildResearchOutputAnswer,
   getResearchOutputColumns,
   getResearchOutputRows,
   parseRowIndexParam,
-  toResearchOutputRowNavigation,
 } from "../researchOutputAnswer";
-
-describe("parseQuestionKey", () => {
-  it("parses base and custom keys", () => {
-    expect(parseQuestionKey("base-question-9")).toEqual({
-      kind: "base",
-      versionedQuestionId: 9,
-    });
-    expect(parseQuestionKey("custom-question-3")).toEqual({
-      kind: "custom",
-      customQuestionId: 3,
-    });
-  });
-
-  it("returns null for unrecognized keys", () => {
-    expect(parseQuestionKey("base-section-1")).toBeNull();
-    expect(parseQuestionKey("base-question-x")).toBeNull();
-    expect(parseQuestionKey("")).toBeNull();
-  });
-});
 
 describe("researchOutputAnswer helpers", () => {
   const parsedJson = {
@@ -106,7 +84,6 @@ describe("researchOutputAnswer helpers", () => {
       type: RESEARCH_OUTPUT_QUESTION_TYPE,
       columnHeadings: ["Title", "Output Type"],
       answer: rows,
-      meta: { schemaVersion: CURRENT_SCHEMA_VERSION },
     });
   });
 
@@ -117,30 +94,5 @@ describe("researchOutputAnswer helpers", () => {
     expect(parseRowIndexParam("-1")).toBeNull();
     expect(parseRowIndexParam("1.5")).toBeNull();
     expect(parseRowIndexParam("abc")).toBeNull();
-  });
-
-  const rowHref = (questionKeyValue: string, rowIndex: string) =>
-    `/en-US/ro/${questionKeyValue}/${rowIndex}`;
-
-  it("links research output rows by question key and row index", () => {
-    const navigation = toResearchOutputRowNavigation(
-      {
-        identity: { kind: "custom", customQuestionId: 3 },
-        questionType: RESEARCH_OUTPUT_QUESTION_TYPE,
-      },
-      rowHref
-    );
-
-    expect(navigation?.addHref).toBe("/en-US/ro/custom-question-3/new");
-    expect(navigation?.editHref(4)).toBe("/en-US/ro/custom-question-3/4");
-  });
-
-  it("has no row links for other question types", () => {
-    expect(
-      toResearchOutputRowNavigation(
-        { identity: { kind: "base", versionedQuestionId: 9 }, questionType: "text" },
-        rowHref
-      )
-    ).toBeUndefined();
   });
 });

@@ -52,8 +52,6 @@ jest.mock('../../PlanQuestionSidebar', () => {
   const MockPlanQuestionSidebar = (props: any) => (
     <div>
       <span data-testid="sidebar-can-comment">{String(props.canComment)}</span>
-      <button type="button" onClick={() => props.loadGuidance()}>Load guidance</button>
-      <button type="button" onClick={() => props.loadComments()}>Load comments</button>
       <button type="button" onClick={() => props.onAddComment('new comment')}>Add comment</button>
       <button type="button" onClick={() => props.onUpdateComment('answer-7', 'updated')}>Update comment</button>
       <button type="button" onClick={() => props.onDeleteComment('answer-7')}>Delete comment</button>
@@ -380,20 +378,16 @@ describe('PlanResearchOutputEditScreen', () => {
     expect(screen.queryByRole('button', { name: 'Save output' })).not.toBeInTheDocument();
   });
 
-  it('wires the sidebar guidance and comment actions to the data source', async () => {
+  it('wires the sidebar comment actions to the data source', async () => {
     const user = userEvent.setup();
     const { dataSource } = renderScreen();
 
     expect(screen.getByTestId('sidebar-can-comment')).toHaveTextContent('true');
 
-    await user.click(screen.getByRole('button', { name: 'Load guidance' }));
-    await user.click(screen.getByRole('button', { name: 'Load comments' }));
     await user.click(screen.getByRole('button', { name: 'Add comment' }));
     await user.click(screen.getByRole('button', { name: 'Update comment' }));
     await user.click(screen.getByRole('button', { name: 'Delete comment' }));
 
-    expect(dataSource.loadGuidance).toHaveBeenCalledWith(questionKeyParam);
-    expect(dataSource.loadComments).toHaveBeenCalledWith(questionKeyParam);
     expect(dataSource.addComment).toHaveBeenCalledWith(questionKeyParam, 'new comment');
     expect(dataSource.updateComment).toHaveBeenCalledWith(questionKeyParam, 'answer-7', 'updated');
     expect(dataSource.deleteComment).toHaveBeenCalledWith(questionKeyParam, 'answer-7');

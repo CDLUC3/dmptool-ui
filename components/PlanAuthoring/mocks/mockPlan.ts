@@ -38,7 +38,7 @@ const GUIDANCE: PlanAuthoringGuidanceSource[] = [
     shortName: "DMP Tool",
     orgURI: "bestPractice",
     items: [
-      { id: 1, title: "Data sharing", guidanceText: "<p>Prefer open formats and name a repository that issues DOIs.</p>" },
+      { guidanceText: "<p>Prefer open formats and name a repository that issues DOIs.</p>" },
     ],
   },
   {
@@ -48,8 +48,8 @@ const GUIDANCE: PlanAuthoringGuidanceSource[] = [
     shortName: "NSF",
     orgURI: NSF,
     items: [
-      { id: 2, title: "Expectations", guidanceText: "<p><strong>Expectations</strong></p>" },
-      { id: 3, title: "Coverage", guidanceText: "<ul><li>Data types and volume</li><li>Standards</li><li>Timelines</li></ul>" },
+      { guidanceText: "<p><strong>Expectations</strong></p>" },
+      { guidanceText: "<ul><li>Data types and volume</li><li>Standards</li><li>Timelines</li></ul>" },
     ],
   },
   {
@@ -59,7 +59,7 @@ const GUIDANCE: PlanAuthoringGuidanceSource[] = [
     shortName: "CDL",
     orgURI: CDL,
     items: [
-      { id: 4, title: "Storage", guidanceText: "<p>Use campus storage, not personal drives, for the primary copy.</p>" },
+      { guidanceText: "<p>Use campus storage, not personal drives, for the primary copy.</p>" },
     ],
   },
   {
@@ -69,7 +69,7 @@ const GUIDANCE: PlanAuthoringGuidanceSource[] = [
     shortName: "Stanford",
     orgURI: STANFORD,
     items: [
-      { id: 5, title: "Licensing", guidanceText: "<p>Less restrictive licensing travels further; CC0 is a good default.</p>" },
+      { guidanceText: "<p>Less restrictive licensing travels further; CC0 is a good default.</p>" },
     ],
   },
 ];

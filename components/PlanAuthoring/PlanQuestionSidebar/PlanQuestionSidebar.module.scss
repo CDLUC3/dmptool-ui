@@ -115,20 +115,6 @@
   }
 }
 
-.loadError {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.5rem;
-  margin-bottom: 0.75rem;
-  font-size: 0.8125rem;
-  color: var(--error-600, #b91c1c);
-
-  p {
-    margin: 0;
-  }
-}
-
 // Hint that guidance continues when the panel can scroll further down.
 .guidanceScrollFade {
   position: absolute;

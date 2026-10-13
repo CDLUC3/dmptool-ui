@@ -10,9 +10,6 @@ import styles from "./PlanComments.module.scss";
 interface PlanCommentsProps {
   comments: PlanComment[];
   canAdd: boolean;
-  loading?: boolean;
-  loadFailed?: boolean;
-  onRetryLoad?: () => void;
   mutationError?: PlanCommentMutationError | null;
   editingCommentId: string | null;
   editingCommentText: string;
@@ -21,16 +18,13 @@ interface PlanCommentsProps {
   handleUpdateComment: (comment: PlanComment) => void;
   handleCancelEdit: () => void;
   handleDeleteComment: (comment: PlanComment) => void;
-  onAdd: (text: string) => Promise<void>;
+  onAdd: (text: string) => Promise<unknown>;
   className?: string;
 }
 
 export default function PlanComments({
   comments,
   canAdd,
-  loading = false,
-  loadFailed = false,
-  onRetryLoad,
   mutationError = null,
   editingCommentId,
   editingCommentText,
@@ -57,26 +51,7 @@ export default function PlanComments({
 
   return (
     <div className={[styles.comments, className].filter(Boolean).join(" ")}>
-      {loading ? (
-        <p className={styles.commentsEmpty}>{t("comments.loading")}</p>
-      ) : null}
-      {loadFailed ? (
-        <div
-          className={styles.commentsError}
-          role="alert"
-        >
-          <p>{t("comments.loadFailed")}</p>
-          {onRetryLoad ? (
-            <Button
-              className="small"
-              onPress={onRetryLoad}
-            >
-              {t("common.retry")}
-            </Button>
-          ) : null}
-        </div>
-      ) : null}
-      {!loading && !loadFailed && comments.length === 0 ? (
+      {comments.length === 0 ? (
         <p className={styles.commentsEmpty}>{t("comments.empty")}</p>
       ) : null}
       {mutationError ? (

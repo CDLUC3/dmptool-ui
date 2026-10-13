@@ -4,10 +4,10 @@ import userEvent from "@testing-library/user-event";
 import { NextIntlClientProvider } from "next-intl";
 import globalMessages from "@/messages/en-US/global.json";
 import planAuthoringMessages from "@/messages/en-US/planAuthoring.json";
-import type { ResearchOutputRowNavigation } from "@/components/Form/ResearchOutputAnswerComponent";
 import { RESEARCH_OUTPUT_QUESTION_TYPE } from "@/lib/constants";
 import PlanQuestionAnswer from "../index";
 import type { PlanQuestionDefinition } from "../../model";
+import type { ResearchOutputRowHref } from "../../researchOutputAnswer";
 import { makeQuestion as makeSharedQuestion } from "../../mocks";
 
 jest.mock("next-intl", () => jest.requireActual("next-intl"));
@@ -46,18 +46,18 @@ jest.mock("@/components/Form/ResearchOutputAnswerComponent", () => {
     rows,
     onSave,
     isDisabled,
-    rowNavigation,
+    rowHref,
   }: {
     rows: unknown[];
     onSave: (rows: unknown[]) => void;
     isDisabled?: boolean;
-    rowNavigation?: { addHref: string };
+    rowHref?: (rowIndex: number | "new") => string;
   }) => (
     <div
       data-testid="research-output-list"
       data-row-count={rows.length}
       data-disabled={String(Boolean(isDisabled))}
-      data-add-href={rowNavigation?.addHref ?? ""}
+      data-add-href={rowHref?.("new") ?? ""}
     >
       <button type="button" onClick={() => onSave([])}>
         Remove all outputs
@@ -87,12 +87,12 @@ function renderAnswer(
   draftAnswer: unknown,
   {
     disabled = false,
-    onSaveNow,
-    rowNavigation,
+    onSaveNow = jest.fn().mockResolvedValue(undefined),
+    researchOutputRowHref,
   }: {
     disabled?: boolean;
-    onSaveNow?: () => Promise<boolean>;
-    rowNavigation?: ResearchOutputRowNavigation;
+    onSaveNow?: () => Promise<void>;
+    researchOutputRowHref?: ResearchOutputRowHref;
   } = {}
 ) {
   const onChange = jest.fn();
@@ -104,7 +104,7 @@ function renderAnswer(
         disabled={disabled}
         onChange={onChange}
         onSaveNow={onSaveNow}
-        rowNavigation={rowNavigation}
+        researchOutputRowHref={researchOutputRowHref}
       />
     </NextIntlClientProvider>
   );
@@ -429,17 +429,18 @@ describe("PlanQuestionAnswer", () => {
     it("passes row navigation and disabled state through to the list", () => {
       renderAnswer(researchOutputQuestion(), storedAnswer, {
         disabled: true,
-        rowNavigation: { editHref: (index) => `/edit/${index}`, addHref: "/edit/new" },
+        researchOutputRowHref: (questionKeyValue, rowIndex) =>
+          `/ro/${questionKeyValue}/${rowIndex}`,
       });
 
       const list = screen.getByTestId("research-output-list");
-      expect(list).toHaveAttribute("data-add-href", "/edit/new");
+      expect(list).toHaveAttribute("data-add-href", "/ro/base-question-7/new");
       expect(list).toHaveAttribute("data-disabled", "true");
     });
 
     it("rebuilds the answer JSON and saves when the list changes", async () => {
       const user = userEvent.setup();
-      const onSaveNow = jest.fn().mockResolvedValue(true);
+      const onSaveNow = jest.fn().mockResolvedValue(undefined);
       const { onChange } = renderAnswer(researchOutputQuestion(), storedAnswer, { onSaveNow });
 
       await user.click(screen.getByRole("button", { name: "Remove all outputs" }));

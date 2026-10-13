@@ -5,8 +5,9 @@ import { axe, toHaveNoViolations } from "jest-axe";
 import { NextIntlClientProvider } from "next-intl";
 import globalMessages from "@/messages/en-US/global.json";
 import planAuthoringMessages from "@/messages/en-US/planAuthoring.json";
+import { GuidanceSourceType } from "@/generated/graphql";
 import PlanQuestionSidebar from "../index";
-import type { PlanGuidanceSource, PlanGuidanceSourceType } from "../../model";
+import type { PlanGuidanceSource } from "../../model";
 import { makeComment, makeGuidanceSource } from "../../mocks";
 
 expect.extend(toHaveNoViolations);
@@ -23,7 +24,7 @@ const messages = { ...globalMessages, ...planAuthoringMessages };
 
 function source(
   id: string,
-  type: PlanGuidanceSourceType,
+  type: GuidanceSourceType,
   shortName: string
 ): PlanGuidanceSource {
   return makeGuidanceSource({
@@ -35,10 +36,10 @@ function source(
   });
 }
 
-const bestPractice = source("dmptool", "BEST_PRACTICE", "DMP Tool");
-const templateOwner = source("nsf", "TEMPLATE_OWNER", "NSF");
-const userAffiliation = source("cdl", "USER_AFFILIATION", "CDL");
-const userSelected = source("ucb", "USER_SELECTED", "UCB");
+const bestPractice = source("dmptool", GuidanceSourceType.BestPractice, "DMP Tool");
+const templateOwner = source("nsf", GuidanceSourceType.TemplateOwner, "NSF");
+const userAffiliation = source("cdl", GuidanceSourceType.UserAffiliation, "CDL");
+const userSelected = source("ucb", GuidanceSourceType.UserSelected, "UCB");
 
 type SidebarProps = React.ComponentProps<typeof PlanQuestionSidebar>;
 
@@ -49,21 +50,24 @@ function renderSidebar(overrides: Partial<SidebarProps> = {}) {
     comments: [],
     canCustomize: false,
     canComment: true,
-    loadGuidance: jest.fn().mockResolvedValue([bestPractice, templateOwner, userAffiliation]),
-    loadComments: jest.fn().mockResolvedValue([]),
     onAddComment: jest.fn().mockResolvedValue(undefined),
     onUpdateComment: jest.fn(),
     onDeleteComment: jest.fn().mockResolvedValue(undefined),
     onCustomize: jest.fn(),
     ...overrides,
   };
-  const view = render(
+  const ui = (sidebarProps: SidebarProps) => (
     <NextIntlClientProvider locale="en-US" messages={messages} timeZone="UTC">
       <h3 id="question-title">What data will you collect</h3>
-      <PlanQuestionSidebar {...props} />
+      <PlanQuestionSidebar {...sidebarProps} />
     </NextIntlClientProvider>
   );
-  return { ...view, props };
+  const view = render(ui(props));
+  return {
+    ...view,
+    props,
+    rerenderWith: (next: Partial<SidebarProps>) => view.rerender(ui({ ...props, ...next })),
+  };
 }
 
 function guidancePill(name: string) {
@@ -103,11 +107,11 @@ describe("PlanQuestionSidebar", () => {
     });
   });
 
-  it.each<[PlanGuidanceSourceType, PlanGuidanceSource]>([
-    ["BEST_PRACTICE", bestPractice],
-    ["TEMPLATE_OWNER", templateOwner],
-    ["USER_AFFILIATION", userAffiliation],
-    ["USER_SELECTED", userSelected],
+  it.each<[GuidanceSourceType, PlanGuidanceSource]>([
+    [GuidanceSourceType.BestPractice, bestPractice],
+    [GuidanceSourceType.TemplateOwner, templateOwner],
+    [GuidanceSourceType.UserAffiliation, userAffiliation],
+    [GuidanceSourceType.UserSelected, userSelected],
   ])("uses the resolver label for %s guidance", (_type, guidance) => {
     renderSidebar({ sources: [guidance] });
 
@@ -118,7 +122,7 @@ describe("PlanQuestionSidebar", () => {
 
   it("shows another source's guidance when its pill is selected", async () => {
     const user = userEvent.setup();
-    const { props } = renderSidebar();
+    renderSidebar();
 
     await user.click(guidancePill("DMP Tool"));
 
@@ -129,7 +133,6 @@ describe("PlanQuestionSidebar", () => {
         name: "DMP Tool guidance label",
       })
     ).toBeInTheDocument();
-    expect(props.loadGuidance).toHaveBeenCalledTimes(1);
   });
 
   describe("Customize", () => {
@@ -147,29 +150,6 @@ describe("PlanQuestionSidebar", () => {
 
       expect(screen.queryByRole("button", { name: "+ Customize" })).not.toBeInTheDocument();
     });
-  });
-
-  it("shows a retryable error when guidance fails to load", async () => {
-    jest.spyOn(console, "error").mockImplementation(() => undefined);
-    const user = userEvent.setup();
-    const loadGuidance = jest
-      .fn()
-      .mockRejectedValueOnce(new Error("offline"))
-      .mockResolvedValueOnce([bestPractice, templateOwner, userAffiliation]);
-    renderSidebar({ loadGuidance });
-
-    await user.click(guidancePill("NSF"));
-
-    const alert = await screen.findByRole("alert");
-    expect(alert).toHaveTextContent("Unable to load guidance.");
-
-    await user.click(within(alert).getByRole("button", { name: "Retry" }));
-
-    await waitFor(() => {
-      expect(screen.queryByRole("alert")).not.toBeInTheDocument();
-    });
-    expect(loadGuidance).toHaveBeenCalledTimes(2);
-    expect(screen.getByText("NSF says hello")).toBeInTheDocument();
   });
 
   describe("comment count", () => {
@@ -201,10 +181,9 @@ describe("PlanQuestionSidebar", () => {
   });
 
   describe("comments panel", () => {
-    it("opens, loads the comments and closes again", async () => {
+    it("opens the comments and closes again", async () => {
       const user = userEvent.setup();
-      const loadComments = jest.fn().mockResolvedValue([makeComment()]);
-      renderSidebar({ loadComments });
+      renderSidebar({ comments: [makeComment()] });
 
       const toggle = screen.getByRole("button", { name: /Show comments/ });
       expect(toggle).toHaveAttribute("aria-expanded", "false");
@@ -212,7 +191,6 @@ describe("PlanQuestionSidebar", () => {
       await user.click(toggle);
 
       expect(await screen.findByText("First comment")).toBeInTheDocument();
-      expect(loadComments).toHaveBeenCalledTimes(1);
       const hide = screen.getByRole("button", { name: /Hide comments/ });
       expect(hide).toHaveAttribute("aria-expanded", "true");
 
@@ -221,33 +199,9 @@ describe("PlanQuestionSidebar", () => {
       expect(screen.getByText("CDL says hello")).toBeInTheDocument();
     });
 
-    it("shows a retryable error when comments fail to load", async () => {
-      jest.spyOn(console, "error").mockImplementation(() => undefined);
+    it("adds a comment and shows the updated list", async () => {
       const user = userEvent.setup();
-      const loadComments = jest
-        .fn()
-        .mockRejectedValueOnce(new Error("offline"))
-        .mockResolvedValueOnce([makeComment()]);
-      renderSidebar({ loadComments });
-
-      await user.click(screen.getByRole("button", { name: /Show comments/ }));
-      const alert = await screen.findByRole("alert");
-      expect(alert).toHaveTextContent("Unable to load comments.");
-
-      await user.click(within(alert).getByRole("button", { name: "Retry" }));
-
-      expect(await screen.findByText("First comment")).toBeInTheDocument();
-      expect(screen.queryByRole("alert")).not.toBeInTheDocument();
-    });
-
-    it("adds a comment and shows the refreshed list", async () => {
-      const user = userEvent.setup();
-      const added = makeComment({ id: "answer-2", text: "Second comment" });
-      const loadComments = jest
-        .fn()
-        .mockResolvedValueOnce([makeComment()])
-        .mockResolvedValueOnce([makeComment(), added]);
-      const { props } = renderSidebar({ loadComments });
+      const { props, rerenderWith } = renderSidebar({ comments: [makeComment()] });
 
       await user.click(screen.getByRole("button", { name: /Show comments/ }));
       await screen.findByText("First comment");
@@ -256,9 +210,14 @@ describe("PlanQuestionSidebar", () => {
       await user.type(composer, "  Second comment  ");
       await user.click(screen.getByRole("button", { name: "Comment" }));
 
-      expect(await screen.findByText("Second comment")).toBeInTheDocument();
       expect(props.onAddComment).toHaveBeenCalledWith("Second comment");
-      expect(composer).toHaveValue("");
+      await waitFor(() => expect(composer).toHaveValue(""));
+
+      rerenderWith({
+        comments: [makeComment(), makeComment({ id: "answer-2", text: "Second comment" })],
+      });
+
+      expect(screen.getByText("Second comment")).toBeInTheDocument();
       expect(screen.getAllByRole("listitem")).toHaveLength(2);
     });
 
@@ -266,11 +225,7 @@ describe("PlanQuestionSidebar", () => {
       const user = userEvent.setup();
       const edited = makeComment({ text: "Edited comment", isEdited: true });
       const onUpdateComment = jest.fn().mockResolvedValue(edited);
-      const loadComments = jest
-        .fn()
-        .mockResolvedValueOnce([makeComment()])
-        .mockResolvedValueOnce([edited]);
-      renderSidebar({ loadComments, onUpdateComment });
+      renderSidebar({ comments: [makeComment()], onUpdateComment });
 
       await user.click(screen.getByRole("button", { name: /Show comments/ }));
       await user.click(await screen.findByRole("button", { name: "Edit" }));
@@ -290,10 +245,7 @@ describe("PlanQuestionSidebar", () => {
     it("cancels an edit without saving", async () => {
       const user = userEvent.setup();
       const onUpdateComment = jest.fn();
-      renderSidebar({
-        loadComments: jest.fn().mockResolvedValue([makeComment()]),
-        onUpdateComment,
-      });
+      renderSidebar({ comments: [makeComment()], onUpdateComment });
 
       await user.click(screen.getByRole("button", { name: /Show comments/ }));
       await user.click(await screen.findByRole("button", { name: "Edit" }));
@@ -308,7 +260,7 @@ describe("PlanQuestionSidebar", () => {
       jest.spyOn(console, "error").mockImplementation(() => undefined);
       const user = userEvent.setup();
       renderSidebar({
-        loadComments: jest.fn().mockResolvedValue([makeComment()]),
+        comments: [makeComment()],
         onUpdateComment: jest.fn().mockRejectedValue(new Error("forbidden")),
       });
 
@@ -327,11 +279,7 @@ describe("PlanQuestionSidebar", () => {
     it("deletes a comment", async () => {
       const user = userEvent.setup();
       const onDeleteComment = jest.fn().mockResolvedValue(undefined);
-      const loadComments = jest
-        .fn()
-        .mockResolvedValueOnce([makeComment()])
-        .mockResolvedValueOnce([]);
-      renderSidebar({ loadComments, onDeleteComment });
+      renderSidebar({ comments: [makeComment()], onDeleteComment });
 
       await user.click(screen.getByRole("button", { name: /Show comments/ }));
       await user.click(await screen.findByRole("button", { name: "Delete" }));
@@ -347,7 +295,7 @@ describe("PlanQuestionSidebar", () => {
       jest.spyOn(console, "error").mockImplementation(() => undefined);
       const user = userEvent.setup();
       renderSidebar({
-        loadComments: jest.fn().mockResolvedValue([makeComment()]),
+        comments: [makeComment()],
         onDeleteComment: jest.fn().mockRejectedValue(new Error("forbidden")),
       });
 
@@ -363,11 +311,11 @@ describe("PlanQuestionSidebar", () => {
     it("shows Edit and Delete per comment permissions", async () => {
       const user = userEvent.setup();
       renderSidebar({
-        loadComments: jest.fn().mockResolvedValue([
+        comments: [
           makeComment({ id: "answer-1", text: "Mine", canEdit: true, canDelete: true }),
           makeComment({ id: "answer-2", text: "Moderated", canEdit: false, canDelete: true }),
           makeComment({ id: "feedback-1", text: "Theirs", canEdit: false, canDelete: false, isFeedback: true }),
-        ]),
+        ],
       });
 
       await user.click(screen.getByRole("button", { name: /Show comments/ }));

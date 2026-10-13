@@ -10,8 +10,7 @@ const MINUTE_MS = 60 * 1000;
 
 interface PlanQuestionSaveStatusProps {
   state: PlanQuestionSaveState;
-  /** Epoch milliseconds, as a string (the API's timestamp format). */
-  lastSavedAt?: string;
+  lastSavedAt?: number;
   className?: string;
 }
 
@@ -25,8 +24,7 @@ export default function PlanQuestionSaveStatus({
   const locale = useLocale();
   const showLastSaved =
     (state.status === "clean" || state.status === "saved") &&
-    lastSavedAt != null &&
-    Number.isFinite(Number(lastSavedAt));
+    lastSavedAt != null;
   const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
@@ -40,10 +38,10 @@ export default function PlanQuestionSaveStatus({
 
   const text = (() => {
     if (showLastSaved) {
-      return now - Number(lastSavedAt) < MINUTE_MS
+      return now - lastSavedAt < MINUTE_MS
         ? QuestionPage("messages.savedJustNow")
         : t("saveStatus.lastSaved", {
-            relative: formatRelativeFromTimestamp(lastSavedAt, locale),
+            relative: formatRelativeFromTimestamp(String(lastSavedAt), locale),
           });
     }
     switch (state.status) {

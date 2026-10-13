@@ -306,7 +306,7 @@ export function createFakePlanAuthoringClient(
               label: org.displayName,
               shortName: org.displayAbbreviation ?? org.displayName,
               orgURI: org.uri,
-              items: [{ id: null, title: null, guidanceText: org.guidanceText }],
+              items: [{ guidanceText: org.guidanceText }],
             },
           ];
         });

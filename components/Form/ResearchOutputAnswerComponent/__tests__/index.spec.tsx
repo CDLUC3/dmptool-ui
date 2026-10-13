@@ -15,6 +15,14 @@ import {
 
 expect.extend(toHaveNoViolations);
 
+const mockTranslate = (key: string, values?: Record<string, string>) =>
+  values ? [key, ...Object.values(values)].join(' ') : key;
+
+jest.mock('next-intl', () => ({
+  ...jest.requireActual('next-intl'),
+  useTranslations: () => mockTranslate,
+}));
+
 // Define props interface for the mock component
 interface MockSingleResearchOutputComponentProps {
   columns: typeof DefaultResearchOutputTableQuestion['columns'];
@@ -766,7 +774,7 @@ describe('ResearchOutputAnswerComponent', () => {
         />
       );
 
-      await user.click(screen.getAllByRole('button', { name: /buttons\.delete/i })[0]);
+      await user.click(screen.getAllByRole('button', { name: /labels\.deleteResearchOutput/i })[0]);
 
       const dialog = screen.getByRole('alertdialog');
       expect(within(dialog).getByText('headings.confirmDelete')).toBeInTheDocument();
@@ -789,7 +797,7 @@ describe('ResearchOutputAnswerComponent', () => {
         />
       );
 
-      await user.click(screen.getByRole('button', { name: /buttons\.delete/i }));
+      await user.click(screen.getByRole('button', { name: /labels\.deleteResearchOutput/i }));
       await user.click(
         within(screen.getByRole('alertdialog')).getByRole('button', { name: /buttons\.cancel/i })
       );
@@ -810,7 +818,7 @@ describe('ResearchOutputAnswerComponent', () => {
         />
       );
 
-      await user.click(screen.getByRole('button', { name: /buttons\.delete/i }));
+      await user.click(screen.getByRole('button', { name: /labels\.deleteResearchOutput/i }));
       await user.click(
         within(screen.getByRole('alertdialog')).getByRole('button', { name: /buttons\.delete/i })
       );
@@ -974,7 +982,7 @@ describe('ResearchOutputAnswerComponent', () => {
 
       render(<CustomComponent />);
 
-      await user.click(screen.getByRole('button', { name: /buttons\.delete/i }));
+      await user.click(screen.getByRole('button', { name: /labels\.deleteResearchOutput/i }));
       await user.click(
         within(screen.getByRole('alertdialog')).getByRole('button', { name: /buttons\.delete/i })
       );
@@ -1621,13 +1629,10 @@ describe('ResearchOutputAnswerComponent', () => {
     });
   });
 
-  describe('rowNavigation', () => {
-    const rowNavigation = {
-      editHref: (index: number) => `/edit/${index}`,
-      addHref: '/edit/new',
-    };
+  describe('rowHref', () => {
+    const rowHref = (rowIndex: number | 'new') => `/edit/${rowIndex}`;
 
-    it('keeps list view and renders Edit/Add as links when rowNavigation is set', async () => {
+    it('keeps list view and renders Edit/Add as links when rowHref is set', async () => {
       const mockRows = [createMockRow('Dataset 1', 'dataset', [])];
 
       renderWithProviders(
@@ -1635,7 +1640,7 @@ describe('ResearchOutputAnswerComponent', () => {
           columns={mockColumns}
           rows={mockRows}
           setRows={mockSetRows}
-          rowNavigation={rowNavigation}
+          rowHref={rowHref}
         />
       );
 
@@ -1651,13 +1656,13 @@ describe('ResearchOutputAnswerComponent', () => {
       expect(screen.getByRole('button', { name: /delete/i })).toBeInTheDocument();
     });
 
-    it('does not auto-open the form when empty and rowNavigation is set', async () => {
+    it('does not auto-open the form when empty and rowHref is set', async () => {
       renderWithProviders(
         <ResearchOutputAnswerComponent
           columns={mockColumns}
           rows={[]}
           setRows={mockSetRows}
-          rowNavigation={rowNavigation}
+          rowHref={rowHref}
         />
       );
 
@@ -1672,7 +1677,7 @@ describe('ResearchOutputAnswerComponent', () => {
       expect(mockSetRows).not.toHaveBeenCalled();
     });
 
-    it('still enters form view on Edit when rowNavigation is omitted', async () => {
+    it('still enters form view on Edit when rowHref is omitted', async () => {
       const mockRows = [createMockRow('Dataset 1', 'dataset', [])];
 
       renderWithProviders(
@@ -1704,27 +1709,24 @@ describe('ResearchOutputAnswerComponent', () => {
         />
       );
 
-      expect(screen.getByRole('button', { name: 'buttons.edit Dataset 1' })).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: 'buttons.edit Dataset 2' })).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: 'buttons.delete Dataset 1' })).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: 'buttons.delete Dataset 2' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'labels.editResearchOutput Dataset 1' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'labels.editResearchOutput Dataset 2' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'labels.deleteResearchOutput Dataset 1' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'labels.deleteResearchOutput Dataset 2' })).toBeInTheDocument();
     });
 
-    it('names Edit links with the output title when row navigation is set', () => {
+    it('names Edit links with the output title when rowHref is set', () => {
       renderWithProviders(
         <ResearchOutputAnswerComponent
           columns={mockColumns}
           rows={[createMockRow('Dataset 1', 'dataset', [])]}
           setRows={mockSetRows}
-          rowNavigation={{
-            editHref: (index: number) => `/edit/${index}`,
-            addHref: '/edit/new',
-          }}
+          rowHref={(rowIndex) => `/edit/${rowIndex}`}
         />
       );
 
-      expect(screen.getByRole('link', { name: 'buttons.edit Dataset 1' })).toHaveAttribute('href', '/edit/0');
-      expect(screen.getByRole('button', { name: 'buttons.delete Dataset 1' })).toBeInTheDocument();
+      expect(screen.getByRole('link', { name: 'labels.editResearchOutput Dataset 1' })).toHaveAttribute('href', '/edit/0');
+      expect(screen.getByRole('button', { name: 'labels.deleteResearchOutput Dataset 1' })).toBeInTheDocument();
     });
 
     it('has no accessibility violations on the list', async () => {
@@ -1752,7 +1754,7 @@ describe('ResearchOutputAnswerComponent', () => {
         />
       );
 
-      await user.click(screen.getByRole('button', { name: 'buttons.delete Dataset 1' }));
+      await user.click(screen.getByRole('button', { name: 'labels.deleteResearchOutput Dataset 1' }));
       const results = await axe(document.body);
       expect(results).toHaveNoViolations();
     });

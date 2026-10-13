@@ -18,7 +18,7 @@ interface UsePlanQuestionControllerResult {
   saveState: PlanQuestionSaveState;
   draftAnswer: unknown;
   setDraftAnswer: (answer: unknown) => void;
-  saveNow: () => Promise<boolean>;
+  saveNow: () => Promise<void>;
 }
 
 export function usePlanQuestionController({
@@ -41,7 +41,7 @@ export function usePlanQuestionController({
   const inFlightRef = useRef(false);
   const queuedRef = useRef(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const persistRef = useRef<() => Promise<boolean>>(async () => false);
+  const persistRef = useRef<() => Promise<void>>(async () => {});
 
   useEffect(() => {
     draftRef.current = draftAnswer;
@@ -67,14 +67,14 @@ export function usePlanQuestionController({
     setSaveState({ status: "clean" });
   }, [questionKeyValue]);
 
-  const persist = useCallback(async (): Promise<boolean> => {
+  const persist = useCallback(async (): Promise<void> => {
     if (!canEdit) {
-      return false;
+      return;
     }
 
     if (inFlightRef.current) {
       queuedRef.current = true;
-      return false;
+      return;
     }
 
     inFlightRef.current = true;
@@ -84,15 +84,12 @@ export function usePlanQuestionController({
     let result: SaveAnswerResult;
     try {
       result = await dataSource.saveAnswer(questionKeyValue, draftRef.current);
-    } catch (error) {
-      console.error("Failed to save plan answer", error);
-      result = { kind: "failed" };
     } finally {
       inFlightRef.current = false;
     }
 
     if (generation !== generationRef.current) {
-      return false;
+      return;
     }
 
     if (result.kind === "saved") {
@@ -101,7 +98,7 @@ export function usePlanQuestionController({
         queuedRef.current = false;
         return persist();
       }
-      return true;
+      return;
     }
 
     queuedRef.current = false;
@@ -113,7 +110,6 @@ export function usePlanQuestionController({
         setSaveState({ status: "failed", message: result.message });
         break;
     }
-    return false;
   }, [canEdit, dataSource, questionKeyValue]);
 
   useEffect(() => {

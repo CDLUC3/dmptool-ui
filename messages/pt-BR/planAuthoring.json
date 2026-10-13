@@ -75,20 +75,17 @@
     },
     "sidebar": {
       "ariaLabel": "Orientação e comentários para perguntas",
-      "loadingGuidance": "Carregando orientação…",
       "selectGuidanceSource": "Selecionar fonte de orientação.",
       "comments": "Comments",
       "showComments": "Mostrar comentários",
       "hideComments": "Ocultar comentários",
-      "commentCount": "{count, plural, one {# comentário} other {# comentários}}",
-      "guidanceLoadFailed": "Não é possível carregar a orientação."
+      "commentCount": "{count, plural, one {# comentário} other {# comentários}}"
     },
     "guidance": {
       "sourcesAria": "Salvar fontes de orientação",
       "customize": "+ Personalizar"
     },
     "comments": {
-      "loading": "Carregando comentários…",
       "empty": "Nenhum comentário ainda.",
       "listAria": "Comments",
       "admin": " (administrador)",
@@ -99,7 +96,6 @@
       "posting": "Publicando…",
       "comment": "Comentário",
       "saveBeforeCommenting": "Salve uma resposta antes de adicionar comentários.",
-      "loadFailed": "Não é possível carregar os comentários.",
       "addFailed": "Não é possível adicionar o comentário. Tente novamente.",
       "updateFailed": "Não é possível atualizar o comentário. Tente novamente.",
       "deleteFailed": "Não é possível excluir o comentário. Tente novamente."
@@ -161,9 +157,9 @@
     },
     "researchOutput": {
       "backToPlan": "Voltar ao plano",
-      "notFoundTitle": "Resultado de pesquisa não encontrado",
-      "notFoundBody": "Essa pergunta ou linha de resultado de pesquisa não está neste plano.",
-      "saveFailed": "Não foi possível salvar o resultado de pesquisa."
+      "notFoundTitle": "Saída de pesquisa não encontrada",
+      "notFoundBody": "Essa pergunta ou linha de saída de pesquisa não está neste plano.",
+      "saveFailed": "Não foi possível salvar a saída de pesquisa."
     }
   }
 }

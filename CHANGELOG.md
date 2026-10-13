@@ -1,7 +1,7 @@
 ## Added
 - Added the `PlanAuthoring` one-pager to the plan page (`/projects/:projectId/dmp/:dmpId`), wired to the GraphQL API through a new `planAuthoring` query: answers save through `addAnswer`/`updateAnswer`, comments and feedback comments show as one thread, and guidance organisations can be added and removed. The old section and question routes redirect to the one-pager, and the demo data source is replaced by mocks and scenarios [#430]
-- Added research output editing to the plan page: rows list inline and Add/Edit opens `/projects/:projectId/dmp/:dmpId/ro/:questionKey/:rowIndex` (route `projects.dmp.researchOutput`), which saves through the real API and returns to the question. The styleguide research output page now uses the fake GraphQL client [#430]
-- Added Plan Authoring styleguide research-output Add/Edit as a separate page (`PlanResearchOutputEditScreen`), with optional `rowNavigation` on `ResearchOutputAnswerComponent` so production inline edit stays unchanged when the prop is omitted. Frontend stub only — saves go through the demo data source [#334]
+- Added research output editing to the plan page: rows list inline and Add/Edit opens `/projects/:projectId/dmp/:dmpId/ro/:questionKey/:rowIndex` (route `projects.dmp.researchOutput`), which saves through the real API and returns to the question. Given `rowHref`, `ResearchOutputAnswerComponent` renders Add and Edit as `next/link` links, so the hrefs are complete paths that include the locale (e.g. from `routePath`). The styleguide research output page now uses the fake GraphQL client [#430]
+- Added Plan Authoring research-output Add/Edit as a separate screen (`PlanResearchOutputEditScreen`), shown in the styleguide, with optional `rowHref` on `ResearchOutputAnswerComponent` so inline edit stays unchanged when the prop is omitted [#334]
 - Added tests for `PlanResearchOutputEditScreen`, `PlanQuestionAnswer`, and the research-output list, including `jest-axe` accessibility checks [#334]
 - Added `PlanCard` with template and uploaded variants on the project overview, plus styleguide demos [#93]
 - Added plan authoring uploaded-document view with document card, update/replace dialog, and styleguide demo [#93]
@@ -48,7 +48,6 @@
 - Added `UpdateAffiliation` and `AffiliationById` queries [#203]
 
 ## Updated
-- Updated `ResearchOutputAnswerComponent` row links to use `next/link`, so `rowNavigation` hrefs are complete paths that include the locale (e.g. from `routePath`) [#430]
 - Updated `ResearchOutputAnswerComponent` list to use the standard button styles and the shared `ModalOverlayComponent` delete confirmation instead of `window.confirm`; Edit and Delete controls now include the output title in their accessible name, and the empty-title fallback is translated [#334]
 - Updated `PlanCard` section progress to prefer required counts (`X of Y required`), falling back to all-question counts (`X of Y`) when none are required [#93]
 - Redesigned `ProjectListItem` and project list pages (`/projects`, `/admin/projects`, `/admin/users/[userId]/projects`) with expandable plan details, skeleton loading, and GraphQL-backed plan and collaborator data

@@ -8,7 +8,6 @@ import {
   TEXT_AREA_QUESTION_TYPE,
 } from "@/lib/constants";
 import { useToast } from "@/context/ToastContext";
-import type { ResearchOutputRowNavigation } from "@/components/Form/ResearchOutputAnswerComponent";
 import type { PlanAuthoringDataSource } from "../dataSource";
 import type {
   PlanCapabilities,
@@ -23,6 +22,7 @@ import {
 } from "../sampleAnswers";
 import { usePlanQuestionController } from "../usePlanQuestionController";
 import type { RegisterUnsavedChange } from "../useUnsavedChangesRegistry";
+import type { ResearchOutputRowHref } from "../researchOutputAnswer";
 import PlanQuestionHeader from "../PlanQuestionHeader";
 import PlanSampleAnswers from "../PlanSampleAnswers";
 import PlanQuestionAnswer from "../PlanQuestionAnswer";
@@ -42,7 +42,7 @@ interface PlanQuestionProps {
   dataSource: PlanAuthoringDataSource;
   onCustomizeGuidance: () => void;
   registerUnsavedChange?: RegisterUnsavedChange;
-  rowNavigation?: ResearchOutputRowNavigation;
+  researchOutputRowHref?: ResearchOutputRowHref;
   className?: string;
 }
 
@@ -52,7 +52,7 @@ export default function PlanQuestion({
   dataSource,
   onCustomizeGuidance,
   registerUnsavedChange,
-  rowNavigation,
+  researchOutputRowHref,
   className,
 }: PlanQuestionProps) {
   const t = useTranslations("PlanAuthoring");
@@ -156,7 +156,7 @@ export default function PlanQuestion({
                 disabled={!canEditAnswer}
                 onChange={controller.setDraftAnswer}
                 onSaveNow={controller.saveNow}
-                rowNavigation={rowNavigation}
+                researchOutputRowHref={researchOutputRowHref}
               />
               <div className={styles.questionActions}>
                 {canEditAnswer ? (
@@ -184,11 +184,7 @@ export default function PlanQuestion({
           comments={question.comments}
           canCustomize={capabilities.canCustomizeGuidance}
           canComment={capabilities.canComment && question.hasAnswer}
-          loadGuidance={() => dataSource.loadGuidance(key)}
-          loadComments={() => dataSource.loadComments(key)}
-          onAddComment={(text) =>
-            dataSource.addComment(key, text).then(() => undefined)
-          }
+          onAddComment={(text) => dataSource.addComment(key, text)}
           onUpdateComment={(commentId, text) =>
             dataSource.updateComment(key, commentId, text)
           }

@@ -10,7 +10,7 @@ import {
   type PlanComment,
   type PlanQuestionDefinition,
 } from "../model";
-import { makeModel } from "./builders";
+import { makeComment, makeModel } from "./builders";
 import {
   MOCK_COMMENTS_ERROR,
   MOCK_GUIDANCE_ERROR,
@@ -142,39 +142,22 @@ export function createMockDataSource(
         ...question,
         answerJson,
         hasAnswer: answerJson != null && answerJson !== "",
-        lastSavedAt: String(Date.now()),
+        lastSavedAt: Date.now(),
       }));
       return { kind: "saved" };
-    },
-
-    async loadGuidance(key) {
-      await wait(delayMs);
-      assertGuidance();
-      return findQuestion(key)?.guidanceSources ?? [];
-    },
-
-    async loadComments(key) {
-      await wait(delayMs);
-      assertComments();
-      return findQuestion(key)?.comments ?? [];
     },
 
     async addComment(key, text) {
       await wait(delayMs);
       assertComments();
       requireQuestion(key);
-      const model = currentModel();
       nextCommentId += 1;
-      const comment: PlanComment = {
+      const comment = makeComment({
         id: `answer-mock-${nextCommentId}`,
-        authorId: model?.currentUserId ?? 0,
-        authorName: model?.currentUserName ?? "",
         createdLabel: "Just now",
         text,
         isFeedback: false,
-        canEdit: true,
-        canDelete: true,
-      };
+      });
       updateQuestion(key, (question) => ({
         ...question,
         comments: [...question.comments, comment],

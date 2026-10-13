@@ -1,3 +1,4 @@
+import { GuidanceSourceType } from "@/generated/graphql";
 import {
   collectLockedGuidanceOrgIds,
   computeProgress,
@@ -27,7 +28,6 @@ describe("PlanAuthoring model helpers", () => {
       {
         identity: { kind: "base", versionedSectionId: 1 },
         title: "One",
-        displayOrder: 1,
         questions: [
           {
             identity: { kind: "base", versionedQuestionId: 1 },
@@ -40,7 +40,6 @@ describe("PlanAuthoring model helpers", () => {
             hasAnswer: true,
             guidanceSources: [],
             comments: [],
-            displayOrder: 1,
           },
           {
             identity: { kind: "base", versionedQuestionId: 2 },
@@ -53,7 +52,6 @@ describe("PlanAuthoring model helpers", () => {
             hasAnswer: false,
             guidanceSources: [],
             comments: [],
-            displayOrder: 2,
           },
         ],
       },
@@ -71,7 +69,6 @@ describe("PlanAuthoring model helpers", () => {
       {
         identity: { kind: "base", versionedSectionId: 1 },
         title: "One",
-        displayOrder: 1,
         questions: [
           {
             identity: { kind: "base", versionedQuestionId: 1 },
@@ -85,7 +82,7 @@ describe("PlanAuthoring model helpers", () => {
             guidanceSources: [
               {
                 id: "nih",
-                type: "TEMPLATE_OWNER",
+                type: GuidanceSourceType.TemplateOwner,
                 label: "NIH",
                 shortName: "NIH",
                 locked: true,
@@ -93,7 +90,7 @@ describe("PlanAuthoring model helpers", () => {
               },
               {
                 id: "uci",
-                type: "USER_AFFILIATION",
+                type: GuidanceSourceType.UserAffiliation,
                 label: "UCI",
                 shortName: "UCI",
                 locked: false,
@@ -101,7 +98,6 @@ describe("PlanAuthoring model helpers", () => {
               },
             ],
             comments: [],
-            displayOrder: 1,
           },
           {
             identity: { kind: "base", versionedQuestionId: 2 },
@@ -115,7 +111,7 @@ describe("PlanAuthoring model helpers", () => {
             guidanceSources: [
               {
                 id: "nih",
-                type: "TEMPLATE_OWNER",
+                type: GuidanceSourceType.TemplateOwner,
                 label: "NIH",
                 shortName: "NIH",
                 locked: true,
@@ -123,7 +119,7 @@ describe("PlanAuthoring model helpers", () => {
               },
               {
                 id: "stanford",
-                type: "USER_SELECTED",
+                type: GuidanceSourceType.UserSelected,
                 label: "Stanford",
                 shortName: "SU",
                 locked: true,
@@ -131,7 +127,6 @@ describe("PlanAuthoring model helpers", () => {
               },
             ],
             comments: [],
-            displayOrder: 2,
           },
         ],
       },

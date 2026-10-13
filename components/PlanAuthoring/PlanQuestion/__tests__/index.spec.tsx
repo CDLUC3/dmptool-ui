@@ -8,11 +8,13 @@ import globalMessages from "@/messages/en-US/global.json";
 import planOverviewMessages from "@/messages/en-US/planBuilderPlanOverview.json";
 import planAuthoringMessages from "@/messages/en-US/planAuthoring.json";
 import templateBuilderMessages from "@/messages/en-US/templateBuilder.json";
-import type { ResearchOutputRowNavigation } from "@/components/Form/ResearchOutputAnswerComponent";
 import { RESEARCH_OUTPUT_QUESTION_TYPE } from "@/lib/constants";
 import PlanQuestion from "../index";
 import type { PlanCapabilities, PlanQuestionDefinition } from "../../model";
-import { buildResearchOutputAnswer } from "../../researchOutputAnswer";
+import {
+  buildResearchOutputAnswer,
+  type ResearchOutputRowHref,
+} from "../../researchOutputAnswer";
 import {
   createMockDataSource,
   makeModel,
@@ -120,12 +122,12 @@ function renderQuestion({
   question = makeQuestion(),
   capabilities = editableCapabilities,
   dataSource = createDataSource(question),
-  rowNavigation,
+  researchOutputRowHref,
 }: {
   question?: PlanQuestionDefinition;
   capabilities?: PlanCapabilities;
   dataSource?: SpiedMockDataSource;
-  rowNavigation?: ResearchOutputRowNavigation;
+  researchOutputRowHref?: ResearchOutputRowHref;
 } = {}) {
   const view = render(
     <NextIntlClientProvider locale="en-US" messages={messages} timeZone="UTC">
@@ -134,7 +136,7 @@ function renderQuestion({
         capabilities={capabilities}
         dataSource={dataSource}
         onCustomizeGuidance={jest.fn()}
-        rowNavigation={rowNavigation}
+        researchOutputRowHref={researchOutputRowHref}
       />
     </NextIntlClientProvider>
   );
@@ -328,19 +330,17 @@ describe("PlanQuestion", () => {
     it("links research output rows to their own Add/Edit pages", () => {
       renderQuestion({
         question: researchOutputQuestion(),
-        rowNavigation: {
-          editHref: (index) => `/edit/${index}`,
-          addHref: "/edit/new",
-        },
+        researchOutputRowHref: (questionKeyValue, rowIndex) =>
+          `/ro/${questionKeyValue}/${rowIndex}`,
       });
 
       expect(screen.getByRole("link", { name: "+ Add Output" })).toHaveAttribute(
         "href",
-        "/edit/new"
+        "/ro/base-question-101/new"
       );
       expect(screen.getAllByRole("link", { name: /^Edit / })[0]).toHaveAttribute(
         "href",
-        "/edit/0"
+        "/ro/base-question-101/0"
       );
     });
 
@@ -452,7 +452,7 @@ describe("PlanQuestion", () => {
         question: makeQuestion({
           answerJson: { type: "text", answer: "Survey responses" },
           hasAnswer: true,
-          lastSavedAt: String(Date.now() - 60 * 60 * 1000),
+          lastSavedAt: Date.now() - 60 * 60 * 1000,
         }),
       });
 

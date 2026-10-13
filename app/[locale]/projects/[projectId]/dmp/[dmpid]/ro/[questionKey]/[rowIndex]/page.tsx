@@ -8,9 +8,8 @@ import {
   usePlanAuthoringDataSource,
 } from "@/components/PlanAuthoring";
 import { routePath } from "@/utils/routes";
-
 export default function PlanResearchOutputPage() {
-  const params = useParams<{
+  const { projectId, dmpid: dmpId, questionKey, rowIndex } = useParams<{
     projectId: string;
     dmpid: string;
     questionKey: string;
@@ -18,16 +17,14 @@ export default function PlanResearchOutputPage() {
   }>();
   const locale = useLocale();
   const Global = useTranslations("Global");
-  const projectId = String(params.projectId);
-  const dmpId = String(params.dmpid);
   const dataSource = usePlanAuthoringDataSource(Number(dmpId));
   const planHref = routePath("projects.dmp.show", { projectId, dmpId }, {}, locale);
 
   return (
     <PlanResearchOutputEditScreen
       dataSource={dataSource}
-      questionKeyParam={String(params.questionKey ?? "")}
-      rowIndexParam={String(params.rowIndex ?? "")}
+      questionKeyParam={questionKey}
+      rowIndexParam={rowIndex}
       planHref={planHref}
       breadcrumbs={(currentPage) => (
         <Breadcrumbs aria-label={Global("breadcrumbs.navigation")}>

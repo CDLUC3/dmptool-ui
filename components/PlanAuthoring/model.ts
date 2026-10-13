@@ -1,3 +1,5 @@
+import type { GuidanceSourceType } from "@/generated/graphql";
+
 export type PlanSectionIdentity =
   | { kind: "base"; versionedSectionId: number }
   | { kind: "custom"; customSectionId: number };
@@ -22,19 +24,11 @@ export interface PlanCapabilities {
   canCustomizeGuidance: boolean;
 }
 
-export type PlanGuidanceSourceType =
-  | "BEST_PRACTICE"
-  | "OTHER_AFFILIATION"
-  | "TEMPLATE_OWNER"
-  | "USER_AFFILIATION"
-  | "USER_SELECTED";
-
 export interface PlanGuidanceSource {
   id: string;
-  type: PlanGuidanceSourceType;
+  type: GuidanceSourceType;
   label: string;
   shortName: string;
-  orgURI?: string;
   locked?: boolean;
   bodyHtml: string;
 }
@@ -43,21 +37,12 @@ export interface PlanGuidanceOrgOption {
   id: string;
   label: string;
   shortName: string;
-  orgURI: string;
-}
-
-
-export interface PlanCommentUser {
-  id: number;
-  givenName: string;
-  surName: string;
 }
 
 export interface PlanComment {
   /** Opaque key; answer and feedback comment ids come from separate tables and can collide. */
   id: string;
   authorId: number;
-  user?: PlanCommentUser;
   authorName: string;
   createdLabel: string;
   text: string;
@@ -83,11 +68,10 @@ export interface PlanQuestionDefinition {
   jsonError?: PlanQuestionJsonError;
   answerJson: unknown | null;
   hasAnswer: boolean;
-  /** Epoch milliseconds as a string, like the API's timestamps. */
-  lastSavedAt?: string;
+  /** Epoch milliseconds. */
+  lastSavedAt?: number;
   guidanceSources: PlanGuidanceSource[];
   comments: PlanComment[];
-  displayOrder: number;
   sampleText?: string | null;
   customizationSampleText?: string | null;
   useSampleTextAsDefault?: boolean;
@@ -100,7 +84,6 @@ export interface PlanSectionDefinition {
   title: string;
   introductionHtml?: string;
   requirementsHtml?: string;
-  displayOrder: number;
   questions: PlanQuestionDefinition[];
 }
 
@@ -128,9 +111,6 @@ export interface PlanAuthoringModel {
   templateVersion: string;
   funderName: string;
   membersLabel: string;
-  /** Signed-in user id — mirrors me.me.id for comment ownership checks. */
-  currentUserId: number;
-  currentUserName: string;
   progress: PlanAuthoringProgress;
   capabilities: PlanCapabilities;
   sections: PlanSectionDefinition[];
@@ -148,25 +128,6 @@ export function questionKey(identity: PlanQuestionIdentity): string {
   return identity.kind === "base"
     ? `base-question-${identity.versionedQuestionId}`
     : `custom-question-${identity.customQuestionId}`;
-}
-
-/** Inverse of `questionKey`. Returns null for unrecognized keys. */
-export function parseQuestionKey(key: string): PlanQuestionIdentity | null {
-  const baseMatch = /^base-question-(\d+)$/.exec(key);
-  if (baseMatch) {
-    return {
-      kind: "base",
-      versionedQuestionId: Number(baseMatch[1]),
-    };
-  }
-  const customMatch = /^custom-question-(\d+)$/.exec(key);
-  if (customMatch) {
-    return {
-      kind: "custom",
-      customQuestionId: Number(customMatch[1]),
-    };
-  }
-  return null;
 }
 
 export function sectionAnchorId(identity: PlanSectionIdentity): string {

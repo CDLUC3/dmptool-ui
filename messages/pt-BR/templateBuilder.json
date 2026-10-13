@@ -439,10 +439,12 @@
       "guidanceText": "Orientação para perguntas (opcional mas recomendado)",
       "sampleText": "Texto de amostra",
       "comment": "Comentário adicional",
-      "bestPracticeTags": "Pergunte as melhores práticas para incluir"
+      "bestPracticeTags": "Pergunte as melhores práticas para incluir",
+      "editResearchOutput": "Alterar {title}",
+      "deleteResearchOutput": "Apagar {title}"
     },
     "messages": {
-      "areYouSureYouWantToDelete": "Tem certeza que deseja excluir esta saída da pesquisa?",
+      "areYouSureYouWantToDelete": "Tem certeza de que deseja excluir {title}?",
       "untitledResearchOutput": "Saída de pesquisa sem título",
       "errors": {
         "questionTextRequired": "Conjunto de perguntas (obrigatório.",

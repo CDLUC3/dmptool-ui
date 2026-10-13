@@ -13,12 +13,10 @@ import {
   LayoutWithPanel,
   SidebarPanel,
 } from "@/components/Container";
-import type { ResearchOutputRowNavigation } from "@/components/Form/ResearchOutputAnswerComponent";
-import type { PlanAuthoringDataSource, PlanAuthoringState } from "../dataSource";
+import type { PlanAuthoringDataSource } from "../dataSource";
 import type {
   PlanAuthoringVariant,
   PlanDocument,
-  PlanQuestionDefinition,
   PlanSectionDefinition,
 } from "../model";
 import {
@@ -26,9 +24,11 @@ import {
   questionKey,
   sectionKey,
 } from "../model";
+import { usePlanAuthoringState } from "../usePlanAuthoringState";
 import { usePlanSectionNavigation } from "../usePlanSectionNavigation";
 import { useSectionPickerShortcut } from "../useSectionPickerShortcut";
 import { useUnsavedChangesRegistry } from "../useUnsavedChangesRegistry";
+import type { ResearchOutputRowHref } from "../researchOutputAnswer";
 import PlanSectionNavigation from "../PlanSectionNavigation";
 import PlanSectionPickerDialog from "../PlanSectionPickerDialog";
 import PlanSection from "../PlanSection";
@@ -45,9 +45,7 @@ interface PlanAuthoringProps {
   planDocument?: PlanDocument;
   idPrefix?: string;
   overview?: React.ReactNode;
-  getResearchOutputRowNavigation?: (
-    question: PlanQuestionDefinition
-  ) => ResearchOutputRowNavigation | undefined;
+  researchOutputRowHref?: ResearchOutputRowHref;
 }
 
 const NO_SECTIONS: PlanSectionDefinition[] = [];
@@ -63,27 +61,18 @@ export default function PlanAuthoring({
   planDocument: initialPlanDocument,
   idPrefix = "plan-authoring",
   overview,
-  getResearchOutputRowNavigation,
+  researchOutputRowHref,
 }: PlanAuthoringProps) {
   const t = useTranslations("PlanAuthoring");
   const Global = useTranslations("Global");
   const isDocument = variant === "document";
-  const [state, setState] = useState<PlanAuthoringState>(() =>
-    dataSource.getState()
-  );
+  const state = usePlanAuthoringState(dataSource);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [customizeOpen, setCustomizeOpen] = useState(false);
   const [uploadOpen, setUploadOpen] = useState(false);
   const [planDocument, setPlanDocument] = useState<PlanDocument | undefined>(
     initialPlanDocument
   );
-
-  useEffect(() => {
-    setState(dataSource.getState());
-    return dataSource.subscribe(() => {
-      setState(dataSource.getState());
-    });
-  }, [dataSource]);
 
   const model = state.status === "ready" ? state.model : null;
   const sections = model?.sections ?? NO_SECTIONS;
@@ -302,7 +291,7 @@ export default function PlanAuthoring({
                           dataSource={dataSource}
                           onCustomizeGuidance={() => setCustomizeOpen(true)}
                           registerUnsavedChange={registerUnsavedChange}
-                          rowNavigation={getResearchOutputRowNavigation?.(question)}
+                          researchOutputRowHref={researchOutputRowHref}
                         />
                       ))}
                     </PlanSection>
@@ -331,9 +320,7 @@ export default function PlanAuthoring({
             lockedOrgIds={lockedOrgIds}
             availableOrgs={model.availableGuidanceOrgs}
             onSearch={(term) => dataSource.searchGuidanceOrgs(term)}
-            onSave={async (orgIds) => {
-              await dataSource.setSelectedGuidanceOrgs(orgIds);
-            }}
+            onSave={(orgIds) => dataSource.setSelectedGuidanceOrgs(orgIds)}
           />
         </>
       ) : null}

@@ -172,7 +172,6 @@ describe("planAuthoringDataSource loading", () => {
     expect(listener).toHaveBeenCalledTimes(1);
     const model = modelOf(dataSource);
     expect(model.title).toBe("Ocean plan");
-    expect(model.currentUserName).toBe("Ann Lee");
     expect(model.capabilities.canComment).toBe(true);
     expect(model.progress).toEqual({ answeredQuestions: 1, totalQuestions: 4, percentComplete: 25 });
     expect(
@@ -367,7 +366,7 @@ describe("planAuthoringDataSource saveAnswer", () => {
     const saved = questionOf(dataSource, "base-question-101");
     expect(saved.answerJson).toBe(answer);
     expect(saved.hasAnswer).toBe(true);
-    expect(saved.lastSavedAt).toBe(String(NOW));
+    expect(saved.lastSavedAt).toBe(NOW);
     expect(modelOf(dataSource).progress).toEqual({ answeredQuestions: 2, totalQuestions: 4, percentComplete: 50 });
     expect(listener).toHaveBeenCalledTimes(1);
   });
@@ -510,7 +509,7 @@ describe("planAuthoringDataSource guidance", () => {
     query.mockClear();
 
     await expect(dataSource.searchGuidanceOrgs("  CDL ")).resolves.toEqual([
-      { id: CDL, label: "California Digital Library", shortName: "CDL", orgURI: CDL },
+      { id: CDL, label: "California Digital Library", shortName: "CDL" },
     ]);
     expect(query).toHaveBeenCalledWith({
       query: ManagedAffiliationsWithGuidanceDocument,

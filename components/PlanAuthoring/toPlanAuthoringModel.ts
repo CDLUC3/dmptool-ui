@@ -36,7 +36,7 @@ export type PlanAuthoringAnswer = NonNullable<PlanAuthoringQuestion["answer"]>;
 export type PlanAuthoringGuidanceSource = NonNullable<
   PlanAuthoringQuestion["guidanceSources"]
 >[number];
-export type PlanAuthoringAvailableGuidanceSource = NonNullable<
+type PlanAuthoringAvailableGuidanceSource = NonNullable<
   PlanAuthoringPlan["availableGuidanceSources"]
 >[number];
 export type PlanAuthoringMe = MeQuery["me"];
@@ -98,11 +98,9 @@ export function toPlanAuthoringViewer({
 }): PlanAuthoringViewer {
   const { canModerateComments, newCommentTarget } =
     deriveCommentCapabilities({
-      me: { role: me?.role },
-      plan: {
-        myAccessLevel: plan?.myAccessLevel,
-        feedbackRounds: compact(plan?.feedback),
-      },
+      role: me?.role,
+      myAccessLevel: plan?.myAccessLevel,
+      feedbackRounds: compact(plan?.feedback),
     });
 
   return {
@@ -140,11 +138,6 @@ function toQuestionIdentity(question: PlanAuthoringQuestion): PlanQuestionIdenti
   throw new Error(`${question.questionType} plan question is missing its id`);
 }
 
-function parseJsonObject(json: string): Record<string, unknown> {
-  const parsed: unknown = JSON.parse(json);
-  return isRecord(parsed) ? parsed : {};
-}
-
 function parseQuestionJson(json: Nullable<string>): {
   parsedJson: Record<string, unknown>;
   jsonError?: PlanQuestionJsonError;
@@ -173,14 +166,14 @@ function fromStoredAnswerJson(
   if (!json) {
     return null;
   }
-  let stored: Record<string, unknown>;
+  let stored: unknown;
   try {
-    stored = parseJsonObject(json);
+    stored = JSON.parse(json);
   } catch (error) {
     console.error("Failed to parse plan answer JSON", error);
     return null;
   }
-  const { meta: _meta, ...answerJson } = stored;
+  const { meta: _meta, ...answerJson } = isRecord(stored) ? stored : {};
   const rangeKeys = RANGE_ANSWER_KEYS[questionType];
   if (!rangeKeys || !isRecord(answerJson.answer)) {
     return answerJson;
@@ -216,7 +209,7 @@ export function toStoredAnswerJson(
   });
 }
 
-export type PlanCommentKind = "answer" | "feedback";
+type PlanCommentKind = "answer" | "feedback";
 
 /** What the comment mutations need, keyed by PlanComment.id. */
 export type PlanCommentRef =
@@ -235,6 +228,7 @@ export function toPlanComment(
     authorName: string;
     created: Nullable<string>;
     text: string;
+    isEdited: boolean;
   },
   viewer: PlanAuthoringViewer
 ): PlanComment {
@@ -247,6 +241,7 @@ export function toPlanComment(
       : "",
     text: comment.text,
     isFeedback: kind === "feedback",
+    isEdited: comment.isEdited,
     ...deriveCommentActions(comment.authorId, viewer),
   };
 }
@@ -292,8 +287,8 @@ function toComments(
     }
     return parseInt(a.comment.created, 10) - parseInt(b.comment.created, 10);
   });
-  return entries.map(({ kind, comment }) => {
-    const planComment = toPlanComment(
+  return entries.map(({ kind, comment }) =>
+    toPlanComment(
       kind,
       {
         id: comment.id,
@@ -301,15 +296,14 @@ function toComments(
         authorName: fullName(comment.user),
         created: comment.created,
         text: comment.commentText ?? "",
+        isEdited:
+          comment.created != null &&
+          comment.modified != null &&
+          comment.modified !== comment.created,
       },
       viewer
-    );
-    const isEdited =
-      comment.created != null &&
-      comment.modified != null &&
-      comment.modified !== comment.created;
-    return isEdited ? { ...planComment, isEdited } : planComment;
-  });
+    )
+  );
 }
 
 // Apollo always includes template owner and user affiliation guidance
@@ -347,7 +341,6 @@ function toGuidanceSources(
         type: source.type,
         label: source.label,
         shortName: source.shortName,
-        orgURI: source.orgURI,
         locked: isAlwaysShownSource(source),
         bodyHtml: "",
       },
@@ -361,29 +354,26 @@ function toGuidanceSources(
 
 // The resolver carries question and customization samples on their guidance items.
 function toQuestionSamples(sources: PlanAuthoringGuidanceSource[]) {
-  const sampleFrom = (source: PlanAuthoringGuidanceSource | undefined) =>
-    source?.items.find((item) => item.sampleText)?.sampleText;
-  const questionSource = sources.find(
-    (source) =>
-      !source.id.startsWith(CUSTOMIZATION_SOURCE_PREFIX) &&
-      sampleFrom(source) != null
-  );
-  const customizationSource = sources.find(
-    (source) =>
-      source.id.startsWith(CUSTOMIZATION_SOURCE_PREFIX) &&
-      sampleFrom(source) != null
-  );
-  const sampleText = sampleFrom(questionSource);
-  const customizationSampleText = sampleFrom(customizationSource);
+  const samples = sources.flatMap(({ id, label, items }) => {
+    const sampleText = items.find((item) => item.sampleText)?.sampleText;
+    return sampleText
+      ? [{ sampleText, label, isCustomization: id.startsWith(CUSTOMIZATION_SOURCE_PREFIX) }]
+      : [];
+  });
+  const questionSample = samples.find((sample) => !sample.isCustomization);
+  const customizationSample = samples.find((sample) => sample.isCustomization);
 
   return {
-    ...(sampleText && questionSource
-      ? { sampleText, sampleTextOrgLabel: questionSource.label }
-      : {}),
-    ...(customizationSampleText && customizationSource
+    ...(questionSample
       ? {
-          customizationSampleText,
-          customizationSampleOrgLabel: customizationSource.label,
+          sampleText: questionSample.sampleText,
+          sampleTextOrgLabel: questionSample.label,
+        }
+      : {}),
+    ...(customizationSample
+      ? {
+          customizationSampleText: customizationSample.sampleText,
+          customizationSampleOrgLabel: customizationSample.label,
         }
       : {}),
   };
@@ -391,9 +381,6 @@ function toQuestionSamples(sources: PlanAuthoringGuidanceSource[]) {
 
 function toQuestion(
   question: PlanAuthoringQuestion,
-  // Custom questions arrive spliced into place with no displayOrder, so the
-  // resolver's array order is the display order.
-  displayOrder: number,
   sectionIdentity: PlanSectionIdentity,
   plan: PlanAuthoringPlan,
   viewer: PlanAuthoringViewer
@@ -402,6 +389,7 @@ function toQuestion(
   const questionType = typeof parsedJson.type === "string" ? parsedJson.type : "";
   const answerJson = fromStoredAnswerJson(questionType, question.answer?.json);
   const sources = compact(question.guidanceSources);
+  const modified = question.answer?.modified;
 
   return {
     identity: toQuestionIdentity(question),
@@ -417,10 +405,12 @@ function toQuestion(
     jsonError,
     answerJson,
     hasAnswer: question.hasAnswer ?? false,
-    lastSavedAt: question.answer?.modified ?? undefined,
+    lastSavedAt:
+      modified != null && Number.isFinite(Number(modified))
+        ? Number(modified)
+        : undefined,
     guidanceSources: toGuidanceSources(sources),
     comments: toComments(question.answer, viewer),
-    displayOrder,
     useSampleTextAsDefault: question.useSampleTextAsDefault ?? false,
     ...toQuestionSamples(sources),
   };
@@ -437,9 +427,8 @@ function toSection(
     title: section.title,
     introductionHtml: section.introduction ?? undefined,
     requirementsHtml: section.requirements ?? undefined,
-    displayOrder: section.displayOrder,
-    questions: compact(section.questions).map((question, index) =>
-      toQuestion(question, index, identity, plan, viewer)
+    questions: compact(section.questions).map((question) =>
+      toQuestion(question, identity, plan, viewer)
     ),
   };
 }
@@ -452,10 +441,9 @@ function toUserSelectedOrgs(plan: PlanAuthoringPlan): PlanGuidanceOrgOption[] {
     .flatMap((section) => compact(section.questions))
     .flatMap((question) => compact(question.guidanceSources))
     .filter((source) => source.type === GuidanceSourceType.UserSelected)
-    .map(({ label, shortName, orgURI }) => ({ id: orgURI, label, shortName, orgURI }));
+    .map(({ label, shortName, orgURI }) => ({ id: orgURI, label, shortName }));
 }
 
-// Displayed orgs are the always-shown sources plus every user-selected org.
 function toSelectedGuidanceOrgs(
   plan: PlanAuthoringPlan,
   sections: PlanSectionDefinition[]
@@ -465,8 +453,8 @@ function toSelectedGuidanceOrgs(
     .flatMap((section) => section.questions)
     .flatMap((question) => question.guidanceSources)
     .filter((source) => source.locked)
-    .forEach(({ id, label, shortName, orgURI }) => {
-      orgs.set(id, { id, label, shortName, orgURI: orgURI ?? id });
+    .forEach(({ id, label, shortName }) => {
+      orgs.set(id, { id, label, shortName });
     });
   toUserSelectedOrgs(plan).forEach((org) => {
     if (!orgs.has(org.id)) {
@@ -484,7 +472,7 @@ function toAvailableGuidanceOrgs(
   compact(sources)
     .filter(isOrganizationGuidanceSource)
     .forEach(({ label, shortName, orgURI }) => {
-      orgs.set(orgURI, { id: orgURI, label, shortName, orgURI });
+      orgs.set(orgURI, { id: orgURI, label, shortName });
     });
   selected.forEach((org) => orgs.set(org.id, org));
   return [...orgs.values()];
@@ -526,8 +514,6 @@ export function toPlanAuthoringModel(
     funderName:
       compact(plan.fundings)[0]?.projectFunding?.affiliation?.displayName ?? "",
     membersLabel: toMembersLabel(plan),
-    currentUserId: viewer.currentUserId,
-    currentUserName: viewer.currentUserName,
     // Recomputed from sections so it stays consistent with local saves.
     progress: computeProgress(sections),
     capabilities: {
@@ -560,7 +546,6 @@ export function collectAnswerIds(plan: PlanAuthoringPlan): Map<string, number> {
   return answerIds;
 }
 
-/** Comment refs keyed by questionKey, then by PlanComment.id. */
 export function collectCommentRefs(
   plan: PlanAuthoringPlan
 ): Map<string, Map<string, PlanCommentRef>> {

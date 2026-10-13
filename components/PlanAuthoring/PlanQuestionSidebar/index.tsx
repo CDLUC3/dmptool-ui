@@ -13,19 +13,16 @@ import { useTranslations } from "next-intl";
 import { Button } from "react-aria-components";
 import { DmpIcon } from "@/components/Icons";
 import SafeHtml from "@/components/SafeHtml";
-import type {
-  PlanComment,
-  PlanGuidanceSource,
-  PlanGuidanceSourceType,
-} from "../model";
+import { GuidanceSourceType } from "@/generated/graphql";
+import type { PlanComment, PlanGuidanceSource } from "../model";
 import PlanGuidanceTabs from "../PlanGuidanceTabs";
 import PlanComments from "../PlanComments";
 import { usePlanComments } from "../usePlanComments";
 import styles from "./PlanQuestionSidebar.module.scss";
 
-const DEFAULT_GUIDANCE_PRIORITY: PlanGuidanceSourceType[] = [
-  "USER_AFFILIATION",
-  "TEMPLATE_OWNER",
+const DEFAULT_GUIDANCE_PRIORITY = [
+  GuidanceSourceType.UserAffiliation,
+  GuidanceSourceType.TemplateOwner,
 ];
 
 function defaultGuidanceSourceId(sources: PlanGuidanceSource[]): string | null {
@@ -45,9 +42,7 @@ interface PlanQuestionSidebarProps {
   comments: PlanComment[];
   canCustomize: boolean;
   canComment: boolean;
-  loadGuidance: () => Promise<PlanGuidanceSource[]>;
-  loadComments: () => Promise<PlanComment[]>;
-  onAddComment: (text: string) => Promise<void>;
+  onAddComment: (text: string) => Promise<unknown>;
   onUpdateComment: (commentId: string, text: string) => Promise<PlanComment>;
   onDeleteComment: (commentId: string) => Promise<void>;
   onCustomize: () => void;
@@ -60,8 +55,6 @@ export default function PlanQuestionSidebar({
   comments,
   canCustomize,
   canComment,
-  loadGuidance,
-  loadComments,
   onAddComment,
   onUpdateComment,
   onDeleteComment,
@@ -74,59 +67,18 @@ export default function PlanQuestionSidebar({
   const [selectedId, setSelectedId] = useState<string | null>(() =>
     defaultGuidanceSourceId(sources)
   );
-  const [loadedSources, setLoadedSources] = useState<PlanGuidanceSource[] | null>(
-    null
-  );
-  const [loadedComments, setLoadedComments] = useState<PlanComment[] | null>(
-    null
-  );
-  const [loadingGuidance, setLoadingGuidance] = useState(false);
-  const [loadingComments, setLoadingComments] = useState(false);
-  const [guidanceLoadFailed, setGuidanceLoadFailed] = useState(false);
-  const [commentsLoadFailed, setCommentsLoadFailed] = useState(false);
   const [activeTab, setActiveTab] = useState<"guidance" | "comments">("guidance");
   const [showGuidanceScrollFade, setShowGuidanceScrollFade] = useState(false);
   const guidancePanelRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     setSelectedId(defaultGuidanceSourceId(sources));
-    setLoadedSources(null);
-    setLoadedComments(null);
-    setGuidanceLoadFailed(false);
-    setCommentsLoadFailed(false);
     setActiveTab("guidance");
   }, [sources]);
 
-  const fetchGuidance = useCallback(async () => {
-    setLoadingGuidance(true);
-    setGuidanceLoadFailed(false);
-    try {
-      setLoadedSources(await loadGuidance());
-    } catch (error) {
-      console.error("Failed to load plan guidance", error);
-      setGuidanceLoadFailed(true);
-    } finally {
-      setLoadingGuidance(false);
-    }
-  }, [loadGuidance]);
-
-  const fetchComments = useCallback(async () => {
-    setLoadingComments(true);
-    setCommentsLoadFailed(false);
-    try {
-      setLoadedComments(await loadComments());
-    } catch (error) {
-      console.error("Failed to load plan comments", error);
-      setCommentsLoadFailed(true);
-    } finally {
-      setLoadingComments(false);
-    }
-  }, [loadComments]);
-
-  const visibleSources = loadedSources ?? sources;
   const selectedSource = useMemo(
-    () => visibleSources.find((source) => source.id === selectedId) ?? null,
-    [selectedId, visibleSources]
+    () => sources.find((source) => source.id === selectedId) ?? null,
+    [selectedId, sources]
   );
 
   const updateGuidanceScrollFade = useCallback(() => {
@@ -165,35 +117,12 @@ export default function PlanQuestionSidebar({
     };
   }, [
     activeTab,
-    loadingGuidance,
     selectedSource?.id,
     selectedSource?.bodyHtml,
     updateGuidanceScrollFade,
   ]);
 
-  const visibleComments = loadedComments ?? comments;
   const commentsExpanded = activeTab === "comments";
-
-  const refreshComments = useCallback(async () => {
-    setLoadedComments(await loadComments());
-  }, [loadComments]);
-
-  const handleUpdateComment = useCallback(
-    async (commentId: string, text: string) => {
-      const updated = await onUpdateComment(commentId, text);
-      await refreshComments();
-      return updated;
-    },
-    [onUpdateComment, refreshComments]
-  );
-
-  const handleDeleteComment = useCallback(
-    async (commentId: string) => {
-      await onDeleteComment(commentId);
-      await refreshComments();
-    },
-    [onDeleteComment, refreshComments]
-  );
 
   const {
     localComments,
@@ -205,11 +134,7 @@ export default function PlanQuestionSidebar({
     handleUpdateComment: commitUpdateComment,
     handleCancelEdit,
     handleDeleteComment: commitDeleteComment,
-  } = usePlanComments({
-    comments: visibleComments,
-    onUpdateComment: handleUpdateComment,
-    onDeleteComment: handleDeleteComment,
-  });
+  } = usePlanComments({ comments, onUpdateComment, onDeleteComment });
 
   return (
     <div
@@ -223,14 +148,11 @@ export default function PlanQuestionSidebar({
       </span>
       <div className={styles.sidebarInner}>
         <PlanGuidanceTabs
-          sources={visibleSources}
+          sources={sources}
           selectedId={activeTab === "guidance" ? selectedId : null}
           onSelect={(id) => {
             setActiveTab("guidance");
             setSelectedId(id);
-            if (!loadedSources) {
-              void fetchGuidance();
-            }
           }}
           onCustomize={onCustomize}
           canCustomize={canCustomize}
@@ -242,21 +164,6 @@ export default function PlanQuestionSidebar({
               ref={guidancePanelRef}
               className={styles.guidancePanel}
             >
-              {loadingGuidance ? <p>{t("sidebar.loadingGuidance")}</p> : null}
-              {guidanceLoadFailed ? (
-                <div
-                  className={styles.loadError}
-                  role="alert"
-                >
-                  <p>{t("sidebar.guidanceLoadFailed")}</p>
-                  <Button
-                    className="small"
-                    onPress={() => void fetchGuidance()}
-                  >
-                    {t("common.retry")}
-                  </Button>
-                </div>
-              ) : null}
               {selectedSource ? (
                 <>
                   <h4>{selectedSource.label}</h4>
@@ -287,9 +194,6 @@ export default function PlanQuestionSidebar({
             <PlanComments
               comments={localComments}
               canAdd={canComment}
-              loading={loadingComments}
-              loadFailed={commentsLoadFailed}
-              onRetryLoad={() => void fetchComments()}
               mutationError={mutationError}
               editingCommentId={editingCommentId}
               editingCommentText={editingCommentText}
@@ -298,10 +202,7 @@ export default function PlanQuestionSidebar({
               handleUpdateComment={commitUpdateComment}
               handleCancelEdit={handleCancelEdit}
               handleDeleteComment={commitDeleteComment}
-              onAdd={async (text) => {
-                await onAddComment(text);
-                await refreshComments();
-              }}
+              onAdd={onAddComment}
             />
           ) : null}
         </div>
@@ -318,9 +219,6 @@ export default function PlanQuestionSidebar({
             return;
           }
           setActiveTab("comments");
-          if (!loadedComments) {
-            void fetchComments();
-          }
         }}
       >
         <span className={styles.commentsTabLabel}>

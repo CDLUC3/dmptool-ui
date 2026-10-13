@@ -35,7 +35,6 @@ export function makeQuestion(
     hasAnswer: false,
     guidanceSources: [],
     comments: [],
-    displayOrder: 1,
     ...overrides,
   };
 }
@@ -46,7 +45,6 @@ export function makeSection(
   return {
     identity: { kind: "base", versionedSectionId: 1 },
     title: "Data collection",
-    displayOrder: 1,
     questions: [],
     ...overrides,
   };
@@ -62,8 +60,6 @@ export function makeModel(
     templateVersion: "v2",
     funderName: "NSF",
     membersLabel: "Ada Lovelace",
-    currentUserId: 1,
-    currentUserName: "Ada Lovelace",
     progress: { answeredQuestions: 1, totalQuestions: 2, percentComplete: 50 },
     capabilities: {
       canEditAnswers: true,
@@ -87,7 +83,6 @@ export function makeModel(
       makeSection({
         identity: { kind: "custom", customSectionId: 2 },
         title: "Custom sharing section",
-        displayOrder: 2,
         questions: [
           makeQuestion({
             identity: { kind: "custom", customQuestionId: 21 },
@@ -127,7 +122,7 @@ export function makeGuidanceSource(
 ): PlanGuidanceSource {
   return {
     id: "nsf",
-    type: "TEMPLATE_OWNER",
+    type: GuidanceSourceType.TemplateOwner,
     label: "NSF guidance label",
     shortName: "NSF",
     bodyHtml: "<p>NSF says hello</p>",
@@ -142,7 +137,6 @@ export function makeGuidanceOrg(
     id: "org-1",
     label: "University of Example",
     shortName: "UoE",
-    orgURI: "https://ror.org/example",
     ...overrides,
   };
 }
@@ -261,8 +255,8 @@ export function makeRawMe(
 }
 
 export function makeCommentPermissionPlan(
-  overrides: Partial<CommentPermissionFacts["plan"]> = {}
-): CommentPermissionFacts["plan"] {
+  overrides: Partial<CommentPermissionFacts> = {}
+): CommentPermissionFacts {
   return {
     myAccessLevel: "EDIT",
     feedbackRounds: [

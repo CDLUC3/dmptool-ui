@@ -12,7 +12,6 @@ const sections: PlanSectionDefinition[] = [
   makeSection({
     identity: { kind: "base", versionedSectionId: 2 },
     title: "Access and sharing",
-    displayOrder: 2,
   }),
 ];
 

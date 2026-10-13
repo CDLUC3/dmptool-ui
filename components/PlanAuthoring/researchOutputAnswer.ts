@@ -1,15 +1,12 @@
-import { CURRENT_SCHEMA_VERSION, ResearchOutputTableColumnsEnum } from "@dmptool/types";
+import { ResearchOutputTableColumnsEnum } from "@dmptool/types";
 import type { ResearchOutputTableQuestionType } from "@dmptool/types";
 import type { ResearchOutputTable } from "@/app/types";
-import type { ResearchOutputRowNavigation } from "@/components/Form/ResearchOutputAnswerComponent";
 import { RESEARCH_OUTPUT_QUESTION_TYPE } from "@/lib/constants";
-import { questionKey, type PlanQuestionDefinition } from "./model";
-
-export type ResearchOutputAnswerJson = {
+import { getAnswerValue } from "./answerUtils";
+type ResearchOutputAnswerJson = {
   type: typeof RESEARCH_OUTPUT_QUESTION_TYPE;
   columnHeadings: string[];
   answer: ResearchOutputTable[];
-  meta: { schemaVersion: string };
 };
 
 type ResearchOutputColumn = ResearchOutputTableQuestionType["columns"][number];
@@ -84,10 +81,7 @@ export function getResearchOutputColumns(
 }
 
 export function getResearchOutputRows(answerJson: unknown): ResearchOutputTable[] {
-  if (!answerJson || typeof answerJson !== "object") {
-    return [];
-  }
-  const answer = (answerJson as { answer?: unknown }).answer;
+  const answer = getAnswerValue(answerJson);
   return Array.isArray(answer) ? (answer as ResearchOutputTable[]) : [];
 }
 
@@ -100,26 +94,13 @@ export function buildResearchOutputAnswer(
     type: RESEARCH_OUTPUT_QUESTION_TYPE,
     columnHeadings: columns.map((col) => col.heading),
     answer: rows,
-    meta: {
-      schemaVersion: CURRENT_SCHEMA_VERSION,
-    },
   };
 }
 
-/** Row links for a research output question, `rowIndex` being a number or "new"; undefined for other question types. */
-export function toResearchOutputRowNavigation(
-  question: Pick<PlanQuestionDefinition, "identity" | "questionType">,
-  rowHref: (questionKeyValue: string, rowIndex: string) => string
-): ResearchOutputRowNavigation | undefined {
-  if (question.questionType !== RESEARCH_OUTPUT_QUESTION_TYPE) {
-    return undefined;
-  }
-  const key = questionKey(question.identity);
-  return {
-    editHref: (rowIndex) => rowHref(key, String(rowIndex)),
-    addHref: rowHref(key, "new"),
-  };
-}
+export type ResearchOutputRowHref = (
+  questionKey: string,
+  rowIndex: number | "new"
+) => string;
 
 export function parseRowIndexParam(s: string): number | "new" | null {
   if (s === "new") {
@@ -128,9 +109,5 @@ export function parseRowIndexParam(s: string): number | "new" | null {
   if (!/^\d+$/.test(s)) {
     return null;
   }
-  const index = Number(s);
-  if (!Number.isInteger(index) || index < 0) {
-    return null;
-  }
-  return index;
+  return Number(s);
 }

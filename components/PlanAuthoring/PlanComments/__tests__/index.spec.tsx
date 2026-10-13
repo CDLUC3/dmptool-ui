@@ -56,7 +56,6 @@ const baseComment: PlanComment = makeComment({
 const defaultProps = {
   comments: [] as PlanComment[],
   canAdd: true,
-  loading: false,
   editingCommentId: null,
   editingCommentText: '',
   setEditingCommentText: jest.fn(),
@@ -72,14 +71,8 @@ describe('PlanComments', () => {
     jest.clearAllMocks();
   });
 
-  it('shows a loading message when loading is true', () => {
-    render(<PlanComments {...defaultProps} loading={true} />);
-
-    expect(screen.getByText('PlanAuthoring.comments.loading')).toBeInTheDocument();
-  });
-
-  it('shows an empty-state message when there are no comments and not loading', () => {
-    render(<PlanComments {...defaultProps} comments={[]} loading={false} />);
+  it('shows an empty-state message when there are no comments', () => {
+    render(<PlanComments {...defaultProps} comments={[]} />);
 
     expect(screen.getByText('PlanAuthoring.comments.empty')).toBeInTheDocument();
   });
@@ -374,18 +367,6 @@ describe('PlanComments', () => {
     });
     expect(textarea).toHaveValue('');
     expect(onAdd).toHaveBeenLastCalledWith('Retry me');
-  });
-
-  it('shows the load error with a Retry button', async () => {
-    const user = userEvent.setup();
-    const onRetryLoad = jest.fn();
-    render(<PlanComments {...defaultProps} loadFailed={true} onRetryLoad={onRetryLoad} />);
-
-    expect(screen.getByRole('alert')).toHaveTextContent('PlanAuthoring.comments.loadFailed');
-    expect(screen.queryByText('PlanAuthoring.comments.empty')).not.toBeInTheDocument();
-
-    await user.click(screen.getByRole('button', { name: 'PlanAuthoring.common.retry' }));
-    expect(onRetryLoad).toHaveBeenCalledTimes(1);
   });
 
   it.each(['updateFailed', 'deleteFailed'] as const)(

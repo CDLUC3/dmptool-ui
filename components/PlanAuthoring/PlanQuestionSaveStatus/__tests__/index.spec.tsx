@@ -13,7 +13,7 @@ jest.mock("next-intl", () => jest.requireActual("next-intl"));
 
 const messages = { ...planOverviewMessages, ...planAuthoringMessages };
 
-function renderStatus(state: PlanQuestionSaveState, lastSavedAt?: string) {
+function renderStatus(state: PlanQuestionSaveState, lastSavedAt?: number) {
   return render(
     <NextIntlClientProvider locale="en-US" messages={messages} timeZone="UTC">
       <PlanQuestionSaveStatus state={state} lastSavedAt={lastSavedAt} />
@@ -55,7 +55,7 @@ describe("PlanQuestionSaveStatus", () => {
     jest.useFakeTimers();
     jest.setSystemTime(new Date("2026-09-25T12:00:00Z"));
 
-    renderStatus({ status: "saved" }, String(Date.now()));
+    renderStatus({ status: "saved" }, Date.now());
     expect(screen.getByRole("status")).toHaveTextContent("Saved just now");
 
     act(() => {
@@ -72,7 +72,7 @@ describe("PlanQuestionSaveStatus", () => {
   it("shows the stored save time for a clean answer loaded from the server", () => {
     jest.useFakeTimers();
     jest.setSystemTime(new Date("2026-09-25T12:00:00Z"));
-    const twoHoursAgo = String(Date.now() - 2 * 60 * 60 * 1000);
+    const twoHoursAgo = Date.now() - 2 * 60 * 60 * 1000;
 
     renderStatus({ status: "clean" }, twoHoursAgo);
 
@@ -80,21 +80,9 @@ describe("PlanQuestionSaveStatus", () => {
   });
 
   it("prefers unsaved changes over the last saved time", () => {
-    renderStatus({ status: "dirty" }, String(Date.now()));
+    renderStatus({ status: "dirty" }, Date.now());
 
     expect(screen.getByRole("status")).toHaveTextContent("Unsaved changes");
-  });
-
-  it("ignores a non-numeric lastSavedAt", () => {
-    const { rerender } = renderStatus({ status: "clean" }, "yesterday");
-    expect(screen.queryByRole("status")).not.toBeInTheDocument();
-
-    rerender(
-      <NextIntlClientProvider locale="en-US" messages={messages} timeZone="UTC">
-        <PlanQuestionSaveStatus state={{ status: "saved" }} lastSavedAt="yesterday" />
-      </NextIntlClientProvider>
-    );
-    expect(screen.getByRole("status")).toHaveTextContent(/^Saved$/);
   });
 
   it("has no accessibility violations", async () => {

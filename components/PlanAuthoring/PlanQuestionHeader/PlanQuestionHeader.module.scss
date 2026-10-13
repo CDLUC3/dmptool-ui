@@ -73,36 +73,40 @@
   gap: 0.25rem;
 }
 
-/* The badge is the popover trigger, so it resets the global `button` styles. */
-button.requiredBadge,
-.requiredBadge {
-  all: unset;
-  box-sizing: border-box;
+/* The badge is the popover trigger; the extra class outranks the global `button` rules. */
+.requiredRow button.requiredBadge {
+  position: static;
   display: inline-flex;
   width: fit-content;
   align-items: center;
   gap: 0.35rem;
+  margin: 0;
   padding: 0.125rem 0.45rem;
+  border: 0;
   border-radius: 0.25rem;
-  background: #fff3df !important;
-  color: #985a16 !important;
-  font-family: inherit;
+  appearance: none;
+  background: #fff3df;
+  color: #985a16;
+  font: inherit;
   font-size: 0.6875rem;
   font-weight: 500;
   line-height: 1.5;
+  text-align: start;
   cursor: pointer;
-  box-shadow: none !important;
+  transition: none;
+  box-shadow: none;
   text-decoration: none;
 
   &:hover,
   &[data-hovered],
   &[data-pressed] {
-    background: #ffe7c2 !important;
+    background: #ffe7c2;
+    color: #985a16;
   }
 
   &:focus-visible,
   &[data-focus-visible] {
-    outline: 2px solid var(--blue-900) !important;
-    outline-offset: 2px !important;
+    outline: 2px solid var(--blue-900);
+    outline-offset: 2px;
   }
 }

@@ -24,7 +24,7 @@ interface PlanGuidanceCustomizeDialogProps {
   lockedOrgIds?: string[];
   availableOrgs: PlanGuidanceOrgOption[];
   onSearch: (term: string) => Promise<PlanGuidanceOrgOption[]>;
-  onSave: (orgIds: string[]) => Promise<void>;
+  onSave: (orgIds: string[]) => Promise<unknown>;
 }
 
 export default function PlanGuidanceCustomizeDialog({

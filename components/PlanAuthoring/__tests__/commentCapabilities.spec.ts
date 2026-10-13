@@ -8,11 +8,8 @@ import { makeCommentPermissionPlan } from "../mocks";
 const CLOSED_ROUNDS = [{ id: 30, requested: "1751900000000", completed: "1751929006000" }];
 const UNREQUESTED_ROUNDS = [{ id: 32, requested: null, completed: null }];
 
-function capabilities(
-  me: CommentPermissionFacts["me"],
-  plan: Partial<CommentPermissionFacts["plan"]> = {}
-) {
-  return deriveCommentCapabilities({ me, plan: makeCommentPermissionPlan(plan) });
+function capabilities(role: string, plan: Partial<CommentPermissionFacts> = {}) {
+  return deriveCommentCapabilities(makeCommentPermissionPlan({ role, ...plan }));
 }
 
 describe("deriveCommentCapabilities canModerateComments", () => {
@@ -23,23 +20,23 @@ describe("deriveCommentCapabilities canModerateComments", () => {
     ["COMMENT", false],
     [null, false],
   ])("myAccessLevel %p moderates: %p", (myAccessLevel, expected) => {
-    expect(capabilities({ role: "RESEARCHER" }, { myAccessLevel }).canModerateComments).toBe(expected);
+    expect(capabilities("RESEARCHER", { myAccessLevel }).canModerateComments).toBe(expected);
   });
 
   it("does not let an admin moderate unless they are the PRIMARY collaborator", () => {
-    expect(capabilities({ role: "ADMIN" }, { myAccessLevel: null }).canModerateComments).toBe(false);
+    expect(capabilities("ADMIN", { myAccessLevel: null }).canModerateComments).toBe(false);
   });
 });
 
 describe("deriveCommentCapabilities newCommentTarget", () => {
-  it.each<[string, CommentPermissionFacts["me"], Partial<CommentPermissionFacts["plan"]>, unknown]>([
-    ["an admin with an open round", { role: "ADMIN" }, {}, { kind: "feedback", planFeedbackId: 31 }],
-    ["a superadmin with an open round", { role: "SUPERADMIN" }, {}, { kind: "feedback", planFeedbackId: 31 }],
-    ["an admin when every round is closed", { role: "ADMIN" }, { feedbackRounds: CLOSED_ROUNDS }, { kind: "answer" }],
-    ["an admin when the open round was never requested", { role: "ADMIN" }, { feedbackRounds: UNREQUESTED_ROUNDS }, { kind: "answer" }],
-    ["a researcher with an open round", { role: "RESEARCHER" }, {}, { kind: "answer" }],
-  ])("targets %s", (_label, me, plan, expected) => {
-    expect(capabilities(me, plan).newCommentTarget).toEqual(expected);
+  it.each<[string, string, Partial<CommentPermissionFacts>, unknown]>([
+    ["an admin with an open round", "ADMIN", {}, { kind: "feedback", planFeedbackId: 31 }],
+    ["a superadmin with an open round", "SUPERADMIN", {}, { kind: "feedback", planFeedbackId: 31 }],
+    ["an admin when every round is closed", "ADMIN", { feedbackRounds: CLOSED_ROUNDS }, { kind: "answer" }],
+    ["an admin when the open round was never requested", "ADMIN", { feedbackRounds: UNREQUESTED_ROUNDS }, { kind: "answer" }],
+    ["a researcher with an open round", "RESEARCHER", {}, { kind: "answer" }],
+  ])("targets %s", (_label, role, plan, expected) => {
+    expect(capabilities(role, plan).newCommentTarget).toEqual(expected);
   });
 });
 

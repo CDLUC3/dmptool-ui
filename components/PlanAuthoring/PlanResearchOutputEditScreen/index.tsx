@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
+import type { ResearchOutputTableQuestionType } from "@dmptool/types";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -12,7 +13,7 @@ import Loading from "@/components/Loading";
 import SingleResearchOutputComponent from "@/components/Form/ResearchOutputAnswerComponent/SingleResearchOutputComponent";
 import { createEmptyResearchOutputRow } from "@/utils/researchOutputTransformations";
 import type { ResearchOutputTable } from "@/app/types";
-import type { PlanAuthoringDataSource, PlanAuthoringState } from "../dataSource";
+import type { PlanAuthoringDataSource } from "../dataSource";
 import {
   collectLockedGuidanceOrgIds,
   questionAnchorId,
@@ -22,6 +23,7 @@ import PlanQuestionHeader from "../PlanQuestionHeader";
 import PlanQuestionSidebar from "../PlanQuestionSidebar";
 import PlanGuidanceCustomizeDialog from "../PlanGuidanceCustomizeDialog";
 import questionStyles from "../PlanQuestion/PlanQuestion.module.scss";
+import { usePlanAuthoringState } from "../usePlanAuthoringState";
 import { useUnsavedChangesRegistry } from "../useUnsavedChangesRegistry";
 import {
   buildResearchOutputAnswer,
@@ -40,6 +42,63 @@ interface PlanResearchOutputEditScreenProps {
   breadcrumbs: (currentPage: string) => React.ReactNode;
 }
 
+interface ResearchOutputRowFormProps {
+  seed: ResearchOutputTable;
+  columns: ResearchOutputTableQuestionType["columns"];
+  questionKeyParam: string;
+  canEdit: boolean;
+  isSaving: boolean;
+  isNew: boolean;
+  hasOtherRows: boolean;
+  onSave: (row: ResearchOutputTable) => Promise<boolean>;
+  onCancel: () => void;
+}
+
+function ResearchOutputRowForm({
+  seed,
+  columns,
+  questionKeyParam,
+  canEdit,
+  isSaving,
+  isNew,
+  hasOtherRows,
+  onSave,
+  onCancel,
+}: ResearchOutputRowFormProps) {
+  const registerUnsavedChange = useUnsavedChangesRegistry();
+  const [rows, setRows] = useState<ResearchOutputTable[]>(() => [seed]);
+  const [savedRowJson, setSavedRowJson] = useState(() => JSON.stringify(seed));
+  const hasUnsavedChanges = JSON.stringify(rows[0]) !== savedRowJson;
+
+  useEffect(() => {
+    if (!hasUnsavedChanges) {
+      return undefined;
+    }
+    return registerUnsavedChange(questionKeyParam);
+  }, [hasUnsavedChanges, registerUnsavedChange, questionKeyParam]);
+
+  const handleSave = async () => {
+    const row = rows[0];
+    if (await onSave(row)) {
+      setSavedRowJson(JSON.stringify(row));
+    }
+  };
+
+  return (
+    <SingleResearchOutputComponent
+      columns={columns}
+      rows={rows}
+      setRows={setRows}
+      showButtons={canEdit}
+      isDisabled={!canEdit || isSaving}
+      onSave={handleSave}
+      onCancel={onCancel}
+      isNewEntry={isNew}
+      hasOtherRows={hasOtherRows}
+    />
+  );
+}
+
 export default function PlanResearchOutputEditScreen({
   dataSource,
   questionKeyParam,
@@ -53,18 +112,7 @@ export default function PlanResearchOutputEditScreen({
   const [saveErrors, setSaveErrors] = useState<string[]>([]);
   const [customizeOpen, setCustomizeOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const savingRef = useRef(false);
-  const registerUnsavedChange = useUnsavedChangesRegistry();
-  const [state, setState] = useState<PlanAuthoringState>(() =>
-    dataSource.getState()
-  );
-
-  useEffect(() => {
-    setState(dataSource.getState());
-    return dataSource.subscribe(() => {
-      setState(dataSource.getState());
-    });
-  }, [dataSource]);
+  const state = usePlanAuthoringState(dataSource);
 
   const model = state.status === "ready" ? state.model : null;
 
@@ -77,39 +125,15 @@ export default function PlanResearchOutputEditScreen({
   );
 
   const columns = question ? getResearchOutputColumns(question.parsedJson) : null;
-  const rowIndexOrNew = parseRowIndexParam(rowIndexParam);
+  const rowIndex = parseRowIndexParam(rowIndexParam);
   const existingRows = question ? getResearchOutputRows(question.answerJson) : [];
-  const isNew = rowIndexOrNew === "new";
-  const rowExists =
-    isNew ||
-    (typeof rowIndexOrNew === "number" && rowIndexOrNew < existingRows.length);
-
-  const [rows, setRows] = useState<ResearchOutputTable[]>([]);
-  const [savedRowJson, setSavedRowJson] = useState<string | null>(null);
-  const rowSeed =
-    columns && rowExists && rowIndexOrNew !== null
-      ? isNew
-        ? createEmptyResearchOutputRow(columns)
-        : existingRows[rowIndexOrNew as number]
-      : null;
-  const hasSeededRow = rows.length > 0;
-
-  useEffect(() => {
-    if (!hasSeededRow && rowSeed) {
-      setRows([rowSeed]);
-      setSavedRowJson(JSON.stringify(rowSeed));
-    }
-  }, [hasSeededRow, rowSeed]);
-
-  const hasUnsavedChanges =
-    hasSeededRow && savedRowJson !== null && JSON.stringify(rows[0]) !== savedRowJson;
-
-  useEffect(() => {
-    if (!hasUnsavedChanges) {
-      return undefined;
-    }
-    return registerUnsavedChange(questionKeyParam);
-  }, [hasUnsavedChanges, registerUnsavedChange, questionKeyParam]);
+  const isNew = rowIndex === "new";
+  let rowSeed: ResearchOutputTable | null = null;
+  if (columns && isNew) {
+    rowSeed = createEmptyResearchOutputRow(columns);
+  } else if (columns && typeof rowIndex === "number" && rowIndex < existingRows.length) {
+    rowSeed = existingRows[rowIndex];
+  }
 
   const lockedOrgIds = useMemo(
     () => collectLockedGuidanceOrgIds(model?.sections ?? []),
@@ -167,35 +191,30 @@ export default function PlanResearchOutputEditScreen({
     ? tEdit("headings.addResearchOutput")
     : tEdit("headings.editResearchOutput");
 
-  const handleSave = async () => {
-    if (rows.length === 0 || savingRef.current) {
-      return;
+  const saveRow = async (row: ResearchOutputTable): Promise<boolean> => {
+    if (isSaving) {
+      return false;
     }
-    savingRef.current = true;
     setIsSaving(true);
     setSaveErrors([]);
-    const nextRows = [...existingRows];
-    if (isNew) {
-      nextRows.push(rows[0]);
-    } else {
-      nextRows[rowIndexOrNew as number] = rows[0];
-    }
+    const nextRows = isNew
+      ? [...existingRows, row]
+      : existingRows.map((existing, index) => (index === rowIndex ? row : existing));
     const result = await dataSource.saveAnswer(
       key,
       buildResearchOutputAnswer(question.parsedJson, nextRows)
     );
     if (result.kind === "saved") {
-      setSavedRowJson(JSON.stringify(rows[0]));
       navigateBack();
-      return;
+      return true;
     }
-    savingRef.current = false;
     setIsSaving(false);
     setSaveErrors(
       result.kind === "invalid"
         ? result.messages
         : [result.message ?? t("researchOutput.saveFailed")]
     );
+    return false;
   };
 
   return (
@@ -218,19 +237,17 @@ export default function PlanResearchOutputEditScreen({
           <div className={questionStyles.planQuestionBody}>
             <div className={questionStyles.planQuestionMain}>
               <PlanQuestionHeader question={question} />
-              {hasSeededRow ? (
-                <SingleResearchOutputComponent
-                  columns={columns}
-                  rows={rows}
-                  setRows={setRows}
-                  showButtons={canEdit}
-                  isDisabled={!canEdit || isSaving}
-                  onSave={handleSave}
-                  onCancel={navigateBack}
-                  isNewEntry={isNew}
-                  hasOtherRows={existingRows.length > 0}
-                />
-              ) : null}
+              <ResearchOutputRowForm
+                seed={rowSeed}
+                columns={columns}
+                questionKeyParam={questionKeyParam}
+                canEdit={canEdit}
+                isSaving={isSaving}
+                isNew={isNew}
+                hasOtherRows={existingRows.length > 0}
+                onSave={saveRow}
+                onCancel={navigateBack}
+              />
             </div>
             <PlanQuestionSidebar
               questionTitleId={titleId}
@@ -238,11 +255,7 @@ export default function PlanResearchOutputEditScreen({
               comments={question.comments}
               canCustomize={capabilities.canCustomizeGuidance}
               canComment={capabilities.canComment && question.hasAnswer}
-              loadGuidance={() => dataSource.loadGuidance(key)}
-              loadComments={() => dataSource.loadComments(key)}
-              onAddComment={(text) =>
-                dataSource.addComment(key, text).then(() => undefined)
-              }
+              onAddComment={(text) => dataSource.addComment(key, text)}
               onUpdateComment={(commentId, text) =>
                 dataSource.updateComment(key, commentId, text)
               }
@@ -261,9 +274,7 @@ export default function PlanResearchOutputEditScreen({
           lockedOrgIds={lockedOrgIds}
           availableOrgs={model.availableGuidanceOrgs}
           onSearch={(term) => dataSource.searchGuidanceOrgs(term)}
-          onSave={async (orgIds) => {
-            await dataSource.setSelectedGuidanceOrgs(orgIds);
-          }}
+          onSave={(orgIds) => dataSource.setSelectedGuidanceOrgs(orgIds)}
         />
       </ContentContainer>
     </LayoutContainer>

@@ -106,7 +106,6 @@ describe("mockPlan through the real GraphQL data source", () => {
     expect(model).toMatchObject({
       membersLabel: "Jennifer Frost (PI), Amelia Snow (Other)",
       affiliationName: "University of California CDL",
-      currentUserName: "Style Guide User",
       selectedGuidanceOrgIds: [NSF, CDL, STANFORD],
       progress: { answeredQuestions: 6, totalQuestions: 15, percentComplete: 40 },
       capabilities: {
@@ -186,7 +185,7 @@ describe("fake plan authoring API", () => {
     const dataSource = await readyScenario("editable");
 
     await expect(dataSource.searchGuidanceOrgs("ucb")).resolves.toEqual([
-      { id: UCB, label: "UC Berkeley", shortName: "UCB", orgURI: UCB },
+      { id: UCB, label: "UC Berkeley", shortName: "UCB" },
     ]);
     await expect(dataSource.setSelectedGuidanceOrgs([NSF, CDL, UCB])).resolves.toEqual([NSF, CDL, UCB]);
 
@@ -259,7 +258,7 @@ describe("createMockDataSource", () => {
 
     await dataSource.saveAnswer("custom-question-21", { type: "text", answer: "x" });
 
-    expect(questionOf(dataSource, "custom-question-21")).toMatchObject({ hasAnswer: true, lastSavedAt: "1758800000000" });
+    expect(questionOf(dataSource, "custom-question-21")).toMatchObject({ hasAnswer: true, lastSavedAt: 1758800000000 });
     expect(modelOf(dataSource).progress.answeredQuestions).toBe(2);
     expect(listener).toHaveBeenCalledTimes(1);
     jest.restoreAllMocks();
@@ -276,8 +275,8 @@ describe("createMockDataSource", () => {
   });
 
   it("rejects comment and guidance calls when asked to", async () => {
-    await expect(createMockDataSource({ commentsFail: true }).loadComments(KEY)).rejects.toThrow(MOCK_COMMENTS_ERROR);
-    await expect(createMockDataSource({ guidanceFail: true }).loadGuidance(KEY)).rejects.toThrow(MOCK_GUIDANCE_ERROR);
+    await expect(createMockDataSource({ commentsFail: true }).addComment(KEY, "x")).rejects.toThrow(MOCK_COMMENTS_ERROR);
+    await expect(createMockDataSource({ guidanceFail: true }).searchGuidanceOrgs("x")).rejects.toThrow(MOCK_GUIDANCE_ERROR);
   });
 
   it("starts from initialState, reloads back to its model and accepts setState", async () => {

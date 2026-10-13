@@ -2,7 +2,6 @@ import type {
   PlanAuthoringModel,
   PlanComment,
   PlanGuidanceOrgOption,
-  PlanGuidanceSource,
 } from "./model";
 
 export type PlanAuthoringState =
@@ -22,8 +21,6 @@ export interface PlanAuthoringDataSource {
     questionKeyValue: string,
     answerJson: unknown
   ): Promise<SaveAnswerResult>;
-  loadGuidance(questionKeyValue: string): Promise<PlanGuidanceSource[]>;
-  loadComments(questionKeyValue: string): Promise<PlanComment[]>;
   addComment(questionKeyValue: string, text: string): Promise<PlanComment>;
   updateComment(
     questionKeyValue: string,

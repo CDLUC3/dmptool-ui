@@ -123,7 +123,7 @@ export const createEmptyResearchOutputRow = (
 export const getRowDisplayInfo = (
   row: ResearchOutputTable,
   columns: ResearchOutputTableQuestionType['columns'],
-  untitledTitle = 'Untitled Research Output'
+  untitledTitle: string
 ): { title: string; outputType: string; repositories: string[] } => {
   const titleIndex = columns.findIndex(col =>
     col.heading.toLowerCase() === 'title'

@@ -281,7 +281,6 @@ describe('PlanGuidanceCustomizeDialog', () => {
         id: 'org-9',
         label: 'Searched University',
         shortName: 'SU',
-        orgURI: 'https://ror.org/org-9',
       });
       const onSave = jest.fn().mockResolvedValue(undefined);
       render(

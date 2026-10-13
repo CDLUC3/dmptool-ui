@@ -7,9 +7,7 @@ import {
   TEXT_AREA_QUESTION_TYPE,
 } from "@/lib/constants";
 import { useRenderQuestionField } from "@/components/hooks/useRenderQuestionField";
-import ResearchOutputAnswerComponent, {
-  type ResearchOutputRowNavigation,
-} from "@/components/Form/ResearchOutputAnswerComponent";
+import ResearchOutputAnswerComponent from "@/components/Form/ResearchOutputAnswerComponent";
 import FormTextArea from "@/components/Form/FormTextArea";
 import SafeHtml from "@/components/SafeHtml";
 import type { ResearchOutputTable } from "@/app/types";
@@ -26,6 +24,7 @@ import {
   buildResearchOutputAnswer,
   getResearchOutputColumns,
   getResearchOutputRows,
+  type ResearchOutputRowHref,
 } from "../researchOutputAnswer";
 import styles from "./PlanQuestionAnswer.module.scss";
 
@@ -34,8 +33,8 @@ interface PlanQuestionAnswerProps {
   draftAnswer: unknown;
   disabled?: boolean;
   onChange: (answerJson: unknown) => void;
-  onSaveNow?: () => Promise<boolean>;
-  rowNavigation?: ResearchOutputRowNavigation;
+  onSaveNow: () => Promise<void>;
+  researchOutputRowHref?: ResearchOutputRowHref;
   className?: string;
 }
 
@@ -45,7 +44,7 @@ export default function PlanQuestionAnswer({
   disabled = false,
   onChange,
   onSaveNow,
-  rowNavigation,
+  researchOutputRowHref,
   className,
 }: PlanQuestionAnswerProps) {
   const t = useTranslations("PlanAuthoring");
@@ -93,7 +92,7 @@ export default function PlanQuestionAnswer({
   const persistResearchOutputRows = async (rows: ResearchOutputTable[]) => {
     setResearchOutputRows(rows);
     onChange(buildResearchOutputAnswer(question.parsedJson, rows));
-    await onSaveNow?.();
+    await onSaveNow();
   };
 
   return (
@@ -105,7 +104,11 @@ export default function PlanQuestionAnswer({
           setRows={setResearchOutputRows}
           onSave={persistResearchOutputRows}
           isDisabled={disabled}
-          rowNavigation={rowNavigation}
+          rowHref={
+            researchOutputRowHref &&
+            ((rowIndex) =>
+              researchOutputRowHref(questionKey(question.identity), rowIndex))
+          }
         />
       ) : showSanitizedRichText ? (
         <div className={styles.readOnlyRichText}>

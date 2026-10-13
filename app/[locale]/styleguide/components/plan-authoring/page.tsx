@@ -9,7 +9,6 @@ import {
   createScenarioDataSource,
   scenarios,
 } from "@/components/PlanAuthoring/mocks";
-import { toResearchOutputRowNavigation } from "@/components/PlanAuthoring/researchOutputAnswer";
 import {
   getStyleguidePlanAuthoringDataSource,
   STYLEGUIDE_RESEARCH_OUTPUT_PATH,
@@ -51,12 +50,8 @@ export default function PlanAuthoringStyleGuidePage() {
 
       <PlanAuthoring
         dataSource={questionsDataSource}
-        getResearchOutputRowNavigation={(question) =>
-          toResearchOutputRowNavigation(
-            question,
-            (questionKey, rowIndex) =>
-              `/${locale}${STYLEGUIDE_RESEARCH_OUTPUT_PATH}/${questionKey}/${rowIndex}`
-          )
+        researchOutputRowHref={(questionKey, rowIndex) =>
+          `/${locale}${STYLEGUIDE_RESEARCH_OUTPUT_PATH}/${questionKey}/${rowIndex}`
         }
       />
 

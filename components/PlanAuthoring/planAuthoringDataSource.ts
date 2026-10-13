@@ -302,7 +302,7 @@ export function createPlanAuthoringDataSource({
                 ...item,
                 answerJson,
                 hasAnswer: answerJson != null && answerJson !== "",
-                lastSavedAt: String(Date.now()),
+                lastSavedAt: Date.now(),
               }
             : item
         ),
@@ -312,14 +312,6 @@ export function createPlanAuthoringDataSource({
         model: { ...state.model, sections, progress: computeProgress(sections) },
       });
       return result;
-    },
-
-    async loadGuidance(questionKeyValue) {
-      return findQuestion(questionKeyValue)?.guidanceSources ?? [];
-    },
-
-    async loadComments(questionKeyValue) {
-      return findQuestion(questionKeyValue)?.comments ?? [];
     },
 
     async addComment(questionKeyValue, text) {
@@ -341,6 +333,7 @@ export function createPlanAuthoringDataSource({
           // The comment mutations don't return created, so use the client's time.
           created: String(Date.now()),
           text: created.commentText ?? text,
+          isEdited: false,
         },
         viewer
       );
@@ -359,32 +352,28 @@ export function createPlanAuthoringDataSource({
 
     async updateComment(questionKeyValue, commentId, text) {
       const ref = requireCommentRef(questionKeyValue, commentId);
-      const updatedText =
-        ref.kind === "answer"
-          ? throwOnFieldErrors(
-              (
-                await client.mutate({
-                  mutation: UpdateAnswerCommentDocument,
-                  variables: {
-                    answerId: ref.answerId,
-                    answerCommentId: ref.answerCommentId,
-                    commentText: text,
-                  },
-                })
-              ).data?.updateAnswerComment
-            ).commentText
-          : throwOnFieldErrors(
-              (
-                await client.mutate({
-                  mutation: UpdateFeedbackCommentDocument,
-                  variables: {
-                    planId,
-                    planFeedbackCommentId: ref.planFeedbackCommentId,
-                    commentText: text,
-                  },
-                })
-              ).data?.updateFeedbackComment
-            ).commentText;
+      let updatedText: string | null | undefined;
+      if (ref.kind === "answer") {
+        const { data } = await client.mutate({
+          mutation: UpdateAnswerCommentDocument,
+          variables: {
+            answerId: ref.answerId,
+            answerCommentId: ref.answerCommentId,
+            commentText: text,
+          },
+        });
+        updatedText = throwOnFieldErrors(data?.updateAnswerComment).commentText;
+      } else {
+        const { data } = await client.mutate({
+          mutation: UpdateFeedbackCommentDocument,
+          variables: {
+            planId,
+            planFeedbackCommentId: ref.planFeedbackCommentId,
+            commentText: text,
+          },
+        });
+        updatedText = throwOnFieldErrors(data?.updateFeedbackComment).commentText;
+      }
       const existing = findQuestion(questionKeyValue)?.comments.find(
         (comment) => comment.id === commentId
       );
@@ -444,11 +433,9 @@ export function createPlanAuthoringDataSource({
           label: item.displayName,
           shortName:
             item.displayAbbreviation || item.acronyms?.[0] || item.displayName,
-          orgURI: item.uri,
         }));
     },
 
-    // Org ids are affiliation URIs, which is what add/removePlanGuidance take.
     async setSelectedGuidanceOrgs(orgIds) {
       if (state.status !== "ready") {
         return [];

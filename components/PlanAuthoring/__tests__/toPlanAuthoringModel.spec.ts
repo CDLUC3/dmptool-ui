@@ -76,7 +76,7 @@ describe("toPlanAuthoringModel structure", () => {
         title: section.title,
         introductionHtml: section.introductionHtml,
         requirementsHtml: section.requirementsHtml,
-        questions: section.questions.map((question) => [question.identity, question.displayOrder]),
+        questions: section.questions.map((question) => question.identity),
       }))
     ).toEqual([
       {
@@ -85,9 +85,9 @@ describe("toPlanAuthoringModel structure", () => {
         introductionHtml: "<p>Intro</p>",
         requirementsHtml: "<p>Section req</p>",
         questions: [
-          [{ kind: "base", versionedQuestionId: 100 }, 0],
-          [{ kind: "custom", customQuestionId: 200 }, 1],
-          [{ kind: "base", versionedQuestionId: 101 }, 2],
+          { kind: "base", versionedQuestionId: 100 },
+          { kind: "custom", customQuestionId: 200 },
+          { kind: "base", versionedQuestionId: 101 },
         ],
       },
       {
@@ -95,7 +95,7 @@ describe("toPlanAuthoringModel structure", () => {
         title: "Custom section",
         introductionHtml: undefined,
         requirementsHtml: undefined,
-        questions: [[{ kind: "custom", customQuestionId: 300 }, 0]],
+        questions: [{ kind: "custom", customQuestionId: 300 }],
       },
     ]);
     expect(model.sections[0].questions[1].sectionIdentity).toEqual({ kind: "base", versionedSectionId: 10 });
@@ -245,13 +245,25 @@ describe("toPlanAuthoringModel question fields", () => {
       }),
     ]);
 
-    expect(question).toMatchObject({ answerJson: expected, hasAnswer: true, lastSavedAt: "1751929006000" });
+    expect(question).toMatchObject({ answerJson: expected, hasAnswer: true, lastSavedAt: 1751929006000 });
   });
 
   it("leaves a question without an answer empty and unanswered", () => {
     const [question] = mapQuestions([makeRawQuestion({ versionedQuestionId: 1, hasAnswer: false })]);
 
     expect(question).toMatchObject({ answerJson: null, hasAnswer: false, lastSavedAt: undefined, comments: [] });
+  });
+
+  it("drops a non-numeric modified time", () => {
+    const [question] = mapQuestions([
+      makeRawQuestion({
+        versionedQuestionId: 1,
+        answer: makeRawAnswer("text", "hi", { modified: "yesterday" }),
+      }),
+    ]);
+
+    expect(question.lastSavedAt).toBeUndefined();
+    expect(question.answerJson).toEqual({ type: "text", answer: "hi" });
   });
 });
 
@@ -303,17 +315,15 @@ describe("toPlanAuthoringModel guidance", () => {
         type: "BEST_PRACTICE",
         label: "DMP Tool",
         shortName: "DMP Tool",
-        orgURI: "bestPractice",
         locked: false,
         bodyHtml: "<p>a</p><p>b</p>",
       },
-      { id: NSF, type: "TEMPLATE_OWNER", label: "NSF", shortName: "NSF", orgURI: NSF, locked: true, bodyHtml: "<p>nsf</p>" },
+      { id: NSF, type: "TEMPLATE_OWNER", label: "NSF", shortName: "NSF", locked: true, bodyHtml: "<p>nsf</p>" },
       {
         id: UCOP,
         type: "USER_AFFILIATION",
         label: "UCOP",
         shortName: "UCOP",
-        orgURI: UCOP,
         locked: true,
         bodyHtml: "<p>custom</p><p>tagged</p>",
       },
@@ -369,19 +379,13 @@ describe("toPlanAuthoringModel guidance", () => {
     );
 
     expect(model.availableGuidanceOrgs).toEqual([
-      { id: NSF, label: "NSF", shortName: "NSF", orgURI: NSF },
-      {
-        id: "https://ror.org/stanford",
-        label: "Stanford",
-        shortName: "Stanford",
-        orgURI: "https://ror.org/stanford",
-      },
-      { id: UCOP, label: "UCOP", shortName: "UCOP", orgURI: UCOP },
+      { id: NSF, label: "NSF", shortName: "NSF" },
+      { id: "https://ror.org/stanford", label: "Stanford", shortName: "Stanford" },
+      { id: UCOP, label: "UCOP", shortName: "UCOP" },
       {
         id: "https://ror.org/empty",
         label: "https://ror.org/empty",
         shortName: "https://ror.org/empty",
-        orgURI: "https://ror.org/empty",
       },
     ]);
     expect(model.selectedGuidanceOrgIds).toEqual([NSF, UCOP, "https://ror.org/empty"]);
@@ -447,6 +451,7 @@ describe("toPlanAuthoringModel comments", () => {
         createdLabel: "at 1000",
         text: "Admin note",
         isFeedback: true,
+        isEdited: false,
         canEdit: false,
         canDelete: false,
       },
@@ -457,6 +462,7 @@ describe("toPlanAuthoringModel comments", () => {
         createdLabel: "at 3000",
         text: "Mine",
         isFeedback: false,
+        isEdited: false,
         canEdit: true,
         canDelete: true,
       },
@@ -467,6 +473,7 @@ describe("toPlanAuthoringModel comments", () => {
         createdLabel: "",
         text: "Undated",
         isFeedback: false,
+        isEdited: false,
         canEdit: false,
         canDelete: false,
       },
@@ -489,8 +496,8 @@ describe("toPlanAuthoringModel comments", () => {
 
     expect(question.comments.map((comment) => [comment.id, comment.isEdited])).toEqual([
       ["answer-1", true],
-      ["answer-2", undefined],
-      ["answer-3", undefined],
+      ["answer-2", false],
+      ["answer-3", false],
     ]);
   });
 
@@ -624,7 +631,7 @@ describe("toPlanAuthoringModel question JSON", () => {
     expect(valid).toMatchObject({
       questionType: "text",
       answerJson: { type: "text", answer: "hi" },
-      lastSavedAt: "1758800000000",
+      lastSavedAt: 1758800000000,
     });
     consoleError.mockRestore();
   });
