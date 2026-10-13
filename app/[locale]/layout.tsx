@@ -1,5 +1,6 @@
 import { cookies } from 'next/headers';
 import { verifyJwtToken } from '@/lib/server/auth';
+import { ACCESS_TOKEN_NAME } from '@/utils/authHelper';
 import { Poppins } from "next/font/google";
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
@@ -53,7 +54,7 @@ export const metadata: Metadata = {
 };
 
 async function getInitialIsAuthenticated(): Promise<boolean> {
-  const token = (await cookies()).get('dmspt')?.value;
+  const token = (await cookies()).get(ACCESS_TOKEN_NAME)?.value;
   if (!token) return false;
   try {
     return !!(await verifyJwtToken(token));

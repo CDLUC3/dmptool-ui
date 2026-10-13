@@ -62,7 +62,7 @@ const SignUpPage: React.FC = () => {
   const errorRef = useRef<HTMLDivElement>(null);
   const formRef = useRef<HTMLFormElement | null>(null);
   const router = useRouter();
-  const { csrfToken } = useCsrf();
+  const { getCsrfToken } = useCsrf();
   const { setIsAuthenticated } = useAuthContext();
 
   const [step, setStep] = useState<SignupStepState>("email");
@@ -124,13 +124,19 @@ const SignUpPage: React.FC = () => {
 
     /* eslint-disable @typescript-eslint/no-explicit-any */
     try {
-      const response = await signupRequest(csrfToken);
+      const response = await signupRequest(await getCsrfToken());
 
-      if (response && response.ok) {
+      const onSignupSuccess = () => {
         setIsAuthenticated(true);
         router.push('/')
+      };
+
+      if (response && response.ok) {
+        onSignupSuccess();
       } else {
-        await handleErrors(response, signupRequest, setErrors, router, '/signup');
+        // CSRF tokens are single-use, so a token already used by sign-up or logout gets a 403 here.
+        // handleErrors retries with a fresh token, and must finish the login the same way on success.
+        await handleErrors(response, signupRequest, setErrors, router, '/signup', onSignupSuccess);
       }
     } catch (err: any) {
       logECS('error', 'Signup error', {

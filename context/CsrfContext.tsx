@@ -1,11 +1,11 @@
 'use client'
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useCallback, useContext } from 'react';
 import logECS from '@/utils/clientLogger';
 import { fetchCsrfToken } from '@/utils/authHelper';
 
 interface CsrfContextProps {
-  csrfToken: string | null;
+  getCsrfToken: () => Promise<string | null>;
 }
 
 const CsrfContext = createContext<CsrfContextProps | undefined>(undefined);
@@ -13,15 +13,16 @@ const CsrfContext = createContext<CsrfContextProps | undefined>(undefined);
 export function CsrfProvider({ children }: {
   children: React.ReactNode;
 }) {
-  const [csrfToken, setCsrfToken] = useState<string | null>(null);
-
-  const refreshCsrfToken = async () => {
+  /*
+   * The Auth Service's CSRF tokens are single-use and expire, so fetch a new one
+   * right before each request that needs it, instead of holding one for the page session.
+   */
+  const getCsrfToken = useCallback(async (): Promise<string | null> => {
     try {
       const response = await fetchCsrfToken();
       if (response) {
         const csrfToken = response.headers.get('X-CSRF-TOKEN');
         if (csrfToken) {
-          setCsrfToken(csrfToken);
           return csrfToken;
         } else {
           throw new Error("CsrfContext: CSRF token not found in response header");
@@ -36,19 +37,12 @@ export function CsrfProvider({ children }: {
       logECS("error", `CsrfContext: Error getting csrf token from auth service: ${err}`, {
         source: "CsrfProvider",
       });
-      setCsrfToken(null);
       return null;
     }
-
-  }
-
-  useEffect(() => {
-    // Fetch CSRF token when component mounts
-    refreshCsrfToken();
   }, []);
 
   return (
-    <CsrfContext.Provider value={{ csrfToken }}>
+    <CsrfContext.Provider value={{ getCsrfToken }}>
       {children}
     </CsrfContext.Provider>
   )
