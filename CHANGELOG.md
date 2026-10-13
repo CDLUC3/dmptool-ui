@@ -1,5 +1,7 @@
 ## Added
-- Added `NEXT_PUBLIC_AUTH_SERVICE_URL` env variable to Dockerfile.prod and the buildspec.yaml
+- Added `/healthcheck` endpoint that is outside the i18n and other middleware constraints and removed the old `[locale]/healthcheck`
+- Added additional AUTH ENV variables to buildspec and Dockerfile.prod to support new auth service
+- Added HOSTNAME and PORT as env variables in Dockerfile.prod because CLI args are ignored by nextJS (according to Copilot)
 - Added `AUTH_ENDPOINT`, `NEXT_PUBLIC_AUTH_ENDPOINT`, `TOKEN_ISSUER`, `TOKEN_AUDIENCE`, `ACCESS_TOKEN_NAME`, `REFRESH_TOKEN`, and `SSO_PENDING_TOKEN_NAME` env variables and removed `JWT_SECRET`
  - Added `sectionMoveConflicts.ts` and `questionMoveConflicts.ts` files, whose functions `findSectionMoveConflicts` and `findQuestionMoveConflicts` help determine whether a `question` or `section` display order can be updated. `TemplateEditPage` and `SectionEditContainer` pages were updated to use these functions [#986]
  - Added `utils/displayLogicConflictError.ts`, which turns conflicts into an `ErrorMessageItem` with links, and updated `ErrorMessages` with an option to pass in a link heading and URLs [#986]
@@ -50,6 +52,7 @@
 - Added `UpdateAffiliation` and `AffiliationById` queries [#203]
 
 ## Updated
+- Updated JWKS loading to be lazy loaded instead of running on startup
 - Updated the `PublishedQuestion` query to accept an optional `planId` so the plan's question customizations are returned [#388]
 - Updated the Forgot Password page to call the new Auth service's password reset endpoint
 - Updated the Reset Password page to immediately verify the password reset token with the Auth service and then post the changed password to the Auth Service's reset password endpoint

@@ -21,7 +21,18 @@ interface JWTAccessToken extends JwtPayload {
 }
 
 // TODO: These routes will need to be updated.
-const excludedPaths = ['/email', '/favicon.ico', '/_next', '/api', '/login', '/signup', '/styleguide', '/contact', '/dmps'];
+const excludedPaths = [
+  "/email",
+  "/favicon.ico",
+  "/_next",
+  "/api",
+  "/login",
+  "/signup",
+  "/styleguide",
+  "/contact",
+  "/dmps",
+  "/healthcheck",
+];
 
 // Check if the request is for a server action
 function isServerAction(request: NextRequest): boolean {
@@ -119,11 +130,11 @@ export async function proxy(request: NextRequest) {
   const response = NextResponse.next({ request: { headers: requestHeaders } });
 
   // Locale already in the URL (e.g. /pt-BR/projects), if any
-  const firstSegment = pathname.split('/')[1];
+  const firstSegment = pathname.split("/")[1];
   const urlLocale = locales.includes(firstSegment) ? firstSegment : null;
 
   // Prefer the URL's locale; otherwise fall back to JWT → cookie → browser → default
-  const locale = urlLocale ?? await getLocale(request, jwtResult);
+  const locale = urlLocale ?? (await getLocale(request, jwtResult));
 
   // Redirect to login if no tokens are found
   if (!isExcludedPath && !isServerActionRequest) {
@@ -172,7 +183,7 @@ export async function proxy(request: NextRequest) {
   }
 
   if (!urlLocale) {
-    const newUrl = new URL(`/${locale}${pathname === '/' ? '' : pathname}`, request.url);
+    const newUrl = new URL(`/${locale}${pathname === "/" ? "" : pathname}`, request.url);
     if (request.nextUrl.search) {
       newUrl.search = request.nextUrl.search;
     }
@@ -194,7 +205,9 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  // Don't run middleware for api endpoints, static files, anything in our pubic folder or _next files
-  matcher: ['/((?!api|_next|static|.*\\.(?:ico|png|jpg|jpeg|gif|svg|css|js|json|woff2?|ttf|map|txt|xml)$).*)'],
+  // Don't run middleware for api endpoints, static files, health checks, or anything in our public folder or _next files
+  matcher: [
+    "/((?!api|_next|static|healthcheck|public|.*\\.(?:ico|png|jpg|jpeg|gif|svg|css|js|json|woff2?|ttf|map|txt|xml)$).*)",
+  ],
 };
 
