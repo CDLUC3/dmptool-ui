@@ -1,6 +1,6 @@
 ## Added
-- Added `/healthcheck` endpoint that is outside the i18n and other middelware constraints
-- Added additional ENV variables to buildspec and Dockerfile.prod to support new auth service
+- Added `/healthcheck` endpoint that is outside the i18n and other middleware constraints and removed the old `[locale]/healthcheck`
+- Added additional AUTH ENV variables to buildspec and Dockerfile.prod to support new auth service
 - Added HOSTNAME and PORT as env variables in Dockerfile.prod because CLI args are ignored by nextJS (according to Copilot)
 - Added `AUTH_ENDPOINT`, `NEXT_PUBLIC_AUTH_ENDPOINT`, `TOKEN_ISSUER`, `TOKEN_AUDIENCE`, `ACCESS_TOKEN_NAME`, `REFRESH_TOKEN`, and `SSO_PENDING_TOKEN_NAME` env variables and removed `JWT_SECRET`
  - Added `sectionMoveConflicts.ts` and `questionMoveConflicts.ts` files, whose functions `findSectionMoveConflicts` and `findQuestionMoveConflicts` help determine whether a `question` or `section` display order can be updated. `TemplateEditPage` and `SectionEditContainer` pages were updated to use these functions [#986]
