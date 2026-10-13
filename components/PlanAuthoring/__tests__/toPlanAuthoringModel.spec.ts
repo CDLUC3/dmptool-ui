@@ -42,17 +42,10 @@ function mapQuestions(
 }
 
 describe("toPlanAuthoringModel structure", () => {
-  it("maps identities, sorts sections by displayOrder and keeps the resolver's question order", () => {
+  it("maps identities and keeps the resolver's section and question order", () => {
     const model = toPlanAuthoringModel(
       makeRawPlan({
         sections: [
-          makeRawSection({
-            sectionType: "CUSTOM",
-            customSectionId: 20,
-            displayOrder: 2,
-            title: "Custom section",
-            questions: [makeRawQuestion({ questionType: "CUSTOM", customQuestionId: 300 })],
-          }),
           makeRawSection({
             versionedSectionId: 10,
             displayOrder: 1,
@@ -64,6 +57,13 @@ describe("toPlanAuthoringModel structure", () => {
               makeRawQuestion({ questionType: "CUSTOM", customQuestionId: 200 }),
               makeRawQuestion({ versionedQuestionId: 101 }),
             ],
+          }),
+          makeRawSection({
+            sectionType: "CUSTOM",
+            customSectionId: 20,
+            displayOrder: 2,
+            title: "Custom section",
+            questions: [makeRawQuestion({ questionType: "CUSTOM", customQuestionId: 300 })],
           }),
         ],
       }),
@@ -123,14 +123,13 @@ describe("toPlanAuthoringModel structure", () => {
   });
 
   it.each([
-    [false, false, true],
-    [true, false, false],
-    [true, true, true],
-    [null, false, true],
-  ])("readOnly %p with edit access %p gives canEditAnswers %p", (readOnly, hasEditAccess, expected) => {
+    [false, true],
+    [true, false],
+    [null, true],
+  ])("readOnly %p gives canEditAnswers %p", (readOnly, expected) => {
     const model = toPlanAuthoringModel(
       makeRawPlan({ readOnly }),
-      { ...EMPTY_PLAN_AUTHORING_VIEWER, hasEditAccess }
+      EMPTY_PLAN_AUTHORING_VIEWER
     );
 
     expect(model.capabilities.canEditAnswers).toBe(expected);
@@ -171,9 +170,14 @@ describe("toPlanAuthoringModel question fields", () => {
           questionText: "Describe your data",
           required: true,
           requirementText: "<p>Funder requires this</p>",
-          sampleText: "<p>Sample</p>",
           useSampleTextAsDefault: true,
           guidanceSources: [
+            makeRawGuidanceSource({
+              orgURI: NSF,
+              type: GuidanceSourceType.TemplateOwner,
+              label: "National Science Foundation",
+              items: [{ guidanceText: "", sampleText: "<p>Sample</p>" }],
+            }),
             makeRawGuidanceSource({
               id: `customization-${UCOP}`,
               orgURI: UCOP,
@@ -206,7 +210,6 @@ describe("toPlanAuthoringModel question fields", () => {
       requirementHtml: undefined,
       requirementOrgLabel: undefined,
       useSampleTextAsDefault: false,
-      sampleTextOrgLabel: undefined,
     });
     expect(plain.customizationSampleText).toBeUndefined();
   });
@@ -237,6 +240,7 @@ describe("toPlanAuthoringModel question fields", () => {
       makeRawQuestion({
         versionedQuestionId: 1,
         json: JSON.stringify({ type }),
+        hasAnswer: true,
         answer: { id: 5, json: stored, modified: "1751929006000" },
       }),
     ]);
@@ -290,7 +294,7 @@ describe("toPlanAuthoringModel guidance", () => {
   });
   const plan = { versionedTemplate: { name: "NSF", version: "v1", owner: { name: "NSF", uri: NSF } } };
 
-  it("keys sources by org URI, merges customization guidance first, drops empty sources and locks the template owner", () => {
+  it("keys sources by org URI, merges customization guidance first, drops empty sources and locks always-shown orgs", () => {
     const [mapped] = mapQuestions([question], EMPTY_PLAN_AUTHORING_VIEWER, plan);
 
     expect(mapped.guidanceSources).toEqual([
@@ -310,23 +314,103 @@ describe("toPlanAuthoringModel guidance", () => {
         label: "UCOP",
         shortName: "UCOP",
         orgURI: UCOP,
-        locked: false,
+        locked: true,
         bodyHtml: "<p>custom</p><p>tagged</p>",
       },
     ]);
   });
 
-  it("uses the non best practice orgs shown on questions as the plan's guidance selection", () => {
+  it("does not lock USER_SELECTED orgs", () => {
+    const [mapped] = mapQuestions(
+      [
+        makeRawQuestion({
+          guidanceSources: [
+            makeRawGuidanceSource({ orgURI: UCOP, items: [{ guidanceText: "<p>picked</p>" }] }),
+          ],
+        }),
+      ],
+      EMPTY_PLAN_AUTHORING_VIEWER,
+      plan
+    );
+
+    expect(mapped.guidanceSources.map(({ id, locked }) => [id, locked])).toEqual([[UCOP, false]]);
+  });
+
+  it("selects always-shown orgs plus every USER_SELECTED org, even without guidance text", () => {
     const model = toPlanAuthoringModel(
-      makeRawPlan({ ...plan, sections: [makeRawSection({ questions: [question] })] }),
-      EMPTY_PLAN_AUTHORING_VIEWER
+      makeRawPlan({
+        ...plan,
+        availableGuidanceSources: [
+          {
+            id: "bestPractice",
+            type: GuidanceSourceType.BestPractice,
+            label: "DMP Tool",
+            shortName: "DMP Tool",
+            orgURI: "bestPractice",
+          },
+          {
+            id: `affiliation-${NSF}`,
+            type: GuidanceSourceType.TemplateOwner,
+            label: "NSF",
+            shortName: "NSF",
+            orgURI: NSF,
+          },
+          {
+            id: "affiliation-https://ror.org/stanford",
+            type: GuidanceSourceType.OtherAffiliation,
+            label: "Stanford",
+            shortName: "Stanford",
+            orgURI: "https://ror.org/stanford",
+          },
+        ],
+        sections: [makeRawSection({ questions: [question] })],
+      }),
+      { ...EMPTY_PLAN_AUTHORING_VIEWER, canCustomizeGuidance: true }
     );
 
     expect(model.availableGuidanceOrgs).toEqual([
       { id: NSF, label: "NSF", shortName: "NSF", orgURI: NSF },
+      {
+        id: "https://ror.org/stanford",
+        label: "Stanford",
+        shortName: "Stanford",
+        orgURI: "https://ror.org/stanford",
+      },
       { id: UCOP, label: "UCOP", shortName: "UCOP", orgURI: UCOP },
+      {
+        id: "https://ror.org/empty",
+        label: "https://ror.org/empty",
+        shortName: "https://ror.org/empty",
+        orgURI: "https://ror.org/empty",
+      },
     ]);
-    expect(model.selectedGuidanceOrgIds).toEqual([NSF, UCOP]);
+    expect(model.selectedGuidanceOrgIds).toEqual([NSF, UCOP, "https://ror.org/empty"]);
+    expect(model.capabilities.canCustomizeGuidance).toBe(true);
+  });
+
+  it("hides guidance customization until Apollo returns an organization source", () => {
+    const viewer = {
+      ...EMPTY_PLAN_AUTHORING_VIEWER,
+      canCustomizeGuidance: true,
+    };
+    const withoutSources = toPlanAuthoringModel(makeRawPlan(), viewer);
+    const withBestPracticeOnly = toPlanAuthoringModel(
+      makeRawPlan({
+        availableGuidanceSources: [
+          {
+            id: "bestPractice",
+            type: GuidanceSourceType.BestPractice,
+            label: "DMP Tool",
+            shortName: "DMP Tool",
+            orgURI: UCOP,
+          },
+        ],
+      }),
+      viewer
+    );
+
+    expect(withoutSources.capabilities.canCustomizeGuidance).toBe(false);
+    expect(withBestPracticeOnly.capabilities.canCustomizeGuidance).toBe(false);
   });
 });
 
@@ -422,14 +506,12 @@ describe("toPlanAuthoringModel comments", () => {
 });
 
 describe("toPlanAuthoringViewer", () => {
-  it("derives the user, edit access and comment permissions from Me and the plan", () => {
+  it("derives the user, guidance access and comment permissions from Me and the plan", () => {
     const viewer = toPlanAuthoringViewer({
       me: makeRawMe({ id: 5, givenName: "Ada", surName: "Lovelace" }),
       plan: makeRawPlan({
-        readOnly: true,
-        project: {
-          collaborators: [{ accessLevel: ProjectCollaboratorAccessLevel.Edit, user: { id: 5 } }],
-        },
+        readOnly: false,
+        myAccessLevel: ProjectCollaboratorAccessLevel.Edit,
       }),
       locale: "en-US",
     });
@@ -438,7 +520,6 @@ describe("toPlanAuthoringViewer", () => {
       currentUserId: 5,
       currentUserName: "Ada Lovelace",
       affiliationName: "California Digital Library",
-      hasEditAccess: true,
       canCustomizeGuidance: true,
       canComment: true,
       canModerateComments: false,
@@ -446,20 +527,22 @@ describe("toPlanAuthoringViewer", () => {
     });
   });
 
-  it("targets the open feedback round for an admin from the plan creator's org", () => {
-    const me = makeRawMe({ id: 8, role: UserRole.Admin });
+  it("targets the open feedback round for an admin", () => {
     const viewer = toPlanAuthoringViewer({
-      me,
+      me: makeRawMe({ id: 8, role: UserRole.Admin }),
       plan: makeRawPlan({
-        planCreator: { affiliation: { uri: me.affiliation!.uri } },
-        feedback: [{ id: 30, completed: "1751929006000" }, { id: 31, completed: null }],
+        readOnly: true,
+        feedback: [
+          { id: 30, requested: "1751900000000", completed: "1751929006000" },
+          { id: 31, requested: "1751950000000", completed: null },
+        ],
       }),
       locale: "en-US",
     });
 
     expect(viewer).toMatchObject({
       canComment: true,
-      hasEditAccess: false,
+      canCustomizeGuidance: false,
       newCommentTarget: { kind: "feedback", planFeedbackId: 31 },
     });
   });

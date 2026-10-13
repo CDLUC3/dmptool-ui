@@ -103,15 +103,17 @@ describe("PlanQuestionSidebar", () => {
     });
   });
 
-  it.each<[PlanGuidanceSourceType, string, PlanGuidanceSource]>([
-    ["BEST_PRACTICE", "Best practice by", bestPractice],
-    ["TEMPLATE_OWNER", "Template owner guidance", templateOwner],
-    ["USER_AFFILIATION", "Your organization's guidance", userAffiliation],
-    ["USER_SELECTED", "Additional guidance", userSelected],
-  ])('labels %s guidance "%s"', (_type, heading, guidance) => {
+  it.each<[PlanGuidanceSourceType, PlanGuidanceSource]>([
+    ["BEST_PRACTICE", bestPractice],
+    ["TEMPLATE_OWNER", templateOwner],
+    ["USER_AFFILIATION", userAffiliation],
+    ["USER_SELECTED", userSelected],
+  ])("uses the resolver label for %s guidance", (_type, guidance) => {
     renderSidebar({ sources: [guidance] });
 
-    expect(screen.getByText(heading)).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { level: 4, name: guidance.label })
+    ).toBeInTheDocument();
   });
 
   it("shows another source's guidance when its pill is selected", async () => {
@@ -121,7 +123,12 @@ describe("PlanQuestionSidebar", () => {
     await user.click(guidancePill("DMP Tool"));
 
     expect(await screen.findByText("DMP Tool says hello")).toBeInTheDocument();
-    expect(screen.getByText("Best practice by")).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", {
+        level: 4,
+        name: "DMP Tool guidance label",
+      })
+    ).toBeInTheDocument();
     expect(props.loadGuidance).toHaveBeenCalledTimes(1);
   });
 

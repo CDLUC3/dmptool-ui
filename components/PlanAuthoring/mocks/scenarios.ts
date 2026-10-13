@@ -1,3 +1,4 @@
+import { ProjectCollaboratorAccessLevel } from "@/generated/graphql";
 import type { PlanAuthoringDataSource } from "../dataSource";
 import type { PlanAuthoringVariant, PlanDocument } from "../model";
 import { createPlanAuthoringDataSource } from "../planAuthoringDataSource";
@@ -23,7 +24,7 @@ export const scenarios = {
       plan: {
         ...mockPlan,
         readOnly: true,
-        project: { collaborators: [] },
+        myAccessLevel: ProjectCollaboratorAccessLevel.Comment,
       },
     },
   }),

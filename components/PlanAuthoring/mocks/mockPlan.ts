@@ -88,6 +88,17 @@ const CDL_CUSTOMIZATION: PlanAuthoringGuidanceSource = {
   ],
 };
 
+function withQuestionSample(sampleText: string): PlanAuthoringGuidanceSource[] {
+  return GUIDANCE.map((source) =>
+    source.orgURI === NSF
+      ? {
+          ...source,
+          items: [...source.items, { guidanceText: "", sampleText }],
+        }
+      : source
+  );
+}
+
 /** Orgs the fake managedAffiliationsWithGuidance search returns, with the guidance they add. */
 export const MOCK_GUIDANCE_ORGS = [
   { uri: NSF, displayName: "National Science Foundation", displayAbbreviation: "NSF", guidanceText: GUIDANCE[1].items[0].guidanceText },
@@ -111,14 +122,7 @@ export const mockPlan = makeRawPlan({
   id: 1,
   title: "V4.3: Coastal Ocean Processes of North Greenland",
   readOnly: false,
-  createdById: JENNIFER.id,
-  planCreator: { affiliation: { uri: CDL } },
-  project: {
-    collaborators: [
-      { accessLevel: ProjectCollaboratorAccessLevel.Own, user: { id: JENNIFER.id } },
-      { accessLevel: ProjectCollaboratorAccessLevel.Primary, user: { id: MOCK_CURRENT_USER_ID } },
-    ],
-  },
+  myAccessLevel: ProjectCollaboratorAccessLevel.Primary,
   members: [
     { projectMember: { givenName: "Jennifer", surName: "Frost" }, memberRoles: [{ label: "PI" }] },
     { projectMember: { givenName: "Amelia", surName: "Snow" }, memberRoles: [{ label: "Other" }] },
@@ -132,6 +136,15 @@ export const mockPlan = makeRawPlan({
   fundings: [
     { projectFunding: { affiliation: { displayName: "National Science Foundation (nsf.gov)" } } },
   ],
+  availableGuidanceSources: GUIDANCE.map(
+    ({ id, type, label, shortName, orgURI }) => ({
+      id,
+      type,
+      label,
+      shortName,
+      orgURI,
+    })
+  ),
   sections: [
     makeRawSection({
       versionedSectionId: 1,
@@ -207,16 +220,21 @@ export const mockPlan = makeRawPlan({
           required: true,
           requirementText: "<p>Name the person and their share of effort.</p>",
           json: JSON.stringify({ type: "textArea", attributes: {} }),
-          sampleText: "<p><em>Jordan Lee (Research Data Librarian)</em> will spend about 15% FTE on data management.</p>",
-          guidanceSources: [...GUIDANCE, CDL_CUSTOMIZATION],
+          guidanceSources: [
+            ...withQuestionSample(
+              "<p><em>Jordan Lee (Research Data Librarian)</em> will spend about 15% FTE on data management.</p>"
+            ),
+            CDL_CUSTOMIZATION,
+          ],
         }),
         makeRawQuestion({
           versionedQuestionId: 202,
           questionText: "Handover plan if the steward leaves",
           json: JSON.stringify({ type: "textArea", attributes: {} }),
-          sampleText: "<p>The co-PI assumes stewardship duties; handover notes live in the project drive.</p>",
           useSampleTextAsDefault: true,
-          guidanceSources: GUIDANCE,
+          guidanceSources: withQuestionSample(
+            "<p>The co-PI assumes stewardship duties; handover notes live in the project drive.</p>"
+          ),
         }),
         makeRawQuestion({
           versionedQuestionId: 203,

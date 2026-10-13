@@ -1,6 +1,6 @@
 import { CURRENT_SCHEMA_VERSION } from "@dmptool/types";
 import {
-  ProjectCollaboratorAccessLevel,
+  GuidanceSourceType,
   type MeQuery,
   type PlanAuthoringQuery,
 } from "@/generated/graphql";
@@ -36,6 +36,9 @@ export type PlanAuthoringAnswer = NonNullable<PlanAuthoringQuestion["answer"]>;
 export type PlanAuthoringGuidanceSource = NonNullable<
   PlanAuthoringQuestion["guidanceSources"]
 >[number];
+export type PlanAuthoringAvailableGuidanceSource = NonNullable<
+  PlanAuthoringPlan["availableGuidanceSources"]
+>[number];
 export type PlanAuthoringMe = MeQuery["me"];
 
 /** Everything the model needs that the plan query does not carry. */
@@ -43,8 +46,6 @@ export interface PlanAuthoringViewer {
   currentUserId: number;
   currentUserName: string;
   affiliationName: string;
-  /** Collaborator edit access, which overrides plan.readOnly (legacy rule). */
-  hasEditAccess: boolean;
   canComment: boolean;
   canModerateComments: boolean;
   /** Read by the data source only; never reaches the model. */
@@ -57,7 +58,6 @@ export const EMPTY_PLAN_AUTHORING_VIEWER: PlanAuthoringViewer = {
   currentUserId: 0,
   currentUserName: "",
   affiliationName: "",
-  hasEditAccess: false,
   canComment: false,
   canModerateComments: false,
   newCommentTarget: { kind: "answer" },
@@ -96,23 +96,11 @@ export function toPlanAuthoringViewer({
   plan: Nullable<PlanAuthoringPlan>;
   locale: string;
 }): PlanAuthoringViewer {
-  const collaborators = compact(plan?.project?.collaborators);
-  const hasEditAccess = collaborators.some(
-    (collaborator) =>
-      me?.id != null &&
-      collaborator.user?.id === me.id &&
-      collaborator.accessLevel === ProjectCollaboratorAccessLevel.Edit
-  );
-  const { canComment, canModerateComments, newCommentTarget } =
+  const { canModerateComments, newCommentTarget } =
     deriveCommentCapabilities({
-      me: { id: me?.id, role: me?.role, affiliationUri: me?.affiliation?.uri },
+      me: { role: me?.role },
       plan: {
-        createdById: plan?.createdById,
-        creatorAffiliationUri: plan?.planCreator?.affiliation?.uri,
-        collaborators: collaborators.map((collaborator) => ({
-          userId: collaborator.user?.id,
-          accessLevel: collaborator.accessLevel,
-        })),
+        myAccessLevel: plan?.myAccessLevel,
         feedbackRounds: compact(plan?.feedback),
       },
     });
@@ -121,9 +109,10 @@ export function toPlanAuthoringViewer({
     currentUserId: me?.id ?? 0,
     currentUserName: fullName(me),
     affiliationName: me?.affiliation?.displayName ?? "",
-    hasEditAccess,
-    canCustomizeGuidance: !plan?.readOnly || hasEditAccess,
-    canComment,
+    canCustomizeGuidance: plan != null && !plan.readOnly,
+    // The plan query and addAnswerComment share one project permission check,
+    // so anyone who loaded the plan can comment.
+    canComment: plan != null,
     canModerateComments,
     newCommentTarget,
     formatCommentCreated: (created) =>
@@ -323,12 +312,21 @@ function toComments(
   });
 }
 
-// The resolver ids sources as `affiliation-<uri>` or `customization-<uri>`,
-// but plan guidance selection and add/removePlanGuidance key on the org URI,
-// and both ids can appear for the same org on one question.
+// Apollo always includes template owner and user affiliation guidance
+// (customizations arrive as USER_AFFILIATION); only USER_SELECTED orgs come
+// from planGuidance rows and can be removed.
+function isAlwaysShownSource(source: PlanAuthoringGuidanceSource): boolean {
+  return (
+    source.type === GuidanceSourceType.TemplateOwner ||
+    source.type === GuidanceSourceType.UserAffiliation
+  );
+}
+
+// Both `affiliation-<uri>` and `customization-<uri>` sources can appear for
+// one org on a question; they share a label, so they render as one tab keyed
+// by orgURI, which is also what add/removePlanGuidance take.
 function toGuidanceSources(
-  sources: PlanAuthoringGuidanceSource[],
-  lockedOrgUri: Nullable<string>
+  sources: PlanAuthoringGuidanceSource[]
 ): PlanGuidanceSource[] {
   const byOrg = new Map<string, { source: PlanGuidanceSource; html: string[] }>();
   sources.forEach((source) => {
@@ -338,6 +336,8 @@ function toGuidanceSources(
       existing.html = source.id.startsWith(CUSTOMIZATION_SOURCE_PREFIX)
         ? [...html, ...existing.html]
         : [...existing.html, ...html];
+      existing.source.locked =
+        existing.source.locked || isAlwaysShownSource(source);
       return;
     }
     byOrg.set(source.orgURI, {
@@ -348,8 +348,7 @@ function toGuidanceSources(
         label: source.label,
         shortName: source.shortName,
         orgURI: source.orgURI,
-        // The server always shows template owner guidance, so removing it is a no-op.
-        locked: source.orgURI === lockedOrgUri,
+        locked: isAlwaysShownSource(source),
         bodyHtml: "",
       },
     });
@@ -360,15 +359,34 @@ function toGuidanceSources(
     .map(({ source, html }) => ({ ...source, bodyHtml: html.join("") }));
 }
 
-// Question customization sample text is on the customization source's item.
-function toCustomizationSample(sources: PlanAuthoringGuidanceSource[]) {
-  const source = sources.find((item) =>
-    item.id.startsWith(CUSTOMIZATION_SOURCE_PREFIX)
+// The resolver carries question and customization samples on their guidance items.
+function toQuestionSamples(sources: PlanAuthoringGuidanceSource[]) {
+  const sampleFrom = (source: PlanAuthoringGuidanceSource | undefined) =>
+    source?.items.find((item) => item.sampleText)?.sampleText;
+  const questionSource = sources.find(
+    (source) =>
+      !source.id.startsWith(CUSTOMIZATION_SOURCE_PREFIX) &&
+      sampleFrom(source) != null
   );
-  const sampleText = source?.items.find((item) => item.sampleText)?.sampleText;
-  return sampleText && source
-    ? { customizationSampleText: sampleText, customizationSampleOrgLabel: source.label }
-    : {};
+  const customizationSource = sources.find(
+    (source) =>
+      source.id.startsWith(CUSTOMIZATION_SOURCE_PREFIX) &&
+      sampleFrom(source) != null
+  );
+  const sampleText = sampleFrom(questionSource);
+  const customizationSampleText = sampleFrom(customizationSource);
+
+  return {
+    ...(sampleText && questionSource
+      ? { sampleText, sampleTextOrgLabel: questionSource.label }
+      : {}),
+    ...(customizationSampleText && customizationSource
+      ? {
+          customizationSampleText,
+          customizationSampleOrgLabel: customizationSource.label,
+        }
+      : {}),
+  };
 }
 
 function toQuestion(
@@ -398,17 +416,13 @@ function toQuestion(
     parsedJson,
     jsonError,
     answerJson,
-    hasAnswer: question.hasAnswer ?? answerJson != null,
+    hasAnswer: question.hasAnswer ?? false,
     lastSavedAt: question.answer?.modified ?? undefined,
-    guidanceSources: toGuidanceSources(sources, plan.versionedTemplate?.owner?.uri),
+    guidanceSources: toGuidanceSources(sources),
     comments: toComments(question.answer, viewer),
     displayOrder,
-    sampleText: question.sampleText,
     useSampleTextAsDefault: question.useSampleTextAsDefault ?? false,
-    sampleTextOrgLabel: question.sampleText
-      ? plan.versionedTemplate?.owner?.name
-      : undefined,
-    ...toCustomizationSample(sources),
+    ...toQuestionSamples(sources),
   };
 }
 
@@ -430,22 +444,56 @@ function toSection(
   };
 }
 
-// plan.availableGuidanceSources is always empty, because the resolver asks for
-// plan guidance without a section or question. The orgs shown on questions are
-// the plan's guidance selection. They are also the only orgs the dialog can
-// list before a search.
+// Apollo has no list of the plan's guidance selections, so they are read from
+// the raw USER_SELECTED question sources, including ones with no items, so a
+// selection without guidance on this plan's questions still counts.
+function toUserSelectedOrgs(plan: PlanAuthoringPlan): PlanGuidanceOrgOption[] {
+  return compact(plan.sections)
+    .flatMap((section) => compact(section.questions))
+    .flatMap((question) => compact(question.guidanceSources))
+    .filter((source) => source.type === GuidanceSourceType.UserSelected)
+    .map(({ label, shortName, orgURI }) => ({ id: orgURI, label, shortName, orgURI }));
+}
+
+// Displayed orgs are the always-shown sources plus every user-selected org.
 function toSelectedGuidanceOrgs(
+  plan: PlanAuthoringPlan,
   sections: PlanSectionDefinition[]
 ): PlanGuidanceOrgOption[] {
   const orgs = new Map<string, PlanGuidanceOrgOption>();
   sections
     .flatMap((section) => section.questions)
     .flatMap((question) => question.guidanceSources)
-    .filter((source) => source.type !== "BEST_PRACTICE")
+    .filter((source) => source.locked)
     .forEach(({ id, label, shortName, orgURI }) => {
       orgs.set(id, { id, label, shortName, orgURI: orgURI ?? id });
     });
+  toUserSelectedOrgs(plan).forEach((org) => {
+    if (!orgs.has(org.id)) {
+      orgs.set(org.id, org);
+    }
+  });
   return [...orgs.values()];
+}
+
+function toAvailableGuidanceOrgs(
+  sources: Nullable<(PlanAuthoringAvailableGuidanceSource | null)[]>,
+  selected: PlanGuidanceOrgOption[]
+): PlanGuidanceOrgOption[] {
+  const orgs = new Map<string, PlanGuidanceOrgOption>();
+  compact(sources)
+    .filter(isOrganizationGuidanceSource)
+    .forEach(({ label, shortName, orgURI }) => {
+      orgs.set(orgURI, { id: orgURI, label, shortName, orgURI });
+    });
+  selected.forEach((org) => orgs.set(org.id, org));
+  return [...orgs.values()];
+}
+
+function isOrganizationGuidanceSource(
+  source: PlanAuthoringAvailableGuidanceSource
+): boolean {
+  return source.type !== GuidanceSourceType.BestPractice;
 }
 
 function toMembersLabel(plan: PlanAuthoringPlan): string {
@@ -462,10 +510,13 @@ export function toPlanAuthoringModel(
   plan: PlanAuthoringPlan,
   viewer: PlanAuthoringViewer
 ): PlanAuthoringModel {
-  const sections = [...compact(plan.sections)]
-    .sort((a, b) => a.displayOrder - b.displayOrder)
-    .map((section) => toSection(section, plan, viewer));
-  const guidanceOrgs = toSelectedGuidanceOrgs(sections);
+  const sections = compact(plan.sections).map((section) =>
+    toSection(section, plan, viewer)
+  );
+  const guidanceOrgs = toSelectedGuidanceOrgs(plan, sections);
+  const hasAvailableGuidanceOrgs = compact(
+    plan.availableGuidanceSources
+  ).some(isOrganizationGuidanceSource);
 
   return {
     title: plan.title ?? "",
@@ -480,13 +531,17 @@ export function toPlanAuthoringModel(
     // Recomputed from sections so it stays consistent with local saves.
     progress: computeProgress(sections),
     capabilities: {
-      canEditAnswers: !plan.readOnly || viewer.hasEditAccess,
+      canEditAnswers: !plan.readOnly,
       canComment: viewer.canComment,
       canModerateComments: viewer.canModerateComments,
-      canCustomizeGuidance: viewer.canCustomizeGuidance,
+      canCustomizeGuidance:
+        viewer.canCustomizeGuidance && hasAvailableGuidanceOrgs,
     },
     sections,
-    availableGuidanceOrgs: guidanceOrgs,
+    availableGuidanceOrgs: toAvailableGuidanceOrgs(
+      plan.availableGuidanceSources,
+      guidanceOrgs
+    ),
     selectedGuidanceOrgIds: guidanceOrgs.map((org) => org.id),
   };
 }

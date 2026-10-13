@@ -23,13 +23,6 @@ import PlanComments from "../PlanComments";
 import { usePlanComments } from "../usePlanComments";
 import styles from "./PlanQuestionSidebar.module.scss";
 
-const GUIDANCE_HEADING_KEYS: Record<PlanGuidanceSourceType, string> = {
-  BEST_PRACTICE: "Global.bestPractice",
-  TEMPLATE_OWNER: "PlanAuthoring.sidebar.guidanceHeading.templateOwner",
-  USER_AFFILIATION: "PlanAuthoring.sidebar.guidanceHeading.userAffiliation",
-  USER_SELECTED: "PlanAuthoring.sidebar.guidanceHeading.userSelected",
-};
-
 const DEFAULT_GUIDANCE_PRIORITY: PlanGuidanceSourceType[] = [
   "USER_AFFILIATION",
   "TEMPLATE_OWNER",
@@ -76,7 +69,6 @@ export default function PlanQuestionSidebar({
   className,
 }: PlanQuestionSidebarProps) {
   const t = useTranslations("PlanAuthoring");
-  const tRoot = useTranslations();
   const commentsPanelId = useId();
   const labelId = useId();
   const [selectedId, setSelectedId] = useState<string | null>(() =>
@@ -267,7 +259,6 @@ export default function PlanQuestionSidebar({
               ) : null}
               {selectedSource ? (
                 <>
-                  <p className={styles.eyebrow}>{tRoot(GUIDANCE_HEADING_KEYS[selectedSource.type])}</p>
                   <h4>{selectedSource.label}</h4>
                   <SafeHtml
                     html={selectedSource.bodyHtml}

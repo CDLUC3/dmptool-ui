@@ -87,7 +87,7 @@ describe("mockPlan through the real GraphQL data source", () => {
     expect(radio?.guidanceSources.map(({ id, type, locked }) => [id, type, locked])).toEqual([
       ["bestPractice", "BEST_PRACTICE", false],
       [NSF, "TEMPLATE_OWNER", true],
-      [CDL, "USER_AFFILIATION", false],
+      [CDL, "USER_AFFILIATION", true],
       [STANFORD, "USER_SELECTED", false],
     ]);
     expect(questionOf(dataSource, STEWARD_KEY)).toMatchObject({

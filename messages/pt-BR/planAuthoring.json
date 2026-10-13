@@ -76,11 +76,6 @@
     "sidebar": {
       "ariaLabel": "Orientação e comentários para perguntas",
       "loadingGuidance": "Carregando orientação…",
-      "guidanceHeading": {
-        "templateOwner": "Orientação do proprietário do modelo",
-        "userAffiliation": "Orientação da sua organização",
-        "userSelected": "Orientação adicional"
-      },
       "selectGuidanceSource": "Selecionar fonte de orientação.",
       "comments": "Comments",
       "showComments": "Mostrar comentários",

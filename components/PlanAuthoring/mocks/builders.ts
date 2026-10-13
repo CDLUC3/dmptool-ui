@@ -186,7 +186,6 @@ export function makeRawPlan(
     title: "Ocean plan",
     readOnly: false,
     versionedTemplate: { id: 55, name: "NSF", version: "v2" },
-    project: { collaborators: [] },
     feedback: [],
     members: [],
     fundings: [],
@@ -265,17 +264,10 @@ export function makeCommentPermissionPlan(
   overrides: Partial<CommentPermissionFacts["plan"]> = {}
 ): CommentPermissionFacts["plan"] {
   return {
-    createdById: 1,
-    creatorAffiliationUri: "https://ror.org/ucop",
-    collaborators: [
-      { userId: 2, accessLevel: "EDIT" },
-      { userId: 4, accessLevel: "OWN" },
-      { userId: 5, accessLevel: "PRIMARY" },
-      { userId: 6, accessLevel: "COMMENT" },
-    ],
+    myAccessLevel: "EDIT",
     feedbackRounds: [
-      { id: 30, completed: "1751929006000" },
-      { id: 31, completed: null },
+      { id: 30, requested: "1751900000000", completed: "1751929006000" },
+      { id: 31, requested: "1751950000000", completed: null },
     ],
     ...overrides,
   };

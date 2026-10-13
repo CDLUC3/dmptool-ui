@@ -3,22 +3,10 @@ query PlanAuthoring($planId: Int!) {
     id
     title
     readOnly
-    createdById
-    planCreator {
-      affiliation {
-        uri
-      }
-    }
-    project {
-      collaborators {
-        accessLevel
-        user {
-          id
-        }
-      }
-    }
+    myAccessLevel
     feedback {
       id
+      requested
       completed
     }
     members {
@@ -46,6 +34,13 @@ query PlanAuthoring($planId: Int!) {
         }
       }
     }
+    availableGuidanceSources {
+      id
+      type
+      label
+      shortName
+      orgURI
+    }
     sections {
       sectionType
       versionedSectionId
@@ -61,7 +56,6 @@ query PlanAuthoring($planId: Int!) {
         required
         questionText
         requirementText
-        sampleText
         useSampleTextAsDefault
         hasAnswer
         json

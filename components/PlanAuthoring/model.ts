@@ -24,6 +24,7 @@ export interface PlanCapabilities {
 
 export type PlanGuidanceSourceType =
   | "BEST_PRACTICE"
+  | "OTHER_AFFILIATION"
   | "TEMPLATE_OWNER"
   | "USER_AFFILIATION"
   | "USER_SELECTED";

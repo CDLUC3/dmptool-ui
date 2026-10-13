@@ -76,11 +76,6 @@
     "sidebar": {
       "ariaLabel": "Question guidance and comments",
       "loadingGuidance": "Loading guidance…",
-      "guidanceHeading": {
-        "templateOwner": "Template owner guidance",
-        "userAffiliation": "Your organization's guidance",
-        "userSelected": "Additional guidance"
-      },
       "selectGuidanceSource": "Select a guidance source.",
       "comments": "Comments",
       "showComments": "Show comments",

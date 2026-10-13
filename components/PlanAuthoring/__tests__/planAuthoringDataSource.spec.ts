@@ -60,11 +60,8 @@ const ANSWERED_TEXT: PlanAuthoringQuestion = makeRawQuestion({
 
 function makePlan(overrides: Partial<PlanAuthoringQuestion> = {}): PlanAuthoringPlan {
   return makeRawPlan({
-    planCreator: { affiliation: { uri: UCOP } },
-    project: {
-      collaborators: [{ accessLevel: ProjectCollaboratorAccessLevel.Comment, user: { id: 3 } }],
-    },
-    feedback: [{ id: 44, completed: null }],
+    myAccessLevel: ProjectCollaboratorAccessLevel.Comment,
+    feedback: [{ id: 44, requested: "1000", completed: null }],
     sections: [
       makeRawSection({
         questions: [
