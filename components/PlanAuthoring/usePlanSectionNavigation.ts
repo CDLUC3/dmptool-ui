@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   PlanSectionDefinition,
   questionAnchorId,
@@ -119,7 +119,10 @@ export function usePlanSectionNavigation({
     };
   }, [sections, spyOffset]);
 
-  const jumpToSection = useCallback((section: PlanSectionDefinition) => {
+  const jumpToSection = useCallback((
+    section: PlanSectionDefinition,
+    behavior: ScrollBehavior = "smooth"
+  ) => {
     const sectionNode = document.getElementById(
       sectionAnchorId(section.identity)
     );
@@ -128,7 +131,7 @@ export function usePlanSectionNavigation({
     }
 
     setActiveSectionKey(sectionKey(section.identity));
-    sectionNode.scrollIntoView({ behavior: "smooth", block: "start" });
+    sectionNode.scrollIntoView({ behavior, block: "start" });
 
     // Prefer focusing the first question so keyboard / screen-reader users
     // land in the interactive content of the section, not just the header.
@@ -150,6 +153,31 @@ export function usePlanSectionNavigation({
       }, 50);
     }
   }, []);
+
+  // The browser's own fragment jump runs before the sections have loaded.
+  const jumpedToFragmentRef = useRef(false);
+  useEffect(() => {
+    if (jumpedToFragmentRef.current || sections.length === 0) {
+      return;
+    }
+    jumpedToFragmentRef.current = true;
+    const anchorId = decodeURIComponent(window.location.hash.slice(1));
+    if (!anchorId) {
+      return;
+    }
+    const section = sections.find((item) => sectionAnchorId(item.identity) === anchorId);
+    if (section) {
+      // A smooth scroll is cut short by the rest of the page still loading.
+      jumpToSection(section, "instant");
+      return;
+    }
+    const isQuestion = sections.some((item) =>
+      item.questions.some((question) => questionAnchorId(question.identity) === anchorId)
+    );
+    if (isQuestion) {
+      document.getElementById(anchorId)?.scrollIntoView({ block: "start" });
+    }
+  }, [sections, jumpToSection]);
 
   const activeSection = activeSectionKey
     ? sectionByKey.get(activeSectionKey) ?? null

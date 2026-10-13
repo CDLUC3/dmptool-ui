@@ -135,6 +135,35 @@ describe("PlanQuestionSidebar", () => {
     ).toBeInTheDocument();
   });
 
+  describe("when guidance is refreshed", () => {
+    it("keeps the open comments and the selected source", async () => {
+      const user = userEvent.setup();
+      const { rerenderWith } = renderSidebar({ comments: [makeComment()] });
+      await user.click(guidancePill("DMP Tool"));
+      await user.click(screen.getByRole("button", { name: /Show comments/ }));
+
+      rerenderWith({
+        comments: [makeComment()],
+        sources: [{ ...bestPractice }, { ...templateOwner }, { ...userAffiliation }],
+      });
+
+      expect(screen.getByText("First comment")).toBeInTheDocument();
+      await user.click(screen.getByRole("button", { name: /Hide comments/ }));
+      expect(guidancePill("DMP Tool")).toBeChecked();
+    });
+
+    it("falls back to the default source when the selected one is gone", async () => {
+      const user = userEvent.setup();
+      const { rerenderWith } = renderSidebar();
+      await user.click(guidancePill("DMP Tool"));
+
+      rerenderWith({ sources: [templateOwner, userAffiliation] });
+
+      expect(guidancePill("CDL")).toBeChecked();
+      expect(screen.getByText("CDL says hello")).toBeInTheDocument();
+    });
+  });
+
   describe("Customize", () => {
     it("is offered and calls onCustomize when allowed", async () => {
       const user = userEvent.setup();

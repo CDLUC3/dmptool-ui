@@ -180,6 +180,27 @@ describe('PlanComments', () => {
     expect(screen.queryByText('This looks great.')).not.toBeInTheDocument();
   });
 
+  it('focuses the edit box when editing starts, and not again on later renders', () => {
+    const editing = (text: string) => (
+      <>
+        <button type="button">Elsewhere</button>
+        <PlanComments
+          {...defaultProps}
+          comments={[baseComment]}
+          editingCommentId={baseComment.id}
+          editingCommentText={text}
+        />
+      </>
+    );
+    const { rerender } = render(editing('Editing'));
+    expect(screen.getByRole('textbox', { name: 'PlanAuthoring.comments.editAria' })).toHaveFocus();
+
+    screen.getByRole('button', { name: 'Elsewhere' }).focus();
+    rerender(editing('Editing more'));
+
+    expect(screen.getByRole('button', { name: 'Elsewhere' })).toHaveFocus();
+  });
+
   it('calls setEditingCommentText as the edit textarea changes', () => {
     render(
       <PlanComments

@@ -178,6 +178,11 @@ export function createFakePlanAuthoringClient(
             ? item.customQuestionId === versionedCustomQuestionId
             : item.versionedQuestionId === versionedQuestionId
         ) ?? fail("Question not found.");
+      if (question.answer) {
+        return {
+          addAnswer: { id: null, json, modified: null, errors: { general: "Answer already exists" } },
+        };
+      }
       const answer: PlanAuthoringAnswer = {
         id: nextId++,
         json: json as string,

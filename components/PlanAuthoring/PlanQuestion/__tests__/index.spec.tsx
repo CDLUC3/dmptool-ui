@@ -350,7 +350,33 @@ describe("PlanQuestion", () => {
       expect(screen.getByRole("button", { name: "+ Add Output" })).toBeInTheDocument();
       expect(screen.queryByRole("button", { name: "Save" })).not.toBeInTheDocument();
     });
-  });
+
+    it("offers Save to retry a research output delete that failed", async () => {
+      jest.spyOn(window, "scrollTo").mockImplementation(() => {});
+      const user = userEvent.setup();
+      const question = researchOutputQuestion();
+      const dataSource = createDataSource(question);
+      dataSource.saveAnswer.mockResolvedValueOnce({ kind: "failed", message: "Nope" });
+      renderQuestion({
+        question,
+        dataSource,
+        researchOutputRowHref: (questionKeyValue, rowIndex) => `/ro/${questionKeyValue}/${rowIndex}`,
+      });
+
+      await user.click(screen.getAllByRole("button", { name: /^Delete / })[0]);
+      await user.click(within(await screen.findByRole("alertdialog")).getByRole("button", { name: "Delete" }));
+      await waitFor(() => {
+        expect(dataSource.saveAnswer).toHaveBeenCalledTimes(1);
+      });
+
+      await user.click(await screen.findByRole("button", { name: "Save" }));
+
+      expect(dataSource.saveAnswer).toHaveBeenCalledTimes(2);
+      expect(dataSource.saveAnswer.mock.calls[1]).toEqual(dataSource.saveAnswer.mock.calls[0]);
+      await waitFor(() => {
+        expect(screen.queryByRole("button", { name: "Save" })).not.toBeInTheDocument();
+      });
+    });  });
 
   describe("sample answers", () => {
     it("fills the draft with the sample when Use answer is pressed", async () => {

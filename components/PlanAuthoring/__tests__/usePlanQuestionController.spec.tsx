@@ -148,6 +148,73 @@ describe("usePlanQuestionController", () => {
       });
       expect(result.current.saveState).toEqual({ status: "saved" });
     });
+
+    it("ignores an edit that leaves the answer unchanged", async () => {
+      const { result, dataSource } = renderController();
+
+      act(() => {
+        result.current.setDraftAnswer({ type: "text", answer: "server" });
+      });
+      act(() => {
+        jest.advanceTimersByTime(AUTOSAVE_MS * 3);
+      });
+      await flushPromises();
+
+      expect(result.current.saveState).toEqual({ status: "clean" });
+      expect(dataSource.saveAnswer).not.toHaveBeenCalled();
+    });
+
+    it("does not add an empty answer when an unanswered editor reports empty content", async () => {
+      const { result, dataSource } = renderController({ initialAnswer: undefined });
+
+      act(() => {
+        result.current.setDraftAnswer({ type: "textArea", answer: "" });
+      });
+      act(() => {
+        jest.advanceTimersByTime(AUTOSAVE_MS * 3);
+      });
+      await flushPromises();
+
+      expect(result.current.saveState).toEqual({ status: "clean" });
+      expect(dataSource.saveAnswer).not.toHaveBeenCalled();
+    });
+
+    it("stays dirty when typing continues during a save, until that edit is saved", async () => {
+      const dataSource = createDataSource();
+      const first = deferred<SaveAnswerResult>();
+      dataSource.saveAnswer
+        .mockReturnValueOnce(first.promise)
+        .mockResolvedValueOnce({ kind: "saved" });
+      const unregister = jest.fn();
+      const registerUnsavedChange = jest.fn(() => unregister);
+      const { result } = renderController({ dataSource, registerUnsavedChange });
+
+      act(() => {
+        result.current.setDraftAnswer({ type: "text", answer: "one" });
+      });
+      act(() => {
+        void result.current.saveNow();
+      });
+      act(() => {
+        result.current.setDraftAnswer({ type: "text", answer: "two" });
+      });
+      await act(async () => {
+        first.resolve({ kind: "saved" });
+        await first.promise;
+      });
+
+      expect(result.current.saveState).toEqual({ status: "dirty" });
+      expect(unregister).not.toHaveBeenCalled();
+
+      act(() => {
+        jest.advanceTimersByTime(AUTOSAVE_MS);
+      });
+      await flushPromises();
+
+      expect(dataSource.saveAnswer).toHaveBeenLastCalledWith(KEY, { type: "text", answer: "two" });
+      expect(result.current.saveState).toEqual({ status: "saved" });
+      expect(unregister).toHaveBeenCalledTimes(1);
+    });
   });
 
   describe("save results", () => {

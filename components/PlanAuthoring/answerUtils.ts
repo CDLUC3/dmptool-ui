@@ -1,3 +1,5 @@
+import { TEXT_QUESTION_TYPE } from "@/lib/constants";
+
 export type PlanAnswerOption = { label: string; value: string };
 
 export function getOptions(
@@ -28,6 +30,28 @@ export function getAnswerValue(answerJson: unknown): unknown {
     return answerJson;
   }
   return (answerJson as { answer?: unknown }).answer;
+}
+
+/** Matches Apollo's `FILLED_ANSWER_CHECK`, so progress agrees with the server after a reload. */
+export function isFilledAnswer(answerJson: unknown): boolean {
+  if (!answerJson || typeof answerJson !== "object" || Array.isArray(answerJson)) {
+    return false;
+  }
+  const { type } = answerJson as { type?: unknown };
+  const answer = getAnswerValue(answerJson);
+  return !(TEXT_QUESTION_TYPE.includes(String(type)) && (answer == null || answer === ""));
+}
+
+const isEmptyAnswerValue = (value: unknown) => value == null || value === "";
+
+/** An empty editor reports `""` where an unanswered question has no answer, so the two count as the same. */
+export function isSameAnswer(a: unknown, b: unknown): boolean {
+  const valueA = getAnswerValue(a);
+  const valueB = getAnswerValue(b);
+  const sameValue =
+    (isEmptyAnswerValue(valueA) && isEmptyAnswerValue(valueB)) ||
+    JSON.stringify(valueA) === JSON.stringify(valueB);
+  return sameValue && getAdditionalCommentValue(a) === getAdditionalCommentValue(b);
 }
 
 /** Answer-JSON key for the optional "explain your answer" field (legacy contract). */

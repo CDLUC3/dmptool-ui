@@ -79,6 +79,9 @@ export default function PlanQuestion({
     canEdit: canEditAnswer,
     registerUnsavedChange,
   });
+  const saveFailed =
+    controller.saveState.status === "failed" ||
+    controller.saveState.status === "invalid";
   const shellRef = useRef<HTMLElement | null>(null);
   const [heightPx, setHeightPx] = useState<number | null>(null);
 
@@ -165,7 +168,7 @@ export default function PlanQuestion({
                     lastSavedAt={question.lastSavedAt}
                   />
                 ) : null}
-                {canEditAnswer && !isResearchOutput ? (
+                {canEditAnswer && (!isResearchOutput || saveFailed) ? (
                   <Button
                     onPress={() => {
                       void controller.saveNow();

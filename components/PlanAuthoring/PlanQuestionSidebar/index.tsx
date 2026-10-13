@@ -2,7 +2,6 @@
 
 import React, {
   useCallback,
-  useEffect,
   useId,
   useLayoutEffect,
   useMemo,
@@ -25,14 +24,14 @@ const DEFAULT_GUIDANCE_PRIORITY = [
   GuidanceSourceType.TemplateOwner,
 ];
 
-function defaultGuidanceSourceId(sources: PlanGuidanceSource[]): string | null {
+function defaultGuidanceSource(sources: PlanGuidanceSource[]): PlanGuidanceSource | null {
   for (const type of DEFAULT_GUIDANCE_PRIORITY) {
     const match = sources.find((source) => source.type === type);
     if (match) {
-      return match.id;
+      return match;
     }
   }
-  return sources[0]?.id ?? null;
+  return sources[0] ?? null;
 }
 
 interface PlanQuestionSidebarProps {
@@ -64,22 +63,18 @@ export default function PlanQuestionSidebar({
   const t = useTranslations("PlanAuthoring");
   const commentsPanelId = useId();
   const labelId = useId();
-  const [selectedId, setSelectedId] = useState<string | null>(() =>
-    defaultGuidanceSourceId(sources)
-  );
+  const [pickedId, setPickedId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"guidance" | "comments">("guidance");
   const [showGuidanceScrollFade, setShowGuidanceScrollFade] = useState(false);
   const guidancePanelRef = useRef<HTMLDivElement | null>(null);
 
-  useEffect(() => {
-    setSelectedId(defaultGuidanceSourceId(sources));
-    setActiveTab("guidance");
-  }, [sources]);
-
   const selectedSource = useMemo(
-    () => sources.find((source) => source.id === selectedId) ?? null,
-    [selectedId, sources]
+    () =>
+      sources.find((source) => source.id === pickedId) ??
+      defaultGuidanceSource(sources),
+    [pickedId, sources]
   );
+  const selectedId = selectedSource?.id ?? null;
 
   const updateGuidanceScrollFade = useCallback(() => {
     const panel = guidancePanelRef.current;
@@ -152,7 +147,7 @@ export default function PlanQuestionSidebar({
           selectedId={activeTab === "guidance" ? selectedId : null}
           onSelect={(id) => {
             setActiveTab("guidance");
-            setSelectedId(id);
+            setPickedId(id);
           }}
           onCustomize={onCustomize}
           canCustomize={canCustomize}

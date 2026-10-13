@@ -3,10 +3,31 @@ import {
   getAdditionalCommentValue,
   getOptions,
   hasAdditionalCommentKey,
+  isFilledAnswer,
   withAdditionalComment,
 } from "../answerUtils";
 
 describe("answerUtils", () => {
+  describe("isFilledAnswer", () => {
+    it("treats empty or null text and textArea answers as unanswered", () => {
+      expect(isFilledAnswer({ type: "text", answer: "" })).toBe(false);
+      expect(isFilledAnswer({ type: "textArea", answer: null })).toBe(false);
+      expect(isFilledAnswer({ type: "textArea" })).toBe(false);
+    });
+
+    it("counts any other answer object, as the server's progress does", () => {
+      expect(isFilledAnswer({ type: "text", answer: "x" })).toBe(true);
+      expect(isFilledAnswer({ type: "checkBoxes", answer: [] })).toBe(true);
+      expect(isFilledAnswer({ type: "date", answer: null })).toBe(true);
+    });
+
+    it("treats a missing or non-object answer as unanswered", () => {
+      expect(isFilledAnswer(null)).toBe(false);
+      expect(isFilledAnswer(undefined)).toBe(false);
+      expect(isFilledAnswer("text")).toBe(false);
+    });
+  });
+
   describe("getOptions", () => {
     it("returns an empty list when options are missing or not an array", () => {
       expect(getOptions({})).toEqual([]);

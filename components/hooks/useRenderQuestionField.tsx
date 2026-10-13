@@ -57,7 +57,6 @@ export type QuestionType = keyof QuestionTypeMap;
 
 export type ParsedQuestion = QuestionTypeMap[QuestionType];
 
-
 export interface RenderQuestionFieldProps {
   questionType: string;
   parsed: ParsedQuestion | undefined;
@@ -65,6 +64,8 @@ export interface RenderQuestionFieldProps {
   readOnly?: boolean;
   /** TinyMCE DOM id — required when multiple textArea questions share a page. */
   editorId?: string;
+  /** Native input name. Unique per question when several questions share a page. */
+  fieldName?: string;
 
   radioProps?: {
     selectedRadioValue: string;
@@ -165,6 +166,7 @@ export function useRenderQuestionField({
   readOnly,
   questionType,
   editorId = 'question-text-editor',
+  fieldName,
   radioProps,
   checkBoxProps,
   multiSelectBoxProps,
@@ -193,7 +195,7 @@ export function useRenderQuestionField({
           <RadioButtonsQuestionComponent
             parsedQuestion={parsed}
             selectedRadioValue={radioProps?.selectedRadioValue}
-            name="radio-buttons"
+            name={fieldName ?? "radio-buttons"}
             handleRadioChange={radioProps?.handleRadioChange}
             isDisabled={readOnly}
           />
@@ -207,6 +209,7 @@ export function useRenderQuestionField({
           <CheckboxesQuestionComponent
             parsedQuestion={parsed}
             selectedCheckboxValues={checkBoxProps?.selectedCheckboxValues}
+            name={fieldName}
             handleCheckboxGroupChange={checkBoxProps?.handleCheckboxGroupChange}
             isDisabled={readOnly}
           />
@@ -221,6 +224,7 @@ export function useRenderQuestionField({
             <SelectboxQuestionComponent
               parsedQuestion={parsed}
               selectedSelectValue={selectBoxProps.selectedSelectValue}
+              selectName={fieldName}
               handleSelectChange={selectBoxProps.handleSelectChange}
               isDisabled={readOnly}
             />
@@ -249,7 +253,7 @@ export function useRenderQuestionField({
         const { minLength, maxLength } = parsed.attributes || {};
         return (
           <FormInput
-            name="textField"
+            name={fieldName ?? "textField"}
             type="text"
             label="text"
             placeholder="Enter text"
@@ -283,7 +287,7 @@ export function useRenderQuestionField({
         const { min: minValue, max: maxValue } = parsed.attributes || {};
         return (
           <DateComponent
-            name="startDate"
+            name={fieldName ?? "startDate"}
             value={getCalendarDateValue(dateProps?.dateValue)}
             onChange={(newDate) => dateProps?.handleDateChange(newDate)
             }
@@ -301,6 +305,7 @@ export function useRenderQuestionField({
         return (
           <DateRangeQuestionComponent
             parsedQuestion={parsed}
+            fieldName={fieldName}
             dateRange={dateRangeProps?.dateRange}
             handleDateChange={dateRangeProps?.handleDateRangeChange}
             isDisabled={readOnly}
@@ -361,7 +366,7 @@ export function useRenderQuestionField({
         const { minLength, maxLength, pattern } = parsed.attributes || {};
         return (
           <FormInput
-            name="urlInput"
+            name={fieldName ?? "urlInput"}
             type="url"
             label="url"
             placeholder="url"
@@ -382,7 +387,7 @@ export function useRenderQuestionField({
         const { minLength, maxLength, pattern } = parsed.attributes || {};
         return (
           <FormInput
-            name="emailInput"
+            name={fieldName ?? "emailInput"}
             type="email"
             label="email"
             placeholder="email"
@@ -403,6 +408,7 @@ export function useRenderQuestionField({
         return (
           <BooleanQuestionComponent
             parsedQuestion={parsed}
+            name={fieldName}
             selectedValue={booleanProps?.yesNoValue}
             handleRadioChange={booleanProps?.handleBooleanChange}
             isDisabled={readOnly}

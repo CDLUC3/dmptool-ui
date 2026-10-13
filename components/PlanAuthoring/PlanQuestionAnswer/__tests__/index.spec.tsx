@@ -193,6 +193,68 @@ describe("PlanQuestionAnswer", () => {
   });
 
   it.each([
+    ["radioButtons", { options: choiceOptions }, "Barbara", "Charlie", "Barbara", "Charlie"],
+    ["boolean", { attributes: {} }, true, false, "Yes", "No"],
+  ])(
+    "keeps each %s question's choice when several are on the page",
+    (questionType, parsedJson, firstAnswer, secondAnswer, firstLabel, secondLabel) => {
+      const answerFor = (versionedQuestionId: number, answer: unknown) => (
+        <section aria-label={`question ${versionedQuestionId}`}>
+          <PlanQuestionAnswer
+            question={{
+              ...makeQuestion(questionType, parsedJson),
+              identity: { kind: "base", versionedQuestionId },
+            }}
+            draftAnswer={{ type: questionType, answer }}
+            disabled={false}
+            onChange={jest.fn()}
+            onSaveNow={jest.fn().mockResolvedValue(undefined)}
+          />
+        </section>
+      );
+      render(
+        <NextIntlClientProvider locale="en-US" messages={messages} timeZone="UTC">
+          {answerFor(1, firstAnswer)}
+          {answerFor(2, secondAnswer)}
+        </NextIntlClientProvider>
+      );
+
+      const first = within(screen.getByRole("region", { name: "question 1" }));
+      const second = within(screen.getByRole("region", { name: "question 2" }));
+      expect(first.getByRole("radio", { name: firstLabel })).toBeChecked();
+      expect(second.getByRole("radio", { name: secondLabel })).toBeChecked();
+    }
+  );
+
+  it("gives each text question its own input name", () => {
+    const answerFor = (versionedQuestionId: number) => (
+      <section aria-label={`question ${versionedQuestionId}`}>
+        <PlanQuestionAnswer
+          question={{
+            ...makeQuestion("text", { attributes: {} }),
+            identity: { kind: "base", versionedQuestionId },
+          }}
+          draftAnswer={{ type: "text", answer: "hello" }}
+          disabled={false}
+          onChange={jest.fn()}
+          onSaveNow={jest.fn().mockResolvedValue(undefined)}
+        />
+      </section>
+    );
+    render(
+      <NextIntlClientProvider locale="en-US" messages={messages} timeZone="UTC">
+        {answerFor(1)}
+        {answerFor(2)}
+      </NextIntlClientProvider>
+    );
+
+    const first = within(screen.getByRole("region", { name: "question 1" })).getByRole("textbox");
+    const second = within(screen.getByRole("region", { name: "question 2" })).getByRole("textbox");
+    expect(first).toHaveAttribute("name", expect.stringMatching(/^plan-answer-base-question-1-/));
+    expect(second).toHaveAttribute("name", expect.stringMatching(/^plan-answer-base-question-2-/));
+  });
+
+  it.each([
     ["email", "email", "ada@example.com", "grace@example.com"],
     ["url", "url", "https://example.com", "https://dmptool.org"],
   ])("renders a %s answer and emits edits", (questionType, label, stored, next) => {
@@ -313,7 +375,7 @@ describe("PlanQuestionAnswer", () => {
       answer: "2025-05-15",
     });
 
-    expect(namedValues("2025-05-15")).toContain("startDate");
+    expect(namedValues("2025-05-15").some((name) => /^plan-answer-base-question-7-/.test(name ?? ""))).toBe(true);
   });
 
   it("shows both ends of a stored date range and changes one end only", async () => {
@@ -328,8 +390,12 @@ describe("PlanQuestionAnswer", () => {
 
     expect(screen.getByText("Starts")).toBeInTheDocument();
     expect(screen.getByText("Ends")).toBeInTheDocument();
-    expect(namedValues("2025-01-01")).toContain("startDate");
-    expect(namedValues("2025-12-31")).toContain("endDate");
+    expect(
+      namedValues("2025-01-01").some((name) => /^plan-answer-base-question-7-.*-start$/.test(name ?? ""))
+    ).toBe(true);
+    expect(
+      namedValues("2025-12-31").some((name) => /^plan-answer-base-question-7-.*-end$/.test(name ?? ""))
+    ).toBe(true);
 
     await user.click(screen.getAllByLabelText("Calendar")[0]);
     await user.click(await screen.findByRole("button", { name: /15/ }));

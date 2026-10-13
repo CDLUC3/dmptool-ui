@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Button, Form, TextArea } from "react-aria-components";
 import type { PlanComment } from "../model";
@@ -41,6 +41,11 @@ export default function PlanComments({
   const [text, setText] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [addFailed, setAddFailed] = useState(false);
+  const editTextAreaRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    editTextAreaRef.current?.focus({ preventScroll: true });
+  }, [editingCommentId]);
 
   const updateCommentHandler = (comment: PlanComment) => {
     if (!editingCommentText.trim()) {
@@ -100,11 +105,7 @@ export default function PlanComments({
                     setEditingCommentText(event.target.value)
                   }
                   rows={3}
-                  ref={(el) => {
-                    if (el) {
-                      el.focus({ preventScroll: true });
-                    }
-                  }}
+                  ref={editTextAreaRef}
                   aria-label={t("comments.editAria")}
                 />
               ) : (

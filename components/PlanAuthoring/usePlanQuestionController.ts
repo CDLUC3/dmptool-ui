@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { isSameAnswer } from "./answerUtils";
 import type { PlanAuthoringDataSource, SaveAnswerResult } from "./dataSource";
 import type { PlanQuestionSaveState } from "./model";
 import type { RegisterUnsavedChange } from "./useUnsavedChangesRegistry";
@@ -38,6 +39,7 @@ export function usePlanQuestionController({
   const initialAnswerRef = useRef(initialAnswer);
   const saveStatusRef = useRef<PlanQuestionSaveState["status"]>("clean");
   const generationRef = useRef(0);
+  const editCountRef = useRef(0);
   const inFlightRef = useRef(false);
   const queuedRef = useRef(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -79,6 +81,7 @@ export function usePlanQuestionController({
 
     inFlightRef.current = true;
     const generation = ++generationRef.current;
+    const editCountAtStart = editCountRef.current;
     setSaveState({ status: "saving" });
 
     let result: SaveAnswerResult;
@@ -93,7 +96,9 @@ export function usePlanQuestionController({
     }
 
     if (result.kind === "saved") {
-      setSaveState({ status: "saved" });
+      setSaveState({
+        status: editCountRef.current === editCountAtStart ? "saved" : "dirty",
+      });
       if (queuedRef.current) {
         queuedRef.current = false;
         return persist();
@@ -118,10 +123,11 @@ export function usePlanQuestionController({
 
   const setDraftAnswer = useCallback(
     (answer: unknown) => {
-      if (!canEdit) {
+      if (!canEdit || isSameAnswer(draftRef.current, answer)) {
         return;
       }
 
+      editCountRef.current += 1;
       draftRef.current = answer;
       setDraftAnswerState(answer);
       setSaveState({ status: "dirty" });

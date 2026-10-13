@@ -51,6 +51,7 @@ export default function PlanQuestionAnswer({
   const tGlobal = useTranslations("Global");
   const reactId = useId();
   const editorId = `plan-editor-${questionKey(question.identity)}-${reactId}`;
+  const fieldName = `plan-answer-${questionKey(question.identity)}-${reactId}`;
   const value = getAnswerValue(draftAnswer);
   const additionalCommentValue = getAdditionalCommentValue(draftAnswer);
   // Question JSON flag (legacy). Distinct from collaborative PlanComments.
@@ -86,6 +87,7 @@ export default function PlanQuestionAnswer({
       editorId,
       onChange,
     }),
+    fieldName,
     typeaheadSearchProps,
   });
 

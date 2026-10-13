@@ -960,6 +960,32 @@ describe('PlanOverviewPage', () => {
     });
   });
 
+  it('keeps the plan on screen while it refetches', async () => {
+    const defaultUseQuery = mockUseQuery.getMockImplementation()!;
+    mockUseQuery.mockImplementation((document, options) => {
+      const result = defaultUseQuery(document, options);
+      return document === PlanDocument ? { ...result, loading: true } : result;
+    });
+
+    render(<PlanOverviewPage />);
+
+    expect(screen.getByRole('button', { name: /buttons.publish/i })).toBeInTheDocument();
+  });
+
+  it('refetches the plan when the Publish modal opens, so its checklist reflects answers saved since load', async () => {
+    render(<PlanOverviewPage />);
+    const planQueryIndex = mockUseQuery.mock.calls.findIndex(([document]) => document === PlanDocument);
+    const { refetch } = mockUseQuery.mock.results[planQueryIndex].value;
+    refetch.mockClear();
+
+    fireEvent.click(screen.getByText(/buttons.publish/i));
+
+    await waitFor(() => {
+      expect(screen.getByTestId('recommended-checklist')).toBeInTheDocument();
+    });
+    expect(refetch).toHaveBeenCalledTimes(1);
+  });
+
   it('should have correct info in first page of Publish modal for required items', async () => {
     render(<PlanOverviewPage />);
 

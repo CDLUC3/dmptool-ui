@@ -14,6 +14,7 @@ import {
   UpdateAnswerDocument,
   UpdateFeedbackCommentDocument,
 } from "@/generated/graphql";
+import { isFilledAnswer } from "./answerUtils";
 import type {
   PlanAuthoringDataSource,
   PlanAuthoringState,
@@ -155,6 +156,26 @@ export function createPlanAuthoringDataSource({
 
   load();
 
+  const updateAnswer = async (answerId: number, json: string): Promise<SaveAnswerResult> => {
+    const { data } = await client.mutate({
+      mutation: UpdateAnswerDocument,
+      variables: { answerId, json },
+    });
+    const messages = fieldErrors(data?.updateAnswer?.errors);
+    return messages.length > 0 ? { kind: "invalid", messages } : { kind: "saved" };
+  };
+
+  const refreshAnswerIds = async () => {
+    const { data } = await client.query({
+      query: PlanAuthoringDocument,
+      variables: { planId },
+      fetchPolicy: "network-only",
+    });
+    if (data?.plan) {
+      answerIds = collectAnswerIds(data.plan);
+    }
+  };
+
   const persistAnswer = async (
     questionKeyValue: string,
     question: PlanQuestionDefinition,
@@ -163,27 +184,25 @@ export function createPlanAuthoringDataSource({
     const json = toStoredAnswerJson(question, answerJson);
     const answerId = answerIds.get(questionKeyValue);
     if (answerId != null) {
-      const { data } = await client.mutate({
-        mutation: UpdateAnswerDocument,
-        variables: { answerId, json },
-      });
-      const messages = fieldErrors(data?.updateAnswer?.errors);
-      return messages.length > 0 ? { kind: "invalid", messages } : { kind: "saved" };
+      return updateAnswer(answerId, json);
     }
     const { data } = await client.mutate({
       mutation: AddAnswerDocument,
       variables: { ...answerTarget(planId, question), json },
     });
-    const messages = fieldErrors(data?.addAnswer?.errors);
-    if (messages.length > 0) {
-      return { kind: "invalid", messages };
-    }
     const newAnswerId = data?.addAnswer?.id;
-    if (newAnswerId == null) {
-      return { kind: "failed" };
+    if (newAnswerId != null) {
+      answerIds.set(questionKeyValue, newAnswerId);
+      return { kind: "saved" };
     }
-    answerIds.set(questionKeyValue, newAnswerId);
-    return { kind: "saved" };
+    // Another tab may have added this answer since the plan loaded.
+    await refreshAnswerIds();
+    const existingAnswerId = answerIds.get(questionKeyValue);
+    if (existingAnswerId != null) {
+      return updateAnswer(existingAnswerId, json);
+    }
+    const messages = fieldErrors(data?.addAnswer?.errors);
+    return messages.length > 0 ? { kind: "invalid", messages } : { kind: "failed" };
   };
 
   const replaceComments = (
@@ -301,7 +320,7 @@ export function createPlanAuthoringDataSource({
             ? {
                 ...item,
                 answerJson,
-                hasAnswer: answerJson != null && answerJson !== "",
+                hasAnswer: isFilledAnswer(answerJson),
                 lastSavedAt: Date.now(),
               }
             : item

@@ -267,6 +267,28 @@ describe("planAuthoringDataSource saveAnswer", () => {
     });
   });
 
+  it("updates the answer another tab added since the plan loaded", async () => {
+    const { dataSource, mutate, query, realMutate } = await setupReady();
+    const { data } = await realMutate({
+      mutation: AddAnswerDocument,
+      variables: { planId: 7, versionedSectionId: 10, versionedQuestionId: 101, json: "{}" },
+    });
+    const otherTabAnswerId = data?.addAnswer?.id;
+    query.mockClear();
+
+    await expect(
+      dataSource.saveAnswer("base-question-101", { type: "text", answer: "mine" })
+    ).resolves.toEqual({ kind: "saved" });
+    await dataSource.saveAnswer("base-question-101", { type: "text", answer: "mine again" });
+
+    expect(query).toHaveBeenCalledWith(expect.objectContaining({ query: PlanAuthoringDocument }));
+    expect(mutationsOf(mutate)).toEqual([
+      [AddAnswerDocument, expect.any(Object)],
+      [UpdateAnswerDocument, { answerId: otherTabAnswerId, json: expect.stringContaining('"mine"') }],
+      [UpdateAnswerDocument, { answerId: otherTabAnswerId, json: expect.stringContaining('"mine again"') }],
+    ]);
+  });
+
   it("adds again after a failed add, because no answer id came back", async () => {
     const consoleError = jest.spyOn(console, "error").mockImplementation(() => {});
     const { dataSource, mutate } = await setupReady({ failSaveOnce: true });
@@ -369,6 +391,15 @@ describe("planAuthoringDataSource saveAnswer", () => {
     expect(saved.lastSavedAt).toBe(NOW);
     expect(modelOf(dataSource).progress).toEqual({ answeredQuestions: 2, totalQuestions: 4, percentComplete: 50 });
     expect(listener).toHaveBeenCalledTimes(1);
+  });
+
+  it("stops counting a text answer once it is cleared", async () => {
+    const { dataSource } = await setupReady();
+
+    await dataSource.saveAnswer("base-question-100", { type: "text", answer: "" });
+
+    expect(questionOf(dataSource, "base-question-100").hasAnswer).toBe(false);
+    expect(modelOf(dataSource).progress).toEqual({ answeredQuestions: 0, totalQuestions: 4, percentComplete: 0 });
   });
 });
 

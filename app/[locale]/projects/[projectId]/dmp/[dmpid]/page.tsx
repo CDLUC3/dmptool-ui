@@ -287,6 +287,12 @@ const PlanOverviewPage: React.FC = () => {
     setIsEditingPlanStatus(true);
   };
 
+  const openPublishModal = () => {
+    // Answers are saved by PlanAuthoring, which doesn't update PlanDocument's progress.
+    void refetch();
+    setIsModalOpen(true);
+  };
+
   const handleDialogCloseBtn = () => {
     handleModalOpenChange(false);
   };
@@ -693,7 +699,7 @@ const PlanOverviewPage: React.FC = () => {
   }, [me?.me?.affiliation]);
 
 
-  if (loading) {
+  if (loading && !data) {
     return <Loading variant="page" message={Global("messaging.loading")} />;
   }
 
@@ -840,7 +846,7 @@ const PlanOverviewPage: React.FC = () => {
                     )}
                     {!isReadOnly ? (
                       <Button
-                        onPress={() => setIsModalOpen(true)}
+                        onPress={openPublishModal}
                       >
                         {Global("buttons.publish")}
                       </Button>
@@ -984,7 +990,7 @@ const PlanOverviewPage: React.FC = () => {
                         <Link
                           href="#"
                           className="side-panel-link"
-                          onPress={() => setIsModalOpen(true)}
+                          onPress={openPublishModal}
                           aria-label={t("status.publish.label")}
                         >
                           {t("status.publish.label")}

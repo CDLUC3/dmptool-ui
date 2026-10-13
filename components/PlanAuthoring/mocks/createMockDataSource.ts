@@ -1,3 +1,4 @@
+import { isFilledAnswer } from "../answerUtils";
 import type {
   PlanAuthoringDataSource,
   PlanAuthoringState,
@@ -141,7 +142,7 @@ export function createMockDataSource(
       updateQuestion(key, (question) => ({
         ...question,
         answerJson,
-        hasAnswer: answerJson != null && answerJson !== "",
+        hasAnswer: isFilledAnswer(answerJson),
         lastSavedAt: Date.now(),
       }));
       return { kind: "saved" };

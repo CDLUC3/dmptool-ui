@@ -165,6 +165,50 @@ describe("usePlanSectionNavigation", () => {
     expect(frames).toHaveLength(0);
   });
 
+  describe("URL fragment", () => {
+    afterEach(() => {
+      window.history.replaceState(null, "", "/");
+    });
+
+    it("jumps to the section in the URL once the sections have loaded, and only once", () => {
+      window.history.replaceState(null, "", `/#${sectionAnchorId(sections[1].identity)}`);
+      const target = document.getElementById(sectionAnchorId(sections[1].identity))!;
+      const { result, rerender } = renderHook(
+        ({ list }) => usePlanSectionNavigation({ sections: list }),
+        { initialProps: { list: [] as PlanSectionDefinition[] } }
+      );
+      expect(target.scrollIntoView).not.toHaveBeenCalled();
+
+      rerender({ list: sections });
+      expect(result.current.activeSection).toBe(sections[1]);
+      expect(target.scrollIntoView).toHaveBeenCalledTimes(1);
+      expect(target.scrollIntoView).toHaveBeenCalledWith({ behavior: "instant", block: "start" });
+
+      rerender({ list: [...sections] });
+      expect(target.scrollIntoView).toHaveBeenCalledTimes(1);
+    });
+
+    it("scrolls to the question in the URL", () => {
+      const question = sections[1].questions[0];
+      window.history.replaceState(null, "", `/#${questionAnchorId(question.identity)}`);
+
+      renderHook(() => usePlanSectionNavigation({ sections }));
+
+      expect(document.getElementById(questionAnchorId(question.identity))!.scrollIntoView).toHaveBeenCalledWith({
+        block: "start",
+      });
+    });
+
+    it("ignores a fragment that names nothing on the plan", () => {
+      window.history.replaceState(null, "", "/#somewhere-else");
+
+      const { result } = renderHook(() => usePlanSectionNavigation({ sections }));
+
+      expect(result.current.activeSection).toBe(sections[0]);
+      expect(Element.prototype.scrollIntoView).not.toHaveBeenCalled();
+    });
+  });
+
   describe("jumpToSection", () => {
     it("scrolls to the section and focuses its first question's heading", () => {
       enableFakeTimers();
