@@ -1,9 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
-import { useTranslations } from "next-intl";
-import { routing } from "@/i18n/routing";
+import { useLocale, useTranslations } from "next-intl";
 import { formatRelativeFromTimestamp } from "@/utils/dateUtils";
 import type { PlanQuestionSaveState } from "../model";
 import styles from "./PlanQuestionSaveStatus.module.scss";
@@ -24,8 +22,7 @@ export default function PlanQuestionSaveStatus({
 }: PlanQuestionSaveStatusProps) {
   const t = useTranslations("PlanAuthoring");
   const QuestionPage = useTranslations("PlanOverviewQuestionPage");
-  // useParams rather than useLocale so this renders without an intl provider.
-  const locale = useParams<{ locale?: string }>()?.locale ?? routing.defaultLocale;
+  const locale = useLocale();
   const showLastSaved =
     (state.status === "clean" || state.status === "saved") &&
     lastSavedAt != null &&

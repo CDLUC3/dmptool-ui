@@ -334,7 +334,11 @@ import { Button } from 'react-aria-components';
     modified: formatDate(plan.modified),
     versionedSections: plan.versionedSections?.map((section) => ({
       ...section,
-      href: routePath("projects.dmp.versionedSection", { ... }),
+      href: \`\${routePath("projects.dmp.show", { ... })}#\${sectionAnchorId(
+        section.sectionType === "CUSTOM"
+          ? { kind: "custom", customSectionId: section.customSectionId }
+          : { kind: "base", versionedSectionId: section.versionedSectionId }
+      )}\`,
     })),
     downloadHref: routePath("projects.dmp.download", { ... }),
     actionHref: routePath("projects.dmp.show", { ... }),

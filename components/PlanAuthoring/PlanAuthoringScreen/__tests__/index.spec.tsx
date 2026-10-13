@@ -20,6 +20,17 @@ global.ResizeObserver = jest.fn().mockImplementation(() => ({
   disconnect: jest.fn(),
 }));
 
+jest.mock("next-intl", () => {
+  const mockTranslate = Object.assign((key: string) => key, {
+    rich: (key: string) => key,
+  });
+  return {
+    ...jest.requireActual("next-intl"),
+    useTranslations: jest.fn(() => mockTranslate),
+    useLocale: jest.fn(() => "en-US"),
+  };
+});
+
 jest.mock("../../PlanDocumentUploadDialog", () => ({
   __esModule: true,
   default: ({

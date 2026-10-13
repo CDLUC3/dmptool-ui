@@ -57,6 +57,7 @@ type MockUseTranslations = {
 
 // Mock useFormatter from next-intl
 jest.mock('next-intl', () => ({
+  useLocale: jest.fn(() => 'en-US'),
   useFormatter: jest.fn(() => ({
     dateTime: jest.fn(() => '01-01-2023'),
   })),
