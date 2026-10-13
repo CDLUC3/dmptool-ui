@@ -158,6 +158,12 @@
     },
     "common": {
       "retry": "Retry"
+    },
+    "researchOutput": {
+      "backToPlan": "Back to plan",
+      "notFoundTitle": "Research output not found",
+      "notFoundBody": "That research output question or row is missing from this plan.",
+      "saveFailed": "Unable to save research output."
     }
   }
 }

@@ -4,6 +4,8 @@ import userEvent from "@testing-library/user-event";
 import { NextIntlClientProvider } from "next-intl";
 import globalMessages from "@/messages/en-US/global.json";
 import planAuthoringMessages from "@/messages/en-US/planAuthoring.json";
+import type { ResearchOutputRowNavigation } from "@/components/Form/ResearchOutputAnswerComponent";
+import { RESEARCH_OUTPUT_QUESTION_TYPE } from "@/lib/constants";
 import PlanQuestionAnswer from "../index";
 import type { PlanQuestionDefinition } from "../../model";
 import { makeQuestion as makeSharedQuestion } from "../../mocks";
@@ -39,6 +41,33 @@ jest.mock("@/components/Form/TypeAheadWithOther/useAffiliationSearch", () => ({
   }),
 }));
 
+jest.mock("@/components/Form/ResearchOutputAnswerComponent", () => {
+  const MockResearchOutputAnswerComponent = ({
+    rows,
+    onSave,
+    isDisabled,
+    rowNavigation,
+  }: {
+    rows: unknown[];
+    onSave: (rows: unknown[]) => void;
+    isDisabled?: boolean;
+    rowNavigation?: { addHref: string };
+  }) => (
+    <div
+      data-testid="research-output-list"
+      data-row-count={rows.length}
+      data-disabled={String(Boolean(isDisabled))}
+      data-add-href={rowNavigation?.addHref ?? ""}
+    >
+      <button type="button" onClick={() => onSave([])}>
+        Remove all outputs
+      </button>
+    </div>
+  );
+  MockResearchOutputAnswerComponent.displayName = "MockResearchOutputAnswerComponent";
+  return MockResearchOutputAnswerComponent;
+});
+
 const messages = { ...globalMessages, ...planAuthoringMessages };
 
 function makeQuestion(
@@ -56,7 +85,15 @@ function makeQuestion(
 function renderAnswer(
   question: PlanQuestionDefinition,
   draftAnswer: unknown,
-  { disabled = false } = {}
+  {
+    disabled = false,
+    onSaveNow,
+    rowNavigation,
+  }: {
+    disabled?: boolean;
+    onSaveNow?: () => Promise<boolean>;
+    rowNavigation?: ResearchOutputRowNavigation;
+  } = {}
 ) {
   const onChange = jest.fn();
   render(
@@ -66,6 +103,8 @@ function renderAnswer(
         draftAnswer={draftAnswer}
         disabled={disabled}
         onChange={onChange}
+        onSaveNow={onSaveNow}
+        rowNavigation={rowNavigation}
       />
     </NextIntlClientProvider>
   );
@@ -360,6 +399,65 @@ describe("PlanQuestionAnswer", () => {
       );
 
       expect(screen.getByRole("textbox", { name: /Institution/ })).toBeDisabled();
+    });
+  });
+
+  describe("research output question", () => {
+    const columns = [
+      {
+        heading: "Title",
+        commonStandardId: "title",
+        content: { type: "text", meta: { schemaVersion: "1.0" }, attributes: {} },
+      },
+    ];
+    const row = {
+      columns: [
+        { type: "text", commonStandardId: "title", meta: { schemaVersion: "1.0" }, answer: "Dataset A" },
+      ],
+    };
+    const researchOutputQuestion = () => makeQuestion(RESEARCH_OUTPUT_QUESTION_TYPE, { columns });
+    const storedAnswer = { type: RESEARCH_OUTPUT_QUESTION_TYPE, answer: [row] };
+
+    it("renders the research output list with rows from the draft answer", () => {
+      renderAnswer(researchOutputQuestion(), storedAnswer);
+
+      const list = screen.getByTestId("research-output-list");
+      expect(list).toHaveAttribute("data-row-count", "1");
+      expect(list).toHaveAttribute("data-disabled", "false");
+    });
+
+    it("passes row navigation and disabled state through to the list", () => {
+      renderAnswer(researchOutputQuestion(), storedAnswer, {
+        disabled: true,
+        rowNavigation: { editHref: (index) => `/edit/${index}`, addHref: "/edit/new" },
+      });
+
+      const list = screen.getByTestId("research-output-list");
+      expect(list).toHaveAttribute("data-add-href", "/edit/new");
+      expect(list).toHaveAttribute("data-disabled", "true");
+    });
+
+    it("rebuilds the answer JSON and saves when the list changes", async () => {
+      const user = userEvent.setup();
+      const onSaveNow = jest.fn().mockResolvedValue(true);
+      const { onChange } = renderAnswer(researchOutputQuestion(), storedAnswer, { onSaveNow });
+
+      await user.click(screen.getByRole("button", { name: "Remove all outputs" }));
+
+      expect(onChange).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: RESEARCH_OUTPUT_QUESTION_TYPE,
+          columnHeadings: ["Title"],
+          answer: [],
+        })
+      );
+      expect(onSaveNow).toHaveBeenCalledTimes(1);
+    });
+
+    it("falls back to the shared field when the question JSON has no columns", () => {
+      renderAnswer(makeQuestion(RESEARCH_OUTPUT_QUESTION_TYPE, {}), null);
+
+      expect(screen.queryByTestId("research-output-list")).not.toBeInTheDocument();
     });
   });
 

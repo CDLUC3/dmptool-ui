@@ -16,10 +16,8 @@ interface BuildPlanRenderQuestionPropsArgs {
 
 /**
  * Maps a `{ type, answer }` draft into the per-type props `useRenderQuestionField`
- * expects, and emits edits back as `{ type, answer }`.
- *
- * TODO(follow-up PR): researchOutputTable needs row state and an explicit save,
- * so wire `researchOutputTableAnswerProps` in PlanQuestionAnswer, not here.
+ * expects, and emits edits back as `{ type, answer }`. Research output tables are
+ * rendered by PlanQuestionAnswer, not through these props.
  */
 export function buildPlanRenderQuestionProps({
   questionType,
@@ -153,8 +151,5 @@ export function buildPlanRenderQuestionProps({
       emailValue: stringValue || null,
       handleEmailChange: (event) => emit(event.target.value),
     },
-    // TODO(follow-up PR): researchOutputTableAnswerProps — rows/setRows/onSave
-    // parity with PlanOverviewQuestionPageShared (columnHeadings + meta +
-    // createEmptyResearchOutputRow).
   };
 }

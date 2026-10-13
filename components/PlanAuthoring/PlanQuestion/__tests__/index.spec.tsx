@@ -7,13 +7,19 @@ import { useToast } from "@/context/ToastContext";
 import globalMessages from "@/messages/en-US/global.json";
 import planOverviewMessages from "@/messages/en-US/planBuilderPlanOverview.json";
 import planAuthoringMessages from "@/messages/en-US/planAuthoring.json";
+import templateBuilderMessages from "@/messages/en-US/templateBuilder.json";
+import type { ResearchOutputRowNavigation } from "@/components/Form/ResearchOutputAnswerComponent";
+import { RESEARCH_OUTPUT_QUESTION_TYPE } from "@/lib/constants";
 import PlanQuestion from "../index";
 import type { PlanCapabilities, PlanQuestionDefinition } from "../../model";
+import { buildResearchOutputAnswer } from "../../researchOutputAnswer";
 import {
   createMockDataSource,
   makeModel,
   makeQuestion as makeSharedQuestion,
   makeSection,
+  MOCK_RESEARCH_OUTPUT_PARSED_JSON,
+  MOCK_RESEARCH_OUTPUT_ROWS,
 } from "../../mocks";
 import {
   spyOnDataSource,
@@ -57,6 +63,7 @@ const messages = {
   ...globalMessages,
   ...planOverviewMessages,
   ...planAuthoringMessages,
+  ...templateBuilderMessages,
 };
 
 const QUESTION_KEY = "base-question-101";
@@ -97,14 +104,28 @@ function createDataSource(
   );
 }
 
+function researchOutputQuestion(): PlanQuestionDefinition {
+  return makeQuestion({
+    questionType: RESEARCH_OUTPUT_QUESTION_TYPE,
+    parsedJson: MOCK_RESEARCH_OUTPUT_PARSED_JSON,
+    answerJson: buildResearchOutputAnswer(
+      MOCK_RESEARCH_OUTPUT_PARSED_JSON,
+      MOCK_RESEARCH_OUTPUT_ROWS
+    ),
+    hasAnswer: true,
+  });
+}
+
 function renderQuestion({
   question = makeQuestion(),
   capabilities = editableCapabilities,
   dataSource = createDataSource(question),
+  rowNavigation,
 }: {
   question?: PlanQuestionDefinition;
   capabilities?: PlanCapabilities;
   dataSource?: SpiedMockDataSource;
+  rowNavigation?: ResearchOutputRowNavigation;
 } = {}) {
   const view = render(
     <NextIntlClientProvider locale="en-US" messages={messages} timeZone="UTC">
@@ -113,6 +134,7 @@ function renderQuestion({
         capabilities={capabilities}
         dataSource={dataSource}
         onCustomizeGuidance={jest.fn()}
+        rowNavigation={rowNavigation}
       />
     </NextIntlClientProvider>
   );
@@ -301,6 +323,32 @@ describe("PlanQuestion", () => {
       });
 
       expect(screen.getByRole("textbox", { name: "Answer editor" })).toHaveValue("");
+    });
+
+    it("links research output rows to their own Add/Edit pages", () => {
+      renderQuestion({
+        question: researchOutputQuestion(),
+        rowNavigation: {
+          editHref: (index) => `/edit/${index}`,
+          addHref: "/edit/new",
+        },
+      });
+
+      expect(screen.getByRole("link", { name: "+ Add Output" })).toHaveAttribute(
+        "href",
+        "/edit/new"
+      );
+      expect(screen.getAllByRole("link", { name: /^Edit / })[0]).toHaveAttribute(
+        "href",
+        "/edit/0"
+      );
+    });
+
+    it("has no Save button for a research output question", () => {
+      renderQuestion({ question: researchOutputQuestion() });
+
+      expect(screen.getByRole("button", { name: "+ Add Output" })).toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: "Save" })).not.toBeInTheDocument();
     });
   });
 

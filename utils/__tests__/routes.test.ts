@@ -38,6 +38,9 @@ describe('routePath utility', () => {
 
       expect(routePath('projects.dmp.show', { projectId: '123', dmpId: '456' }, {}, 'pt-BR'))
         .toBe('/pt-BR/projects/123/dmp/456');
+
+      expect(routePath('projects.dmp.researchOutput', { projectId: '123', dmpId: '456', questionKey: 'base-question-7', rowIndex: 'new' }, {}, 'pt-BR'))
+        .toBe('/pt-BR/projects/123/dmp/456/ro/base-question-7/new');
     });
   });
 

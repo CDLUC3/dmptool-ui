@@ -2,20 +2,25 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import { useLocale } from "next-intl";
 import { ContentContainer, LayoutContainer } from "@/components/Container";
 import { PlanAuthoring } from "@/components/PlanAuthoring";
 import {
   createScenarioDataSource,
   scenarios,
 } from "@/components/PlanAuthoring/mocks";
+import { toResearchOutputRowNavigation } from "@/components/PlanAuthoring/researchOutputAnswer";
+import {
+  getStyleguidePlanAuthoringDataSource,
+  STYLEGUIDE_RESEARCH_OUTPUT_PATH,
+} from "./styleguideDataSource";
 import "../../shared/styleguide.scss";
 
 const documentScenario = scenarios.documentVariant();
 
 export default function PlanAuthoringStyleGuidePage() {
-  const [questionsDataSource] = useState(() =>
-    createScenarioDataSource("saveFails", { delayMs: 450 })
-  );
+  const locale = useLocale();
+  const questionsDataSource = getStyleguidePlanAuthoringDataSource();
   const [documentDataSource] = useState(() =>
     createScenarioDataSource("documentVariant")
   );
@@ -39,11 +44,21 @@ export default function PlanAuthoringStyleGuidePage() {
           The single-page plan authoring UI, running on its real GraphQL data
           source against a fake in-memory API. Saves, comments, and customize
           guidance send the same queries and mutations as a real plan. The
-          first Save on any question fails once, then succeeds.
+          first Save on any question fails once, then succeeds. Research
+          outputs open on their own Add/Edit page instead of an inline form.
         </p>
       </ContentContainer>
 
-      <PlanAuthoring dataSource={questionsDataSource} />
+      <PlanAuthoring
+        dataSource={questionsDataSource}
+        getResearchOutputRowNavigation={(question) =>
+          toResearchOutputRowNavigation(
+            question,
+            (questionKey, rowIndex) =>
+              `/${locale}${STYLEGUIDE_RESEARCH_OUTPUT_PATH}/${questionKey}/${rowIndex}`
+          )
+        }
+      />
 
       <ContentContainer>
         <section id="uploaded-document">

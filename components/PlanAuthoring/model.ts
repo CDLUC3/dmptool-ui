@@ -46,10 +46,18 @@ export interface PlanGuidanceOrgOption {
   orgURI: string;
 }
 
+
+export interface PlanCommentUser {
+  id: number;
+  givenName: string;
+  surName: string;
+}
+
 export interface PlanComment {
   /** Opaque key; answer and feedback comment ids come from separate tables and can collide. */
   id: string;
   authorId: number;
+  user?: PlanCommentUser;
   authorName: string;
   createdLabel: string;
   text: string;
@@ -140,6 +148,25 @@ export function questionKey(identity: PlanQuestionIdentity): string {
   return identity.kind === "base"
     ? `base-question-${identity.versionedQuestionId}`
     : `custom-question-${identity.customQuestionId}`;
+}
+
+/** Inverse of `questionKey`. Returns null for unrecognized keys. */
+export function parseQuestionKey(key: string): PlanQuestionIdentity | null {
+  const baseMatch = /^base-question-(\d+)$/.exec(key);
+  if (baseMatch) {
+    return {
+      kind: "base",
+      versionedQuestionId: Number(baseMatch[1]),
+    };
+  }
+  const customMatch = /^custom-question-(\d+)$/.exec(key);
+  if (customMatch) {
+    return {
+      kind: "custom",
+      customQuestionId: Number(customMatch[1]),
+    };
+  }
+  return null;
 }
 
 export function sectionAnchorId(identity: PlanSectionIdentity): string {

@@ -13,10 +13,12 @@ import {
   LayoutWithPanel,
   SidebarPanel,
 } from "@/components/Container";
+import type { ResearchOutputRowNavigation } from "@/components/Form/ResearchOutputAnswerComponent";
 import type { PlanAuthoringDataSource, PlanAuthoringState } from "../dataSource";
 import type {
   PlanAuthoringVariant,
   PlanDocument,
+  PlanQuestionDefinition,
   PlanSectionDefinition,
 } from "../model";
 import {
@@ -43,6 +45,9 @@ interface PlanAuthoringProps {
   planDocument?: PlanDocument;
   idPrefix?: string;
   overview?: React.ReactNode;
+  getResearchOutputRowNavigation?: (
+    question: PlanQuestionDefinition
+  ) => ResearchOutputRowNavigation | undefined;
 }
 
 const NO_SECTIONS: PlanSectionDefinition[] = [];
@@ -58,6 +63,7 @@ export default function PlanAuthoring({
   planDocument: initialPlanDocument,
   idPrefix = "plan-authoring",
   overview,
+  getResearchOutputRowNavigation,
 }: PlanAuthoringProps) {
   const t = useTranslations("PlanAuthoring");
   const Global = useTranslations("Global");
@@ -296,6 +302,7 @@ export default function PlanAuthoring({
                           dataSource={dataSource}
                           onCustomizeGuidance={() => setCustomizeOpen(true)}
                           registerUnsavedChange={registerUnsavedChange}
+                          rowNavigation={getResearchOutputRowNavigation?.(question)}
                         />
                       ))}
                     </PlanSection>

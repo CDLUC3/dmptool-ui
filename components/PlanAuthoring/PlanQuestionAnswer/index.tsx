@@ -1,11 +1,18 @@
 "use client";
 
-import React, { useId } from "react";
+import React, { useEffect, useId, useState } from "react";
 import { useTranslations } from "next-intl";
-import { TEXT_AREA_QUESTION_TYPE } from "@/lib/constants";
+import {
+  RESEARCH_OUTPUT_QUESTION_TYPE,
+  TEXT_AREA_QUESTION_TYPE,
+} from "@/lib/constants";
 import { useRenderQuestionField } from "@/components/hooks/useRenderQuestionField";
+import ResearchOutputAnswerComponent, {
+  type ResearchOutputRowNavigation,
+} from "@/components/Form/ResearchOutputAnswerComponent";
 import FormTextArea from "@/components/Form/FormTextArea";
 import SafeHtml from "@/components/SafeHtml";
+import type { ResearchOutputTable } from "@/app/types";
 import type { PlanQuestionDefinition } from "../model";
 import { questionKey } from "../model";
 import {
@@ -15,6 +22,11 @@ import {
 } from "../answerUtils";
 import { buildPlanRenderQuestionProps } from "../buildPlanRenderQuestionProps";
 import { useAffiliationSearchAnswer } from "../useAffiliationSearchAnswer";
+import {
+  buildResearchOutputAnswer,
+  getResearchOutputColumns,
+  getResearchOutputRows,
+} from "../researchOutputAnswer";
 import styles from "./PlanQuestionAnswer.module.scss";
 
 interface PlanQuestionAnswerProps {
@@ -22,6 +34,8 @@ interface PlanQuestionAnswerProps {
   draftAnswer: unknown;
   disabled?: boolean;
   onChange: (answerJson: unknown) => void;
+  onSaveNow?: () => Promise<boolean>;
+  rowNavigation?: ResearchOutputRowNavigation;
   className?: string;
 }
 
@@ -30,6 +44,8 @@ export default function PlanQuestionAnswer({
   draftAnswer,
   disabled = false,
   onChange,
+  onSaveNow,
+  rowNavigation,
   className,
 }: PlanQuestionAnswerProps) {
   const t = useTranslations("PlanAuthoring");
@@ -45,13 +61,18 @@ export default function PlanQuestionAnswer({
   const showSanitizedRichText =
     disabled && question.questionType === TEXT_AREA_QUESTION_TYPE;
 
-  // TODO(follow-up PR): researchOutputTable parity via useRenderQuestionField.
-  // Hold local `rows`/`setRows` (seed from draft or createEmptyResearchOutputRow),
-  // pass researchOutputTableAnswerProps with onSave that emits
-  // { type, columnHeadings, answer: rows, meta } like PlanOverviewQuestionPageShared,
-  // then call saveNow. Disable autosave for this type; surface
-  // onEditingStateChange so PlanQuestion can hide its Save button while a row
-  // form is open.
+  const researchOutputColumns =
+    question.questionType === RESEARCH_OUTPUT_QUESTION_TYPE
+      ? getResearchOutputColumns(question.parsedJson)
+      : null;
+  const [researchOutputRows, setResearchOutputRows] = useState<
+    ResearchOutputTable[]
+  >(() => getResearchOutputRows(draftAnswer));
+
+  useEffect(() => {
+    setResearchOutputRows(getResearchOutputRows(draftAnswer));
+  }, [draftAnswer]);
+
   const typeaheadSearchProps = useAffiliationSearchAnswer({
     questionType: question.questionType,
     draftAnswer,
@@ -69,9 +90,24 @@ export default function PlanQuestionAnswer({
     typeaheadSearchProps,
   });
 
+  const persistResearchOutputRows = async (rows: ResearchOutputTable[]) => {
+    setResearchOutputRows(rows);
+    onChange(buildResearchOutputAnswer(question.parsedJson, rows));
+    await onSaveNow?.();
+  };
+
   return (
     <div className={[styles.answerEditor, className].filter(Boolean).join(" ")}>
-      {showSanitizedRichText ? (
+      {researchOutputColumns ? (
+        <ResearchOutputAnswerComponent
+          columns={researchOutputColumns}
+          rows={researchOutputRows}
+          setRows={setResearchOutputRows}
+          onSave={persistResearchOutputRows}
+          isDisabled={disabled}
+          rowNavigation={rowNavigation}
+        />
+      ) : showSanitizedRichText ? (
         <div className={styles.readOnlyRichText}>
           {typeof value === "string" && value.trim() ? (
             <SafeHtml html={value} />

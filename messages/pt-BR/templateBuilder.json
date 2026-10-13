@@ -443,6 +443,7 @@
     },
     "messages": {
       "areYouSureYouWantToDelete": "Tem certeza que deseja excluir esta saída da pesquisa?",
+      "untitledResearchOutput": "Saída de pesquisa sem título",
       "errors": {
         "questionTextRequired": "Conjunto de perguntas (obrigatório.",
         "questionUpdateError": "Erro ao criar a seção",

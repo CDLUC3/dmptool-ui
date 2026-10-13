@@ -158,6 +158,12 @@
     },
     "common": {
       "retry": "Tentar novamente"
+    },
+    "researchOutput": {
+      "backToPlan": "Voltar ao plano",
+      "notFoundTitle": "Resultado de pesquisa não encontrado",
+      "notFoundBody": "Essa pergunta ou linha de resultado de pesquisa não está neste plano.",
+      "saveFailed": "Não foi possível salvar o resultado de pesquisa."
     }
   }
 }
