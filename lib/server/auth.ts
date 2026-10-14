@@ -3,7 +3,8 @@ import { decodeJwt, jwtVerify, createRemoteJWKSet, JWTPayload } from "jose";
 // Define the issuer, audience and JWKS URL pointing to the Auth Service
 const ISSUER = process.env.TOKEN_ISSUER || "http://localhost:4646";
 const AUDIENCE = process.env.TOKEN_AUDIENCE || "my-ui";
-const JWKS_URL = `${process.env.NEXT_PUBLIC_AUTH_ENDPOINT}/jwks`;
+// This runs server-side, so prefer AUTH_ENDPOINT (e.g. http://auth:4646 inside Docker) over the browser-facing URL
+const JWKS_URL = `${process.env.AUTH_ENDPOINT ?? process.env.NEXT_PUBLIC_AUTH_ENDPOINT}/jwks`;
 
 // createRemoteJWKSet automatically caches keys and refetches when a key rotates
 let cachedJWKSClient: any = null;
