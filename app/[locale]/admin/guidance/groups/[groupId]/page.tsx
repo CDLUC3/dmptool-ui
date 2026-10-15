@@ -531,6 +531,15 @@ const GuidanceGroupIndexPage: React.FC = () => {
   };
   saveGuidanceRef.current = saveGuidance;
 
+  // Screen reader announcement only changes with the save state, so the minute count isn't read out every minute
+  const getSaveAnnouncement = (tagId: number) => {
+    const status = saveStatusByTag[tagId];
+    if (status?.isSaving) return Global('buttons.saving');
+    if (status?.isDirty) return t('messages.unsavedChanges');
+    if (status?.lastSavedAt) return t('messages.savedJustNow');
+    return '';
+  };
+
   // Helper function to format the last saved messaging, matching the plan question page
   const getLastSavedText = (tagId: number) => {
     const status = saveStatusByTag[tagId];
@@ -838,17 +847,17 @@ const GuidanceGroupIndexPage: React.FC = () => {
                       </div>
 
                       <div className={styles.buttonWrapper}>
-                        <div
-                          className={styles.lastSaved}
-                          data-testid={`last-saved-${tagId}`}
-                          aria-live="polite"
-                          role="status"
-                        >
+                        <div className={styles.lastSaved} data-testid={`last-saved-${tagId}`}>
                           {getLastSavedText(tagId)}
                         </div>
+                        <span className="hidden-accessibly" role="status" aria-live="polite">
+                          {getSaveAnnouncement(tagId)}
+                        </span>
                         <Button
-                          onPress={() => saveGuidance(tagId)}
-                          isDisabled={isSaving}
+                          onPress={() => {
+                            if (!isSaving) void saveGuidance(tagId);
+                          }}
+                          aria-disabled={isSaving}
                           className="button--primary"
                         >
                           {isSaving

@@ -704,6 +704,10 @@ describe("GuidanceGroupIndexPage", () => {
         jest.advanceTimersByTime(60 * 1000);
       });
       expect(screen.getByTestId('last-saved-1')).toHaveTextContent('Guidance.messages.lastSavedMinutesAgo');
+
+      // The screen reader announcement doesn't change with the minute count
+      const guidanceCard = editor.closest('div')?.parentElement as HTMLElement;
+      expect(within(guidanceCard).getByRole('status')).toHaveTextContent('Guidance.messages.savedJustNow');
     } finally {
       jest.useRealTimers();
     }
@@ -737,7 +741,7 @@ describe("GuidanceGroupIndexPage", () => {
     fireEvent.click(saveBtn);
     await waitFor(() => {
       expect(addGuidanceTextAction).toHaveBeenCalledTimes(1);
-      expect(within(guidanceCard).getByRole('button', { name: 'Global.buttons.save' })).not.toBeDisabled();
+      expect(within(guidanceCard).getByRole('button', { name: 'Global.buttons.save' })).not.toHaveAttribute('aria-disabled', 'true');
     });
 
     fireEvent.change(editor, { target: { value: 'Second version' } });
@@ -751,6 +755,113 @@ describe("GuidanceGroupIndexPage", () => {
       });
     });
     expect(addGuidanceTextAction).toHaveBeenCalledTimes(1);
+  });
+
+  it('should wait for an in-progress save to finish before autosaving again', async () => {
+    let resolveAdd: (value: unknown) => void = () => { };
+    (addGuidanceTextAction as jest.Mock).mockReturnValue(new Promise(resolve => { resolveAdd = resolve; }));
+    (updateGuidanceAction as jest.Mock).mockResolvedValue({
+      success: true,
+      data: { id: 999, errors: null },
+      redirect: undefined,
+    });
+
+    render(
+      <MockedProvider mocks={mocks}>
+        <GuidanceGroupIndexPage />
+      </MockedProvider>,
+    );
+
+    await waitForElementToBeRemoved(() => screen.getByText('Global.messaging.loading'));
+
+    const editor = screen.getByTestId('editor-content-14');
+    const guidanceCard = editor.closest('div')?.parentElement as HTMLElement;
+
+    jest.useFakeTimers();
+    try {
+      fireEvent.change(editor, { target: { value: 'First version' } });
+      fireEvent.click(within(guidanceCard).getByRole('button', { name: 'Global.buttons.save' }));
+      expect(addGuidanceTextAction).toHaveBeenCalledTimes(1);
+
+      // Keep typing while the first save is still running
+      fireEvent.change(editor, { target: { value: 'Second version' } });
+      await act(async () => {
+        jest.advanceTimersByTime(3000);
+      });
+      expect(updateGuidanceAction).not.toHaveBeenCalled();
+
+      await act(async () => {
+        resolveAdd({ success: true, data: { id: 999, errors: null } });
+      });
+    } finally {
+      jest.useRealTimers();
+    }
+
+    await waitFor(() => {
+      expect(updateGuidanceAction).toHaveBeenCalledWith({
+        guidanceId: 999,
+        guidanceText: 'Second version',
+        tagId: 14
+      });
+    });
+    expect(addGuidanceTextAction).toHaveBeenCalledTimes(1);
+  });
+
+  it('should warn before leaving with the back button when there are unsaved changes', async () => {
+    const pushStateSpy = jest.spyOn(window.history, 'pushState');
+    const backSpy = jest.spyOn(window.history, 'back').mockImplementation(() => { });
+    const confirmSpy = jest.spyOn(window, 'confirm');
+
+    render(
+      <MockedProvider mocks={mocks}>
+        <GuidanceGroupIndexPage />
+      </MockedProvider>,
+    );
+
+    await waitForElementToBeRemoved(() => screen.getByText('Global.messaging.loading'));
+
+    fireEvent.change(screen.getByTestId('editor-content-1'), { target: { value: 'Not saved yet' } });
+    expect(pushStateSpy).toHaveBeenCalledTimes(1);
+
+    // Cancel: stay on the page
+    confirmSpy.mockReturnValueOnce(false);
+    act(() => {
+      window.dispatchEvent(new PopStateEvent('popstate'));
+    });
+    expect(confirmSpy).toHaveBeenCalledWith('Global.messaging.unsavedChangesWarning');
+    expect(pushStateSpy).toHaveBeenCalledTimes(2);
+    expect(backSpy).not.toHaveBeenCalled();
+
+    // Confirm: leave the page
+    confirmSpy.mockReturnValueOnce(true);
+    act(() => {
+      window.dispatchEvent(new PopStateEvent('popstate'));
+    });
+    expect(backSpy).toHaveBeenCalledTimes(1);
+
+    pushStateSpy.mockRestore();
+    backSpy.mockRestore();
+    confirmSpy.mockRestore();
+  });
+
+  it('should warn before closing the tab only when there are unsaved changes', async () => {
+    render(
+      <MockedProvider mocks={mocks}>
+        <GuidanceGroupIndexPage />
+      </MockedProvider>,
+    );
+
+    await waitForElementToBeRemoved(() => screen.getByText('Global.messaging.loading'));
+
+    const cleanEvent = new Event('beforeunload', { cancelable: true });
+    window.dispatchEvent(cleanEvent);
+    expect(cleanEvent.defaultPrevented).toBe(false);
+
+    fireEvent.change(screen.getByTestId('editor-content-1'), { target: { value: 'Not saved yet' } });
+
+    const dirtyEvent = new Event('beforeunload', { cancelable: true });
+    window.dispatchEvent(dirtyEvent);
+    expect(dirtyEvent.defaultPrevented).toBe(true);
   });
 
   it('should not autosave when the text is changed back to the saved version', async () => {
