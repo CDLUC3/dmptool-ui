@@ -119,7 +119,10 @@ const PlanCreate: React.FC = () => {
   const prevSearchTermRef = useRef(searchTerm);
 
   // Published templates lazy query
-  const [fetchPublishedTemplates, { data: publishedTemplates, loading, error: publishedTemplatesError }] = useLazyQuery(PublishedTemplatesDocument);
+  const [fetchPublishedTemplates, { data: publishedTemplates, loading, error: publishedTemplatesError }] = useLazyQuery(PublishedTemplatesDocument, {
+    // Always fetch from the server so newly published template versions are picked up
+    fetchPolicy: 'network-only',
+  });
 
   // Get Project Funders data
   const { data: projectFundings, loading: projectFundingsLoading, error: projectFundingsError } = useQuery(ProjectFundingsDocument, {
