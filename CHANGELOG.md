@@ -1,4 +1,5 @@
 ## Added
+- Added autosave to the guidance group page (`admin/guidance/groups/[groupId]`). Each tag's guidance text saves 3 seconds after typing stops and when the window loses focus, matching the plan question page. A status below each editor shows "Unsaved changes", "Saving...", "Saved just now" or "Last saved X minutes ago", and the Save button still works for manual saves. Publish/Unpublish save any pending changes first. Added en-US/pt-BR translations [#193]
 - Added `PlanCard` with template and uploaded variants on the project overview, plus styleguide demos [#93]
 - Added plan authoring uploaded-document view with document card, update/replace dialog, and styleguide demo [#93]
 - Added `TriggerQuestionsForQuestion` query [#360]
@@ -149,6 +150,7 @@
 - Updated `RepoSelectorForAnswer` to wait to query `Re3byUrIsDocument` until we have `preferredReposURIs` because preferred repos don't display even though they eventually do to trigger the display of the "preferred repositories" checkbox [#118]
 
 ## Fixed
+- Fixed `addGuidanceTextAction` reading the wrong `dataPath` (`addGuidanceText` instead of `addGuidance`), which meant the new guidance id was never returned and saving the same tag again failed with `Variable "$input" got invalid value null at "input.guidanceId"` [#XXX]
 - Fix additional type errors in CommentsDrawer test that was still breaking build, and fixed some type errors in questionTypeHandlers [#380]
 - Fixed broken build due to `type` errors, and `Abort` errors in `/projects` pages so that they don't load with errors [#380]
 - Fixed bug where owner's affiliation was displayed in subheader of landing page, rather than funder of plan [#365]
