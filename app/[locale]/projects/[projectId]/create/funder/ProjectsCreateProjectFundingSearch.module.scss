@@ -1,8 +1,3 @@
-.fundingResultsList {
-  max-width: 60ch;
-  border-top: 1px solid var(--gray-100);
-}
-
 .popularFundersSection {
   > h3 {
     margin-bottom: var(--space-2);
@@ -13,6 +8,11 @@
 .popularDescription {
   max-width: 60ch;
   margin: 0 0 var(--space-4);
+}
+
+.funderRadioGroup {
+  max-width: 60ch;
+  margin-top: var(--space-4);
 }
 
 .resultMessageSection {
@@ -38,24 +38,6 @@
   padding-inline: 0;
 }
 
-.fundingResultsListItem {
-  display: flex;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 1rem 0;
-  align-items: center;
-  border-bottom: 1px solid var(--gray-100);
-
-  :global(.funder-name) {
-    flex: 1;
-    margin: 0;
-  }
-
-  :global(.select-button) {
-    flex-shrink: 0;
-  }
-}
-
 .fundingResultsListMore {
   display: flex;
   align-items: center;
@@ -66,4 +48,15 @@
   p {
     margin: 0;
   }
+}
+
+.noFunderSection {
+  margin-top: var(--space-8);
+  padding-top: var(--space-6);
+  border-top: 1px solid var(--gray-100);
+}
+
+.nextHint {
+  margin: var(--space-6) 0 0;
+  font-size: var(--fs-small);
 }

@@ -28,6 +28,7 @@ import { ContentContainer, LayoutContainer } from "@/components/Container";
 import { FormInput, FormSelect } from "@/components/Form";
 import ErrorMessages from '@/components/ErrorMessages';
 import { TypeAheadWithOther, useAffiliationSearch } from '@/components/Form/TypeAheadWithOther';
+import { flowPath, useCreateProjectFlow } from '@/components/CreateProjectFlow';
 
 // Utils and other
 import { routePath } from '@/utils/routes';
@@ -66,6 +67,7 @@ const AddProjectFunderManually = () => {
   const router = useRouter();
   const params = useParams();
   const projectId = Number(params.projectId);
+  const { inFlow, flow } = useCreateProjectFlow();
 
   // For TypeAhead component
   const { suggestions, handleSearch, isSearching, searchError } = useAffiliationSearch();
@@ -277,7 +279,9 @@ const AddProjectFunderManually = () => {
       }
       // Success
       showSuccessToast();
-      router.push(routePath('projects.fundings.index', { projectId }));
+      router.push(inFlow
+        ? flowPath('projectDetails', flow, projectId)
+        : routePath('projects.fundings.index', { projectId }));
 
     } catch (err) {
       const error = err as Error;

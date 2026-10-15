@@ -1,7 +1,7 @@
 import React from 'react';
 import { act, render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { MockedProvider } from '@apollo/client/testing/react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useToast } from '@/context/ToastContext';
 import { axe, toHaveNoViolations } from 'jest-axe';
 import { AddProjectDocument } from '@/generated/graphql';
@@ -144,6 +144,7 @@ const mocks = [
 // Mock next/navigation hooks
 jest.mock('next/navigation', () => ({
   useRouter: jest.fn(),
+  useSearchParams: jest.fn(),
 }));
 
 jest.mock('@/context/ToastContext', () => ({
@@ -170,7 +171,42 @@ describe('ProjectsCreateProject', () => {
     HTMLElement.prototype.scrollIntoView = mockScrollIntoView;
     window.scrollTo = jest.fn(); // Called by the wrapping PageHeader
     (useRouter as jest.Mock).mockReturnValue(mockRouter);
+    (useSearchParams as jest.Mock).mockReturnValue(new URLSearchParams());
     (useToast as jest.Mock).mockReturnValue(mockToast);
+  });
+
+  it('should show the setup progress rail with Create project as the current stage', async () => {
+    await act(async () => {
+      render(
+        <MockedProvider mocks={mocks}>
+          <ProjectsCreateProject />
+        </MockedProvider>
+      );
+    });
+
+    expect(screen.getByRole('heading', { name: 'rail.title' })).toBeInTheDocument();
+    expect(screen.getByTestId('create-flow-stage-createProject')).toHaveAttribute('aria-current', 'step');
+    expect(screen.getByText('createProject.descriptionPlan')).toBeInTheDocument();
+  });
+
+  it('should carry intent=project through to the funder step', async () => {
+    (useSearchParams as jest.Mock).mockReturnValue(new URLSearchParams('intent=project'));
+    await act(async () => {
+      render(
+        <MockedProvider mocks={mocks}>
+          <ProjectsCreateProject />
+        </MockedProvider>
+      );
+    });
+
+    expect(screen.getByText('createProject.descriptionProject')).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText(/form.projectTitle/i), { target: { value: 'Test Project' } });
+    fireEvent.click(screen.getByLabelText('labels.realProject'));
+    fireEvent.click(screen.getByRole('button', { name: /buttons.next/i }));
+
+    await waitFor(() => {
+      expect(mockRouter.push).toHaveBeenCalledWith('/en-US/projects/123/create/funder?intent=project');
+    });
   });
 
   it('should render the ProjectsCreateProject component', async () => {
@@ -188,7 +224,7 @@ describe('ProjectsCreateProject', () => {
     expect(screen.getByText(/form.projectTitleHelpText/i)).toBeInTheDocument();
     expect(screen.getByLabelText('labels.realProject')).toBeInTheDocument();
     expect(screen.getByLabelText('labels.mockProject')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /buttons.continue/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /buttons.next/i })).toBeInTheDocument();
   });
 
   it('should handle form submission with valid data', async () => {
@@ -202,11 +238,11 @@ describe('ProjectsCreateProject', () => {
 
     fireEvent.change(screen.getByLabelText(/form.projectTitle/i), { target: { value: 'Test Project' } });
     fireEvent.click(screen.getByLabelText('labels.realProject'));
-    fireEvent.click(screen.getByRole('button', { name: /buttons.continue/i }));
+    fireEvent.click(screen.getByRole('button', { name: /buttons.next/i }));
 
     await waitFor(() => {
       expect(mockToast.add).toHaveBeenCalledWith('messages.success', { type: 'success' });
-      expect(mockRouter.push).toHaveBeenCalledWith('/en-US/projects/123/funding-search');
+      expect(mockRouter.push).toHaveBeenCalledWith('/en-US/projects/123/create/funder?intent=plan');
     });
   });
 
@@ -226,11 +262,11 @@ describe('ProjectsCreateProject', () => {
     fireEvent.click(screen.getByLabelText('labels.realProject'));
 
     // Submit the form
-    fireEvent.click(screen.getByRole('button', { name: /buttons.continue/i }));
+    fireEvent.click(screen.getByRole('button', { name: /buttons.next/i }));
 
     await waitFor(() => {
       expect(mockToast.add).toHaveBeenCalledWith('messages.success', { type: 'success' });
-      expect(mockRouter.push).toHaveBeenCalledWith('/en-US/projects/123/funding-search');
+      expect(mockRouter.push).toHaveBeenCalledWith('/en-US/projects/123/create/funder?intent=plan');
     });
   });
 
@@ -247,7 +283,7 @@ describe('ProjectsCreateProject', () => {
     // Select "Real project" radio
     fireEvent.click(screen.getByLabelText('labels.realProject'));
 
-    fireEvent.click(screen.getByRole('button', { name: /buttons.continue/i }));
+    fireEvent.click(screen.getByRole('button', { name: /buttons.next/i }));
 
     await waitFor(() => {
       const fieldWrapper = screen.getByTestId('field-wrapper');
@@ -265,7 +301,7 @@ describe('ProjectsCreateProject', () => {
     });
 
     fireEvent.change(screen.getByLabelText(/form.projectTitle/i), { target: { value: 'Field Errors' } });
-    fireEvent.click(screen.getByRole('button', { name: /buttons.continue/i }));
+    fireEvent.click(screen.getByRole('button', { name: /buttons.next/i }));
 
     await waitFor(() => {
       expect(screen.getByText(/Title error/i)).toBeInTheDocument();
@@ -283,7 +319,7 @@ describe('ProjectsCreateProject', () => {
     });
 
     fireEvent.change(screen.getByLabelText(/form.projectTitle/i), { target: { value: 'General Error' } });
-    fireEvent.click(screen.getByRole('button', { name: /buttons.continue/i }));
+    fireEvent.click(screen.getByRole('button', { name: /buttons.next/i }));
 
     await waitFor(() => {
       expect(screen.getByText(/Title error/i)).toBeInTheDocument();
@@ -303,7 +339,7 @@ describe('ProjectsCreateProject', () => {
     fireEvent.change(screen.getByLabelText(/form.projectTitle/i), { target: { value: 'Server Error' } });
     // Select "Real project" radio
     fireEvent.click(screen.getByLabelText('labels.realProject'));
-    fireEvent.click(screen.getByRole('button', { name: /buttons.continue/i }));
+    fireEvent.click(screen.getByRole('button', { name: /buttons.next/i }));
 
     await waitFor(() => {
       expect(screen.getByText('messages.errors.createProjectError')).toBeInTheDocument();

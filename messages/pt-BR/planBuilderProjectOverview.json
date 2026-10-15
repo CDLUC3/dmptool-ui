@@ -127,6 +127,123 @@
     "title": "Painel de projetos e planos",
     "projectsList": "Seus projetos"
   },
+  "CreateProjectFlow": {
+    "buttons": {
+      "back": "Voltar",
+      "next": "Próximo"
+    },
+    "rail": {
+      "title": "Progresso da configuração",
+      "stages": {
+        "createProject": "Criar projeto",
+        "addFunder": "Adicionar financiador",
+        "projectDetails": "Adicionar detalhes do projeto",
+        "setupComplete": "Configuração concluída"
+      },
+      "states": {
+        "done": "concluído",
+        "current": "etapa atual",
+        "upcoming": "não iniciado",
+        "skipped": "ignorado"
+      }
+    },
+    "createProject": {
+      "descriptionPlan": "Os planos ficam dentro de um projeto de pesquisa. Primeiro criaremos o projeto e depois ajudaremos você a configurar seu plano.",
+      "descriptionProject": "Configure o projeto primeiro. Você pode adicionar um plano agora ou mais tarde."
+    },
+    "startPlan": {
+      "title": "Criar um novo DMP",
+      "description": "Os planos ficam dentro de um projeto de pesquisa. Você pode adicionar este plano a um projeto existente ou iniciar um novo.",
+      "gateLabel": "Você já tem um projeto para este plano?",
+      "yesExisting": "Sim, escolher um projeto existente",
+      "noNew": "Não, iniciar um novo projeto",
+      "projectsLabel": "Escolha um projeto",
+      "noProjects": "Você ainda não tem projetos. Inicie um novo projeto.",
+      "projectMeta": "{funder} · {plans, plural, =0 {nenhum plano} one {# plano} other {# planos}}",
+      "noFunder": "Sem financiador",
+      "errors": {
+        "chooseGate": "Escolha se deseja usar um projeto existente ou iniciar um novo.",
+        "chooseProject": "Escolha um projeto para este plano.",
+        "loadProjects": "Não foi possível carregar seus projetos."
+      }
+    },
+    "funder": {
+      "title": "Adicionar financiador",
+      "description": "Isso inclui financiadores aos quais você planeja se candidatar — não apenas os que já concederam financiamento. Adicionar um agora nos ajuda a recomendar o modelo certo. Se você tiver mais de um financiador, poderá adicioná-los depois.",
+      "noFunderText": "Se você ainda não tem um financiador, marque a caixa abaixo para continuar para a próxima etapa.",
+      "noFunderLabel": "Não tenho um financiador",
+      "selectToContinue": "Selecione um financiador ou marque “Não tenho um financiador” para continuar."
+    },
+    "fundingStatus": {
+      "title": "Situação do financiamento",
+      "description": "Conte-nos em que ponto você está com {funder}. Você pode atualizar isso depois.",
+      "descriptionNoFunder": "Conte-nos em que ponto você está com este financiador. Você pode atualizar isso depois.",
+      "label": "Qual é a situação do seu financiamento?",
+      "changeFunder": "Alterar financiador",
+      "options": {
+        "planned": "Planejando solicitar",
+        "plannedDescription": "Você ainda não enviou uma proposta.",
+        "applied": "Já solicitado",
+        "appliedDescription": "Você enviou uma proposta e está aguardando resposta.",
+        "funded": "Já financiado",
+        "fundedDescription": "O financiador concedeu o financiamento."
+      },
+      "errors": {
+        "noFunding": "Não encontramos o financiador deste projeto. Adicione um financiador primeiro.",
+        "saveFailed": "Não foi possível salvar a situação do financiamento. Tente novamente."
+      }
+    },
+    "fundingDetails": {
+      "title": "Adicionar detalhes do financiamento",
+      "description": "Adicione os identificadores que tiver para este financiamento. Você pode pular esta etapa e adicioná-los depois.",
+      "funderName": "Financiador",
+      "status": "Situação do financiamento",
+      "grantId": "Número ou URL da concessão",
+      "grantIdHelp": "O número da concessão ou um link para a página da concessão.",
+      "funderProjectNumber": "Número ou ID do projeto",
+      "funderProjectNumberHelp": "O identificador do financiador para o projeto de pesquisa.",
+      "funderOpportunityNumber": "Número da oportunidade ou da concessão federal",
+      "funderOpportunityNumberHelp": "O identificador da chamada ou oportunidade à qual você se candidatou.",
+      "statuses": {
+        "PLANNED": "Planejado",
+        "GRANTED": "Concedido",
+        "DENIED": "Negado"
+      },
+      "messages": {
+        "saved": "Detalhes do financiamento salvos.",
+        "saveFailed": "Não foi possível salvar os detalhes do financiamento. Tente novamente.",
+        "notFound": "Não encontramos este registro de financiamento."
+      }
+    },
+    "projectDetails": {
+      "skipHint": "Apenas o nome do projeto é obrigatório. Você pode preencher o restante agora ou depois."
+    },
+    "planStart": {
+      "title": "Criar ou enviar um plano",
+      "description": "A maioria das pessoas cria o plano diretamente na ferramenta.",
+      "label": "Como você deseja adicionar um plano?",
+      "options": {
+        "create": "Criar um plano",
+        "createDescription": "Responda às perguntas guiadas e nós o construiremos com você.",
+        "upload": "Enviar um plano",
+        "uploadDescription": "Traga um plano que você já escreveu."
+      }
+    },
+    "upload": {
+      "notAvailable": "O envio de planos existentes ainda não está disponível. Seu arquivo não foi salvo. Você pode criar um plano no DMP Tool."
+    },
+    "complete": {
+      "projectTitle": "Você criou um projeto",
+      "projectDescription": "Parabéns, seu novo projeto <strong>{title}</strong> está configurado{hasFunders, select, yes { e vinculado a <strong>{funders}</strong>} other {}}. Você pode criar seu primeiro DMP agora ou voltar a ele mais tarde.",
+      "createFirstPlan": "Criar seu primeiro plano",
+      "overviewHintProject": "Acesse a <link>visão geral do projeto</link> se quiser fazer alterações neste projeto.",
+      "overviewHintPlan": "Acesse a <link>visão geral do projeto</link> se quiser fazer alterações neste projeto ou plano.",
+      "setupTitle": "Configuração concluída",
+      "setupDescription": "Parabéns, seu novo projeto <strong>{title}</strong> está configurado{hasFunders, select, yes {, vinculado a <strong>{funders}</strong>,} other {}} e seu primeiro DMP{hasPlanTitle, select, yes {, <strong>{planTitle}</strong>,} other {}} foi criado e está pronto para você começar a escrever o plano.",
+      "startWriting": "Começar a escrever",
+      "loadFailed": "Não foi possível carregar este projeto."
+    }
+  },
   "ProjectsCreateProject": {
     "pageTitle": "Criar detalhes do projeto",
     "description": "Vamos começar pedindo detalhes sobre seu projeto de pesquisa para que possamos ajudá-lo a criar o plano de gerenciamento de dados certo para ele. Você pode então adicionar planos adicionais para o mesmo projeto.",
@@ -172,7 +289,7 @@
     },
     "messages": {
       "success": {
-        "projectSelected": "Projeto {projectTitle} selecionado. Redirecionando à página de visão geral do projeto."
+        "projectSelected": "Projeto {projectTitle} selecionado. Confira os detalhes que preenchemos para você."
       },
       "error": {
         "selectedFailed": "Falha ao excluir o projeto. Tente novamente."

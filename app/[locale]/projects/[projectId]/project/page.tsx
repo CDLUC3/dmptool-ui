@@ -4,6 +4,7 @@ import {
   useEffect,
   useRef,
   useState,
+  type ReactNode,
   type TransitionStartFunction
 } from 'react';
 import { useMutation, useQuery } from '@apollo/client/react';
@@ -44,6 +45,12 @@ import {
 import ErrorMessages from '@/components/ErrorMessages';
 import ResearchDomainCascadingDropdown
   from '@/components/ResearchDomainCascadingDropdown';
+import CreateProjectFlowLayout, {
+  FlowActions,
+  flowPath,
+  screenAfterProjectDetails,
+  useCreateProjectFlow,
+} from '@/components/CreateProjectFlow';
 
 import { getCalendarDateValue } from "@/utils/dateUtils";
 import { scrollToTop } from '@/utils/general';
@@ -67,6 +74,7 @@ const ProjectsProjectDetail = () => {
   const projectFundingId = searchParams.get('projectFundingId');
   const router = useRouter();
   const projectId = String(params.projectId); // From route /projects/:projectId
+  const { inFlow, flow } = useCreateProjectFlow();
 
   //For scrolling to top of page
   const topRef = useRef<HTMLDivElement | null>(null);
@@ -74,7 +82,7 @@ const ProjectsProjectDetail = () => {
   //For scrolling to error in page
   const errorRef = useRef<HTMLDivElement | null>(null);
 
-  const PROJECT_SEARCH_URL = routePath('projects.create.projects.search', {
+  const PROJECT_SEARCH_URL = routePath('projects.projects.search', {
     projectId: projectId as string,
   });
 
@@ -104,6 +112,7 @@ const ProjectsProjectDetail = () => {
   const ProjectOverview = useTranslations('ProjectOverview');
   const ProjectDetail = useTranslations('ProjectsProjectDetail');
   const Global = useTranslations('Global');
+  const Flow = useTranslations('CreateProjectFlow');
 
   // Initialize useUpdateProjectMutation
   const [updateProjectMutation] = useMutation(UpdateProjectDocument);
@@ -260,6 +269,10 @@ const ProjectsProjectDetail = () => {
           startTransition(() => {
             router.push(routePath('projects.show', { projectId }));
           });
+        } else if (inFlow) {
+          startTransition(() => {
+            router.push(flowPath(screenAfterProjectDetails(flow), flow, projectId));
+          });
         } else {
           startTransition(() => {
             router.push(routePath('projects.dmp.start', { projectId }));
@@ -312,12 +325,16 @@ const ProjectsProjectDetail = () => {
     return <div>{Global('messaging.loading')}...</div>;
   }
 
+  const wrapLayout = (children: ReactNode) => inFlow
+    ? <CreateProjectFlowLayout screen="projectDetails" flow={flow}>{children}</CreateProjectFlowLayout>
+    : <LayoutContainer><ContentContainer>{children}</ContentContainer></LayoutContainer>;
+
   return (
     <>
       <div ref={topRef} />
       <PageHeader
         title={ProjectDetail('title')}
-        description={ProjectDetail('description')}
+        description={inFlow ? Flow('projectDetails.skipHint') : ProjectDetail('description')}
         showBackButton={false}
         breadcrumbs={
           <Breadcrumbs aria-label={ProjectOverview('navigation')}>
@@ -332,8 +349,7 @@ const ProjectsProjectDetail = () => {
         actions={null}
         className="page-project-list"
       />
-      <LayoutContainer>
-        <ContentContainer>
+      {wrapLayout(<>
           <ErrorMessages errors={errors} ref={errorRef} />
           <Form onSubmit={(e) => e.preventDefault()} className="project-detail-form">
             <FormInput
@@ -389,6 +405,7 @@ const ProjectsProjectDetail = () => {
               isDisabled={isReadOnly}
             />
 
+            {!inFlow && (
             <div className="project-type-section">
 
               <RadioGroupComponent
@@ -417,36 +434,38 @@ const ProjectsProjectDetail = () => {
                 </div>
               </RadioGroupComponent>
             </div>
-
-            {!isReadOnly ? (
-              <TransitionButton
-                type="submit"
-                className="submit-button"
-                onPress={handleFormSubmit}
-                loadingLabel={Global('buttons.saving')}
-              >
-                {Global('buttons.save')}
-              </TransitionButton>
-            ) : (
-              <DialogTrigger>
-                <Button
-                  className="disabled-button-look"
-                  type="button"
-                  aria-disabled={true}
-                >
-                  {Global('buttons.save')}
-                </Button>
-                <Popover placement="bottom" className="popover--inverse">
-                  <Dialog aria-label={ProjectDetail("messages.readOnlyLinkMessage")} className="popoverContent">
-                    {ProjectDetail("messages.readOnlyLinkMessage")}
-                  </Dialog>
-                </Popover>
-              </DialogTrigger>
             )}
+
+            <FlowActions>
+              {!isReadOnly ? (
+                <TransitionButton
+                  type="submit"
+                  className="submit-button"
+                  onPress={handleFormSubmit}
+                  loadingLabel={Global('buttons.saving')}
+                >
+                  {inFlow ? Flow('buttons.next') : Global('buttons.save')}
+                </TransitionButton>
+              ) : (
+                <DialogTrigger>
+                  <Button
+                    className="disabled-button-look"
+                    type="button"
+                    aria-disabled={true}
+                  >
+                    {Global('buttons.save')}
+                  </Button>
+                  <Popover placement="bottom" className="popover--inverse">
+                    <Dialog aria-label={ProjectDetail("messages.readOnlyLinkMessage")} className="popoverContent">
+                      {ProjectDetail("messages.readOnlyLinkMessage")}
+                    </Dialog>
+                  </Popover>
+                </DialogTrigger>
+              )}
+            </FlowActions>
           </Form>
 
-          {/** Don't show if no funder, no apiTarget on the matching funder, or project is read-only */}
-          {!isReadOnly && hasFunder && hasApiTarget && (
+          {!inFlow && !isReadOnly && hasFunder && hasApiTarget && (
             <div className="form-signpost my-8">
               <div className="form-signpost-inner">
                 <div className="">
@@ -468,8 +487,7 @@ const ProjectsProjectDetail = () => {
               </div>
             </div>
           )}
-        </ContentContainer>
-      </LayoutContainer >
+      </>)}
     </>
   )
     ;

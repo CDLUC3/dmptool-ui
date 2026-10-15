@@ -55,7 +55,7 @@ const ProjectsCreateProjectProjectSearch = () => {
 
   // States for each search field
   const [projectID, setProjectID] = useState<string>("");
-  const [projectName, setProjectName] = useState<string>("Particle");
+  const [projectName, setProjectName] = useState<string>("");
   const [awardYear, setAwardYear] = useState<string>("");
   const [principalInvestigator, setPrincipalInvestigator] = useState<string>("");
 
@@ -89,7 +89,7 @@ const ProjectsCreateProjectProjectSearch = () => {
     if (!affiliationId) {
       logECS('error', 'ProjectsCreateProjectProjectSearch', {
         error: 'Missing affiliationId in search parameters',
-        url: { path: routePath('projects.create.projects.search', { projectId: projectId as string }) },
+        url: { path: routePath('projects.projects.search', { projectId: projectId as string }) },
       });
       return;
     }
@@ -97,7 +97,7 @@ const ProjectsCreateProjectProjectSearch = () => {
     if (!affiliationData?.affiliationById?.uri) {
       logECS('error', 'ProjectsCreateProjectProjectSearch', {
         error: 'Missing affiliation URI',
-        url: { path: routePath('projects.create.projects.search', { projectId: projectId as string }) },
+        url: { path: routePath('projects.projects.search', { projectId: projectId as string }) },
       });
       setHasSearched(true);
       setProjects([]);
@@ -182,7 +182,7 @@ const ProjectsCreateProjectProjectSearch = () => {
     } catch (error) {
       logECS('error', 'projectImportMutation', {
         error,
-        url: { path: routePath('projects.create.projects.search', { projectId: projectId as string }) },
+        url: { path: routePath('projects.projects.search', { projectId: projectId as string }) },
       });
       setErrorMessages([t('messages.errors.selectedFailed')]);
     }

@@ -88,7 +88,8 @@ jest.mock('@/utils/clientLogger', () => jest.fn());
 // Mock the useParams and useRouter hooks
 jest.mock('next/navigation', () => ({
   useParams: jest.fn(),
-  useRouter: jest.fn()
+  useRouter: jest.fn(),
+  useSearchParams: jest.fn(() => new URLSearchParams()),
 }))
 
 

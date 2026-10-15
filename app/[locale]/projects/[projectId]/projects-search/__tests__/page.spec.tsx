@@ -74,6 +74,11 @@ const stableAffiliationReturn = {
   error: undefined,
 };
 
+const searchFor = (projectName = 'REU') => {
+  fireEvent.change(screen.getByRole('textbox', { name: 'form.projectName' }), { target: { value: projectName } });
+  fireEvent.click(screen.getByRole('button', { name: /buttons.search/i }));
+};
+
 const setupMocks = () => {
   (useParams as jest.Mock).mockReturnValue({ projectId: '1' });
   (useRouter as jest.Mock).mockReturnValue({ push: jest.fn() });
@@ -145,7 +150,7 @@ describe('ProjectsCreateProjectProjectSearch', () => {
     ] as any);
 
     render(<ProjectsCreateProjectProjectSearch />);
-    fireEvent.click(screen.getByRole('button', { name: /buttons.search/i }));
+    searchFor();
 
     await waitFor(() => {
       expect(screen.getByText(/headings.projectsFound/i)).toBeInTheDocument();
@@ -164,7 +169,7 @@ describe('ProjectsCreateProjectProjectSearch', () => {
     ] as any);
 
     render(<ProjectsCreateProjectProjectSearch />);
-    fireEvent.click(screen.getByRole('button', { name: /buttons.search/i }));
+    searchFor();
 
     await waitFor(() => {
       expect(screen.getByText('2548467')).toBeInTheDocument();
@@ -182,7 +187,7 @@ describe('ProjectsCreateProjectProjectSearch', () => {
     ] as any);
 
     render(<ProjectsCreateProjectProjectSearch />);
-    fireEvent.click(screen.getByRole('button', { name: /buttons.search/i }));
+    searchFor();
 
     await waitFor(() => {
       expect(screen.getByText('Curt Schurgers')).toBeInTheDocument();
@@ -200,7 +205,7 @@ describe('ProjectsCreateProjectProjectSearch', () => {
     ] as any);
 
     render(<ProjectsCreateProjectProjectSearch />);
-    fireEvent.click(screen.getByRole('button', { name: /buttons.search/i }));
+    searchFor();
 
     await waitFor(() => {
       expect(screen.getByText(/headings.noProjectFound/i)).toBeInTheDocument();
@@ -218,7 +223,7 @@ describe('ProjectsCreateProjectProjectSearch', () => {
     ] as any);
 
     render(<ProjectsCreateProjectProjectSearch />);
-    fireEvent.click(screen.getByRole('button', { name: /buttons.search/i }));
+    searchFor();
 
     await waitFor(() => {
       expect(screen.getByRole('button', { name: /buttons.addProjectManually/i })).toBeInTheDocument();
@@ -239,7 +244,7 @@ describe('ProjectsCreateProjectProjectSearch', () => {
     ] as any);
 
     render(<ProjectsCreateProjectProjectSearch />);
-    fireEvent.click(screen.getByRole('button', { name: /buttons.search/i }));
+    searchFor();
 
     await waitFor(() => {
       expect(screen.getByRole('button', { name: /buttons.addProjectManually/i })).toBeInTheDocument();
@@ -270,7 +275,7 @@ describe('ProjectsCreateProjectProjectSearch', () => {
     ] as any);
 
     render(<ProjectsCreateProjectProjectSearch />);
-    fireEvent.click(screen.getByRole('button', { name: /buttons.search/i }));
+    searchFor();
 
     await waitFor(() => {
       expect(screen.getByRole('button', { name: /Select REU Site/i })).toBeInTheDocument();
@@ -328,7 +333,7 @@ describe('ProjectsCreateProjectProjectSearch', () => {
     ] as any);
 
     render(<ProjectsCreateProjectProjectSearch />);
-    fireEvent.click(screen.getByRole('button', { name: 'buttons.search' }));
+    searchFor();
 
     await waitFor(() => {
       expect(screen.getByRole('button', { name: /Select REU Site/i })).toBeInTheDocument();
@@ -350,9 +355,6 @@ describe('ProjectsCreateProjectProjectSearch', () => {
     ] as any);
 
     render(<ProjectsCreateProjectProjectSearch />);
-
-    // Clear the default projectName value first
-    fireEvent.change(screen.getByRole('textbox', { name: 'form.projectName' }), { target: { value: '' } });
     fireEvent.click(screen.getByRole('button', { name: /buttons.search/i }));
 
     expect(mockSearchFn).not.toHaveBeenCalled();

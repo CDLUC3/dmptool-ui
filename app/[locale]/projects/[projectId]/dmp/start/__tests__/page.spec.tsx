@@ -1,7 +1,7 @@
 import React from 'react';
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import ProjectsProjectPlanNew from '../page';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { axe, toHaveNoViolations } from 'jest-axe';
 import { mockScrollTo } from '@/__mocks__/common';
 
@@ -11,6 +11,7 @@ expect.extend(toHaveNoViolations);
 jest.mock('next/navigation', () => ({
   useParams: jest.fn(),
   useRouter: jest.fn(),
+  useSearchParams: jest.fn(),
 }));
 
 
@@ -27,6 +28,27 @@ describe('ProjectsProjectPlanNew', () => {
     // mock router
     mockRouter = { push: jest.fn() };
     (useRouter as jest.Mock).mockReturnValue(mockRouter);
+    (useSearchParams as jest.Mock).mockReturnValue(new URLSearchParams());
+  });
+
+  it('should keep the flow query and show the rail when inside the create flow', async () => {
+    (useSearchParams as jest.Mock).mockReturnValue(new URLSearchParams('intent=plan&from=existing'));
+    render(<ProjectsProjectPlanNew />);
+
+    expect(screen.getByRole('heading', { level: 1, name: 'planStart.title' })).toBeInTheDocument();
+    expect(screen.getByTestId('create-flow-stage-addFunder')).toHaveTextContent('rail.states.skipped');
+    expect(screen.getByTestId('create-flow-stage-setupComplete')).toHaveAttribute('aria-current', 'step');
+
+    expect(screen.getByTestId('plan-start-intro')).toHaveTextContent('planStart.description');
+    expect(screen.getByText('planStart.options.createDescription')).toBeInTheDocument();
+    expect(screen.getByText('planStart.options.uploadDescription')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByLabelText('planStart.options.upload'));
+    fireEvent.click(screen.getByRole('button', { name: 'buttons.next' }));
+
+    await waitFor(() => {
+      expect(mockRouter.push).toHaveBeenCalledWith('/en-US/projects/1/dmp/upload?intent=plan&from=existing');
+    });
   });
 
   afterEach(() => {
@@ -43,6 +65,8 @@ describe('ProjectsProjectPlanNew', () => {
     expect(within(breadcrumb).getByText('breadcrumbs.projects')).toBeInTheDocument();
     expect(within(breadcrumb).getByText('breadcrumbs.projectOverview')).toBeInTheDocument();
     expect(within(breadcrumb).getByText('breadcrumbs.startDMP')).toBeInTheDocument();
+
+    expect(screen.queryByTestId('plan-start-intro')).not.toBeInTheDocument();
 
     // Check radio options
     expect(screen.getByLabelText('labels.startNewPlan')).toBeInTheDocument();
