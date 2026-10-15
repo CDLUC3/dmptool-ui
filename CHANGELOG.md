@@ -171,6 +171,7 @@
 - Updated `RepoSelectorForAnswer` to wait to query `Re3byUrIsDocument` until we have `preferredReposURIs` because preferred repos don't display even though they eventually do to trigger the display of the "preferred repositories" checkbox [#118]
 
 ## Fixed
+- Fixed header showing "Login/Sign Up" for logged-in users when running locally in Docker. `lib/server/auth.ts` fetched the JWKS from `NEXT_PUBLIC_AUTH_ENDPOINT`, which resolves to `localhost` inside the `dmptool-ui` container, so JWT verification failed with `ECONNREFUSED`. It now uses the server-side `AUTH_ENDPOINT` and falls back to `NEXT_PUBLIC_AUTH_ENDPOINT` [#477]
 - Fixed header showing "Login/Sign Up" for logged-in users. `app/[locale]/layout.tsx` was still reading the old `dmspt` cookie instead of `ACCESS_TOKEN_NAME`, so the server always rendered the header as logged out [#471]
 - Fixed login after a fresh sign-up leaving the header in a logged-out state. The Auth service's CSRF tokens are single-use, so the login request was rejected with `Invalid CSRF token` and retried by `handleErrors`, which then navigated home without updating the auth state. `handleErrors` now accepts an optional `onRetrySuccess` callback, which the login and signup pages use to finish the same way as a first-try success [#471]
 - Updated `/api/check-auth` to refresh the auth tokens with the Auth service when the access token is missing or invalid but a refresh token exists, since `/api` routes and some excluded paths (e.g. `/dmps`) are not covered by the token refresh in `proxy.ts`[#471]
