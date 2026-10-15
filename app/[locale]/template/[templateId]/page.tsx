@@ -30,6 +30,7 @@ import {
   ArchiveTemplateDocument,
   CreateTemplateVersionDocument,
   TemplateDocument,
+  TemplateVersionsDocument,
 } from "@/generated/graphql";
 import Loading from "@/components/Loading";
 import { updateTemplateAction, updateSectionDisplayOrderAction } from "./actions";
@@ -47,7 +48,7 @@ import SectionEditContainer from "@/components/SectionEditContainer";
 import { TransitionButton, TransitionLink } from "@/components/Form";
 
 // Hooks
-import { useFormatDate } from "@/hooks/useFormatDate";
+import { useFormatDate, useFormatDateWithMonth } from "@/hooks/useFormatDate";
 import { useTemplateStatus } from "../hooks/useTemplateStatus";
 
 // Utils and other
@@ -69,6 +70,7 @@ type UpdateTemplateErrors = {
 
 const TemplateEditPage: React.FC = () => {
   const formatDate = useFormatDate();
+  const formatDateWithMonth = useFormatDateWithMonth();
 
   const [isPublishModalOpen, setPublishModalOpen] = useState(false);
   const toastState = useToast();
@@ -129,6 +131,16 @@ const TemplateEditPage: React.FC = () => {
     variables: { templateId: Number(templateId) },
   });
 
+  const { data: versionsData, refetch: refetchVersions } = useQuery(TemplateVersionsDocument, {
+    variables: { templateId: Number(templateId) },
+  });
+
+  // Saving a draft also overwrites the template's latestPublish* fields, so the
+  // last real publish has to come from the version history
+  const lastPublishedVersion = (versionsData?.templateVersions ?? [])
+    .filter((version) => version?.versionType === TemplateVersionType.Published)
+    .sort((a, b) => Number(b?.version.replace(/\D/g, "")) - Number(a?.version.replace(/\D/g, "")))[0];
+
   const sortSections = (sections: Section[]) => {
     // Create a new array with the spread operator before sorting
     return [...sections].sort((a, b) => a.displayOrder! - b.displayOrder!);
@@ -188,11 +200,6 @@ const TemplateEditPage: React.FC = () => {
   ) => {
     setErrors([]); // Clear previous errors
 
-    if (!latestPublishVisibility) {
-      setErrors([EditTemplate("errors.saveTemplateError")]);
-      return;
-    }
-
     try {
       const response = await createTemplateVersionMutation({
         variables: {
@@ -219,6 +226,7 @@ const TemplateEditPage: React.FC = () => {
       setPublishModalOpen(false);
       showSuccessToast();
       await refetch();
+      await refetchVersions();
     } catch (err) {
       setErrors([EditTemplate("errors.saveTemplateError")]);
 
@@ -711,13 +719,11 @@ const TemplateEditPage: React.FC = () => {
                   onChange={handleVisibilityChange}
                   isRequired
                   defaultValue={
-                    template.latestPublishDate
-                      ? template.latestPublishVisibility === "PUBLIC"
-                        ? "public"
-                        : template.latestPublishVisibility === "ORGANIZATION"
-                          ? "organization"
-                          : undefined
-                      : undefined
+                    lastPublishedVersion?.visibility === TemplateVisibility.Public
+                      ? "public"
+                      : lastPublishedVersion?.visibility === TemplateVisibility.Organization
+                        ? "organization"
+                        : undefined
                   }
                 >
                   <Label>{PublishTemplate("heading.visibilitySettings")}</Label>
@@ -727,6 +733,19 @@ const TemplateEditPage: React.FC = () => {
                   >
                     {PublishTemplate("descPublishedTemplate")}
                   </Text>
+                  {lastPublishedVersion && (
+                    <p className={styles.lastPublished} data-testid="lastPublishedVisibility">
+                      {PublishTemplate.rich("lastPublishedVisibility", {
+                        version: lastPublishedVersion.version,
+                        date: formatDateWithMonth(lastPublishedVersion.created),
+                        visibility: lastPublishedVersion.visibility === TemplateVisibility.Public
+                          ? PublishTemplate("radioBtn.public")
+                          : PublishTemplate("radioBtn.organizationOnly"),
+                        strong: (chunks) => <strong>{chunks}</strong>,
+                      })}
+                      {template.isDirty && ` ${PublishTemplate("unpublishedChangesSinceLastPublish")}`}
+                    </p>
+                  )}
                   <Radio
                     data-testid="visPublic"
                     value="public"
@@ -775,7 +794,7 @@ const TemplateEditPage: React.FC = () => {
                       data-testid="changeLog"
                       style={{ height: "100px" }}
                     />
-                    <FieldError />
+                    <FieldError>{PublishTemplate("messages.errors.changeLogRequiredError")}</FieldError>
                   </TextField>
                 </div>
 

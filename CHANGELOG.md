@@ -1,4 +1,5 @@
 ## Added
+- Added a "last published" note (version, date, visibility, and unpublished changes) and a clearer change log required message to the template Publish modal. The note and the pre-selected visibility come from the last `PUBLISHED` entry in `TemplateVersions` (now including `visibility`), because saving a draft overwrites the template's `latestPublish*` fields [#381]
 - Added `PlanCard` with template and uploaded variants on the project overview, plus styleguide demos [#93]
 - Added plan authoring uploaded-document view with document card, update/replace dialog, and styleguide demo [#93]
 - Added `TriggerQuestionsForQuestion` query [#360]
@@ -149,6 +150,7 @@
 - Updated `RepoSelectorForAnswer` to wait to query `Re3byUrIsDocument` until we have `preferredReposURIs` because preferred repos don't display even though they eventually do to trigger the display of the "preferred repositories" checkbox [#118]
 
 ## Fixed
+- Fixed the pt-BR `publishingTemplate3Private` translation in the template Publish modal, which described the visibility as public instead of organization only [#381]
 - Fix additional type errors in CommentsDrawer test that was still breaking build, and fixed some type errors in questionTypeHandlers [#380]
 - Fixed broken build due to `type` errors, and `Abort` errors in `/projects` pages so that they don't load with errors [#380]
 - Fixed bug where owner's affiliation was displayed in subheader of landing page, rather than funder of plan [#365]

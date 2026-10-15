@@ -1,6 +1,10 @@
 // Mock useFormatter and useTranslations from next-intl
 jest.mock("next-intl", () => ({
-  useTranslations: jest.fn(() => jest.fn((key) => key)), // Mock `useTranslations`,
+  useTranslations: jest.fn(() => Object.assign(jest.fn((key) => key), {
+    rich: jest.fn((key, values = {}) =>
+      [key, ...Object.values(values).filter((value) => typeof value === "string")].join(" ")
+    ),
+  })),
 }));
 import React from "react";
 import { act, fireEvent, render, screen, waitFor, within } from "@/utils/test-utils";
@@ -9,6 +13,7 @@ import {
   ArchiveTemplateDocument,
   CreateTemplateVersionDocument,
   TemplateDocument,
+  TemplateVersionsDocument,
   SectionDocument,
 } from "@/generated/graphql";
 import { useToast } from "@/context/ToastContext";
@@ -33,7 +38,12 @@ jest.mock("next-intl", () => ({
   useFormatter: jest.fn(() => ({
     dateTime: jest.fn(() => "01-01-2023"),
   })),
-  useTranslations: jest.fn(() => jest.fn((key) => key)), // Mock `useTranslations`,
+  useTranslations: jest.fn(() => Object.assign(jest.fn((key) => key), {
+    // Echo the string values so tests can check what was interpolated
+    rich: jest.fn((key, values = {}) =>
+      [key, ...Object.values(values).filter((value) => typeof value === "string")].join(" ")
+    ),
+  })),
 }));
 
 // Mock Apollo Client hooks
@@ -167,6 +177,10 @@ const mockTemplateData: {
   ],
 };
 
+const mockTemplateVersions = [
+  { version: "v1", versionType: "PUBLISHED", visibility: "ORGANIZATION", created: "1648835084000" },
+];
+
 // Cast with jest.mocked utility
 const mockUseQuery = jest.mocked(useQuery);
 const mockUseMutation = jest.mocked(useMutation);
@@ -179,9 +193,19 @@ const setupMocks = () => {
     error: null,
   };
 
+  const stableVersionsQueryReturn = {
+    data: { templateVersions: mockTemplateVersions },
+    loading: false,
+    error: null,
+    refetch: jest.fn(),
+  };
+
   mockUseQuery.mockImplementation((document) => {
     if (document === TemplateDocument) {
       return stableTemplateQueryReturn as any;
+    }
+    if (document === TemplateVersionsDocument) {
+      return stableVersionsQueryReturn as any;
     }
     if (document === SectionDocument) {
       return {
@@ -660,6 +684,94 @@ describe("TemplateEditPage", () => {
     await waitFor(() => {
       expect(screen.getByText("errors.saveTemplateError")).toBeInTheDocument();
     });
+  });
+
+  it("should show visibility error when publishing without selecting visibility", async () => {
+    const mockMutationFn = jest.fn();
+
+    mockUseMutation.mockImplementation((document) => {
+      if (document === CreateTemplateVersionDocument) {
+        return [mockMutationFn, { loading: false, error: undefined }] as any;
+      }
+      return [jest.fn(), { loading: false, error: undefined }] as any;
+    });
+
+    const stableTemplateQueryReturn = {
+      data: { template: { ...mockTemplateData, latestPublishDate: null } },
+      loading: false,
+      error: null,
+    };
+
+    mockUseQuery.mockImplementation((document) => {
+      if (document === TemplateDocument) {
+        return stableTemplateQueryReturn as any;
+      }
+      return { data: null, loading: false, error: undefined } as any;
+    });
+
+    render(<TemplateEditPage />);
+
+    fireEvent.click(screen.getByRole("button", { name: /button.publishtemplate/i }));
+    fireEvent.change(screen.getByTestId("changeLog"), { target: { value: "This is a test comment." } });
+    fireEvent.click(screen.getByRole("button", { name: /button.saveandpublish/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText("messages.errors.selectVisibilityError")).toBeInTheDocument();
+    });
+    expect(mockMutationFn).not.toHaveBeenCalled();
+    expect(screen.queryByTestId("lastPublishedVisibility")).not.toBeInTheDocument();
+  });
+
+  it("should show the change log error when publishing without a change log", async () => {
+    render(<TemplateEditPage />);
+
+    fireEvent.click(screen.getByRole("button", { name: /button.publishtemplate/i }));
+    fireEvent.click(screen.getByRole("button", { name: /button.saveandpublish/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText("messages.errors.changeLogRequiredError")).toBeInTheDocument();
+    });
+  });
+
+  it("should show the last published visibility when the template was published before", async () => {
+    render(<TemplateEditPage />);
+
+    fireEvent.click(screen.getByRole("button", { name: /button.publishtemplate/i }));
+
+    await waitFor(() => {
+      expect(screen.getByTestId("lastPublishedVisibility")).toHaveTextContent("lastPublishedVisibility v1");
+    });
+  });
+
+  it("should base the last published note and default visibility on the last published version, not a later draft", async () => {
+    const templateAfterDraft = {
+      ...mockTemplateData,
+      latestPublishVersion: "v3",
+      latestPublishVisibility: "ORGANIZATION",
+    };
+    const versions = [
+      { version: "v3", versionType: "DRAFT", visibility: "ORGANIZATION", created: "1700000000000" },
+      { version: "v10", versionType: "PUBLISHED", visibility: "PUBLIC", created: "1690000000000" },
+      { version: "v9", versionType: "PUBLISHED", visibility: "ORGANIZATION", created: "1680000000000" },
+    ];
+    const stableTemplateQueryReturn = { data: { template: templateAfterDraft }, loading: false, error: null };
+    const stableVersionsQueryReturn = { data: { templateVersions: versions }, loading: false, error: null, refetch: jest.fn() };
+
+    mockUseQuery.mockImplementation((document) => {
+      if (document === TemplateDocument) return stableTemplateQueryReturn as any;
+      if (document === TemplateVersionsDocument) return stableVersionsQueryReturn as any;
+      return { data: null, loading: false, error: undefined } as any;
+    });
+
+    render(<TemplateEditPage />);
+
+    fireEvent.click(screen.getByRole("button", { name: /button.publishtemplate/i }));
+
+    await waitFor(() => {
+      expect(screen.getByTestId("lastPublishedVisibility")).toHaveTextContent("v10");
+    });
+    expect(screen.getByTestId("lastPublishedVisibility")).toHaveTextContent("radioBtn.public");
+    expect(screen.getByTestId("visPublic")).toHaveAttribute("data-selected", "true");
   });
 
   it("should set correct error when useCreate returns error", async () => {
