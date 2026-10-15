@@ -204,7 +204,7 @@
         "cannotMoveFurtherDown": "Não é possível mover a seção mais para baixo",
         "displayOrderAlreadyAtTop": "A seção já está no topo da ordem",
         "cannotMoveFurtherUpOrDown": "Não é possível mover a seção mais para baixo",
-        "displayLogicOrderConflict": "Esta pergunta é utilizada na lógica de exibição. Remova a condição da lógica de exibição antes de mover esta pergunta. A pergunta deve aparecer antes da pergunta que ela exibe ou oculta."
+        "displayLogicOrderConflict": "Perguntas com Lógica de Exibição aplicada devem ser posicionadas após as perguntas nas quais essa lógica se baseia."
       },
       "questionMoved": "Seção movida para a posição {displayOrder}",
       "sectionMoved": "Seção movida para a posição {displayOrder}"

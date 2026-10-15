@@ -204,7 +204,7 @@
         "cannotMoveFurtherDown": "Cannot move question further down",
         "displayOrderAlreadyAtTop": "Question is already at top of order",
         "cannotMoveFurtherUpOrDown": "Cannot move question further up or down",
-        "displayLogicOrderConflict": "This question is used in display logic. Remove the display logic condition before moving this question. The question must appear before the question it shows or hides."
+        "displayLogicOrderConflict": "Questions with Display Logic applied must be placed after the questions that their logic is based on."
       },
       "questionMoved": "Question moved to position {displayOrder}",
       "sectionMoved": "Section moved to position {displayOrder}"
