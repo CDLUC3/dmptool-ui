@@ -622,6 +622,313 @@ describe("GuidanceGroupIndexPage", () => {
     });
   });
 
+  it('should autosave guidance text after inactivity and show save status', async () => {
+    (updateGuidanceAction as jest.Mock).mockResolvedValue({
+      success: true,
+      data: { id: 976, errors: null },
+      redirect: undefined,
+    });
+
+    render(
+      <MockedProvider mocks={mocks}>
+        <GuidanceGroupIndexPage />
+      </MockedProvider>,
+    );
+
+    await waitForElementToBeRemoved(() => screen.getByText('Global.messaging.loading'));
+
+    jest.useFakeTimers();
+    try {
+      const editor = screen.getByTestId('editor-content-1');
+      fireEvent.change(editor, { target: { value: 'Autosaved text for Storage & security' } });
+
+      expect(screen.getByTestId('last-saved-1')).toHaveTextContent('Guidance.messages.unsavedChanges');
+      expect(updateGuidanceAction).not.toHaveBeenCalled();
+
+      await act(async () => {
+        jest.advanceTimersByTime(3000);
+      });
+    } finally {
+      jest.useRealTimers();
+    }
+
+    await waitFor(() => {
+      expect(updateGuidanceAction).toHaveBeenCalledWith({
+        guidanceId: 976,
+        guidanceText: 'Autosaved text for Storage & security',
+        tagId: 1
+      });
+      expect(screen.getByTestId('last-saved-1')).toHaveTextContent('Guidance.messages.savedJustNow');
+    });
+
+    // Autosave doesn't show a toast, only the manual Save button does
+    expect(mockToast.add).not.toHaveBeenCalled();
+  });
+
+  it('should change "Saved just now" to minutes ago as time passes', async () => {
+    (updateGuidanceAction as jest.Mock).mockResolvedValue({
+      success: true,
+      data: { id: 976, errors: null },
+      redirect: undefined,
+    });
+
+    render(
+      <MockedProvider mocks={mocks}>
+        <GuidanceGroupIndexPage />
+      </MockedProvider>,
+    );
+
+    await waitForElementToBeRemoved(() => screen.getByText('Global.messaging.loading'));
+
+    jest.useFakeTimers();
+    try {
+      const editor = screen.getByTestId('editor-content-1');
+      fireEvent.change(editor, { target: { value: 'Text that will age' } });
+
+      await act(async () => {
+        jest.advanceTimersByTime(3000);
+      });
+      expect(screen.getByTestId('last-saved-1')).toHaveTextContent('Guidance.messages.savedJustNow');
+
+      await act(async () => {
+        jest.advanceTimersByTime(59 * 1000);
+      });
+      expect(screen.getByTestId('last-saved-1')).toHaveTextContent('Guidance.messages.savedJustNow');
+
+      await act(async () => {
+        jest.advanceTimersByTime(1000);
+      });
+      expect(screen.getByTestId('last-saved-1')).toHaveTextContent('Guidance.messages.lastSavedOneMinuteAgo');
+
+      await act(async () => {
+        jest.advanceTimersByTime(60 * 1000);
+      });
+      expect(screen.getByTestId('last-saved-1')).toHaveTextContent('Guidance.messages.lastSavedMinutesAgo');
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  it('should update the newly created guidance on the next save instead of adding it again', async () => {
+    (addGuidanceTextAction as jest.Mock).mockResolvedValue({
+      success: true,
+      data: { id: 999, errors: null },
+      redirect: undefined,
+    });
+    (updateGuidanceAction as jest.Mock).mockResolvedValue({
+      success: true,
+      data: { id: 999, errors: null },
+      redirect: undefined,
+    });
+
+    render(
+      <MockedProvider mocks={mocks}>
+        <GuidanceGroupIndexPage />
+      </MockedProvider>,
+    );
+
+    await waitForElementToBeRemoved(() => screen.getByText('Global.messaging.loading'));
+
+    const editor = screen.getByTestId('editor-content-14');
+    const guidanceCard = editor.closest('div')?.parentElement as HTMLElement;
+    const saveBtn = within(guidanceCard).getByRole('button', { name: 'Global.buttons.save' });
+
+    fireEvent.change(editor, { target: { value: 'First version' } });
+    fireEvent.click(saveBtn);
+    await waitFor(() => {
+      expect(addGuidanceTextAction).toHaveBeenCalledTimes(1);
+      expect(within(guidanceCard).getByRole('button', { name: 'Global.buttons.save' })).not.toBeDisabled();
+    });
+
+    fireEvent.change(editor, { target: { value: 'Second version' } });
+    fireEvent.click(within(guidanceCard).getByRole('button', { name: 'Global.buttons.save' }));
+
+    await waitFor(() => {
+      expect(updateGuidanceAction).toHaveBeenCalledWith({
+        guidanceId: 999,
+        guidanceText: 'Second version',
+        tagId: 14
+      });
+    });
+    expect(addGuidanceTextAction).toHaveBeenCalledTimes(1);
+  });
+
+  it('should not autosave when the text is changed back to the saved version', async () => {
+    render(
+      <MockedProvider mocks={mocks}>
+        <GuidanceGroupIndexPage />
+      </MockedProvider>,
+    );
+
+    await waitForElementToBeRemoved(() => screen.getByText('Global.messaging.loading'));
+
+    jest.useFakeTimers();
+    try {
+      const editor = screen.getByTestId('editor-content-1');
+      const originalText = (editor as HTMLTextAreaElement).value;
+      fireEvent.change(editor, { target: { value: 'Temporary edit' } });
+      fireEvent.change(editor, { target: { value: originalText } });
+
+      expect(screen.getByTestId('last-saved-1')).toBeEmptyDOMElement();
+
+      await act(async () => {
+        jest.advanceTimersByTime(3000);
+      });
+    } finally {
+      jest.useRealTimers();
+    }
+
+    expect(updateGuidanceAction).not.toHaveBeenCalled();
+  });
+
+  it('should autosave pending changes before publishing', async () => {
+    (updateGuidanceAction as jest.Mock).mockResolvedValue({
+      success: true,
+      data: { id: 976, errors: null },
+      redirect: undefined,
+    });
+    (publishGuidanceGroupAction as jest.Mock).mockResolvedValue({
+      success: true,
+      data: { id: 2397, name: "CDL Guidance Group", errors: null },
+    });
+    const confirmSpy = jest.spyOn(window, 'confirm');
+
+    render(
+      <MockedProvider mocks={inactiveGroupMocks}>
+        <GuidanceGroupIndexPage />
+      </MockedProvider>,
+    );
+
+    await waitForElementToBeRemoved(() => screen.getByText("Global.messaging.loading"));
+
+    const editor = screen.getByTestId('editor-content-1');
+    fireEvent.change(editor, { target: { value: 'Edited right before publishing' } });
+
+    const sidebar = screen.getByTestId("sidebar-panel");
+    const publishBtn = within(sidebar).getByRole("button", { name: "Global.buttons.publish" });
+
+    await act(async () => {
+      fireEvent.click(publishBtn);
+    });
+
+    await waitFor(() => {
+      expect(updateGuidanceAction).toHaveBeenCalledWith({
+        guidanceId: 976,
+        guidanceText: 'Edited right before publishing',
+        tagId: 1
+      });
+      expect(publishGuidanceGroupAction).toHaveBeenCalled();
+    });
+    expect(confirmSpy).not.toHaveBeenCalled();
+    confirmSpy.mockRestore();
+  });
+
+  describe('autosave', () => {
+    afterEach(() => {
+      jest.useRealTimers();
+    });
+
+    it('should only autosave once when typing continues within the delay', async () => {
+      (updateGuidanceAction as jest.Mock).mockResolvedValue({
+        success: true,
+        data: { id: 976, errors: null },
+        redirect: undefined,
+      });
+
+      render(
+        <MockedProvider mocks={mocks}>
+          <GuidanceGroupIndexPage />
+        </MockedProvider>,
+      );
+
+      await waitForElementToBeRemoved(() => screen.getByText('Global.messaging.loading'));
+
+      jest.useFakeTimers();
+
+      const editor = screen.getByTestId('editor-content-1');
+      fireEvent.change(editor, { target: { value: 'First' } });
+      act(() => {
+        jest.advanceTimersByTime(2000);
+      });
+      fireEvent.change(editor, { target: { value: 'First and second' } });
+
+      await act(async () => {
+        jest.advanceTimersByTime(3000);
+      });
+
+      jest.useRealTimers();
+
+      await waitFor(() => {
+        expect(updateGuidanceAction).toHaveBeenCalledTimes(1);
+        expect(updateGuidanceAction).toHaveBeenCalledWith(expect.objectContaining({ guidanceText: 'First and second' }));
+      });
+    });
+
+    it('should save pending changes immediately when the window loses focus', async () => {
+      (addGuidanceTextAction as jest.Mock).mockResolvedValue({
+        success: true,
+        data: { id: 999, errors: null },
+        redirect: undefined,
+      });
+
+      render(
+        <MockedProvider mocks={mocks}>
+          <GuidanceGroupIndexPage />
+        </MockedProvider>,
+      );
+
+      await waitForElementToBeRemoved(() => screen.getByText('Global.messaging.loading'));
+
+      const editor = screen.getByTestId('editor-content-14');
+      fireEvent.change(editor, { target: { value: 'Saved on blur' } });
+
+      await act(async () => {
+        window.dispatchEvent(new Event('blur'));
+      });
+
+      await waitFor(() => {
+        expect(addGuidanceTextAction).toHaveBeenCalledTimes(1);
+        expect(addGuidanceTextAction).toHaveBeenCalledWith({
+          guidanceGroupId: 2397,
+          guidanceText: 'Saved on blur',
+          tagId: 14,
+        });
+        expect(screen.getByTestId('last-saved-14')).toHaveTextContent('Guidance.messages.savedJustNow');
+      });
+    });
+
+    it('should show unsaved changes when autosave fails', async () => {
+      (updateGuidanceAction as jest.Mock).mockResolvedValue({
+        success: false,
+        errors: ['Autosave failed'],
+      });
+
+      render(
+        <MockedProvider mocks={mocks}>
+          <GuidanceGroupIndexPage />
+        </MockedProvider>,
+      );
+
+      await waitForElementToBeRemoved(() => screen.getByText('Global.messaging.loading'));
+
+      jest.useFakeTimers();
+
+      const editor = screen.getByTestId('editor-content-1');
+      fireEvent.change(editor, { target: { value: 'This will fail' } });
+
+      await act(async () => {
+        jest.advanceTimersByTime(3000);
+      });
+
+      jest.useRealTimers();
+
+      await waitFor(() => {
+        expect(screen.getByText('Autosave failed')).toBeInTheDocument();
+        expect(screen.getByTestId('last-saved-1')).toHaveTextContent('Guidance.messages.unsavedChanges');
+      });
+    });
+  });
+
   it('should handle unpublishing of guidance group', async () => {
     (unPublishGuidanceGroupAction as jest.Mock).mockResolvedValue({
       success: true,
