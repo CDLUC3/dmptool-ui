@@ -52,6 +52,7 @@
 - Added `UpdateAffiliation` and `AffiliationById` queries [#203]
 
 ## Updated
+
 - Updated conditional display logic error messaging and also added `fetchPolicy` of `network-only` to the `TemplateListPage` [#1472]
 - Updated JWKS loading to be lazy loaded instead of running on startup
 - Updated the `PublishedQuestion` query to accept an optional `planId` so the plan's question customizations are returned [#388]
