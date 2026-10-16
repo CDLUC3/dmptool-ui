@@ -3,6 +3,10 @@
   "extends": [
     "config:recommended"
   ],
+  "timezone": "America/Los_Angeles",
+  "schedule": [
+    "before 5am on monday"
+  ],
   "enabledManagers": [
     "npm"
   ],

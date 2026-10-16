@@ -164,4 +164,4 @@ jobs:
             --base development \
             --head "$BRANCH" \
             --title "chore: sync release v${VERSION} to development" \
-            --body "Automated sync of \`package.json\` and \`CHANGELOG.md\` from \`main\` after release v${VERSION}."
+            --body "There was an automated sync of \`package.json\` and \`CHANGELOG.md\` from \`main\` after release v${VERSION}."
