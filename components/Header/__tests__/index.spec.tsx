@@ -18,6 +18,13 @@ jest.mock("@/context/CsrfContext", () => ({
 
 const mockPush = jest.fn();
 jest.mock("next/navigation", () => ({
+  usePathname: jest.fn(() => "/"),
+}));
+
+jest.mock('@/i18n/routing', () => ({
+  Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
+    <a href={href} {...props}>{children}</a>
+  ),
   useRouter: jest.fn(() => ({
     push: mockPush,
   })),
@@ -80,7 +87,7 @@ describe("Header", () => {
       clearAuthData: jest.fn().mockResolvedValue(undefined),
     });
     (useCsrf as jest.Mock).mockReturnValue({
-      csrfToken: "mock-csrf-token",
+      getCsrfToken: jest.fn().mockResolvedValue("mock-csrf-token"),
     });
   });
 
@@ -142,7 +149,7 @@ describe("Header", () => {
 
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining("/apollo-signout"),
+        expect.stringContaining("/sign-out"),
         expect.objectContaining({
           method: "POST",
           credentials: "include",

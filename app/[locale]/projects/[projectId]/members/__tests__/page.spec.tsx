@@ -1,5 +1,6 @@
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
+import { useRouter } from '@/i18n/routing';
 import { useQuery } from '@apollo/client/react';
 import ProjectsProjectMembers from '../page';
 import { axe, toHaveNoViolations } from 'jest-axe';
@@ -9,7 +10,14 @@ expect.extend(toHaveNoViolations);
 
 jest.mock('next/navigation', () => ({
   useParams: jest.fn(),
-  useRouter: jest.fn()
+}));
+
+
+jest.mock('@/i18n/routing', () => ({
+  Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
+    <a href={href} {...props}>{children}</a>
+  ),
+  useRouter: jest.fn(() => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn() })),
 }));
 
 // Mock Apollo Client hooks
@@ -151,7 +159,7 @@ describe('ProjectsProjectMembers', () => {
     expect(jacquesCard).not.toBeNull();
     expect(within(jacquesCard as HTMLElement).getByRole('link', { name: /ariaLabels\.editMember/i })).toHaveAttribute(
       'href',
-      '/en-US/projects/1/members/1/edit'
+      '/projects/1/members/1/edit'
     );
     expect(within(jacquesCard as HTMLElement).getByRole('heading', { level: 3, name: /ariaLabels\.editMember/i })).toBeInTheDocument();
     expect(within(jacquesCard as HTMLElement).getByText('Principal Investigator (PI)')).toBeInTheDocument();
@@ -164,11 +172,11 @@ describe('ProjectsProjectMembers', () => {
     expect(screen.getByText('para.para1AllowCollaborators')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /buttons.shareWithPeople/i })).toHaveAttribute(
       'href',
-      '/en-US/projects/1/collaboration'
+      '/projects/1/collaboration'
     );
     expect(screen.getByRole('link', { name: /shareWithPeople/i })).toHaveAttribute(
       'href',
-      '/en-US/projects/1/collaboration'
+      '/projects/1/collaboration'
     );
   });
 
@@ -185,7 +193,7 @@ describe('ProjectsProjectMembers', () => {
 
     fireEvent.click(screen.getByText('buttons.addMembers'));
 
-    expect(mockRouter.push).toHaveBeenCalledWith('/en-US/projects/1/members/search');
+    expect(mockRouter.push).toHaveBeenCalledWith('/projects/1/members/search');
   });
 
   it('should handle edit member button click', () => {
@@ -202,7 +210,7 @@ describe('ProjectsProjectMembers', () => {
     const editButtons = screen.queryAllByText('buttons.edit');
     fireEvent.click(editButtons[0]);
 
-    expect(mockRouter.push).toHaveBeenCalledWith('/en-US/projects/1/members/1/edit');
+    expect(mockRouter.push).toHaveBeenCalledWith('/projects/1/members/1/edit');
   });
 
   it('should not render edit controls for members without an id', () => {

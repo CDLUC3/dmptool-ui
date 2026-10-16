@@ -33,14 +33,21 @@
     "researchOutputs": "Research outputs",
     "plan": "Plan",
     "plans": "Plans",
+    "untitledPlan": "Untitled plan",
+    "untitledSection": "Untitled section",
+    "uploaded": "Uploaded",
+    "uploadedDocument": "Uploaded document",
     "sections": "Sections",
     "planActions": "Plan actions",
+    "downloadWithTitle": "Download {title}",
+    "actionWithTitle": "{action} {title}",
     "upload": "Upload plan",
     "uploadPlan": "Upload a new plan",
     "createNew": "Create new plan",
     "createNewPlan": "Create a new plan",
     "funder": "Funder",
     "planSections": "Plan sections",
+    "progressRequired": "{current} of {total} required",
     "progress": "{current} of {total}",
     "doi": "DOI",
     "lastUpdated": "Last updated",
@@ -77,6 +84,29 @@
       "edit": "Adjust for this project",
       "view": "View related works for this project",
       "publish": "Publish a plan to start adding published outputs to your project"
+    },
+    "openProject": "Open project",
+    "openPlan": "Open plan",
+    "plansInProject": "Plans in this project",
+    "createNewDmpInProject": "Create a new DMP in this project",
+    "noPlansYet": "No plans yet.",
+    "statusColumn": "Status",
+    "yourRole": "Your role",
+    "updated": "Updated",
+    "actions": "Actions",
+    "projectSummary": "Project summary",
+    "lastUpdatedOn": "Last updated {date}",
+    "planCount": "{count, plural, =0 {0 plans} one {1 plan} other {# plans}}",
+    "funderSummary": "{name} and {count} more",
+    "collaboratorsJustYou": "Collaborators: Just you",
+    "collaboratorsYouAndOthers": "Collaborators: You and {count, plural, one {1 other} other {# others}}",
+    "collaboratorsNamed": "Collaborators: {name}{count, plural, =0 {} one { and 1 other} other { and # others}}",
+    "collaboratorsNone": "Collaborators: None",
+    "relatedWorksFound": "{count, plural, =0 {0 related works found} one {1 related work found} other {# related works found}}",
+    "planStatus": {
+      "DRAFT": "Draft",
+      "COMPLETE": "Complete",
+      "ARCHIVED": "Archived"
     }
   },
   "ProjectsListPage": {
@@ -90,9 +120,12 @@
         "noProjectsDescription": "Create a data management plan to get started. You can manage all your DMPs and research projects from this dashboard."
       },
       "errors": {
-        "errorRetrievingProjects": "Something went wrong with retrieving projects. Please try again later."
+        "errorRetrievingProjects": "Something went wrong with retrieving projects. Please try again later.",
+        "failedToLoadMore": "Failed to load more projects"
       }
-    }
+    },
+    "title": "Projects and Plans Dashboard",
+    "projectsList": "Your projects"
   },
   "ProjectsCreateProject": {
     "pageTitle": "Create project details",
@@ -371,7 +404,7 @@
     "para1": "When you click <strong>Grant access</strong> we'll send an email to this person inviting them to view your plan.",
     "para2": "If they aren't already a member of the DMP Tool we'll invite them to join.",
     "para3": "We have sent an invite to <strong>{email}</strong>. They will have access to this project.",
-    "para4": "To also add them as a Project Member, <projectmember> go to the Project Members page </projectmember>.",
+    "para4": "To also add them as a Project Member, &lt;projectmember&gt; go to the Project Members page &lt;/projectmember&gt;.",
     "para5": "They will have access to {access} DMPs in this project.",
     "messaging": {
       "errors": {
@@ -533,5 +566,12 @@
       "addProjectMember": "Add project member",
       "projectMemberSearch": "Project member search"
     }
+  },
+  "ProjectListFilters": {
+    "statusLabel": "Status",
+    "roleLabel": "Your role",
+    "allStatuses": "All statuses",
+    "allRoles": "All roles",
+    "clearFilters": "Clear filters"
   }
 }

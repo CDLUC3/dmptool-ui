@@ -2,9 +2,8 @@
 
 import React, { useEffect, useState, useRef, useMemo } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
-import Link from "next/link";
-import { useRouter, useParams, useSearchParams } from "next/navigation";
-import { usePathname } from "@/i18n/routing";
+import { useParams, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, Link } from "@/i18n/routing";
 import {
   Breadcrumb,
   Breadcrumbs,

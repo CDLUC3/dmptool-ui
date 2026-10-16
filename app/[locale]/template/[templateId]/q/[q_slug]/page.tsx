@@ -1,7 +1,8 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react';
-import { useParams, useRouter, useSearchParams } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
+import { useRouter } from '@/i18n/routing';
 import { useTranslations } from 'next-intl';
 import { useQuery, useMutation } from '@apollo/client/react';
 import {
@@ -33,7 +34,7 @@ import {
 import {
   TagsDocument,
   QuestionDocument,
-  QuestionsDocument,
+  TriggerQuestionsForQuestionDocument,
   QuestionErrors,
   SaveQuestionDisplayLogicDocument,
   QuestionConditionGroupsDocument,
@@ -121,6 +122,14 @@ const QuestionEdit = () => {
   const templateId = String(params.templateId);
   const questionId = String(params.q_slug); //question id
   const questionTypeIdQueryParam = searchParams.get('questionType') || null;
+  // Links can open a specific tab, and highlight trigger questions in the Display Logic tab, e.g. from the message
+  // shown when a move is blocked by this question's display logic
+  const tabQueryParam = searchParams.get('tab');
+  const defaultTab = tabQueryParam && ['edit', 'options', 'logic'].includes(tabQueryParam) ? tabQueryParam : 'edit';
+  const highlightedTriggerQuestionIds = (searchParams.get('trigger') ?? '')
+    .split(',')
+    .map(Number)
+    .filter((id) => Number.isInteger(id) && id > 0);
 
   //For scrolling to error in page
   const errorRef = useRef<HTMLDivElement | null>(null);
@@ -130,7 +139,9 @@ const QuestionEdit = () => {
   const hasHydratedDisplayLogicRef = useRef(false);
 
   // Track whether there are unsaved changes
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState<boolean>(false);
+  const [hasUnsavedQuestionChanges, setHasUnsavedQuestionChanges] = useState<boolean>(false);
+  const [hasUnsavedDisplayLogicChanges, setHasUnsavedDisplayLogicChanges] = useState<boolean>(false);
+
   // Form state
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [isSavingLogic, setIsSavingLogic] = useState<boolean>(false);
@@ -181,11 +192,18 @@ const QuestionEdit = () => {
     setTimeout(() => setAnnouncement(''), 100);
   };
 
-  // Mark the form as dirty and indicate that there are unsaved changes, and clear all errors
+  // Mark the form as dirty and indicate that there are unsaved changes to the question form, and clear all errors
   const markDirty = () => {
-    setHasUnsavedChanges(true);
+    setHasUnsavedQuestionChanges(true);
     clearAllErrors();
   };
+
+  // Mark the display logic form as dirty and indicate that there are unsaved changes to the display logic form, and clear all errors
+  const markDisplayLogicDirty = () => {
+    setHasUnsavedDisplayLogicChanges(true);
+    clearAllErrors();
+  };
+
 
   // Research Output Table Hooks
   const {
@@ -230,15 +248,16 @@ const QuestionEdit = () => {
     }
   });
 
-  // All questions in the same section as this one — the source list that
-  // Display Logic's trigger-question dropdown filters down from.
+  // All prior questions across the template that can be used as
+  // Display Logic trigger-question candidates.
   const {
-    data: questionsData,
-    loading: questionsLoading,
-    error: questionsError
-  } = useQuery(QuestionsDocument, {
-    variables: { sectionId: selectedQuestion?.question?.sectionId ?? 0 },
-    skip: !selectedQuestion?.question?.sectionId
+    data: triggerQuestionsData,
+    loading: triggerQuestionsLoading,
+    error: triggerQuestionsError
+  } = useQuery(TriggerQuestionsForQuestionDocument, {
+    variables: { questionId: Number(questionId) },
+    fetchPolicy: 'network-only', // Always fetch fresh data for trigger questions
+    skip: !questionId
   });
 
   // Query for all tags
@@ -253,18 +272,13 @@ const QuestionEdit = () => {
 
   // GraphQL Mutations
   const [saveQuestionDisplayLogicMutation] = useMutation(SaveQuestionDisplayLogicDocument);
-  const [removeQuestionDisplayLogicMutation] = useMutation(RemoveQuestionDisplayLogicDocument, {
-    refetchQueries: [
-      { query: QuestionConditionGroupsDocument, variables: { questionId: Number(questionId) } }
-    ]
-  });
+  const [removeQuestionDisplayLogicMutation] = useMutation(RemoveQuestionDisplayLogicDocument);
 
   // Candidate questions this question's display logic can trigger off of:
-  // prior multiple-choice/checkbox questions in the same section.
+  // prior option-type questions across the full template.
   const { triggerQuestions } = useTriggerQuestions(
-    questionsData?.questions,
-    Number(questionId),
-    (question?.displayOrder ? Number(question.displayOrder) : undefined)
+    triggerQuestionsData?.triggerQuestionsForQuestion,
+    Number(questionId)
   );
 
   // Update rows state and question.json when options change
@@ -374,7 +388,7 @@ const QuestionEdit = () => {
   // Handler for display logic changes (Display Logic tab)
   const handleDisplayLogicChange = (logic: DisplayLogic | null) => {
     setDisplayLogic(logic);
-    markDirty();
+    markDisplayLogicDirty();
   };
 
   // Handler for saving display logic changes (Display Logic tab)
@@ -397,7 +411,7 @@ const QuestionEdit = () => {
       if (errs.length > 0) {
         setDisplayLogicError(errs[0]); // Show the first error in the display logic tab
       } else {
-        setHasUnsavedChanges(false);
+        setHasUnsavedDisplayLogicChanges(false);
         setHasSavedDisplayLogic(true);
         toastState.add(t('messages.success.displayLogicUpdated'), { type: 'success' });
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -548,13 +562,16 @@ const QuestionEdit = () => {
           }
         } else {
           if (response?.data?.errors) {
-            const errs = extractErrors<UpdateQuestionErrors>(response?.data?.errors, ["general", "questionText"]);
+            const errs = extractErrors<UpdateQuestionErrors>(response?.data?.errors, ["general", "questionText", "json"]);
             if (errs.length > 0) {
+              // The server refused the update, so show the errors and stay on the page instead of reporting success
               setIsSubmitting(false);
               setErrors(errs);
+              announce(QuestionAdd('researchOutput.announcements.errorOccurred') || 'An error occurred. Please check the form.');
+              return;
             }
           }
-          setHasUnsavedChanges(false);
+          setHasUnsavedQuestionChanges(false);
           toastState.add(QuestionAdd('messages.success.questionUpdated'), { type: 'success' });
           // Redirect user to the Edit Question view with their new question id after successfully adding the new question
           router.push(TEMPLATE_URL);
@@ -614,12 +631,12 @@ const QuestionEdit = () => {
       allErrors.push(selectedQuestionQueryError.message);
     }
 
-    if (questionsError) {
-      allErrors.push(questionsError.message);
+    if (triggerQuestionsError) {
+      allErrors.push(triggerQuestionsError.message);
     }
 
     setErrors(allErrors);
-  }, [selectedQuestionQueryError, questionsError]);
+  }, [selectedQuestionQueryError, triggerQuestionsError]);
 
   // Set question details in state when data is loaded
   useEffect(() => {
@@ -824,9 +841,9 @@ const QuestionEdit = () => {
   // Warn user of unsaved changes if they try to leave the page
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (hasUnsavedChanges) {
+      if (hasUnsavedQuestionChanges || hasUnsavedDisplayLogicChanges) {
         e.preventDefault();
-        e.returnValue = ''; // Required for Chrome/Firefox to show the confirm dialog
+        e.returnValue = '';// Required for Chrome/Firefox to show the confirm dialog
       }
     };
 
@@ -834,15 +851,14 @@ const QuestionEdit = () => {
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
     };
-  }, [hasUnsavedChanges]);
-
+  }, [hasUnsavedQuestionChanges, hasUnsavedDisplayLogicChanges]);
 
   useEffect(() => {
-    const stillLoading = loading || (!!selectedQuestion?.question?.sectionId && questionsLoading);
+    const stillLoading = loading || triggerQuestionsLoading;
     if (!stillLoading && !initialLoadComplete) {
       setInitialLoadComplete(true);
     }
-  }, [loading, questionsLoading, selectedQuestion, initialLoadComplete]);
+  }, [loading, triggerQuestionsLoading, selectedQuestion, initialLoadComplete]);
 
   if (!initialLoadComplete) {
     return <Loading message={Global('messaging.loading')} />;
@@ -880,7 +896,7 @@ const QuestionEdit = () => {
 
       <div className="template-editor-container">
         <div className="main-content">
-          <Tabs>
+          <Tabs defaultSelectedKey={defaultTab}>
             <TabList aria-label="Question editing">
               <Tab id="edit">{t('tabs.editQuestion')}</Tab>
               <Tab id="options">{t('tabs.options')}</Tab>
@@ -963,7 +979,7 @@ const QuestionEdit = () => {
 
                 {!QUESTION_TYPES_EXCLUDED_FROM_COMMENT_FIELD.includes(questionType ?? '') && (
                   <RadioGroupComponent
-                    name="radioGroup"
+                    name="showCommentField"
                     value={question?.showCommentField ? 'yes' : 'no'}
                     radioGroupLabel={QuestionAdd('labels.additionalCommentBox')}
                     onChange={(value) => handleInputChange('showCommentField', value === 'yes')}
@@ -1084,7 +1100,7 @@ const QuestionEdit = () => {
                 )}
 
                 <RadioGroupComponent
-                  name="radioGroup"
+                  name="requiredQuestion"
                   value={question?.required ? 'yes' : 'no'}
                   radioGroupLabel={Global('labels.requiredField')}
                   description={Global('descriptions.requiredFieldDescription')}
@@ -1168,6 +1184,7 @@ const QuestionEdit = () => {
               <h2>{t('tabPanel.headings.logic')}</h2>
               <DisplayLogicComponent
                 triggerQuestions={triggerQuestions}
+                highlightedTriggerQuestionIds={highlightedTriggerQuestionIds}
                 displayLogic={displayLogic}
                 hasSavedDisplayLogic={hasSavedDisplayLogic}
                 onDisplayLogicChange={handleDisplayLogicChange}

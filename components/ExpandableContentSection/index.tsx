@@ -38,8 +38,11 @@ export default function ExpandableContentSection({
       return node.map(getTextContent).join('');
     }
 
-    if (typeof node === 'object' && 'props' in node) {
-      return getTextContent(node.props.children);
+    if (React.isValidElement(node)) {
+      // Cast to an interface with the specific prop we need
+      const element = node as React.ReactElement<{ children?: React.ReactNode }>;
+      return getTextContent(element.props.children);
+
     }
 
     return '';
@@ -83,7 +86,12 @@ export default function ExpandableContentSection({
         }
 
         if (listItems.length === 0) return null;
-        return React.cloneElement(child as React.ReactElement, { children: listItems });
+
+        const element = child as React.ReactElement<Record<string, unknown>>;
+        return React.createElement(
+          element.type,
+          { ...element.props, children: listItems }
+        );
       }
 
       // For other elements, check text length

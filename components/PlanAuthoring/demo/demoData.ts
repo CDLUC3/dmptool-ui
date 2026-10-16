@@ -11,12 +11,22 @@ import {
 import {
   PlanAuthoringModel,
   PlanComment,
+  PlanDocument,
   PlanGuidanceOrgOption,
   PlanGuidanceSource,
   PlanQuestionDefinition,
   PlanSectionDefinition,
   computeProgress,
 } from "../model";
+
+export const DEMO_PLAN_DOCUMENT: PlanDocument = {
+  fileName: "Coastal_Ocean_DMP_Frost_2026.pdf",
+  fileType: "PDF",
+  doi: "https://doi.org/10.48321/D116c4ef8f",
+  modified: "04-13-2026",
+  created: "04-13-2026",
+  downloadHref: "#",
+};
 
 // Guidance bodies are WYSIWYG-authored in the admin, so demo data deliberately
 // mixes headings, links, bold/italic, lists, and blockquotes at varying lengths.

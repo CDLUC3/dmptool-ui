@@ -6,9 +6,9 @@ import DOMPurify from "dompurify";
 export type SafeHtmlProps = {
   html: string | null | undefined;
   className?: string;
-  as?: keyof JSX.IntrinsicElements; // wrapper element for HTML content (when HTML tags exist)
+  as?: React.ElementType; // wrapper element for HTML content (when HTML tags exist)
   wrapPlainText?: boolean; // wrap plain strings (no tags) in a block element
-  plainTextWrapper?: keyof JSX.IntrinsicElements; // which element to wrap plain text with
+  plainTextWrapper?: React.ElementType; // which element to wrap plain text with
 };
 
 type PurifyLike = {
@@ -65,12 +65,12 @@ export const SafeHtml: React.FC<SafeHtmlProps> = ({
   const containsTag = /<[^>]+>/i.test(sanitized);
 
   if (!containsTag && wrapPlainText) {
-    const PlainWrapper = (plainTextWrapper || "p") as keyof JSX.IntrinsicElements;
+    const PlainWrapper = (plainTextWrapper || "p") as React.ElementType;
     // Using React.createElement to keep typing simple for dynamic tag
     return React.createElement(PlainWrapper, { className }, sanitized);
   }
 
-  const Wrapper = (as || "div") as keyof JSX.IntrinsicElements;
+  const Wrapper = (as || "div") as React.ElementType;
   // Using React.createElement to support dynamic wrapper element
   return React.createElement(Wrapper, {
     className,

@@ -166,10 +166,9 @@ interface SGSectionHeadingProps {
 }
 
 export function SGSectionHeading({ children, level = 2 }: SGSectionHeadingProps) {
-  const Tag = `h${level}` as keyof JSX.IntrinsicElements;
-  return <Tag className={styles.sectionHeading}>{children}</Tag>;
+  const Tag = `h${level}` as const;
+  return React.createElement(Tag as React.ElementType, { className: styles.sectionHeading }, children);
 }
-
 interface SGSubHeadingProps {
   children: ReactNode;
 }

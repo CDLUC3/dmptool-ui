@@ -1029,10 +1029,6 @@ table,
   border-radius: var(--border-radius-md);
   background: var(--gray-25);
 
-  @include r.device(lg) {
-    max-width: 75%;
-  }
-
   .empty-state-heading {
     font-size: var(--fs-base);
     font-weight: var(--fw-semibold);

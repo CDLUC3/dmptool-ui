@@ -8,7 +8,8 @@ import {
 } from 'react';
 import { useMutation, useQuery } from '@apollo/client/react';
 import { useTranslations } from 'next-intl';
-import { useParams, useRouter, useSearchParams } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
+import { useRouter } from '@/i18n/routing';
 import { CalendarDate, DateValue, parseDate } from "@internationalized/date";
 import {
   Breadcrumb,

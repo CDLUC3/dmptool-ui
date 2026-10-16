@@ -5,7 +5,8 @@ import {
   PlanFeedback,
   ProjectFundingStatus,
   TemplateCustomizationMigrationStatus,
-  TemplateCustomizationStatus
+  TemplateCustomizationStatus,
+  PlanStatus
 } from "@/generated/graphql";
 import {
   AffiliationSearchQuestionType,
@@ -102,7 +103,7 @@ export interface TemplateItemProps {
     id?: number | null;
   },
   title: string;
-  content?: JSX.Element | null;
+  content?: React.ReactNode | null;
   description?: string;
   link?: string | null;
   defaultExpanded: boolean;
@@ -293,11 +294,24 @@ export interface ProjectSearchResultInterface {
     name?: string | null;
     grantId?: string | null;
   }[] | null;
+  plans?: {
+    id?: number | null;
+    title?: string | null;
+    dmpId?: string | null;
+    status?: PlanStatus | null;
+    modified?: string | null;
+    planCreator?: {
+      id?: number | null;
+      givenName?: string | null;
+      surName?: string | null;
+    } | null;
+  }[] | null;
 }
 
 export interface ProjectItemProps {
   id?: number | null;
   title: string;
+  myAccessLevel?: string | null;
   description?: string;
   link?: LinkHref;
   defaultExpanded: boolean;
@@ -309,15 +323,27 @@ export interface ProjectItemProps {
     roles: string;
     orcid?: string | null;
   }[];
-  plans?: {
-    name: string;
-    dmpId?: string | null;
-    link?: string;
-  }[];
+  plans?: ProjectItemPlanProps[];
   grantId?: string | null;
   modified?: string;
+  // Total number of collaborators on the project, including the current user
+  collaboratorCount?: number | null;
+  // Number of related works discovered for this project (omit to hide the indicator)
+  relatedWorksCount?: number | null;
+  // Optional override for the "create a new plan in this project" link
+  createPlanLink?: string;
   nextCursor?: string | null;
   totalCount?: number | null;
+}
+
+export interface ProjectItemPlanProps {
+  name: string;
+  dmpId?: string | null;
+  link?: string;
+  // Plan status, e.g. DRAFT | COMPLETE | ARCHIVED
+  status?: string | null;
+  // Pre-formatted last modified date for the plan
+  modified?: string | null;
 }
 
 export interface ProjectMember {
@@ -428,7 +454,7 @@ export interface PlanMember {
 }
 export interface ListItemsInterface {
   id: number;
-  content: JSX.Element;
+  content: React.ReactNode;
   completed: boolean;
 }
 

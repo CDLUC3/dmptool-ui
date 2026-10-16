@@ -87,6 +87,17 @@ export interface PlanAuthoringProgress {
   percentComplete: number;
 }
 
+export type PlanAuthoringVariant = "questions" | "document";
+
+export interface PlanDocument {
+  fileName: string;
+  fileType?: string;
+  doi?: string | null;
+  modified?: string | null;
+  created?: string | null;
+  downloadHref?: string;
+}
+
 export interface PlanAuthoringModel {
   title: string;
   templateName: string;

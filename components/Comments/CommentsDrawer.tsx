@@ -22,7 +22,7 @@ import { MergedComment } from '@/app/types';
 export interface CommentsDrawerProps {
   isCommentsDrawerOpen: boolean;
   closeCurrentDrawer: () => void;
-  openCommentsButtonRef: React.RefObject<HTMLButtonElement>;
+  openCommentsButtonRef: React.RefObject<HTMLButtonElement | null>;
   mergedComments: MergedComment[];
   editingCommentId: number | null | undefined;
   editingCommentText: string;
@@ -34,7 +34,7 @@ export interface CommentsDrawerProps {
   me: MeQuery | null | undefined;
   planOwners: number[] | undefined | null;
   locale: string;
-  commentsEndRef: React.RefObject<HTMLDivElement>;
+  commentsEndRef: React.RefObject<HTMLDivElement | null>;
   canAddComments: boolean;
   handleAddComment: (e: React.FormEvent<HTMLFormElement>, newComment: string) => Promise<void>;
 }

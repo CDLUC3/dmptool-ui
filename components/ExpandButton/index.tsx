@@ -17,6 +17,7 @@ export default function ExpandButton({
   expanded,
   setExpanded,
   screenReaderText,
+  className,
   ...rest
 }: ExpandButtonItemProps) {
   const toggleExpand = () => {
@@ -27,7 +28,7 @@ export default function ExpandButton({
     <Button
       aria-expanded={expanded}
       onPress={toggleExpand}
-      className={styles.expandButton}
+      className={[styles.expandButton, className].filter(Boolean).join(" ")}
       {...rest}
     >
       <span>{expanded ? collapseLabel : expandLabel}</span>

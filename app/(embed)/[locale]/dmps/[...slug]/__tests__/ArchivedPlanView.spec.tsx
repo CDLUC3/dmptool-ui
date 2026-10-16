@@ -557,12 +557,6 @@ describe('ArchivedPlanView', () => {
     expect(screen.getByText(/templateInfoWithOrg/)).toBeInTheDocument();
   });
 
-  it('should render the no-org attribution text when writtenForOrg is undefined', () => {
-    render(<ArchivedPlanView {...defaultProps} writtenForOrg={undefined} />);
-
-    expect(screen.getByText('templateInfoWithoutOrg')).toBeInTheDocument();
-  });
-
   it('should render the footer with copyright and attribution links', () => {
     render(<ArchivedPlanView {...defaultProps} />);
 

@@ -58,11 +58,12 @@
   display: flex;
   flex-direction: column;  // Stack vertically on mobile
   align-items: flex-start;
-  gap: var(--space-6);
+  gap: var(--space-8);
 
   @include r.device(md) {
     flex-direction: row;    // Side-by-side on md and up
     align-items: flex-start;
+    justify-content: space-between;
   }
 }
 .titleActionsCorner {

@@ -1,8 +1,7 @@
 'use client'
 
 import { useTransition, useRef } from 'react'
-import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, Link } from '@/i18n/routing';
 import NProgress from 'nprogress'
 import type { ComponentProps } from 'react'
 import styles from './transitionLink.module.scss';
