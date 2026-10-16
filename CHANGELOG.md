@@ -52,7 +52,7 @@
 - Added `UpdateAffiliation` and `AffiliationById` queries [#203]
 
 ## Updated
-- Updated `DisplayLogicComponent` to always assume `OR` type for conditions within the same conditionGroup. Removed logic that was applying the question `displayLogicAction` and `displayLogicMatchType` to conditions within each conditionGroup [#360]
+- Updated `DisplayLogicComponent` to always assume `OR` type for conditions within the same conditionGroup. Removed logic that was applying the question `displayLogicAction` and `displayLogicMatchType` to conditions within each conditionGroup. Also, added message in `Display logic` tab when a user views the tab before saving the question [#360]
 - Updated conditional display logic error messaging and also added `fetchPolicy` of `network-only` to the `TemplateListPage` [#1472]
 - Updated JWKS loading to be lazy loaded instead of running on startup
 - Updated the `PublishedQuestion` query to accept an optional `planId` so the plan's question customizations are returned [#388]
