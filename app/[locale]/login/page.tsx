@@ -114,7 +114,7 @@ const LoginPage: React.FC = () => {
   };
 
   // 2nd phase of the login process: submit the email and password to the server for authentication or redirect them to their IdP for SSO.
-  const handleLogin = async () => {
+  const handlePasswordLogin = async () => {
     setLoading(true);
     setErrors([]); // Clear previous errors
 
@@ -155,29 +155,21 @@ const LoginPage: React.FC = () => {
 
 console.log('LOGIN STEP:', step);
 
-      const response = step === "sso"
-        ? await ssoLoginRequest(await getCsrfToken())
-        : await passwordLoginRequest(await getCsrfToken());
+      const response = await passwordLoginRequest(await getCsrfToken());
 
       if (response.ok) {
         await onLoginSuccess();
       } else {
         // CSRF tokens are single-use, so a token already used by sign-up or logout gets a 403 here.
         // handleErrors retries with a fresh token, and must finish the login the same way on success.
-        await handleErrors(response, step === "sso" ? ssoLoginRequest : passwordLoginRequest, setErrors, router, "/login", onLoginSuccess);
+        await handleErrors(response, passwordLoginRequest, setErrors, router, "/login", onLoginSuccess);
       }
     } catch (err: any) {
       logECS("error", "Login error", {
         error: err,
-        url: { path: step === "sso" ? "/sso/passthru" : "/sign-in" },
+        url: { path: "/sign-in" },
       });
-      setErrors([t(step === "sso" ? "ssoError" : "loginError")]);
-
-      if (step === "sso") {
-        // If the SSO login failed for some reason, log the error and return to the password step so the user can try to
-        // log in via that route.
-        setStep("password");
-      }
+      setErrors([t("loginError")]);
     } finally {
       setLoading(false);
     }
@@ -193,7 +185,7 @@ console.log('LOGIN STEP:', step);
 
       case "password":
       case "sso":
-        handleLogin();
+        window.location.href = `${process.env.NEXT_PUBLIC_AUTH_ENDPOINT}/sso/passthru?email=${encodeURIComponent(email)}&entityId=${encodeURIComponent(ssoEntityId || "")}`;
         break;
     }
   }
