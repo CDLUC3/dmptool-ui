@@ -184,6 +184,8 @@ console.log('LOGIN STEP:', step);
         break;
 
       case "password":
+        handlePasswordLogin();
+        break;
       case "sso":
         window.location.href = `${process.env.NEXT_PUBLIC_AUTH_ENDPOINT}/sso/passthru?email=${encodeURIComponent(email)}&entityId=${encodeURIComponent(ssoEntityId || "")}`;
         break;
