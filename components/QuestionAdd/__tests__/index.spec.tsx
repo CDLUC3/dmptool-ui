@@ -384,6 +384,50 @@ describe("QuestionAdd", () => {
     expect(screen.getByText('form.noLabel')).toBeInTheDocument();
   });
 
+  it("should explain on the Display Logic tab that logic can be added after the question is saved", async () => {
+    const json = JSON.stringify({ meta: { schemaVersion: "1.0" }, type: "textArea", attributes: {} });
+    await act(async () => {
+      render(
+        <QuestionAdd
+          questionType="textArea"
+          questionName="Text Area"
+          questionJSON={json}
+          sectionId="1"
+          onSave={jest.fn()}
+          backUrl="/back"
+          successUrl="/success"
+          breadcrumbs={<div>Breadcrumbs</div>}
+          showDisplayLogicAfterSaveMessage
+        />);
+    });
+
+    fireEvent.click(screen.getByRole('tab', { name: 'tabs.logic' }));
+
+    expect(await screen.findByText('messages.displayLogicAfterSave')).toBeInTheDocument();
+  });
+
+  it("should not show the display logic message when showDisplayLogicAfterSaveMessage is not set", async () => {
+    const json = JSON.stringify({ meta: { schemaVersion: "1.0" }, type: "textArea", attributes: {} });
+    await act(async () => {
+      render(
+        <QuestionAdd
+          questionType="textArea"
+          questionName="Text Area"
+          questionJSON={json}
+          sectionId="1"
+          onSave={jest.fn()}
+          backUrl="/back"
+          successUrl="/success"
+          breadcrumbs={<div>Breadcrumbs</div>}
+        />);
+    });
+
+    fireEvent.click(screen.getByRole('tab', { name: 'tabs.logic' }));
+
+    expect(await screen.findByRole('heading', { name: 'tabs.logic' })).toBeInTheDocument();
+    expect(screen.queryByText('messages.displayLogicAfterSave')).not.toBeInTheDocument();
+  });
+
   it("should return user to the template edit page if questionType is missing", async () => {
     const json = JSON.stringify({
       meta: {
