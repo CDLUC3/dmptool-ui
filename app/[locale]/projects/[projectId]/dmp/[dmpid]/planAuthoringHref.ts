@@ -7,8 +7,8 @@ export interface PlanRouteParams {
 }
 
 export function planAuthoringHref(
-  { locale, projectId, dmpid }: PlanRouteParams,
+  { projectId, dmpid }: PlanRouteParams,
   anchorId: string
 ): string {
-  return `${routePath("projects.dmp.show", { projectId, dmpId: dmpid }, {}, locale)}#${anchorId}`;
+  return `${routePath("projects.dmp.show", { projectId, dmpId: dmpid })}#${anchorId}`;
 }

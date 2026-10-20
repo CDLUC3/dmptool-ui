@@ -1,4 +1,4 @@
-import { redirect } from "next/navigation";
+import { redirect } from "@/i18n/routing";
 import { sectionAnchorId } from "@/components/PlanAuthoring/model";
 import { planAuthoringHref, type PlanRouteParams } from "../../planAuthoringHref";
 
@@ -8,10 +8,11 @@ export default async function PlanCustomSectionRedirectPage({
   params: Promise<PlanRouteParams & { csid: string }>;
 }) {
   const { csid, ...plan } = await params;
-  redirect(
-    planAuthoringHref(
+  redirect({
+    href: planAuthoringHref(
       plan,
       sectionAnchorId({ kind: "custom", customSectionId: Number(csid) })
-    )
-  );
+    ),
+    locale: plan.locale,
+  });
 }

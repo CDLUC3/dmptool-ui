@@ -16,11 +16,19 @@ import mocksAffiliations from '@/__mocks__/common/mockAffiliations.json';
 expect.extend(toHaveNoViolations);
 
 jest.mock('next/navigation', () => ({
-  useRouter: jest.fn(),
   useSearchParams: () => ({
     get: jest.fn(),
   })
 }));
+
+jest.mock('@/i18n/routing', () => ({
+  Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
+    <a href={href} {...props}>{children}</a>
+  ),
+  useRouter: jest.fn(() => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn() })),
+  usePathname: jest.fn(() => '/account/profile'),
+}));
+
 
 jest.mock('@/utils/clientLogger', () => ({
   __esModule: true,
@@ -59,10 +67,6 @@ jest.mock('@/components/Form/TypeAheadWithOther', () => ({
     suggestions: mocksAffiliations,
     handleSearch: jest.fn(),
   })),
-}));
-
-jest.mock('@/i18n/routing', () => ({
-  usePathname: jest.fn(() => '/about'),
 }));
 
 // Mock useFormatter and useTranslations from next-intl

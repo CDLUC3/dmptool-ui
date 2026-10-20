@@ -32,6 +32,12 @@ expect.extend(toHaveNoViolations);
 
 jest.mock("next-intl", () => jest.requireActual("next-intl"));
 
+jest.mock("@/i18n/routing", () => ({
+  Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
+    <a href={href} {...props}>{children}</a>
+  ),
+}));
+
 jest.mock("@/components/TinyMCEEditor", () => ({
   __esModule: true,
   default: ({

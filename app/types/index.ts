@@ -310,6 +310,7 @@ export interface ProjectSearchResultInterface {
 export interface ProjectItemProps {
   id?: number | null;
   title: string;
+  myAccessLevel?: string | null;
   description?: string;
   link?: LinkHref;
   defaultExpanded: boolean;
@@ -340,8 +341,6 @@ export interface ProjectItemPlanProps {
   link?: string;
   // Plan status, e.g. DRAFT | COMPLETE | ARCHIVED
   status?: string | null;
-  // The current user's role on the plan, e.g. Owner | Editor | Viewer (pre-localized)
-  role?: string | null;
   // Pre-formatted last modified date for the plan
   modified?: string | null;
 }

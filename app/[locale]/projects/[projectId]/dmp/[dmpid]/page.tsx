@@ -1,10 +1,9 @@
 "use client";
 
 import { useEffect, useState, useRef, useMemo, useCallback } from "react";
-import { useParams, useRouter } from "next/navigation";
-import { useFormatter, useLocale, useTranslations } from "next-intl";
-// next/link is faster for basic links
-import NextLink from "next/link";
+import { useParams } from "next/navigation";
+import { useRouter, Link as NextLink } from "@/i18n/routing";
+import { useFormatter, useTranslations } from "next-intl";
 import {
   Breadcrumb,
   Breadcrumbs,
@@ -193,7 +192,6 @@ const PlanOverviewPage: React.FC = () => {
   // Localization keys
   const t = useTranslations("PlanOverview");
   const Global = useTranslations("Global");
-  const locale = useLocale();
 
   // Get Plan using planId
   const {
@@ -718,13 +716,13 @@ const PlanOverviewPage: React.FC = () => {
         breadcrumbs={
           <Breadcrumbs aria-label={Global("breadcrumbs.navigation")}>
             <Breadcrumb>
-              <Link href={routePath("app.home", {}, {}, locale)}>{Global("breadcrumbs.home")}</Link>
+              <Link href={routePath("app.home")}>{Global("breadcrumbs.home")}</Link>
             </Breadcrumb>
             <Breadcrumb>
-              <Link href={routePath("projects.index", {}, {}, locale)}>{Global("breadcrumbs.projects")}</Link>
+              <Link href={routePath("projects.index")}>{Global("breadcrumbs.projects")}</Link>
             </Breadcrumb>
             <Breadcrumb>
-              <Link href={routePath("projects.show", { projectId }, {}, locale)}>{Global("breadcrumbs.projectOverview")}</Link>
+              <Link href={routePath("projects.show", { projectId })}>{Global("breadcrumbs.projectOverview")}</Link>
             </Breadcrumb>
             <Breadcrumb>{Global("breadcrumbs.planOverview")}</Breadcrumb>
           </Breadcrumbs>
@@ -741,12 +739,7 @@ const PlanOverviewPage: React.FC = () => {
         <PlanAuthoring
           dataSource={dataSource}
           researchOutputRowHref={(questionKey, rowIndex) =>
-            routePath(
-              "projects.dmp.researchOutput",
-              { projectId, dmpId, questionKey, rowIndex },
-              {},
-              locale
-            )
+            routePath("projects.dmp.researchOutput", { projectId, dmpId, questionKey, rowIndex })
           }
           overview={
             <LayoutWithPanel>

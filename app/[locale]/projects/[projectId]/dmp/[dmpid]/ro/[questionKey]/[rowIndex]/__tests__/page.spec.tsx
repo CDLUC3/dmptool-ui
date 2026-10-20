@@ -55,13 +55,13 @@ describe("PlanResearchOutputPage", () => {
         dataSource,
         questionKeyParam: "base-question-13164",
         rowIndexParam: "2",
-        planHref: "/en-US/projects/36/dmp/26",
+        planHref: "/projects/36/dmp/26",
       }),
       undefined
     );
   });
 
-  it("links the breadcrumbs back to the plan in the current locale", () => {
+  it("links the breadcrumbs back to the plan with unprefixed paths for AriaRouterProvider to localize", () => {
     renderPage("pt-BR");
 
     const nav = screen.getByRole("list", { name: "breadcrumbs.navigation" });
@@ -69,10 +69,10 @@ describe("PlanResearchOutputPage", () => {
       .getAllByRole("link")
       .map((link) => link.getAttribute("href"));
     expect(hrefs).toEqual([
-      "/pt-BR",
-      "/pt-BR/projects",
-      "/pt-BR/projects/36",
-      "/pt-BR/projects/36/dmp/26",
+      "/",
+      "/projects",
+      "/projects/36",
+      "/projects/36/dmp/26",
     ]);
     expect(within(nav).getByText("Edit research output")).toBeInTheDocument();
   });

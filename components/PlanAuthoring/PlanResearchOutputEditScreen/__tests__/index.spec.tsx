@@ -3,7 +3,7 @@ import { act, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 import { axe, toHaveNoViolations } from 'jest-axe';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/i18n/routing';
 import { RESEARCH_OUTPUT_QUESTION_TYPE } from '@/lib/constants';
 import type { PlanAuthoringState } from '../../dataSource';
 import type { PlanAuthoringModel } from '../../model';
@@ -35,6 +35,13 @@ expect.extend(toHaveNoViolations);
 
 jest.mock('next-intl', () => ({
   useTranslations: jest.fn((namespace: string) => (key: string) => `${namespace}.${key}`),
+}));
+
+jest.mock('@/i18n/routing', () => ({
+  Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
+    <a href={href} {...props}>{children}</a>
+  ),
+  useRouter: jest.fn(),
 }));
 
 jest.mock('@/components/PageHeader', () => {
@@ -160,7 +167,7 @@ function buildDataSource(
   return spyOnDataSource(createMockDataSource({ model: buildModel(), ...options }));
 }
 
-const planHref = '/en-US/styleguide/components/plan-authoring';
+const planHref = '/styleguide/components/plan-authoring';
 const questionKeyParam = questionKey(question.identity);
 const returnHref = `${planHref}#${questionAnchorId(question.identity)}`;
 

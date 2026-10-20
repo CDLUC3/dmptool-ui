@@ -23,6 +23,12 @@ jest.mock('next-intl', () => ({
   useTranslations: () => mockTranslate,
 }));
 
+jest.mock('@/i18n/routing', () => ({
+  Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
+    <a href={href} {...props}>{children}</a>
+  ),
+}));
+
 // Define props interface for the mock component
 interface MockSingleResearchOutputComponentProps {
   columns: typeof DefaultResearchOutputTableQuestion['columns'];

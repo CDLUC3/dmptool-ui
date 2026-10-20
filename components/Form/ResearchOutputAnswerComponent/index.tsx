@@ -2,7 +2,7 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Button, DialogTrigger } from "react-aria-components";
-import Link from "next/link";
+import { Link } from "@/i18n/routing";
 import { ModalOverlayComponent } from "@/components/ModalOverlayComponent";
 import {
   ResearchOutputTableQuestionType
@@ -26,7 +26,7 @@ type ResearchOutputAnswerComponentProps = {
   initialViewMode?: 'list' | 'form'; // Control initial view - 'form' for preview, 'list' for normal use
   isDisabled?: boolean; // Whether the component is in read-only mode (e.g., for preview or if question is disabled)
   onEditingStateChange?: (isEditing: boolean) => void; // Notify parent when entering/leaving single-edit view
-  /** When set, Edit/Add link to these hrefs, used as-is so they must include the locale (e.g. from `routePath`), and the list never auto-opens the inline form. */
+  /** When set, Edit/Add link to these hrefs (e.g. from `routePath`), and the list never auto-opens the inline form. */
   rowHref?: (rowIndex: number | 'new') => string;
 };
 

@@ -8,7 +8,8 @@ import {
   within,
 } from '@testing-library/react';
 
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
+import { useRouter } from '@/i18n/routing';
 import { MockedProvider } from '@apollo/client/testing/react';
 import {
   AffiliationFundersDocument,
@@ -305,6 +306,13 @@ jest.mock('@/components/PageHeader', () => ({
   default: () => <div data-testid="mock-page-header" />
 }));
 
+jest.mock('@/i18n/routing', () => ({
+  Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
+    <a href={href} {...props}>{children}</a>
+  ),
+  useRouter: jest.fn(() => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn() })),
+}));
+
 // Mock Toast
 const mockToast = {
   add: jest.fn(),
@@ -571,7 +579,7 @@ describe("ProjectsProjectFundingSearch", () => {
     fireEvent.click(selectBtn);
 
     await waitFor(() => {
-      expect(mockPush).toHaveBeenCalledWith('/en-US/projects/123/fundings/18/edit');
+      expect(mockPush).toHaveBeenCalledWith('/projects/123/fundings/18/edit');
       expect(mockToast.add).toHaveBeenCalledWith('messages.success.addProjectFunding', { type: 'success', timeout: 3000 });
 
     });

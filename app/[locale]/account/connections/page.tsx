@@ -9,7 +9,7 @@ import {
   SidebarPanel,
 } from '@/components/Container';
 import { Breadcrumb, Breadcrumbs } from "react-aria-components";
-import Link from "next/link";
+import { Link } from "@/i18n/routing";
 import { useTranslations } from 'next-intl';
 import { useToast } from '@/context/ToastContext';
 import profileStyles from "@/app/[locale]/account/profile/profile.module.scss";

@@ -3,7 +3,6 @@
 import React from "react";
 import { useParams } from "next/navigation";
 import { MockedProvider } from "@apollo/client/testing/react";
-import { useLocale } from "next-intl";
 import { Link } from "@/i18n/routing";
 import PlanResearchOutputEditScreen from "@/components/PlanAuthoring/PlanResearchOutputEditScreen";
 import {
@@ -15,15 +14,13 @@ import "../../../../../shared/styleguide.scss";
 
 export default function PlanAuthoringResearchOutputEditPage() {
   const params = useParams<{ questionKey: string; rowIndex: string }>();
-  const locale = useLocale();
-
   return (
     <MockedProvider mocks={MOCK_RESEARCH_OUTPUT_APOLLO_MOCKS}>
       <PlanResearchOutputEditScreen
         dataSource={getStyleguidePlanAuthoringDataSource()}
         questionKeyParam={String(params.questionKey ?? "")}
         rowIndexParam={String(params.rowIndex ?? "")}
-        planHref={`/${locale}${STYLEGUIDE_PLAN_HREF}`}
+        planHref={STYLEGUIDE_PLAN_HREF}
         breadcrumbs={(currentPage) => (
           <nav className="breadcrumbs" aria-label="Breadcrumb">
             <Link href="/styleguide">Style Guide</Link>

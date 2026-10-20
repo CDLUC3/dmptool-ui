@@ -2,9 +2,8 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import type { ResearchOutputTableQuestionType } from "@dmptool/types";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { Link, useRouter } from "@/i18n/routing";
 import { Button } from "react-aria-components";
 import PageHeader from "@/components/PageHeader";
 import { ContentContainer, LayoutContainer } from "@/components/Container";
@@ -36,7 +35,7 @@ interface PlanResearchOutputEditScreenProps {
   dataSource: PlanAuthoringDataSource;
   questionKeyParam: string;
   rowIndexParam: string;
-  /** Path to the plan, including the locale; the screen adds the question anchor when going back. */
+  /** Path to the plan (e.g. from `routePath`); the screen adds the question anchor when going back. */
   planHref: string;
   /** Receives the current page title so callers can end the trail with it. */
   breadcrumbs: (currentPage: string) => React.ReactNode;

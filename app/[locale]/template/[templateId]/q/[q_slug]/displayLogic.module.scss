@@ -261,3 +261,16 @@
   fill: var(--blue-900);
   background: none;
 }
+
+// A trigger question highlighted because its condition is blocking a change, e.g. when linked from the message
+// about a blocked move
+.highlightedGroup {
+  border: 2px solid var(--brand-error, #c62828);
+  background-color: var(--red-50, #fdecea);
+}
+
+.highlightedGroupMessage {
+  margin: 0;
+  font-weight: 600;
+  color: var(--brand-error, #c62828);
+}

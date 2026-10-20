@@ -8,7 +8,8 @@ import {
 } from '@testing-library/react';
 
 import '@testing-library/jest-dom';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
+import { useRouter } from '@/i18n/routing';
 import { MockedProvider } from '@apollo/client/testing/react';
 import {
   ProjectFundingsDocument,
@@ -231,11 +232,15 @@ const MOCKS = [
 
 // Other Mocks
 jest.mock('next/navigation', () => ({
-  useRouter: jest.fn(),
   useParams: jest.fn(),
-  usePathname: jest.fn(() => {
-    return '/en-US/projects/123/dmp/345/fundings';
-  })
+}));
+
+jest.mock('@/i18n/routing', () => ({
+  Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
+    <a href={href} {...props}>{children}</a>
+  ),
+  useRouter: jest.fn(() => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn() })),
+  usePathname: () => '/en-US/projects/123/dmp/345/fundings',
 }));
 
 // Needed for the errormessages component
@@ -371,7 +376,7 @@ describe('ProjectsProjectPlanAdjustFunding', () => {
     await waitFor(
       () => {
         expect(mockToast.add).toHaveBeenCalledWith('successfullyUpdated', { type: 'success' });
-        expect(mockUseRouter().push).toHaveBeenCalledWith('/en-US/projects/123/dmp/456');
+        expect(mockUseRouter().push).toHaveBeenCalledWith('/projects/123/dmp/456');
       },
       { timeout: 3000 } // Increase timeout for slower CI environments
     );
@@ -438,7 +443,7 @@ describe('ProjectsProjectPlanAdjustFunding', () => {
 
     const addFundingLink = screen.getByText("addSourceLink");
     expect(addFundingLink).toBeInTheDocument();
-    expect(addFundingLink).toHaveAttribute('href', '/en-US/projects/123/fundings/search');
+    expect(addFundingLink).toHaveAttribute('href', '/projects/123/fundings/search');
   });
 
   it('should pass accessibility tests', async () => {

@@ -107,7 +107,8 @@
       "updateDisplayOrderError": "Erro ao atualizar ordem de exibição",
       "cannotMoveFurtherDown": "Não é possível mover a seção mais para baixo",
       "displayOrderAlreadyAtTop": "A seção já está no topo da ordem",
-      "cannotMoveFurtherUpOrDown": "Não é possível mover a seção mais para baixo"
+      "cannotMoveFurtherUpOrDown": "Não é possível mover a seção mais para baixo",
+      "displayLogicOrderConflict": "Remova a(s) condição(ões) de lógica de exibição antes de mover esta seção. A seção deve aparecer antes de quaisquer perguntas que ela exiba ou oculte."
     },
     "messages": {
       "successfullyArchived": "Modelo arquivado com sucesso",
@@ -202,7 +203,8 @@
         "updateDisplayOrderError": "Erro ao atualizar ordem de exibição",
         "cannotMoveFurtherDown": "Não é possível mover a seção mais para baixo",
         "displayOrderAlreadyAtTop": "A seção já está no topo da ordem",
-        "cannotMoveFurtherUpOrDown": "Não é possível mover a seção mais para baixo"
+        "cannotMoveFurtherUpOrDown": "Não é possível mover a seção mais para baixo",
+        "displayLogicOrderConflict": "Perguntas com Lógica de Exibição aplicada devem ser posicionadas após as perguntas nas quais essa lógica se baseia."
       },
       "questionMoved": "Seção movida para a posição {displayOrder}",
       "sectionMoved": "Seção movida para a posição {displayOrder}"
@@ -492,13 +494,11 @@
       "headings": {
         "options": "Opções",
         "logic": "Lógica de exibição",
-        "confirmClearDisplayLogic": "Limpar toda a lógica da exibição?",
-        "confirmMatchTypeChange": "Alterar tipo de partida?"
+        "confirmClearDisplayLogic": "Limpar toda a lógica da exibição?"
       },
       "descriptions": {
         "displayLogic": "Configurar a lógica de exibição para exibir ou ocultar esta questão com base na forma como os usuários responderam a várias escolhas anteriores ou a questões da caixa de seleção. Adicione uma ou mais condições para determinar quando esta questão aparece.",
-        "clearDisplayLogicWarning": "Isto irá limpar todas as suas condições de salvamento para esta questão. Esta ação não pode ser desfeita.",
-        "matchTypeChangeWarning": "Mudar o tipo de correspondência pode limpar algumas de suas condições caso suas condições existentes entrem em conflito umas com as outras e sejam removidas."
+        "clearDisplayLogicWarning": "Isto irá limpar todas as suas condições de salvamento para esta questão. Esta ação não pode ser desfeita."
       },
       "buttons": {
         "addDisplayLogic": "Adicionar lógica de tela",
@@ -525,7 +525,9 @@
         "ofTheFollowingMatch": "das seguintes condições são atendidas",
         "triggerQuestion": "A resposta para esta pergunta",
         "conditionOption": "opção de condição",
-        "conditionOperator": "Operador da condição"
+        "conditionOperator": "Operador da condição",
+        "joinerAnd": "E",
+        "joinerOr": "OU"
       },
       "helpText": {
         "noTriggerQuestionsAvailable": "Nenhuma pergunta qualificada está disponível para ser usada como gatilho para a lógica de exibição."
@@ -534,9 +536,8 @@
         "warnings": {
           "triggerQuestionUnavailable": "Esta questão de gatilho não está disponível."
         },
-        "removedUnavailableTriggerQuestions": "Algumas lógicas de exibição foram removidas porque uma pergunta da qual dependia já não está disponível.",
-        "allMatchTypeRule": "Quando o tipo de correspondência é tudo, cada condição em um grupo deve usar um valor de opção diferente.",
-        "anyMatchTypeRule": "Quando o tipo de correspondência é Any, cada condição em um grupo deve ser única (nenhum operador duplicado + pares de opções)."
+        "blockingTriggerQuestion": "Esta pergunta de acionamento está bloqueando uma alteração que você tentou fazer. Remova esta condição para continuar.",
+        "removedUnavailableTriggerQuestions": "Algumas lógicas de exibição foram removidas porque uma pergunta da qual dependia já não está disponível."
       }
     }
   },
@@ -651,7 +652,8 @@
       "success": {
         "questionAdded": "A pergunta foi adicionada com sucesso.",
         "questionUpdated": "A pergunta foi atualizada com sucesso."
-      }
+      },
+      "displayLogicAfterSave": "A lógica de exibição pode ser adicionada depois que esta pergunta for salva."
     },
     "researchOutput": {
       "announcements": {
@@ -885,5 +887,9 @@
         "noCollaborators": "Nenhuma pessoa externa foi adicionada ainda"
       }
     }
+  },
+  "DisplayLogicConflictMessage": {
+    "questionsHeading": "Edite a lógica de exibição em:",
+    "untitledQuestion": "Pergunta {id}"
   }
 }

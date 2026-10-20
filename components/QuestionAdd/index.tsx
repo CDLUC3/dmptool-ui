@@ -1,7 +1,8 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
+import { useRouter } from '@/i18n/routing';
 import { useTranslations } from 'next-intl';
 
 import {
@@ -104,7 +105,8 @@ const QuestionAdd = ({
   backUrl,
   successUrl,
   breadcrumbs,
-  showTags = true
+  showTags = true,
+  showDisplayLogicAfterSaveMessage = false
 }:
   {
     questionType?: string | null,
@@ -116,6 +118,7 @@ const QuestionAdd = ({
     successUrl: string;     // where to redirect on save success
     breadcrumbs: React.ReactNode;
     showTags?: boolean;
+    showDisplayLogicAfterSaveMessage?: boolean; // Display logic can only be set up on a saved question
   }) => {
 
   const params = useParams();
@@ -839,6 +842,9 @@ const QuestionAdd = ({
             </TabPanel>
             <TabPanel id="logic">
               <h2>{Global('tabs.logic')}</h2>
+              {showDisplayLogicAfterSaveMessage && (
+                <p>{QuestionAdd('messages.displayLogicAfterSave')}</p>
+              )}
             </TabPanel>
           </Tabs>
 

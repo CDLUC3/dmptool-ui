@@ -1,8 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import Link from "next/link";
-import { useLocale } from "next-intl";
+import { Link } from "@/i18n/routing";
 import { ContentContainer, LayoutContainer } from "@/components/Container";
 import { PlanAuthoring } from "@/components/PlanAuthoring";
 import {
@@ -16,7 +15,6 @@ import {
 import "../../shared/styleguide.scss";
 
 export default function PlanAuthoringStyleGuidePage() {
-  const locale = useLocale();
   const questionsDataSource = getStyleguidePlanAuthoringDataSource();
   const [documentDataSource] = useState(() => createScenarioDataSource());
 
@@ -47,7 +45,7 @@ export default function PlanAuthoringStyleGuidePage() {
       <PlanAuthoring
         dataSource={questionsDataSource}
         researchOutputRowHref={(questionKey, rowIndex) =>
-          `/${locale}${STYLEGUIDE_RESEARCH_OUTPUT_PATH}/${questionKey}/${rowIndex}`
+          `${STYLEGUIDE_RESEARCH_OUTPUT_PATH}/${questionKey}/${rowIndex}`
         }
       />
 

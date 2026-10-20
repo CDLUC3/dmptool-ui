@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { useLocale, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 import { Breadcrumb, Breadcrumbs, Link } from "react-aria-components";
 import {
   PlanResearchOutputEditScreen,
@@ -15,10 +15,9 @@ export default function PlanResearchOutputPage() {
     questionKey: string;
     rowIndex: string;
   }>();
-  const locale = useLocale();
   const Global = useTranslations("Global");
   const dataSource = usePlanAuthoringDataSource(Number(dmpId));
-  const planHref = routePath("projects.dmp.show", { projectId, dmpId }, {}, locale);
+  const planHref = routePath("projects.dmp.show", { projectId, dmpId });
 
   return (
     <PlanResearchOutputEditScreen
@@ -29,13 +28,13 @@ export default function PlanResearchOutputPage() {
       breadcrumbs={(currentPage) => (
         <Breadcrumbs aria-label={Global("breadcrumbs.navigation")}>
           <Breadcrumb>
-            <Link href={routePath("app.home", {}, {}, locale)}>{Global("breadcrumbs.home")}</Link>
+            <Link href={routePath("app.home")}>{Global("breadcrumbs.home")}</Link>
           </Breadcrumb>
           <Breadcrumb>
-            <Link href={routePath("projects.index", {}, {}, locale)}>{Global("breadcrumbs.projects")}</Link>
+            <Link href={routePath("projects.index")}>{Global("breadcrumbs.projects")}</Link>
           </Breadcrumb>
           <Breadcrumb>
-            <Link href={routePath("projects.show", { projectId }, {}, locale)}>{Global("breadcrumbs.projectOverview")}</Link>
+            <Link href={routePath("projects.show", { projectId })}>{Global("breadcrumbs.projectOverview")}</Link>
           </Breadcrumb>
           <Breadcrumb>
             <Link href={planHref}>{Global("breadcrumbs.planOverview")}</Link>
