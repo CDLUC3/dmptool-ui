@@ -1,4 +1,6 @@
 ## Added
+- Added display logic to the `PlanAuthoring` one-pager: questions hidden by their display logic are not rendered, and are left out of the plan progress, section picker counts and section navigation. Hidden questions keep their answers [#366]
+- Added `visibleQuestions` to the `PlanAuthoring` model that filters out the `isHidden` question [#366]
 - Added the `PlanAuthoring` one-pager to the plan page (`/projects/:projectId/dmp/:dmpId`), wired to the GraphQL API through a new `planAuthoring` query: answers save through `addAnswer`/`updateAnswer`, comments and feedback comments show as one thread, and guidance organisations can be added and removed. The old section and question routes redirect to the one-pager, and the demo data source is replaced by mocks and scenarios [#430]
 - Added research output editing to the plan page: rows list inline and Add/Edit opens `/projects/:projectId/dmp/:dmpId/ro/:questionKey/:rowIndex` (route `projects.dmp.researchOutput`), which saves through the real API and returns to the question. Given `rowHref`, `ResearchOutputAnswerComponent` renders Add and Edit as `@/i18n/routing` links, so the hrefs are plain `routePath` paths and the locale is added automatically. The styleguide research output page now uses the fake GraphQL client [#430]
 - Added Plan Authoring research-output Add/Edit as a separate screen (`PlanResearchOutputEditScreen`), shown in the styleguide, with optional `rowHref` on `ResearchOutputAnswerComponent` so inline edit stays unchanged when the prop is omitted [#334]
@@ -56,6 +58,9 @@
 - Added `UpdateAffiliation` and `AffiliationById` queries [#203]
 
 ## Updated
+- Updated `planAuthoringDataSource.ts` to use `hiddenVersionedQuestionIds`, which is returned with every `Save` of a question [#366]
+- Updated `PlanAuthoring` model, and its components like `PlanSectionPickerDialog`, `PlanSection`, `PlanAuthoringScreen` to use the new `visibleQuestions` function to display only those questions in the one-pager [#366]
+- `toQuestion` method now returns `isHidden` in the `toPlanAuthoringModel.ts` file, so we can use that info to determine which questions to show [#366]
 - Updated `ResearchOutputAnswerComponent` list to use the standard button styles and the shared `ModalOverlayComponent` delete confirmation instead of `window.confirm`; Edit and Delete controls now include the output title in their accessible name, and the empty-title fallback is translated [#334]
 - Updated `DisplayLogicComponent` to always assume `OR` type for conditions within the same conditionGroup. Removed logic that was applying the question `displayLogicAction` and `displayLogicMatchType` to conditions within each conditionGroup. Also, added message in `Display logic` tab when a user views the tab before saving the question [#360]
 - Updated conditional display logic error messaging and also added `fetchPolicy` of `network-only` to the `TemplateListPage` [#1472]

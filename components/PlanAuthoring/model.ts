@@ -68,6 +68,8 @@ export interface PlanQuestionDefinition {
   jsonError?: PlanQuestionJsonError;
   answerJson: unknown | null;
   hasAnswer: boolean;
+  /** Hidden by the question's display logic, based on the plan's saved answers. */
+  isHidden?: boolean;
   /** Epoch milliseconds. */
   lastSavedAt?: number;
   guidanceSources: PlanGuidanceSource[];
@@ -138,16 +140,23 @@ export function questionAnchorId(identity: PlanQuestionIdentity): string {
   return `plan-question-${questionKey(identity)}`;
 }
 
+/** Hidden questions aren't displayed or counted toward progress; their answers are kept. */
+export function visibleQuestions(
+  section: PlanSectionDefinition
+): PlanQuestionDefinition[] {
+  return section.questions.filter((question) => !question.isHidden);
+}
+
 export function computeProgress(
   sections: PlanSectionDefinition[]
 ): PlanAuthoringProgress {
   const totalQuestions = sections.reduce(
-    (sum, section) => sum + section.questions.length,
+    (sum, section) => sum + visibleQuestions(section).length,
     0
   );
   const answeredQuestions = sections.reduce(
     (sum, section) =>
-      sum + section.questions.filter((question) => question.hasAnswer).length,
+      sum + visibleQuestions(section).filter((question) => question.hasAnswer).length,
     0
   );
   const percentComplete =

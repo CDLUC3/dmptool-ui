@@ -73,6 +73,9 @@ function throwOnFieldErrors<T extends { errors?: Record<string, unknown> | null 
   return payload;
 }
 
+// Every save also returns which questions display logic now hides.
+type PersistedAnswer = SaveAnswerResult & { hiddenVersionedQuestionIds?: number[] | null };
+
 function answerTarget(planId: number, question: PlanQuestionDefinition) {
   const section = question.sectionIdentity;
   const identity = question.identity;
@@ -156,13 +159,15 @@ export function createPlanAuthoringDataSource({
 
   load();
 
-  const updateAnswer = async (answerId: number, json: string): Promise<SaveAnswerResult> => {
+  const updateAnswer = async (answerId: number, json: string): Promise<PersistedAnswer> => {
     const { data } = await client.mutate({
       mutation: UpdateAnswerDocument,
       variables: { answerId, json },
     });
     const messages = fieldErrors(data?.updateAnswer?.errors);
-    return messages.length > 0 ? { kind: "invalid", messages } : { kind: "saved" };
+    return messages.length > 0
+      ? { kind: "invalid", messages }
+      : { kind: "saved", hiddenVersionedQuestionIds: data?.updateAnswer?.plan?.hiddenVersionedQuestionIds };
   };
 
   const refreshAnswerIds = async () => {
@@ -180,7 +185,7 @@ export function createPlanAuthoringDataSource({
     questionKeyValue: string,
     question: PlanQuestionDefinition,
     answerJson: unknown
-  ): Promise<SaveAnswerResult> => {
+  ): Promise<PersistedAnswer> => {
     const json = toStoredAnswerJson(question, answerJson);
     const answerId = answerIds.get(questionKeyValue);
     if (answerId != null) {
@@ -193,7 +198,7 @@ export function createPlanAuthoringDataSource({
     const newAnswerId = data?.addAnswer?.id;
     if (newAnswerId != null) {
       answerIds.set(questionKeyValue, newAnswerId);
-      return { kind: "saved" };
+      return { kind: "saved", hiddenVersionedQuestionIds: data?.addAnswer?.plan?.hiddenVersionedQuestionIds };
     }
     // Another tab may have added this answer since the plan loaded.
     await refreshAnswerIds();
@@ -301,30 +306,37 @@ export function createPlanAuthoringDataSource({
         return { kind: "failed", message: "Question not found." };
       }
 
-      let result: SaveAnswerResult;
+      let persisted: PersistedAnswer;
       try {
-        result = await persistAnswer(questionKeyValue, question, answerJson);
+        persisted = await persistAnswer(questionKeyValue, question, answerJson);
       } catch (error) {
         console.error("Failed to save plan answer", error);
         return { kind: "failed", message: errorMessage(error) };
       }
 
+      const { hiddenVersionedQuestionIds, ...result } = persisted;
       if (result.kind !== "saved" || state.status !== "ready") {
         return result;
       }
 
+      // Only base questions have display logic, so custom questions keep isHidden as is.
+      const hiddenIds = hiddenVersionedQuestionIds ? new Set(hiddenVersionedQuestionIds) : null;
       const sections = state.model.sections.map((section) => ({
         ...section,
-        questions: section.questions.map((item) =>
-          questionKey(item.identity) === questionKeyValue
+        questions: section.questions.map((item) => {
+          const next =
+            hiddenIds && item.identity.kind === "base"
+              ? { ...item, isHidden: hiddenIds.has(item.identity.versionedQuestionId) }
+              : item;
+          return questionKey(item.identity) === questionKeyValue
             ? {
-                ...item,
+                ...next,
                 answerJson,
                 hasAnswer: isFilledAnswer(answerJson),
                 lastSavedAt: Date.now(),
               }
-            : item
-        ),
+            : next;
+        }),
       }));
       setState({
         status: "ready",
