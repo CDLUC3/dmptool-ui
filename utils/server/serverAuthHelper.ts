@@ -1,8 +1,10 @@
 'use server'
 
 import { cookies } from "next/headers";
-import jwt, { JwtPayload } from 'jsonwebtoken';
+import { JwtPayload } from 'jsonwebtoken';
 import logger from "@/utils/server/logger";
+import { ACCESS_TOKEN_NAME } from "@/utils/authHelper";
+import { verifyJwtToken } from "@/lib/server/auth";
 
 export interface JWTAccessToken extends JwtPayload {
   id: number,
@@ -65,7 +67,7 @@ export const serverRefreshAuthTokens = async () => {
     const cookieString = cookieStore.toString();
 
     // Refresh auth tokens
-    const response = await fetch(`${process.env.SERVER_ENDPOINT}/apollo-refresh`, {
+    const response = await fetch(`${process.env.AUTH_ENDPOINT}/refresh-token`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -108,7 +110,7 @@ export const serverFetchCsrfToken = async () => {
     const cookieStore = await cookies();
     const cookieString = cookieStore.toString();
 
-    const response = await fetch(`${process.env.SERVER_ENDPOINT}/apollo-csrf`, {
+    const response = await fetch(`${process.env.AUTH_ENDPOINT}/csrf`, {
       headers: {
         Cookie: cookieString, // Attach all cookies
       },
@@ -124,16 +126,16 @@ export const serverFetchCsrfToken = async () => {
 
 // Fetch and decode the JWT Access Token
 export const serverFetchAccessToken = async (): Promise<JWTAccessToken | undefined> => {
-  try {
-    const cookieStore = await cookies();
-    const cookie = cookieStore.get("dmspt");
-    if (!cookie || !cookie.value) return undefined;
+  const cookieStore = await cookies();
+  const cookie = cookieStore.get(ACCESS_TOKEN_NAME);
+  if (!cookie || !cookie.value) return undefined;
 
-    const secret = process.env.JWT_SECRET ?? "";
-    const token = jwt.verify(String(cookie?.value), secret) as JwtPayload;
-    return token ? token as JWTAccessToken : undefined;
-  } catch (err) {
-    logger.error(err, "Error decoding JWT Access Token");
+  try {
+    const payload: JwtPayload | null = await verifyJwtToken(cookie.value);
+    return payload ? payload as JWTAccessToken : undefined;
+
+  } catch (error) {
+    logger.error(error, "Error decoding JWT Access Token");
     return undefined;
   }
 }

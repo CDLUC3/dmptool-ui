@@ -1,6 +1,7 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
-import { useParams, useRouter, useSearchParams } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
+import { useRouter } from '@/i18n/routing';
 import { MockedProvider } from '@apollo/client/testing/react';
 import { MockedResponse } from '@apollo/client/testing';
 import { axe, toHaveNoViolations } from 'jest-axe';
@@ -10,11 +11,16 @@ import PlanCreateUpload from '../page';
 
 expect.extend(toHaveNoViolations);
 
-
 jest.mock('next/navigation', () => ({
-  useRouter: jest.fn(),
   useParams: jest.fn(),
   useSearchParams: jest.fn(),
+}));
+
+jest.mock('@/i18n/routing', () => ({
+  Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
+    <a href={href} {...props}>{children}</a>
+  ),
+  useRouter: jest.fn(() => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn() })),
 }));
 
 const mockUseRouter = useRouter as jest.Mock;
@@ -150,7 +156,7 @@ describe('PlanCreateUpload Component', () => {
     submitValidFile();
 
     await waitFor(() => {
-      expect(mockUseRouter().push).toHaveBeenCalledWith('/en-US/projects/1/dmp/55');
+      expect(mockUseRouter().push).toHaveBeenCalledWith('/projects/1/dmp/55');
     });
   });
 
@@ -162,7 +168,7 @@ describe('PlanCreateUpload Component', () => {
     submitValidFile();
 
     await waitFor(() => {
-      expect(mockUseRouter().push).toHaveBeenCalledWith('/en-US/projects/1/create/complete?intent=plan&planId=55');
+      expect(mockUseRouter().push).toHaveBeenCalledWith('/projects/1/create/complete?intent=plan&planId=55');
     });
   });
 

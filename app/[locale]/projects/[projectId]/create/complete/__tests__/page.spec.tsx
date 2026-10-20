@@ -1,7 +1,8 @@
 import React from 'react';
 import { act, render, screen } from '@testing-library/react';
 import { axe, toHaveNoViolations } from 'jest-axe';
-import { useParams, useRouter, useSearchParams } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
+import { useRouter } from '@/i18n/routing';
 import { useQuery } from '@apollo/client/react';
 import { useTranslations } from 'next-intl';
 
@@ -10,9 +11,15 @@ import ProjectsCreateProjectSetupComplete from '../page';
 expect.extend(toHaveNoViolations);
 
 jest.mock('next/navigation', () => ({
-  useRouter: jest.fn(),
   useParams: jest.fn(),
   useSearchParams: jest.fn(),
+}));
+
+jest.mock('@/i18n/routing', () => ({
+  Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
+    <a href={href} {...props}>{children}</a>
+  ),
+  useRouter: jest.fn(() => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn() })),
 }));
 
 jest.mock('@apollo/client/react', () => ({
@@ -75,9 +82,9 @@ describe('ProjectsCreateProjectSetupComplete', () => {
     expect(screen.getByRole('heading', { level: 1, name: 'complete.projectTitle' })).toBeInTheDocument();
     expect(document.getElementById('setup-complete-summary')).toHaveTextContent('[title:Coastal Ocean Processes]');
     expect(screen.getByRole('link', { name: 'complete.createFirstPlan' }))
-      .toHaveAttribute('href', '/en-US/projects/5/dmp/start?intent=plan');
+      .toHaveAttribute('href', '/projects/5/dmp/start?intent=plan');
     expect(screen.getByRole('link', { name: 'complete.overviewHintProject.link' }))
-      .toHaveAttribute('href', '/en-US/projects/5');
+      .toHaveAttribute('href', '/projects/5');
     expect(screen.queryByTestId('create-flow-back')).not.toBeInTheDocument();
   });
 
@@ -95,9 +102,9 @@ describe('ProjectsCreateProjectSetupComplete', () => {
     expect(description).toHaveTextContent('[hasPlanTitle:yes]');
 
     expect(screen.getByRole('link', { name: 'complete.startWriting' }))
-      .toHaveAttribute('href', '/en-US/projects/5/dmp/7');
+      .toHaveAttribute('href', '/projects/5/dmp/7');
     expect(screen.getByRole('link', { name: 'complete.overviewHintPlan.link' }))
-      .toHaveAttribute('href', '/en-US/projects/5');
+      .toHaveAttribute('href', '/projects/5');
     expect(screen.getByTestId('create-flow-stage-setupComplete')).toHaveTextContent('rail.states.done');
   });
 

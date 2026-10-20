@@ -2,7 +2,8 @@
 
 import React, { useEffect, useRef, useState, type TransitionStartFunction } from 'react';
 import { useTranslations } from 'next-intl';
-import { useParams, useRouter, useSearchParams } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
+import { useRouter } from '@/i18n/routing';
 import { useMutation, useQuery } from '@apollo/client/react';
 import {
   Breadcrumb,

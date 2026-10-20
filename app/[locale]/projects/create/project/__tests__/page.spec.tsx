@@ -1,7 +1,8 @@
 import React from 'react';
 import { act, render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { MockedProvider } from '@apollo/client/testing/react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
+import { useRouter } from '@/i18n/routing';
 import { useToast } from '@/context/ToastContext';
 import { axe, toHaveNoViolations } from 'jest-axe';
 import { AddProjectDocument } from '@/generated/graphql';
@@ -143,8 +144,14 @@ const mocks = [
 
 // Mock next/navigation hooks
 jest.mock('next/navigation', () => ({
-  useRouter: jest.fn(),
   useSearchParams: jest.fn(),
+}));
+
+jest.mock('@/i18n/routing', () => ({
+  Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
+    <a href={href} {...props}>{children}</a>
+  ),
+  useRouter: jest.fn(() => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn() })),
 }));
 
 jest.mock('@/context/ToastContext', () => ({
@@ -205,7 +212,7 @@ describe('ProjectsCreateProject', () => {
     fireEvent.click(screen.getByRole('button', { name: /buttons.next/i }));
 
     await waitFor(() => {
-      expect(mockRouter.push).toHaveBeenCalledWith('/en-US/projects/123/create/funder?intent=project');
+      expect(mockRouter.push).toHaveBeenCalledWith('/projects/123/create/funder?intent=project');
     });
   });
 
@@ -242,7 +249,7 @@ describe('ProjectsCreateProject', () => {
 
     await waitFor(() => {
       expect(mockToast.add).toHaveBeenCalledWith('messages.success', { type: 'success' });
-      expect(mockRouter.push).toHaveBeenCalledWith('/en-US/projects/123/create/funder?intent=plan');
+      expect(mockRouter.push).toHaveBeenCalledWith('/projects/123/create/funder?intent=plan');
     });
   });
 
@@ -266,7 +273,7 @@ describe('ProjectsCreateProject', () => {
 
     await waitFor(() => {
       expect(mockToast.add).toHaveBeenCalledWith('messages.success', { type: 'success' });
-      expect(mockRouter.push).toHaveBeenCalledWith('/en-US/projects/123/create/funder?intent=plan');
+      expect(mockRouter.push).toHaveBeenCalledWith('/projects/123/create/funder?intent=plan');
     });
   });
 

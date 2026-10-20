@@ -1,7 +1,7 @@
 import React from 'react';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { axe, toHaveNoViolations } from 'jest-axe';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/i18n/routing';
 import { useQuery } from '@apollo/client/react';
 
 import ProjectsStartPlan from '../page';
@@ -9,8 +9,14 @@ import ProjectsStartPlan from '../page';
 expect.extend(toHaveNoViolations);
 
 jest.mock('next/navigation', () => ({
-  useRouter: jest.fn(),
   useSearchParams: jest.fn(() => new URLSearchParams()),
+}));
+
+jest.mock('@/i18n/routing', () => ({
+  Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
+    <a href={href} {...props}>{children}</a>
+  ),
+  useRouter: jest.fn(() => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn() })),
 }));
 
 jest.mock('@apollo/client/react', () => ({
@@ -59,7 +65,7 @@ describe('ProjectsStartPlan', () => {
     clickNext();
 
     await waitFor(() => {
-      expect(mockPush).toHaveBeenCalledWith('/en-US/projects/create/project?intent=plan');
+      expect(mockPush).toHaveBeenCalledWith('/projects/create/project?intent=plan');
     });
   });
 
@@ -78,7 +84,7 @@ describe('ProjectsStartPlan', () => {
     clickNext();
 
     await waitFor(() => {
-      expect(mockPush).toHaveBeenCalledWith('/en-US/projects/11/dmp/start?intent=plan&from=existing');
+      expect(mockPush).toHaveBeenCalledWith('/projects/11/dmp/start?intent=plan&from=existing');
     });
   });
 

@@ -11,7 +11,8 @@ import {
 import "@testing-library/jest-dom";
 import { MockedProvider } from "@apollo/client/testing/react";
 import { useFormatter, useTranslations } from "next-intl";
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
+import { useRouter } from "@/i18n/routing";
 import logECS from '@/utils/clientLogger';
 import {
   MeDocument,
@@ -64,8 +65,11 @@ jest.mock("next-intl", () => ({
 }));
 
 jest.mock('next/navigation', () => ({
-  useRouter: jest.fn(),
   useParams: jest.fn()
+}));
+
+jest.mock('@/i18n/routing', () => ({
+  useRouter: jest.fn(() => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn() })),
 }));
 
 const mockRouter = {
@@ -400,7 +404,7 @@ describe("GuidanceGroupIndexPage", () => {
     (addGuidanceTextAction as jest.Mock).mockResolvedValue({
       success: true,
       data: { id: 999, errors: null },
-      redirect: "/en-US/admin/guidance/groups/2397/some-redirect-page",
+      redirect: "/admin/guidance/groups/2397/some-redirect-page",
     });
 
     render(
@@ -425,7 +429,7 @@ describe("GuidanceGroupIndexPage", () => {
     fireEvent.click(saveBtn);
 
     await waitFor(() => {
-      expect(mockRouter.push).toHaveBeenCalledWith('/en-US/admin/guidance/groups/2397/some-redirect-page')
+      expect(mockRouter.push).toHaveBeenCalledWith('/admin/guidance/groups/2397/some-redirect-page')
     });
   });
 
@@ -469,7 +473,7 @@ describe("GuidanceGroupIndexPage", () => {
         'adding Guidance text',
         expect.objectContaining({
           errors: expect.anything(),
-          url: { path: '/en-US/admin/guidance/groups/2397' },
+          url: { path: '/admin/guidance/groups/2397' },
         })
       )
     });
@@ -516,7 +520,7 @@ describe("GuidanceGroupIndexPage", () => {
     (updateGuidanceAction as jest.Mock).mockResolvedValue({
       success: true,
       data: { id: 1, errors: null },
-      redirect: "/en-US/admin/guidance/groups/2397/some-redirect-page",
+      redirect: "/admin/guidance/groups/2397/some-redirect-page",
     });
 
     render(
@@ -538,7 +542,7 @@ describe("GuidanceGroupIndexPage", () => {
 
 
     await waitFor(() => {
-      expect(mockRouter.push).toHaveBeenCalledWith('/en-US/admin/guidance/groups/2397/some-redirect-page')
+      expect(mockRouter.push).toHaveBeenCalledWith('/admin/guidance/groups/2397/some-redirect-page')
     });
   });
 
@@ -578,7 +582,7 @@ describe("GuidanceGroupIndexPage", () => {
         'updating Guidance text',
         expect.objectContaining({
           errors: expect.anything(),
-          url: { path: '/en-US/admin/guidance/groups/2397' },
+          url: { path: '/admin/guidance/groups/2397' },
         })
       )
     });
@@ -662,7 +666,7 @@ describe("GuidanceGroupIndexPage", () => {
     await waitFor(() => {
       expect(unPublishGuidanceGroupAction).toHaveBeenCalledWith({ guidanceGroupId: 2398 });
       expect(mockToast.add).toHaveBeenCalledWith('Guidance.messages.success.guidanceGroupUnpublished', { type: 'success' });
-      expect(mockRouter.push).toHaveBeenCalledWith('/en-US/admin/guidance');
+      expect(mockRouter.push).toHaveBeenCalledWith('/admin/guidance');
     });
   });
 
@@ -680,7 +684,7 @@ describe("GuidanceGroupIndexPage", () => {
           name: null
         },
       },
-      redirect: '/en-US/admin/guidance/redirect-page'
+      redirect: '/admin/guidance/redirect-page'
     });
     render(
       <MockedProvider mocks={mocks}>
@@ -700,7 +704,7 @@ describe("GuidanceGroupIndexPage", () => {
     });
 
     await waitFor(() => {
-      expect(mockRouter.push).toHaveBeenCalledWith('/en-US/admin/guidance/redirect-page')
+      expect(mockRouter.push).toHaveBeenCalledWith('/admin/guidance/redirect-page')
     });
   });
 
@@ -775,7 +779,7 @@ describe("GuidanceGroupIndexPage", () => {
         'Unpublishing Guidance Group',
         expect.objectContaining({
           errors: expect.anything(),
-          url: { path: '/en-US/admin/guidance/groups/create' },
+          url: { path: '/admin/guidance/groups/create' },
         })
       )
     }, { timeout: 3000 });
@@ -820,7 +824,7 @@ describe("GuidanceGroupIndexPage", () => {
 
     await waitFor(() => {
       expect(mockToast.add).toHaveBeenCalledWith('Guidance.messages.success.guidanceGroupPublished', { type: 'success' });
-      expect(mockRouter.push).toHaveBeenCalledWith('/en-US/admin/guidance');
+      expect(mockRouter.push).toHaveBeenCalledWith('/admin/guidance');
       expect(publishGuidanceGroupAction).toHaveBeenCalledWith({
         guidanceGroupId: 2398
       });
@@ -841,7 +845,7 @@ describe("GuidanceGroupIndexPage", () => {
           name: null
         },
       },
-      redirect: '/en-US/admin/guidance/redirect-page'
+      redirect: '/admin/guidance/redirect-page'
     });
     render(
       <MockedProvider mocks={inactiveGroupMocks}>
@@ -861,7 +865,7 @@ describe("GuidanceGroupIndexPage", () => {
     });
 
     await waitFor(() => {
-      expect(mockRouter.push).toHaveBeenCalledWith('/en-US/admin/guidance/redirect-page')
+      expect(mockRouter.push).toHaveBeenCalledWith('/admin/guidance/redirect-page')
     });
   });
 
@@ -905,7 +909,7 @@ describe("GuidanceGroupIndexPage", () => {
       'publishing Guidance Group',
       expect.objectContaining({
         errors: expect.anything(),
-        url: { path: '/en-US/admin/guidance/groups/create' },
+        url: { path: '/admin/guidance/groups/create' },
       })
     );
 
@@ -955,7 +959,7 @@ describe("GuidanceGroupIndexPage", () => {
         'publishing Guidance Group',
         expect.objectContaining({
           errors: expect.anything(),
-          url: { path: '/en-US/admin/guidance/groups/create' },
+          url: { path: '/admin/guidance/groups/create' },
         })
       )
     });

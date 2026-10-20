@@ -1,9 +1,10 @@
 'use client';
 
 import React, { useRef, useState, type ReactNode } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useMutation } from '@apollo/client/react';
+import { useRouter } from '@/i18n/routing';
 import {
   Breadcrumb,
   Breadcrumbs,

@@ -3,7 +3,8 @@ import { act, render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { axe, toHaveNoViolations } from 'jest-axe';
 import { MockedProvider } from '@apollo/client/testing/react';
 import { MockedResponse } from '@apollo/client/testing';
-import { useParams, useRouter, useSearchParams } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
+import { useRouter } from '@/i18n/routing';
 
 import {
   ProjectFundingDocument,
@@ -16,9 +17,15 @@ import ProjectsCreateProjectFundingDetails from '../page';
 expect.extend(toHaveNoViolations);
 
 jest.mock('next/navigation', () => ({
-  useRouter: jest.fn(),
   useParams: jest.fn(),
   useSearchParams: jest.fn(),
+}));
+
+jest.mock('@/i18n/routing', () => ({
+  Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
+    <a href={href} {...props}>{children}</a>
+  ),
+  useRouter: jest.fn(() => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn() })),
 }));
 
 const mockToastAdd = jest.fn();
@@ -129,7 +136,7 @@ describe('ProjectsCreateProjectFundingDetails', () => {
     fireEvent.click(screen.getByRole('button', { name: 'buttons.next' }));
 
     await waitFor(() => {
-      expect(mockPush).toHaveBeenCalledWith('/en-US/projects/123/project?intent=plan');
+      expect(mockPush).toHaveBeenCalledWith('/projects/123/project?intent=plan');
     });
     expect(mockToastAdd).toHaveBeenCalledWith('fundingDetails.messages.saved', { type: 'success' });
   });
@@ -194,7 +201,7 @@ describe('ProjectsCreateProjectFundingDetails', () => {
     fireEvent.click(screen.getByRole('button', { name: 'buttons.next' }));
 
     await waitFor(() => {
-      expect(mockPush).toHaveBeenCalledWith('/en-US/projects/123/project?intent=plan');
+      expect(mockPush).toHaveBeenCalledWith('/projects/123/project?intent=plan');
     });
   });
 

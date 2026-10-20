@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { useRouter, useParams, usePathname } from 'next/navigation';
+import { useParams } from 'next/navigation';
+import { useRouter, usePathname } from '@/i18n/routing';
 import { useTranslations } from 'next-intl';
 import {
   Breadcrumb,

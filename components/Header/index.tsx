@@ -3,8 +3,7 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 
-import { useRouter } from "next/navigation";
-import Link from "next/link";
+import { useRouter, Link } from "@/i18n/routing";
 import { useTranslations } from "next-intl";
 import { useAuthContext } from "@/context/AuthContext";
 import { useCsrf } from "@/context/CsrfContext";
@@ -26,7 +25,7 @@ function Header() {
     clearAuthData
   } = useAuthContext();
   const router = useRouter();
-  const { csrfToken } = useCsrf();
+  const { getCsrfToken } = useCsrf();
   const t = useTranslations("Header");
 
   const locales = [
@@ -47,7 +46,8 @@ function Header() {
   const handleLogout = async () => {
     setShowMobileMenu(false);
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_SERVER_ENDPOINT}/apollo-signout`, {
+      const csrfToken = await getCsrfToken();
+      const response = await fetch(`${process.env.NEXT_PUBLIC_AUTH_ENDPOINT}/sign-out`, {
         method: "POST",
         credentials: "include",
         headers: {

@@ -7,7 +7,8 @@ import {
   waitFor,
 } from '@testing-library/react';
 
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
+import { useRouter } from '@/i18n/routing';
 import { MockedProvider } from '@apollo/client/testing/react';
 import {
   AffiliationFundersDocument,
@@ -25,6 +26,12 @@ import { axe, toHaveNoViolations } from 'jest-axe';
 
 expect.extend(toHaveNoViolations);
 
+jest.mock('@/i18n/routing', () => ({
+  Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
+    <a href={href} {...props}>{children}</a>
+  ),
+  useRouter: jest.fn(() => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn() })),
+}));
 
 const mocks = [
   {
@@ -609,7 +616,7 @@ describe("CreateProjectSearchFunder", () => {
     fireEvent.click(screen.getByTestId('funder-next'));
 
     await waitFor(() => {
-      expect(mockPush).toHaveBeenCalledWith('/en-US/projects/123/create/funding-status?intent=plan&projectFundingId=18');
+      expect(mockPush).toHaveBeenCalledWith('/projects/123/create/funding-status?intent=plan&projectFundingId=18');
     });
   });
 
@@ -631,7 +638,7 @@ describe("CreateProjectSearchFunder", () => {
     fireEvent.click(screen.getByTestId('funder-next'));
 
     await waitFor(() => {
-      expect(mockPush).toHaveBeenCalledWith('/en-US/projects/123/create/funding-status?intent=plan&projectFundingId=77');
+      expect(mockPush).toHaveBeenCalledWith('/projects/123/create/funding-status?intent=plan&projectFundingId=77');
     });
   });
 
@@ -653,7 +660,7 @@ describe("CreateProjectSearchFunder", () => {
     fireEvent.click(screen.getByTestId('funder-next'));
 
     await waitFor(() => {
-      expect(mockPush).toHaveBeenCalledWith('/en-US/projects/123/create/funding-status?intent=plan&projectFundingId=18');
+      expect(mockPush).toHaveBeenCalledWith('/projects/123/create/funding-status?intent=plan&projectFundingId=18');
     });
   });
 
@@ -677,7 +684,7 @@ describe("CreateProjectSearchFunder", () => {
     fireEvent.click(screen.getByTestId('funder-next'));
 
     await waitFor(() => {
-      expect(mockPush).toHaveBeenCalledWith('/en-US/projects/123/create/funding-status?intent=plan&projectFundingId=18');
+      expect(mockPush).toHaveBeenCalledWith('/projects/123/create/funding-status?intent=plan&projectFundingId=18');
     });
   });
 
@@ -757,7 +764,7 @@ describe("CreateProjectSearchFunder", () => {
     fireEvent.click(addBtn);
 
     await waitFor(() => {
-      expect(mockPush).toHaveBeenCalledWith('/en-US/projects/123/fundings/add?intent=plan');
+      expect(mockPush).toHaveBeenCalledWith('/projects/123/fundings/add?intent=plan');
     });
   });
 
@@ -775,7 +782,7 @@ describe("CreateProjectSearchFunder", () => {
     fireEvent.click(screen.getByTestId('funder-next'));
 
     await waitFor(() => {
-      expect(mockPush).toHaveBeenCalledWith('/en-US/projects/123/project?intent=plan');
+      expect(mockPush).toHaveBeenCalledWith('/projects/123/project?intent=plan');
     });
   });
 

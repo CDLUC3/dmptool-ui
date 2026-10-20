@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
+import { useRouter } from "@/i18n/routing";
 import { useFormatter, useTranslations } from "next-intl";
 import {
   Breadcrumb,
@@ -87,6 +88,7 @@ const ProjectOverviewPage: React.FC = () => {
   const { data, loading, error } = useQuery(ProjectDocument, {
     variables: { projectId: Number(projectId) },
     notifyOnNetworkStatusChange: true,
+    fetchPolicy: "cache-and-network", // Use cache first, then network
   });
 
   // Run me query to get user's info to determine if they are a collaborator with edit access

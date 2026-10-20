@@ -1,6 +1,7 @@
 import React from 'react';
 import { fireEvent, render, renderHook, screen } from '@testing-library/react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
+import { useRouter } from '@/i18n/routing';
 
 import { ProjectFundingStatus } from '@/generated/graphql';
 import CreateProjectFlowLayout, {
@@ -15,8 +16,14 @@ import CreateProjectFlowLayout, {
 } from '..';
 
 jest.mock('next/navigation', () => ({
-  useRouter: jest.fn(),
   useSearchParams: jest.fn(),
+}));
+
+jest.mock('@/i18n/routing', () => ({
+  Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
+    <a href={href} {...props}>{children}</a>
+  ),
+  useRouter: jest.fn(() => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn() })),
 }));
 
 const mockBack = jest.fn();
@@ -56,18 +63,18 @@ describe('CreateProjectFlow', () => {
 
   describe('flowPath', () => {
     it('builds every flow-only screen under a create route', () => {
-      expect(flowPath('startPlan', DEFAULT_FLOW)).toBe('/en-US/projects/create?intent=plan');
-      expect(flowPath('createProject', DEFAULT_FLOW)).toBe('/en-US/projects/create/project?intent=plan');
-      expect(flowPath('funder', DEFAULT_FLOW, 4)).toBe('/en-US/projects/4/create/funder?intent=plan');
-      expect(flowPath('fundingStatus', DEFAULT_FLOW, 4)).toBe('/en-US/projects/4/create/funding-status?intent=plan');
-      expect(flowPath('projectSearch', DEFAULT_FLOW, 4)).toBe('/en-US/projects/4/create/project-search?intent=plan');
-      expect(flowPath('fundingDetails', DEFAULT_FLOW, 4)).toBe('/en-US/projects/4/create/funding-details?intent=plan');
-      expect(flowPath('complete', DEFAULT_FLOW, 4)).toBe('/en-US/projects/4/create/complete?intent=plan');
+      expect(flowPath('startPlan', DEFAULT_FLOW)).toBe('/projects/create?intent=plan');
+      expect(flowPath('createProject', DEFAULT_FLOW)).toBe('/projects/create/project?intent=plan');
+      expect(flowPath('funder', DEFAULT_FLOW, 4)).toBe('/projects/4/create/funder?intent=plan');
+      expect(flowPath('fundingStatus', DEFAULT_FLOW, 4)).toBe('/projects/4/create/funding-status?intent=plan');
+      expect(flowPath('projectSearch', DEFAULT_FLOW, 4)).toBe('/projects/4/create/project-search?intent=plan');
+      expect(flowPath('fundingDetails', DEFAULT_FLOW, 4)).toBe('/projects/4/create/funding-details?intent=plan');
+      expect(flowPath('complete', DEFAULT_FLOW, 4)).toBe('/projects/4/create/complete?intent=plan');
     });
 
     it('carries the existing-project flag and extra query values', () => {
       expect(flowPath('planStart', { intent: 'plan', fromExisting: true }, '7', { planId: 3, skip: undefined }))
-        .toBe('/en-US/projects/7/dmp/start?intent=plan&from=existing&planId=3');
+        .toBe('/projects/7/dmp/start?intent=plan&from=existing&planId=3');
     });
   });
 

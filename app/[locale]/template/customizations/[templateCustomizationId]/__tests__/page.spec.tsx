@@ -3,7 +3,8 @@ import { act, fireEvent, render, screen, within, waitFor, cleanup } from '@/util
 import { MockedProvider } from '@apollo/client/testing/react';
 import { InMemoryCache } from '@apollo/client';
 import { RichTranslationValues } from 'next-intl';
-import { useRouter, useParams } from 'next/navigation';
+import { useParams } from 'next/navigation';
+import { useRouter } from '@/i18n/routing';
 import { useToast } from '@/context/ToastContext';
 import TemplateCustomizationOverview from '../page';
 import { axe, toHaveNoViolations } from 'jest-axe';
@@ -34,8 +35,15 @@ expect.extend(toHaveNoViolations);
 
 // Mock next/navigation
 jest.mock('next/navigation', () => ({
-  useRouter: jest.fn(),
   useParams: jest.fn(),
+}));
+
+jest.mock('@/i18n/routing', () => ({
+  Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
+    <a href={href} {...props}>{children}</a>
+  ),
+  useRouter: jest.fn(() => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn() })),
+  usePathname: jest.fn(() => '/template/customizations/1'),
 }));
 
 jest.mock('@/context/ToastContext', () => ({
@@ -158,8 +166,8 @@ describe('TemplateCustomizationOverview', () => {
         const templatesLink = screen.getByText('breadcrumbs.templateCustomizations');
         expect(homeLink).toBeInTheDocument();
         expect(templatesLink).toBeInTheDocument();
-        expect(homeLink).toHaveAttribute('href', '/en-US');
-        expect(templatesLink).toHaveAttribute('href', '/en-US/template/customizations');
+        expect(homeLink).toHaveAttribute('href', '/');
+        expect(templatesLink).toHaveAttribute('href', '/template/customizations');
       });
     });
 
@@ -277,7 +285,7 @@ describe('TemplateCustomizationOverview', () => {
         expect(screen.queryByText('messages.error.saveCustomizationError')).toBeInTheDocument();
         expect(logECS).toHaveBeenCalledWith('error', 'saveCustomizationTemplate', {
           error: 'No result returned from mutation',
-          url: { path: '/en-US/template/customizations/1' },
+          url: { path: '/template/customizations/1' },
         });
       });
     });
@@ -351,7 +359,7 @@ describe('TemplateCustomizationOverview', () => {
         expect(screen.queryByText('messages.error.unpublishCustomizationError')).toBeInTheDocument();
         expect(logECS).toHaveBeenCalledWith('error', 'unpublishTemplateCustomization', {
           error: 'No result returned from mutation',
-          url: { path: '/en-US/template/customizations/1' },
+          url: { path: '/template/customizations/1' },
         });
       });
     });
@@ -443,7 +451,7 @@ describe('TemplateCustomizationOverview', () => {
         expect(screen.queryByText('messages.error.updatingSectionMoveError')).toBeInTheDocument();
         expect(logECS).toHaveBeenCalledWith('error', 'handleSectionMove', {
           error: expect.any(Error),
-          url: { path: '/en-US/template/customizations/1' },
+          url: { path: '/template/customizations/1' },
         });
       });
     });
@@ -546,7 +554,7 @@ describe('TemplateCustomizationOverview', () => {
           expect.objectContaining({
             error: expect.any(Error),
             url: expect.objectContaining({
-              path: expect.stringContaining('/en-US/template/customizations/1')
+              path: expect.stringContaining('/template/customizations/1')
             }),
           })
         );

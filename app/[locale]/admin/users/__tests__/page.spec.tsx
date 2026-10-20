@@ -12,6 +12,14 @@ import { EXPORT_PAGE_SIZE } from '@/lib/constants';
 
 expect.extend(toHaveNoViolations);
 
+jest.mock('@/i18n/routing', () => ({
+  Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
+    <a href={href} {...props}>{children}</a>
+  ),
+  useRouter: jest.fn(() => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn() })),
+  usePathname: jest.fn(() => '/admin/users'),
+}));
+
 type UsersPageItems = NonNullable<NonNullable<UsersQuery['users']>['items']>;
 type UsersPageItem = UsersPageItems[number]; // single item, not the array
 
@@ -228,9 +236,11 @@ describe('Admin - User Accounts Dashboard', () => {
   });
 
   describe('initial render', () => {
-    it('shows loading state before data arrives', () => {
+    it('shows loading state before data arrives', async () => {
       renderPage([makeMeMock(UserRole.Researcher), makeUsersMock()]);
       expect(screen.getByTestId('mock-loading')).toBeInTheDocument();
+
+      await screen.findByTestId('mock-table');
     });
 
     it('renders the search controls', async () => {

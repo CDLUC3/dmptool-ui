@@ -17,7 +17,8 @@ import {
   ListBoxItem
 } from "react-aria-components";
 import { useTranslations } from 'next-intl';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
+import { useRouter } from '@/i18n/routing';
 
 import classNames from 'classnames';
 

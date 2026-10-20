@@ -1,19 +1,24 @@
 import React from 'react';
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import ProjectsProjectPlanNew from '../page';
-import { useParams, useRouter, useSearchParams } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
+import { useRouter } from '@/i18n/routing';
 import { axe, toHaveNoViolations } from 'jest-axe';
 import { mockScrollTo } from '@/__mocks__/common';
 
 expect.extend(toHaveNoViolations);
 
-
 jest.mock('next/navigation', () => ({
   useParams: jest.fn(),
-  useRouter: jest.fn(),
   useSearchParams: jest.fn(),
 }));
 
+jest.mock('@/i18n/routing', () => ({
+  Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
+    <a href={href} {...props}>{children}</a>
+  ),
+  useRouter: jest.fn(() => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn() })),
+}));
 
 let mockRouter;
 
@@ -47,7 +52,7 @@ describe('ProjectsProjectPlanNew', () => {
     fireEvent.click(screen.getByRole('button', { name: 'buttons.next' }));
 
     await waitFor(() => {
-      expect(mockRouter.push).toHaveBeenCalledWith('/en-US/projects/1/dmp/upload?intent=plan&from=existing');
+      expect(mockRouter.push).toHaveBeenCalledWith('/projects/1/dmp/upload?intent=plan&from=existing');
     });
   });
 
@@ -88,7 +93,7 @@ describe('ProjectsProjectPlanNew', () => {
     fireEvent.click(nextButton);
 
     await waitFor(() => {
-      expect(mockRouter.push).toHaveBeenCalledWith('/en-US/projects/1/dmp/create');
+      expect(mockRouter.push).toHaveBeenCalledWith('/projects/1/dmp/create');
     });
   });
 
@@ -103,7 +108,7 @@ describe('ProjectsProjectPlanNew', () => {
     fireEvent.click(nextButton);
 
     await waitFor(() => {
-      expect(mockRouter.push).toHaveBeenCalledWith('/en-US/projects/1/dmp/upload');
+      expect(mockRouter.push).toHaveBeenCalledWith('/projects/1/dmp/upload');
     });
   });
 
