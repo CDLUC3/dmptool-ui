@@ -16,7 +16,7 @@ import { useTranslations } from 'next-intl';
 
 //GraphQL
 import { useLazyQuery } from '@apollo/client/react';
-import { TemplatesDocument, TemplatesQuery } from '@/generated/graphql';
+import { TemplatesDocument } from '@/generated/graphql';
 
 import {
   TemplateSearchResultInterface,
