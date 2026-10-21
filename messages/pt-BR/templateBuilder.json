@@ -130,11 +130,13 @@
       "orgOnlyHelpText": "Apenas planejar autores de sua organização poderão ver e usar esse modelo."
     },
     "descPublishedTemplate": "Você pode controlar quem pode usar este modelo publicado.",
+    "lastPublishedVisibility": "A versão {version} foi publicada em {date} com visibilidade <strong>{visibility}</strong>.",
+    "unpublishedChangesSinceLastPublish": "Desde então, há alterações que ainda não foram publicadas.",
     "bullet": {
       "publishingTemplate": "Após a publicação, todos os novos planos usarão esta versão.",
       "publishingTemplate2": "Os planos existentes ou em andamento não serão atualizados.",
       "publishingTemplate3": "Você configurou a visibilidade como pública nas opções do modelo. Todos os usuários das Ferramentas DMP serão capazes de ver e usar este modelo.",
-      "publishingTemplate3Private": "Você configurou a visibilidade como pública nas opções do modelo. Todos os usuários das Ferramentas DMP serão capazes de ver e usar este modelo."
+      "publishingTemplate3Private": "Você configurou a visibilidade como privada nas opções do modelo. Apenas usuários da Ferramenta DMP da sua organização poderão ver e usar este modelo."
     },
     "descChangeLog": "Insira uma breve descrição do que foi alterado. Isto só será visível para pessoas de sua organização.",
     "button": {
@@ -144,7 +146,8 @@
     },
     "messages": {
       "errors": {
-        "selectVisibilityError": "Por favor, selecione uma opção de visibilidade antes de publicar."
+        "selectVisibilityError": "Por favor, selecione uma opção de visibilidade antes de publicar.",
+        "changeLogRequiredError": "O log de alterações é obrigatório. Descreva o que mudou nesta versão antes de publicar."
       }
     }
   },

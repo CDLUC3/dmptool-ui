@@ -130,6 +130,8 @@
       "orgOnlyHelpText": "Only plan writers from your organization will be able to view and use this template."
     },
     "descPublishedTemplate": "You can control who can use this published template.",
+    "lastPublishedVisibility": "Version {version} was published on {date} with <strong>{visibility}</strong> visibility.",
+    "unpublishedChangesSinceLastPublish": "It has changes since then that haven't been published yet.",
     "bullet": {
       "publishingTemplate": "After publication, all new plans will use this version.",
       "publishingTemplate2": "In-progress or existing plans will not be updated.",
@@ -144,7 +146,8 @@
     },
     "messages": {
       "errors": {
-        "selectVisibilityError": "Please select a visibility option before publishing."
+        "selectVisibilityError": "Please select a visibility option before publishing.",
+        "changeLogRequiredError": "A change log is required. Please describe what has changed in this version before publishing."
       }
     }
   },
