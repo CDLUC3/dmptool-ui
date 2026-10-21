@@ -1,4 +1,4 @@
-import { TEXT_QUESTION_TYPE } from "@/lib/constants";
+import { SELECTBOX_QUESTION_TYPE, TEXT_QUESTION_TYPE } from "@/lib/constants";
 
 export type PlanAnswerOption = { label: string; value: string };
 
@@ -84,24 +84,48 @@ export function withAnswer(
     : base;
 }
 
+/** The option a select box shows when unanswered (its `selected` option), if any. */
+function getDefaultAnswer(
+  questionType: string,
+  parsedJson: Record<string, unknown> | undefined
+): string | undefined {
+  if (questionType !== SELECTBOX_QUESTION_TYPE || !Array.isArray(parsedJson?.options)) {
+    return undefined;
+  }
+  const selected = parsedJson.options.find(
+    (option) => option && typeof option === "object" && (option as { selected?: unknown }).selected === true
+  ) as { value?: unknown } | undefined;
+  return typeof selected?.value === "string" ? selected.value : undefined;
+}
+
+/**
+ * Sets the additional comment. An empty answer falls back to the question's
+ * default option, so what's saved matches what the field shows.
+ */
 export function withAdditionalComment(
   answerJson: unknown,
   questionType: string,
-  additionalComment: string
+  additionalComment: string,
+  parsedJson?: Record<string, unknown>
 ): unknown {
+  const answer = getAnswerValue(answerJson);
+  const resolvedAnswer = isEmptyAnswerValue(answer)
+    ? getDefaultAnswer(questionType, parsedJson) ?? answer ?? null
+    : answer;
+
   if (answerJson && typeof answerJson === "object") {
     const record = answerJson as Record<string, unknown>;
     return {
       ...record,
       type: typeof record.type === "string" ? record.type : questionType,
-      answer: "answer" in record ? record.answer : null,
+      answer: resolvedAnswer,
       [ADDITIONAL_COMMENT_JSON_KEY]: additionalComment,
     };
   }
 
   return {
     type: questionType,
-    answer: getAnswerValue(answerJson) ?? null,
+    answer: resolvedAnswer,
     [ADDITIONAL_COMMENT_JSON_KEY]: additionalComment,
   };
 }

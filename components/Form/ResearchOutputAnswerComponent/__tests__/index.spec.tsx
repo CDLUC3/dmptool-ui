@@ -48,6 +48,7 @@ jest.mock('../SingleResearchOutputComponent', () => {
     onSave,
     onCancel,
     onDelete,
+    showButtons,
     isNewEntry,
     hasOtherRows
   }: MockSingleResearchOutputComponentProps) {
@@ -58,6 +59,7 @@ jest.mock('../SingleResearchOutputComponent', () => {
         <button onClick={onDelete}>Delete</button>
         <div data-testid="is-new-entry">{isNewEntry ? 'true' : 'false'}</div>
         <div data-testid="has-other-rows">{hasOtherRows ? 'true' : 'false'}</div>
+        <div data-testid="show-buttons">{showButtons ? 'true' : 'false'}</div>
       </div>
     );
   };
@@ -1697,6 +1699,79 @@ describe('ResearchOutputAnswerComponent', () => {
       await user.click(screen.getByRole('button', { name: /edit/i }));
 
       expect(screen.getByTestId('single-research-output')).toBeInTheDocument();
+    });
+  });
+
+  describe('read-only mode (isDisabled)', () => {
+    it('hides Add and Delete and shows View instead of Edit', () => {
+      renderWithProviders(
+        <ResearchOutputAnswerComponent
+          columns={mockColumns}
+          rows={[createMockRow('Dataset 1', 'dataset', [])]}
+          setRows={mockSetRows}
+          isDisabled
+        />
+      );
+
+      expect(screen.queryByRole('button', { name: /addOutput/i })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /deleteResearchOutput/i })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /editResearchOutput/i })).not.toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: 'labels.viewResearchOutput Dataset 1' })
+      ).toHaveTextContent('buttons.view');
+    });
+
+    it('renders View as a link when rowHref is set', () => {
+      renderWithProviders(
+        <ResearchOutputAnswerComponent
+          columns={mockColumns}
+          rows={[createMockRow('Dataset 1', 'dataset', [])]}
+          setRows={mockSetRows}
+          rowHref={(rowIndex) => `/edit/${rowIndex}`}
+          isDisabled
+        />
+      );
+
+      expect(screen.queryByRole('link', { name: /addOutput/i })).not.toBeInTheDocument();
+      expect(
+        screen.getByRole('link', { name: 'labels.viewResearchOutput Dataset 1' })
+      ).toHaveAttribute('href', '/edit/0');
+    });
+
+    it('opens the row read-only without save buttons and returns to the list', async () => {
+      renderWithProviders(
+        <ResearchOutputAnswerComponent
+          columns={mockColumns}
+          rows={[createMockRow('Dataset 1', 'dataset', [])]}
+          setRows={mockSetRows}
+          isDisabled
+        />
+      );
+
+      await user.click(screen.getByRole('button', { name: /viewResearchOutput/i }));
+
+      expect(screen.getByRole('heading', { name: 'headings.viewResearchOutput' })).toBeInTheDocument();
+      expect(screen.getByTestId('show-buttons')).toHaveTextContent('false');
+
+      await user.click(screen.getByRole('button', { name: /backToList/i }));
+
+      expect(screen.queryByTestId('single-research-output')).not.toBeInTheDocument();
+    });
+
+    it('does not auto-open the add form when there are no rows', async () => {
+      renderWithProviders(
+        <ResearchOutputAnswerComponent
+          columns={mockColumns}
+          rows={[]}
+          setRows={mockSetRows}
+          isDisabled
+        />
+      );
+
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      expect(screen.queryByTestId('single-research-output')).not.toBeInTheDocument();
+      expect(mockSetRows).not.toHaveBeenCalled();
     });
   });
 

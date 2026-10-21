@@ -7,7 +7,7 @@ const AUDIENCE = process.env.TOKEN_AUDIENCE || "my-ui";
 const JWKS_URL = `${process.env.AUTH_ENDPOINT ?? process.env.NEXT_PUBLIC_AUTH_ENDPOINT}/jwks`;
 
 // createRemoteJWKSet automatically caches keys and refetches when a key rotates
-let cachedJWKSClient: any = null;
+let cachedJWKSClient: ReturnType<typeof createRemoteJWKSet> | null = null;
 
 /**
  * Get the cached JWK client or create a new one if it doesn't exist.

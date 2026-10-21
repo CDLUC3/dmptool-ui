@@ -186,9 +186,12 @@ export default function PlanResearchOutputEditScreen({
   const canEdit = capabilities.canEditAnswers;
   const key = questionKey(question.identity);
   const titleId = `${questionAnchorId(question.identity)}-title`;
-  const pageTitle = isNew
-    ? tEdit("headings.addResearchOutput")
-    : tEdit("headings.editResearchOutput");
+  let pageTitle = tEdit("headings.editResearchOutput");
+  if (isNew) {
+    pageTitle = tEdit("headings.addResearchOutput");
+  } else if (!canEdit) {
+    pageTitle = tEdit("headings.viewResearchOutput");
+  }
 
   const saveRow = async (row: ResearchOutputTable): Promise<boolean> => {
     if (isSaving) {

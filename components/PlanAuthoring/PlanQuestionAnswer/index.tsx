@@ -139,7 +139,12 @@ export default function PlanQuestionAnswer({
           value={additionalCommentValue}
           onChange={(next) =>
             onChange(
-              withAdditionalComment(draftAnswer, question.questionType, next)
+              withAdditionalComment(
+                draftAnswer,
+                question.questionType,
+                next,
+                question.parsedJson
+              )
             )
           }
           disabled={disabled}
