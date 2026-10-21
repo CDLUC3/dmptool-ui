@@ -1,7 +1,8 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor, within, cleanup } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
+import { useRouter } from '@/i18n/routing';
 import RepoSelectorForAnswer from '../index';
 import { useToast } from '@/context/ToastContext';
 import { useQuery, useLazyQuery } from '@apollo/client/react';
@@ -21,7 +22,14 @@ import mockValue from '../__mocks__/mockValue.json';
 // Mocks
 jest.mock('next/navigation', () => ({
   useParams: jest.fn(),
-  useRouter: jest.fn(),
+}));
+
+jest.mock('@/i18n/routing', () => ({
+  Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
+    <a href={href} {...props}>{children}</a>
+  ),
+  useRouter: jest.fn(() => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn() })),
+  usePathname: jest.fn(() => '/'),
 }));
 
 // Mock next-intl

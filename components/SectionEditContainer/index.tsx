@@ -1,23 +1,29 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/i18n/routing';
 import { useQuery } from '@apollo/client/react';
 
 import {
   SectionDocument,
-  Question,
+  SectionQuery,
 } from '@/generated/graphql';
 import { useToast } from '@/context/ToastContext';
 import SectionHeaderEdit from '@/components/SectionHeaderEdit';
 import QuestionEditCard from '@/components/QuestionEditCard';
 import AddQuestionButton from '@/components/AddQuestionButton';
 import { updateQuestionDisplayOrderAction } from './actions';
+import { findQuestionMoveConflicts } from './questionMoveConflicts';
+import { ErrorMessage } from '@/components/ErrorMessages';
+import { buildDisplayLogicConflictError } from '@/utils/displayLogicConflictError';
+import { DisplayLogicOrderConflict } from '@/app/types/displayLogic';
+
+type Question = NonNullable<NonNullable<SectionQuery['section']>['questions']>[number];
 
 interface SectionEditContainerProps {
   sectionId: number;
   templateId: string | number;
   displayOrder: number;
-  setErrorMessages: React.Dispatch<React.SetStateAction<string[]>>;
+  setErrorMessages: React.Dispatch<React.SetStateAction<ErrorMessage[]>>;
   onMoveUp: (() => void) | undefined;
   onMoveDown: (() => void) | undefined;
 }
@@ -34,6 +40,7 @@ const SectionEditContainer: React.FC<SectionEditContainerProps> = ({
   const toastState = useToast();
   const t = useTranslations('Sections');
   const Global = useTranslations('Global');
+  const DisplayLogicConflict = useTranslations('DisplayLogicConflictMessage');
 
   const { data, loading, error, refetch } = useQuery(SectionDocument, {
     variables: { sectionId: Number(sectionId) },
@@ -65,7 +72,10 @@ const SectionEditContainer: React.FC<SectionEditContainerProps> = ({
     return [...questions].sort((a, b) => (a.displayOrder!) - (b.displayOrder!));
   };
 
-  const validateQuestionMove = (questionId: number, newDisplayOrder: number): { isValid: boolean, message?: string } => {
+  const validateQuestionMove = (
+    questionId: number,
+    newDisplayOrder: number
+  ): { isValid: boolean, message?: string, conflicts?: DisplayLogicOrderConflict[] } => {
     const currentQuestion = localQuestions.find(q => q.id === questionId);
 
     // If current question doesn't exist in localQuestions
@@ -91,6 +101,12 @@ const SectionEditContainer: React.FC<SectionEditContainerProps> = ({
     if (currentQuestion.displayOrder === newDisplayOrder) {
       const errorMsg = t('messages.errors.cannotMoveFurtherUpOrDown');
       return { isValid: false, message: errorMsg }
+    }
+
+    // If the move would put a question above a trigger question its display logic depends on
+    const conflicts = findQuestionMoveConflicts(localQuestions, questionId, newDisplayOrder);
+    if (conflicts.length > 0) {
+      return { isValid: false, conflicts };
     }
 
     return { isValid: true };
@@ -148,18 +164,40 @@ const SectionEditContainer: React.FC<SectionEditContainerProps> = ({
     };
   }
 
+  // Show the questions whose display logic is blocking a move, with links to edit them
+  const showDisplayLogicConflict = (conflicts: DisplayLogicOrderConflict[], questions: Question[]) => {
+    setErrorMessages([
+      buildDisplayLogicConflictError({
+        conflicts,
+        questions,
+        templateId,
+        message: t('messages.errors.displayLogicOrderConflict'),
+        linksHeading: DisplayLogicConflict('questionsHeading'),
+        untitledQuestion: (id) => DisplayLogicConflict('untitledQuestion', { id }),
+      }),
+    ]);
+  };
+
   const handleDisplayOrderChange = async (questionId: number, newDisplayOrder: number) => {
     // Remove all current errors
     setErrorMessages([]);
 
     if (isReordering) return; // Prevent concurrent operations
 
-    const { isValid, message } = validateQuestionMove(questionId, newDisplayOrder);
+    const { isValid, message, conflicts } = validateQuestionMove(questionId, newDisplayOrder);
+    if (conflicts) {
+      showDisplayLogicConflict(conflicts, localQuestions);
+      return;
+    }
     if (!isValid && message) {
       // Deliver toast error messages
       toastState.add(message, { type: 'error' });
       return;
     }
+
+    // Keep the current order so the optimistic update can be reverted. Refetching alone won't revert it,
+    // because when the server rejects the move the refetched data is unchanged and doesn't reset localQuestions
+    const previousQuestions = localQuestions;
 
     // First, optimistically update the UI immediately for smoother reshuffling
     updateLocalQuestionOrder(questionId, newDisplayOrder);
@@ -170,9 +208,11 @@ const SectionEditContainer: React.FC<SectionEditContainerProps> = ({
         questionId,
         newDisplayOrder
       );
+      const moveFailed = !result.success || !!result.data?.errors?.general;
 
       if (!result.success) {
         // Revert optimistic update on failure
+        setLocalQuestions(previousQuestions);
         await refetch();
         const errors = result.errors;
 
@@ -184,8 +224,19 @@ const SectionEditContainer: React.FC<SectionEditContainerProps> = ({
         }
       } else if (result.data?.errors?.general) {
         // Revert on server errors
-        await refetch();
-        setErrorMessages(prev => [...prev, result.data?.errors?.general || t('messages.errors.updateQuestionOrder')]);
+        setLocalQuestions(previousQuestions);
+        const refetched = await refetch();
+
+        // The server can reject a move that the check above allowed, e.g. when display logic was added after the
+        // page loaded. Check the latest display logic so the same message is shown as for the check above
+        const latestQuestions = (refetched?.data?.section?.questions ?? [])
+          .filter((question): question is Question => question !== null);
+        const latestConflicts = findQuestionMoveConflicts(latestQuestions, questionId, newDisplayOrder);
+        if (latestConflicts.length > 0) {
+          showDisplayLogicConflict(latestConflicts, latestQuestions);
+        } else {
+          setErrorMessages(prev => [...prev, result.data?.errors?.general || t('messages.errors.updateQuestionOrder')]);
+        }
       }
 
       // Scroll user to the reordered section
@@ -201,11 +252,13 @@ const SectionEditContainer: React.FC<SectionEditContainerProps> = ({
         });
       }
 
-      // After successful update
-      const message = t('messages.questionMoved', { displayOrder: newDisplayOrder })
-      setAnnouncement(message);
+      // Only announce the move if it succeeded. Failures are announced by the parent's ErrorMessages
+      // (role="alert"), so clear the announcement to avoid a stale or conflicting message
+      setAnnouncement(moveFailed ? '' : t('messages.questionMoved', { displayOrder: newDisplayOrder }));
     } catch {
       // Revert optimistic update on network error
+      setAnnouncement('');
+      setLocalQuestions(previousQuestions);
       await refetch();
       setErrorMessages(prev => [...prev, t('messages.errors.updateQuestionOrder')]);
     } finally {

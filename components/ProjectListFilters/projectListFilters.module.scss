@@ -1,0 +1,27 @@
+@use '@/styles/responsive' as r;
+
+// Sits in the "filters" area of the global .searchSection grid: under the search field
+// on mobile, and to the right of it on desktop
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+.filterSelect {
+  min-width: 12rem;
+}
+
+// Full-width row of its own on mobile so it wraps under the selects
+.clearFilters {
+  flex-basis: 100%;
+  justify-content: flex-start;
+  text-align: left;
+
+  @include r.device(md) {
+    flex-basis: auto;
+    // Line up with the select triggers, not their labels
+    margin-bottom: var(--space-2);
+  }
+}

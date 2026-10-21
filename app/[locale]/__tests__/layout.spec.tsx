@@ -7,7 +7,9 @@ import { render, screen } from '@testing-library/react';
 import LocaleLayout from '@/app/[locale]/layout';
 import { routing } from '@/i18n/routing';
 import { notFound } from 'next/navigation'; // Replace require with import
-import { headers } from 'next/headers';
+import { headers, cookies } from 'next/headers';
+import { verifyJwtToken } from '@/lib/server/auth';
+import { ACCESS_TOKEN_NAME } from '@/utils/authHelper';
 
 
 // Mock next-intl/middleware BEFORE importing middleware
@@ -88,13 +90,23 @@ jest.mock('@/components/NavigationEvents', () => {
   return MockNavigationEvents;
 });
 
+jest.mock('@/components/AriaRouterProvider', () => ({
+  AriaRouterProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+}));
+
+jest.mock('@/lib/server/auth', () => ({
+  verifyJwtToken: jest.fn(),
+}));
+
 jest.mock('next/headers', () => ({
   headers: jest.fn().mockResolvedValue(new Headers()),
+  cookies: jest.fn(),
 }));
 
 describe('LocaleLayout', () => {
   beforeEach(() => {
     (headers as jest.Mock).mockResolvedValue(new Headers()); // Reset to default before every test
+    (cookies as jest.Mock).mockResolvedValue({ get: jest.fn() }); // No auth cookie by default
   });
 
 
@@ -140,8 +152,11 @@ describe('LocaleLayout', () => {
 
     expect(notFound).toHaveBeenCalled();
   });
-  it('passes initialIsAuthenticated=true to AuthProvider when x-is-authenticated header is "true"', async () => {
-    (headers as jest.Mock).mockResolvedValue(new Headers({ 'x-is-authenticated': 'true' }));
+  it('passes initialIsAuthenticated=true to AuthProvider when the access token cookie is valid', async () => {
+    (cookies as jest.Mock).mockResolvedValue({
+      get: jest.fn((name: string) => (name === ACCESS_TOKEN_NAME ? { value: 'valid-token' } : undefined)),
+    });
+    (verifyJwtToken as jest.Mock).mockResolvedValue({ id: 1 });
 
     const TestComponent = await LocaleLayout({
       children: <>Main Content</>,

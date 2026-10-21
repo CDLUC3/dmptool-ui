@@ -12,6 +12,7 @@ export interface QuestionOption {
 export type UpdateQuestionErrors = {
   general?: string;
   questionText?: string;
+  json?: string;
 }
 
 export type RemoveQuestionErrors = {

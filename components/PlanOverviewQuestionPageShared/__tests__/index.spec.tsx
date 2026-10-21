@@ -1,7 +1,8 @@
 import React from 'react';
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
+import { useRouter } from '@/i18n/routing';
 import { axe, toHaveNoViolations } from 'jest-axe';
 import { useQuery, useMutation } from '@apollo/client/react';
 import {
@@ -211,8 +212,15 @@ jest.mock('@/app/actions/index', () => ({
 }));
 
 jest.mock('next/navigation', () => ({
-  useRouter: jest.fn(),
   useParams: jest.fn()
+}));
+
+jest.mock('@/i18n/routing', () => ({
+  Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
+    <a href={href} {...props}>{children}</a>
+  ),
+  useRouter: jest.fn(() => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn() })),
+  usePathname: jest.fn(() => '/'),
 }));
 
 jest.mock('next-intl', () => ({
@@ -1316,7 +1324,7 @@ describe('PlanOverviewQuestionPage render of questions', () => {
 
     fireEvent.click(backToSectionBtn);
 
-    expect(mockUseRouter().push).toHaveBeenCalledWith('/en-US/projects/1/dmp/1/s/22');
+    expect(mockUseRouter().push).toHaveBeenCalledWith('/projects/1/dmp/1/s/22');
   })
 
 });
@@ -2391,7 +2399,7 @@ describe('Call to updateAnswerAction', () => {
       fireEvent.click(saveBtn);
     })
 
-    expect(mockUseRouter().push).toHaveBeenNthCalledWith(2, '/en-US/projects/1/dmp/1/s/22');
+    expect(mockUseRouter().push).toHaveBeenNthCalledWith(2, '/projects/1/dmp/1/s/22');
   })
 
   it('should display errors if updateAnswerAction returns errors in the response', async () => {
@@ -2641,6 +2649,112 @@ describe('Call to addAnswerAction', () => {
         versionedSectionId: 22,
         versionedQuestionId: 344,
         json: "{\"type\":\"checkBoxes\",\"answer\":[\"Alex\"],\"meta\":{\"schemaVersion\":\"1.0\"},\"comment\":\"\"}"
+      });
+    });
+  });
+
+  describe('default option selections', () => {
+    // Mock the question and answer queries; any other documents fall back to the plan/empty data
+    const mockQuestionAndAnswer = (questionData: unknown, answerData: unknown) => {
+      mockUseQuery.mockImplementation((document) => {
+        if (document === PublishedQuestionDocument) {
+          return { data: questionData, loading: false, error: undefined, refetch: jest.fn() } as any;
+        }
+        if (document === AnswerByVersionedQuestionIdDocument) {
+          return { data: answerData, loading: false, error: undefined, refetch: jest.fn() } as any;
+        }
+        if (document === PlanDocument) {
+          return { data: mockPlanData, loading: false, refetch: mockRefetch } as any;
+        }
+        return { data: null, loading: false, error: undefined } as any;
+      });
+    };
+
+    it('should save the default radio option when there is no answer and the user does not change the selection', async () => {
+      // The "No" option is marked as selected (the default) in the question JSON
+      mockQuestionAndAnswer(mockQuestionDataForRadioButton, null);
+      (addAnswerAction as jest.Mock).mockResolvedValue({
+        success: true,
+        data: { errors: { general: null }, id: 28, json: '{"type":"radioButtons","answer":"No"}', modified: "1751929006000" },
+      });
+
+      await act(async () => {
+        render(<PlanOverviewQuestionPageShared config={config} />);
+      });
+
+      // The default is displayed as selected
+      expect(screen.getByText('No').closest('label')).toHaveAttribute('data-selected', 'true');
+
+      // Save without clicking any radio button
+      fireEvent.click(screen.getByRole('button', { name: 'labels.saveAnswer' }));
+
+      await waitFor(() => {
+        expect(addAnswerAction).toHaveBeenCalledWith({
+          planId: 1,
+          versionedSectionId: 22,
+          versionedQuestionId: 344,
+          json: "{\"type\":\"radioButtons\",\"answer\":\"No\",\"meta\":{\"schemaVersion\":\"1.0\"},\"comment\":\"\"}"
+        });
+      });
+    });
+
+    it('should save the default radio option when the saved answer is empty', async () => {
+      // e.g. a previous save stored only a comment, with no radio selection
+      const emptyRadioAnswer = {
+        answerByVersionedQuestionId: {
+          ...mockAnswerDataForRadioButton.answerByVersionedQuestionId,
+          json: "{\"type\":\"radioButtons\",\"answer\":\"\",\"comment\":\"Just a comment\"}",
+        }
+      };
+      mockQuestionAndAnswer(mockQuestionDataForRadioButton, emptyRadioAnswer);
+      // Clear calls left over from earlier tests so we only inspect this test's save
+      (updateAnswerAction as jest.Mock).mockClear();
+      (updateAnswerAction as jest.Mock).mockResolvedValue({
+        success: true,
+        data: { errors: { general: null }, id: 5, json: '{"type":"radioButtons","answer":"No"}', modified: "1751929006000" },
+      });
+
+      await act(async () => {
+        render(<PlanOverviewQuestionPageShared config={config} />);
+      });
+
+      fireEvent.click(screen.getByRole('button', { name: 'labels.saveAnswer' }));
+
+      await waitFor(() => {
+        expect(updateAnswerAction).toHaveBeenCalled();
+        const callArgs = (updateAnswerAction as jest.Mock).mock.calls[0][0];
+        const parsedJson = JSON.parse(callArgs.json);
+        expect(parsedJson.answer).toBe('No');
+        expect(parsedJson.comment).toBe('Just a comment');
+      });
+    });
+
+    it('should save the default checkbox options when there is no answer and the user does not change the selection', async () => {
+      const checkboxQuestionWithDefaults = {
+        publishedQuestion: {
+          ...mockCheckboxQuestion.publishedQuestion,
+          json: "{\"meta\":{\"schemaVersion\":\"1.0\"},\"type\":\"checkBoxes\",\"options\":[{\"label\":\"Alex\",\"value\":\"Alex\",\"selected\":false},{\"label\":\"Barbara\",\"value\":\"Barbara\",\"selected\":true},{\"label\":\"Charlie\",\"value\":\"Charlie\",\"selected\":true}]}"
+        }
+      };
+      mockQuestionAndAnswer(checkboxQuestionWithDefaults, null);
+      (addAnswerAction as jest.Mock).mockResolvedValue({
+        success: true,
+        data: { errors: { general: null }, id: 29, json: '{"type":"checkBoxes","answer":["Barbara","Charlie"]}', modified: "1751929006000" },
+      });
+
+      await act(async () => {
+        render(<PlanOverviewQuestionPageShared config={config} />);
+      });
+
+      fireEvent.click(screen.getByRole('button', { name: 'labels.saveAnswer' }));
+
+      await waitFor(() => {
+        expect(addAnswerAction).toHaveBeenCalledWith({
+          planId: 1,
+          versionedSectionId: 22,
+          versionedQuestionId: 344,
+          json: "{\"type\":\"checkBoxes\",\"answer\":[\"Barbara\",\"Charlie\"],\"meta\":{\"schemaVersion\":\"1.0\"},\"comment\":\"\"}"
+        });
       });
     });
   });

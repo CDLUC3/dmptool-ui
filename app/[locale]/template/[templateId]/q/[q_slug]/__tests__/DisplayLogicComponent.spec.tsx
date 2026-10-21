@@ -268,7 +268,7 @@ describe('DisplayLogicComponent', () => {
 
       render(<DisplayLogicComponent {...defaultProps} displayLogic={logic} />);
 
-      expect(screen.getByText('OR')).toBeInTheDocument();
+      expect(screen.getByText('tabPanel.labels.joinerOr')).toBeInTheDocument();
     });
 
     it("should reset a group's conditions when its trigger question is changed", () => {
@@ -302,7 +302,7 @@ describe('DisplayLogicComponent', () => {
       ]);
     });
 
-    it('should render AND text between multiple conditions in the same group when matchType is all', () => {
+    it('should render OR between conditions in the same group and AND between groups when matchType is all', () => {
       const logic = makeDisplayLogic({
         matchType: 'all',
         groups: [
@@ -314,15 +314,22 @@ describe('DisplayLogicComponent', () => {
               { id: 'cond-2', operator: 'is_not', optionValue: 'Experimental (e.g., lab protocols, genetic sequencing)' },
             ],
           },
+          {
+            id: 'group-2',
+            triggerQuestionId: 3692,
+            conditions: [{ id: 'cond-3', operator: 'is', optionValue: 'CSV' }],
+          },
         ],
       });
 
       render(<DisplayLogicComponent {...defaultProps} displayLogic={logic} />);
 
-      expect(screen.getByText('AND')).toBeInTheDocument();
+      // Conditions within a group are always OR; the match type only joins the groups
+      expect(screen.getAllByText('tabPanel.labels.joinerOr')).toHaveLength(1);
+      expect(screen.getAllByText('tabPanel.labels.joinerAnd')).toHaveLength(1);
     });
 
-    it('should default a newly added condition to an unused option when matchType is all', () => {
+    it('should default a newly added condition to "is" and the first option not used in the group', () => {
       const onDisplayLogicChange = jest.fn();
       const logic = makeDisplayLogic({
         matchType: 'all',
@@ -330,7 +337,7 @@ describe('DisplayLogicComponent', () => {
           {
             id: 'group-1',
             triggerQuestionId: 3691,
-            conditions: [{ id: 'cond-1', operator: 'is', optionValue: 'Observational (e.g., sensor data, surveys, field notes)' }],
+            conditions: [{ id: 'cond-1', operator: 'is_not', optionValue: 'Observational (e.g., sensor data, surveys, field notes)' }],
           },
         ],
       });
@@ -341,12 +348,13 @@ describe('DisplayLogicComponent', () => {
 
       const [updatedLogic] = onDisplayLogicChange.mock.calls[0];
       expect(updatedLogic.groups[0].conditions).toHaveLength(2);
-      expect(updatedLogic.groups[0].conditions[1].optionValue).toBe('Experimental (e.g., lab protocols, genetic sequencing)');
+      expect(updatedLogic.groups[0].conditions[1]).toEqual(
+        expect.objectContaining({ operator: 'is', optionValue: 'Experimental (e.g., lab protocols, genetic sequencing)' })
+      );
     });
 
-    it('should hide add condition in matchType all when all options are already used in the group', () => {
+    it('should hide add condition once every option of the trigger question is used in the group', () => {
       const logic = makeDisplayLogic({
-        matchType: 'all',
         groups: [
           {
             id: 'group-1',
@@ -364,10 +372,36 @@ describe('DisplayLogicComponent', () => {
       expect(screen.queryByRole('button', { name: 'tabPanel.buttons.addCondition' })).not.toBeInTheDocument();
     });
 
-    it('should block save and show validation error when matchType is all and a group reuses an option value', async () => {
-      const onDisplayLogicSave = jest.fn().mockResolvedValue(undefined);
+    it('should only offer options not used by other conditions in the group, but always offer both operators', () => {
       const logic = makeDisplayLogic({
-        matchType: 'all',
+        groups: [
+          {
+            id: 'group-1',
+            triggerQuestionId: 3691,
+            conditions: [
+              { id: 'cond-1', operator: 'is', optionValue: 'Observational (e.g., sensor data, surveys, field notes)' },
+              { id: 'cond-2', operator: 'is', optionValue: 'Experimental (e.g., lab protocols, genetic sequencing)' },
+            ],
+          },
+        ],
+      });
+
+      const { container } = render(<DisplayLogicComponent {...defaultProps} displayLogic={logic} />);
+
+      const optionValues = (name: string) =>
+        Array.from((container.querySelector(`select[name="${name}"]`) as HTMLSelectElement).options)
+          .map((o) => o.value)
+          .filter(Boolean);
+
+      // Each condition can only keep its own option, since the other option is used by the other condition
+      expect(optionValues('option-cond-1')).toEqual(['Observational (e.g., sensor data, surveys, field notes)']);
+      expect(optionValues('option-cond-2')).toEqual(['Experimental (e.g., lab protocols, genetic sequencing)']);
+      expect(optionValues('operator-cond-1')).toEqual(['is', 'is_not']);
+      expect(optionValues('operator-cond-2')).toEqual(['is', 'is_not']);
+    });
+
+    it('should keep showing each selected option for previously saved conditions that share an option', () => {
+      const logic = makeDisplayLogic({
         groups: [
           {
             id: 'group-1',
@@ -380,25 +414,16 @@ describe('DisplayLogicComponent', () => {
         ],
       });
 
-      render(
-        <DisplayLogicComponent
-          {...defaultProps}
-          displayLogic={logic}
-          onDisplayLogicSave={onDisplayLogicSave}
-        />
-      );
+      const { container } = render(<DisplayLogicComponent {...defaultProps} displayLogic={logic} />);
 
-      await act(async () => {
-        fireEvent.click(screen.getByRole('button', { name: 'tabPanel.buttons.saveDisplayLogic' }));
-      });
-
-      expect(onDisplayLogicSave).not.toHaveBeenCalled();
-      expect(
-        screen.getByText('tabPanel.messages.allMatchTypeRule')
-      ).toBeInTheDocument();
+      for (const name of ['option-cond-1', 'option-cond-2']) {
+        const values = Array.from((container.querySelector(`select[name="${name}"]`) as HTMLSelectElement).options)
+          .map((o) => o.value);
+        expect(values).toContain('Observational (e.g., sensor data, surveys, field notes)');
+      }
     });
 
-    it('should allow save when matchType is all and each condition uses a different option value', async () => {
+    it('should allow save when each condition in a group uses a different option', async () => {
       const onDisplayLogicSave = jest.fn().mockResolvedValue(undefined);
       const logic = makeDisplayLogic({
         matchType: 'all',
@@ -427,62 +452,6 @@ describe('DisplayLogicComponent', () => {
       });
 
       expect(onDisplayLogicSave).toHaveBeenCalledTimes(1);
-    });
-
-    it('should block save and show validation error when matchType is any and a group repeats the same operator + option', async () => {
-      const onDisplayLogicSave = jest.fn().mockResolvedValue(undefined);
-      const logic = makeDisplayLogic({
-        matchType: 'any',
-        groups: [
-          {
-            id: 'group-1',
-            triggerQuestionId: 3691,
-            conditions: [
-              { id: 'cond-1', operator: 'is', optionValue: 'Observational (e.g., sensor data, surveys, field notes)' },
-              { id: 'cond-2', operator: 'is', optionValue: 'Observational (e.g., sensor data, surveys, field notes)' },
-            ],
-          },
-        ],
-      });
-
-      render(
-        <DisplayLogicComponent
-          {...defaultProps}
-          displayLogic={logic}
-          onDisplayLogicSave={onDisplayLogicSave}
-        />
-      );
-
-      await act(async () => {
-        fireEvent.click(screen.getByRole('button', { name: 'tabPanel.buttons.saveDisplayLogic' }));
-      });
-
-      expect(onDisplayLogicSave).not.toHaveBeenCalled();
-      expect(
-        screen.getByText('tabPanel.messages.anyMatchTypeRule')
-      ).toBeInTheDocument();
-    });
-
-    it('should hide add condition in matchType any when all operator + option combinations are already used', () => {
-      const logic = makeDisplayLogic({
-        matchType: 'any',
-        groups: [
-          {
-            id: 'group-1',
-            triggerQuestionId: 3691,
-            conditions: [
-              { id: 'cond-1', operator: 'is', optionValue: 'Observational (e.g., sensor data, surveys, field notes)' },
-              { id: 'cond-2', operator: 'is', optionValue: 'Experimental (e.g., lab protocols, genetic sequencing)' },
-              { id: 'cond-3', operator: 'is_not', optionValue: 'Observational (e.g., sensor data, surveys, field notes)' },
-              { id: 'cond-4', operator: 'is_not', optionValue: 'Experimental (e.g., lab protocols, genetic sequencing)' },
-            ],
-          },
-        ],
-      });
-
-      render(<DisplayLogicComponent {...defaultProps} displayLogic={logic} />);
-
-      expect(screen.queryByRole('button', { name: 'tabPanel.buttons.addCondition' })).not.toBeInTheDocument();
     });
   });
 
@@ -658,6 +627,14 @@ describe('DisplayLogicComponent', () => {
 
     it('should update only the optionValue of the matching condition, leaving other conditions untouched', () => {
       const onDisplayLogicChange = jest.fn();
+      // A third option is needed, since an option already used by another condition in the group can't be selected
+      const threeOptionTriggerQuestion: TriggerQuestionOption = {
+        ...mockTriggerQuestions[0],
+        options: [
+          ...mockTriggerQuestions[0].options,
+          { label: 'Simulation', value: 'Simulation' },
+        ],
+      };
       const logic = makeDisplayLogic({
         groups: [
           {
@@ -672,17 +649,20 @@ describe('DisplayLogicComponent', () => {
       });
 
       const { container } = render(
-        <DisplayLogicComponent {...defaultProps} displayLogic={logic} onDisplayLogicChange={onDisplayLogicChange} />
+        <DisplayLogicComponent
+          {...defaultProps}
+          triggerQuestions={[threeOptionTriggerQuestion, mockTriggerQuestions[1]]}
+          displayLogic={logic}
+          onDisplayLogicChange={onDisplayLogicChange}
+        />
       );
 
       const optionSelect = container.querySelector('select[name="option-cond-1"]') as HTMLSelectElement;
-      fireEvent.change(optionSelect, {
-        target: { value: 'Experimental (e.g., lab protocols, genetic sequencing)' },
-      });
+      fireEvent.change(optionSelect, { target: { value: 'Simulation' } });
 
       const [updatedLogic] = onDisplayLogicChange.mock.calls[0];
       expect(updatedLogic.groups[0].conditions).toEqual([
-        expect.objectContaining({ id: 'cond-1', optionValue: 'Experimental (e.g., lab protocols, genetic sequencing)' }),
+        expect.objectContaining({ id: 'cond-1', optionValue: 'Simulation' }),
         expect.objectContaining({ id: 'cond-2', operator: 'is_not', optionValue: 'Experimental (e.g., lab protocols, genetic sequencing)' }),
       ]);
     });
@@ -792,23 +772,8 @@ describe('DisplayLogicComponent', () => {
     });
   });
 
-  describe('match type change confirmation', () => {
-    it('should update match type immediately when no group has duplicate option values', () => {
-      const onDisplayLogicChange = jest.fn();
-      const logic = makeDisplayLogic(); // single condition per group — no conflict
-
-      const { container } = render(
-        <DisplayLogicComponent {...defaultProps} displayLogic={logic} onDisplayLogicChange={onDisplayLogicChange} />
-      );
-
-      const matchTypeSelect = container.querySelector('select[name="displayLogicMatchType"]') as HTMLSelectElement;
-      fireEvent.change(matchTypeSelect, { target: { value: 'all' } });
-
-      expect(onDisplayLogicChange).toHaveBeenCalledWith(expect.objectContaining({ matchType: 'all' }));
-      expect(screen.queryByText('tabPanel.headings.confirmMatchTypeChange')).not.toBeInTheDocument();
-    });
-
-    it('should open a confirmation dialog instead of applying immediately when switching to all would create duplicate option values', async () => {
+  describe('match type change', () => {
+    it('should switch the match type without changing or removing any conditions', () => {
       const onDisplayLogicChange = jest.fn();
       const logic = makeDisplayLogic({
         matchType: 'any',
@@ -831,86 +796,9 @@ describe('DisplayLogicComponent', () => {
       const matchTypeSelect = container.querySelector('select[name="displayLogicMatchType"]') as HTMLSelectElement;
       fireEvent.change(matchTypeSelect, { target: { value: 'all' } });
 
-      expect(await screen.findByText('tabPanel.headings.confirmMatchTypeChange')).toBeInTheDocument();
-      // Match type must not be applied yet — waiting on user confirmation
-      expect(onDisplayLogicChange).not.toHaveBeenCalled();
-    });
-
-    it('should apply the match type change and remove conflicting conditions when confirmed', async () => {
-      const onDisplayLogicChange = jest.fn();
-      const logic = makeDisplayLogic({
-        matchType: 'any',
-        groups: [
-          {
-            id: 'group-1',
-            triggerQuestionId: 3691,
-            conditions: [
-              { id: 'cond-1', operator: 'is', optionValue: 'Observational (e.g., sensor data, surveys, field notes)' },
-              { id: 'cond-2', operator: 'is_not', optionValue: 'Observational (e.g., sensor data, surveys, field notes)' },
-            ],
-          },
-        ],
-      });
-
-      const { container } = render(
-        <DisplayLogicComponent {...defaultProps} displayLogic={logic} onDisplayLogicChange={onDisplayLogicChange} />
-      );
-
-      const matchTypeSelect = container.querySelector('select[name="displayLogicMatchType"]') as HTMLSelectElement;
-      fireEvent.change(matchTypeSelect, { target: { value: 'all' } });
-
-      const confirmButton = await screen.findByText('buttons.confirm');
-      await act(async () => {
-        fireEvent.click(confirmButton);
-      });
-      await waitFor(() => {
-        expect(onDisplayLogicChange).toHaveBeenCalledWith(
-          expect.objectContaining({
-            matchType: 'all',
-            groups: [
-              expect.objectContaining({
-                id: 'group-1',
-                // Only the first occurrence of the duplicated option value should survive
-                conditions: [expect.objectContaining({ id: 'cond-1', optionValue: 'Observational (e.g., sensor data, surveys, field notes)' })],
-              }),
-            ],
-          })
-        );
-      });
-    });
-
-    it('should not change the match type when the confirmation dialog is cancelled', async () => {
-      const onDisplayLogicChange = jest.fn();
-      const logic = makeDisplayLogic({
-        matchType: 'any',
-        groups: [
-          {
-            id: 'group-1',
-            triggerQuestionId: 3691,
-            conditions: [
-              { id: 'cond-1', operator: 'is', optionValue: 'Observational (e.g., sensor data, surveys, field notes)' },
-              { id: 'cond-2', operator: 'is_not', optionValue: 'Observational (e.g., sensor data, surveys, field notes)' },
-            ],
-          },
-        ],
-      });
-
-      const { container } = render(
-        <DisplayLogicComponent {...defaultProps} displayLogic={logic} onDisplayLogicChange={onDisplayLogicChange} />
-      );
-
-      const matchTypeSelect = container.querySelector('select[name="displayLogicMatchType"]') as HTMLSelectElement;
-      fireEvent.change(matchTypeSelect, { target: { value: 'all' } });
-
-      const cancelButton = await screen.findByText('buttons.cancel');
-      await act(async () => {
-        fireEvent.click(cancelButton);
-      });
-
-      expect(onDisplayLogicChange).not.toHaveBeenCalled();
-      expect(screen.queryByText('tabPanel.headings.confirmMatchTypeChange')).not.toBeInTheDocument();
-      // Select should still reflect the original matchType
-      expect(matchTypeSelect.value).toBe('any');
+      // Conditions within a group are always OR, so switching any/all never needs a confirmation or clean-up
+      expect(onDisplayLogicChange).toHaveBeenCalledWith({ ...logic, matchType: 'all' });
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     });
   });
 
@@ -950,6 +838,52 @@ describe('DisplayLogicComponent', () => {
 
       expect(onDisplayLogicChange).not.toHaveBeenCalled();
       expect(mockToastAdd).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('highlighted trigger questions', () => {
+    // Two groups, triggered by 3691 and 3692
+    const twoGroupLogic = makeDisplayLogic({
+      groups: [
+        {
+          id: 'group-1',
+          triggerQuestionId: 3691,
+          conditions: [{ id: 'cond-1', operator: 'is', optionValue: 'Observational (e.g., sensor data, surveys, field notes)' }],
+        },
+        {
+          id: 'group-2',
+          triggerQuestionId: 3692,
+          conditions: [{ id: 'cond-2', operator: 'is', optionValue: 'CSV' }],
+        },
+      ],
+    });
+
+    it('should highlight, scroll to and focus the trigger questions that are blocking a change', () => {
+      render(
+        <DisplayLogicComponent {...defaultProps} displayLogic={twoGroupLogic} highlightedTriggerQuestionIds={[3692]} />
+      );
+
+      const highlighted = screen.getAllByTestId('highlighted-trigger-question');
+      expect(highlighted).toHaveLength(1);
+      expect(highlighted[0]).toHaveTextContent('tabPanel.messages.blockingTriggerQuestion');
+      expect(highlighted[0]).toHaveFocus();
+      expect(mockScrollIntoView).toHaveBeenCalled();
+    });
+
+    it('should not highlight anything when no trigger questions are highlighted', () => {
+      render(<DisplayLogicComponent {...defaultProps} displayLogic={twoGroupLogic} />);
+
+      expect(screen.queryByTestId('highlighted-trigger-question')).not.toBeInTheDocument();
+      expect(screen.queryByText('tabPanel.messages.blockingTriggerQuestion')).not.toBeInTheDocument();
+    });
+
+    it('should pass axe accessibility test with a highlighted trigger question', async () => {
+      const { container } = render(
+        <DisplayLogicComponent {...defaultProps} displayLogic={twoGroupLogic} highlightedTriggerQuestionIds={[3691]} />
+      );
+      await act(async () => {
+        expect(await axe(container)).toHaveNoViolations();
+      });
     });
   });
 });

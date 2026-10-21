@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import Link from "next/link";
+import { Link } from "@/i18n/routing";
 import { useTranslations } from "next-intl";
 import { ContentContainer, LayoutContainer } from "@/components/Container";
 import { Button } from "react-aria-components";

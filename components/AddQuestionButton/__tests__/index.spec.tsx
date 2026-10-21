@@ -4,7 +4,15 @@ import AddQuestionButton from '../index';
 expect.extend(toHaveNoViolations);
 
 jest.mock('next/navigation', () => ({
-  useRouter: () => ({
+  usePathname: () => '/',
+  useSearchParams: () => new URLSearchParams(),
+}));
+
+jest.mock('@/i18n/routing', () => ({
+  Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
+    <a href={href} {...props}>{children}</a>
+  ),
+  useRouter: jest.fn(() => ({
     push: jest.fn(),
     prefetch: jest.fn(),
     replace: jest.fn(),
@@ -12,9 +20,8 @@ jest.mock('next/navigation', () => ({
     route: '/',
     query: {},
     asPath: '/',
-  }),
-  usePathname: () => '/',
-  useSearchParams: () => new URLSearchParams(),
+  })),
+  usePathname: jest.fn(() => '/'),
 }));
 
 describe('AddQuestionButton', () => {
