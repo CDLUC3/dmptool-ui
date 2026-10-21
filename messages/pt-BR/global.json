@@ -882,6 +882,10 @@
       "loadingPleaseWait": "Aguarde. Carregando...",
       "unPublishBtnTooltipMessage": "Não é possível cancelar a publicação do grupo de orientação porque não há versões publicadas.",
       "publishBtnTooltipMessage": "Grupo de Orientação já foi publicado.",
+      "unsavedChanges": "Alterações não salvas",
+      "savedJustNow": "Salvo há pouco",
+      "lastSavedOneMinuteAgo": "Salvo há 1 minuto",
+      "lastSavedMinutesAgo": "Salvo há {minutes} minutos",
       "success": {
         "guidanceGroupCreated": "Grupo de orientação {groupName} criado com sucesso",
         "guidanceGroupPublished": "Grupo de orientação {groupName} publicado com sucesso",

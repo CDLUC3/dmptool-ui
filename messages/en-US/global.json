@@ -868,6 +868,10 @@
       "loadingPleaseWait": "Loading, please wait...",
       "unPublishBtnTooltipMessage": "Cannot unpublish guidance group because there are no published versions.",
       "publishBtnTooltipMessage": "Guidance group is already published.",
+      "unsavedChanges": "Unsaved changes",
+      "savedJustNow": "Saved just now",
+      "lastSavedOneMinuteAgo": "Last saved 1 minute ago",
+      "lastSavedMinutesAgo": "Last saved {minutes} minutes ago",
       "success": {
         "guidanceGroupCreated": "Guidance group {groupName} successfully created",
         "guidanceGroupPublished": "Guidance group {groupName} successfully published",

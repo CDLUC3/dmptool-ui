@@ -1,4 +1,5 @@
 ## Added
+- Added autosave to the guidance group page (`admin/guidance/groups/[groupId]`). Each tag's guidance text saves 3 seconds after typing stops and when the window loses focus, matching the plan question page. A status below each editor shows "Unsaved changes", "Saving...", "Saved just now" or "Last saved X minutes ago", and the Save button still works for manual saves. Publish/Unpublish save any pending changes first. Added en-US/pt-BR translations [#193]
 - Added a "last published" note (version, date, visibility, and unpublished changes) and a clearer change log required message to the template Publish modal. The note and the pre-selected visibility come from the last `PUBLISHED` entry in `TemplateVersions` (now including `visibility`), because saving a draft overwrites the template's `latestPublish*` fields [#381]
 - Added `/healthcheck` endpoint that is outside the i18n and other middleware constraints and removed the old `[locale]/healthcheck`
 - Added additional AUTH ENV variables to buildspec and Dockerfile.prod to support new auth service
@@ -179,6 +180,7 @@
 - Updated `RepoSelectorForAnswer` to wait to query `Re3byUrIsDocument` until we have `preferredReposURIs` because preferred repos don't display even though they eventually do to trigger the display of the "preferred repositories" checkbox [#118]
 
 ## Fixed
+- Fixed `addGuidanceTextAction` reading the wrong `dataPath` (`addGuidanceText` instead of `addGuidance`), which meant the new guidance id was never returned and saving the same tag again failed with `Variable "$input" got invalid value null at "input.guidanceId"` [#193]
 - Fixed the pt-BR `publishingTemplate3Private` translation in the template Publish modal, which described the visibility as public instead of organization only [#381]
 - Updated `fetchPolicy` for `publishedTemplates` query on `PlanCreate` page to always fetch latest published plans to address a bug where cached data was getting wrong published version id [#484]
 - Fixed header showing "Login/Sign Up" for logged-in users when running locally in Docker. `lib/server/auth.ts` fetched the JWKS from `NEXT_PUBLIC_AUTH_ENDPOINT`, which resolves to `localhost` inside the `dmptool-ui` container, so JWT verification failed with `ECONNREFUSED`. It now uses the server-side `AUTH_ENDPOINT` and falls back to `NEXT_PUBLIC_AUTH_ENDPOINT` [#477]
