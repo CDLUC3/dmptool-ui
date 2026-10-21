@@ -79,7 +79,6 @@ export const SSOCheckContainer: React.FC<SSOCheckContainerProps> = ({ mode }) =>
     confirmPassword: "",
   });
   const [loading, setLoading] = useState(false);
-  const [invalid, setInvalid] = useState<boolean>(false);
   const { getCsrfToken } = useCsrf();
   const router = useRouter();
 
@@ -253,12 +252,10 @@ export const SSOCheckContainer: React.FC<SSOCheckContainerProps> = ({ mode }) =>
             surName: lastName,
             email,
             password,
-            affiliationId: affiliation || undefined,
+            affiliationId: affiliationId || undefined,
             otherAffiliationName: otherAffiliation,
             acceptedTerms: termsAccepted,
           };
-
-console.log("PAYLOAD, URL", payload, `${process.env.NEXT_PUBLIC_AUTH_ENDPOINT}${authTargets[mode]}`);
 
       return await fetch(`${process.env.NEXT_PUBLIC_AUTH_ENDPOINT}${authTargets[mode]}`, {
         method: "POST",
@@ -277,11 +274,7 @@ console.log("PAYLOAD, URL", payload, `${process.env.NEXT_PUBLIC_AUTH_ENDPOINT}${
     /* eslint-disable @typescript-eslint/no-explicit-any */
     try {
 
-console.log('SUBMITTING')
-
       const response = await authRequest(await getCsrfToken());
-
-console.log('RESPONSE', response.status)
 
       if (response.ok) {
         await onFormSubmissionSuccess();
@@ -314,8 +307,6 @@ console.log('RESPONSE', response.status)
     ev.preventDefault();
 
     try {
-
-console.log('SUBMIT CLICK', step, mode)
 
       switch (step) {
         case "email":
@@ -357,10 +348,6 @@ console.log('SUBMIT CLICK', step, mode)
     } else if (value.toLowerCase() === "other") {
       setAffiliationId("");
     }
-  }
-
-  function hasErrors() {
-    return Object.values(fieldErrors).some((v) => v.trim() !== "");
   }
 
   function reFocusForm() {
@@ -564,7 +551,7 @@ console.log('SUBMIT CLICK', step, mode)
             </Button>
             <Button
               type="submit"
-              isDisabled={loading && (mode === "login" && !password || mode === "register" && !termsAccepted)}
+              isDisabled={loading || (mode === "register" && !termsAccepted)}
               data-testid="actionSubmit"
             >
               {loading ? "..." : t(modeButtonText[mode])}
