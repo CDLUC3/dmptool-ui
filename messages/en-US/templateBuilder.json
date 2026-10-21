@@ -107,7 +107,8 @@
       "updateDisplayOrderError": "Error updating display order",
       "cannotMoveFurtherDown": "Cannot move section further down",
       "displayOrderAlreadyAtTop": "Section is already at top of order",
-      "cannotMoveFurtherUpOrDown": "Cannot move section further up or down"
+      "cannotMoveFurtherUpOrDown": "Cannot move section further up or down",
+      "displayLogicOrderConflict": "Remove the display logic condition(s) before moving this section. The section must appear before any questions it shows or hides."
     },
     "messages": {
       "successfullyArchived": "Successfully archived the template",
@@ -205,7 +206,8 @@
         "updateDisplayOrderError": "Error updating display order",
         "cannotMoveFurtherDown": "Cannot move question further down",
         "displayOrderAlreadyAtTop": "Question is already at top of order",
-        "cannotMoveFurtherUpOrDown": "Cannot move question further up or down"
+        "cannotMoveFurtherUpOrDown": "Cannot move question further up or down",
+        "displayLogicOrderConflict": "Questions with Display Logic applied must be placed after the questions that their logic is based on."
       },
       "questionMoved": "Question moved to position {displayOrder}",
       "sectionMoved": "Section moved to position {displayOrder}"
@@ -492,13 +494,11 @@
       "headings": {
         "options": "Options",
         "logic": "Display Logic",
-        "confirmClearDisplayLogic": "Clear all display logic?",
-        "confirmMatchTypeChange": "Change match type?"
+        "confirmClearDisplayLogic": "Clear all display logic?"
       },
       "descriptions": {
         "displayLogic": "Configure display logic to show or hide this question based on how users answered previous multiple choice or checkbox questions. Add one or more conditions to determine when this question appears.",
-        "clearDisplayLogicWarning": "This will clear all your saved conditions for this question. This action cannot be undone.",
-        "matchTypeChangeWarning": "Switching the match type may clear some of your conditions if your existing conditions conflict with each other and will be removed."
+        "clearDisplayLogicWarning": "This will clear all your saved conditions for this question. This action cannot be undone."
       },
       "buttons": {
         "addDisplayLogic": "Add display logic",
@@ -525,7 +525,9 @@
         "ofTheFollowingMatch": "of the following conditions are met",
         "triggerQuestion": "The answer to this question",
         "conditionOption": "condition option",
-        "conditionOperator": "Condition operator"
+        "conditionOperator": "Condition operator",
+        "joinerAnd": "AND",
+        "joinerOr": "OR"
       },
       "helpText": {
         "noTriggerQuestionsAvailable": "No qualifying questions are available to use as a trigger for display logic."
@@ -534,9 +536,8 @@
         "warnings": {
           "triggerQuestionUnavailable": "This trigger question is not available."
         },
-        "removedUnavailableTriggerQuestions": "Some display logic was removed because a question it depended on is no longer available.",
-        "allMatchTypeRule": "When match type is All, each condition in a group must use a different option value.",
-        "anyMatchTypeRule": "When match type is Any, each condition in a group must be unique (no duplicate operator + option pairs)."
+        "blockingTriggerQuestion": "This trigger question is blocking a change you tried to make. Remove this condition to continue.",
+        "removedUnavailableTriggerQuestions": "Some display logic was removed because a question it depended on is no longer available."
       }
     }
   },
@@ -651,7 +652,8 @@
       "success": {
         "questionAdded": "Question was successfully added.",
         "questionUpdated": "Question was successfully updated."
-      }
+      },
+      "displayLogicAfterSave": "Display logic can be added once this question has been saved."
     },
     "researchOutput": {
       "announcements": {
@@ -885,5 +887,9 @@
         "noCollaborators": "No external people have been added yet"
       }
     }
+  },
+  "DisplayLogicConflictMessage": {
+    "questionsHeading": "Edit the display logic on:",
+    "untitledQuestion": "Question {id}"
   }
 }

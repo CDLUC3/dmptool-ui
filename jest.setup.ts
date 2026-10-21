@@ -43,6 +43,10 @@ if (typeof window !== 'undefined') {
   window.DOMException = DOMException as any;
 }
 
+if (typeof Element !== 'undefined') {
+  Element.prototype.scrollIntoView = jest.fn();
+}
+
 // Mock toast
 jest.mock('@/context/ToastContext', () => ({
   useToast: jest.fn(() => ({
@@ -84,6 +88,12 @@ jest.mock('next/link', () => {
 
 // Mock the clientLogger
 jest.mock('@/utils/clientLogger', () => jest.fn());
+
+// Server JWT verification fetches remote JWKS keys through the ESM-only jose package.
+// Unit tests should mock this boundary instead of loading the remote verifier.
+jest.mock('@/lib/server/auth', () => ({
+  verifyJwtToken: jest.fn(),
+}));
 
 // Mock the useParams and useRouter hooks
 jest.mock('next/navigation', () => ({

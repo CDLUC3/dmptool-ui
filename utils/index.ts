@@ -7,7 +7,6 @@ export { handleErrors } from './errorHandler';
 export { filterTemplates } from './filterTemplates';
 export { scrollToTop } from './general';
 export { getAuthTokenServer } from './getAuthTokenServer';
-export { getSecret } from './getSecret';
 export { handleApolloErrors, handleGraphQLErrors, handleNetworkError } from './gqlErrorHandler';
 export { routes, type RouteName, routePath } from './routes';
 export { default as userFriendlyErrorMessages, type ErrorMessages } from './userFriendlyErrorMessages';

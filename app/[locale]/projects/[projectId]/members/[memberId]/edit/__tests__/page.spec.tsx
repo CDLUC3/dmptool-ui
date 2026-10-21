@@ -1,6 +1,7 @@
 import React from "react";
 import { act, fireEvent, render, screen, waitFor, within } from '@/utils/test-utils';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
+import { useRouter } from '@/i18n/routing';
 import { useToast } from '@/context/ToastContext';
 import logECS from '@/utils/clientLogger';
 import { useQuery, useMutation } from '@apollo/client/react';
@@ -47,6 +48,13 @@ const mockRouter = {
 const mockToast = {
   add: jest.fn(),
 };
+
+jest.mock('@/i18n/routing', () => ({
+  Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
+    <a href={href} {...props}>{children}</a>
+  ),
+  useRouter: jest.fn(() => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn() })),
+}));
 
 // Cast with jest.mocked utility
 const mockUseQuery = jest.mocked(useQuery);
@@ -368,7 +376,7 @@ describe("ProjectsProjectMembersEdit", () => {
     fireEvent.click(saveButton);
 
     await waitFor(() => {
-      expect(mockRouter.push).toHaveBeenCalledWith('/en-US/projects/1/members');
+      expect(mockRouter.push).toHaveBeenCalledWith('/projects/1/members');
     });
   });
 
@@ -684,7 +692,7 @@ describe("ProjectsProjectMembersEdit", () => {
         'updateProjectMember',
         expect.objectContaining({
           error: expect.anything(),
-          url: { path: '/en-US/projects/1/members/1/edit' },
+          url: { path: '/projects/1/members/1/edit' },
         })
       );
     });
@@ -725,7 +733,7 @@ describe("ProjectsProjectMembersEdit", () => {
     });
 
     await waitFor(() => {
-      expect(mockRouter.push).toHaveBeenCalledWith('/en-US/projects/1/members');
+      expect(mockRouter.push).toHaveBeenCalledWith('/projects/1/members');
     });
   });
 
@@ -822,7 +830,7 @@ describe("ProjectsProjectMembersEdit", () => {
         'removeProjectMember',
         expect.objectContaining({
           error: expect.anything(),
-          url: { path: '/en-US/projects/1/members/1/edit' },
+          url: { path: '/projects/1/members/1/edit' },
         })
       );
     });

@@ -1,43 +1,45 @@
-import { jwtVerify, JWTPayload } from 'jose';
-import { getSecret } from '@/utils/getSecret';
+import { decodeJwt, jwtVerify, createRemoteJWKSet, JWTPayload } from "jose";
+
+// Define the issuer, audience and JWKS URL pointing to the Auth Service
+const ISSUER = process.env.TOKEN_ISSUER || "http://localhost:4646";
+const AUDIENCE = process.env.TOKEN_AUDIENCE || "my-ui";
+// This runs server-side, so prefer AUTH_ENDPOINT (e.g. http://auth:4646 inside Docker) over the browser-facing URL
+const JWKS_URL = `${process.env.AUTH_ENDPOINT ?? process.env.NEXT_PUBLIC_AUTH_ENDPOINT}/jwks`;
+
+// createRemoteJWKSet automatically caches keys and refetches when a key rotates
+let cachedJWKSClient: ReturnType<typeof createRemoteJWKSet> | null = null;
 
 /**
- * Get the JWT Secret
- * @returns 
+ * Get the cached JWK client or create a new one if it doesn't exist.
+ *
+ * @returns the JWK client for verifying JWTs
  */
-export async function getJwtSecretKey(): Promise<Uint8Array> {
-    const secret = await getSecret();
-
-    if (!secret) {
-        throw new Error('JWT Secret key is not set');
-    }
-
-    return new TextEncoder().encode(secret);
+function getJWKClient() {
+  if (!cachedJWKSClient) {
+    cachedJWKSClient = createRemoteJWKSet(new URL(JWKS_URL));
+  }
+  return cachedJWKSClient;
 }
 
 /**
- * Determine if token is valid
- * @param token 
- * @returns 
+ * Verify a JWT against the public keys fetched from the Auth Service's JWKS endpoint.
+ *
+ * @param token the JWT string to verify
+ * @returns a Promise that resolves to the decoded payload if valid, or null if invalid
  */
 export async function verifyJwtToken(token: string): Promise<JWTPayload | null> {
-    try {
-        const secretKey = await getJwtSecretKey();
+  try {
+    const client = getJWKClient();
+    const { payload } = await jwtVerify(token, client, {
+      issuer: ISSUER,
+      audience: AUDIENCE,
+      algorithms: ['RS256'],
+    });
 
-        const { payload } = await jwtVerify(token, secretKey) as { payload: JWTPayload };
-
-        return payload; //return boolean
-    } catch (error) {
-        console.error(JSON.stringify({
-            level: 'error',
-            message: '[verifyJwtToken]: Token verification failed',
-            error: {
-                name: (error as Error).name,
-                message: (error as Error).message,
-                stack: (error as Error).stack
-            }
-        }));
-        return null;
-    }
+    return payload as JWTPayload;
+  } catch (error) {
+    const decoded = decodeJwt(token);
+    console.error("JWT verification failed:", error, decoded, ISSUER, AUDIENCE);
+    return null;
+  }
 }
-

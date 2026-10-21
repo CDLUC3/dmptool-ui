@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
-import Link from 'next/link';
+import { Link } from '@/i18n/routing';
 import {
   Breadcrumb,
   Breadcrumbs,
@@ -16,7 +16,7 @@ import { useTranslations } from 'next-intl';
 
 //GraphQL
 import { useLazyQuery } from '@apollo/client/react';
-import { TemplatesDocument, TemplatesQuery } from '@/generated/graphql';
+import { TemplatesDocument } from '@/generated/graphql';
 
 import {
   TemplateSearchResultInterface,
@@ -84,7 +84,9 @@ const TemplateListPage: React.FC = () => {
   const TEMPLATE_CREATE_URL = routePath('template.create');
 
   // Lazy query for organization templates
-  const [fetchTemplates, { data: templateData, loading, error: queryError }] = useLazyQuery<TemplatesQuery>(TemplatesDocument);
+  const [fetchTemplates, { data: templateData, loading, error: queryError }] = useLazyQuery(TemplatesDocument, {
+    fetchPolicy: 'network-only',
+  });
 
   // zero out search and filters
   const resetSearch = async () => {

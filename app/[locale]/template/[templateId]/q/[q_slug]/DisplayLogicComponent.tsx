@@ -40,6 +40,9 @@ interface DisplayLogicComponentProps {
   // Lets "Remove all" skip the backend call when there's nothing there yet
   // to delete — the user is just discarding a local, never-saved draft.
   hasSavedDisplayLogic?: boolean;
+  // Trigger questions to highlight, e.g. when linked from a message about a move that this question's display logic
+  // is blocking. The first highlighted trigger question is scrolled into view and focused
+  highlightedTriggerQuestionIds?: number[];
 }
 
 const MAX_OPTION_LABEL_LENGTH = 60; // Max length for a select option label before truncating with ellipsis.
@@ -68,124 +71,43 @@ const makeGroup = (triggerQuestionId: number, tq: TriggerQuestionOption): Displa
 };
 
 
-// In "ALL" mode, each option value can only appear once per group. 
-// This prevents contradictory pairs like "is selected: Yes" and "is NOT selected: Yes" 
-// in the same group.
-const hasDuplicateOptionValues = (group: DisplayLogicGroup) => {
-  const seen = new Set<string>();
-  for (const condition of group.conditions) {
-    const value = condition.optionValue;
-    if (!value) continue;
-    if (seen.has(value)) return true;
-    seen.add(value);
-  }
-  return false;
-};
+// Conditions within a group are always joined with OR (the any/all match type only applies
+// between groups), so each option can only be used once per group. Otherwise a group could contain
+// opposite conditions like "includes: California" OR "does not include: California", which is always true.
+// The option dropdowns enforce this, so duplicates can't be created.
 
-// In "ANY" mode, each condition in a group must be unique (no duplicate operator + option pairs).
-const conditionPairKey = (operator: 'is' | 'is_not', optionValue: string) =>
-  `${operator}::${optionValue}`;
+// Returns the option values already used by other conditions in the group
+const getOptionValuesUsedByOthers = (group: DisplayLogicGroup, conditionId?: string) =>
+  new Set(
+    group.conditions
+      .filter((c) => c.id !== conditionId)
+      .map((c) => c.optionValue)
+      .filter(Boolean)
+  );
 
-
-// In "ANY" mode, each condition in a group must be unique (no duplicate operator + option pairs).
-const hasDuplicateConditionPairs = (group: DisplayLogicGroup) => {
-  const seen = new Set<string>();
-  for (const condition of group.conditions) {
-    const key = conditionPairKey(condition.operator, condition.optionValue);
-    if (seen.has(key)) return true;
-    seen.add(key);
-  }
-  return false;
-};
-
-// Returns the list of operators available for a given trigger question.
-const getOperatorsForQuestion = (
-  _tq: TriggerQuestionOption
-): ('is' | 'is_not')[] => {
-  return ['is', 'is_not'];
-};
-
-// In ALL mode, each option value can only appear once per group.
-// In ANY mode, each operator + option pair can only appear once per group.
-// This prevents contradictory pairs like "is selected: Yes" and
-// "is NOT selected: Yes" in the same group.
+// Returns the options a condition can choose from: its own option plus any option not used elsewhere in the group
 const getAvailableConditionOptions = (
-  matchType: DisplayLogic['matchType'],
   group: DisplayLogicGroup,
   conditionId: string,
   tq: TriggerQuestionOption
 ) => {
-  const currentCondition = group.conditions.find((c) => c.id === conditionId);
-  const currentValue = currentCondition?.optionValue;
-
-  if (matchType === 'all') {
-    const usedByOtherConditions = new Set(
-      group.conditions
-        .filter((c) => c.id !== conditionId)
-        .map((c) => c.optionValue)
-        .filter(Boolean)
-    );
-    return tq.options.filter(
-      (opt) => opt.value === currentValue || !usedByOtherConditions.has(opt.value)
-    );
-  }
-
-  // In ANY mode, each operator + option pair can only appear once per group.
-  const currentOperator = currentCondition?.operator ?? 'is';
-  const usedPairsByOthers = new Set(
-    group.conditions
-      .filter((c) => c.id !== conditionId)
-      .map((c) => conditionPairKey(c.operator, c.optionValue))
-  );
-
-  return tq.options.filter(
-    (opt) =>
-      opt.value === currentValue ||
-      !usedPairsByOthers.has(conditionPairKey(currentOperator, opt.value))
-  );
+  const currentValue = group.conditions.find((c) => c.id === conditionId)?.optionValue;
+  const usedByOthers = getOptionValuesUsedByOthers(group, conditionId);
+  // Always keep the condition's own option, so previously saved duplicates still show their selection
+  return tq.options.filter((opt) => opt.value === currentValue || !usedByOthers.has(opt.value));
 };
 
-// Returns the operator options available for a given condition — excludes any
-// operator that would create a duplicate (operator, optionValue) pair with
-// another condition in the same group, based on this condition's CURRENT option value.
-const getAvailableOperatorOptions = (
-  group: DisplayLogicGroup,
-  conditionId: string,
-  allOperatorItems: { id: string; name: string }[]
-) => {
-  const condition = group.conditions.find((c) => c.id === conditionId);
-  if (!condition) return allOperatorItems;
-
-  const usedPairsByOthers = new Set(
-    group.conditions
-      .filter((c) => c.id !== conditionId)
-      .map((c) => conditionPairKey(c.operator, c.optionValue))
-  );
-
-  return allOperatorItems.filter(
-    (item) =>
-      item.id === condition.operator ||
-      !usedPairsByOthers.has(conditionPairKey(item.id as 'is' | 'is_not', condition.optionValue))
-  );
+// Returns the first option not yet used in the group, if any
+const getFirstUnusedOption = (group: DisplayLogicGroup, tq: TriggerQuestionOption) => {
+  const used = getOptionValuesUsedByOthers(group);
+  return tq.options.find((opt) => !used.has(opt.value));
 };
-// Returns true if a new condition can be added to a group, based on the match type 
-// and the trigger question's options.
+
+// Returns true if a new condition can be added to a group, i.e. the trigger question still has an unused option
 const canAddConditionForGroup = (
-  matchType: DisplayLogic['matchType'],
   group: DisplayLogicGroup,
   tq: TriggerQuestionOption
-) => {
-  if (matchType === 'all') {
-    const usedValues = new Set(group.conditions.map((c) => c.optionValue).filter(Boolean));
-    return tq.options.some((opt) => !usedValues.has(opt.value));
-  }
-
-  const operators = getOperatorsForQuestion(tq);
-  const usedPairs = new Set(group.conditions.map((c) => conditionPairKey(c.operator, c.optionValue)));
-  return tq.options.some((opt) =>
-    operators.some((operator) => !usedPairs.has(conditionPairKey(operator, opt.value)))
-  );
-};
+) => getFirstUnusedOption(group, tq) !== undefined;
 
 
 /**
@@ -207,6 +129,7 @@ const DisplayLogicComponent = ({
   isSaving = false,
   isLoadingExistingLogic = false,
   hasSavedDisplayLogic = false,
+  highlightedTriggerQuestionIds = [],
 }: DisplayLogicComponentProps) => {
   // hooks
   const t = useTranslations('QuestionEdit');
@@ -219,7 +142,6 @@ const DisplayLogicComponent = ({
   const [isRemoveAllOpen, setRemoveAllOpen] = useState(false);
   const [isRemoving, setIsRemoving] = useState(false);
   const [errors, setErrors] = useState<string[]>([]);
-  const [pendingMatchType, setPendingMatchType] = useState<DisplayLogic['matchType'] | null>(null);
 
 
   const ACTION_ITEMS = [
@@ -268,26 +190,6 @@ const DisplayLogicComponent = ({
   const handleSave = async () => {
     if (!displayLogic) return;
 
-    if (
-      displayLogic.matchType === 'all' &&
-      displayLogic.groups.some((group) => hasDuplicateOptionValues(group))
-    ) {
-      setErrors([
-        t('tabPanel.messages.allMatchTypeRule')
-      ]);
-      return;
-    }
-
-    if (
-      displayLogic.matchType === 'any' &&
-      displayLogic.groups.some((group) => hasDuplicateConditionPairs(group))
-    ) {
-      setErrors([
-        t('tabPanel.messages.anyMatchTypeRule')
-      ]);
-      return;
-    }
-
     setErrors([]);
     await onDisplayLogicSave();
   };
@@ -333,36 +235,15 @@ const DisplayLogicComponent = ({
     updateLogic({ groups: displayLogic.groups.filter((g) => g.id !== groupId) });
   };
 
-  // Adds a new condition to a group, defaulting to the first option of that group's trigger question
+  // Adds a new condition to a group, defaulting to "is" and the first option not already used in the group
   const handleAddCondition = (group: DisplayLogicGroup, tq: TriggerQuestionOption) => {
-    const usedValuesInGroup = new Set(group.conditions.map((c) => c.optionValue).filter(Boolean));
-
-    let nextOperator: 'is' | 'is_not' = 'is';
-    let firstOption: TriggerQuestionOption['options'][number] | undefined = tq.options[0];
-
-    if (displayLogic?.matchType === 'all') {
-      firstOption = tq.options.find((opt) => !usedValuesInGroup.has(opt.value));
-    } else {
-      const operators = getOperatorsForQuestion(tq);
-      const usedPairs = new Set(group.conditions.map((c) => conditionPairKey(c.operator, c.optionValue)));
-
-      firstOption = undefined;
-      for (const operator of operators) {
-        const candidate = tq.options.find((opt) => !usedPairs.has(conditionPairKey(operator, opt.value)));
-        if (candidate) {
-          nextOperator = operator;
-          firstOption = candidate;
-          break;
-        }
-      }
-    }
-
+    const firstOption = getFirstUnusedOption(group, tq);
     if (!firstOption) return;
 
     updateGroup(group.id, {
       conditions: [
         ...group.conditions,
-        { id: makeId('cond'), operator: nextOperator, optionValue: firstOption?.value ?? '' },
+        { id: makeId('cond'), operator: 'is', optionValue: firstOption.value },
       ],
     });
   };
@@ -405,40 +286,9 @@ const DisplayLogicComponent = ({
     }
   };
 
-  const groupsWithDuplicates = (matchType: DisplayLogic['matchType']) => {
-    if (!displayLogic || matchType !== 'all') return [];
-    return displayLogic.groups.filter((g) => hasDuplicateOptionValues(g));
-  };
-
+  // The match type only changes how groups are joined (AND/OR), so it never affects the conditions within a group
   const handleMatchTypeChange = (value: string) => {
-    if (!displayLogic) return;
-    const newMatchType = value as DisplayLogic['matchType'];
-
-    if (groupsWithDuplicates(newMatchType).length > 0) {
-      setPendingMatchType(newMatchType); // opens confirm dialog instead of applying immediately
-      return;
-    }
-
-    updateLogic({ matchType: newMatchType });
-  };
-
-  const confirmMatchTypeChange = () => {
-    if (!pendingMatchType || !displayLogic) return;
-
-    const cleanedGroups = displayLogic.groups.map((group) => {
-      const seen = new Set<string>();
-      return {
-        ...group,
-        conditions: group.conditions.filter((c) => {
-          if (!c.optionValue || seen.has(c.optionValue)) return false;
-          seen.add(c.optionValue);
-          return true;
-        }),
-      };
-    });
-
-    updateLogic({ matchType: pendingMatchType, groups: cleanedGroups });
-    setPendingMatchType(null);
+    updateLogic({ matchType: value as DisplayLogic['matchType'] });
   };
 
   // If the display logic references trigger questions that no longer exist
@@ -454,6 +304,20 @@ const DisplayLogicComponent = ({
       toastState.add(t('tabPanel.messages.removedUnavailableTriggerQuestions'));
     }
   }, [triggerQuestions, displayLogic, triggerQuestionMap, onDisplayLogicChange, toastState, t]);
+
+  // Scroll to and focus the first highlighted trigger question once it is shown, so the user is taken straight to it
+  const firstHighlightedGroupId = displayLogic?.groups.find(
+    (g) => triggerQuestionMap.has(g.triggerQuestionId) && highlightedTriggerQuestionIds.includes(g.triggerQuestionId)
+  )?.id;
+  const firstHighlightedGroupRef = useRef<HTMLDivElement | null>(null);
+  const hasFocusedHighlightedGroup = useRef(false);
+  useEffect(() => {
+    if (hasFocusedHighlightedGroup.current || !firstHighlightedGroupId || !firstHighlightedGroupRef.current) return;
+
+    hasFocusedHighlightedGroup.current = true;
+    firstHighlightedGroupRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    firstHighlightedGroupRef.current.focus({ preventScroll: true });
+  }, [firstHighlightedGroupId]);
 
   // If there's no display logic yet, show the "Add display logic" button (or a message if there are no trigger questions)
   if (!displayLogic) {
@@ -503,50 +367,12 @@ const DisplayLogicComponent = ({
           <span className={styles.sentenceText}>{t('tabPanel.labels.ofTheFollowingMatch')}</span>
         </div>
 
-        <ModalOverlay
-          isOpen={pendingMatchType !== null}
-          onOpenChange={(open) => {
-            if (!open) setPendingMatchType(null);
-          }}
-        >
-          <Modal>
-            <Dialog aria-labelledby="confirm-match-type-change-title">
-              {({ close }) => (
-                <>
-                  <h3 id="confirm-match-type-change-title">{t('tabPanel.headings.confirmMatchTypeChange')}</h3>
-                  <p>{t('tabPanel.descriptions.matchTypeChangeWarning')}</p>
-
-                  <div className={styles.removeAllConditionsDialogButtons}>
-                    <Button
-                      className="tertiary"
-                      autoFocus
-                      onPress={() => {
-                        setPendingMatchType(null);
-                        close();
-                      }}
-                    >
-                      {Global('buttons.cancel')}
-                    </Button>
-
-                    <Button
-                      className="danger"
-                      onPress={async () => {
-                        confirmMatchTypeChange();
-                      }}
-                    >
-                      {Global('buttons.confirm')}
-                    </Button>
-                  </div>
-                </>
-              )}
-            </Dialog>
-          </Modal>
-        </ModalOverlay>
-
         {/* One box per trigger question the user has added */}
         {displayLogic.groups.map((group, index) => {
           const tq = triggerQuestionMap.get(group.triggerQuestionId);
           if (!tq) return null;
+
+          const isHighlighted = highlightedTriggerQuestionIds.includes(group.triggerQuestionId);
 
           // Determine which operator items to show based on whether the trigger question is multi-value or single-value
           const operatorItems = tq.isMultiValue ? OPERATOR_ITEMS_MULTI : OPERATOR_ITEMS_SINGLE;
@@ -560,10 +386,18 @@ const DisplayLogicComponent = ({
             <div key={group.id}>
               {index > 0 && (
                 <div className={styles.groupJoiner} aria-hidden="true">
-                  {displayLogic.matchType === 'all' ? 'AND' : 'OR'}
+                  {displayLogic.matchType === 'all' ? t('tabPanel.labels.joinerAnd') : t('tabPanel.labels.joinerOr')}
                 </div>
               )}
-              <div className={styles.conditionsWrapper}>
+              <div
+                className={`${styles.conditionsWrapper} ${isHighlighted ? styles.highlightedGroup : ''}`}
+                ref={group.id === firstHighlightedGroupId ? firstHighlightedGroupRef : undefined}
+                tabIndex={isHighlighted ? -1 : undefined}
+                data-testid={isHighlighted ? 'highlighted-trigger-question' : undefined}
+              >
+                {isHighlighted && (
+                  <p className={styles.highlightedGroupMessage}>{t('tabPanel.messages.blockingTriggerQuestion')}</p>
+                )}
                 <Button
                   className={`react-aria-Button ${styles.removeGroupButton}`}
                   type="button"
@@ -583,13 +417,10 @@ const DisplayLogicComponent = ({
 
                 {group.conditions.map((condition, conditionIndex) => {
                   const conditionOptions = getAvailableConditionOptions(
-                    displayLogic.matchType,
                     group,
                     condition.id,
                     tq
                   );
-
-                  const availableOperatorItems = getAvailableOperatorOptions(group, condition.id, operatorItems);
 
                   const selectedOption = tq.options.find((opt) => opt.value === condition.optionValue);
                   const conditionLabel = t('tabPanel.buttons.removeConditionAriaLabel', {
@@ -604,9 +435,10 @@ const DisplayLogicComponent = ({
 
                   return (
                     <div key={condition.id}>
+                      {/* Conditions within a group are always joined with OR, regardless of the match type */}
                       {conditionIndex > 0 && (
                         <div className={styles.conditionJoiner} aria-hidden="true">
-                          {displayLogic.matchType === 'all' ? 'AND' : 'OR'}
+                          {t('tabPanel.labels.joinerOr')}
                         </div>
                       )}
                       <div className={styles.conditionRow}>
@@ -615,7 +447,7 @@ const DisplayLogicComponent = ({
                           label={t('tabPanel.labels.conditionOperator')}
                           selectClasses={styles.conditionOperator}
                           hideLabelVisually
-                          items={availableOperatorItems}
+                          items={operatorItems}
                           selectedKey={condition.operator}
                           onChange={(value) => handleConditionChange(group, condition.id, 'operator', value)}
                         />
@@ -641,7 +473,7 @@ const DisplayLogicComponent = ({
                   )
                 })}
 
-                {canAddConditionForGroup(displayLogic.matchType, group, tq) && (
+                {canAddConditionForGroup(group, tq) && (
                   <Button
                     className={`react-aria-Button link ${styles.addConditionButton}`}
                     type="button"

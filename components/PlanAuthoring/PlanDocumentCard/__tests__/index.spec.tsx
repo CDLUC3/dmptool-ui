@@ -7,6 +7,14 @@ import type { PlanDocument } from "../../model";
 
 expect.extend(toHaveNoViolations);
 
+jest.mock('@/i18n/routing', () => ({
+  Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
+    <a href={href} {...props}>{children}</a>
+  ),
+  useRouter: jest.fn(() => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn() })),
+  usePathname: jest.fn(() => '/'),
+}));
+
 const planDocument: PlanDocument = {
   fileName: "Coastal_Ocean_DMP_Frost_2026.pdf",
   fileType: "PDF",

@@ -6,7 +6,7 @@ import logECS from '@/utils/clientLogger';
 import { useCsrf } from '@/context/CsrfContext';
 
 //Need to import this useRouter after the jest.mock is in place
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/i18n/routing';
 import { fetchCsrfToken } from "@/utils/authHelper";
 import mocksAffiliations from '@/__mocks__/common/mockAffiliations.json';
 
@@ -38,8 +38,12 @@ jest.mock('@/components/Form/TypeAheadWithOther', () => ({
   })),
 }));
 
-jest.mock('next/navigation', () => ({
-  useRouter: jest.fn()
+
+jest.mock('@/i18n/routing', () => ({
+  Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
+    <a href={href} {...props}>{children}</a>
+  ),
+  useRouter: jest.fn(() => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn() })),
 }));
 
 
@@ -80,8 +84,7 @@ const mockFetchCsrfToken = fetchCsrfToken as jest.Mock;
 // Mock fetch globally
 global.fetch = jest.fn() as jest.MockedFunction<typeof fetch>;
 
-const serverEndpoint = process.env.NEXT_PUBLIC_SERVER_ENDPOINT as string;
-const signUpUrl = `${serverEndpoint}/apollo-signup`;
+const signUpUrl = `${process.env.NEXT_PUBLIC_AUTH_ENDPOINT}/sign-up`;
 
 describe('SignUpPage', () => {
   const signupData = {
@@ -136,7 +139,7 @@ describe('SignUpPage', () => {
     HTMLElement.prototype.scrollIntoView = mockScrollIntoView;
     HTMLElement.prototype.focus = mockFocus;
 
-    (useCsrf as jest.Mock).mockReturnValue({ csrfToken: 'mocked-csrf-token' });
+    (useCsrf as jest.Mock).mockReturnValue({ getCsrfToken: jest.fn().mockResolvedValue('mocked-csrf-token') });
 
     mockUseRouter.mockReturnValue({
       push: jest.fn(),
@@ -420,12 +423,12 @@ describe('SignUpPage', () => {
     });
     fireEvent.click(screen.getByTestId("continue"));
 
-    // Nothing typed yet — every requirement should be unmet
-    expect(screen.getByTestId("requirement-minLength")).toHaveClass('unmet');
-    expect(screen.getByTestId("requirement-hasUppercase")).toHaveClass('unmet');
-    expect(screen.getByTestId("requirement-hasLowercase")).toHaveClass('unmet');
-    expect(screen.getByTestId("requirement-hasNumber")).toHaveClass('unmet');
-    expect(screen.getByTestId("requirement-hasSpecialChar")).toHaveClass('unmet');
+    // Nothing typed yet — requirements stay pending, not failed
+    expect(screen.getByTestId("requirement-minLength")).toHaveClass('pending');
+    expect(screen.getByTestId("requirement-hasUppercase")).toHaveClass('pending');
+    expect(screen.getByTestId("requirement-hasLowercase")).toHaveClass('pending');
+    expect(screen.getByTestId("requirement-hasNumber")).toHaveClass('pending');
+    expect(screen.getByTestId("requirement-hasSpecialChar")).toHaveClass('pending');
 
     // Type a password that satisfies every rule
     fireEvent.change(screen.getByTestId("pass"), {
@@ -537,7 +540,7 @@ describe('SignUpPage', () => {
         'Signup error',
         expect.objectContaining({
           error: expect.anything(),
-          url: { path: '/apollo-signup' },
+          url: { path: '/sign-up' },
         })
       )
     });
