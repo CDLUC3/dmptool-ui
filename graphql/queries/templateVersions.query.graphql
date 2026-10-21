@@ -3,6 +3,7 @@ query TemplateVersions($templateId: Int!) {
     name
     version
     versionType
+    visibility
     created
     comment
     id

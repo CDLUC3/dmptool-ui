@@ -5,6 +5,8 @@
 - Added research output editing to the plan page: rows list inline and Add/Edit opens `/projects/:projectId/dmp/:dmpId/ro/:questionKey/:rowIndex` (route `projects.dmp.researchOutput`), which saves through the real API and returns to the question. Given `rowHref`, `ResearchOutputAnswerComponent` renders Add and Edit as `@/i18n/routing` links, so the hrefs are plain `routePath` paths and the locale is added automatically. The styleguide research output page now uses the fake GraphQL client [#430]
 - Added Plan Authoring research-output Add/Edit as a separate screen (`PlanResearchOutputEditScreen`), shown in the styleguide, with optional `rowHref` on `ResearchOutputAnswerComponent` so inline edit stays unchanged when the prop is omitted [#334]
 - Added tests for `PlanResearchOutputEditScreen`, `PlanQuestionAnswer`, and the research-output list, including `jest-axe` accessibility checks [#334]
+- Added autosave to the guidance group page (`admin/guidance/groups/[groupId]`). Each tag's guidance text saves 3 seconds after typing stops and when the window loses focus, matching the plan question page. A status below each editor shows "Unsaved changes", "Saving...", "Saved just now" or "Last saved X minutes ago", and the Save button still works for manual saves. Publish/Unpublish save any pending changes first. Added en-US/pt-BR translations [#193]
+- Added a "last published" note (version, date, visibility, and unpublished changes) and a clearer change log required message to the template Publish modal. The note and the pre-selected visibility come from the last `PUBLISHED` entry in `TemplateVersions` (now including `visibility`), because saving a draft overwrites the template's `latestPublish*` fields [#381]
 - Added `/healthcheck` endpoint that is outside the i18n and other middleware constraints and removed the old `[locale]/healthcheck`
 - Added additional AUTH ENV variables to buildspec and Dockerfile.prod to support new auth service
 - Added HOSTNAME and PORT as env variables in Dockerfile.prod because CLI args are ignored by nextJS (according to Copilot)
@@ -61,7 +63,8 @@
 - Updated `planAuthoringDataSource.ts` to use `hiddenVersionedQuestionIds`, which is returned with every `Save` of a question [#366]
 - Updated `PlanAuthoring` model, and its components like `PlanSectionPickerDialog`, `PlanSection`, `PlanAuthoringScreen` to use the new `visibleQuestions` function to display only those questions in the one-pager [#366]
 - `toQuestion` method now returns `isHidden` in the `toPlanAuthoringModel.ts` file, so we can use that info to determine which questions to show [#366]
-- Updated `ResearchOutputAnswerComponent` list to use the standard button styles and the shared `ModalOverlayComponent` delete confirmation instead of `window.confirm`; Edit and Delete controls now include the output title in their accessible name, and the empty-title fallback is translated [#334]
+- Updated the Update password page to use the `updatePassword` GraphQL mutation
+- Updated `PasswordRequirementsList` so requirements stay pending until the user types, and use ticks instead of warning dots
 - Updated `DisplayLogicComponent` to always assume `OR` type for conditions within the same conditionGroup. Removed logic that was applying the question `displayLogicAction` and `displayLogicMatchType` to conditions within each conditionGroup. Also, added message in `Display logic` tab when a user views the tab before saving the question [#360]
 - Updated conditional display logic error messaging and also added `fetchPolicy` of `network-only` to the `TemplateListPage` [#1472]
 - Updated JWKS loading to be lazy loaded instead of running on startup
@@ -78,6 +81,7 @@
 - Updated `routes.ts` to not require `locale` to be passed in because it was defaulting to `en-US` and changing the language for a user that had a `languageId` of `pt-BR` [#367]
 - Updated all pages to use `useRouter` from `@/i18n/routing` so that it would retain the `locale` specified in the `path`. Also, updated `proxy.ts` so that it accurately applies `locale` to a path that does not contain one. [#367]
 - Updated `README.md` to include more info on localization [#367]
+>>>>>>> development
 - Updated `PlanCard` section progress to prefer required counts (`X of Y required`), falling back to all-question counts (`X of Y`) when none are required [#93]
 - Redesigned `ProjectListItem` and project list pages (`/projects`, `/admin/projects`, `/admin/users/[userId]/projects`) with expandable plan details, skeleton loading, and GraphQL-backed plan and collaborator data
 - Updated `DisplayLogicComponent.tsx` to show condition joiner within condition groups as well as between condition groups [#360]
@@ -183,6 +187,8 @@
 - Updated `RepoSelectorForAnswer` to wait to query `Re3byUrIsDocument` until we have `preferredReposURIs` because preferred repos don't display even though they eventually do to trigger the display of the "preferred repositories" checkbox [#118]
 
 ## Fixed
+- Fixed `addGuidanceTextAction` reading the wrong `dataPath` (`addGuidanceText` instead of `addGuidance`), which meant the new guidance id was never returned and saving the same tag again failed with `Variable "$input" got invalid value null at "input.guidanceId"` [#193]
+- Fixed the pt-BR `publishingTemplate3Private` translation in the template Publish modal, which described the visibility as public instead of organization only [#381]
 - Updated `fetchPolicy` for `publishedTemplates` query on `PlanCreate` page to always fetch latest published plans to address a bug where cached data was getting wrong published version id [#484]
 - Fixed header showing "Login/Sign Up" for logged-in users when running locally in Docker. `lib/server/auth.ts` fetched the JWKS from `NEXT_PUBLIC_AUTH_ENDPOINT`, which resolves to `localhost` inside the `dmptool-ui` container, so JWT verification failed with `ECONNREFUSED`. It now uses the server-side `AUTH_ENDPOINT` and falls back to `NEXT_PUBLIC_AUTH_ENDPOINT` [#477]
 - Fixed header showing "Login/Sign Up" for logged-in users. `app/[locale]/layout.tsx` was still reading the old `dmspt` cookie instead of `ACCESS_TOKEN_NAME`, so the server always rendered the header as logged out [#471]

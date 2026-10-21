@@ -139,8 +139,8 @@ export function usePlanSectionNavigation({
     const firstQuestion = visibleQuestions(section)[0];
     const focusTarget = firstQuestion
       ? document.getElementById(questionAnchorId(firstQuestion.identity))
-          ?.querySelector<HTMLElement>("h3") ??
-        document.getElementById(questionAnchorId(firstQuestion.identity))
+        ?.querySelector<HTMLElement>("h3") ??
+      document.getElementById(questionAnchorId(firstQuestion.identity))
       : sectionNode.querySelector<HTMLElement>("h2");
 
     if (focusTarget) {
@@ -162,7 +162,7 @@ export function usePlanSectionNavigation({
       return;
     }
     jumpedToFragmentRef.current = true;
-    const anchorId = decodeURIComponent(window.location.hash.slice(1));
+    const anchorId = window.location.hash.slice(1);
     if (!anchorId) {
       return;
     }
@@ -185,9 +185,9 @@ export function usePlanSectionNavigation({
     : null;
   const activeIndex = activeSection
     ? sections.findIndex(
-        (section) =>
-          sectionKey(section.identity) === sectionKey(activeSection.identity)
-      )
+      (section) =>
+        sectionKey(section.identity) === sectionKey(activeSection.identity)
+    )
     : -1;
 
   return {

@@ -99,5 +99,47 @@ describe("answerUtils", () => {
         comment: "note",
       });
     });
+
+    describe("select box default option", () => {
+      const parsedJson = {
+        type: "selectBox",
+        options: [
+          { label: "Oregon", value: "Oregon" },
+          { label: "California", value: "California", selected: true },
+        ],
+      };
+
+      it.each([
+        ["missing", null],
+        ["null", { type: "selectBox", answer: null }],
+        ["empty", { type: "selectBox", answer: "" }],
+      ])("uses the default option when the answer is %s", (_label, draft) => {
+        expect(withAdditionalComment(draft, "selectBox", "note", parsedJson)).toEqual({
+          type: "selectBox",
+          answer: "California",
+          comment: "note",
+        });
+      });
+
+      it("keeps a chosen answer over the default option", () => {
+        expect(
+          withAdditionalComment(
+            { type: "selectBox", answer: "Oregon" },
+            "selectBox",
+            "note",
+            parsedJson
+          )
+        ).toEqual({ type: "selectBox", answer: "Oregon", comment: "note" });
+      });
+
+      it("leaves the answer empty when no option is marked selected", () => {
+        expect(
+          withAdditionalComment(null, "selectBox", "note", {
+            type: "selectBox",
+            options: [{ label: "Oregon", value: "Oregon" }],
+          })
+        ).toEqual({ type: "selectBox", answer: null, comment: "note" });
+      });
+    });
   });
 });

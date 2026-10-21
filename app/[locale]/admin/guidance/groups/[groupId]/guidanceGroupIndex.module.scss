@@ -41,7 +41,14 @@
 .buttonWrapper {
   display: flex;
   justify-content: flex-end;
+  align-items: center;
+  gap: var(--space-4);
   margin: var(--space-4) 0;
+}
+
+.lastSaved {
+  color: var(--slate-800);
+  font-size: var(--fs-small);
 }
 
 .buttonSmallDisabled {

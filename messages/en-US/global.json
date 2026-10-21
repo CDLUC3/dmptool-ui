@@ -192,7 +192,8 @@
         "passwordMissingLowercase": "Password must contain at least one lowercase letter",
         "passwordMissingSpecialChar": "Password must contain at least one special character",
         "incorrectCurrentPassword": "Current password is incorrect",
-        "errorUpdatingPassword": "Error when updating password"
+        "errorUpdatingPassword": "Error when updating password",
+        "passwordDoesNotMeetRequirements": "Password does not meet the requirements"
       }
     }
   },
@@ -873,6 +874,10 @@
       "loadingPleaseWait": "Loading, please wait...",
       "unPublishBtnTooltipMessage": "Cannot unpublish guidance group because there are no published versions.",
       "publishBtnTooltipMessage": "Guidance group is already published.",
+      "unsavedChanges": "Unsaved changes",
+      "savedJustNow": "Saved just now",
+      "lastSavedOneMinuteAgo": "Last saved 1 minute ago",
+      "lastSavedMinutesAgo": "Last saved {minutes} minutes ago",
       "success": {
         "guidanceGroupCreated": "Guidance group {groupName} successfully created",
         "guidanceGroupPublished": "Guidance group {groupName} successfully published",
