@@ -91,6 +91,7 @@ const routes = {
   'projects.dmp.customSection': '/projects/:projectId/dmp/:dmpId/cs/:csid',
   'projects.dmp.customQuestion.underVersionedSection': '/projects/:projectId/dmp/:dmpId/s/:sid/cq/:cqid',
   'projects.dmp.customQuestion.underCustomSection': '/projects/:projectId/dmp/:dmpId/cs/:csid/cq/:cqid',
+  'projects.dmp.researchOutput': '/projects/:projectId/dmp/:dmpId/ro/:questionKey/:rowIndex',
   'projects.dmp.create': '/projects/:projectId/dmp/create',
   'projects.dmp.upload': '/projects/:projectId/dmp/upload',
 

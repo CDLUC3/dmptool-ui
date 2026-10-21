@@ -31,6 +31,11 @@ describe('routePath utility', () => {
       expect(routePath('projects.members.search', { projectId: '123' }, { role: 'PI', status: 'active' }))
         .toBe('/projects/123/members/search?role=PI&status=active');
     });
+
+    it('should generate the research output row route', () => {
+      expect(routePath('projects.dmp.researchOutput', { projectId: '123', dmpId: '456', questionKey: 'base-question-7', rowIndex: 'new' }))
+        .toBe('/projects/123/dmp/456/ro/base-question-7/new');
+    });
   });
 
   // Parameter handling

@@ -57,7 +57,6 @@ export type QuestionType = keyof QuestionTypeMap;
 
 export type ParsedQuestion = QuestionTypeMap[QuestionType];
 
-
 export interface RenderQuestionFieldProps {
   questionType: string;
   parsed: ParsedQuestion | undefined;
@@ -65,6 +64,10 @@ export interface RenderQuestionFieldProps {
   readOnly?: boolean;
   /** TinyMCE DOM id — required when multiple textArea questions share a page. */
   editorId?: string;
+  /** Native input name. Unique per question when several questions share a page. */
+  fieldName?: string;
+  /** Id of the question title. When set, it names the field in place of the type label ("text", "email", …). */
+  labelledBy?: string;
 
   radioProps?: {
     selectedRadioValue: string;
@@ -165,6 +168,8 @@ export function useRenderQuestionField({
   readOnly,
   questionType,
   editorId = 'question-text-editor',
+  fieldName,
+  labelledBy,
   radioProps,
   checkBoxProps,
   multiSelectBoxProps,
@@ -193,7 +198,7 @@ export function useRenderQuestionField({
           <RadioButtonsQuestionComponent
             parsedQuestion={parsed}
             selectedRadioValue={radioProps?.selectedRadioValue}
-            name="radio-buttons"
+            name={fieldName ?? "radio-buttons"}
             handleRadioChange={radioProps?.handleRadioChange}
             isDisabled={readOnly}
           />
@@ -207,6 +212,7 @@ export function useRenderQuestionField({
           <CheckboxesQuestionComponent
             parsedQuestion={parsed}
             selectedCheckboxValues={checkBoxProps?.selectedCheckboxValues}
+            name={fieldName}
             handleCheckboxGroupChange={checkBoxProps?.handleCheckboxGroupChange}
             isDisabled={readOnly}
           />
@@ -221,6 +227,7 @@ export function useRenderQuestionField({
             <SelectboxQuestionComponent
               parsedQuestion={parsed}
               selectedSelectValue={selectBoxProps.selectedSelectValue}
+              selectName={fieldName}
               handleSelectChange={selectBoxProps.handleSelectChange}
               isDisabled={readOnly}
             />
@@ -249,9 +256,11 @@ export function useRenderQuestionField({
         const { minLength, maxLength } = parsed.attributes || {};
         return (
           <FormInput
-            name="textField"
+            name={fieldName ?? "textField"}
             type="text"
             label="text"
+            labelClasses={labelledBy ? "hidden-accessibly" : undefined}
+            aria-labelledby={labelledBy}
             placeholder="Enter text"
             value={textFieldProps?.textValue ?? ''
             }
@@ -269,6 +278,7 @@ export function useRenderQuestionField({
         return (
           <TinyMCEEditor
             id={editorId}
+            labelId={labelledBy}
             content={textAreaProps?.content ?? ''}
             setContent={(value) => textAreaProps?.setContent && textAreaProps?.setContent(value)}
             onChange={textAreaProps?.handleTextAreaChange}
@@ -283,11 +293,12 @@ export function useRenderQuestionField({
         const { min: minValue, max: maxValue } = parsed.attributes || {};
         return (
           <DateComponent
-            name="startDate"
+            name={fieldName ?? "startDate"}
             value={getCalendarDateValue(dateProps?.dateValue)}
             onChange={(newDate) => dateProps?.handleDateChange(newDate)
             }
-            label="Date"
+            label={labelledBy ? "" : "Date"}
+            aria-labelledby={labelledBy}
             minValue={minValue}
             maxValue={maxValue}
             isDisabled={readOnly}
@@ -301,6 +312,7 @@ export function useRenderQuestionField({
         return (
           <DateRangeQuestionComponent
             parsedQuestion={parsed}
+            fieldName={fieldName}
             dateRange={dateRangeProps?.dateRange}
             handleDateChange={dateRangeProps?.handleDateRangeChange}
             isDisabled={readOnly}
@@ -314,7 +326,8 @@ export function useRenderQuestionField({
         const { min: minValue, max: maxValue, step } = parsed.attributes || {};
         return (
           <NumberComponent
-            label="number"
+            label={labelledBy ? "" : "number"}
+            aria-labelledby={labelledBy}
             value={numberProps?.numberValue ?? undefined
             }
             onChange={numberProps?.handleNumberChange}
@@ -361,9 +374,11 @@ export function useRenderQuestionField({
         const { minLength, maxLength, pattern } = parsed.attributes || {};
         return (
           <FormInput
-            name="urlInput"
+            name={fieldName ?? "urlInput"}
             type="url"
             label="url"
+            labelClasses={labelledBy ? "hidden-accessibly" : undefined}
+            aria-labelledby={labelledBy}
             placeholder="url"
             value={urlProps?.urlValue ?? ''
             }
@@ -382,9 +397,11 @@ export function useRenderQuestionField({
         const { minLength, maxLength, pattern } = parsed.attributes || {};
         return (
           <FormInput
-            name="emailInput"
+            name={fieldName ?? "emailInput"}
             type="email"
             label="email"
+            labelClasses={labelledBy ? "hidden-accessibly" : undefined}
+            aria-labelledby={labelledBy}
             placeholder="email"
             value={emailProps?.emailValue ?? ''
             }
@@ -403,6 +420,7 @@ export function useRenderQuestionField({
         return (
           <BooleanQuestionComponent
             parsedQuestion={parsed}
+            name={fieldName}
             selectedValue={booleanProps?.yesNoValue}
             handleRadioChange={booleanProps?.handleBooleanChange}
             isDisabled={readOnly}

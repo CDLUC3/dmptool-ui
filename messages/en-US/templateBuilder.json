@@ -444,10 +444,14 @@
       "guidanceText": "Question guidance (optional but recommended)",
       "sampleText": "Sample text",
       "comment": "Additional comment",
-      "bestPracticeTags": "Question Best Practices to include"
+      "bestPracticeTags": "Question Best Practices to include",
+      "editResearchOutput": "Edit {title}",
+      "viewResearchOutput": "View {title}",
+      "deleteResearchOutput": "Delete {title}"
     },
     "messages": {
-      "areYouSureYouWantToDelete": "Are you sure you want to delete this research output?",
+      "areYouSureYouWantToDelete": "Are you sure you want to delete {title}?",
+      "untitledResearchOutput": "Untitled Research Output",
       "errors": {
         "questionTextRequired": "Question text field is required.",
         "questionUpdateError": "Error when updating question",
@@ -470,7 +474,8 @@
       "deleteQuestion": "Delete question",
       "confirmDelete": "Confirm delete",
       "addResearchOutput": "Add Research Output",
-      "editResearchOutput": "Edit Research Output"
+      "editResearchOutput": "Edit Research Output",
+      "viewResearchOutput": "View Research Output"
     },
     "definitions": {
       "type": "Type",

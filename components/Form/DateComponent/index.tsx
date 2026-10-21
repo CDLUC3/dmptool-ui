@@ -28,6 +28,7 @@ interface DateComponentProps {
   maxValue?: DateValue | string;
   helpMessage?: string;
   isDisabled?: boolean;
+  'aria-labelledby'?: string;
 }
 
 function toDateValue(value?: string | DateValue) {
@@ -46,6 +47,7 @@ const DateComponent: React.FC<DateComponentProps> = ({
   maxValue,
   helpMessage = "",
   isDisabled = false,
+  'aria-labelledby': ariaLabelledBy,
 }) => (
   <DatePicker
     name={name}
@@ -55,8 +57,9 @@ const DateComponent: React.FC<DateComponentProps> = ({
     minValue={toDateValue(minValue)}
     maxValue={toDateValue(maxValue)}
     isDisabled={isDisabled}
+    aria-labelledby={ariaLabelledBy}
   >
-    <Label>{label}</Label>
+    {label ? <Label>{label}</Label> : null}
     <Group>
       <DateInput>{(segment) => <DateSegment segment={segment} />}</DateInput>
       <Button>

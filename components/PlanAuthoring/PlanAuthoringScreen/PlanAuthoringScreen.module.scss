@@ -48,6 +48,10 @@
   padding-bottom: var(--space-8, 3rem);
 }
 
+.readOnlyNotice {
+  margin-bottom: var(--space-6, 2rem);
+}
+
 .writePlanIntro {
   display: flex;
   flex-direction: column;
@@ -81,6 +85,24 @@
       color: var(--gray-600);
     }
   }
+}
+
+.loadError {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding-bottom: var(--space-8, 3rem);
+  color: var(--error-600, #b91c1c);
+
+  p {
+    margin: 0;
+  }
+}
+
+.loadErrorDetail {
+  font-size: 0.875rem;
+  color: var(--gray-600);
 }
 
 .sectionsStack {

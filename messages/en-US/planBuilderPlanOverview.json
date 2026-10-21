@@ -61,10 +61,7 @@
     "sections": {
       "start": "Start",
       "ariaLabel": "{action} answer for: {title}",
-      "progress": "{current} of {total}",
-      "questionsAnswered": "question(s) answered",
       "update": "Update",
-      "updateSection": "Update {title}",
       "view": "View"
     },
     "errors": {
