@@ -32,6 +32,7 @@
       "invalidPassword": "Please enter a valid password",
       "passwordRequirements": "Password must meet the requirements below",
       "passwordUpdatedTitle": "Password updated",
+      "expiredTokenMessage": "Your password reset link has expired. Please request a new password reset.",
       "passwordUpdatedMessage": "Your password has been changed successfully. You can now sign in using your new password.",
       "buttons": {
         "changeMyPassword": "Change my password",

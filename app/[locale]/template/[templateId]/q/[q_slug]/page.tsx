@@ -1,7 +1,8 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react';
-import { useParams, useRouter, useSearchParams } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
+import { useRouter } from '@/i18n/routing';
 import { useTranslations } from 'next-intl';
 import { useQuery, useMutation } from '@apollo/client/react';
 import {
@@ -121,6 +122,14 @@ const QuestionEdit = () => {
   const templateId = String(params.templateId);
   const questionId = String(params.q_slug); //question id
   const questionTypeIdQueryParam = searchParams.get('questionType') || null;
+  // Links can open a specific tab, and highlight trigger questions in the Display Logic tab, e.g. from the message
+  // shown when a move is blocked by this question's display logic
+  const tabQueryParam = searchParams.get('tab');
+  const defaultTab = tabQueryParam && ['edit', 'options', 'logic'].includes(tabQueryParam) ? tabQueryParam : 'edit';
+  const highlightedTriggerQuestionIds = (searchParams.get('trigger') ?? '')
+    .split(',')
+    .map(Number)
+    .filter((id) => Number.isInteger(id) && id > 0);
 
   //For scrolling to error in page
   const errorRef = useRef<HTMLDivElement | null>(null);
@@ -553,10 +562,13 @@ const QuestionEdit = () => {
           }
         } else {
           if (response?.data?.errors) {
-            const errs = extractErrors<UpdateQuestionErrors>(response?.data?.errors, ["general", "questionText"]);
+            const errs = extractErrors<UpdateQuestionErrors>(response?.data?.errors, ["general", "questionText", "json"]);
             if (errs.length > 0) {
+              // The server refused the update, so show the errors and stay on the page instead of reporting success
               setIsSubmitting(false);
               setErrors(errs);
+              announce(QuestionAdd('researchOutput.announcements.errorOccurred') || 'An error occurred. Please check the form.');
+              return;
             }
           }
           setHasUnsavedQuestionChanges(false);
@@ -884,7 +896,7 @@ const QuestionEdit = () => {
 
       <div className="template-editor-container">
         <div className="main-content">
-          <Tabs>
+          <Tabs defaultSelectedKey={defaultTab}>
             <TabList aria-label="Question editing">
               <Tab id="edit">{t('tabs.editQuestion')}</Tab>
               <Tab id="options">{t('tabs.options')}</Tab>
@@ -1172,6 +1184,7 @@ const QuestionEdit = () => {
               <h2>{t('tabPanel.headings.logic')}</h2>
               <DisplayLogicComponent
                 triggerQuestions={triggerQuestions}
+                highlightedTriggerQuestionIds={highlightedTriggerQuestionIds}
                 displayLogic={displayLogic}
                 hasSavedDisplayLogic={hasSavedDisplayLogic}
                 onDisplayLogicChange={handleDisplayLogicChange}

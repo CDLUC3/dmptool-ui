@@ -1,6 +1,8 @@
 // enable TypeScript and IntelliSense support for Cypress
 /// <reference types="cypress" />
 
+import { ACCESS_TOKEN_NAME, REFRESH_TOKEN_NAME } from "../../utils/authHelper";
+
 describe('Authentication flow tests', () => {
   let baseUrl: string;
   let email: string;
@@ -65,8 +67,8 @@ describe('Authentication flow tests', () => {
       // Expect to be redirected to homepage or dashboard
       cy.location('pathname').should('match', /^\/en-US\/?$/);
       // Verify authentication cookies are set
-      cy.getCookie('dmspt').should('exist'); // access token
-      cy.getCookie('dmspr').should('exist'); // refresh token
+      cy.getCookie(ACCESS_TOKEN_NAME).should('exist'); // access token
+      cy.getCookie(REFRESH_TOKEN_NAME).should('exist'); // refresh token
     });
   });
 });

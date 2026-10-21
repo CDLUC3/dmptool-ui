@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from "next/headers";
 import { createLogger } from '@/utils/server/logger';
+import { ACCESS_TOKEN_NAME } from "@/utils/authHelper";
 
 const logger = createLogger();
 
@@ -38,29 +39,26 @@ export async function GET(request: NextRequest) {
 
     // Get all cookies to pass in request header
     const cookieStore = await cookies();
-    const cookieString = cookieStore.toString();
 
-    // Extract dmspt token from cookies
-    const dmsptMatch = cookieString.match(/dmspt=([^;]+)/);
-    const dmsptToken = dmsptMatch ? dmsptMatch[1] : null;
+    // Extract access token from cookies
+    const accessToken = cookieStore.get(ACCESS_TOKEN_NAME)?.value;
 
     // Build headers for the narrative service request
-    const headers: Record<string, string> = {
-      Accept: acceptHeader,
-      Cookie: cookieString,
-    };
+    const headers: Record<string, string> = { Accept: acceptHeader };
 
-    if (dmsptToken) {
-      headers['Authorization'] = `Bearer ${dmsptToken}`;
+    if (accessToken) {
+      headers["Cookie"] = `${ACCESS_TOKEN_NAME}=${accessToken}`;
     }
 
-    logger.info({
-      acceptHeader,
-      cookieString,
-      dmsptToken,
-      headers,
-      narrativeUrl: narrativeUrl.toString(),
-    }, 'Making request to narrative service');
+    logger.info(
+      {
+        acceptHeader,
+        accessToken,
+        headers,
+        narrativeUrl: narrativeUrl.toString(),
+      },
+      "Making request to narrative service",
+    );
 
     // Fetch from the narrative service
     const response = await fetch(narrativeUrl.toString(), {
@@ -72,7 +70,6 @@ export async function GET(request: NextRequest) {
         status: response.status,
         statusText: response.statusText,
         url: narrativeUrl.toString(),
-        headers,
       }, 'Narrative service returned error');
       return NextResponse.json(
         { error: `Narrative service error: ${response.statusText}` },

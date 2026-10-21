@@ -13,7 +13,8 @@ import {
   Text
 } from "react-aria-components";
 import { useTranslations } from 'next-intl';
-import { useRouter, useParams } from 'next/navigation';
+import { useParams } from 'next/navigation';
+import { useRouter } from '@/i18n/routing';
 import { useMutation, useLazyQuery } from '@apollo/client/react';
 
 import {

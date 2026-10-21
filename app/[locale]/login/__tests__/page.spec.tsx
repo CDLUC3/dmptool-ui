@@ -4,13 +4,29 @@ import logECS from '@/utils/clientLogger';
 import LoginPage from '../page';
 
 //Need to import this useRouter after the jest.mock is in place
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/i18n/routing';
 import { fetchCsrfToken } from "@/utils/authHelper";
 import { useCsrf } from '@/context/CsrfContext';
+import { useAuthContext } from '@/context/AuthContext';
+import { routePath } from '@/utils/index';
 
-jest.mock('next/navigation', () => ({
-  useRouter: jest.fn()
+jest.mock('@/i18n/routing', () => ({
+  Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
+    <a href={href} {...props}>{children}</a>
+  ),
+  useRouter: jest.fn(() => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn() })),
+  usePathname: jest.fn(() => '/login'),
 }));
+
+// Login redirects with window.location.assign(), which jsdom doesn't let us mock,
+// so spy on routePath to verify the home route is built for the redirect
+jest.mock('@/utils/index', () => {
+  const actual = jest.requireActual('@/utils/index');
+  return {
+    ...actual,
+    routePath: jest.fn(actual.routePath),
+  };
+});
 
 jest.mock('@/utils/clientLogger', () => ({
   __esModule: true,
@@ -46,7 +62,7 @@ const mockFetchCsrfToken = fetchCsrfToken as jest.Mock;
 // Mock fetch globally
 global.fetch = jest.fn() as jest.MockedFunction<typeof fetch>;
 
-const signInUrl = `${process.env.NEXT_PUBLIC_SERVER_ENDPOINT}/apollo-signin`;
+const signInUrl = `${process.env.NEXT_PUBLIC_AUTH_ENDPOINT}/sign-in`;
 
 describe('LoginPage', () => {
   const doSteps = async () => {
@@ -71,7 +87,7 @@ describe('LoginPage', () => {
       push: jest.fn(),
     });
 
-    (useCsrf as jest.Mock).mockReturnValue({ csrfToken: 'mocked-csrf-token' });
+    (useCsrf as jest.Mock).mockReturnValue({ getCsrfToken: jest.fn().mockResolvedValue('mocked-csrf-token') });
 
     jest.spyOn(console, 'error').mockImplementation(() => { });
   });
@@ -161,7 +177,8 @@ describe('LoginPage', () => {
 
     // Check that user is redirected to home page
     await waitFor(() => {
-      expect(mockUseRouter().push).toHaveBeenCalledWith('/');
+      expect(routePath).toHaveBeenCalledWith('app.home');
+      expect(routePath).toHaveReturnedWith('/');
     });
   });
 
@@ -201,8 +218,9 @@ describe('LoginPage', () => {
 
     // Check that user is redirected to home page
     await waitFor(() => {
-      expect(mockUseRouter().push).toHaveBeenCalledWith('/');
-    })
+      expect(routePath).toHaveBeenCalledWith('app.home');
+      expect(routePath).toHaveReturnedWith('/');
+    });
   });
 
   it('should initially disable submit button after submitting form until response is returned ', async () => {
@@ -253,6 +271,42 @@ describe('LoginPage', () => {
     })
   });
 
+  it('should finish logging in when the sign-in succeeds on retry after a stale CSRF token', async () => {
+    const mockSetIsAuthenticated = jest.fn();
+    (useAuthContext as jest.Mock).mockReturnValue({
+      setIsAuthenticated: mockSetIsAuthenticated,
+      clearCache: jest.fn().mockResolvedValue(undefined),
+    });
+    mockFetchCsrfToken.mockResolvedValueOnce({
+      headers: { get: () => 'fresh-csrf-token' },
+    });
+
+    jest.spyOn(global, 'fetch')
+      .mockResolvedValueOnce({
+        ok: false,
+        status: 403,
+        json: () => Promise.resolve({ success: false, message: 'Invalid CSRF token' }),
+      } as unknown as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve({ success: true, message: 'ok' }),
+      } as unknown as Response);
+
+    render(<LoginPage />);
+
+    doSteps();
+    fireEvent.click(screen.getByTestId("actionSubmit"));
+
+    await waitFor(() => {
+      expect(global.fetch).toHaveBeenLastCalledWith(signInUrl, expect.objectContaining({
+        headers: expect.objectContaining({ 'X-CSRF-TOKEN': 'fresh-csrf-token' }),
+      }));
+      expect(mockSetIsAuthenticated).toHaveBeenCalledWith(true);
+      expect(routePath).toHaveBeenCalledWith('app.home');
+    });
+  });
+
   it('should handle 500 error', async () => {
     jest.spyOn(global, 'fetch').mockImplementation(() => {
       return Promise.resolve({
@@ -293,7 +347,7 @@ describe('LoginPage', () => {
         'Login error',
         expect.objectContaining({
           error: expect.anything(),
-          url: { path: '/apollo-signin' },
+          url: { path: '/sign-in' },
         })
       )
     })

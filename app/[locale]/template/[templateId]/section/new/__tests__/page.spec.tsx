@@ -7,7 +7,8 @@ import {
   TemplateDocument,
 } from '@/generated/graphql';
 import { axe, toHaveNoViolations } from 'jest-axe';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
+import { useRouter } from '@/i18n/routing';
 import logECS from '@/utils/clientLogger';
 import SectionTypeSelectPage from '../page';
 import { mockScrollIntoView, mockScrollTo } from "@/__mocks__/common";
@@ -24,8 +25,15 @@ jest.mock('@apollo/client/react', () => ({
 
 jest.mock('next/navigation', () => ({
   useParams: jest.fn(),
-  useRouter: jest.fn(),
 }))
+
+jest.mock('@/i18n/routing', () => ({
+  Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
+    <a href={href} {...props}>{children}</a>
+  ),
+  useRouter: jest.fn(() => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn() })),
+  usePathname: jest.fn(() => '/template/1/section/new'),
+}));
 
 jest.mock('@/components/BackButton', () => {
   return {
@@ -481,7 +489,7 @@ describe("SectionTypeSelectPage", () => {
 
     await waitFor(async () => {
       // Verify that router.push was called with "/login"
-      expect(mockRouter.push).toHaveBeenCalledWith('/en-US/template/123/section/1');
+      expect(mockRouter.push).toHaveBeenCalledWith('/template/123/section/1');
     })
   })
 
@@ -545,7 +553,7 @@ describe("SectionTypeSelectPage", () => {
         'copyPublishedSection',
         expect.objectContaining({
           error: expect.anything(),
-          url: { path: '/en-US/template/123/section/new' },
+          url: { path: '/template/123/section/new' },
         })
       )
     })

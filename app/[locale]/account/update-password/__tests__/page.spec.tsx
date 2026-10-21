@@ -2,12 +2,11 @@ import React from "react";
 import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import { axe, toHaveNoViolations } from "jest-axe";
-import { useQuery, useMutation } from "@apollo/client/react";
 
 import { mockScrollIntoView, mockScrollTo } from "@/__mocks__/common";
-import { MeDocument, UpdatePasswordDocument } from "@/generated/graphql";
-import { handleApolloError } from "@/utils/apolloErrorHandler";
+import { useCsrf } from "@/context/CsrfContext";
 import { getPasswordRequirements } from "@/utils/validation";
+import logECS from "@/utils/clientLogger";
 import UpdatePasswordPage from "../page";
 
 expect.extend(toHaveNoViolations);
@@ -18,10 +17,20 @@ jest.mock("@/context/ToastContext", () => ({
     add: mockToastAdd,
   })),
 }));
+jest.mock('@/i18n/routing', () => ({
+  Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
+    <a href={href} {...props}>{children}</a>
+  ),
+  useRouter: jest.fn(() => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn() })),
+}));
 
-jest.mock("@apollo/client/react", () => ({
-  useQuery: jest.fn(),
-  useMutation: jest.fn(),
+jest.mock("@/context/CsrfContext", () => ({
+  useCsrf: jest.fn(),
+}));
+
+jest.mock("@/utils/clientLogger", () => ({
+  __esModule: true,
+  default: jest.fn(),
 }));
 
 jest.mock("@/utils/validation", () => {
@@ -32,52 +41,26 @@ jest.mock("@/utils/validation", () => {
   };
 });
 
-jest.mock("@/utils/apolloErrorHandler", () => {
-  const actual = jest.requireActual("@/utils/apolloErrorHandler");
-  return {
-    ...actual,
-    handleApolloError: jest.fn(actual.handleApolloError),
-  };
-});
+const mockFetch = jest.fn();
+global.fetch = mockFetch as unknown as typeof fetch;
 
-const mockUseQuery = useQuery as unknown as jest.Mock;
-const mockUseMutation = useMutation as unknown as jest.Mock;
-const mockUpdatePassword = jest.fn();
+const mockGetCsrfToken = jest.fn();
 const realGetPasswordRequirements = jest.requireActual("@/utils/validation").getPasswordRequirements;
 
+const CHANGE_PASSWORD_URL = `${process.env.NEXT_PUBLIC_AUTH_ENDPOINT}/change-password`;
+const CURRENT_PASSWORD = "Password123$9";
 const VALID_PASSWORD = "ValidPass123!";
-const USER_EMAIL = "admin@nsf.gov";
 
-function setupMocks({
-  queryLoading = false,
-  email = USER_EMAIL,
-  queryError,
-}: {
-  queryLoading?: boolean;
-  email?: string | null;
-  queryError?: Error;
-} = {}) {
-  mockUseQuery.mockImplementation((document) => {
-    if (document === MeDocument) {
-      return {
-        data: email ? { me: { email } } : { me: null },
-        loading: queryLoading,
-        error: queryError,
-      };
-    }
-    return { data: null, loading: false, error: undefined };
-  });
-
-  mockUseMutation.mockImplementation((document) => {
-    if (document === UpdatePasswordDocument) {
-      return [mockUpdatePassword, { loading: false }];
-    }
-    return [jest.fn(), { loading: false }];
-  });
+function mockResponse(status: number, body: unknown = { success: status === 200, message: "ok" }) {
+  return {
+    ok: status >= 200 && status < 300,
+    status,
+    json: jest.fn().mockResolvedValue(body),
+  };
 }
 
 function fillPasswordFields({
-  currentPassword = "Password123$9",
+  currentPassword = CURRENT_PASSWORD,
   newPassword = VALID_PASSWORD,
   confirmPassword = VALID_PASSWORD,
 }: {
@@ -99,28 +82,16 @@ describe("UpdatePasswordPage", () => {
     HTMLElement.prototype.scrollIntoView = mockScrollIntoView;
     mockScrollTo();
     mockToastAdd.mockClear();
-    mockUpdatePassword.mockReset();
-    mockUpdatePassword.mockResolvedValue({
-      data: { updatePassword: { id: 1, errors: {} } },
-    });
+    mockFetch.mockReset();
+    mockFetch.mockResolvedValue(mockResponse(200));
+    mockGetCsrfToken.mockReset();
+    mockGetCsrfToken.mockResolvedValue("mocked-csrf-token");
+    (useCsrf as jest.Mock).mockReturnValue({ getCsrfToken: mockGetCsrfToken });
     (getPasswordRequirements as jest.Mock).mockImplementation(realGetPasswordRequirements);
-    (handleApolloError as jest.Mock).mockImplementation(
-      jest.requireActual("@/utils/apolloErrorHandler").handleApolloError,
-    );
-    setupMocks();
   });
 
   afterEach(() => {
     jest.clearAllMocks();
-  });
-
-  it("shows a loading state while the current user is loading", () => {
-    setupMocks({ queryLoading: true });
-
-    render(<UpdatePasswordPage />);
-
-    expect(screen.getByText("messaging.loading")).toBeInTheDocument();
-    expect(screen.queryByTestId("change-password")).not.toBeInTheDocument();
   });
 
   it("does not submit when the new password is too short", async () => {
@@ -130,7 +101,7 @@ describe("UpdatePasswordPage", () => {
     submitForm();
 
     expect(await screen.findByText("messaging.fixBelow")).toBeInTheDocument();
-    expect(mockUpdatePassword).not.toHaveBeenCalled();
+    expect(mockFetch).not.toHaveBeenCalled();
   });
 
   it("does not submit when passwords do not match", async () => {
@@ -140,22 +111,28 @@ describe("UpdatePasswordPage", () => {
     submitForm();
 
     expect(await screen.findByText("messages.errors.passwordsDoNotMatch")).toBeInTheDocument();
-    expect(mockUpdatePassword).not.toHaveBeenCalled();
+    expect(mockFetch).not.toHaveBeenCalled();
   });
 
-  it("submits updatePassword and shows a success toast", async () => {
+  it("posts to the auth service change-password endpoint and shows a success toast", async () => {
     render(<UpdatePasswordPage />);
 
     fillPasswordFields();
     submitForm();
 
     await waitFor(() => {
-      expect(mockUpdatePassword).toHaveBeenCalledWith({
-        variables: {
-          email: USER_EMAIL,
-          oldPassword: "Password123$9",
-          newPassword: VALID_PASSWORD,
+      expect(mockFetch).toHaveBeenCalledWith(CHANGE_PASSWORD_URL, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRF-TOKEN": "mocked-csrf-token",
         },
+        body: JSON.stringify({
+          currentPassword: CURRENT_PASSWORD,
+          newPassword: VALID_PASSWORD,
+          newPasswordConfirmation: VALID_PASSWORD,
+        }),
       });
     });
 
@@ -171,15 +148,32 @@ describe("UpdatePasswordPage", () => {
     expect(screen.getByTestId("confirm-password")).toHaveValue("");
   });
 
-  it("maps a server general error to incorrect current password", async () => {
-    mockUpdatePassword.mockResolvedValueOnce({
-      data: {
-        updatePassword: {
-          id: 1,
-          errors: { general: "Unable to update the password at this time" },
-        },
-      },
+  it("retries with a fresh CSRF token when the first one is rejected", async () => {
+    mockGetCsrfToken
+      .mockResolvedValueOnce("used-csrf-token")
+      .mockResolvedValueOnce("fresh-csrf-token");
+    mockFetch
+      .mockResolvedValueOnce(mockResponse(403, { message: "Invalid CSRF token" }))
+      .mockResolvedValueOnce(mockResponse(200));
+
+    render(<UpdatePasswordPage />);
+
+    fillPasswordFields();
+    submitForm();
+
+    await waitFor(() => {
+      expect(mockToastAdd).toHaveBeenCalledWith("messages.passwordUpdateSuccess", {
+        type: "success",
+        timeout: 3000,
+      });
     });
+
+    expect(mockFetch).toHaveBeenCalledTimes(2);
+    expect(mockFetch.mock.calls[1][1].headers["X-CSRF-TOKEN"]).toBe("fresh-csrf-token");
+  });
+
+  it("maps an invalid current password 401 onto the current password field", async () => {
+    mockFetch.mockResolvedValueOnce(mockResponse(401, { success: false, message: "Invalid current password" }));
 
     render(<UpdatePasswordPage />);
 
@@ -188,12 +182,59 @@ describe("UpdatePasswordPage", () => {
 
     expect(await screen.findByText("messages.errors.incorrectCurrentPassword")).toBeInTheDocument();
     expect(screen.getByText("messages.errors.errorUpdatingPassword")).toBeInTheDocument();
+    expect(screen.getByTestId("current-password")).toHaveValue(CURRENT_PASSWORD);
     expect(mockToastAdd).not.toHaveBeenCalled();
   });
 
-  it("shows an error when updatePassword returns null", async () => {
-    mockUpdatePassword.mockResolvedValueOnce({
-      data: { updatePassword: null },
+  it("maps an invalid password format 400 onto the new password field", async () => {
+    mockFetch.mockResolvedValueOnce(mockResponse(400, { success: false, message: "Invalid password format" }));
+
+    render(<UpdatePasswordPage />);
+
+    fillPasswordFields();
+    submitForm();
+
+    expect(await screen.findByText("messages.errors.passwordDoesNotMeetRequirements")).toBeInTheDocument();
+    expect(screen.getByText("messages.errors.errorUpdatingPassword")).toBeInTheDocument();
+    expect(screen.queryByText("messages.errors.incorrectCurrentPassword")).not.toBeInTheDocument();
+    expect(mockToastAdd).not.toHaveBeenCalled();
+  });
+
+  it("maps a passwords do not match 400 onto the confirm password field", async () => {
+    mockFetch.mockResolvedValueOnce(mockResponse(400, { success: false, message: "Passwords do not match" }));
+
+    render(<UpdatePasswordPage />);
+
+    fillPasswordFields();
+    submitForm();
+
+    expect(await screen.findByText("messages.errors.passwordsDoNotMatch")).toBeInTheDocument();
+    expect(screen.getByText("messages.errors.errorUpdatingPassword")).toBeInTheDocument();
+    expect(mockToastAdd).not.toHaveBeenCalled();
+  });
+
+  it("shows a general error and logs when the access token is invalid", async () => {
+    mockFetch.mockResolvedValueOnce(mockResponse(401, { success: false, message: "Invalid access token" }));
+
+    render(<UpdatePasswordPage />);
+
+    fillPasswordFields();
+    submitForm();
+
+    expect(await screen.findByText("messages.errors.errorUpdatingPassword")).toBeInTheDocument();
+    expect(screen.queryByText("messages.errors.incorrectCurrentPassword")).not.toBeInTheDocument();
+    expect(logECS).toHaveBeenCalledWith("error", "updatePassword", expect.objectContaining({
+      status: 401,
+      message: "Invalid access token",
+    }));
+    expect(mockToastAdd).not.toHaveBeenCalled();
+  });
+
+  it("shows a general error when the error response has no JSON body", async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: false,
+      status: 500,
+      json: jest.fn().mockRejectedValue(new Error("Unexpected token")),
     });
 
     render(<UpdatePasswordPage />);
@@ -205,24 +246,28 @@ describe("UpdatePasswordPage", () => {
     expect(mockToastAdd).not.toHaveBeenCalled();
   });
 
-  it("shows the thrown error message when the mutation fails", async () => {
-    mockUpdatePassword.mockRejectedValueOnce(new Error("network error"));
+  it("shows a general error when the request fails", async () => {
+    mockFetch.mockRejectedValueOnce(new TypeError("Failed to fetch"));
 
     render(<UpdatePasswordPage />);
 
     fillPasswordFields();
     submitForm();
 
-    expect(await screen.findByText("network error")).toBeInTheDocument();
+    expect(await screen.findByText("messages.errors.errorUpdatingPassword")).toBeInTheDocument();
+    expect(screen.queryByText("Failed to fetch")).not.toBeInTheDocument();
+    expect(logECS).toHaveBeenCalledWith("error", "updatePassword", expect.objectContaining({
+      error: expect.any(TypeError),
+    }));
     expect(mockToastAdd).not.toHaveBeenCalled();
   });
 
-  it("disables submit while the mutation is in flight", async () => {
-    let resolveMutation: (value: unknown) => void = () => {};
-    mockUpdatePassword.mockImplementation(
+  it("disables submit while the request is in flight", async () => {
+    let resolveFetch: (value: unknown) => void = () => { };
+    mockFetch.mockImplementation(
       () =>
         new Promise((resolve) => {
-          resolveMutation = resolve;
+          resolveFetch = resolve;
         }),
     );
 
@@ -237,7 +282,7 @@ describe("UpdatePasswordPage", () => {
       expect(submitButton).toHaveTextContent("btnChangingPassword");
     });
 
-    resolveMutation({ data: { updatePassword: { id: 1, errors: {} } } });
+    resolveFetch(mockResponse(200));
 
     await waitFor(() => {
       expect(submitButton).not.toBeDisabled();
@@ -254,59 +299,6 @@ describe("UpdatePasswordPage", () => {
     expect(screen.queryByText("messages.errors.currentPasswordRequired")).not.toBeInTheDocument();
   });
 
-  it("shows a blocking message when the current user has no email", () => {
-    setupMocks({ email: null });
-
-    render(<UpdatePasswordPage />);
-
-    expect(screen.getByText("messages.errors.emailRequiredToUpdatePassword")).toBeInTheDocument();
-    expect(screen.queryByTestId("change-password")).not.toBeInTheDocument();
-    expect(mockUpdatePassword).not.toHaveBeenCalled();
-  });
-
-  it("shows a blocking message when the current user cannot be loaded", () => {
-    setupMocks({ email: null, queryError: new Error("failed to load me") });
-
-    render(<UpdatePasswordPage />);
-
-    expect(screen.getByText("messages.errors.errorLoadingAccount")).toBeInTheDocument();
-    expect(screen.queryByText("messages.errors.emailRequiredToUpdatePassword")).not.toBeInTheDocument();
-    expect(screen.queryByTestId("change-password")).not.toBeInTheDocument();
-    expect(mockUpdatePassword).not.toHaveBeenCalled();
-  });
-
-  it("keeps loading when the current user query is aborted", () => {
-    const abortError = new Error("The operation was aborted.");
-    abortError.name = "AbortError";
-    setupMocks({ email: null, queryError: abortError });
-
-    render(<UpdatePasswordPage />);
-
-    expect(screen.getByText("messaging.loading")).toBeInTheDocument();
-    expect(screen.queryByTestId("change-password")).not.toBeInTheDocument();
-  });
-
-  it("maps a server password error onto the new password field", async () => {
-    mockUpdatePassword.mockResolvedValueOnce({
-      data: {
-        updatePassword: {
-          id: 1,
-          errors: { password: "Password is too weak" },
-        },
-      },
-    });
-
-    render(<UpdatePasswordPage />);
-
-    fillPasswordFields();
-    submitForm();
-
-    expect(await screen.findByText("Password is too weak")).toBeInTheDocument();
-    expect(screen.getByText("messages.errors.errorUpdatingPassword")).toBeInTheDocument();
-    expect(screen.queryByText("messages.errors.incorrectCurrentPassword")).not.toBeInTheDocument();
-    expect(mockToastAdd).not.toHaveBeenCalled();
-  });
-
   it("does not submit when confirm password is missing", async () => {
     render(<UpdatePasswordPage />);
 
@@ -314,7 +306,7 @@ describe("UpdatePasswordPage", () => {
     submitForm();
 
     expect(await screen.findByText("messages.errors.confirmPasswordRequired")).toBeInTheDocument();
-    expect(mockUpdatePassword).not.toHaveBeenCalled();
+    expect(mockFetch).not.toHaveBeenCalled();
   });
 
   it("does not submit when the new password is missing an uppercase letter", async () => {
@@ -324,26 +316,7 @@ describe("UpdatePasswordPage", () => {
     submitForm();
 
     expect(await screen.findByText("messages.errors.passwordMissingUppercase")).toBeInTheDocument();
-    expect(mockUpdatePassword).not.toHaveBeenCalled();
-  });
-
-  it("ignores an aborted updatePassword request", async () => {
-    const abortError = new Error("The operation was aborted.");
-    abortError.name = "AbortError";
-    mockUpdatePassword.mockRejectedValueOnce(abortError);
-
-    render(<UpdatePasswordPage />);
-
-    fillPasswordFields();
-    submitForm();
-
-    await waitFor(() => {
-      expect(mockUpdatePassword).toHaveBeenCalled();
-    });
-
-    expect(screen.queryByText("messages.errors.errorUpdatingPassword")).not.toBeInTheDocument();
-    expect(mockToastAdd).not.toHaveBeenCalled();
-    expect(screen.getByTestId("current-password")).toHaveValue("Password123$9");
+    expect(mockFetch).not.toHaveBeenCalled();
   });
 
   it("falls back to the short-password error when a requirement has no mapped message", async () => {
@@ -355,20 +328,7 @@ describe("UpdatePasswordPage", () => {
     submitForm();
 
     expect(await screen.findByText("messages.errors.passwordTooShort")).toBeInTheDocument();
-    expect(mockUpdatePassword).not.toHaveBeenCalled();
-  });
-
-  it("falls back to a generic error when the mutation error has no message", async () => {
-    (handleApolloError as jest.Mock).mockReturnValueOnce({ wasRealError: true, message: "" });
-    mockUpdatePassword.mockRejectedValueOnce(new Error(""));
-
-    render(<UpdatePasswordPage />);
-
-    fillPasswordFields();
-    submitForm();
-
-    expect(await screen.findByText("messages.errors.errorUpdatingPassword")).toBeInTheDocument();
-    expect(mockToastAdd).not.toHaveBeenCalled();
+    expect(mockFetch).not.toHaveBeenCalled();
   });
 
   it("has no accessibility violations", async () => {

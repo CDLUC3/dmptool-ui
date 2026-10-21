@@ -1,10 +1,8 @@
 import { useState } from 'react';
 import { useSwitchLanguage } from '@/hooks/switchLanguage';
 import { useLocale } from 'next-intl';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
+import { usePathname, useRouter, Link } from '@/i18n/routing';
 
-import { usePathname } from '@/i18n/routing';
 import styles from './languageSelector.module.scss';
 
 // Define the interface for the locales

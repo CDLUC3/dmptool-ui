@@ -73,6 +73,10 @@ query Section($sectionId: Int!) {
       questionText
       sectionId
       templateId
+      conditionGroups {
+        id
+        triggerQuestionId
+      }
     }
     tags {
       id
