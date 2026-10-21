@@ -186,7 +186,8 @@
         "passwordMissingLowercase": "A senha deve conter pelo menos uma letra minúscula",
         "passwordMissingSpecialChar": "A senha deve conter pelo menos um caractere especial",
         "incorrectCurrentPassword": "A senha atual está incorreta",
-        "errorUpdatingPassword": "Erro ao atualizar a senha"
+        "errorUpdatingPassword": "Erro ao atualizar a senha",
+        "passwordDoesNotMeetRequirements": "A senha não atende aos requisitos"
       }
     }
   },

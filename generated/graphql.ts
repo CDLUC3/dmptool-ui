@@ -1425,11 +1425,13 @@ export type GuidanceSource = {
 export enum GuidanceSourceType {
   /** Best practice guidance from DMP Tool */
   BestPractice = 'BEST_PRACTICE',
-  /** Guidance from the template owner organization */
+  /** Guidance from another affiliation that has not yet been selected by the user */
+  OtherAffiliation = 'OTHER_AFFILIATION',
+  /** Guidance from the template owner affiliation */
   TemplateOwner = 'TEMPLATE_OWNER',
   /** Guidance from the user's affiliation */
   UserAffiliation = 'USER_AFFILIATION',
-  /** Guidance from user-selected organizations */
+  /** Guidance from user-selected affiliations */
   UserSelected = 'USER_SELECTED'
 }
 
@@ -2826,6 +2828,8 @@ export type Plan = {
   modified?: Maybe<Scalars['String']['output']>;
   /** The user who last modified the Object */
   modifiedById?: Maybe<Scalars['Int']['output']>;
+  /** The current user's access level for the plan */
+  myAccessLevel?: Maybe<ProjectCollaboratorAccessLevel>;
   /** The affiliation that owns the plan */
   owner?: Maybe<Affiliation>;
   /** The user who created the plan */
@@ -3117,8 +3121,6 @@ export type PlanQuestion = {
   displayOrder?: Maybe<Scalars['Int']['output']>;
   /** The guidance sources for the versioned question */
   guidanceSources?: Maybe<Array<GuidanceSource>>;
-  /** Guidance to complete the question */
-  guidanceText?: Maybe<Scalars['String']['output']>;
   /** Whether or not the question has been answered */
   hasAnswer?: Maybe<Scalars['Boolean']['output']>;
   /** The JSON representation of the question type */
@@ -3131,8 +3133,6 @@ export type PlanQuestion = {
   required?: Maybe<Scalars['Boolean']['output']>;
   /** Requirements associated with the Question */
   requirementText?: Maybe<Scalars['String']['output']>;
-  /** Sample text to possibly provide a starting point or example to answer question */
-  sampleText?: Maybe<Scalars['String']['output']>;
   /** Whether or not the sample text should be used as the default answer for this question */
   useSampleTextAsDefault?: Maybe<Scalars['Boolean']['output']>;
   /** The unique identifier for the Template Question (if applicable) */

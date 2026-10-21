@@ -52,6 +52,10 @@
 - Added `UpdateAffiliation` and `AffiliationById` queries [#203]
 
 ## Updated
+<<<<<<< HEAD
+- Updated the Update password page to use the `updatePassword` GraphQL mutation
+- Updated `PasswordRequirementsList` so requirements stay pending until the user types, and use ticks instead of warning dots
+=======
 - Updated `DisplayLogicComponent` to always assume `OR` type for conditions within the same conditionGroup. Removed logic that was applying the question `displayLogicAction` and `displayLogicMatchType` to conditions within each conditionGroup. Also, added message in `Display logic` tab when a user views the tab before saving the question [#360]
 - Updated conditional display logic error messaging and also added `fetchPolicy` of `network-only` to the `TemplateListPage` [#1472]
 - Updated JWKS loading to be lazy loaded instead of running on startup
@@ -68,6 +72,7 @@
 - Updated `routes.ts` to not require `locale` to be passed in because it was defaulting to `en-US` and changing the language for a user that had a `languageId` of `pt-BR` [#367]
 - Updated all pages to use `useRouter` from `@/i18n/routing` so that it would retain the `locale` specified in the `path`. Also, updated `proxy.ts` so that it accurately applies `locale` to a path that does not contain one. [#367]
 - Updated `README.md` to include more info on localization [#367]
+>>>>>>> development
 - Updated `PlanCard` section progress to prefer required counts (`X of Y required`), falling back to all-question counts (`X of Y`) when none are required [#93]
 - Redesigned `ProjectListItem` and project list pages (`/projects`, `/admin/projects`, `/admin/users/[userId]/projects`) with expandable plan details, skeleton loading, and GraphQL-backed plan and collaborator data
 - Updated `DisplayLogicComponent.tsx` to show condition joiner within condition groups as well as between condition groups [#360]

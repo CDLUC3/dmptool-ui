@@ -3,6 +3,10 @@ import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import { axe, toHaveNoViolations } from "jest-axe";
 
+import { mockScrollIntoView, mockScrollTo } from "@/__mocks__/common";
+import { useCsrf } from "@/context/CsrfContext";
+import { getPasswordRequirements } from "@/utils/validation";
+import logECS from "@/utils/clientLogger";
 import UpdatePasswordPage from "../page";
 
 expect.extend(toHaveNoViolations);
@@ -13,8 +17,6 @@ jest.mock("@/context/ToastContext", () => ({
     add: mockToastAdd,
   })),
 }));
-
-
 jest.mock('@/i18n/routing', () => ({
   Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
     <a href={href} {...props}>{children}</a>
@@ -22,206 +24,316 @@ jest.mock('@/i18n/routing', () => ({
   useRouter: jest.fn(() => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn() })),
 }));
 
+jest.mock("@/context/CsrfContext", () => ({
+  useCsrf: jest.fn(),
+}));
+
+jest.mock("@/utils/clientLogger", () => ({
+  __esModule: true,
+  default: jest.fn(),
+}));
+
+jest.mock("@/utils/validation", () => {
+  const actual = jest.requireActual("@/utils/validation");
+  return {
+    ...actual,
+    getPasswordRequirements: jest.fn(actual.getPasswordRequirements),
+  };
+});
+
+const mockFetch = jest.fn();
+global.fetch = mockFetch as unknown as typeof fetch;
+
+const mockGetCsrfToken = jest.fn();
+const realGetPasswordRequirements = jest.requireActual("@/utils/validation").getPasswordRequirements;
+
+const CHANGE_PASSWORD_URL = `${process.env.NEXT_PUBLIC_AUTH_ENDPOINT}/change-password`;
+const CURRENT_PASSWORD = "Password123$9";
+const VALID_PASSWORD = "ValidPass123!";
+
+function mockResponse(status: number, body: unknown = { success: status === 200, message: "ok" }) {
+  return {
+    ok: status >= 200 && status < 300,
+    status,
+    json: jest.fn().mockResolvedValue(body),
+  };
+}
+
+function fillPasswordFields({
+  currentPassword = CURRENT_PASSWORD,
+  newPassword = VALID_PASSWORD,
+  confirmPassword = VALID_PASSWORD,
+}: {
+  currentPassword?: string;
+  newPassword?: string;
+  confirmPassword?: string;
+} = {}) {
+  fireEvent.change(screen.getByTestId("current-password"), { target: { value: currentPassword } });
+  fireEvent.change(screen.getByTestId("new-password"), { target: { value: newPassword } });
+  fireEvent.change(screen.getByTestId("confirm-password"), { target: { value: confirmPassword } });
+}
+
+function submitForm() {
+  fireEvent.click(screen.getByTestId("change-password"));
+}
 
 describe("UpdatePasswordPage", () => {
   beforeEach(() => {
-    window.scrollTo = jest.fn();
+    HTMLElement.prototype.scrollIntoView = mockScrollIntoView;
+    mockScrollTo();
     mockToastAdd.mockClear();
+    mockFetch.mockReset();
+    mockFetch.mockResolvedValue(mockResponse(200));
+    mockGetCsrfToken.mockReset();
+    mockGetCsrfToken.mockResolvedValue("mocked-csrf-token");
+    (useCsrf as jest.Mock).mockReturnValue({ getCsrfToken: mockGetCsrfToken });
+    (getPasswordRequirements as jest.Mock).mockImplementation(realGetPasswordRequirements);
   });
 
   afterEach(() => {
     jest.clearAllMocks();
   });
 
-  it("should render password form fields", () => {
+  it("does not submit when the new password is too short", async () => {
     render(<UpdatePasswordPage />);
 
-    // Check that all password fields are rendered
-    const currentPasswordField = screen.getByLabelText(/currentPassword/);
-    const newPasswordField = screen.getByLabelText(/newPassword/);
-    const confirmPasswordField = screen.getByLabelText(/confirmPassword/);
+    fillPasswordFields({ newPassword: "bad", confirmPassword: "bad" });
+    submitForm();
 
-    expect(currentPasswordField).toBeInTheDocument();
-    expect(newPasswordField).toBeInTheDocument();
-    expect(confirmPasswordField).toBeInTheDocument();
+    expect(await screen.findByText("messaging.fixBelow")).toBeInTheDocument();
+    expect(mockFetch).not.toHaveBeenCalled();
   });
 
-  it("should have password input types", () => {
+  it("does not submit when passwords do not match", async () => {
     render(<UpdatePasswordPage />);
 
-    const currentPasswordField = screen.getByLabelText(/currentPassword/);
-    const newPasswordField = screen.getByLabelText(/newPassword/);
-    const confirmPasswordField = screen.getByLabelText(/confirmPassword/);
+    fillPasswordFields({ confirmPassword: "DifferentPass123!" });
+    submitForm();
 
-    expect(currentPasswordField).toHaveAttribute("type", "password");
-    expect(newPasswordField).toHaveAttribute("type", "password");
-    expect(confirmPasswordField).toHaveAttribute("type", "password");
+    expect(await screen.findByText("messages.errors.passwordsDoNotMatch")).toBeInTheDocument();
+    expect(mockFetch).not.toHaveBeenCalled();
   });
 
-  it("should have required attributes on password fields", () => {
+  it("posts to the auth service change-password endpoint and shows a success toast", async () => {
     render(<UpdatePasswordPage />);
 
-    const currentPasswordField = screen.getByLabelText(/currentPassword/);
-    const newPasswordField = screen.getByLabelText(/newPassword/);
-    const confirmPasswordField = screen.getByLabelText(/confirmPassword/);
+    fillPasswordFields();
+    submitForm();
 
-    expect(currentPasswordField).toBeRequired();
-    expect(newPasswordField).toBeRequired();
-    expect(confirmPasswordField).toBeRequired();
-  });
+    await waitFor(() => {
+      expect(mockFetch).toHaveBeenCalledWith(CHANGE_PASSWORD_URL, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRF-TOKEN": "mocked-csrf-token",
+        },
+        body: JSON.stringify({
+          currentPassword: CURRENT_PASSWORD,
+          newPassword: VALID_PASSWORD,
+          newPasswordConfirmation: VALID_PASSWORD,
+        }),
+      });
+    });
 
-  it("should render password requirements list", () => {
-    render(<UpdatePasswordPage />);
-
-    // Check that requirements section exists with list items
-    const requirementsList = document.querySelector("ul");
-    expect(requirementsList).toBeInTheDocument();
-
-    const listItems = document.querySelectorAll("li");
-    expect(listItems.length).toBeGreaterThan(0);
-  });
-
-  it("should have form element present", () => {
-    render(<UpdatePasswordPage />);
-
-    const form = document.querySelector("form");
-    expect(form).toBeInTheDocument();
-  });
-
-  it("should render submit button", () => {
-    render(<UpdatePasswordPage />);
-
-    const submitButton = screen.getByRole("button", { name: /btnChangePassword|btnChangingPassword/ });
-    expect(submitButton).toBeInTheDocument();
-    expect(submitButton).toHaveAttribute("type", "submit");
-  });
-
-  it("should handle password field changes", () => {
-    render(<UpdatePasswordPage />);
-
-    const currentPasswordField = screen.getByLabelText(/currentPassword/);
-    const newPasswordField = screen.getByLabelText(/newPassword/);
-    const confirmPasswordField = screen.getByLabelText(/confirmPassword/);
-
-    // Test field value changes
-    fireEvent.change(currentPasswordField, { target: { value: "oldpassword" } });
-    fireEvent.change(newPasswordField, { target: { value: "newpassword123" } });
-    fireEvent.change(confirmPasswordField, { target: { value: "newpassword123" } });
-
-    expect(currentPasswordField).toHaveValue("oldpassword");
-    expect(newPasswordField).toHaveValue("newpassword123");
-    expect(confirmPasswordField).toHaveValue("newpassword123");
-  });
-
-  it("should handle form submission", async () => {
-    render(<UpdatePasswordPage />);
-
-    const form = document.querySelector("form");
-    const consoleSpy = jest.spyOn(console, "log").mockImplementation();
-
-    // Fill in form fields
-    const currentPasswordField = screen.getByLabelText(/currentPassword/);
-    const newPasswordField = screen.getByLabelText(/newPassword/);
-    const confirmPasswordField = screen.getByLabelText(/confirmPassword/);
-
-    fireEvent.change(currentPasswordField, { target: { value: "oldpassword" } });
-    fireEvent.change(newPasswordField, { target: { value: "newpassword123" } });
-    fireEvent.change(confirmPasswordField, { target: { value: "newpassword123" } });
-
-    // Submit form
-    fireEvent.submit(form!);
-
-    // Should log the form data (static implementation)
-    await waitFor(async () => {
-      expect(consoleSpy).toHaveBeenCalledWith("Password update submitted:", expect.any(Object));
+    await waitFor(() => {
       expect(mockToastAdd).toHaveBeenCalledWith("messages.passwordUpdateSuccess", {
         type: "success",
         timeout: 3000,
       });
-    }, { timeout: 3000 });
-
-    consoleSpy.mockRestore();
-  });
-
-  it("should disable submit button during submission", async () => {
-    render(<UpdatePasswordPage />);
-
-    const form = document.querySelector("form");
-    const submitButton = screen.getByRole("button", { name: /btnChangePassword|btnChangingPassword/ });
-
-    // Fill in form fields
-    const currentPasswordField = screen.getByLabelText(/currentPassword/);
-    fireEvent.change(currentPasswordField, { target: { value: "password" } });
-
-    // Submit form
-    fireEvent.submit(form!);
-
-    // Button should be disabled during submission
-    await waitFor(() => {
-      expect(submitButton).toBeDisabled();
     });
 
-    // Should be enabled again after submission
-    await waitFor(
-      () => {
-        expect(submitButton).not.toBeDisabled();
-      },
-      { timeout: 2000 },
+    expect(screen.getByTestId("current-password")).toHaveValue("");
+    expect(screen.getByTestId("new-password")).toHaveValue("");
+    expect(screen.getByTestId("confirm-password")).toHaveValue("");
+  });
+
+  it("retries with a fresh CSRF token when the first one is rejected", async () => {
+    mockGetCsrfToken
+      .mockResolvedValueOnce("used-csrf-token")
+      .mockResolvedValueOnce("fresh-csrf-token");
+    mockFetch
+      .mockResolvedValueOnce(mockResponse(403, { message: "Invalid CSRF token" }))
+      .mockResolvedValueOnce(mockResponse(200));
+
+    render(<UpdatePasswordPage />);
+
+    fillPasswordFields();
+    submitForm();
+
+    await waitFor(() => {
+      expect(mockToastAdd).toHaveBeenCalledWith("messages.passwordUpdateSuccess", {
+        type: "success",
+        timeout: 3000,
+      });
+    });
+
+    expect(mockFetch).toHaveBeenCalledTimes(2);
+    expect(mockFetch.mock.calls[1][1].headers["X-CSRF-TOKEN"]).toBe("fresh-csrf-token");
+  });
+
+  it("maps an invalid current password 401 onto the current password field", async () => {
+    mockFetch.mockResolvedValueOnce(mockResponse(401, { success: false, message: "Invalid current password" }));
+
+    render(<UpdatePasswordPage />);
+
+    fillPasswordFields();
+    submitForm();
+
+    expect(await screen.findByText("messages.errors.incorrectCurrentPassword")).toBeInTheDocument();
+    expect(screen.getByText("messages.errors.errorUpdatingPassword")).toBeInTheDocument();
+    expect(screen.getByTestId("current-password")).toHaveValue(CURRENT_PASSWORD);
+    expect(mockToastAdd).not.toHaveBeenCalled();
+  });
+
+  it("maps an invalid password format 400 onto the new password field", async () => {
+    mockFetch.mockResolvedValueOnce(mockResponse(400, { success: false, message: "Invalid password format" }));
+
+    render(<UpdatePasswordPage />);
+
+    fillPasswordFields();
+    submitForm();
+
+    expect(await screen.findByText("messages.errors.passwordDoesNotMeetRequirements")).toBeInTheDocument();
+    expect(screen.getByText("messages.errors.errorUpdatingPassword")).toBeInTheDocument();
+    expect(screen.queryByText("messages.errors.incorrectCurrentPassword")).not.toBeInTheDocument();
+    expect(mockToastAdd).not.toHaveBeenCalled();
+  });
+
+  it("maps a passwords do not match 400 onto the confirm password field", async () => {
+    mockFetch.mockResolvedValueOnce(mockResponse(400, { success: false, message: "Passwords do not match" }));
+
+    render(<UpdatePasswordPage />);
+
+    fillPasswordFields();
+    submitForm();
+
+    expect(await screen.findByText("messages.errors.passwordsDoNotMatch")).toBeInTheDocument();
+    expect(screen.getByText("messages.errors.errorUpdatingPassword")).toBeInTheDocument();
+    expect(mockToastAdd).not.toHaveBeenCalled();
+  });
+
+  it("shows a general error and logs when the access token is invalid", async () => {
+    mockFetch.mockResolvedValueOnce(mockResponse(401, { success: false, message: "Invalid access token" }));
+
+    render(<UpdatePasswordPage />);
+
+    fillPasswordFields();
+    submitForm();
+
+    expect(await screen.findByText("messages.errors.errorUpdatingPassword")).toBeInTheDocument();
+    expect(screen.queryByText("messages.errors.incorrectCurrentPassword")).not.toBeInTheDocument();
+    expect(logECS).toHaveBeenCalledWith("error", "updatePassword", expect.objectContaining({
+      status: 401,
+      message: "Invalid access token",
+    }));
+    expect(mockToastAdd).not.toHaveBeenCalled();
+  });
+
+  it("shows a general error when the error response has no JSON body", async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: false,
+      status: 500,
+      json: jest.fn().mockRejectedValue(new Error("Unexpected token")),
+    });
+
+    render(<UpdatePasswordPage />);
+
+    fillPasswordFields();
+    submitForm();
+
+    expect(await screen.findByText("messages.errors.errorUpdatingPassword")).toBeInTheDocument();
+    expect(mockToastAdd).not.toHaveBeenCalled();
+  });
+
+  it("shows a general error when the request fails", async () => {
+    mockFetch.mockRejectedValueOnce(new TypeError("Failed to fetch"));
+
+    render(<UpdatePasswordPage />);
+
+    fillPasswordFields();
+    submitForm();
+
+    expect(await screen.findByText("messages.errors.errorUpdatingPassword")).toBeInTheDocument();
+    expect(screen.queryByText("Failed to fetch")).not.toBeInTheDocument();
+    expect(logECS).toHaveBeenCalledWith("error", "updatePassword", expect.objectContaining({
+      error: expect.any(TypeError),
+    }));
+    expect(mockToastAdd).not.toHaveBeenCalled();
+  });
+
+  it("disables submit while the request is in flight", async () => {
+    let resolveFetch: (value: unknown) => void = () => { };
+    mockFetch.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          resolveFetch = resolve;
+        }),
     );
-  });
 
-  it("should clear field errors when user types", () => {
     render(<UpdatePasswordPage />);
 
-    const currentPasswordField = screen.getByLabelText(/currentPassword/);
+    fillPasswordFields();
+    submitForm();
 
-    // Simulate typing in field (this tests the error clearing logic)
-    fireEvent.change(currentPasswordField, { target: { value: "test" } });
+    const submitButton = screen.getByTestId("change-password");
+    await waitFor(() => {
+      expect(submitButton).toBeDisabled();
+      expect(submitButton).toHaveTextContent("btnChangingPassword");
+    });
 
-    // Field should have the value
-    expect(currentPasswordField).toHaveValue("test");
+    resolveFetch(mockResponse(200));
+
+    await waitFor(() => {
+      expect(submitButton).not.toBeDisabled();
+    });
   });
 
-  it("should render sidebar with navigation links", () => {
+  it("clears a field error when the user types", async () => {
     render(<UpdatePasswordPage />);
 
-    // Check sidebar is present
-    const sidebar =
-      document.querySelector('[class*="SidebarPanel"]') ||
-      document.querySelector('[class*="sidebar"]') ||
-      document.querySelector("aside");
+    submitForm();
+    expect(await screen.findByText("messages.errors.currentPasswordRequired")).toBeInTheDocument();
 
-    if (!sidebar) {
-      // Fallback: check if the main content structure exists
-      const contentContainer = document.querySelector('[class*="ContentContainer"]');
-      expect(contentContainer).toBeInTheDocument();
-    } else {
-      expect(sidebar).toBeInTheDocument();
-    }
-
-    // Check for navigation links (test structure, not specific text)
-    const links = document.querySelectorAll("a");
-    expect(links.length).toBeGreaterThan(0);
+    fireEvent.change(screen.getByTestId("current-password"), { target: { value: "test" } });
+    expect(screen.queryByText("messages.errors.currentPasswordRequired")).not.toBeInTheDocument();
   });
 
-  it("should have proper layout structure", () => {
+  it("does not submit when confirm password is missing", async () => {
     render(<UpdatePasswordPage />);
 
-    // Check main layout components exist
-    const layoutContainer =
-      document.querySelector('[class*="LayoutWithPanel"]') || document.querySelector('[class*="layout"]');
+    fillPasswordFields({ confirmPassword: "" });
+    submitForm();
 
-    const contentContainer =
-      document.querySelector('[class*="ContentContainer"]') || document.querySelector('[class*="content"]');
-
-    // At minimum, should have content structure
-    expect(contentContainer || layoutContainer).toBeInTheDocument();
+    expect(await screen.findByText("messages.errors.confirmPasswordRequired")).toBeInTheDocument();
+    expect(mockFetch).not.toHaveBeenCalled();
   });
 
-  it("should pass accessibility tests", async () => {
+  it("does not submit when the new password is missing an uppercase letter", async () => {
+    render(<UpdatePasswordPage />);
+
+    fillPasswordFields({ newPassword: "validpass123!", confirmPassword: "validpass123!" });
+    submitForm();
+
+    expect(await screen.findByText("messages.errors.passwordMissingUppercase")).toBeInTheDocument();
+    expect(mockFetch).not.toHaveBeenCalled();
+  });
+
+  it("falls back to the short-password error when a requirement has no mapped message", async () => {
+    (getPasswordRequirements as jest.Mock).mockImplementation(() => [{ key: "unknownRule", isMet: false }]);
+
+    render(<UpdatePasswordPage />);
+
+    fillPasswordFields();
+    submitForm();
+
+    expect(await screen.findByText("messages.errors.passwordTooShort")).toBeInTheDocument();
+    expect(mockFetch).not.toHaveBeenCalled();
+  });
+
+  it("has no accessibility violations", async () => {
     const { container } = render(<UpdatePasswordPage />);
 
-    // Wait for component to render
     await waitFor(() => {
       expect(screen.getByLabelText(/currentPassword/)).toBeInTheDocument();
     });

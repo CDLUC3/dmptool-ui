@@ -186,7 +186,8 @@
         "passwordMissingLowercase": "Password must contain at least one lowercase letter",
         "passwordMissingSpecialChar": "Password must contain at least one special character",
         "incorrectCurrentPassword": "Current password is incorrect",
-        "errorUpdatingPassword": "Error when updating password"
+        "errorUpdatingPassword": "Error when updating password",
+        "passwordDoesNotMeetRequirements": "Password does not meet the requirements"
       }
     }
   },
