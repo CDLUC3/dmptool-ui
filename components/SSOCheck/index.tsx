@@ -177,56 +177,66 @@ export const SSOCheckContainer: React.FC<SSOCheckContainerProps> = ({ mode }) =>
     }
   };
 
+  // Validate the email field and return an error message if it is invalid or empty.
+  function getEmailError(): string {
+    if (!email.trim()) return t("emailRequired");
+    if (!isValidEmail(email)) return t("invalidEmail");
+    return "";
+  }
+
   // Validate the form fields based on the current mode (login or register) and set any errors found.
   function isValid(): boolean {
-    let hasErrors = false;
-    const globalErrors = errors || [];
-
-    if (globalErrors.length > 0) hasErrors = true;
+    // Build up all field errors at once so later checks don't overwrite earlier ones
+    const newFieldErrors: fieldErrorsMap = {
+      email: "",
+      givenName: "",
+      surName: "",
+      affiliationId: "",
+      otherAffiliationName: "",
+      password: "",
+      confirmPassword: "",
+    };
 
     if (!isValidEmail(email)) {
-      setFieldErrors({
-        ...fieldErrors,
-        email: globalT("messaging.errors.invalidEmail"),
-      });
-      hasErrors = true;
+      newFieldErrors.email = globalT("messaging.errors.invalidEmail");
     }
 
-    if (mode === "login") {
-      if (!isValidPassword(password)) {
-        setFieldErrors({
-          ...fieldErrors,
-          confirmPassword: t("passwordRequirements"),
-        });
-        hasErrors = true;
-      }
-    } else {
-      if (password !== confirmPassword) {
-        setFieldErrors({
-          ...fieldErrors,
-          confirmPassword: globalT("messaging.errors.passMissMatch"),
-        });
-        hasErrors = true;
-      }
+    switch (mode) {
+      case "login":
+        if (!password) {
+          newFieldErrors.password = t("passwordRequired");
+        }
+        break;
 
-      if (!isValidPassword(password)) {
-        setFieldErrors({
-          ...fieldErrors,
-          password: t("passwordRequirements"),
-        });
-        hasErrors = true;
-      }
+      case "register":
+        if (!firstName.trim()) {
+          newFieldErrors.givenName = t("firstNameRequired");
+        }
 
-      if (!affiliationId && !otherAffiliation) {
-        setFieldErrors({
-          ...fieldErrors,
-          affiliationId: t("institutionRequired"),
-        });
-        hasErrors = true;
-      }
+        if (!lastName.trim()) {
+          newFieldErrors.surName = t("lastNameRequired");
+        }
+
+        if (!isValidPassword(password)) {
+          newFieldErrors.password = t("passwordRequirements");
+        }
+
+        if (password !== confirmPassword) {
+          newFieldErrors.confirmPassword = globalT("messaging.errors.passMissMatch");
+        }
+
+        if (!affiliationId && !otherAffiliation) {
+          newFieldErrors.affiliationId = t("institutionRequired");
+        }
+
+        if (!termsAccepted) {
+          newFieldErrors.otherAffiliationName = t("termsRequired");
+        }
+        break;
     }
 
-    return !hasErrors;
+    setFieldErrors(newFieldErrors);
+    return Object.values(newFieldErrors).every((msg) => !msg);
   }
 
   // Handle the form submission for login or registration, including CSRF token handling and error management.
@@ -273,11 +283,15 @@ export const SSOCheckContainer: React.FC<SSOCheckContainerProps> = ({ mode }) =>
 
     /* eslint-disable @typescript-eslint/no-explicit-any */
     try {
-
       const response = await authRequest(await getCsrfToken());
 
       if (response.ok) {
         await onFormSubmissionSuccess();
+
+      } else if (response.status === 409) {
+        // If it was a 409 conflict, the email is already registered. This should only happen on registration.
+        setErrors([t("accountExists")]);
+        reFocusForm();
 
       } else if (response.status >= 400 && response.status < 500) {
         // If it was a 400 level error just display the generic error message for the mode (login or register) so that
@@ -307,10 +321,14 @@ export const SSOCheckContainer: React.FC<SSOCheckContainerProps> = ({ mode }) =>
     ev.preventDefault();
 
     try {
-
       switch (step) {
         case "email":
-          // We are on the email entry step, so check if it is an SSO email
+          // Validate the email before checking whether it belongs to an SSO provider
+          const emailError = getEmailError();
+          setFieldErrors((prev) => ({ ...prev, email: emailError }));
+          if (emailError) break;
+
+          // Check if it is an SSO email
           await ssoCheck();
           break;
 
@@ -377,6 +395,7 @@ export const SSOCheckContainer: React.FC<SSOCheckContainerProps> = ({ mode }) =>
     <Form
       className={styles.authForm}
       onSubmit={processSubmit}
+      validationBehavior="aria"
       ref={formRef}
       data-step={step}
     >
@@ -390,9 +409,14 @@ export const SSOCheckContainer: React.FC<SSOCheckContainerProps> = ({ mode }) =>
         type="email"
         label={t("emailAddress")}
         ariaLabel={t("emailAddress")}
-        onChange={(e) => setEmail(e.target.value)}
+        onChange={(e) => {
+          setEmail(e.target.value);
+          setFieldErrors((prev) => ({ ...prev, email: "" }));
+        }}
         value={email}
-        isRequired
+        isInvalid={!!fieldErrors.email}
+        errorMessage={fieldErrors.email}
+        isRequiredVisualOnly={true}
         readOnly={["password", "sso"].includes(step)}
         autoComplete={step === "non-sso" ? "off" : "email"}
         inputClasses={["password", "sso"].includes(step) ? "disabled-look" : ""}
@@ -408,7 +432,9 @@ export const SSOCheckContainer: React.FC<SSOCheckContainerProps> = ({ mode }) =>
           label={t("password")}
           ariaLabel={t("password")}
           onChange={(e) => setPassword(e.target.value)}
-          isRequired
+          isInvalid={!!fieldErrors.password}
+          errorMessage={fieldErrors.password}
+          isRequiredVisualOnly={true}
           helpMessage={
             <Link
               href={routePath("login.forgotPassword")}
@@ -429,7 +455,7 @@ export const SSOCheckContainer: React.FC<SSOCheckContainerProps> = ({ mode }) =>
               type="text"
               label={t("firstName")}
               ariaLabel={t("firstName")}
-              isRequired
+              isRequiredVisualOnly={true}
               onChange={(e) => setFirstName(e.target.value)}
             />
 
@@ -438,7 +464,7 @@ export const SSOCheckContainer: React.FC<SSOCheckContainerProps> = ({ mode }) =>
               type="text"
               label={t("lastName")}
               ariaLabel={t("lastName")}
-              isRequired
+              isRequiredVisualOnly={true}
               onChange={(e) => setLastName(e.target.value)}
             />
           </div>
@@ -446,7 +472,7 @@ export const SSOCheckContainer: React.FC<SSOCheckContainerProps> = ({ mode }) =>
           <TypeAheadWithOther
             className={styles.typeAhead}
             label={t("institution")}
-            isRequired={true}
+            isRequiredVisualOnly={true}
             fieldName="institution"
             setOtherField={setOtherField}
             helpText={t("institutionHelp")}
@@ -468,23 +494,12 @@ export const SSOCheckContainer: React.FC<SSOCheckContainerProps> = ({ mode }) =>
           )}
 
           <FormInput
-            name="email"
-            type="email"
-            label={t("emailAddress")}
-            ariaLabel={t("emailAddress")}
-            onChange={(e) => setEmail(e.target.value)}
-            value={email}
-            isRequired
-            disabled={true}
-          />
-
-          <FormInput
             name="password"
             type="password"
             label={t("password")}
             ariaLabel={t("password")}
             passwordToggleLabel={t("password")}
-            isRequired
+            isRequiredVisualOnly={true}
             onChange={(e) => setPassword(e.target.value)}
             isInvalid={!!fieldErrors.password}
             errorMessage={fieldErrors.password}
@@ -499,7 +514,7 @@ export const SSOCheckContainer: React.FC<SSOCheckContainerProps> = ({ mode }) =>
             label={t("passwordConfirm")}
             ariaLabel={t("passwordConfirm")}
             passwordToggleLabel={t("passwordConfirm")}
-            isRequired
+            isRequiredVisualOnly={true}
             onChange={(e) => setConfirmPassword(e.target.value)}
             isInvalid={!!fieldErrors.confirmPassword}
             errorMessage={fieldErrors.confirmPassword}
@@ -509,6 +524,7 @@ export const SSOCheckContainer: React.FC<SSOCheckContainerProps> = ({ mode }) =>
           <Checkbox
             isSelected={termsAccepted}
             onChange={setTermsAccepted}
+            isRequired={true}
           >
             <div className="checkbox">
               <svg
@@ -590,8 +606,7 @@ export const SSOCheckContainer: React.FC<SSOCheckContainerProps> = ({ mode }) =>
           </Button>
         )}
         {step === "email" && (
-          <Link
-            href={mode === "login" ? modePaths.register : modePaths.login}>
+          <Link href={mode === "login" ? modePaths.register : modePaths.login}>
             {t(mode === "login" ? modePathText.register : modePathText.login)}
           </Link>
         )}
