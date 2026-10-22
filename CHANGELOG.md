@@ -60,6 +60,7 @@
 - Added `UpdateAffiliation` and `AffiliationById` queries [#203]
 
 ## Updated
+- Updated `next` and `dompurify`
 - Updated `planAuthoringDataSource.ts` to use `hiddenVersionedQuestionIds`, which is returned with every `Save` of a question [#366]
 - Updated `PlanAuthoring` model, and its components like `PlanSectionPickerDialog`, `PlanSection`, `PlanAuthoringScreen` to use the new `visibleQuestions` function to display only those questions in the one-pager [#366]
 - `toQuestion` method now returns `isHidden` in the `toPlanAuthoringModel.ts` file, so we can use that info to determine which questions to show [#366]
