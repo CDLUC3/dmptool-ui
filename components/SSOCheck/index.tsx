@@ -13,17 +13,15 @@ import { useTranslations } from "next-intl";
 import { TypeAheadWithOther, useAffiliationSearch } from "@/components/Form/TypeAheadWithOther";
 import PasswordRequirementsList from "@/components/PasswordRequirementsList";
 import { handleErrors, isValidPassword, isValidEmail, routePath } from "@/utils/index";
-import { SSO_PENDING_TOKEN_NAME } from "@/utils/authHelper";
-import { jwt } from "zod";
-import { verifyJwtToken } from "@/lib/server/auth";
 
 interface SSOCheckContainerProps {
   mode: Modes;
+  initialPendingSignup?: PendingSSOSignup;
 }
 
 interface LoginInput {
   email: string;
-  password: string;
+  password?: string;
 }
 
 interface RegisterInput {
@@ -46,8 +44,8 @@ type fieldErrorsMap = {
   confirmPassword: string;
 };
 
-interface JWTPendingSSOSignup {
-  email?: string;
+export interface PendingSSOSignup {
+  email: string;
   affiliation?: string;
   displayName?: string;
   givenName?: string;
@@ -74,7 +72,7 @@ const modePathText = {
   register: "registerLink",
 };
 
-export const SSOCheckContainer: React.FC<SSOCheckContainerProps> = ({ mode }) => {
+export const SSOCheckContainer: React.FC<SSOCheckContainerProps> = ({ mode, initialPendingSignup }) => {
   const t = useTranslations("AuthPage");
   const globalT = useTranslations("Global");
   const errorRef = useRef<HTMLDivElement>(null);
@@ -93,24 +91,27 @@ export const SSOCheckContainer: React.FC<SSOCheckContainerProps> = ({ mode }) =>
   const { getCsrfToken } = useCsrf();
   const router = useRouter();
 
-  const [step, setStep] = useState<LoginSteps>("email");
+  const [step, setStep] = useState<LoginSteps>(
+    mode === "register" && initialPendingSignup ? "non-sso" : "email"
+  );
 
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(initialPendingSignup?.email ?? "");
   const [ssoEntityId, setSsoEntityId] = useState<string | null>(null);
 
-  const [affiliation, setAffiliation] = useState<string | null>(null);
-  const [affiliationId, setAffiliationId] = useState<string | null>(null);
+  const [affiliation, setAffiliation] = useState<string | null>(initialPendingSignup?.displayName ?? null);
+  const [affiliationId, setAffiliationId] = useState<string | null>(initialPendingSignup?.affiliation ?? null);
   const [otherField, setOtherField] = useState<boolean>(false);
   const [otherAffiliation, setOtherAffiliation] = useState<string>("");
   const { suggestions, handleSearch, isSearching, searchError } = useAffiliationSearch();
 
   const [password, setPassword] = useState("");
-  const [firstName, setFirstName] = useState<string>("");
-  const [lastName, setLastName] = useState<string>("");
+  const [firstName, setFirstName] = useState(initialPendingSignup?.givenName ?? "");
+  const [lastName, setLastName] = useState(initialPendingSignup?.surName ?? "");
   const [confirmPassword, setConfirmPassword] = useState<string>("");
   const [termsAccepted, setTermsAccepted] = useState<boolean>(false);
 
   const { setIsAuthenticated, clearCache } = useAuthContext();
+  const isPendingSsoSignup = mode === "register" && initialPendingSignup?.email === email;
 
   const returnToEmail = () => {
     setStep("email");
@@ -232,12 +233,14 @@ export const SSOCheckContainer: React.FC<SSOCheckContainerProps> = ({ mode }) =>
           newFieldErrors.surName = t("lastNameRequired");
         }
 
-        if (!isValidPassword(password)) {
-          newFieldErrors.password = t("passwordRequirements");
-        }
+        if (!isPendingSsoSignup) {
+          if (!isValidPassword(password)) {
+            newFieldErrors.password = t("passwordRequirements");
+          }
 
-        if (password !== confirmPassword) {
-          newFieldErrors.confirmPassword = globalT("messaging.errors.passMissMatch");
+          if (password !== confirmPassword) {
+            newFieldErrors.confirmPassword = globalT("messaging.errors.passMissMatch");
+          }
         }
 
         if (!affiliationId && !otherAffiliation) {
@@ -276,10 +279,10 @@ export const SSOCheckContainer: React.FC<SSOCheckContainerProps> = ({ mode }) =>
             givenName: firstName,
             surName: lastName,
             email,
-            password,
             affiliationId: affiliationId || undefined,
             otherAffiliationName: otherAffiliation,
             acceptedTerms: termsAccepted,
+            ...(isPendingSsoSignup ? {} : { password }),
           };
 
       return await fetch(`${process.env.NEXT_PUBLIC_AUTH_ENDPOINT}${authTargets[mode]}`, {
@@ -399,33 +402,6 @@ export const SSOCheckContainer: React.FC<SSOCheckContainerProps> = ({ mode }) =>
   }, [errors]);
 
   useEffect(() => {
-    async function getPendingSSOPayload() {
-      try {
-        const pendingToken = await cookieStore.get(SSO_PENDING_TOKEN_NAME);
-        if (pendingToken !== null && pendingToken.value) {
-          const pendingPayload = (await verifyJwtToken(pendingToken.value)) as JWTPendingSSOSignup;
-
-          if (pendingPayload) {
-            // Update your React state directly as soon as data resolves
-            setEmail(pendingPayload.email || "");
-            setFirstName(pendingPayload.givenName || "");
-            setLastName(pendingPayload.surName || "");
-            setAffiliation(pendingPayload.displayName || "");
-            setAffiliationId(pendingPayload.affiliation || null);
-            setStep("non-sso");
-          }
-        }
-      } catch (err: any) {
-        logECS("error", "Error verifying pending SSO token", {
-          error: err,
-        });
-      }
-    }
-
-    getPendingSSOPayload();
-  }, []);
-
-  useEffect(() => {
     if (step === "non-sso") {
       if (formRef.current) {
         const formEl = formRef.current as HTMLElement;
@@ -500,6 +476,7 @@ export const SSOCheckContainer: React.FC<SSOCheckContainerProps> = ({ mode }) =>
               label={t("firstName")}
               ariaLabel={t("firstName")}
               isRequiredVisualOnly={true}
+              value={firstName}
               onChange={(e) => setFirstName(e.target.value)}
             />
 
@@ -509,6 +486,7 @@ export const SSOCheckContainer: React.FC<SSOCheckContainerProps> = ({ mode }) =>
               label={t("lastName")}
               ariaLabel={t("lastName")}
               isRequiredVisualOnly={true}
+              value={lastName}
               onChange={(e) => setLastName(e.target.value)}
             />
           </div>
@@ -521,6 +499,7 @@ export const SSOCheckContainer: React.FC<SSOCheckContainerProps> = ({ mode }) =>
             setOtherField={setOtherField}
             helpText={t("institutionHelp")}
             updateFormData={updateAffiliations}
+            value={affiliation ?? ""}
             error={fieldErrors?.affiliationId || searchError || ""}
             suggestions={suggestions}
             onSearch={handleSearch}
@@ -537,33 +516,37 @@ export const SSOCheckContainer: React.FC<SSOCheckContainerProps> = ({ mode }) =>
             />
           )}
 
-          <FormInput
-            name="password"
-            type="password"
-            label={t("password")}
-            ariaLabel={t("password")}
-            passwordToggleLabel={t("password")}
-            isRequiredVisualOnly={true}
-            onChange={(e) => setPassword(e.target.value)}
-            isInvalid={!!fieldErrors.password}
-            errorMessage={fieldErrors.password}
-            data-testid="pass"
-          />
+          {!isPendingSsoSignup && (
+            <>
+              <FormInput
+                name="password"
+                type="password"
+                label={t("password")}
+                ariaLabel={t("password")}
+                passwordToggleLabel={t("password")}
+                isRequiredVisualOnly={true}
+                onChange={(e) => setPassword(e.target.value)}
+                isInvalid={!!fieldErrors.password}
+                errorMessage={fieldErrors.password}
+                    data-testid="pass"
+              />
 
-          <PasswordRequirementsList password={password} />
+              <PasswordRequirementsList password={password} />
 
-          <FormInput
-            name="confirmPassword"
-            type="password"
-            label={t("passwordConfirm")}
-            ariaLabel={t("passwordConfirm")}
-            passwordToggleLabel={t("passwordConfirm")}
-            isRequiredVisualOnly={true}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            isInvalid={!!fieldErrors.confirmPassword}
-            errorMessage={fieldErrors.confirmPassword}
-            data-testid="confirmpass"
-          />
+              <FormInput
+                name="confirmPassword"
+                type="password"
+                label={t("passwordConfirm")}
+                ariaLabel={t("passwordConfirm")}
+                passwordToggleLabel={t("passwordConfirm")}
+                isRequiredVisualOnly={true}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                isInvalid={!!fieldErrors.confirmPassword}
+                errorMessage={fieldErrors.confirmPassword}
+                data-testid="confirmpass"
+              />
+            </>
+          )}
 
           <Checkbox
             isSelected={termsAccepted}

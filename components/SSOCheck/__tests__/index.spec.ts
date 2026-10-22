@@ -50,14 +50,15 @@ jest.mock("@/components/Form/TypeAheadWithOther", () => ({
     isSearching: false,
     searchError: null,
   }),
-  TypeAheadWithOther: ({ updateFormData, setOtherField, error }: {
+  TypeAheadWithOther: ({ updateFormData, setOtherField, error, value }: {
     updateFormData: (id: string, value: string) => void;
     setOtherField: (v: boolean) => void;
     error?: string;
+    value?: string;
   }) =>
     React.createElement(
       "div",
-      null,
+      { "data-testid": "typeaheadWithOther", "data-pending-value": value },
       React.createElement(
         "button",
         { type: "button", onClick: () => updateFormData("https://ror.org/abc", "Org") },
@@ -92,8 +93,16 @@ const jsonResponse = (status: number, body: unknown = {}) => ({
   json: async () => body,
 });
 
-const renderComponent = (mode: "login" | "register" = "login") =>
-  render(React.createElement(SSOCheckContainer, { mode }));
+const renderComponent = (
+  mode: "login" | "register" = "login",
+  initialPendingSignup?: {
+    email: string;
+    affiliation?: string;
+    displayName?: string;
+    givenName?: string;
+    surName?: string;
+  }
+) => render(React.createElement(SSOCheckContainer, { mode, initialPendingSignup }));
 
 const getEmailInput = () => screen.getAllByLabelText("emailAddress")[0] as HTMLInputElement;
 
@@ -439,6 +448,24 @@ describe("SSOCheckContainer", () => {
       expect(screen.getByLabelText("lastName")).toBeInTheDocument();
       expect(screen.getByTestId("pwReqs")).toBeInTheDocument();
       expect(screen.getByText("acceptTerms")).toBeInTheDocument();
+    });
+
+    it("prepopulates the registration form from a verified pending SSO signup", () => {
+      renderComponent("register", {
+        email: "jane.doe@example.edu",
+        affiliation: "https://ror.org/123",
+        displayName: "Example University",
+        givenName: "Jane",
+        surName: "Doe",
+      });
+
+      expect(getEmailInput()).toHaveValue("jane.doe@example.edu");
+      expect(screen.getByLabelText("firstName")).toHaveValue("Jane");
+      expect(screen.getByLabelText("lastName")).toHaveValue("Doe");
+      expect(screen.getByTestId("typeaheadWithOther")).toHaveAttribute("data-pending-value", "Example University");
+      expect(screen.queryByLabelText("password")).not.toBeInTheDocument();
+      expect(screen.queryByLabelText("passwordConfirm")).not.toBeInTheDocument();
+      expect(screen.getByTestId("actionSubmit")).toBeInTheDocument();
     });
 
     it("disables submit until the terms are accepted", async () => {
