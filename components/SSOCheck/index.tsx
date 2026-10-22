@@ -141,7 +141,14 @@ export const SSOCheckContainer: React.FC<SSOCheckContainerProps> = ({ mode }) =>
 
     /* eslint-disable @typescript-eslint/no-explicit-any */
     try {
-      const response = await ssoCheckRequest(await getCsrfToken());
+      let response = await ssoCheckRequest(await getCsrfToken());
+
+      // CSRF tokens are single-use, so a token already used by sso-check gets a 403 here.
+      // Retry once with a fresh token before handling the response.
+      if (response.status === 403) {
+        response = await ssoCheckRequest(await getCsrfToken());
+      }
+
       if (response.ok) {
         // If successful, the response will contain the affiliationId and displayName for the SSO provider.
         const json = await response.json();
@@ -149,15 +156,12 @@ export const SSOCheckContainer: React.FC<SSOCheckContainerProps> = ({ mode }) =>
         setAffiliation(json.displayName);
         setAffiliationId(json.affiliationId);
         setStep("sso");
-
       } else if (response.status === 404) {
         // If a 404 was returned then the email is not associated with an SSO provider, so we can show the non-SSO form.
         setStep("non-sso");
-
       } else {
-        // CSRF tokens are single-use, so a token already used by sign-up or logout gets a 403 here.
-        // handleErrors retries with a fresh token, and must finish the login the same way on success.
-        await handleErrors(response, ssoCheckRequest, setErrors, router, mode === "login" ? "/login" : "/signup", onFormSubmissionSuccess);
+        // Any other error (e.g. a 500) is handled by the shared error handler
+        await handleErrors(response, ssoCheckRequest, setErrors, router, modePaths[mode]);
       }
     } catch (err: any) {
       logECS("error", "SSO Check error", {
@@ -283,25 +287,27 @@ export const SSOCheckContainer: React.FC<SSOCheckContainerProps> = ({ mode }) =>
 
     /* eslint-disable @typescript-eslint/no-explicit-any */
     try {
-      const response = await authRequest(await getCsrfToken());
+      let response = await authRequest(await getCsrfToken());
+
+      // CSRF tokens are single-use, so a token already used by sign-up or sign-in gets a 403 here.
+      // Retry once with a fresh token before handling the response.
+      if (response.status === 403) {
+        response = await authRequest(await getCsrfToken());
+      }
 
       if (response.ok) {
         await onFormSubmissionSuccess();
-
       } else if (response.status === 409) {
         // If it was a 409 conflict, the email is already registered. This should only happen on registration.
         setErrors([t("accountExists")]);
         reFocusForm();
-
       } else if (response.status >= 400 && response.status < 500) {
         // If it was a 400 level error just display the generic error message for the mode (login or register) so that
         // we are not giving away any information about the validity of the email or password.
         setErrors([t(mode === "login" ? "loginError" : "registerError")]);
         reFocusForm();
-
       } else {
-        // CSRF tokens are single-use, so a token already used by sign-up or logout gets a 403 here.
-        // handleErrors retries with a fresh token, and must finish the login the same way on success.
+        // Any other error (e.g. a 500) is handled by the shared error handler
         await handleErrors(response, authRequest, setErrors, router, modePaths[mode], onFormSubmissionSuccess);
       }
     } catch (err: any) {
@@ -417,9 +423,9 @@ export const SSOCheckContainer: React.FC<SSOCheckContainerProps> = ({ mode }) =>
         isInvalid={!!fieldErrors.email}
         errorMessage={fieldErrors.email}
         isRequiredVisualOnly={true}
-        readOnly={["password", "sso"].includes(step)}
+        readOnly={["non-sso", "sso"].includes(step)}
+        inputClasses={["non-sso", "sso"].includes(step) ? "disabled-look" : ""}
         autoComplete={step === "non-sso" ? "off" : "email"}
-        inputClasses={["password", "sso"].includes(step) ? "disabled-look" : ""}
         helpMessage={step === "email" ? t("singleSignOn") : undefined}
         data-testid="emailInput"
       />
@@ -477,7 +483,7 @@ export const SSOCheckContainer: React.FC<SSOCheckContainerProps> = ({ mode }) =>
             setOtherField={setOtherField}
             helpText={t("institutionHelp")}
             updateFormData={updateAffiliations}
-            error={fieldErrors?.affiliationId ?? searchError ?? ""}
+            error={fieldErrors?.affiliationId || searchError || ""}
             suggestions={suggestions}
             onSearch={handleSearch}
             isLoading={isSearching}

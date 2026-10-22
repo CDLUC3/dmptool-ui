@@ -286,8 +286,7 @@ describe("SSOCheckContainer", () => {
       await waitFor(() => expect(mockHandleErrors).toHaveBeenCalledTimes(1));
       const args = mockHandleErrors.mock.calls[0];
       expect(args[3]).toBe(mockRouter);
-      expect(args[4]).toBe("/login");
-      expect(typeof args[5]).toBe("function");
+      expect(args[4]).toBe("/login");;
     });
 
     it("passes the signup path to handleErrors in register mode", async () => {
