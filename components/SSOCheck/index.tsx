@@ -616,7 +616,7 @@ export const SSOCheckContainer: React.FC<SSOCheckContainerProps> = ({ mode }) =>
             {t(mode === "login" ? modePathText.register : modePathText.login)}
           </Link>
         )}
-        <Link href="#">{t("getHelpText")}</Link>
+        <Link href={routePath("app.contact")}>{t("getHelpText")}</Link>
       </div>
     </Form>
   );
