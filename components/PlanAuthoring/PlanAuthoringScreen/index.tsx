@@ -23,6 +23,7 @@ import {
   collectLockedGuidanceOrgIds,
   questionKey,
   sectionKey,
+  visibleQuestions,
 } from "../model";
 import { usePlanAuthoringState } from "../usePlanAuthoringState";
 import { usePlanSectionNavigation } from "../usePlanSectionNavigation";
@@ -283,7 +284,7 @@ export default function PlanAuthoring({
                       index={index}
                       total={model.sections.length}
                     >
-                      {section.questions.map((question) => (
+                      {visibleQuestions(section).map((question) => (
                         <PlanQuestion
                           key={questionKey(question.identity)}
                           question={question}

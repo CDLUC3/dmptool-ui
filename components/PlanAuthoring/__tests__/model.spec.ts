@@ -4,8 +4,10 @@ import {
   computeProgress,
   questionKey,
   sectionKey,
+  visibleQuestions,
   type PlanSectionDefinition,
 } from "../model";
+import { makeQuestion, makeSection } from "../mocks";
 
 describe("PlanAuthoring model helpers", () => {
   it("keeps base and custom identity keys distinct", () => {
@@ -136,5 +138,19 @@ describe("PlanAuthoring model helpers", () => {
       "nih",
       "stanford",
     ]);
+  });
+
+  it("leaves hidden questions out of the visible questions and the progress", () => {
+    const shown = makeQuestion({ identity: { kind: "base", versionedQuestionId: 1 }, hasAnswer: true });
+    const hiddenAnswered = makeQuestion({
+      identity: { kind: "base", versionedQuestionId: 2 },
+      hasAnswer: true,
+      isHidden: true,
+    });
+    const hiddenUnanswered = makeQuestion({ identity: { kind: "base", versionedQuestionId: 3 }, isHidden: true });
+    const section = makeSection({ questions: [shown, hiddenAnswered, hiddenUnanswered] });
+
+    expect(visibleQuestions(section)).toEqual([shown]);
+    expect(computeProgress([section])).toEqual({ answeredQuestions: 1, totalQuestions: 1, percentComplete: 100 });
   });
 });

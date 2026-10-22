@@ -650,3 +650,17 @@ describe("toPlanAuthoringModel question JSON", () => {
     );
   });
 });
+
+describe("toPlanAuthoringModel display logic", () => {
+  it("maps isHidden, defaulting to visible", () => {
+    const [hidden, shown, unset] = mapQuestions([
+      makeRawQuestion({ versionedQuestionId: 1, isHidden: true }),
+      makeRawQuestion({ versionedQuestionId: 2, isHidden: false }),
+      makeRawQuestion({ versionedQuestionId: 3 }),
+    ]);
+
+    expect(hidden.isHidden).toBe(true);
+    expect(shown.isHidden).toBe(false);
+    expect(unset.isHidden).toBe(false);
+  });
+});

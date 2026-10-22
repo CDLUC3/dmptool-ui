@@ -59,6 +59,7 @@ query PlanAuthoring($planId: Int!) {
         useSampleTextAsDefault
         hasAnswer
         json
+        isHidden
         guidanceSources {
           id
           type

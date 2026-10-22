@@ -4,7 +4,7 @@ import React from "react";
 import { useTranslations } from "next-intl";
 import SafeHtml from "@/components/SafeHtml";
 import type { PlanSectionDefinition } from "../model";
-import { sectionAnchorId } from "../model";
+import { sectionAnchorId, visibleQuestions } from "../model";
 import styles from "./PlanSection.module.scss";
 
 interface PlanSectionProps {
@@ -54,7 +54,7 @@ export default function PlanSection({
         </p>
       </div>
       <div className={styles.planSectionQuestions}>
-        {section.questions.length > 0 ? (
+        {visibleQuestions(section).length > 0 ? (
           children
         ) : (
           <p className={styles.emptySection}>{t("section.noQuestions")}</p>

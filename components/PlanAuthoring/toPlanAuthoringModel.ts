@@ -405,6 +405,7 @@ function toQuestion(
     jsonError,
     answerJson,
     hasAnswer: question.hasAnswer ?? false,
+    isHidden: question.isHidden ?? false,
     lastSavedAt:
       modified != null && Number.isFinite(Number(modified))
         ? Number(modified)

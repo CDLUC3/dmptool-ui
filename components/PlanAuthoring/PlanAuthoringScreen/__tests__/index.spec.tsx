@@ -8,6 +8,8 @@ import {
   createMockDataSource,
   createScenarioDataSource,
   makeModel,
+  makeQuestion,
+  makeSection,
   MOCK_PLAN_DOCUMENT,
 } from "../../mocks";
 import { spyOnDataSource } from "../../mocks/spyOnDataSource";
@@ -181,6 +183,34 @@ describe("PlanAuthoringScreen", () => {
     const filledSection = screen.getByRole("region", { name: "Data collection" });
     expect(within(emptySection).getByText("section.noQuestions")).toBeInTheDocument();
     expect(within(filledSection).queryByText("section.noQuestions")).not.toBeInTheDocument();
+  });
+
+  it("does not render questions hidden by display logic", () => {
+    const model = makeModel({
+      sections: [
+        makeSection({
+          title: "Data collection",
+          questions: [
+            makeQuestion({ identity: { kind: "base", versionedQuestionId: 1 }, title: "Shown question" }),
+            makeQuestion({ identity: { kind: "base", versionedQuestionId: 2 }, title: "Hidden question", isHidden: true }),
+          ],
+        }),
+        makeSection({
+          identity: { kind: "base", versionedSectionId: 2 },
+          title: "All hidden",
+          questions: [
+            makeQuestion({ identity: { kind: "base", versionedQuestionId: 3 }, title: "Also hidden", isHidden: true }),
+          ],
+        }),
+      ],
+    });
+    const { dataSource } = createDataSource({ status: "ready", model });
+    render(<PlanAuthoring dataSource={dataSource} />);
+
+    expect(screen.getByRole("heading", { level: 3, name: "Shown question" })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { level: 3, name: "Hidden question" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { level: 3, name: "Also hidden" })).not.toBeInTheDocument();
+    expect(screen.getByText("section.noQuestions")).toBeInTheDocument();
   });
 
   it("moves from loading to ready when the data source notifies", () => {

@@ -6,6 +6,7 @@ import {
   questionAnchorId,
   sectionAnchorId,
   sectionKey,
+  visibleQuestions,
 } from "./model";
 
 interface UsePlanSectionNavigationArgs {
@@ -135,7 +136,7 @@ export function usePlanSectionNavigation({
 
     // Prefer focusing the first question so keyboard / screen-reader users
     // land in the interactive content of the section, not just the header.
-    const firstQuestion = section.questions[0];
+    const firstQuestion = visibleQuestions(section)[0];
     const focusTarget = firstQuestion
       ? document.getElementById(questionAnchorId(firstQuestion.identity))
         ?.querySelector<HTMLElement>("h3") ??
@@ -172,7 +173,7 @@ export function usePlanSectionNavigation({
       return;
     }
     const isQuestion = sections.some((item) =>
-      item.questions.some((question) => questionAnchorId(question.identity) === anchorId)
+      visibleQuestions(item).some((question) => questionAnchorId(question.identity) === anchorId)
     );
     if (isQuestion) {
       document.getElementById(anchorId)?.scrollIntoView({ block: "start" });

@@ -399,6 +399,65 @@ describe("planAuthoringDataSource saveAnswer", () => {
   });
 });
 
+describe("planAuthoringDataSource display logic", () => {
+  // Question 1 is the trigger question for questions 2 and 3
+  function makeDisplayLogicPlan(triggerAnswer?: PlanAuthoringQuestion["answer"]) {
+    return makeRawPlan({
+      sections: [
+        makeRawSection({
+          questions: [
+            makeRawQuestion({ versionedQuestionId: 1, answer: triggerAnswer, hasAnswer: Boolean(triggerAnswer) }),
+            makeRawQuestion({ versionedQuestionId: 2 }),
+            makeRawQuestion({ versionedQuestionId: 3, isHidden: true }),
+          ],
+        }),
+      ],
+    });
+  }
+
+  it("applies the hidden questions returned by adding an answer", async () => {
+    const { dataSource, mutate } = await setupReady({ plan: makeDisplayLogicPlan() });
+    const response: MutateResult = {
+      data: {
+        addAnswer: { id: 900, json: "{}", modified: null, errors: null, plan: { id: 7, hiddenVersionedQuestionIds: [2] } },
+      },
+    };
+    mutate.mockResolvedValueOnce(response);
+
+    await expect(dataSource.saveAnswer("base-question-1", { type: "text", answer: "Yes" })).resolves.toEqual({ kind: "saved" });
+
+    expect(questionOf(dataSource, "base-question-2").isHidden).toBe(true);
+    expect(questionOf(dataSource, "base-question-3").isHidden).toBe(false);
+    expect(modelOf(dataSource).progress).toEqual({ answeredQuestions: 1, totalQuestions: 2, percentComplete: 50 });
+  });
+
+  it("applies the hidden questions returned by updating an answer", async () => {
+    const { dataSource, mutate } = await setupReady({
+      plan: makeDisplayLogicPlan(makeRawAnswer("text", "No", { id: 600 })),
+    });
+    const response: MutateResult = {
+      data: {
+        updateAnswer: { id: 600, json: "{}", modified: null, errors: null, plan: { id: 7, hiddenVersionedQuestionIds: [2, 3] } },
+      },
+    };
+    mutate.mockResolvedValueOnce(response);
+
+    await dataSource.saveAnswer("base-question-1", { type: "text", answer: "Yes" });
+
+    expect(questionOf(dataSource, "base-question-2").isHidden).toBe(true);
+    expect(questionOf(dataSource, "base-question-3").isHidden).toBe(true);
+  });
+
+  it("keeps each question's isHidden when a save returns no plan", async () => {
+    const { dataSource } = await setupReady({ plan: makeDisplayLogicPlan() });
+
+    await dataSource.saveAnswer("base-question-2", { type: "text", answer: "x" });
+
+    expect(questionOf(dataSource, "base-question-2").isHidden).toBe(false);
+    expect(questionOf(dataSource, "base-question-3").isHidden).toBe(true);
+  });
+});
+
 describe("planAuthoringDataSource comments", () => {
   it("adds an answer comment with the answer id and appends it to the question", async () => {
     const { dataSource, mutate } = await setupReady();
