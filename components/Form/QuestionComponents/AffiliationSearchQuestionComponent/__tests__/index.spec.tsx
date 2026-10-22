@@ -121,7 +121,7 @@ describe('TypeaheadSearchQuestionComponent', () => {
         handleOtherAffiliationChange={mockHandleOtherAffiliationChange}
       />
     );
-    expect(screen.queryByLabelText('Other institution')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('otherLabel')).not.toBeInTheDocument();
   });
 
   it('should set otherAffiliationName to an empty string if none is passed', () => {
@@ -135,8 +135,8 @@ describe('TypeaheadSearchQuestionComponent', () => {
         handleOtherAffiliationChange={mockHandleOtherAffiliationChange}
       />
     );
-    expect(screen.queryByLabelText('Other institution')).toBeInTheDocument();
-    expect(screen.getByPlaceholderText('Enter other institution name')).toHaveValue('');
+    expect(screen.queryByLabelText('otherLabel')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('otherPlaceholder')).toHaveValue('');
   });
 
   it('should render the "Other institution" input when otherField is true', () => {
@@ -152,8 +152,8 @@ describe('TypeaheadSearchQuestionComponent', () => {
       />
     );
 
-    expect(screen.getByLabelText('Other institution')).toBeInTheDocument();
-    expect(screen.getByPlaceholderText('Enter other institution name')).toHaveValue('Other Inst');
+    expect(screen.getByLabelText('otherLabel')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('otherPlaceholder')).toHaveValue('Other Inst');
   });
 
   it('should call handleAffiliationChange when typing in the typeahead', () => {
@@ -186,7 +186,7 @@ describe('TypeaheadSearchQuestionComponent', () => {
         handleOtherAffiliationChange={mockHandleOtherAffiliationChange}
       />
     );
-    const input = screen.getByPlaceholderText('Enter other institution name');
+    const input = screen.getByPlaceholderText('otherPlaceholder');
     fireEvent.change(input, { target: { value: 'Another Inst' } });
     expect(mockHandleOtherAffiliationChange).toHaveBeenCalled();
   });

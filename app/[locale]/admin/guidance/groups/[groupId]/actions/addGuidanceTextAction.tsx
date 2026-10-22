@@ -23,6 +23,6 @@ export async function addGuidanceTextAction({
         tagId
       }
     },
-    dataPath: "addGuidanceText"
+    dataPath: "addGuidance"
   });
 }

@@ -25,7 +25,6 @@ import { useQuery, useMutation } from '@apollo/client/react';
 import {
   CompleteFeedbackDocument,
   MeDocument,
-  PlanSectionProgress,
   PlanStatus,
   PlanVisibility,
   PlanDocument,
@@ -39,8 +38,10 @@ import {
 } from "./actions";
 
 //Components
-import { ContentContainer, LayoutWithPanel, SidebarPanel } from "@/components/Container";
+import { ContentContainer, LayoutContainer, LayoutWithPanel, SidebarPanel } from "@/components/Container";
+import { PlanAuthoring, usePlanAuthoringDataSource } from "@/components/PlanAuthoring";
 import ErrorMessages from "@/components/ErrorMessages";
+import Loading from "@/components/Loading";
 import { DmpIcon } from "@/components/Icons";
 import { FormSelect, RadioGroupComponent, TransitionLink } from "@/components/Form";
 import PageHeaderWithTitleChange from "@/components/PageHeaderWithTitleChange";
@@ -49,7 +50,7 @@ import NotificationHeader from "@/components/Notification";
 
 // Utils and other
 import { routePath } from "@/utils/routes";
-import { stripHtml, toTitleCase } from "@/utils/general";
+import { toTitleCase } from "@/utils/general";
 import { extractErrors } from "@/utils/errorHandler";
 import { useToast } from "@/context/ToastContext";
 import {
@@ -169,7 +170,6 @@ const PlanOverviewPage: React.FC = () => {
     funderName: "",
     primaryContact: "",
     members: [] as PlanMember[],
-    versionedSections: [] as PlanSectionProgress[],
     affiliationName: "",
     sourceTemplate: "",
     templateVersion: "",
@@ -183,6 +183,7 @@ const PlanOverviewPage: React.FC = () => {
   const projectId = String(params.projectId);
   const dmpId = String(params.dmpid);
   const planId = Number(dmpId);
+  const dataSource = usePlanAuthoringDataSource(planId);
   const errorRef = useRef<HTMLDivElement | null>(null);
   const modalErrorRef = useRef<HTMLDivElement | null>(null);
 
@@ -262,19 +263,6 @@ const PlanOverviewPage: React.FC = () => {
     );
   }, [me?.me?.id, data?.plan?.project?.collaborators]);
 
-  // Project collaborators who have 'EDIT' access level will see the "Update" section card button text since they can
-  // edit the question
-  const isEditCollaborator = useMemo(() => {
-    const myId = me?.me?.id;
-    if (!myId || !data?.plan?.project?.collaborators) return false;
-
-    return data.plan.project.collaborators.some(
-      (collaborator) =>
-        collaborator?.user?.id === myId &&
-        collaborator?.accessLevel === "EDIT"
-    );
-  }, [me?.me?.id, data?.plan?.project?.collaborators]);
-
   // Determine if user is an Org Admin that can see feedback request notifications
   const isOrgAdmin = useIsOrgAdmin(
     me?.me,
@@ -295,6 +283,12 @@ const PlanOverviewPage: React.FC = () => {
 
   const handlePlanStatusChange = () => {
     setIsEditingPlanStatus(true);
+  };
+
+  const openPublishModal = () => {
+    // Answers are saved by PlanAuthoring, which doesn't update PlanDocument's progress.
+    void refetch();
+    setIsModalOpen(true);
   };
 
   const handleDialogCloseBtn = () => {
@@ -657,7 +651,6 @@ const PlanOverviewPage: React.FC = () => {
               isPrimaryContact: member?.isPrimaryContact ?? false,
               role: (member?.projectMember?.memberRoles ?? []).map((role) => role.label),
             })) ?? [],
-        versionedSections: data?.plan?.versionedSections ?? [],
         sourceTemplate: data?.plan?.versionedTemplate?.template?.name ?? "",
         affiliationName: data?.plan?.versionedTemplate?.owner?.displayName ?? "",
         templateVersion: data?.plan?.versionedTemplate?.version ?? "",
@@ -704,8 +697,8 @@ const PlanOverviewPage: React.FC = () => {
   }, [me?.me?.affiliation]);
 
 
-  if (loading) {
-    return <div>{Global("messaging.loading")}...</div>;
+  if (loading && !data) {
+    return <Loading variant="page" message={Global("messaging.loading")} />;
   }
 
   // Calculate the number of checklist items that are not completed
@@ -742,347 +735,296 @@ const PlanOverviewPage: React.FC = () => {
         ref={errorRef}
       />
 
-      <LayoutWithPanel>
-        {isFeedbackRequested && isOrgAdmin && (
-          <NotificationHeader
-            title={t("feedbackNotification.title")}
-            actionButtonText={t("feedbackNotification.markAsDone")}
-            modal={{
-              title: t("feedbackNotification.confirmModal.title"),
-              content: (
-                <p>
-                  {t("feedbackNotification.confirmModal.description")}
-                </p>
-              ),
-              cancelButtonText: Global("buttons.close"),
-              confirmButtonText: t("feedbackNotification.markAsDone"),
-              emailPromptLabel: t("feedbackNotification.confirmModal.emailPromptLabel"),
-              emailPromptYes: t("feedbackNotification.confirmModal.emailPromptYes"),
-              emailPromptNo: t("feedbackNotification.confirmModal.emailPromptNo"),
-              isSubmitting,
-              submittingText: Global('buttons.saving')
-            }}
-            onMarkAsDone={markFeedbackAsDone}
-          >
-            <p>{t("feedbackNotification.description1")}</p>
-            <p>{t("feedbackNotification.description2")}</p>
-          </NotificationHeader>
-        )}
-
-        <ContentContainer>
-          <div className={"container"}>
-            <div className="project-overview">
-              <OverviewSection
-                heading={t("funding.title")}
-                headingId="funding-title"
-                linkHref={FUNDINGS_URL}
-                linkText={t("funding.edit")}
-                linkAriaLabel={t("funding.edit")}
-                disabled={isReadOnly}
-                hoverMessage={t('messages.readOnlyLinkMessageFunding')}
-              >
-                <p>{planData.funderName || t("funding.noFunderSelected")}</p>
-              </OverviewSection>
-
-              <OverviewSection
-                heading={t("members.title")}
-                headingId="members-title"
-                linkHref={MEMBERS_URL}
-                linkText={t("members.edit")}
-                linkAriaLabel={t("members.edit")}
-                disabled={isReadOnly}
-                hoverMessage={t('messages.readOnlyLinkMessageMembers')}
-              >
-                <p>
-                  {planData.members.map((member, index) => (
-                    <span key={member.email}>
-                      {t("members.info", {
-                        name: member.fullname,
-                        role: member.role.map((role) => role).join(", "),
-                      })}
-                      {index < planData.members.length - 1 ? "; " : ""}
-                    </span>
-                  ))}
-                </p>
-              </OverviewSection>
-
-              <OverviewSection
-                heading={t("relatedWorks.title")}
-                headingId="related-works-title"
-                linkHref={RELATED_WORKS_URL}
-                linkText={t("relatedWorks.edit")}
-                linkAriaLabel={t("relatedWorks.edit")}
-                includeLink={!!rwPlanStats?.hasPublishedPlan || !isReadOnly}
-                disabled={isReadOnly}
-                hoverMessage={t('messages.readOnlyLinkMessageRelatedWorks')}
-              >
-                {!rwPlanStats?.hasPublishedPlan && <p>{t("relatedWorks.publish")}</p>}
-                {rwPlanStats?.hasPublishedPlan && rwPlanStats?.pendingCount != null && <p>{t("relatedWorks.pendingCount", { count: rwPlanStats?.pendingCount })}</p>}
-                {rwPlanStats?.hasPublishedPlan && rwPlanStats?.acceptedCount != null && <p>{t("relatedWorks.acceptedCount", { count: rwPlanStats?.acceptedCount })}</p>}
-              </OverviewSection>
-            </div>
-
-            {planData.versionedSections.map((versionedSection, idx) => {
-              const sectionId = versionedSection.versionedSectionId ?? versionedSection.customSectionId;
-              const sectionRoute = versionedSection.sectionType === "BASE"
-                ? routePath("projects.dmp.versionedSection", { projectId, dmpId: planId, versionedSectionId: Number(sectionId) })
-                : routePath("projects.dmp.customSection", { projectId, dmpId: planId, csid: String(sectionId) });
-
-              const canEditSections = !isReadOnly || isEditCollaborator;
-
-              // Determine the action label for the section button
-              const sectionActionLabel = !canEditSections
-                ? t("sections.view")
-                : versionedSection.answeredQuestions === 0
-                  ? t("sections.start")
-                  : t("sections.update");
-
-              return (
-                <section
-                  key={sectionId ?? `section-${idx}`}
-                  className={styles.planSectionsList}
-                  aria-labelledby={`section-title-${sectionId}`}
-                >
-                  <div className={styles.planSectionsHeader}>
-                    <div className={styles.planSectionsTitle}>
-                      <h3 id={`section-title-${sectionId}`}>{versionedSection.title}</h3>
-                      <p
-                        aria-label={`${versionedSection.answeredQuestions} out of ${versionedSection.totalQuestions} questions answered for ${versionedSection.title}`}
-                      >
-                        <span className={styles.progressIndicator}>
-                          <svg
-                            className={styles.progressIcon}
-                            width="18"
-                            height="18"
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 -960 960 960"
-                            fill="currentColor"
-                            aria-hidden="true"
-                          >
-                            <path d="M480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q65 0 123 19t107 53l-58 59q-38-24-81-37.5T480-800q-133 0-226.5 93.5T160-480q0 133 93.5 226.5T480-160q133 0 226.5-93.5T800-480q0-18-2-36t-6-35l65-65q11 32 17 66t6 70q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm-56-216L254-466l56-56 114 114 400-401 56 56-456 457Z" />
-                          </svg>
-                          {t("sections.progress", {
-                            current: versionedSection.answeredQuestions,
-                            total: versionedSection.totalQuestions,
-                          })}{" "}
-                          {t("sections.questionsAnswered")}
-                        </span>
+      <LayoutContainer className={styles.layout}>
+        <PlanAuthoring
+          dataSource={dataSource}
+          researchOutputRowHref={(questionKey, rowIndex) =>
+            routePath("projects.dmp.researchOutput", { projectId, dmpId, questionKey, rowIndex })
+          }
+          overview={
+            <LayoutWithPanel>
+              {isFeedbackRequested && isOrgAdmin && (
+                <NotificationHeader
+                  title={t("feedbackNotification.title")}
+                  actionButtonText={t("feedbackNotification.markAsDone")}
+                  modal={{
+                    title: t("feedbackNotification.confirmModal.title"),
+                    content: (
+                      <p>
+                        {t("feedbackNotification.confirmModal.description")}
                       </p>
-                    </div>
-                    <TransitionLink
-                      href={sectionRoute}
-                      aria-label={t("sections.updateSection", {
-                        title: stripHtml(versionedSection.title),
-                      })}
-                      className={"react-aria-Button react-aria-Button--secondary"}
-                    >
-                      {sectionActionLabel}
-                    </TransitionLink>
-                  </div>
-                </section>
-              )
-            })}
-          </div>
-        </ContentContainer>
+                    ),
+                    cancelButtonText: Global("buttons.close"),
+                    confirmButtonText: t("feedbackNotification.markAsDone"),
+                    emailPromptLabel: t("feedbackNotification.confirmModal.emailPromptLabel"),
+                    emailPromptYes: t("feedbackNotification.confirmModal.emailPromptYes"),
+                    emailPromptNo: t("feedbackNotification.confirmModal.emailPromptNo"),
+                    isSubmitting,
+                    submittingText: Global('buttons.saving')
+                  }}
+                  onMarkAsDone={markFeedbackAsDone}
+                >
+                  <p>{t("feedbackNotification.description1")}</p>
+                  <p>{t("feedbackNotification.description2")}</p>
+                </NotificationHeader>
+              )}
 
-        <SidebarPanel>
-          <div className="status-panel-content side-panel">
-            <div className={`buttonContainer withBorder  mb-5`}>
-              {planData.dmpId && (
-                <NextLink
-                  href={getNarrativeUrl(planData.dmpId)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="button-secondary"
-                >
-                  {Global("buttons.preview")}
-                </NextLink>
-              )}
-              {!isReadOnly ? (
-                <Button
-                  onPress={() => setIsModalOpen(true)}
-                >
-                  {Global("buttons.publish")}
-                </Button>
-              ) : (
-                <DialogTrigger>
-                  <Button
-                    aria-disabled={isReadOnly}
-                    type="button"
-                    className="link-disabled"
-                  >
-                    {Global("buttons.publish")}
-                  </Button>
-                  <Popover placement="bottom" className="popover--inverse">
-                    <Dialog aria-label={t('messages.readOnlyLinkMessagePublish')} className="popoverContent">
-                      {t('messages.readOnlyLinkMessagePublish')}
-                    </Dialog>
-                  </Popover>
-                </DialogTrigger>
-              )}
-            </div>
-            <div className="side-panel-content">
-              <div className={`panelRow mb-5`}>
-                <div>
-                  <h3>{t("status.feedback.title")}</h3>
-                  <p>
-                    {feedbackLoading
-                      ? `${Global("messaging.loading")}...`
-                      : (() => {
-                        const raw = feedbackData?.planFeedbackStatus?.status ?? "NONE";
-                        const key = `status.feedback.${String(raw).toLowerCase()}`;
-                        return t(key);
-                      })()
-                    }
-                  </p>
+              <ContentContainer>
+                <div className={"container"}>
+                  <div className="project-overview">
+                    <OverviewSection
+                      heading={t("funding.title")}
+                      headingId="funding-title"
+                      linkHref={FUNDINGS_URL}
+                      linkText={t("funding.edit")}
+                      linkAriaLabel={t("funding.edit")}
+                      disabled={isReadOnly}
+                      hoverMessage={t('messages.readOnlyLinkMessageFunding')}
+                    >
+                      <p>{planData.funderName || t("funding.noFunderSelected")}</p>
+                    </OverviewSection>
+
+                    <OverviewSection
+                      heading={t("members.title")}
+                      headingId="members-title"
+                      linkHref={MEMBERS_URL}
+                      linkText={t("members.edit")}
+                      linkAriaLabel={t("members.edit")}
+                      disabled={isReadOnly}
+                      hoverMessage={t('messages.readOnlyLinkMessageMembers')}
+                    >
+                      <p>
+                        {planData.members.map((member, index) => (
+                          <span key={member.email}>
+                            {t("members.info", {
+                              name: member.fullname,
+                              role: member.role.map((role) => role).join(", "),
+                            })}
+                            {index < planData.members.length - 1 ? "; " : ""}
+                          </span>
+                        ))}
+                      </p>
+                    </OverviewSection>
+
+                    <OverviewSection
+                      heading={t("relatedWorks.title")}
+                      headingId="related-works-title"
+                      linkHref={RELATED_WORKS_URL}
+                      linkText={t("relatedWorks.edit")}
+                      linkAriaLabel={t("relatedWorks.edit")}
+                      includeLink={!!rwPlanStats?.hasPublishedPlan || !isReadOnly}
+                      disabled={isReadOnly}
+                      hoverMessage={t('messages.readOnlyLinkMessageRelatedWorks')}
+                    >
+                      {!rwPlanStats?.hasPublishedPlan && <p>{t("relatedWorks.publish")}</p>}
+                      {rwPlanStats?.hasPublishedPlan && rwPlanStats?.pendingCount != null && <p>{t("relatedWorks.pendingCount", { count: rwPlanStats?.pendingCount })}</p>}
+                      {rwPlanStats?.hasPublishedPlan && rwPlanStats?.acceptedCount != null && <p>{t("relatedWorks.acceptedCount", { count: rwPlanStats?.acceptedCount })}</p>}
+                    </OverviewSection>
+                  </div>
                 </div>
-                {isPrimaryCollaborator && isFeedbackEnabled ? (
-                  <TransitionLink
-                    href={FEEDBACK_URL}
-                    className="side-panel-link"
-                    aria-label={Global("links.request")}
-                  >
-                    {Global("links.request")}
-                  </TransitionLink>
-                ) : (
-                  (() => {
-                    const disabledMessage = isReadOnly
-                      ? t('status.feedback.disabledTooltip')
-                      : !isFeedbackEnabled
-                        ? t('messages.feedbackNotAvailable')
-                        : t('status.feedback.disabledTooltip');
-                    return (
+              </ContentContainer>
+
+              <SidebarPanel>
+                <div className="status-panel-content side-panel">
+                  <div className={`buttonContainer withBorder  mb-5`}>
+                    {planData.dmpId && (
+                      <NextLink
+                        href={getNarrativeUrl(planData.dmpId)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="button-secondary"
+                      >
+                        {Global("buttons.preview")}
+                      </NextLink>
+                    )}
+                    {!isReadOnly ? (
+                      <Button
+                        onPress={openPublishModal}
+                      >
+                        {Global("buttons.publish")}
+                      </Button>
+                    ) : (
                       <DialogTrigger>
                         <Button
-                          className="link-disabled"
+                          aria-disabled={isReadOnly}
                           type="button"
-                          aria-disabled={true}
+                          className="link-disabled"
                         >
-                          {Global("links.request")}
+                          {Global("buttons.publish")}
                         </Button>
                         <Popover placement="bottom" className="popover--inverse">
-                          <Dialog aria-label={disabledMessage} className="popoverContent">
-                            {disabledMessage}
+                          <Dialog aria-label={t('messages.readOnlyLinkMessagePublish')} className="popoverContent">
+                            {t('messages.readOnlyLinkMessagePublish')}
                           </Dialog>
-
                         </Popover>
                       </DialogTrigger>
-                    )
-                  })()
-
-                )}
-
-              </div>
-              {isEditingPlanStatus ? (
-                <div>
-                  <Form
-                    onSubmit={handlePlanStatusForm}
-                    className="statusForm"
-                  >
-                    <FormSelect
-                      label={t("status.title")}
-                      ariaLabel={t("status.select.label")}
-                      isRequired
-                      name="planStatus"
-                      items={planStatusOptions}
-                      onChange={(selected) => setPlanStatus(selected as PlanStatus)}
-                      selectedKey={planStatus ?? planData.status}
-
-                    >
-                      {(item) => <ListBoxItem key={item.id}>{item.name}</ListBoxItem>}
-                    </FormSelect>
-                    {isEditingPlanStatus && (
-                      <Button
-                        type="submit"
-                        isDisabled={isPlanStatusSubmitting}
-                      >
-                        {isPlanStatusSubmitting ? Global("buttons.saving") : Global("buttons.save")}
-                      </Button>
                     )}
-                  </Form>
-                </div>
-              ) : (
-                <div className={`panelRow mb-5`}>
-                  <div>
-                    <h3>{t("status.title")}</h3>
-                    <p>{toTitleCase(planData.status)}</p>
                   </div>
-                  {!isReadOnly ? (
-                    <Button
-                      className="button-as-link"
-                      data-testid="updateLink"
-                      onPress={handlePlanStatusChange}
-                      aria-label={t("status.select.changeLabel")}
-                    >
-                      {Global("buttons.linkUpdate")}
-                    </Button>
-                  ) : (
-                    <DialogTrigger>
-                      <Button
-                        className="link-disabled"
-                        type="button"
-                        aria-disabled={true}
-                      >
-                        {Global("buttons.linkUpdate")}
-                      </Button>
-                      <Popover placement="bottom" className="popover--inverse">
-                        <Dialog aria-label={t('messages.readOnlyLinkMessage')} className="popoverContent">
-                          {t('messages.readOnlyLinkMessagePlanStatus')}
-                        </Dialog>
-                      </Popover>
-                    </DialogTrigger>
-                  )}
-                </div>
-              )}
+                  <div className="side-panel-content">
+                    <div className={`panelRow mb-5`}>
+                      <div>
+                        <h3>{t("status.feedback.title")}</h3>
+                        <p>
+                          {feedbackLoading
+                            ? `${Global("messaging.loading")}...`
+                            : (() => {
+                              const raw = feedbackData?.planFeedbackStatus?.status ?? "NONE";
+                              const key = `status.feedback.${String(raw).toLowerCase()}`;
+                              return t(key);
+                            })()
+                          }
+                        </p>
+                      </div>
+                      {isPrimaryCollaborator && isFeedbackEnabled ? (
+                        <TransitionLink
+                          href={FEEDBACK_URL}
+                          className="side-panel-link"
+                          aria-label={Global("links.request")}
+                        >
+                          {Global("links.request")}
+                        </TransitionLink>
+                      ) : (
+                        (() => {
+                          const disabledMessage = isReadOnly
+                            ? t('status.feedback.disabledTooltip')
+                            : !isFeedbackEnabled
+                              ? t('messages.feedbackNotAvailable')
+                              : t('status.feedback.disabledTooltip');
+                          return (
+                            <DialogTrigger>
+                              <Button
+                                className="link-disabled"
+                                type="button"
+                                aria-disabled={true}
+                              >
+                                {Global("links.request")}
+                              </Button>
+                              <Popover placement="bottom" className="popover--inverse">
+                                <Dialog aria-label={disabledMessage} className="popoverContent">
+                                  {disabledMessage}
+                                </Dialog>
 
-              <div className={`panelRow mb-5`}>
-                <div>
-                  <h3>{t("status.publish.title")}</h3>
-                  <p>{planData.registered ? PUBLISHED : UNPUBLISHED}</p>
+                              </Popover>
+                            </DialogTrigger>
+                          )
+                        })()
+
+                      )}
+
+                    </div>
+                    {isEditingPlanStatus ? (
+                      <div>
+                        <Form
+                          onSubmit={handlePlanStatusForm}
+                          className="statusForm"
+                        >
+                          <FormSelect
+                            label={t("status.title")}
+                            ariaLabel={t("status.select.label")}
+                            isRequired
+                            name="planStatus"
+                            items={planStatusOptions}
+                            onChange={(selected) => setPlanStatus(selected as PlanStatus)}
+                            selectedKey={planStatus ?? planData.status}
+
+                          >
+                            {(item) => <ListBoxItem key={item.id}>{item.name}</ListBoxItem>}
+                          </FormSelect>
+                          {isEditingPlanStatus && (
+                            <Button
+                              type="submit"
+                              isDisabled={isPlanStatusSubmitting}
+                            >
+                              {isPlanStatusSubmitting ? Global("buttons.saving") : Global("buttons.save")}
+                            </Button>
+                          )}
+                        </Form>
+                      </div>
+                    ) : (
+                      <div className={`panelRow mb-5`}>
+                        <div>
+                          <h3>{t("status.title")}</h3>
+                          <p>{toTitleCase(planData.status)}</p>
+                        </div>
+                        {!isReadOnly ? (
+                          <Button
+                            className="button-as-link"
+                            data-testid="updateLink"
+                            onPress={handlePlanStatusChange}
+                            aria-label={t("status.select.changeLabel")}
+                          >
+                            {Global("buttons.linkUpdate")}
+                          </Button>
+                        ) : (
+                          <DialogTrigger>
+                            <Button
+                              className="link-disabled"
+                              type="button"
+                              aria-disabled={true}
+                            >
+                              {Global("buttons.linkUpdate")}
+                            </Button>
+                            <Popover placement="bottom" className="popover--inverse">
+                              <Dialog aria-label={t('messages.readOnlyLinkMessage')} className="popoverContent">
+                                {t('messages.readOnlyLinkMessagePlanStatus')}
+                              </Dialog>
+                            </Popover>
+                          </DialogTrigger>
+                        )}
+                      </div>
+                    )}
+
+                    <div className={`panelRow mb-5`}>
+                      <div>
+                        <h3>{t("status.publish.title")}</h3>
+                        <p>{planData.registered ? PUBLISHED : UNPUBLISHED}</p>
+                      </div>
+                      {!isReadOnly ? (
+                        <Link
+                          href="#"
+                          className="side-panel-link"
+                          onPress={openPublishModal}
+                          aria-label={t("status.publish.label")}
+                        >
+                          {t("status.publish.label")}
+                        </Link>
+                      ) : (
+                        <DialogTrigger>
+                          <Button
+                            className="link-disabled"
+                            type="button"
+                            aria-disabled={true}
+                          >
+                            {t("status.publish.label")}
+                          </Button>
+                          <Popover placement="bottom" className="popover--inverse">
+                            <Dialog aria-label={t('messages.readOnlyLinkMessagePublishStatus')} className="popoverContent">
+                              {t('messages.readOnlyLinkMessagePublishStatus')}
+                            </Dialog>
+                          </Popover>
+                        </DialogTrigger>
+                      )}
+                    </div>
+                    <div className={`panelRow mb-5`}>
+                      <div>
+                        <h3>{t("status.download.title")}</h3>
+                      </div>
+                      {/**Any user who can access the plan can download the plan */}
+                      <NextLink
+                        href={DOWNLOAD_URL}
+                        className="side-panel-link"
+                        aria-label={t("status.download.title")}
+                      >
+                        {t("status.download.title")}
+                      </NextLink>
+                    </div>
+                  </div>
                 </div>
-                {!isReadOnly ? (
-                  <Link
-                    href="#"
-                    className="side-panel-link"
-                    onPress={() => setIsModalOpen(true)}
-                    aria-label={t("status.publish.label")}
-                  >
-                    {t("status.publish.label")}
-                  </Link>
-                ) : (
-                  <DialogTrigger>
-                    <Button
-                      className="link-disabled"
-                      type="button"
-                      aria-disabled={true}
-                    >
-                      {t("status.publish.label")}
-                    </Button>
-                    <Popover placement="bottom" className="popover--inverse">
-                      <Dialog aria-label={t('messages.readOnlyLinkMessagePublishStatus')} className="popoverContent">
-                        {t('messages.readOnlyLinkMessagePublishStatus')}
-                      </Dialog>
-                    </Popover>
-                  </DialogTrigger>
-                )}
-              </div>
-              <div className={`panelRow mb-5`}>
-                <div>
-                  <h3>{t("status.download.title")}</h3>
-                </div>
-                {/**Any user who can access the plan can download the plan */}
-                <NextLink
-                  href={DOWNLOAD_URL}
-                  className="side-panel-link"
-                  aria-label={t("status.download.title")}
-                >
-                  {t("status.download.title")}
-                </NextLink>
-              </div>
-            </div>
-          </div>
-        </SidebarPanel>
-      </LayoutWithPanel>
+              </SidebarPanel>
+            </LayoutWithPanel>
+          }
+        />
+      </LayoutContainer>
 
       <Modal
         isDismissable

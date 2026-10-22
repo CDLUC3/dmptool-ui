@@ -1,5 +1,6 @@
 import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
+import { axe, toHaveNoViolations } from 'jest-axe';
 import userEvent from '@testing-library/user-event';
 import { NextIntlClientProvider } from 'next-intl';
 import ResearchOutputAnswerComponent from '../index';
@@ -11,6 +12,22 @@ import {
   LicenseSearchAnswerType,
   AnyTableColumnAnswerType
 } from '@dmptool/types';
+
+expect.extend(toHaveNoViolations);
+
+const mockTranslate = (key: string, values?: Record<string, string>) =>
+  values ? [key, ...Object.values(values)].join(' ') : key;
+
+jest.mock('next-intl', () => ({
+  ...jest.requireActual('next-intl'),
+  useTranslations: () => mockTranslate,
+}));
+
+jest.mock('@/i18n/routing', () => ({
+  Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
+    <a href={href} {...props}>{children}</a>
+  ),
+}));
 
 // Define props interface for the mock component
 interface MockSingleResearchOutputComponentProps {
@@ -31,6 +48,7 @@ jest.mock('../SingleResearchOutputComponent', () => {
     onSave,
     onCancel,
     onDelete,
+    showButtons,
     isNewEntry,
     hasOtherRows
   }: MockSingleResearchOutputComponentProps) {
@@ -41,6 +59,7 @@ jest.mock('../SingleResearchOutputComponent', () => {
         <button onClick={onDelete}>Delete</button>
         <div data-testid="is-new-entry">{isNewEntry ? 'true' : 'false'}</div>
         <div data-testid="has-other-rows">{hasOtherRows ? 'true' : 'false'}</div>
+        <div data-testid="show-buttons">{showButtons ? 'true' : 'false'}</div>
       </div>
     );
   };
@@ -52,6 +71,7 @@ const messages = {
     buttons: {
       edit: 'Edit',
       delete: 'Delete',
+      cancel: 'Cancel',
     },
   },
   QuestionEdit: {
@@ -61,6 +81,7 @@ const messages = {
     headings: {
       addResearchOutput: 'Add Research Output',
       editResearchOutput: 'Edit Research Output',
+      confirmDelete: 'Confirm delete',
     },
     definitions: {
       type: 'Type',
@@ -584,7 +605,7 @@ describe('ResearchOutputAnswerComponent', () => {
       expect(screen.queryByText('Figshare')).not.toBeInTheDocument();
     });
 
-    it('should show "Untitled Research Output" for rows without title', () => {
+    it('should show the untitled label for rows without title', () => {
       const mockRows = [createMockRow('', '', [])];
 
       renderWithProviders(
@@ -595,7 +616,7 @@ describe('ResearchOutputAnswerComponent', () => {
         />
       );
 
-      expect(screen.getByText('Untitled Research Output')).toBeInTheDocument();
+      expect(screen.getByText('messages.untitledResearchOutput')).toBeInTheDocument();
     });
 
     it('should render Add Output button', () => {
@@ -747,12 +768,7 @@ describe('ResearchOutputAnswerComponent', () => {
   });
 
   describe('Delete Research Output', () => {
-    beforeEach(() => {
-      // Mock window.confirm
-      global.confirm = jest.fn(() => true);
-    });
-
-    it('should delete row when delete button is clicked and confirmed', async () => {
+    it('should delete row when delete is confirmed in the dialog', async () => {
       const mockRows = [
         createMockRow('Dataset 1', 'dataset', []),
         createMockRow('Dataset 2', 'dataset', []),
@@ -766,15 +782,19 @@ describe('ResearchOutputAnswerComponent', () => {
         />
       );
 
-      const deleteButtons = screen.getAllByRole('button', { name: /delete/i });
-      await user.click(deleteButtons[0]);
+      await user.click(screen.getAllByRole('button', { name: /labels\.deleteResearchOutput/i })[0]);
 
-      expect(global.confirm).toHaveBeenCalledWith('messages.areYouSureYouWantToDelete');
+      const dialog = screen.getByRole('alertdialog');
+      expect(within(dialog).getByText('headings.confirmDelete')).toBeInTheDocument();
+      expect(within(dialog).getByText(/messages\.areYouSureYouWantToDelete/)).toBeInTheDocument();
+      expect(within(dialog).getByText(/Dataset 1/)).toBeInTheDocument();
+      expect(mockSetRows).not.toHaveBeenCalled();
+
+      await user.click(within(dialog).getByRole('button', { name: /buttons\.delete/i }));
       expect(mockSetRows).toHaveBeenCalled();
     });
 
     it('should not delete row when delete is cancelled', async () => {
-      global.confirm = jest.fn(() => false);
       const mockRows = [createMockRow('Dataset 1', 'dataset', [])];
 
       renderWithProviders(
@@ -785,15 +805,16 @@ describe('ResearchOutputAnswerComponent', () => {
         />
       );
 
-      const deleteButton = screen.getByRole('button', { name: /delete/i });
-      await user.click(deleteButton);
+      await user.click(screen.getByRole('button', { name: /labels\.deleteResearchOutput/i }));
+      await user.click(
+        within(screen.getByRole('alertdialog')).getByRole('button', { name: /buttons\.cancel/i })
+      );
 
-      expect(global.confirm).toHaveBeenCalled();
       expect(mockSetRows).not.toHaveBeenCalled();
+      expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
     });
 
     it('should call onSave after successful deletion', async () => {
-      global.confirm = jest.fn(() => true);
       const mockRows = [createMockRow('Dataset 1', 'dataset', [])];
 
       renderWithProviders(
@@ -805,8 +826,10 @@ describe('ResearchOutputAnswerComponent', () => {
         />
       );
 
-      const deleteButton = screen.getByRole('button', { name: /delete/i });
-      await user.click(deleteButton);
+      await user.click(screen.getByRole('button', { name: /labels\.deleteResearchOutput/i }));
+      await user.click(
+        within(screen.getByRole('alertdialog')).getByRole('button', { name: /buttons\.delete/i })
+      );
 
       await waitFor(() => {
         expect(mockOnSave).toHaveBeenCalledWith([], 'delete');
@@ -949,7 +972,6 @@ describe('ResearchOutputAnswerComponent', () => {
     });
 
     it('should automatically add new form when all rows are deleted', async () => {
-      global.confirm = jest.fn(() => true);
       const mockRows = [createMockRow('Dataset 1', 'dataset', [])];
       const currentRows = [...mockRows];
 
@@ -968,8 +990,10 @@ describe('ResearchOutputAnswerComponent', () => {
 
       render(<CustomComponent />);
 
-      const deleteButton = screen.getByRole('button', { name: /delete/i });
-      await user.click(deleteButton);
+      await user.click(screen.getByRole('button', { name: /labels\.deleteResearchOutput/i }));
+      await user.click(
+        within(screen.getByRole('alertdialog')).getByRole('button', { name: /buttons\.delete/i })
+      );
 
       await waitFor(() => {
         expect(screen.getByTestId('single-research-output')).toBeInTheDocument();
@@ -991,7 +1015,7 @@ describe('ResearchOutputAnswerComponent', () => {
       );
 
       // Should still render without errors
-      expect(screen.getByText('Untitled Research Output')).toBeInTheDocument();
+      expect(screen.getByText('messages.untitledResearchOutput')).toBeInTheDocument();
     });
   });
 
@@ -1610,6 +1634,210 @@ describe('ResearchOutputAnswerComponent', () => {
         expect(listItems).toHaveLength(1);
         expect(screen.getByText('Dataset 1')).toBeInTheDocument();
       });
+    });
+  });
+
+  describe('rowHref', () => {
+    const rowHref = (rowIndex: number | 'new') => `/edit/${rowIndex}`;
+
+    it('keeps list view and renders Edit/Add as links when rowHref is set', async () => {
+      const mockRows = [createMockRow('Dataset 1', 'dataset', [])];
+
+      renderWithProviders(
+        <ResearchOutputAnswerComponent
+          columns={mockColumns}
+          rows={mockRows}
+          setRows={mockSetRows}
+          rowHref={rowHref}
+        />
+      );
+
+      await waitFor(() => {
+        expect(screen.queryByTestId('single-research-output')).not.toBeInTheDocument();
+      });
+
+      const addLink = screen.getByRole('link', { name: /addOutput/i });
+      expect(addLink).toHaveAttribute('href', '/edit/new');
+
+      const editLink = screen.getByRole('link', { name: /edit/i });
+      expect(editLink).toHaveAttribute('href', '/edit/0');
+      expect(screen.getByRole('button', { name: /delete/i })).toBeInTheDocument();
+    });
+
+    it('does not auto-open the form when empty and rowHref is set', async () => {
+      renderWithProviders(
+        <ResearchOutputAnswerComponent
+          columns={mockColumns}
+          rows={[]}
+          setRows={mockSetRows}
+          rowHref={rowHref}
+        />
+      );
+
+      await waitFor(() => {
+        expect(screen.queryByTestId('single-research-output')).not.toBeInTheDocument();
+      });
+
+      expect(screen.getByRole('link', { name: /addOutput/i })).toHaveAttribute(
+        'href',
+        '/edit/new'
+      );
+      expect(mockSetRows).not.toHaveBeenCalled();
+    });
+
+    it('still enters form view on Edit when rowHref is omitted', async () => {
+      const mockRows = [createMockRow('Dataset 1', 'dataset', [])];
+
+      renderWithProviders(
+        <ResearchOutputAnswerComponent
+          columns={mockColumns}
+          rows={mockRows}
+          setRows={mockSetRows}
+        />
+      );
+
+      await user.click(screen.getByRole('button', { name: /edit/i }));
+
+      expect(screen.getByTestId('single-research-output')).toBeInTheDocument();
+    });
+  });
+
+  describe('read-only mode (isDisabled)', () => {
+    it('hides Add and Delete and shows View instead of Edit', () => {
+      renderWithProviders(
+        <ResearchOutputAnswerComponent
+          columns={mockColumns}
+          rows={[createMockRow('Dataset 1', 'dataset', [])]}
+          setRows={mockSetRows}
+          isDisabled
+        />
+      );
+
+      expect(screen.queryByRole('button', { name: /addOutput/i })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /deleteResearchOutput/i })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /editResearchOutput/i })).not.toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: 'labels.viewResearchOutput Dataset 1' })
+      ).toHaveTextContent('buttons.view');
+    });
+
+    it('renders View as a link when rowHref is set', () => {
+      renderWithProviders(
+        <ResearchOutputAnswerComponent
+          columns={mockColumns}
+          rows={[createMockRow('Dataset 1', 'dataset', [])]}
+          setRows={mockSetRows}
+          rowHref={(rowIndex) => `/edit/${rowIndex}`}
+          isDisabled
+        />
+      );
+
+      expect(screen.queryByRole('link', { name: /addOutput/i })).not.toBeInTheDocument();
+      expect(
+        screen.getByRole('link', { name: 'labels.viewResearchOutput Dataset 1' })
+      ).toHaveAttribute('href', '/edit/0');
+    });
+
+    it('opens the row read-only without save buttons and returns to the list', async () => {
+      renderWithProviders(
+        <ResearchOutputAnswerComponent
+          columns={mockColumns}
+          rows={[createMockRow('Dataset 1', 'dataset', [])]}
+          setRows={mockSetRows}
+          isDisabled
+        />
+      );
+
+      await user.click(screen.getByRole('button', { name: /viewResearchOutput/i }));
+
+      expect(screen.getByRole('heading', { name: 'headings.viewResearchOutput' })).toBeInTheDocument();
+      expect(screen.getByTestId('show-buttons')).toHaveTextContent('false');
+
+      await user.click(screen.getByRole('button', { name: /backToList/i }));
+
+      expect(screen.queryByTestId('single-research-output')).not.toBeInTheDocument();
+    });
+
+    it('does not auto-open the add form when there are no rows', async () => {
+      renderWithProviders(
+        <ResearchOutputAnswerComponent
+          columns={mockColumns}
+          rows={[]}
+          setRows={mockSetRows}
+          isDisabled
+        />
+      );
+
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      expect(screen.queryByTestId('single-research-output')).not.toBeInTheDocument();
+      expect(mockSetRows).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('row action names', () => {
+    it('names each Edit and Delete control with that output title', () => {
+      const mockRows = [
+        createMockRow('Dataset 1', 'dataset', []),
+        createMockRow('Dataset 2', 'dataset', []),
+      ];
+
+      renderWithProviders(
+        <ResearchOutputAnswerComponent
+          columns={mockColumns}
+          rows={mockRows}
+          setRows={mockSetRows}
+        />
+      );
+
+      expect(screen.getByRole('button', { name: 'labels.editResearchOutput Dataset 1' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'labels.editResearchOutput Dataset 2' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'labels.deleteResearchOutput Dataset 1' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'labels.deleteResearchOutput Dataset 2' })).toBeInTheDocument();
+    });
+
+    it('names Edit links with the output title when rowHref is set', () => {
+      renderWithProviders(
+        <ResearchOutputAnswerComponent
+          columns={mockColumns}
+          rows={[createMockRow('Dataset 1', 'dataset', [])]}
+          setRows={mockSetRows}
+          rowHref={(rowIndex) => `/edit/${rowIndex}`}
+        />
+      );
+
+      expect(screen.getByRole('link', { name: 'labels.editResearchOutput Dataset 1' })).toHaveAttribute('href', '/edit/0');
+      expect(screen.getByRole('button', { name: 'labels.deleteResearchOutput Dataset 1' })).toBeInTheDocument();
+    });
+
+    it('has no accessibility violations on the list', async () => {
+      const { container } = renderWithProviders(
+        <ResearchOutputAnswerComponent
+          columns={mockColumns}
+          rows={[
+            createMockRow('Dataset 1', 'dataset', []),
+            createMockRow('Dataset 2', 'dataset', []),
+          ]}
+          setRows={mockSetRows}
+        />
+      );
+
+      const results = await axe(container);
+      expect(results).toHaveNoViolations();
+    });
+
+    it('has no accessibility violations with the delete confirm open', async () => {
+      renderWithProviders(
+        <ResearchOutputAnswerComponent
+          columns={mockColumns}
+          rows={[createMockRow('Dataset 1', 'dataset', [])]}
+          setRows={mockSetRows}
+        />
+      );
+
+      await user.click(screen.getByRole('button', { name: 'labels.deleteResearchOutput Dataset 1' }));
+      const results = await axe(document.body);
+      expect(results).toHaveNoViolations();
     });
   });
 });

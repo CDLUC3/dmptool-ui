@@ -1,7 +1,9 @@
 'use client'
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Button } from "react-aria-components";
+import { Button, DialogTrigger } from "react-aria-components";
+import { Link } from "@/i18n/routing";
+import { ModalOverlayComponent } from "@/components/ModalOverlayComponent";
 import {
   ResearchOutputTableQuestionType
 } from '@dmptool/types';
@@ -24,6 +26,8 @@ type ResearchOutputAnswerComponentProps = {
   initialViewMode?: 'list' | 'form'; // Control initial view - 'form' for preview, 'list' for normal use
   isDisabled?: boolean; // Whether the component is in read-only mode (e.g., for preview or if question is disabled)
   onEditingStateChange?: (isEditing: boolean) => void; // Notify parent when entering/leaving single-edit view
+  /** When set, Edit/Add link to these hrefs (e.g. from `routePath`), and the list never auto-opens the inline form. */
+  rowHref?: (rowIndex: number | 'new') => string;
 };
 
 const ResearchOutputAnswerComponent: React.FC<ResearchOutputAnswerComponentProps> = ({
@@ -34,10 +38,15 @@ const ResearchOutputAnswerComponent: React.FC<ResearchOutputAnswerComponentProps
   initialViewMode = 'list',
   isDisabled = false,
   onEditingStateChange,
+  rowHref,
 }) => {
+  const linksRows = rowHref !== undefined;
   // State to track which row is being edited (null means showing list view)
-  // If preview mode, start in form view immediately (no flash)
+  // If preview mode, start in form view immediately (no flash). Linked rows stay list-only.
   const [editingRowIndex, setEditingRowIndex] = useState<number | null>(() => {
+    if (linksRows) {
+      return null;
+    }
     if (initialViewMode === 'form') {
       return 0;
     }
@@ -46,7 +55,9 @@ const ResearchOutputAnswerComponent: React.FC<ResearchOutputAnswerComponentProps
   // To track that the page was rendered once
   const hasInitialized = useRef(false);
   // State to track if we're adding a new entry
-  const [isAddingNew, setIsAddingNew] = useState(initialViewMode === 'form');
+  const [isAddingNew, setIsAddingNew] = useState(
+    !linksRows && initialViewMode === 'form'
+  );
 
   // Localization
   const Global = useTranslations('Global');
@@ -72,25 +83,19 @@ const ResearchOutputAnswerComponent: React.FC<ResearchOutputAnswerComponentProps
     setIsAddingNew(false); // Mark as editing existing
   }, []);
 
-  // Handle delete
+  // Handle delete after the confirmation dialog
   const handleDelete = useCallback(async (index: number) => {
-    const msg = t('messages.areYouSureYouWantToDelete');
-    if (confirm(msg)) {
-      // Calculate the new rows after deletion
-      const updatedRows = rows.filter((_, i) => i !== index);
-      setRows(updatedRows);
+    const updatedRows = rows.filter((_, i) => i !== index);
+    setRows(updatedRows);
 
-      // If we were editing this row, go back to list view
-      if (editingRowIndex === index) {
-        setEditingRowIndex(null);
-      }
-      // Trigger parent page save if onSave callback exists
-      if (onSave) {
-        await onSave(updatedRows, 'delete');
-        scrollToElement('.ro-form-wrapper');
-      }
+    if (editingRowIndex === index) {
+      setEditingRowIndex(null);
     }
-  }, [editingRowIndex, onSave, rows, t]);
+    if (onSave) {
+      await onSave(updatedRows, 'delete');
+      scrollToElement('.ro-form-wrapper');
+    }
+  }, [editingRowIndex, onSave, rows, scrollToElement]);
 
   // Handle done editing
   const handleDoneEditing = useCallback(async () => {
@@ -149,8 +154,14 @@ const ResearchOutputAnswerComponent: React.FC<ResearchOutputAnswerComponentProps
   }, [editingRowIndex, rows.length]);
 
   // Automatically show form when there are no rows (i.e., first time adding an answer)
-  // Only use delayed effect for normal list mode
+  // Only use delayed effect for normal list mode. Skip when rowHref owns Add/Edit.
   useEffect(() => {
+    // Read-only list mode never opens the add form
+    if (linksRows || (isDisabled && initialViewMode === 'list')) {
+      hasInitialized.current = true;
+      return;
+    }
+
     if (hasInitialized.current) return;
 
     if (initialViewMode === 'form') {
@@ -182,15 +193,18 @@ const ResearchOutputAnswerComponent: React.FC<ResearchOutputAnswerComponentProps
     }, 50);
 
     return () => clearTimeout(timer);
-  }, [rows.length, editingRowIndex, columns, initialViewMode]);
+  }, [rows.length, editingRowIndex, columns, initialViewMode, linksRows, isDisabled]);
 
   // Handle when all items are deleted
   useEffect(() => {
+    if (linksRows || isDisabled) {
+      return;
+    }
     // If we've initialized before, rows is now empty, and we're not editing
     if (hasInitialized.current && rows.length === 0 && editingRowIndex === null) {
       handleAddNew();
     }
-  }, [rows.length, editingRowIndex]);
+  }, [rows.length, editingRowIndex, linksRows, isDisabled]);
 
   // Notify parent when entering/leaving single-edit view, so that it can
   // hide its own save button, preventing multiple CTAs in the SingleResearchOutputComponent
@@ -207,20 +221,27 @@ const ResearchOutputAnswerComponent: React.FC<ResearchOutputAnswerComponentProps
     const hasOtherRows = isAddingNew
       ? editingRowIndex > 0  // If adding at index > 0, there were existing rows
       : rows.length > 1;      // If editing, check if there are other rows
+    // Viewing an existing row in read-only mode (preview mode stays in the add form)
+    const isViewOnly = isDisabled && !isAddingNew;
+
+    let heading = t('headings.editResearchOutput');
+    if (isAddingNew) {
+      heading = t('headings.addResearchOutput');
+    } else if (isViewOnly) {
+      heading = t('headings.viewResearchOutput');
+    }
 
     return (
       <div className={styles.singleEditView}>
         <div className={styles.btnContainer}>
-          <h3 className="h3">
-            {isAddingNew ? t('headings.addResearchOutput') : t('headings.editResearchOutput')}
-          </h3>
+          <h3 className="h3">{heading}</h3>
         </div>
 
         <SingleResearchOutputComponent
           columns={columns}
           rows={editingRows}
           setRows={handleSetRows}
-          showButtons={true}
+          showButtons={!isViewOnly}
           onSave={handleDoneEditing}
           onCancel={handleCancel}
           onDelete={() => handleDelete(editingRowIndex!)}
@@ -228,6 +249,17 @@ const ResearchOutputAnswerComponent: React.FC<ResearchOutputAnswerComponentProps
           hasOtherRows={hasOtherRows}
           isDisabled={isDisabled}
         />
+
+        {isViewOnly && (
+          <div className={styles.btnContainer}>
+            <Button
+              className="secondary small"
+              onPress={() => setEditingRowIndex(null)}
+            >
+              &lt; {Global('buttons.backToList')}
+            </Button>
+          </div>
+        )}
       </div>
     );
   }
@@ -235,18 +267,37 @@ const ResearchOutputAnswerComponent: React.FC<ResearchOutputAnswerComponentProps
   // Show list view
   return (
     <div className={`${styles.listView} ro-form-wrapper`}>
-      <div className={styles.listHeader}>
-        <Button
-          className="primary small"
-          onPress={handleAddNew}
-        >
-          + {t('buttons.addOutput')}
-        </Button>
-      </div>
+      {!isDisabled && (
+        <div className={styles.listHeader}>
+          {rowHref ? (
+            <Link href={rowHref('new')} className="react-aria-Button primary small">
+              + {t('buttons.addOutput')}
+            </Link>
+          ) : (
+            <Button
+              className="primary small"
+              onPress={handleAddNew}
+            >
+              + {t('buttons.addOutput')}
+            </Button>
+          )}
+        </div>
+      )}
 
       <ul className={styles.outputList}>
         {rows.map((row, index) => {
-          const { title, outputType, repositories } = getRowDisplayInfo(row, columns);
+          const { title, outputType, repositories } = getRowDisplayInfo(
+            row,
+            columns,
+            t('messages.untitledResearchOutput')
+          );
+
+          // In read-only mode, rows open as "View" instead of "Edit"
+          const editLabel = isDisabled
+            ? t('labels.viewResearchOutput', { title })
+            : t('labels.editResearchOutput', { title });
+          const editText = isDisabled ? Global('buttons.view') : Global('buttons.edit');
+          const deleteLabel = t('labels.deleteResearchOutput', { title });
 
           return (
             <li key={index} className={styles.outputItem}>
@@ -272,24 +323,46 @@ const ResearchOutputAnswerComponent: React.FC<ResearchOutputAnswerComponentProps
               </div>
 
               <div className={styles.outputActions}>
-                <Button
-                  className={`${styles.editBtn} small secondary`}
-                  onPress={() => handleEdit(index)}
-                >
-                  {Global('buttons.edit')}
-                </Button>
-                <Button
-                  className={`${styles.deleteBtn} small danger`}
-                  onPress={() => handleDelete(index)}
-                >
-                  {Global('buttons.delete')}
-                </Button>
+                {rowHref ? (
+                  <Link
+                    href={rowHref(index)}
+                    className="react-aria-Button secondary small"
+                    aria-label={editLabel}
+                  >
+                    {editText}
+                  </Link>
+                ) : (
+                  <Button
+                    className="secondary small"
+                    onPress={() => handleEdit(index)}
+                    aria-label={editLabel}
+                  >
+                    {editText}
+                  </Button>
+                )}
+                {!isDisabled && (
+                  <DialogTrigger>
+                    <Button className="danger small" aria-label={deleteLabel}>
+                      {Global('buttons.delete')}
+                    </Button>
+                    <ModalOverlayComponent
+                      heading={t('headings.confirmDelete')}
+                      content={t('messages.areYouSureYouWantToDelete', { title })}
+                      btnSecondaryText={Global('buttons.cancel')}
+                      btnPrimaryText={Global('buttons.delete')}
+                      onPressAction={(_event, close) => {
+                        void handleDelete(index);
+                        close();
+                      }}
+                    />
+                  </DialogTrigger>
+                )}
               </div>
             </li>
           );
         })}
       </ul>
-    </div>
+    </div >
   );
 };
 

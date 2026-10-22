@@ -1,48 +1,7 @@
-.planSectionsList {
-  background: white;
-  border-radius: var(--border-radius-lg);
-  margin-bottom: var(--space-4);
-  box-shadow: var(--card-shadow);
-  padding: var(--card-padding);
-
-  .planSectionsHeader {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-
-  }
-
-  .planSectionsTitle {
-
-    h3 {
-      margin: 0;
-      padding: 0;
-      margin-bottom: var(--space-2);
-    }
-
-    p {
-      margin: 0;
-      padding: 0;
-    }
-  }
-
-  .progressIndicator {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-2);
-    color: var(--gray-500);
-    font-size: var(--fs-sm);
-    font-weight: 400;
-  }
-
-  .progressIcon {
-    color: var(--success-600);
-    flex-shrink: 0;
-  }
-
-  .planSectionsList+.planSectionsList {
-    margin-top: var(--space-4);
-  }
+// The layoutContainer mixin's overflow: auto would make this a scroll
+// container and break position: sticky on the plan section navigation.
+.layout {
+  overflow: visible;
 }
 
 .tooltip {

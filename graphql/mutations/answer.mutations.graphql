@@ -3,6 +3,18 @@ mutation AddAnswer($planId: Int!, $versionedSectionId: Int, $versionedQuestionId
     id
     json
     modified
+    # Which questions are hidden by display logic after this answer is saved
+    plan {
+      id
+      hiddenVersionedQuestionIds
+    }
+    errors {
+      general
+      versionedSectionId
+      versionedQuestionId
+      planId
+      json
+    }
   }
 }
 
@@ -20,6 +32,11 @@ mutation UpdateAnswer($answerId: Int!, $json: String) {
     modified
     versionedQuestion {
       versionedSectionId
+    }
+    # Which questions are hidden by display logic after this answer is saved
+    plan {
+      id
+      hiddenVersionedQuestionIds
     }
   }
 }

@@ -130,11 +130,13 @@
       "orgOnlyHelpText": "Apenas planejar autores de sua organização poderão ver e usar esse modelo."
     },
     "descPublishedTemplate": "Você pode controlar quem pode usar este modelo publicado.",
+    "lastPublishedVisibility": "A versão {version} foi publicada em {date} com visibilidade <strong>{visibility}</strong>.",
+    "unpublishedChangesSinceLastPublish": "Desde então, há alterações que ainda não foram publicadas.",
     "bullet": {
       "publishingTemplate": "Após a publicação, todos os novos planos usarão esta versão.",
       "publishingTemplate2": "Os planos existentes ou em andamento não serão atualizados.",
       "publishingTemplate3": "Você configurou a visibilidade como pública nas opções do modelo. Todos os usuários das Ferramentas DMP serão capazes de ver e usar este modelo.",
-      "publishingTemplate3Private": "Você configurou a visibilidade como pública nas opções do modelo. Todos os usuários das Ferramentas DMP serão capazes de ver e usar este modelo."
+      "publishingTemplate3Private": "Você configurou a visibilidade como privada nas opções do modelo. Apenas usuários da Ferramenta DMP da sua organização poderão ver e usar este modelo."
     },
     "descChangeLog": "Insira uma breve descrição do que foi alterado. Isto só será visível para pessoas de sua organização.",
     "button": {
@@ -144,7 +146,8 @@
     },
     "messages": {
       "errors": {
-        "selectVisibilityError": "Por favor, selecione uma opção de visibilidade antes de publicar."
+        "selectVisibilityError": "Por favor, selecione uma opção de visibilidade antes de publicar.",
+        "changeLogRequiredError": "O log de alterações é obrigatório. Descreva o que mudou nesta versão antes de publicar."
       }
     }
   },
@@ -441,10 +444,14 @@
       "guidanceText": "Orientação para perguntas (opcional mas recomendado)",
       "sampleText": "Texto de amostra",
       "comment": "Comentário adicional",
-      "bestPracticeTags": "Pergunte as melhores práticas para incluir"
+      "bestPracticeTags": "Pergunte as melhores práticas para incluir",
+      "editResearchOutput": "Alterar {title}",
+      "viewResearchOutput": "Exibir {title}",
+      "deleteResearchOutput": "Apagar {title}"
     },
     "messages": {
-      "areYouSureYouWantToDelete": "Tem certeza que deseja excluir esta saída da pesquisa?",
+      "areYouSureYouWantToDelete": "Tem certeza de que deseja excluir {title}?",
+      "untitledResearchOutput": "Saída de pesquisa sem título",
       "errors": {
         "questionTextRequired": "Conjunto de perguntas (obrigatório.",
         "questionUpdateError": "Erro ao criar a seção",
@@ -467,7 +474,8 @@
       "deleteQuestion": "Apagar Pergunta",
       "confirmDelete": "Confirmar exclusão?",
       "addResearchOutput": "Adicionar Saída de Pesquisa",
-      "editResearchOutput": "Editar saída de pesquisa"
+      "editResearchOutput": "Editar saída de pesquisa",
+      "viewResearchOutput": "Exibir saída de pesquisa"
     },
     "definitions": {
       "type": "Tipo",
@@ -491,13 +499,11 @@
       "headings": {
         "options": "Opções",
         "logic": "Lógica de exibição",
-        "confirmClearDisplayLogic": "Limpar toda a lógica da exibição?",
-        "confirmMatchTypeChange": "Alterar tipo de partida?"
+        "confirmClearDisplayLogic": "Limpar toda a lógica da exibição?"
       },
       "descriptions": {
         "displayLogic": "Configurar a lógica de exibição para exibir ou ocultar esta questão com base na forma como os usuários responderam a várias escolhas anteriores ou a questões da caixa de seleção. Adicione uma ou mais condições para determinar quando esta questão aparece.",
-        "clearDisplayLogicWarning": "Isto irá limpar todas as suas condições de salvamento para esta questão. Esta ação não pode ser desfeita.",
-        "matchTypeChangeWarning": "Mudar o tipo de correspondência pode limpar algumas de suas condições caso suas condições existentes entrem em conflito umas com as outras e sejam removidas."
+        "clearDisplayLogicWarning": "Isto irá limpar todas as suas condições de salvamento para esta questão. Esta ação não pode ser desfeita."
       },
       "buttons": {
         "addDisplayLogic": "Adicionar lógica de tela",
@@ -524,7 +530,9 @@
         "ofTheFollowingMatch": "das seguintes condições são atendidas",
         "triggerQuestion": "A resposta para esta pergunta",
         "conditionOption": "opção de condição",
-        "conditionOperator": "Operador da condição"
+        "conditionOperator": "Operador da condição",
+        "joinerAnd": "E",
+        "joinerOr": "OU"
       },
       "helpText": {
         "noTriggerQuestionsAvailable": "Nenhuma pergunta qualificada está disponível para ser usada como gatilho para a lógica de exibição."
@@ -534,9 +542,7 @@
           "triggerQuestionUnavailable": "Esta questão de gatilho não está disponível."
         },
         "blockingTriggerQuestion": "Esta pergunta de acionamento está bloqueando uma alteração que você tentou fazer. Remova esta condição para continuar.",
-        "removedUnavailableTriggerQuestions": "Algumas lógicas de exibição foram removidas porque uma pergunta da qual dependia já não está disponível.",
-        "allMatchTypeRule": "Quando o tipo de correspondência é tudo, cada condição em um grupo deve usar um valor de opção diferente.",
-        "anyMatchTypeRule": "Quando o tipo de correspondência é Any, cada condição em um grupo deve ser única (nenhum operador duplicado + pares de opções)."
+        "removedUnavailableTriggerQuestions": "Algumas lógicas de exibição foram removidas porque uma pergunta da qual dependia já não está disponível."
       }
     }
   },
@@ -651,7 +657,8 @@
       "success": {
         "questionAdded": "A pergunta foi adicionada com sucesso.",
         "questionUpdated": "A pergunta foi atualizada com sucesso."
-      }
+      },
+      "displayLogicAfterSave": "A lógica de exibição pode ser adicionada depois que esta pergunta for salva."
     },
     "researchOutput": {
       "announcements": {

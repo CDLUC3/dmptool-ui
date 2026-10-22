@@ -6,6 +6,16 @@
   }
 }
 
+.lastPublished {
+  margin: var(--space-2) 0 var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--fs-small);
+  line-height: 1.4;
+  color: var(--text-color);
+  background: var(--blue-50, #eff6ff);
+  border-radius: var(--border-radius-md);
+}
+
 .templateHistoryLink {
   font-size: var(--fs-small);
   margin-top: var(--space-1);

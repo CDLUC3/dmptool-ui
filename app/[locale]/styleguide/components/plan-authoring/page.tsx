@@ -1,25 +1,23 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "@/i18n/routing";
 import { ContentContainer, LayoutContainer } from "@/components/Container";
 import { PlanAuthoring } from "@/components/PlanAuthoring";
 import {
-  createPlanAuthoringDemoDataSource,
-  DEMO_PLAN_DOCUMENT,
-} from "@/components/PlanAuthoring/demo";
+  createScenarioDataSource,
+  MOCK_PLAN_DOCUMENT,
+} from "@/components/PlanAuthoring/mocks";
+import {
+  getStyleguidePlanAuthoringDataSource,
+  STYLEGUIDE_RESEARCH_OUTPUT_PATH,
+} from "./styleguideDataSource";
 import "../../shared/styleguide.scss";
 
-const questionsDataSource = createPlanAuthoringDemoDataSource({
-  failSaveOnce: true,
-  delayMs: 450,
-});
-
-const documentDataSource = createPlanAuthoringDemoDataSource({
-  delayMs: 0,
-});
-
 export default function PlanAuthoringStyleGuidePage() {
+  const questionsDataSource = getStyleguidePlanAuthoringDataSource();
+  const [documentDataSource] = useState(() => createScenarioDataSource());
+
   return (
     <LayoutContainer className="plan-authoring-layout">
       <ContentContainer>
@@ -36,13 +34,20 @@ export default function PlanAuthoringStyleGuidePage() {
 
         <h1>Plan Authoring</h1>
         <p className="lead">
-          Demo-data showcase of the single-page plan authoring UI. Saves,
-          guidance load, comments, and customize guidance are simulated — the
-          first Save on any question fails once, then succeeds.
+          The single-page plan authoring UI, running on its real GraphQL data
+          source against a fake in-memory API. Saves, comments, and customize
+          guidance send the same queries and mutations as a real plan. The
+          first Save on any question fails once, then succeeds. Research
+          outputs open on their own Add/Edit page instead of an inline form.
         </p>
       </ContentContainer>
 
-      <PlanAuthoring dataSource={questionsDataSource} />
+      <PlanAuthoring
+        dataSource={questionsDataSource}
+        researchOutputRowHref={(questionKey, rowIndex) =>
+          `${STYLEGUIDE_RESEARCH_OUTPUT_PATH}/${questionKey}/${rowIndex}`
+        }
+      />
 
       <ContentContainer>
         <section id="uploaded-document">
@@ -59,7 +64,7 @@ export default function PlanAuthoringStyleGuidePage() {
       <PlanAuthoring
         dataSource={documentDataSource}
         variant="document"
-        planDocument={DEMO_PLAN_DOCUMENT}
+        planDocument={MOCK_PLAN_DOCUMENT}
         idPrefix="plan-document"
       />
     </LayoutContainer>
