@@ -13,6 +13,9 @@ import { useTranslations } from "next-intl";
 import { TypeAheadWithOther, useAffiliationSearch } from "@/components/Form/TypeAheadWithOther";
 import PasswordRequirementsList from "@/components/PasswordRequirementsList";
 import { handleErrors, isValidPassword, isValidEmail, routePath } from "@/utils/index";
+import { SSO_PENDING_TOKEN_NAME } from "@/utils/authHelper";
+import { jwt } from "zod";
+import { verifyJwtToken } from "@/lib/server/auth";
 
 interface SSOCheckContainerProps {
   mode: Modes;
@@ -42,6 +45,14 @@ type fieldErrorsMap = {
   password: string;
   confirmPassword: string;
 };
+
+interface JWTPendingSSOSignup {
+  email?: string;
+  affiliation?: string;
+  displayName?: string;
+  givenName?: string;
+  surName?: string;
+}
 
 type Modes = "login" | "register";
 type LoginSteps = "email" | "sso" | "non-sso";
@@ -386,6 +397,33 @@ export const SSOCheckContainer: React.FC<SSOCheckContainerProps> = ({ mode }) =>
   useEffect(() => {
     reFocusForm();
   }, [errors]);
+
+  useEffect(() => {
+    async function getPendingSSOPayload() {
+      try {
+        const pendingToken = await cookieStore.get(SSO_PENDING_TOKEN_NAME);
+        if (pendingToken !== null && pendingToken.value) {
+          const pendingPayload = (await verifyJwtToken(pendingToken.value)) as JWTPendingSSOSignup;
+
+          if (pendingPayload) {
+            // Update your React state directly as soon as data resolves
+            setEmail(pendingPayload.email || "");
+            setFirstName(pendingPayload.givenName || "");
+            setLastName(pendingPayload.surName || "");
+            setAffiliation(pendingPayload.displayName || "");
+            setAffiliationId(pendingPayload.affiliation || null);
+            setStep("non-sso");
+          }
+        }
+      } catch (err: any) {
+        logECS("error", "Error verifying pending SSO token", {
+          error: err,
+        });
+      }
+    }
+
+    getPendingSSOPayload();
+  }, []);
 
   useEffect(() => {
     if (step === "non-sso") {
