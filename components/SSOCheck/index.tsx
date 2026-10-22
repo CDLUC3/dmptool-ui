@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useEffect, useRef, useState } from "react";
 import { FormInput } from "@/components/Form";
 import styles from "./ssoCheck.module.scss"
