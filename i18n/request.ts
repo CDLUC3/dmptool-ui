@@ -21,8 +21,7 @@ export default getRequestConfig(async ({ requestLocale }) => {
   // Load messages for a specific locale
   const loadMessages = async (localeToLoad: AllowedLocale) => {
     const mainMessages = (await import(`@/messages/${localeToLoad}/global.json`)).default;
-    const loginPageMessages = (await import(`@/messages/${localeToLoad}/loginPage.json`)).default;
-    const signupPageMessages = (await import(`@/messages/${localeToLoad}/signupPage.json`)).default;
+    const authPageMessages = (await import(`@/messages/${localeToLoad}/authPage.json`)).default;
     const templateMessages = (await import(`@/messages/${localeToLoad}/templateBuilder.json`)).default;
     const planBuilderProjectOverviewMessages = (await import(`@/messages/${localeToLoad}/planBuilderProjectOverview.json`)).default;
     const planBuilderPlanOverviewMessages = (await import(`@/messages/${localeToLoad}/planBuilderPlanOverview.json`)).default;
@@ -37,8 +36,7 @@ export default getRequestConfig(async ({ requestLocale }) => {
     // Merge all message objects
     return {
       ...mainMessages,
-      ...loginPageMessages,
-      ...signupPageMessages,
+      ...authPageMessages,
       ...templateMessages,
       ...messaging,
       ...planBuilderProjectOverviewMessages,
