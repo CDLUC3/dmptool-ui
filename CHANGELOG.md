@@ -184,6 +184,7 @@
 - Updated `RepoSelectorForAnswer` to wait to query `Re3byUrIsDocument` until we have `preferredReposURIs` because preferred repos don't display even though they eventually do to trigger the display of the "preferred repositories" checkbox [#118]
 
 ## Fixed
+- Updated to used patched version of `Node` `v22.23.4`
 - Fixed `addGuidanceTextAction` reading the wrong `dataPath` (`addGuidanceText` instead of `addGuidance`), which meant the new guidance id was never returned and saving the same tag again failed with `Variable "$input" got invalid value null at "input.guidanceId"` [#193]
 - Fixed the pt-BR `publishingTemplate3Private` translation in the template Publish modal, which described the visibility as public instead of organization only [#381]
 - Updated `fetchPolicy` for `publishedTemplates` query on `PlanCreate` page to always fetch latest published plans to address a bug where cached data was getting wrong published version id [#484]
