@@ -1,4 +1,7 @@
 import logECS from '@/utils/clientLogger';
+import { cookies } from "next/headers";
+import { verifyJwtToken } from "@/lib/server/auth";
+import { PendingSSOSignup } from "@/components/SSOCheck";
 
 // Cookie names for Auth Service https://github.com/CDLUC3/dmptool-auth tokens in the browser
 export const ACCESS_TOKEN_NAME = process.env.ACCESS_TOKEN_NAME || "access_token";
@@ -152,3 +155,32 @@ export const fetchCsrfToken = async (cookies?: string, endpoint?: string) => {
   }
 };
 
+// Function to extract the pending SSO signup payload from the JWT payload
+function getPendingSignupPayload(payload: Record<string, unknown> | null): PendingSSOSignup | undefined {
+  if (!payload || typeof payload.email !== "string") {
+    return undefined;
+  }
+
+  return {
+    email: payload.email,
+    affiliation: typeof payload.affiliation === "string" ? payload.affiliation : undefined,
+    displayName: typeof payload.displayName === "string" ? payload.displayName : undefined,
+    givenName: typeof payload.givenName === "string" ? payload.givenName : undefined,
+    surName: typeof payload.surName === "string" ? payload.surName : undefined,
+  };
+}
+
+// Retrieves the initial pending SSO signup information from the cookies and verifies the JWT token.
+export const  getInitialPendingSignup = async (): Promise<PendingSSOSignup | undefined> => {
+  const token: string | undefined = (await cookies()).get(SSO_PENDING_TOKEN_NAME)?.value;
+  if (!token) {
+    return undefined;
+  }
+
+  try {
+    return getPendingSignupPayload(await verifyJwtToken(token));
+  } catch (error) {
+    console.error("Unable to verify pending SSO signup token", error);
+    return undefined;
+  }
+}

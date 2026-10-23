@@ -270,6 +270,18 @@ export const SSOCheckContainer: React.FC<SSOCheckContainerProps> = ({ mode, init
       return;
     }
 
+    // Link account request to the Auth service for pending SSO signups
+    const linkRequest = async (token: string | null) => {
+      return await fetch(`${process.env.NEXT_PUBLIC_AUTH_ENDPOINT}/sso/link`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRF-TOKEN": token || "",
+        },
+      });
+    }
+
     // Login or Register request to the Auth service
     const authRequest = async (token: string | null) => {
       const payload: LoginInput | RegisterInput = mode === "login"
@@ -312,6 +324,15 @@ export const SSOCheckContainer: React.FC<SSOCheckContainerProps> = ({ mode, init
       }
 
       if (response.ok) {
+        // If the user is logging in and they have a pending SSO signup, we need to link their account to the SSO provider.
+        if (mode === "login" && isPendingSsoSignup) {
+          const linkResponse = await linkRequest(await getCsrfToken());
+          if (!linkResponse.ok) {
+            await handleErrors(linkResponse, linkRequest, setErrors, router, modePaths[mode]);
+            return;
+          }
+        }
+
         await onFormSubmissionSuccess();
       } else if (response.status === 409) {
         // If it was a 409 conflict, the email is already registered. This should only happen on registration.
@@ -413,6 +434,10 @@ export const SSOCheckContainer: React.FC<SSOCheckContainerProps> = ({ mode, init
     }
   }, [step]);
 
+  const emailHelpMessage = step === "email"
+    ? t("singleSignOn")
+    : isPendingSsoSignup ? t("pendingSSOEmailHelp") : undefined;
+
   return (
     <Form
       className={styles.authForm}
@@ -425,6 +450,15 @@ export const SSOCheckContainer: React.FC<SSOCheckContainerProps> = ({ mode, init
         errors={errors}
         ref={errorRef}
       />
+
+      {isPendingSsoSignup && (
+        <>
+          <p>{t("linkAccount")}</p>
+          <div className={styles.formLinks}>
+            <Link href={routePath("app.login")}>{t("linkButton")}</Link>
+          </div>
+        </>
+      )}
 
       <FormInput
         name="email"
@@ -439,10 +473,10 @@ export const SSOCheckContainer: React.FC<SSOCheckContainerProps> = ({ mode, init
         isInvalid={!!fieldErrors.email}
         errorMessage={fieldErrors.email}
         isRequiredVisualOnly={true}
-        readOnly={["non-sso", "sso"].includes(step)}
+        readOnly={["non-sso", "sso"].includes(step) && !isPendingSsoSignup}
         inputClasses={["non-sso", "sso"].includes(step) ? "disabled-look" : ""}
         autoComplete={step === "non-sso" ? "off" : "email"}
-        helpMessage={step === "email" ? t("singleSignOn") : undefined}
+        helpMessage={emailHelpMessage}
         data-testid="emailInput"
       />
 
@@ -530,7 +564,7 @@ export const SSOCheckContainer: React.FC<SSOCheckContainerProps> = ({ mode, init
                 onChange={(e) => setPassword(e.target.value)}
                 isInvalid={!!fieldErrors.password}
                 errorMessage={fieldErrors.password}
-                    data-testid="pass"
+                data-testid="pass"
               />
 
               <PasswordRequirementsList password={password} />
