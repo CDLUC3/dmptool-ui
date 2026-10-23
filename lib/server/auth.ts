@@ -1,4 +1,7 @@
 import { decodeJwt, jwtVerify, createRemoteJWKSet, JWTPayload } from "jose";
+import { cookies } from "next/headers";
+import { PendingSSOSignup } from "@/components/SSOCheck";
+import { SSO_PENDING_TOKEN_NAME } from "@/utils/authHelper";
 
 // Define the issuer, audience and JWKS URL pointing to the Auth Service
 const ISSUER = process.env.TOKEN_ISSUER || "http://localhost:4646";
@@ -44,5 +47,35 @@ console.log("Verifying JWT token:", token, "with ISSUER:", ISSUER, "and AUDIENCE
     const decoded = decodeJwt(token);
     console.error("JWT verification failed:", error, decoded, ISSUER, AUDIENCE);
     return null;
+  }
+}
+
+// Function to extract the pending SSO signup payload from the JWT payload
+function getPendingSignupPayload(payload: Record<string, unknown> | null): PendingSSOSignup | undefined {
+  if (!payload || typeof payload.email !== "string") {
+    return undefined;
+  }
+
+  return {
+    email: payload.email,
+    affiliation: typeof payload.affiliation === "string" ? payload.affiliation : undefined,
+    displayName: typeof payload.displayName === "string" ? payload.displayName : undefined,
+    givenName: typeof payload.givenName === "string" ? payload.givenName : undefined,
+    surName: typeof payload.surName === "string" ? payload.surName : undefined,
+  };
+}
+
+// Retrieves the initial pending SSO signup information from the cookies and verifies the JWT token.
+export const  getInitialPendingSignup = async (): Promise<PendingSSOSignup | undefined> => {
+  const token: string | undefined = (await cookies()).get(SSO_PENDING_TOKEN_NAME)?.value;
+  if (!token) {
+    return undefined;
+  }
+
+  try {
+    return getPendingSignupPayload(await verifyJwtToken(token));
+  } catch (error) {
+    console.error("Unable to verify pending SSO signup token", error);
+    return undefined;
   }
 }

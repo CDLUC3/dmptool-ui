@@ -3,7 +3,7 @@ import { getTranslations } from "next-intl/server";
 
 import { ContentContainer, LayoutContainer } from '@/components/Container';
 import { SSOCheckContainer } from "@/components/SSOCheck";
-import { getInitialPendingSignup } from "@/utils/authHelper";
+import { getInitialPendingSignup } from "@/lib/server/auth";
 
 const LoginPage: React.FC = async () => {
   const [t, initialPendingSignup] = await Promise.all([
