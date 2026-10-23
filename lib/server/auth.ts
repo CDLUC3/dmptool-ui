@@ -33,9 +33,6 @@ function getJWKClient() {
 export async function verifyJwtToken(token: string): Promise<JWTPayload | null> {
   try {
     const client = getJWKClient();
-
-console.log("Verifying JWT token:", token, "with ISSUER:", ISSUER, "and AUDIENCE:", AUDIENCE);
-
     const { payload } = await jwtVerify(token, client, {
       issuer: ISSUER,
       audience: AUDIENCE,

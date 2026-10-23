@@ -97,7 +97,7 @@ export const SSOCheckContainer: React.FC<SSOCheckContainerProps> = ({ mode, init
     mode === "register" && initialPendingSignup ? "non-sso" : "email"
   );
 
-  const [email, setEmail] = useState(initialPendingSignup?.email ?? "");
+  const [email, setEmail] = useState(mode === "register" && initialPendingSignup ? initialPendingSignup?.email : "");
   const [ssoEntityId, setSsoEntityId] = useState<string | null>(null);
 
   const [affiliation, setAffiliation] = useState<string | null>(initialPendingSignup?.displayName ?? null);
