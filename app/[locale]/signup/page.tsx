@@ -13,6 +13,8 @@ function getPendingSignupPayload(payload: Record<string, unknown> | null): Pendi
     return undefined;
   }
 
+console.log('SSO pending signup payload:', payload);
+
   return {
     email: payload.email,
     affiliation: typeof payload.affiliation === "string" ? payload.affiliation : undefined,
@@ -27,6 +29,9 @@ async function getInitialPendingSignup(): Promise<PendingSSOSignup | undefined> 
   if (!token) {
     return undefined;
   }
+
+console.log('TOKEN NAME:', SSO_PENDING_TOKEN_NAME);
+console.log('SSO pending signup payload:', token);
 
   try {
     return getPendingSignupPayload(await verifyJwtToken(token));
