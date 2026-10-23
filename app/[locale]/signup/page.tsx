@@ -13,7 +13,7 @@ const SignUpPage: React.FC = async () => {
     getInitialPendingSignup(),
   ]);
 
-  const isPendingSSO: boolean = true; //initialPendingSignup !== undefined;
+  const isPendingSSO: boolean = initialPendingSignup !== undefined;
 
   return (
     <LayoutContainer className="auth-container">
