@@ -99,22 +99,27 @@ const projectReturn = {
   error: undefined,
 };
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-const mockQueries = (project: any = projectReturn) => {
+type QueryResult = ReturnType<typeof useQuery>;
+type MutationResult = ReturnType<typeof useMutation>;
+type LazyQueryResult = ReturnType<typeof useLazyQuery>;
+
+const mockQueries = (project: unknown = projectReturn) => {
   mockUseQuery.mockImplementation((document) => {
-    if (document === AffiliationByIdDocument) return stableAffiliationReturn as any;
-    if (document === ProjectDocument) return project;
-    return { data: null, loading: false, error: undefined } as any;
+    if (document === AffiliationByIdDocument) return stableAffiliationReturn as unknown as QueryResult;
+    if (document === ProjectDocument) return project as QueryResult;
+    return { data: null, loading: false, error: undefined } as unknown as QueryResult;
   });
 };
 
-const lazySearch = (searchFn: jest.Mock) => {
+const mutation = (mutate: jest.Mock) =>
+  [mutate, { loading: false, error: undefined }] as unknown as MutationResult;
+
+const lazySearch = (searchFn: jest.Mock = jest.fn()) => {
   mockUseLazyQuery.mockImplementation(() => [
     searchFn,
     { data: undefined, loading: false, error: undefined, called: false },
-  ] as any);
+  ] as unknown as LazyQueryResult);
 };
-/* eslint-enable @typescript-eslint/no-explicit-any */
 
 const searchFor = (projectName = 'REU') => {
   fireEvent.change(screen.getByRole('textbox', { name: 'form.projectName' }), { target: { value: projectName } });
@@ -129,18 +134,9 @@ const setupMocks = () => {
   });
 
   mockQueries();
-
-  mockUseMutation.mockImplementation(() => [
-    jest.fn().mockResolvedValue({ data: { projectImport: { errors: null } } }),
-    { loading: false, error: undefined },
-    /* eslint-disable @typescript-eslint/no-explicit-any */
-  ] as any);
-
-  mockUseLazyQuery.mockImplementation(() => [
-    jest.fn(),
-    { data: undefined, loading: false, error: undefined, called: false },
-    /* eslint-disable @typescript-eslint/no-explicit-any */
-  ] as any);
+  mockUseMutation.mockImplementation(() =>
+    mutation(jest.fn().mockResolvedValue({ data: { projectImport: { errors: null } } })));
+  lazySearch();
 };
 
 describe('ProjectsCreateProjectProjectSearch', () => {
@@ -178,11 +174,7 @@ describe('ProjectsCreateProjectProjectSearch', () => {
     };
 
     const mockSearchFn = jest.fn().mockResolvedValue(stableSearchReturn);
-    mockUseLazyQuery.mockImplementation(() => [
-      mockSearchFn,
-      { data: undefined, loading: false, error: undefined, called: false },
-      /* eslint-disable @typescript-eslint/no-explicit-any */
-    ] as any);
+    lazySearch(mockSearchFn);
 
     render(<ProjectsCreateProjectProjectSearch />);
     searchFor();
@@ -197,11 +189,7 @@ describe('ProjectsCreateProjectProjectSearch', () => {
     const mockSearchFn = jest.fn().mockResolvedValue({
       data: { searchExternalProjects: [mockProject] },
     });
-    mockUseLazyQuery.mockImplementation(() => [
-      mockSearchFn,
-      { data: undefined, loading: false, error: undefined, called: false },
-      /* eslint-disable @typescript-eslint/no-explicit-any */
-    ] as any);
+    lazySearch(mockSearchFn);
 
     render(<ProjectsCreateProjectProjectSearch />);
     searchFor();
@@ -215,11 +203,7 @@ describe('ProjectsCreateProjectProjectSearch', () => {
     const mockSearchFn = jest.fn().mockResolvedValue({
       data: { searchExternalProjects: [mockProject] },
     });
-    mockUseLazyQuery.mockImplementation(() => [
-      mockSearchFn,
-      { data: undefined, loading: false, error: undefined, called: false },
-      /* eslint-disable @typescript-eslint/no-explicit-any */
-    ] as any);
+    lazySearch(mockSearchFn);
 
     render(<ProjectsCreateProjectProjectSearch />);
     searchFor();
@@ -233,11 +217,7 @@ describe('ProjectsCreateProjectProjectSearch', () => {
     const mockSearchFn = jest.fn().mockResolvedValue({
       data: { searchExternalProjects: [] },
     });
-    mockUseLazyQuery.mockImplementation(() => [
-      mockSearchFn,
-      { data: undefined, loading: false, error: undefined, called: false },
-      /* eslint-disable @typescript-eslint/no-explicit-any */
-    ] as any);
+    lazySearch(mockSearchFn);
 
     render(<ProjectsCreateProjectProjectSearch />);
     searchFor();
@@ -251,11 +231,7 @@ describe('ProjectsCreateProjectProjectSearch', () => {
     const mockSearchFn = jest.fn().mockResolvedValue({
       data: { searchExternalProjects: [mockProject] },
     });
-    mockUseLazyQuery.mockImplementation(() => [
-      mockSearchFn,
-      { data: undefined, loading: false, error: undefined, called: false },
-      /* eslint-disable @typescript-eslint/no-explicit-any */
-    ] as any);
+    lazySearch(mockSearchFn);
 
     render(<ProjectsCreateProjectProjectSearch />);
     searchFor();
@@ -272,11 +248,7 @@ describe('ProjectsCreateProjectProjectSearch', () => {
     const mockSearchFn = jest.fn().mockResolvedValue({
       data: { searchExternalProjects: [] },
     });
-    mockUseLazyQuery.mockImplementation(() => [
-      mockSearchFn,
-      { data: undefined, loading: false, error: undefined, called: false },
-      /* eslint-disable @typescript-eslint/no-explicit-any */
-    ] as any);
+    lazySearch(mockSearchFn);
 
     render(<ProjectsCreateProjectProjectSearch />);
     searchFor();
@@ -295,19 +267,15 @@ describe('ProjectsCreateProjectProjectSearch', () => {
     });
     mockUseMutation.mockImplementation((document) => {
       if (document === ProjectImportDocument) {
-        return [mockImportFn, { loading: false, error: undefined }] as any;
+        return mutation(mockImportFn);
       }
-      return [jest.fn(), { loading: false, error: undefined }] as any;
+      return mutation(jest.fn());
     });
 
     const mockSearchFn = jest.fn().mockResolvedValue({
       data: { searchExternalProjects: [mockProject] },
     });
-    mockUseLazyQuery.mockImplementation(() => [
-      mockSearchFn,
-      { data: undefined, loading: false, error: undefined, called: false },
-      /* eslint-disable @typescript-eslint/no-explicit-any */
-    ] as any);
+    lazySearch(mockSearchFn);
 
     render(<ProjectsCreateProjectProjectSearch />);
     searchFor();
@@ -342,7 +310,7 @@ describe('ProjectsCreateProjectProjectSearch', () => {
 
   it('should keep the current project values when the external project leaves them empty', async () => {
     const mockImportFn = jest.fn().mockResolvedValue({ data: { projectImport: { errors: null } } });
-    mockUseMutation.mockImplementation(() => [mockImportFn, { loading: false, error: undefined }] as any);
+    mockUseMutation.mockImplementation(() => mutation(mockImportFn));
     lazySearch(jest.fn().mockResolvedValue({
       data: {
         searchExternalProjects: [{
@@ -377,7 +345,7 @@ describe('ProjectsCreateProjectProjectSearch', () => {
   it('should not import when the current project could not be loaded', async () => {
     mockQueries({ data: undefined, loading: false, error: new Error('boom') });
     const mockImportFn = jest.fn();
-    mockUseMutation.mockImplementation(() => [mockImportFn, { loading: false, error: undefined }] as any);
+    mockUseMutation.mockImplementation(() => mutation(mockImportFn));
     lazySearch(jest.fn().mockResolvedValue({ data: { searchExternalProjects: [mockProject] } }));
 
     render(<ProjectsCreateProjectProjectSearch />);
@@ -399,20 +367,12 @@ describe('ProjectsCreateProjectProjectSearch', () => {
         },
       },
     });
-    mockUseMutation.mockImplementation(() => [
-      mockImportFn,
-      { loading: false, error: undefined },
-      /* eslint-disable @typescript-eslint/no-explicit-any */
-    ] as any);
+    mockUseMutation.mockImplementation(() => mutation(mockImportFn));
 
     const mockSearchFn = jest.fn().mockResolvedValue({
       data: { searchExternalProjects: [mockProject] },
     });
-    mockUseLazyQuery.mockImplementation(() => [
-      mockSearchFn,
-      { data: undefined, loading: false, error: undefined, called: false },
-      /* eslint-disable @typescript-eslint/no-explicit-any */
-    ] as any);
+    lazySearch(mockSearchFn);
 
     render(<ProjectsCreateProjectProjectSearch />);
     searchFor();
@@ -430,11 +390,7 @@ describe('ProjectsCreateProjectProjectSearch', () => {
 
   it('should not search when all fields are empty', async () => {
     const mockSearchFn = jest.fn();
-    mockUseLazyQuery.mockImplementation(() => [
-      mockSearchFn,
-      { data: undefined, loading: false, error: undefined, called: false },
-      /* eslint-disable @typescript-eslint/no-explicit-any */
-    ] as any);
+    lazySearch(mockSearchFn);
 
     render(<ProjectsCreateProjectProjectSearch />);
     fireEvent.click(screen.getByRole('button', { name: /buttons.search/i }));

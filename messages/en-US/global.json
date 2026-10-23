@@ -258,8 +258,6 @@
     "addManuallyText": "If your funder isn’t shown, you can add the details manually.",
     "addManuallyLabel": "Add funder manually",
     "noFunderHeading": "Don't have a funder yet?",
-    "noFunderText": "If you don't have a funder yet, you can use the link below to proceed to the next step.",
-    "noFunderButtonLabel": "I don't have a funder",
     "messages": {
       "success": {
         "addProjectFunding": "Successfully added the funder to the project."

@@ -86,7 +86,6 @@ const PlanCreateUpload = () => {
 
 
   // The file content is not sent yet; Apollo's uploadPlan resolver is a stub
-  // (see .reference/create-project/apollo-gaps.md)
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setServerErrors([]);

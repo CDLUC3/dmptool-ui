@@ -57,7 +57,6 @@ describe('CreateProjectFlow', () => {
       expect(result.current).toEqual({
         inFlow: true,
         flow: { intent: 'project', fromExisting: true },
-        query: { intent: 'project', from: 'existing' },
       });
     });
   });

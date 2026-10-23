@@ -258,8 +258,6 @@
     "addManuallyText": "Se seu colaborador não estiver mostrado, você pode adicionar seus detalhes manualmente.",
     "addManuallyLabel": "Adicionar professor manualmente",
     "noFunderHeading": "Ainda não tem um financiador?",
-    "noFunderText": "Se você ainda não tem um fundo, você pode usar o link abaixo para prosseguir para a próxima etapa.",
-    "noFunderButtonLabel": "Não tenho um fundador",
     "messages": {
       "success": {
         "addProjectFunding": "O financiador foi adicionado ao projeto com sucesso."

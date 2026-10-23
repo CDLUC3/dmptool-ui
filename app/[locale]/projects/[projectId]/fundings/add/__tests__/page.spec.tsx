@@ -1,6 +1,6 @@
 import React from 'react';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { useParams } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
 import { useRouter } from '@/i18n/routing';
 import { MockedProvider } from '@apollo/client/testing/react';
 import {
@@ -322,11 +322,46 @@ jest.mock('@/i18n/routing', () => ({
   useRouter: jest.fn(() => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn() })),
 }));
 
+const fillAndSubmitValidForm = () => {
+  fireEvent.change(
+    screen.getByLabelText('labels.funderName'),
+    { target: { value: 'New-funderName-123' } }
+  );
+
+  //Enter a value for the "Other Affiliation" field, since we're automatically setting "otherField" to true in the mock
+  fireEvent.change(
+    screen.getByLabelText('Other Institution'),
+    { target: { value: 'New-funderName-123' } }
+  );
+
+  // To change the value in FormSelect, we need to "click" to open the options
+  fireEvent.click(screen.getByRole('button', { name: /fundingStatus/ }));
+  fireEvent.click(screen.getByRole('option', { name: /granted/i }));
+
+  fireEvent.change(
+    screen.getByLabelText('labels.grantNumber'),
+    { target: { value: 'New-grantNumber-123' } }
+  );
+
+  fireEvent.change(
+    screen.getByLabelText('labels.projectNumber'),
+    { target: { value: 'New-projectNumber-123' } }
+  );
+
+  fireEvent.change(
+    screen.getByLabelText('labels.opportunity'),
+    { target: { value: 'New-opportunity-123' } }
+  );
+
+  fireEvent.submit(screen.getByRole('button', { name: /buttons.saveChanges/i }));
+};
+
 describe('AddProjectFunderManually', () => {
 
   beforeEach(() => {
     const mockParams = useParams as jest.Mock;
     mockParams.mockReturnValue({ projectId: '111' });
+    (useSearchParams as jest.Mock).mockReturnValue(new URLSearchParams());
 
     HTMLElement.prototype.scrollIntoView = mockScrollIntoView;
     mockScrollTo();
@@ -360,47 +395,30 @@ describe('AddProjectFunderManually', () => {
       );
     });
 
-    // Update data
-    fireEvent.change(
-      screen.getByLabelText('labels.funderName'),
-      { target: { value: 'New-funderName-123' } }
-    );
-
-    //Enter a value for the "Other Affiliation" field, since we're automatically setting "otherField" to true in the mock
-    fireEvent.change(
-      screen.getByLabelText('Other Institution'),
-      { target: { value: 'New-funderName-123' } }
-    );
-
-
-    // To change the value in FormSelect, we need to "click" to open the options
-    const statusSelect = screen.getByRole('button', { name: /fundingStatus/ });
-    fireEvent.click(statusSelect);
-
-    // Now we need to click on one of the options
-    const optionGranted = screen.getByRole('option', { name: /granted/i });
-    fireEvent.click(optionGranted);
-
-    fireEvent.change(
-      screen.getByLabelText('labels.grantNumber'),
-      { target: { value: 'New-grantNumber-123' } }
-    );
-
-    fireEvent.change(
-      screen.getByLabelText('labels.projectNumber'),
-      { target: { value: 'New-projectNumber-123' } }
-    );
-
-    fireEvent.change(
-      screen.getByLabelText('labels.opportunity'),
-      { target: { value: 'New-opportunity-123' } }
-    );
-
-    // Submit the form
-    fireEvent.submit(screen.getByRole('button', { name: /buttons.saveChanges/i }));
+    fillAndSubmitValidForm();
 
     await waitFor(() => {
       expect(mockPush).toHaveBeenCalledWith(expect.stringMatching(/\/projects\/111\/fundings/));
+    });
+  });
+
+  it('should return to project details when used inside the create flow', async () => {
+    const mockPush = jest.fn();
+    (useRouter as jest.Mock).mockReturnValue({ push: mockPush });
+    (useSearchParams as jest.Mock).mockReturnValue(new URLSearchParams('intent=plan'));
+
+    await act(async () => {
+      render(
+        <MockedProvider mocks={successMocks}>
+          <AddProjectFunderManually />
+        </MockedProvider>
+      );
+    });
+
+    fillAndSubmitValidForm();
+
+    await waitFor(() => {
+      expect(mockPush).toHaveBeenCalledWith('/projects/111/project?intent=plan');
     });
   });
 

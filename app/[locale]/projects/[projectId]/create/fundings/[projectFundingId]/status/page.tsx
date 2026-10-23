@@ -86,7 +86,8 @@ const ProjectsCreateProjectFunding = () => {
   const handleSubmit = async ({ startTransition }: { startTransition: TransitionStartFunction }) => {
     setErrors([]);
 
-    if (!funding?.id) {
+    const fundingId = funding?.id;
+    if (!funding || !fundingId) {
       setErrors([Flow('fundingStatus.errors.noFunding')]);
       return;
     }
@@ -95,7 +96,7 @@ const ProjectsCreateProjectFunding = () => {
       const result = await updateProjectFunding({
         variables: {
           input: {
-            projectFundingId: funding.id,
+            projectFundingId: fundingId,
             status: FUNDING_CHOICE_STATUS[choice],
           }
         }
@@ -113,7 +114,7 @@ const ProjectsCreateProjectFunding = () => {
       const next = screenAfterFundingStatus(choice, !!funding.affiliation?.apiTarget);
       startTransition(() => {
         router.push(next === 'projectSearch'
-          ? fundingFlowPath(next, flow, projectId, funding.id as number)
+          ? fundingFlowPath(next, flow, projectId, fundingId)
           : flowPath(next, flow, projectId));
       });
     } catch (err) {
@@ -128,7 +129,8 @@ const ProjectsCreateProjectFunding = () => {
 
   const handleChangeFunder = async () => {
     setErrors([]);
-    if (!funding?.id) return;
+    const fundingId = funding?.id;
+    if (!fundingId) return;
 
     // removeProjectFunding also unlinks the funding from the project's plans, so a funding
     // that already existed before this flow stays on the project alongside the new funder
@@ -138,7 +140,7 @@ const ProjectsCreateProjectFunding = () => {
     }
 
     try {
-      const result = await removeProjectFunding({ variables: { projectFundingId: Number(funding.id) } });
+      const result = await removeProjectFunding({ variables: { projectFundingId: fundingId } });
       const [hasErrors] = checkErrors(
         (result?.data?.removeProjectFunding?.errors ?? {}) as ProjectFundingErrors,
         ['general', 'affiliationId', 'projectId']

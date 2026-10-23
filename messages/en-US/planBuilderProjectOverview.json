@@ -175,7 +175,8 @@
       "noFunderLabel": "I don't have a funder",
       "selectToContinue": "Select a funder, or check “I don't have a funder” to continue.",
       "errors": {
-        "addFailed": "We couldn't add that funder. Please try again."
+        "addFailed": "We couldn't add that funder. Please try again.",
+        "popularFailed": "We couldn't load the popular funders. You can still search for a funder above."
       }
     },
     "fundingStatus": {
@@ -219,6 +220,10 @@
         "saveFailed": "We couldn't save the funding details. Please try again.",
         "notFound": "We couldn't find this funding record."
       }
+    },
+    "projectSearch": {
+      "projectSelected": "Project {projectTitle} selected. Check the details we filled in for you.",
+      "searchFailed": "We couldn't search this funder's projects. Please try again, or add the project details manually."
     },
     "projectDetails": {
       "skipHint": "Only the project name is required. You can add the rest now or come back to it later."
@@ -275,17 +280,6 @@
       "realProject": "Full functionality. Cannot be changed back to Mock project."
     }
   },
-  "ProjectsCreateProjectFunding": {
-    "title": "Do you already have funding for this project?",
-    "form": {
-      "radioFundingLabel": "Do you already have funding for this project?",
-      "radioFundingDescription": "You can update or remove all of this later, so don't worry if you are still waiting on final details or an award number.",
-      "radioYesLabel": "Yes - I've been awarded funding",
-      "radioYesDescription": "We'll help you link the project to a funder now. You'll be able to select a funder and, if available, we'll pull in relevant details. Everything can be reviewed or changed later.",
-      "radioNoLabel": "No - Skip for now",
-      "radioNoDescription": "You can still proceed. If you receive funding later, you'll be able to link it to this project."
-    }
-  },
   "ProjectsCreateProjectProjectSearch": {
     "title": "Search for projects",
     "description": "Enter details of your project to help find it in this funder's database. The more you enter the more likely it is to find your project.",
@@ -294,9 +288,9 @@
     },
     "messages": {
       "success": {
-        "projectSelected": "Project {projectTitle} selected. Check the details we filled in for you."
+        "projectSelected": "Project {projectTitle} selected. Redirecting to project overview page."
       },
-      "error": {
+      "errors": {
         "selectedFailed": "Failed to select project. Please try again."
       }
     },

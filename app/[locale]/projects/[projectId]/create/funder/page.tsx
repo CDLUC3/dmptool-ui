@@ -66,6 +66,7 @@ const CreateProjectSearchFunder = () => {
 
   const [popularFunders, setPopularFunders] = useState<FunderPopularityResult[]>([]);
   const [popularFundersLoading, setPopularFundersLoading] = useState(true);
+  const [popularFundersFailed, setPopularFundersFailed] = useState(false);
   const [popularFundersQuery] = useLazyQuery(PopularFundersDocument, {});
 
   const [selectedUri, setSelectedUri] = useState<string>('');
@@ -87,6 +88,7 @@ const CreateProjectSearchFunder = () => {
       })
       .catch((err) => {
         handleApolloError(err, 'createProjectSearchFunder.popularFundersQuery');
+        setPopularFundersFailed(true);
       })
       .finally(() => {
         setPopularFundersLoading(false);
@@ -281,6 +283,9 @@ const CreateProjectSearchFunder = () => {
               ) : (
                 <>
                   <h3 id="popular-funders">{t('popularTitle')}</h3>
+                  {popularFundersFailed && (
+                    <ErrorMessages errors={[Flow('funder.errors.popularFailed')]} noScroll />
+                  )}
                   <div
                     className={styles.funderMessage}
                     role="status"

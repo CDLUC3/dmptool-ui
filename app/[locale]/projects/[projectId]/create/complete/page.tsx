@@ -81,7 +81,7 @@ const ProjectsCreateProjectSetupComplete = () => {
         <ErrorMessages errors={error ? [Flow('complete.loadFailed')] : []} ref={errorRef} />
         {loading ? (
           <Loading variant="inline" message={Global('messaging.loading')} />
-        ) : (
+        ) : project && (
           <>
             <span className={styles.check} aria-hidden="true">✓</span>
             <p id="setup-complete-summary">

@@ -96,6 +96,7 @@ const ProjectsCreateProjectProjectSearch = () => {
   // Handles the Search button click
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorMessages([]);
 
     if (!funderUri) return;
 
@@ -131,8 +132,9 @@ const ProjectsCreateProjectProjectSearch = () => {
         error,
         url: { path: routePath('projects.create.projectSearch', { projectId: projectId as string, projectFundingId }) },
       });
-      setHasSearched(true);
+      setHasSearched(false);
       setProjects([]);
+      setErrorMessages([Flow('projectSearch.searchFailed')]);
     }
   };
 
@@ -190,7 +192,7 @@ const ProjectsCreateProjectProjectSearch = () => {
         setErrorMessages([errors?.general ?? t('messages.errors.selectedFailed')]);
       } else {
         toastState.add(
-          t('messages.success.projectSelected', { projectTitle: project.title || '' }),
+          Flow('projectSearch.projectSelected', { projectTitle: project.title || '' }),
           { type: 'success' }
         );
         startTransition(() => {

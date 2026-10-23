@@ -37,7 +37,7 @@ type RichValue = string | ((chunks: React.ReactNode) => React.ReactNode);
 
 const mockUseQuery = jest.mocked(useQuery);
 
-// Renders "key [value ...]" and every tag callback with "key.tag" as its chunk, so tests can see interpolated values and links.
+// Echoes the key and its values so tests can assert what was interpolated
 const translate = Object.assign((key: string) => key, {
   rich: (key: string, values: Record<string, RichValue> = {}) => (
     <>
@@ -145,6 +145,8 @@ describe('ProjectsCreateProjectSetupComplete', () => {
     render(<ProjectsCreateProjectSetupComplete />);
 
     expect(screen.getByText('complete.loadFailed')).toBeInTheDocument();
+    expect(document.getElementById('setup-complete-summary')).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'complete.createFirstPlan' })).not.toBeInTheDocument();
   });
 
   it('should pass axe accessibility test', async () => {

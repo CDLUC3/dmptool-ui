@@ -55,7 +55,6 @@ export function flowQuery(flow: FlowState): Record<string, string | undefined> {
   };
 }
 
-// Screens that work on one funding and carry its id in the path
 export type FundingFlowScreen = 'fundingStatus' | 'projectSearch' | 'fundingDetails';
 
 type FlowQuery = Record<string, string | number | boolean | undefined>;
@@ -80,7 +79,7 @@ export function fundingFlowPath(
   return routePath(FLOW_SCREENS[screen].route, { projectId, projectFundingId }, { ...flowQuery(flow), ...extraQuery });
 }
 
-// "Applied" has no Apollo enum value yet, see .reference/create-project/apollo-gaps.md
+// ProjectFundingStatus has no APPLIED value yet, so "applied" saves as PLANNED
 export const FUNDING_CHOICES = ['planned', 'applied', 'funded'] as const;
 export type FundingChoice = typeof FUNDING_CHOICES[number];
 

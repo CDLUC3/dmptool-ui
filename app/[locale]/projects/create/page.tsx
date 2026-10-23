@@ -51,7 +51,6 @@ const ProjectsStartPlan = () => {
   const projects = data?.myProjects?.items?.filter((p) => p?.id) ?? [];
   const totalCount = data?.myProjects?.totalCount ?? 0;
   const nextCursor = data?.myProjects?.nextCursor;
-  // Loading more keeps the current list on screen, so only a load without data shows the spinner
   const initialLoading = loading && !data;
 
   const applySearch = (value: string) => {

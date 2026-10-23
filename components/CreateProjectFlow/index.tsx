@@ -19,7 +19,6 @@ import {
   FlowState,
   RAIL_STAGES,
   RailStage,
-  flowQuery,
 } from './steps';
 import styles from './CreateProjectFlow.module.scss';
 
@@ -33,7 +32,7 @@ export function useCreateProjectFlow() {
     intent: intent === 'project' ? 'project' : DEFAULT_FLOW.intent,
     fromExisting: searchParams?.get('from') === 'existing',
   };
-  return { inFlow, flow, query: flowQuery(flow) };
+  return { inFlow, flow };
 }
 
 type StageState = 'done' | 'current' | 'upcoming' | 'skipped';

@@ -234,7 +234,6 @@ const mocks = [
     },
   },
 
-  // Existing fundings, checked before adding so Back doesn't create duplicates
   {
     request: {
       query: ProjectFundingsApiDocument,
@@ -345,7 +344,6 @@ const mocks = [
     },
   },
 
-  // Mocked response without an id for addProjectFunding
   {
     request: {
       query: AddProjectFundingDocument,
@@ -496,6 +494,7 @@ describe("CreateProjectSearchFunder", () => {
       expect(screen.getByText('popularFallbackTitle')).toBeInTheDocument();
       expect(screen.getByText('popularFallbackDescription')).toBeInTheDocument();
     });
+    expect(screen.queryByText('funder.errors.popularFailed')).not.toBeInTheDocument();
   });
 
   it("Should show search guidance when Popular Funders fail to load", async () => {
@@ -506,6 +505,7 @@ describe("CreateProjectSearchFunder", () => {
     );
 
     await waitFor(() => {
+      expect(screen.getByText('funder.errors.popularFailed')).toBeInTheDocument();
       expect(screen.getByText('popularFallbackTitle')).toBeInTheDocument();
       expect(screen.getByText('popularFallbackDescription')).toBeInTheDocument();
     });

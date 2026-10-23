@@ -133,7 +133,6 @@ describe('ProjectsCreateProjectFundingDetails', () => {
       (useParams as jest.Mock).mockReturnValue({ projectId: '123', projectFundingId });
       renderPage([]);
 
-      // The query is skipped, so the not-found state shows without a loading pass
       expect(screen.getByText('fundingDetails.messages.notFound')).toBeInTheDocument();
       expect(screen.queryByLabelText('fundingDetails.grantId')).not.toBeInTheDocument();
       expect(screen.queryByRole('button', { name: 'buttons.next' })).not.toBeInTheDocument();
