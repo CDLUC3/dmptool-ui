@@ -26,10 +26,11 @@ import {
 
 // Components
 import PageHeader from "@/components/PageHeader";
-import {
-  ContentContainer,
-  LayoutContainer,
-} from "@/components/Container";
+import CreateProjectFlowLayout, {
+  FlowActions,
+  flowPath,
+  useCreateProjectFlow,
+} from '@/components/CreateProjectFlow';
 import {
   FormInput,
   RadioGroupComponent,
@@ -39,7 +40,6 @@ import ErrorMessages from '@/components/ErrorMessages';
 
 // Utils and other
 import { scrollToTop } from '@/utils/general';
-import { routePath } from '@/utils/routes';
 import { useToast } from '@/context/ToastContext';
 import { checkErrors } from '@/utils/errorHandler';
 import styles from './projectsCreateProject.module.scss';
@@ -59,6 +59,7 @@ interface CreateProjectErrorsInterface {
 const ProjectsCreateProject = () => {
   const toastState = useToast();
   const router = useRouter();
+  const { flow } = useCreateProjectFlow();
   //For scrolling to error in page
   const errorRef = useRef<HTMLDivElement | null>(null);
   const inputFieldRef = useRef<HTMLInputElement | null>(null);
@@ -77,6 +78,7 @@ const ProjectsCreateProject = () => {
   // localization keys
   const Global = useTranslations('Global');
   const CreateProject = useTranslations('ProjectsCreateProject');
+  const Flow = useTranslations('CreateProjectFlow');
 
   const [addProjectMutation] = useMutation(AddProjectDocument);
 
@@ -182,7 +184,7 @@ const ProjectsCreateProject = () => {
         // Called synchronously inside startTransition — this is the part that
         // makes isPending actually track the real navigation.
         startTransition(() => {
-          router.push(routePath('projects.create.funding.search', { projectId: String(result!.id) }));
+          router.push(flowPath('funder', flow, String(result!.id)));
         });
       }
     } catch (error) {
@@ -202,7 +204,9 @@ const ProjectsCreateProject = () => {
     <>
       <PageHeader
         title={CreateProject('pageTitle')}
-        description={CreateProject('description')}
+        description={flow.intent === 'project'
+          ? Flow('createProject.descriptionProject')
+          : Flow('createProject.descriptionPlan')}
         showBackButton={false}
         breadcrumbs={
           <Breadcrumbs>
@@ -211,14 +215,10 @@ const ProjectsCreateProject = () => {
             <Breadcrumb>{CreateProject('pageTitle')}</Breadcrumb>
           </Breadcrumbs>
         }
-        actions={
-          <>
-          </>
-        }
+        actions={null}
         className="page-project-create-project"
       />
-      <LayoutContainer>
-        <ContentContainer>
+      <CreateProjectFlowLayout screen="createProject" flow={flow}>
           <ErrorMessages errors={errors} ref={errorRef} />
           <Form onSubmit={(e) => e.preventDefault()}>
             <FormInput
@@ -261,17 +261,17 @@ const ProjectsCreateProject = () => {
               </div>
             </RadioGroupComponent>
 
-            <TransitionButton
-              type="submit"
-              className=""
-              onPress={handleFormSubmit}
-              loadingLabel={Global('buttons.loading')}
-            >
-              {Global('buttons.continue')}
-            </TransitionButton>
+            <FlowActions>
+              <TransitionButton
+                type="submit"
+                onPress={handleFormSubmit}
+                loadingLabel={Global('buttons.loading')}
+              >
+                {Flow('buttons.next')}
+              </TransitionButton>
+            </FlowActions>
           </Form>
-        </ContentContainer>
-      </LayoutContainer>
+      </CreateProjectFlowLayout>
     </>
   );
 };

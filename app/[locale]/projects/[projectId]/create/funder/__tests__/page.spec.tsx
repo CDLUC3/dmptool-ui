@@ -5,7 +5,6 @@ import {
   screen,
   fireEvent,
   waitFor,
-  within,
 } from '@testing-library/react';
 
 import { useParams } from 'next/navigation';
@@ -15,6 +14,7 @@ import {
   AffiliationFundersDocument,
   PopularFundersDocument,
   AddProjectFundingDocument,
+  ProjectFundingsApiDocument,
 } from '@/generated/graphql';
 
 import { scrollToTop } from '@/utils/general';
@@ -234,6 +234,25 @@ const mocks = [
     },
   },
 
+  {
+    request: {
+      query: ProjectFundingsApiDocument,
+      variables: { projectId: 123 },
+    },
+    maxUsageCount: Number.POSITIVE_INFINITY,
+    result: {
+      data: {
+        project: {
+          fundings: [{
+            id: 77,
+            status: 'PLANNED',
+            affiliation: { apiTarget: null, uri: 'https://funder2', id: 2, displayName: 'Funder 2' },
+          }],
+        },
+      },
+    },
+  },
+
   // This is for when we select a funder
   {
     request: {
@@ -325,6 +344,35 @@ const mocks = [
     },
   },
 
+  {
+    request: {
+      query: AddProjectFundingDocument,
+      variables: {
+        input: {
+          projectId: 123,
+          affiliationId: "https://funder4",
+        },
+      },
+    },
+
+    result: {
+      data: {
+        addProjectFunding: {
+          id: null,
+          errors: {
+            affiliationId: null,
+            funderOpportunityNumber: null,
+            funderProjectNumber: null,
+            general: null,
+            grantId: null,
+            projectId: null,
+            status: null,
+          },
+        }
+      }
+    },
+  },
+
   // Mocked Server error for addProjectFunding
   {
     request: {
@@ -375,6 +423,12 @@ jest.mock('@/components/PageHeader', () => ({
   __esModule: true,
   default: () => <div data-testid="mock-page-header" />
 }));
+
+const searchFor = (term: string) => {
+  const searchInput = screen.getByTestId('search-field').querySelector('input')!;
+  fireEvent.change(searchInput, { target: { value: term } });
+  fireEvent.click(screen.getByTestId('search-btn'));
+};
 
 describe("CreateProjectSearchFunder", () => {
 
@@ -440,6 +494,7 @@ describe("CreateProjectSearchFunder", () => {
       expect(screen.getByText('popularFallbackTitle')).toBeInTheDocument();
       expect(screen.getByText('popularFallbackDescription')).toBeInTheDocument();
     });
+    expect(screen.queryByText('funder.errors.popularFailed')).not.toBeInTheDocument();
   });
 
   it("Should show search guidance when Popular Funders fail to load", async () => {
@@ -450,43 +505,27 @@ describe("CreateProjectSearchFunder", () => {
     );
 
     await waitFor(() => {
+      expect(screen.getByText('funder.errors.popularFailed')).toBeInTheDocument();
       expect(screen.getByText('popularFallbackTitle')).toBeInTheDocument();
       expect(screen.getByText('popularFallbackDescription')).toBeInTheDocument();
     });
   });
 
-  it("Should render the search results", async () => {
+  it("Should render the search results as radio options", async () => {
     render(
       <MockedProvider mocks={mocks}>
         <CreateProjectSearchFunder />
       </MockedProvider>
     );
 
-    // NOTE: search-field and search-input are testID's provided by elements
-    // inside the FunderSearch component.
-    const searchInput = screen.getByTestId('search-field').querySelector('input')!;
-    fireEvent.change(searchInput, { target: { value: "nih" } });
-
-    const searchBtn = screen.getByTestId('search-btn');
-    fireEvent.click(searchBtn);
+    searchFor("nih");
 
     await waitFor(() => {
-      const resultSet = [
-        ["Funder 1", "https://funder1"],
-        ["Funder 30", "https://funder30"],
-      ]
-      resultSet.forEach((funder) => {
-        const funderTitle = screen.getByText(funder[0]);
-        const funderContainer = funderTitle.closest('div')!;
-        const funderContent = within(funderContainer);
-        const selectBtn = funderContent.getByRole('button', {
-          name: /select/i,
-        });
-
-        expect(funderTitle).toBeInTheDocument();
-        expect(selectBtn).toHaveAttribute('data-funder-uri', funder[1]);
-      });
+      expect(screen.getByRole('radio', { name: 'Funder 1' })).toBeInTheDocument();
+      expect(screen.getByRole('radio', { name: 'Funder 30' })).toBeInTheDocument();
     });
+    expect(screen.getByText('found')).toBeInTheDocument();
+    expect(screen.queryByText('popularTitle')).not.toBeInTheDocument();
   });
 
   it("Should cleanly handle empty results", async () => {
@@ -496,13 +535,7 @@ describe("CreateProjectSearchFunder", () => {
       </MockedProvider>
     );
 
-    // NOTE: search-field and search-input are testID's provided by elements
-    // inside the FunderSearch component.
-    const searchInput = screen.getByTestId('search-field').querySelector('input')!;
-    fireEvent.change(searchInput, { target: { value: "empty" } });
-
-    const searchBtn = screen.getByTestId('search-btn');
-    fireEvent.click(searchBtn);
+    searchFor("empty");
 
     await waitFor(() => {
       expect(screen.getByText("noResults")).toBeInTheDocument();
@@ -517,24 +550,10 @@ describe("CreateProjectSearchFunder", () => {
       </MockedProvider>
     );
 
-    // NOTE: search-field and search-input are testID's provided by elements
-    // inside the FunderSearch component.
-    const searchInput = screen.getByTestId('search-field').querySelector('input')!;
-    fireEvent.change(searchInput, { target: { value: "paginated" } });
-
-    const searchBtn = screen.getByTestId('search-btn');
-    fireEvent.click(searchBtn);
+    searchFor("paginated");
 
     await waitFor(() => {
-      const funderTitle = screen.getByText("Funder 50");
-      const funderContainer = funderTitle.closest('div')!;
-      const funderContent = within(funderContainer);
-      const selectBtn = funderContent.getByRole('button', {
-        name: /select/i,
-      });
-
-      expect(funderTitle).toBeInTheDocument();
-      expect(selectBtn).toHaveAttribute('data-funder-uri', "https://funder50");
+      expect(screen.getByRole('radio', { name: 'Funder 50' })).toBeInTheDocument();
     });
 
     expect(screen.getByTestId('load-more-btn')).toBeInTheDocument();
@@ -547,33 +566,63 @@ describe("CreateProjectSearchFunder", () => {
       </MockedProvider>
     );
 
-    // NOTE: search-field and search-input are testID's provided by elements
-    // inside the FunderSearch component.
-    const searchInput = screen.getByTestId('search-field').querySelector('input')!;
-    fireEvent.change(searchInput, { target: { value: "paginated" } });
-
-    const searchBtn = screen.getByTestId('search-btn');
-    fireEvent.click(searchBtn);
+    searchFor("paginated");
 
     await waitFor(() => {
-      const funderTitle = screen.getByText("Funder 50");
-      const funderContainer = funderTitle.closest('div')!;
-      const funderContent = within(funderContainer);
-      const selectBtn = funderContent.getByRole('button', {
-        name: /select/i,
-      });
-
-      expect(funderTitle).toBeInTheDocument();
-      expect(selectBtn).toHaveAttribute('data-funder-uri', "https://funder50");
+      expect(screen.getByRole('radio', { name: 'Funder 50' })).toBeInTheDocument();
     });
 
-    const loadMoreBtn = screen.getByTestId('load-more-btn');
-    expect(loadMoreBtn).toBeInTheDocument();
-    fireEvent.click(loadMoreBtn);
+    fireEvent.click(screen.getByTestId('load-more-btn'));
 
     await waitFor(() => {
-      expect(screen.getByText("Funder 70")).toBeInTheDocument();
+      expect(screen.getByRole('radio', { name: 'Funder 70' })).toBeInTheDocument();
     });
+  });
+
+  it("Should keep Next disabled until a funder or 'no funder' is chosen", async () => {
+    render(
+      <MockedProvider mocks={mocks}>
+        <CreateProjectSearchFunder />
+      </MockedProvider>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByRole('radio', { name: 'Popular Funder 1' })).toBeInTheDocument();
+    });
+
+    expect(screen.getByTestId('funder-next')).toBeDisabled();
+    expect(screen.getByText('funder.selectToContinue')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('radio', { name: 'Popular Funder 1' }));
+
+    expect(screen.getByTestId('funder-next')).toBeEnabled();
+    expect(screen.queryByText('funder.selectToContinue')).not.toBeInTheDocument();
+  });
+
+  it("Should clear the funder selection when 'I don't have a funder' is checked, and vice versa", async () => {
+    render(
+      <MockedProvider mocks={mocks}>
+        <CreateProjectSearchFunder />
+      </MockedProvider>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByRole('radio', { name: 'Popular Funder 1' })).toBeInTheDocument();
+    });
+
+    const radio = screen.getByRole('radio', { name: 'Popular Funder 1' });
+    const noFunder = screen.getByRole('checkbox', { name: 'funder.noFunderLabel' });
+
+    fireEvent.click(radio);
+    expect(radio).toBeChecked();
+
+    fireEvent.click(noFunder);
+    expect(noFunder).toBeChecked();
+    expect(radio).not.toBeChecked();
+
+    fireEvent.click(radio);
+    expect(radio).toBeChecked();
+    expect(noFunder).not.toBeChecked();
   });
 
   it("Should run the addFunder mutation and redirect when selecting a funder", async () => {
@@ -586,30 +635,42 @@ describe("CreateProjectSearchFunder", () => {
       </MockedProvider>
     );
 
-    // NOTE: search-field and search-input are testID's provided by elements
-    // inside the FunderSearch component.
-    const searchInput = screen.getByTestId('search-field').querySelector('input')!;
-    fireEvent.change(searchInput, { target: { value: "nih" } });
-
-    const searchBtn = screen.getByTestId('search-btn');
-    fireEvent.click(searchBtn);
+    searchFor("nih");
 
     await waitFor(() => {
-      expect(screen.getByText("Funder 1")).toBeInTheDocument();
-      expect(screen.queryByText("popularTitle")).not.toBeInTheDocument();
+      expect(screen.getByRole('radio', { name: 'Funder 1' })).toBeInTheDocument();
+      expect(screen.queryByText('popularTitle')).not.toBeInTheDocument();
     });
 
-    const firstFunder = screen.getByText("Funder 1").closest('div')!;
-    const funderContent = within(firstFunder);
-    const selectBtn = funderContent.getByRole('button', {
-      name: /select/i,
-    });
-    expect(selectBtn).toHaveAttribute('data-funder-uri', 'https://funder1');
-    fireEvent.click(selectBtn);
+    fireEvent.click(screen.getByRole('radio', { name: 'Funder 1' }));
+    fireEvent.click(screen.getByTestId('funder-next'));
 
     await waitFor(() => {
-      expect(mockPush).toHaveBeenCalledWith(expect.stringMatching(/\/projects\/123\/project-funding/));
+      expect(mockPush).toHaveBeenCalledWith('/projects/123/create/fundings/18/status?intent=plan&newFunding=true');
     });
+  });
+
+  it("Should reuse the existing funding instead of adding the same funder twice", async () => {
+    const mockPush = jest.fn();
+    (useRouter as jest.Mock).mockReturnValue({ push: mockPush });
+
+    render(
+      <MockedProvider mocks={mocks}>
+        <CreateProjectSearchFunder />
+      </MockedProvider>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByRole('radio', { name: 'Popular Funder 2' })).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole('radio', { name: 'Popular Funder 2' }));
+    fireEvent.click(screen.getByTestId('funder-next'));
+
+    await waitFor(() => {
+      expect(mockPush).toHaveBeenCalledWith('/projects/123/create/fundings/77/status?intent=plan');
+    });
+    expect(mockPush).toHaveBeenCalledTimes(1);
   });
 
   it("Should also run add funder mutation when adding popular funder", async () => {
@@ -623,23 +684,18 @@ describe("CreateProjectSearchFunder", () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText("Popular Funder 1")).toBeInTheDocument();
+      expect(screen.getByRole('radio', { name: 'Popular Funder 1' })).toBeInTheDocument();
     });
 
-    const popFunder = screen.getByText("Popular Funder 1").closest('div')!;
-    const funderContent = within(popFunder);
-    const selectBtn = funderContent.getByRole('button', {
-      name: /select/i,
-    });
-    expect(selectBtn).toHaveAttribute('data-funder-uri', 'https://funder1');
-    fireEvent.click(selectBtn);
+    fireEvent.click(screen.getByRole('radio', { name: 'Popular Funder 1' }));
+    fireEvent.click(screen.getByTestId('funder-next'));
 
     await waitFor(() => {
-      expect(mockPush).toHaveBeenCalledWith(expect.stringMatching(/\/projects\/123/));
+      expect(mockPush).toHaveBeenCalledWith('/projects/123/create/fundings/18/status?intent=plan&newFunding=true');
     });
   });
 
-  it("Should redirect to project info edit page if selected funder doesn't an apiTarget", async () => {
+  it("Should go to the funding status step even if the selected funder doesn't have an apiTarget", async () => {
     const mockPush = jest.fn();
     (useRouter as jest.Mock).mockReturnValue({ push: mockPush });
 
@@ -649,28 +705,17 @@ describe("CreateProjectSearchFunder", () => {
       </MockedProvider>
     );
 
-    // NOTE: search-field and search-input are testID's provided by elements
-    // inside the FunderSearch component.
-    const searchInput = screen.getByTestId('search-field').querySelector('input')!;
-    fireEvent.change(searchInput, { target: { value: "no-api-funder" } });
-
-    const searchBtn = screen.getByTestId('search-btn');
-    fireEvent.click(searchBtn);
+    searchFor("no-api-funder");
 
     await waitFor(() => {
-      expect(screen.getByText("Funder Without Api")).toBeInTheDocument();
+      expect(screen.getByRole('radio', { name: 'Funder Without Api' })).toBeInTheDocument();
     });
 
-    const firstFunder = screen.getByText("Funder Without Api").closest('div')!;
-    const funderContent = within(firstFunder);
-    const selectBtn = funderContent.getByRole('button', {
-      name: /select/i,
-    });
-    expect(selectBtn).toHaveAttribute('data-funder-uri', 'https://funder-no-api');
-    fireEvent.click(selectBtn);
+    fireEvent.click(screen.getByRole('radio', { name: 'Funder Without Api' }));
+    fireEvent.click(screen.getByTestId('funder-next'));
 
     await waitFor(() => {
-      expect(mockPush).toHaveBeenCalledWith(expect.stringMatching(/\/projects\/123\/project/));
+      expect(mockPush).toHaveBeenCalledWith('/projects/123/create/fundings/18/status?intent=plan&newFunding=true');
     });
   });
 
@@ -684,30 +729,43 @@ describe("CreateProjectSearchFunder", () => {
       </MockedProvider>
     );
 
-    // NOTE: search-field and search-input are testID's provided by elements
-    // inside the FunderSearch component.
-    const searchInput = screen.getByTestId('search-field').querySelector('input')!;
-    fireEvent.change(searchInput, { target: { value: "nih" } });
-
-    const searchBtn = screen.getByTestId('search-btn');
-    fireEvent.click(searchBtn);
+    searchFor("nih");
 
     await waitFor(() => {
-      expect(screen.getByText("Funder 3")).toBeInTheDocument();
+      expect(screen.getByRole('radio', { name: 'Funder 3' })).toBeInTheDocument();
     });
 
-    const firstFunder = screen.getByText("Funder 3").closest('div')!;
-    const funderContent = within(firstFunder);
-    const selectBtn = funderContent.getByRole('button', {
-      name: /select/i,
-    });
-    expect(selectBtn).toHaveAttribute('data-funder-uri', 'https://funder3');
-    fireEvent.click(selectBtn);
+    fireEvent.click(screen.getByRole('radio', { name: 'Funder 3' }));
+    fireEvent.click(screen.getByTestId('funder-next'));
 
     await waitFor(() => {
       expect(screen.getByText("This should throw an error")).toBeInTheDocument();
       expect(scrollToTop).toHaveBeenCalled();
     });
+    expect(mockPush).not.toHaveBeenCalled();
+  });
+
+  it("Should show an error and stay on the page when the new funding has no id", async () => {
+    const mockPush = jest.fn();
+    (useRouter as jest.Mock).mockReturnValue({ push: mockPush });
+
+    render(
+      <MockedProvider mocks={mocks}>
+        <CreateProjectSearchFunder />
+      </MockedProvider>
+    );
+
+    searchFor("nih");
+
+    await waitFor(() => {
+      expect(screen.getByRole('radio', { name: 'Funder 4' })).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole('radio', { name: 'Funder 4' }));
+    fireEvent.click(screen.getByTestId('funder-next'));
+
+    expect(await screen.findByText('funder.errors.addFailed')).toBeInTheDocument();
+    expect(mockPush).not.toHaveBeenCalled();
   });
 
   it("add project funder mutation should handle server error", async () => {
@@ -717,33 +775,22 @@ describe("CreateProjectSearchFunder", () => {
       </MockedProvider>
     );
 
-    // NOTE: search-field and search-input are testID's provided by elements
-    // inside the FunderSearch component.
-    const searchInput = screen.getByTestId('search-field')
-      .querySelector('input')!;
-    fireEvent.change(searchInput, { target: { value: "nih" } });
-
-    const searchBtn = screen.getByTestId('search-btn');
-    fireEvent.click(searchBtn);
+    searchFor("nih");
 
     // NOTE: In the mocks, Funder 6 is the one that will raise a server error
     // when adding it as project funder.
     await waitFor(() => {
-      expect(screen.getByText("Funder 6")).toBeInTheDocument();
+      expect(screen.getByRole('radio', { name: 'Funder 6' })).toBeInTheDocument();
     });
 
-    const errFunder = screen.getByText("Funder 6").closest('div')!;
-    const funderContent = within(errFunder);
-    const selectBtn = funderContent.getByRole('button', {
-      name: /select/i,
-    });
-    expect(selectBtn).toHaveAttribute('data-funder-uri', 'https://funder6');
-    fireEvent.click(selectBtn);
+    fireEvent.click(screen.getByRole('radio', { name: 'Funder 6' }));
+    fireEvent.click(screen.getByTestId('funder-next'));
 
     await waitFor(() => {
-      expect(screen.getByText("Server Error")).toBeInTheDocument();
+      expect(screen.getByText('funder.errors.addFailed')).toBeInTheDocument();
       expect(scrollToTop).toHaveBeenCalled();
     });
+    expect(screen.queryByText("Server Error")).not.toBeInTheDocument();
 
     await waitFor(() => {
       expect(logECS).toHaveBeenCalledWith(
@@ -756,7 +803,6 @@ describe("CreateProjectSearchFunder", () => {
     });
   });
 
-
   it("Should allow adding a funder manually", async () => {
     const mockPush = jest.fn();
     (useRouter as jest.Mock).mockReturnValue({ push: mockPush });
@@ -767,25 +813,15 @@ describe("CreateProjectSearchFunder", () => {
       </MockedProvider>
     );
 
-    // NOTE: search-field and search-input are testID's provided by elements
-    // inside the FunderSearch component.
-    const searchInput = screen.getByTestId('search-field').querySelector('input')!;
-    fireEvent.change(searchInput, { target: { value: "nih" } });
+    searchFor("nih");
 
-    const searchBtn = screen.getByTestId('search-btn');
-    fireEvent.click(searchBtn);
+    const addBtn = await screen.findByText('addManuallyLabel');
+    fireEvent.click(addBtn);
 
     await waitFor(() => {
-      const addBtn = screen.getByText('addManuallyLabel');
-      expect(addBtn).toBeInTheDocument();
-      fireEvent.click(addBtn);
-    });
-
-    await waitFor(() => {
-      expect(mockPush).toHaveBeenCalledWith(expect.stringMatching(/\/projects\/123\/fundings\/add/));
+      expect(mockPush).toHaveBeenCalledWith('/projects/123/fundings/add?intent=plan');
     });
   });
-
 
   it("should allow proceeding without a funder", async () => {
     const mockPush = jest.fn();
@@ -797,15 +833,13 @@ describe("CreateProjectSearchFunder", () => {
       </MockedProvider>
     );
 
-    const noFunderBtn = screen.getByText('noFunderButtonLabel');
-    expect(noFunderBtn).toBeInTheDocument();
-    fireEvent.click(noFunderBtn);
+    fireEvent.click(screen.getByRole('checkbox', { name: 'funder.noFunderLabel' }));
+    fireEvent.click(screen.getByTestId('funder-next'));
 
     await waitFor(() => {
-      expect(mockPush).toHaveBeenCalledWith(expect.stringMatching(/\/projects\/123\/project/));
+      expect(mockPush).toHaveBeenCalledWith('/projects/123/project?intent=plan');
     });
   });
-
 
   it('should pass accessibility tests', async () => {
     const { container } = render(
@@ -815,7 +849,7 @@ describe("CreateProjectSearchFunder", () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText("Popular Funder 1")).toBeInTheDocument();
+      expect(screen.getByRole('radio', { name: 'Popular Funder 1' })).toBeInTheDocument();
     });
 
     const results = await axe(container);

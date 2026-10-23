@@ -1,6 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useRef, useState, type ReactNode } from 'react';
+import { useParams } from 'next/navigation';
+import { useTranslations } from 'next-intl';
+import { useMutation } from '@apollo/client/react';
 import { useRouter } from '@/i18n/routing';
 import {
   Breadcrumb,
@@ -15,17 +18,32 @@ import {
 import type { DropEvent, FileDropItem } from 'react-aria';
 
 
+import { UploadPlanDocument } from '@/generated/graphql';
 import PageHeader from "@/components/PageHeader";
 import {
   ContentContainer,
   LayoutWithPanel,
   SidebarPanel
 } from "@/components/Container";
+import CreateProjectFlowLayout, {
+  FlowActions,
+  flowPath,
+  useCreateProjectFlow,
+} from '@/components/CreateProjectFlow';
+import ErrorMessages from '@/components/ErrorMessages';
 import { routePath } from '@/utils/routes';
+import { handleApolloError } from '@/utils/apolloErrorHandler';
 
 
 const PlanCreateUpload = () => {
   const router = useRouter();
+  const params = useParams();
+  const projectId = String(params.projectId);
+  const { inFlow, flow } = useCreateProjectFlow();
+  const Flow = useTranslations('CreateProjectFlow');
+  const [uploadPlan, { loading: uploading }] = useMutation(UploadPlanDocument);
+  const [serverErrors, setServerErrors] = useState<string[]>([]);
+  const errorRef = useRef<HTMLDivElement | null>(null);
   const [fileName, setFileName] = useState<string | null>(null); // Holds uploaded file name
   const [error, setError] = useState<string | null>(null); // Tracks any upload errors
   //const [isDragging, setIsDragging] = useState<boolean>(false); // State for drag-hover effect
@@ -67,24 +85,49 @@ const PlanCreateUpload = () => {
   };
 
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // The file content is not sent yet; Apollo's uploadPlan resolver is a stub
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setServerErrors([]);
 
     if (!fileName) {
       setError('Please upload a valid file before submitting.');
       return;
     }
 
-    // Perform further actions or navigation here
-    router.push(routePath('projects.show', { projectId: 'proj_2425' }))
+    try {
+      const { data } = await uploadPlan({ variables: { projectId: Number(projectId), fileName } });
+      const plan = data?.uploadPlan;
+
+      if (!plan?.id || plan.errors?.general) {
+        setServerErrors([plan?.errors?.general, Flow('upload.notAvailable')].filter(Boolean) as string[]);
+        return;
+      }
+
+      router.push(inFlow
+        ? flowPath('complete', flow, projectId, { planId: plan.id })
+        : routePath('projects.dmp.show', { projectId, dmpId: plan.id }));
+    } catch (err) {
+      handleApolloError(err, 'PlanCreateUpload.handleSubmit');
+      setServerErrors([Flow('upload.notAvailable')]);
+    }
   };
+
+  const wrapLayout = (content: ReactNode, sidebar: ReactNode) => inFlow
+    ? <CreateProjectFlowLayout screen="planUpload" flow={flow}>{content}</CreateProjectFlowLayout>
+    : (
+      <LayoutWithPanel>
+        <ContentContainer>{content}</ContentContainer>
+        <SidebarPanel>{sidebar}</SidebarPanel>
+      </LayoutWithPanel>
+    );
 
   return (
     <>
       <PageHeader
         title="Upload a DMSP"
         description="You can upload a Data Management Plan (DMP) that was created elsewhere and add it to your project. Uploaded plans can be tracked by your organization administrators but cannot be edited in the same way a plan created in the DMP Tool can."
-        showBackButton={true}
+        showBackButton={!inFlow}
         breadcrumbs={
           <Breadcrumbs>
             <Breadcrumb>
@@ -97,8 +140,8 @@ const PlanCreateUpload = () => {
         }
         className="page-project-create-project-funding"
       />
-      <LayoutWithPanel>
-        <ContentContainer>
+      {wrapLayout(<>
+          <ErrorMessages errors={serverErrors} ref={errorRef} />
           <Form onSubmit={handleSubmit}
             data-testid="upload-form"
             aria-labelledby="upload-form">
@@ -139,17 +182,16 @@ const PlanCreateUpload = () => {
               )}
             </DropZone>
 
-            {/* Submit Button */}
-            <Button
-              type="submit"
-            >
-              Upload
-            </Button>
+            <FlowActions>
+              <Button
+                type="submit"
+                isDisabled={uploading}
+              >
+                Upload
+              </Button>
+            </FlowActions>
           </Form>
-        </ContentContainer>
-
-        {/* Sidebar Panel */}
-        <SidebarPanel>
+        </>, <>
           <h2>Best Practice by DMP Tool</h2>
           <p>
             <strong>Recommend: online plan creator</strong>
@@ -181,10 +223,7 @@ const PlanCreateUpload = () => {
             For a smooth and successful submission please adhere to using our
             designated online tool. Thank you for your cooperation!
           </p>
-        </SidebarPanel>
-      </LayoutWithPanel>
-
-
+        </>)}
     </>
   );
 };

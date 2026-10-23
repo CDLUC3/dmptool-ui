@@ -33,6 +33,11 @@ import ErrorMessages from '@/components/ErrorMessages';
 import Loading from '@/components/Loading';
 import { CheckboxGroupComponent } from '@/components/Form';
 import Pagination from '@/components/Pagination';
+import CreateProjectFlowLayout, {
+  FlowActions,
+  flowPath,
+  useCreateProjectFlow,
+} from '@/components/CreateProjectFlow';
 
 // GraphQL
 import {
@@ -86,6 +91,7 @@ const PlanCreate: React.FC = () => {
 
   // Get projectId from the URL
   const projectId = String(params.projectId);
+  const { inFlow, flow } = useCreateProjectFlow();
 
   // Set ref for error messages
   const errorRef = useRef<HTMLDivElement | null>(null);
@@ -332,7 +338,9 @@ const PlanCreate: React.FC = () => {
       // created the plan at this point, and it will cause confusion if we now
       // deal with errors without redirecting to the newly created plan.
       startTransition(() => {
-        router.push(routePath('projects.dmp.show', { projectId, dmpId: newPlanId }));
+        router.push(inFlow
+          ? flowPath('complete', flow, projectId, { planId: newPlanId })
+          : routePath('projects.dmp.show', { projectId, dmpId: newPlanId }));
       });
 
     } catch (err) {
@@ -579,6 +587,14 @@ const PlanCreate: React.FC = () => {
     prevSearchTermRef.current = searchTerm;
   }, [searchTerm]);
 
+  const wrapLayout = (children: React.ReactNode) => inFlow
+    ? <CreateProjectFlowLayout screen="planCreate" flow={flow}>{children}</CreateProjectFlowLayout>
+    : (
+      <LayoutContainer>
+        <ContentContainer className={"layout-content-container-full"}>{children}</ContentContainer>
+      </LayoutContainer>
+    );
+
   return (
     <>
       <PageHeader
@@ -599,8 +615,7 @@ const PlanCreate: React.FC = () => {
 
       <ErrorMessages errors={errors} ref={errorRef} />
 
-      <LayoutContainer>
-        <ContentContainer className={"layout-content-container-full"}>
+      {wrapLayout(<>
           <div role="search" ref={topRef}>
             <div className={styles.searchFieldWrapper}>
               <SearchField aria-label="Template search">
@@ -709,9 +724,8 @@ const PlanCreate: React.FC = () => {
           ) : (
             <p>{Global('messaging.noItemsFound')}</p>
           )}
-
-        </ContentContainer>
-      </LayoutContainer >
+          <FlowActions />
+      </>)}
     </>
   );
 };

@@ -3,7 +3,7 @@ import { act, fireEvent, render, screen, waitFor, cleanup } from '@testing-libra
 import { InMemoryCache } from '@apollo/client';
 import { MockedProvider } from '@apollo/client/testing/react';
 import PlanCreate from '../page';
-import { useParams } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
 import { useRouter } from '@/i18n/routing';
 import { useToast } from '@/context/ToastContext';
 import logECS from '@/utils/clientLogger';
@@ -23,6 +23,7 @@ expect.extend(toHaveNoViolations);
 
 jest.mock('next/navigation', () => ({
   useParams: jest.fn(),
+  useSearchParams: jest.fn(),
 }));
 
 
@@ -1004,6 +1005,7 @@ describe('PlanCreate Component using base mock', () => {
 
     mockRouter = { push: jest.fn() };
     (useRouter as jest.Mock).mockReturnValue(mockRouter);
+    (useSearchParams as jest.Mock).mockReturnValue(new URLSearchParams());
 
     (useToast as jest.Mock).mockReturnValue(mockToast);
   });
@@ -1403,6 +1405,32 @@ describe('PlanCreate Component using base mock', () => {
       await new Promise(resolve => setTimeout(resolve, 0));
     });
   }, 10000);
+
+  it('should finish on setup complete instead of the plan when inside the create flow', async () => {
+    (useSearchParams as jest.Mock).mockReturnValue(new URLSearchParams('intent=plan'));
+
+    render(
+      <MockedProvider mocks={baseMocks} cache={apolloCache}>
+        <PlanCreate />
+      </MockedProvider>
+    );
+
+    expect(screen.getByTestId('create-flow-stage-setupComplete')).toHaveAttribute('aria-current', 'step');
+
+    // The template list re-renders once the funder filter queries resolve, so wait for the checkboxes too
+    await waitFor(() => {
+      expect(screen.getAllByRole('checkbox').length).toBeGreaterThan(0);
+      expect(screen.getAllByText('buttons.select')).toHaveLength(5);
+    }, { timeout: 8000 });
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 0));
+    });
+    fireEvent.click(screen.getAllByText('buttons.select')[0]);
+
+    await waitFor(() => {
+      expect(mockRouter.push).toHaveBeenCalledWith(expect.stringMatching(/^\/projects\/1\/create\/complete\?intent=plan&planId=7$/));
+    }, { timeout: 5000 });
+  }, 20000);
 
   it('should pass axe accessibility test', async () => {
     const { container } = render(

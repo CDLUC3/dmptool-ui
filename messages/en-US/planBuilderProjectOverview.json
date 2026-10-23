@@ -127,6 +127,133 @@
     "title": "Projects and Plans Dashboard",
     "projectsList": "Your projects"
   },
+  "CreateProjectFlow": {
+    "buttons": {
+      "back": "Back",
+      "next": "Next",
+      "chooseFunder": "Choose a funder"
+    },
+    "rail": {
+      "title": "Setup progress",
+      "stages": {
+        "createProject": "Create project",
+        "addFunder": "Add funder",
+        "projectDetails": "Add project details",
+        "setupComplete": "Setup complete"
+      },
+      "states": {
+        "done": "completed",
+        "current": "current step",
+        "upcoming": "not started",
+        "skipped": "skipped"
+      }
+    },
+    "createProject": {
+      "descriptionPlan": "Plans live under a research project. We'll create the project first, then help you set up your plan.",
+      "descriptionProject": "Set up the project first. You can add a plan now or later."
+    },
+    "startPlan": {
+      "title": "Create a new DMP",
+      "description": "Plans live under a research project. You can add this plan to a project you already have, or start a new one.",
+      "gateLabel": "Do you already have a project for this plan?",
+      "yesExisting": "Yes, choose an existing project",
+      "noNew": "No, start a new project",
+      "projectsLabel": "Choose a project",
+      "noProjects": "You don't have any projects yet. Start a new project instead.",
+      "projectMeta": "{funder} · {plans, plural, =0 {no plans} one {# plan} other {# plans}}",
+      "noFunder": "No funder",
+      "errors": {
+        "chooseGate": "Choose whether to use an existing project or start a new one.",
+        "chooseProject": "Choose a project for this plan.",
+        "loadProjects": "We couldn't load your projects."
+      }
+    },
+    "funder": {
+      "title": "Add funder",
+      "description": "This includes funders you're planning to apply to — not only ones that have already awarded funding. Adding one now helps us recommend the right template. If you have more than one funder, you can add them in later.",
+      "noFunderText": "If you don't have a funder yet, check the box below to continue to the next step.",
+      "noFunderLabel": "I don't have a funder",
+      "selectToContinue": "Select a funder, or check “I don't have a funder” to continue.",
+      "errors": {
+        "addFailed": "We couldn't add that funder. Please try again.",
+        "popularFailed": "We couldn't load the popular funders. You can still search for a funder above."
+      }
+    },
+    "fundingStatus": {
+      "title": "Funding status",
+      "description": "Tell us where you are with {funder}. You can update this later.",
+      "descriptionNoFunder": "Tell us where you are with this funder. You can update this later.",
+      "label": "What is the status of your funding?",
+      "changeFunder": "Change funder",
+      "options": {
+        "planned": "Planning to apply",
+        "plannedDescription": "You haven't submitted a proposal yet.",
+        "applied": "Already applied",
+        "appliedDescription": "You've submitted a proposal and are waiting to hear back.",
+        "funded": "Already funded",
+        "fundedDescription": "The funder has awarded the grant."
+      },
+      "errors": {
+        "noFunding": "We couldn't find the funder for this project. Add a funder first.",
+        "saveFailed": "We couldn't save the funding status. Please try again.",
+        "changeFunderFailed": "We couldn't remove that funder. Please try again."
+      }
+    },
+    "fundingDetails": {
+      "title": "Add funding details",
+      "description": "Add any identifiers you have for this funding. You can skip this and add them later.",
+      "funderName": "Funder",
+      "status": "Funding status",
+      "grantId": "Grant number or URL",
+      "grantIdHelp": "The award or grant number, or a link to the award page.",
+      "funderProjectNumber": "Project number or ID",
+      "funderProjectNumberHelp": "The funder's identifier for the research project.",
+      "funderOpportunityNumber": "Opportunity or Federal Award Number",
+      "funderOpportunityNumberHelp": "The identifier of the call or opportunity you applied to.",
+      "statuses": {
+        "PLANNED": "Planned",
+        "GRANTED": "Granted",
+        "DENIED": "Denied"
+      },
+      "messages": {
+        "saved": "Funding details saved.",
+        "saveFailed": "We couldn't save the funding details. Please try again.",
+        "notFound": "We couldn't find this funding record."
+      }
+    },
+    "projectSearch": {
+      "projectSelected": "Project {projectTitle} selected. Check the details we filled in for you.",
+      "searchFailed": "We couldn't search this funder's projects. Please try again, or add the project details manually."
+    },
+    "projectDetails": {
+      "skipHint": "Only the project name is required. You can add the rest now or come back to it later."
+    },
+    "planStart": {
+      "title": "Create or upload a plan",
+      "description": "Most people create their plan directly in the tool.",
+      "label": "How do you want to add a plan?",
+      "options": {
+        "create": "Create a plan",
+        "createDescription": "Answer guided questions and we'll build it with you.",
+        "upload": "Upload a plan",
+        "uploadDescription": "Bring in a plan you've already written."
+      }
+    },
+    "upload": {
+      "notAvailable": "Uploading existing plans isn't available yet. Your file was not saved. You can create a plan in the DMP Tool instead."
+    },
+    "complete": {
+      "projectTitle": "You've created a project",
+      "projectDescription": "Congratulations, your new project <strong>{title}</strong> is set up{hasFunders, select, yes { and linked to <strong>{funders}</strong>} other {}}. You can create your first DMP now, or come back to it later.",
+      "createFirstPlan": "Create your first plan",
+      "overviewHintProject": "Go to <link>Project overview</link> if you wish to make changes to this project.",
+      "overviewHintPlan": "Go to <link>Project overview</link> if you wish to make changes to this project or plan.",
+      "setupTitle": "Setup complete",
+      "setupDescription": "Congratulations, your new project <strong>{title}</strong> is set up{hasFunders, select, yes {, linked to <strong>{funders}</strong>,} other {}} and your first DMP{hasPlanTitle, select, yes {, <strong>{planTitle}</strong>,} other {}} has been created and is ready for you to start writing the plan.",
+      "startWriting": "Start writing",
+      "loadFailed": "We couldn't load this project."
+    }
+  },
   "ProjectsCreateProject": {
     "pageTitle": "Create project details",
     "description": "We'll start with asking for details about your research project so we can help you create the right data management plan for it. You can then add additional plans to the same project.",
@@ -153,17 +280,6 @@
       "realProject": "Full functionality. Cannot be changed back to Mock project."
     }
   },
-  "ProjectsCreateProjectFunding": {
-    "title": "Do you already have funding for this project?",
-    "form": {
-      "radioFundingLabel": "Do you already have funding for this project?",
-      "radioFundingDescription": "You can update or remove all of this later, so don't worry if you are still waiting on final details or an award number.",
-      "radioYesLabel": "Yes - I've been awarded funding",
-      "radioYesDescription": "We'll help you link the project to a funder now. You'll be able to select a funder and, if available, we'll pull in relevant details. Everything can be reviewed or changed later.",
-      "radioNoLabel": "No - Skip for now",
-      "radioNoDescription": "You can still proceed. If you receive funding later, you'll be able to link it to this project."
-    }
-  },
   "ProjectsCreateProjectProjectSearch": {
     "title": "Search for projects",
     "description": "Enter details of your project to help find it in this funder's database. The more you enter the more likely it is to find your project.",
@@ -174,7 +290,7 @@
       "success": {
         "projectSelected": "Project {projectTitle} selected. Redirecting to project overview page."
       },
-      "error": {
+      "errors": {
         "selectedFailed": "Failed to select project. Please try again."
       }
     },

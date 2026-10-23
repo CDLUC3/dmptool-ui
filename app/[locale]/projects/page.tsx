@@ -485,7 +485,13 @@ const ProjectsListPage: React.FC = () => {
         actions={
           <>
             <TransitionLink
-              href={routePath('projects.create')}
+              href={routePath('projects.create', {}, { intent: 'project' })}
+              className="button-link secondary"
+            >
+              {Global('buttons.createProject')}
+            </TransitionLink>
+            <TransitionLink
+              href={routePath('projects.create.start')}
               className="button-link button--primary"
             >
               {Global('buttons.createNewPlan')}
@@ -569,7 +575,7 @@ const ProjectsListPage: React.FC = () => {
                 {Project('messages.info.noProjectsDescription')}
               </p>
               <TransitionLink
-                href={routePath('projects.create')}
+                href={routePath('projects.create.start')}
                 className="button-link button--primary"
               >
                 {Global('buttons.createNewPlan')}
