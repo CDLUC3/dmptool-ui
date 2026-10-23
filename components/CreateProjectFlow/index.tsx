@@ -88,7 +88,7 @@ const CreateProjectFlowLayout = ({ screen, flow, children }: CreateProjectFlowLa
 
   return (
     <LayoutWithPanel>
-      <ContentContainer>
+      <ContentContainer className={styles.content}>
         <FlowNavContext.Provider value={backButton}>
           {children}
         </FlowNavContext.Provider>

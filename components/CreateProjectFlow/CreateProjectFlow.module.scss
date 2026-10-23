@@ -1,3 +1,7 @@
+.content :global(.react-aria-RadioGroup > :is(.react-aria-Label, .help) + :not(.help)) {
+  margin-top: var(--space-2);
+}
+
 .flowNav {
   margin-top: var(--space-6);
   display: flex;

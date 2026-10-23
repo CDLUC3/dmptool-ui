@@ -24,6 +24,7 @@ import { RadioGroupComponent, TransitionButton } from '@/components/Form';
 import ErrorMessages from '@/components/ErrorMessages';
 import Loading from '@/components/Loading';
 import { routePath } from '@/utils/routes';
+import styles from './projectsStartPlan.module.scss';
 
 type Gate = 'existing' | 'new';
 
@@ -134,12 +135,16 @@ const ProjectsStartPlan = () => {
             isInvalid={submitted && !gate}
             errorMessage={Flow('startPlan.errors.chooseGate')}
           >
-            <Radio value="existing">{Flow('startPlan.yesExisting')}</Radio>
-            <Radio value="new">{Flow('startPlan.noNew')}</Radio>
+            <div>
+              <Radio value="existing">{Flow('startPlan.yesExisting')}</Radio>
+            </div>
+            <div>
+              <Radio value="new">{Flow('startPlan.noNew')}</Radio>
+            </div>
           </RadioGroupComponent>
 
           {gate === 'existing' && (projects.length > 0 || term) && (
-            <div role="search">
+            <div className={styles.searchSection} role="search">
               <SearchField
                 value={searchInput}
                 onChange={setSearchInput}
