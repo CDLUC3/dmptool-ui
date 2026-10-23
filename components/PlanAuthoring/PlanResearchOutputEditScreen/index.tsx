@@ -39,6 +39,10 @@ interface PlanResearchOutputEditScreenProps {
   planHref: string;
   /** Receives the current page title so callers can end the trail with it. */
   breadcrumbs: (currentPage: string) => React.ReactNode;
+  /** Called instead of opening the customize guidance dialog. */
+  onCustomizeGuidance?: () => void;
+  /** Shown between the page header and the form. */
+  notice?: React.ReactNode;
 }
 
 interface ResearchOutputRowFormProps {
@@ -104,6 +108,8 @@ export default function PlanResearchOutputEditScreen({
   rowIndexParam,
   planHref,
   breadcrumbs,
+  onCustomizeGuidance,
+  notice,
 }: PlanResearchOutputEditScreenProps) {
   const router = useRouter();
   const t = useTranslations("PlanAuthoring");
@@ -227,6 +233,7 @@ export default function PlanResearchOutputEditScreen({
           showBackButton
           breadcrumbs={breadcrumbs(pageTitle)}
         />
+        {notice}
         {saveErrors.length > 0 ? <ErrorMessages errors={saveErrors} /> : null}
         <article
           id={questionAnchorId(question.identity)}
@@ -264,7 +271,7 @@ export default function PlanResearchOutputEditScreen({
               onDeleteComment={(commentId) =>
                 dataSource.deleteComment(key, commentId)
               }
-              onCustomize={() => setCustomizeOpen(true)}
+              onCustomize={onCustomizeGuidance ?? (() => setCustomizeOpen(true))}
             />
           </div>
         </article>

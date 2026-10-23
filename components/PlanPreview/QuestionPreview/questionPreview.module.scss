@@ -1,0 +1,56 @@
+.questionPreview {
+  margin-top: var(--space-6, 2rem);
+}
+
+.current {
+  position: relative;
+}
+
+.previous,
+.next {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2, 0.5rem);
+}
+
+// The label sits between the blurred question and the one being previewed.
+.previous {
+  flex-direction: column-reverse;
+}
+
+.contextLabel {
+  align-self: flex-start;
+  margin: 0;
+  padding: 0.125rem var(--space-2, 0.5rem);
+  border: 1px dashed var(--border-color-subtle);
+  border-radius: var(--radius);
+  background-color: var(--gray-50);
+  color: var(--gray-600);
+  font-size: var(--fs-small);
+}
+
+// Neighbouring questions give context only; they can't be focused or read out.
+.neighbour {
+  filter: blur(3px);
+  opacity: 0.55;
+  user-select: none;
+  pointer-events: none;
+  max-height: 14rem;
+  overflow: hidden;
+  mask-image: linear-gradient(to bottom, #000 40%, transparent);
+}
+
+// The previous question shows its end, nearest the question being previewed.
+.previous .neighbour {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  mask-image: linear-gradient(to top, #000 40%, transparent);
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .neighbour {
+    filter: none;
+    opacity: 0.4;
+  }
+}

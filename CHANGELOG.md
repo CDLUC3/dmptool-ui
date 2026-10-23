@@ -1,4 +1,5 @@
 ## Added
+- Added a preview mode that shows a template as researchers will see it when writing a plan, using the `PlanAuthoring` one-pager. Answers can be tried out but are never saved. It's opened from Preview on the template and customization overview pages, and from "Preview question" on the add, edit and customize question pages, where it opens in a new tab and shows unsaved edits as they're made [#65]
 - Added display logic to the `PlanAuthoring` one-pager: questions hidden by their display logic are not rendered, and are left out of the plan progress, section picker counts and section navigation. Hidden questions keep their answers [#366]
 - Added `visibleQuestions` to the `PlanAuthoring` model that filters out the `isHidden` question [#366]
 - Added the `PlanAuthoring` one-pager to the plan page (`/projects/:projectId/dmp/:dmpId`), wired to the GraphQL API through a new `planAuthoring` query: answers save through `addAnswer`/`updateAnswer`, comments and feedback comments show as one thread, and guidance organisations can be added and removed. The old section and question routes redirect to the one-pager, and the demo data source is replaced by mocks and scenarios [#430]
@@ -224,6 +225,7 @@
 - Fixed issue with Feedback Notification headers displaying for any collaborator on the Plan Overview, Section and Question pages. It should only display to Org Admins and Super Admins. Added shared isOrgAdmin hook for pages. [#249]
 
 ## Removed
+- Removed the old `QuestionPreview` pop-up and `QuestionView` component, replaced by the new preview mode [#65]
 - Removed the ununused `app/[locale]/users/[userId]/projects` page, since we no longer link to it since we updated the `app/[locale]/users/[userId]/manage` page to link to `projects` instead of `plans` [#379]
 
 ## Chore

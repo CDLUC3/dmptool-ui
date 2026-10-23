@@ -1,0 +1,12 @@
+.toggle {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1, 0.25rem);
+  margin-top: var(--space-3, 0.75rem);
+}
+
+.help {
+  margin: 0;
+  color: var(--gray-600);
+  font-size: var(--fs-small);
+}

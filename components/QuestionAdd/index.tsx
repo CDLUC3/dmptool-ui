@@ -47,8 +47,11 @@ import {
   ResearchOutputComponent
 } from '@/components/Form';
 import ErrorMessages from '@/components/ErrorMessages';
-import QuestionPreview from '@/components/QuestionPreview';
-import QuestionView from '@/components/QuestionView';
+import QuestionPreviewLink from '@/components/QuestionPreviewLink';
+import {
+  useQuestionPreviewDraftSync,
+  type QuestionPreviewDraft,
+} from '@/components/QuestionPreviewLink/questionPreviewDraft';
 import { getParsedQuestionJSON } from '@/components/hooks/getParsedQuestionJSON';
 import { TransitionButton } from '@/components/Form';
 import { DmpIcon } from "@/components/Icons";
@@ -106,7 +109,8 @@ const QuestionAdd = ({
   successUrl,
   breadcrumbs,
   showTags = true,
-  showDisplayLogicAfterSaveMessage = false
+  showDisplayLogicAfterSaveMessage = false,
+  previewHref,
 }:
   {
     questionType?: string | null,
@@ -119,6 +123,7 @@ const QuestionAdd = ({
     breadcrumbs: React.ReactNode;
     showTags?: boolean;
     showDisplayLogicAfterSaveMessage?: boolean; // Display logic can only be set up on a saved question
+    previewHref: string;
   }) => {
 
   const params = useParams();
@@ -134,7 +139,6 @@ const QuestionAdd = ({
   // Form state
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
-  // Make sure to add questionJSON and questionType to the question object so it can be used in the QuestionView component
   const [question, setQuestion] = useState<Question>(() => ({
     ...defaultQuestion,
     // If questionType is non-null/undefined, use it, otherwise empty string
@@ -360,7 +364,11 @@ const QuestionAdd = ({
 
   // Prepare input for the questionTypeHandler. For options questions, we update the 
   // values with rows state. For non-options questions, we use the parsed JSON
-  const getFormState = (question: Question, rowsOverride?: QuestionOptions[]) => {
+  const getFormState = (
+    question: Question,
+    rowsOverride?: QuestionOptions[],
+    onError: (error: string) => void = (error) => setErrors([error])
+  ) => {
 
     if (hasOptions) {
       const useRows = rowsOverride ?? rows;
@@ -388,7 +396,7 @@ const QuestionAdd = ({
 
     if (!parsed) {
       if (error) {
-        setErrors([error])
+        onError(error);
       }
       return;
     }
@@ -403,14 +411,18 @@ const QuestionAdd = ({
   };
 
   // Pass the merged userInput to questionTypeHandlers to generate json and do type and schema validation
-  const buildUpdatedJSON = (question: Question, rowsOverride?: QuestionOptions[]) => {
-    const userInput = getFormState(question, rowsOverride);
+  const buildUpdatedJSON = (
+    question: Question,
+    rowsOverride?: QuestionOptions[],
+    onError: (error: string) => void = (error) => setErrors([error])
+  ) => {
+    const userInput = getFormState(question, rowsOverride, onError);
 
     const { parsed, error } = getParsedQuestionJSON(question, routePath('template.q.new', { templateId }), Global);
 
     if (!parsed) {
       if (error) {
-        setErrors([error]);
+        onError(error);
       }
       return;
     }
@@ -427,6 +439,33 @@ const QuestionAdd = ({
 
     return json;
   };
+
+  const buildPreviewDraft = (): QuestionPreviewDraft | null => {
+    if (!question || !sectionId) {
+      return null;
+    }
+    let json = question.json ?? null;
+    try {
+      const updatedJSON = questionType ? buildUpdatedJSON(question, undefined, () => {}) : undefined;
+      if (updatedJSON?.success && updatedJSON.data) {
+        json = JSON.stringify(updatedJSON.data);
+      }
+    } catch {
+      // The preview falls back to the question's current JSON.
+    }
+    return {
+      sectionId: Number(sectionId),
+      questionText: stripHtmlTags(question.questionText ?? ''),
+      requirementText: question.requirementText ?? null,
+      guidanceText: question.guidanceText ?? null,
+      sampleText: question.sampleText ?? null,
+      useSampleTextAsDefault: Boolean(question.useSampleTextAsDefault),
+      required: Boolean(question.required),
+      json,
+    };
+  };
+
+  const previewDraftSync = useQuestionPreviewDraftSync(buildPreviewDraft);
 
   // Function to add and save the new question
   const handleAdd = async (e: React.FormEvent) => {
@@ -853,17 +892,12 @@ const QuestionAdd = ({
         <div className="sidebar">
           <h2>{Global('headings.preview')}</h2>
           <p>{QuestionAdd('descriptions.previewText')}</p>
-          <QuestionPreview
-            buttonLabel={QuestionAdd('buttons.previewQuestion')}
-            previewDisabled={question ? false : true}
-          >
-            <QuestionView
-              isPreview={true}
-              question={question}
-              templateId={Number(templateId)}
-              path={routePath('template.q.new', { templateId })}
-            />
-          </QuestionPreview>
+          <QuestionPreviewLink
+            href={previewHref}
+            label={QuestionAdd('buttons.previewQuestion')}
+            isDisabled={!question}
+            draftSync={previewDraftSync}
+          />
 
           <h3>{QuestionAdd('headings.bestPractice')}</h3>
           <p>{QuestionAdd('descriptions.bestPracticePara1')}</p>

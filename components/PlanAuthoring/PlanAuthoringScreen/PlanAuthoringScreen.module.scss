@@ -48,6 +48,13 @@
   padding-bottom: var(--space-8, 3rem);
 }
 
+.footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-3, 0.75rem);
+  padding-bottom: var(--space-8, 3rem);
+}
+
 .readOnlyNotice {
   margin-bottom: var(--space-6, 2rem);
 }
