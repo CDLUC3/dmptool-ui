@@ -345,6 +345,36 @@ const mocks = [
     },
   },
 
+  // Mocked response without an id for addProjectFunding
+  {
+    request: {
+      query: AddProjectFundingDocument,
+      variables: {
+        input: {
+          projectId: 123,
+          affiliationId: "https://funder4",
+        },
+      },
+    },
+
+    result: {
+      data: {
+        addProjectFunding: {
+          id: null,
+          errors: {
+            affiliationId: null,
+            funderOpportunityNumber: null,
+            funderProjectNumber: null,
+            general: null,
+            grantId: null,
+            projectId: null,
+            status: null,
+          },
+        }
+      }
+    },
+  },
+
   // Mocked Server error for addProjectFunding
   {
     request: {
@@ -616,7 +646,7 @@ describe("CreateProjectSearchFunder", () => {
     fireEvent.click(screen.getByTestId('funder-next'));
 
     await waitFor(() => {
-      expect(mockPush).toHaveBeenCalledWith('/projects/123/create/funding-status?intent=plan&projectFundingId=18');
+      expect(mockPush).toHaveBeenCalledWith('/projects/123/create/fundings/18/status?intent=plan&newFunding=true');
     });
   });
 
@@ -638,8 +668,9 @@ describe("CreateProjectSearchFunder", () => {
     fireEvent.click(screen.getByTestId('funder-next'));
 
     await waitFor(() => {
-      expect(mockPush).toHaveBeenCalledWith('/projects/123/create/funding-status?intent=plan&projectFundingId=77');
+      expect(mockPush).toHaveBeenCalledWith('/projects/123/create/fundings/77/status?intent=plan');
     });
+    expect(mockPush).toHaveBeenCalledTimes(1);
   });
 
   it("Should also run add funder mutation when adding popular funder", async () => {
@@ -660,7 +691,7 @@ describe("CreateProjectSearchFunder", () => {
     fireEvent.click(screen.getByTestId('funder-next'));
 
     await waitFor(() => {
-      expect(mockPush).toHaveBeenCalledWith('/projects/123/create/funding-status?intent=plan&projectFundingId=18');
+      expect(mockPush).toHaveBeenCalledWith('/projects/123/create/fundings/18/status?intent=plan&newFunding=true');
     });
   });
 
@@ -684,7 +715,7 @@ describe("CreateProjectSearchFunder", () => {
     fireEvent.click(screen.getByTestId('funder-next'));
 
     await waitFor(() => {
-      expect(mockPush).toHaveBeenCalledWith('/projects/123/create/funding-status?intent=plan&projectFundingId=18');
+      expect(mockPush).toHaveBeenCalledWith('/projects/123/create/fundings/18/status?intent=plan&newFunding=true');
     });
   });
 
@@ -714,6 +745,29 @@ describe("CreateProjectSearchFunder", () => {
     expect(mockPush).not.toHaveBeenCalled();
   });
 
+  it("Should show an error and stay on the page when the new funding has no id", async () => {
+    const mockPush = jest.fn();
+    (useRouter as jest.Mock).mockReturnValue({ push: mockPush });
+
+    render(
+      <MockedProvider mocks={mocks}>
+        <CreateProjectSearchFunder />
+      </MockedProvider>
+    );
+
+    searchFor("nih");
+
+    await waitFor(() => {
+      expect(screen.getByRole('radio', { name: 'Funder 4' })).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole('radio', { name: 'Funder 4' }));
+    fireEvent.click(screen.getByTestId('funder-next'));
+
+    expect(await screen.findByText('funder.errors.addFailed')).toBeInTheDocument();
+    expect(mockPush).not.toHaveBeenCalled();
+  });
+
   it("add project funder mutation should handle server error", async () => {
     render(
       <MockedProvider mocks={mocks}>
@@ -733,9 +787,10 @@ describe("CreateProjectSearchFunder", () => {
     fireEvent.click(screen.getByTestId('funder-next'));
 
     await waitFor(() => {
-      expect(screen.getByText("Server Error")).toBeInTheDocument();
+      expect(screen.getByText('funder.errors.addFailed')).toBeInTheDocument();
       expect(scrollToTop).toHaveBeenCalled();
     });
+    expect(screen.queryByText("Server Error")).not.toBeInTheDocument();
 
     await waitFor(() => {
       expect(logECS).toHaveBeenCalledWith(

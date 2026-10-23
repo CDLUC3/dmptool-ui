@@ -21,6 +21,7 @@ import {
   ExternalProject,
   SearchExternalProjectsDocument,
   AffiliationByIdDocument,
+  ProjectDocument,
   ProjectImportDocument
 } from '@/generated/graphql';
 
@@ -73,6 +74,12 @@ const ProjectsCreateProjectProjectSearch = () => {
       affiliationId: Number(affiliationId)
     }
   });
+
+  const { data: projectData } = useQuery(ProjectDocument, {
+    variables: { projectId: Number(projectId) },
+    fetchPolicy: 'network-only',
+  });
+  const currentProject = projectData?.project;
 
   // Initialize useProjectImportMutation for importing project details after selection
   const [projectImportMutation] = useMutation(ProjectImportDocument);
@@ -136,16 +143,25 @@ const ProjectsCreateProjectProjectSearch = () => {
   const handleSelectProject = async (project: ExternalProject): Promise<void> => {
     setErrorMessages([]);
 
+    if (!currentProject) {
+      setErrorMessages([t('messages.errors.selectedFailed')]);
+      return;
+    }
+
     try {
       const response = await projectImportMutation({
         variables: {
           input: {
+            // projectImport overwrites every project column, blanking any field not sent here
+            // and resetting isTestProject to false, so carry the current values over.
             project: {
               id: Number(projectId),
-              title: project.title ?? '',
-              abstractText: project.abstractText ?? undefined,
-              startDate: project.startDate ?? undefined,
-              endDate: project.endDate ?? undefined,
+              title: project.title || currentProject.title,
+              abstractText: project.abstractText || currentProject.abstractText,
+              startDate: project.startDate || currentProject.startDate,
+              endDate: project.endDate || currentProject.endDate,
+              isTestProject: currentProject.isTestProject,
+              researchDomainId: currentProject.researchDomain?.id,
             },
             funding: project.fundings?.map((f) => ({
               projectId: Number(projectId),

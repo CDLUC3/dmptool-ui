@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef, useState, type TransitionStartFunction } from 'react';
+import React, { useEffect, useMemo, useRef, useState, type TransitionStartFunction } from 'react';
 import { useTranslations } from 'next-intl';
 import { useParams, useSearchParams } from 'next/navigation';
 import { useRouter } from '@/i18n/routing';
@@ -30,6 +30,7 @@ import CreateProjectFlowLayout, {
   FundingChoice,
   flowPath,
   fundingChoiceFromStatus,
+  fundingFlowPath,
   screenAfterFundingStatus,
   useCreateProjectFlow,
 } from '@/components/CreateProjectFlow';
@@ -46,14 +47,15 @@ const ProjectsCreateProjectFunding = () => {
   const params = useParams();
   const searchParams = useSearchParams();
   const projectId = String(params.projectId);
-  const projectFundingIdParam = searchParams?.get('projectFundingId');
+  const projectFundingId = String(params.projectFundingId);
+  const isNewFunding = searchParams?.get('newFunding') === 'true';
   const { flow } = useCreateProjectFlow();
   const errorRef = useRef<HTMLDivElement | null>(null);
 
   const Global = useTranslations('Global');
   const Flow = useTranslations('CreateProjectFlow');
 
-  const { data, loading } = useQuery(ProjectFundingsApiDocument, {
+  const { data, loading, error } = useQuery(ProjectFundingsApiDocument, {
     variables: { projectId: Number(projectId) },
     fetchPolicy: 'network-only',
   });
@@ -61,15 +63,25 @@ const ProjectsCreateProjectFunding = () => {
   const [removeProjectFunding] = useMutation(RemoveProjectFundingDocument);
 
   const fundings = data?.project?.fundings ?? [];
-  const funding = fundings.find((f) => String(f.id) === projectFundingIdParam) ?? fundings[0];
+  const funding = fundings.find((f) => String(f.id) === projectFundingId);
   const funderName = funding?.affiliation?.displayName;
 
   const [choice, setChoice] = useState<FundingChoice>('planned');
   const [errors, setErrors] = useState<string[]>([]);
 
+  const notFound = !loading && (!!error || !funding);
+  const displayedErrors = useMemo(
+    () => (notFound ? [Flow('fundingStatus.errors.noFunding')] : errors),
+    [notFound, errors, Flow]
+  );
+
   useEffect(() => {
     if (funding) setChoice(fundingChoiceFromStatus(funding.status));
   }, [funding?.id]);
+
+  useEffect(() => {
+    if (error) handleApolloError(error, 'ProjectsCreateProjectFunding.projectFundingsQuery');
+  }, [error]);
 
   const handleSubmit = async ({ startTransition }: { startTransition: TransitionStartFunction }) => {
     setErrors([]);
@@ -99,12 +111,10 @@ const ProjectsCreateProjectFunding = () => {
       }
 
       const next = screenAfterFundingStatus(choice, !!funding.affiliation?.apiTarget);
-      const extraQuery = next === 'projectSearch'
-        ? { affId: funding.affiliation?.id ?? undefined, projectFundingId: funding.id }
-        : {};
-
       startTransition(() => {
-        router.push(flowPath(next, flow, projectId, extraQuery));
+        router.push(next === 'projectSearch'
+          ? fundingFlowPath(next, flow, projectId, funding.id as number)
+          : flowPath(next, flow, projectId));
       });
     } catch (err) {
       handleApolloError(err, 'ProjectsCreateProjectFunding.handleSubmit');
@@ -112,14 +122,35 @@ const ProjectsCreateProjectFunding = () => {
     }
   };
 
+  const goToFunderStep = () => {
+    router.push(flowPath('funder', flow, projectId));
+  };
+
   const handleChangeFunder = async () => {
     setErrors([]);
+    if (!funding?.id) return;
+
+    // removeProjectFunding also unlinks the funding from the project's plans, so a funding
+    // that already existed before this flow stays on the project alongside the new funder
+    if (!isNewFunding) {
+      goToFunderStep();
+      return;
+    }
+
     try {
-      await removeProjectFunding({ variables: { projectFundingId: Number(funding!.id) } });
-      router.push(flowPath('funder', flow, projectId));
+      const result = await removeProjectFunding({ variables: { projectFundingId: Number(funding.id) } });
+      const [hasErrors] = checkErrors(
+        (result?.data?.removeProjectFunding?.errors ?? {}) as ProjectFundingErrors,
+        ['general', 'affiliationId', 'projectId']
+      );
+      if (hasErrors) {
+        setErrors([Flow('fundingStatus.errors.changeFunderFailed')]);
+        return;
+      }
+      goToFunderStep();
     } catch (err) {
       handleApolloError(err, 'ProjectsCreateProjectFunding.handleChangeFunder');
-      setErrors([Flow('fundingStatus.errors.saveFailed')]);
+      setErrors([Flow('fundingStatus.errors.changeFunderFailed')]);
     }
   };
 
@@ -140,12 +171,22 @@ const ProjectsCreateProjectFunding = () => {
         className="page-project-create-project-funding"
       />
       <CreateProjectFlowLayout screen="fundingStatus" flow={flow}>
-        <ErrorMessages errors={errors} ref={errorRef} />
+        <ErrorMessages errors={displayedErrors} ref={errorRef} />
         {loading ? (
           <>
             <Loading variant="inline" message={Global('messaging.loading')} />
             <FlowActions />
           </>
+        ) : notFound ? (
+          <FlowActions>
+            <Button
+              type="button"
+              onPress={goToFunderStep}
+              data-testid="choose-funder"
+            >
+              {Flow('buttons.chooseFunder')}
+            </Button>
+          </FlowActions>
         ) : (
           <Form onSubmit={(e) => e.preventDefault()}>
             <RadioGroupComponent

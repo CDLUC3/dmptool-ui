@@ -55,14 +55,29 @@ export function flowQuery(flow: FlowState): Record<string, string | undefined> {
   };
 }
 
+// Screens that work on one funding and carry its id in the path
+export type FundingFlowScreen = 'fundingStatus' | 'projectSearch' | 'fundingDetails';
+
+type FlowQuery = Record<string, string | number | boolean | undefined>;
+
 export function flowPath(
-  screen: FlowScreen,
+  screen: Exclude<FlowScreen, FundingFlowScreen>,
   flow: FlowState,
   projectId?: string | number,
-  extraQuery: Record<string, string | number | undefined> = {}
+  extraQuery: FlowQuery = {}
 ): string {
   const params: Record<string, string | number> = projectId === undefined ? {} : { projectId };
   return routePath(FLOW_SCREENS[screen].route, params, { ...flowQuery(flow), ...extraQuery });
+}
+
+export function fundingFlowPath(
+  screen: FundingFlowScreen,
+  flow: FlowState,
+  projectId: string | number,
+  projectFundingId: string | number,
+  extraQuery: FlowQuery = {}
+): string {
+  return routePath(FLOW_SCREENS[screen].route, { projectId, projectFundingId }, { ...flowQuery(flow), ...extraQuery });
 }
 
 // "Applied" has no Apollo enum value yet, see .reference/create-project/apollo-gaps.md
@@ -79,10 +94,13 @@ export function fundingChoiceFromStatus(status?: ProjectFundingStatus | null): F
   return status === ProjectFundingStatus.Granted ? 'funded' : 'planned';
 }
 
-export function screenAfterFundingStatus(choice: FundingChoice, funderHasApi: boolean): FlowScreen {
+export function screenAfterFundingStatus(
+  choice: FundingChoice,
+  funderHasApi: boolean
+): 'projectSearch' | 'projectDetails' {
   return choice !== 'planned' && funderHasApi ? 'projectSearch' : 'projectDetails';
 }
 
-export function screenAfterProjectDetails(flow: FlowState): FlowScreen {
+export function screenAfterProjectDetails(flow: FlowState): 'complete' | 'planStart' {
   return flow.intent === 'project' ? 'complete' : 'planStart';
 }

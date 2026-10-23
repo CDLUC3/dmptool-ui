@@ -30,6 +30,7 @@ import PageHeader from "@/components/PageHeader";
 import CreateProjectFlowLayout, {
   FlowActions,
   flowPath,
+  fundingFlowPath,
   useCreateProjectFlow,
 } from '@/components/CreateProjectFlow';
 import FunderSearch from '@/components/FunderSearch';
@@ -116,10 +117,11 @@ const CreateProjectSearchFunder = () => {
         (f) => f?.affiliation?.uri === funder.uri
       );
 
+      // Apollo allows one funding per funder on a project, so an existing one is reused
       const existingFundingId = existingFunding?.id;
       if (existingFundingId) {
         startTransition(() => {
-          router.push(flowPath('fundingStatus', flow, projectId, { projectFundingId: existingFundingId }));
+          router.push(fundingFlowPath('fundingStatus', flow, projectId, existingFundingId));
         });
         return;
       }
@@ -134,23 +136,27 @@ const CreateProjectSearchFunder = () => {
       });
 
       const [hasErrors, errs] = checkErrors(
-        result?.data?.addProjectFunding?.errors as ProjectFundingErrors,
+        (result?.data?.addProjectFunding?.errors ?? {}) as ProjectFundingErrors,
         ['general']
       );
 
       if (hasErrors) {
-        setErrors([String(errs.general)]);
+        setErrors([errs.general || Flow('funder.errors.addFailed')]);
+        return;
+      }
+
+      const newFundingId = result?.data?.addProjectFunding?.id;
+      if (!newFundingId) {
+        setErrors([Flow('funder.errors.addFailed')]);
         return;
       }
 
       startTransition(() => {
-        router.push(flowPath('fundingStatus', flow, projectId, {
-          projectFundingId: result?.data?.addProjectFunding?.id ?? undefined,
-        }));
+        router.push(fundingFlowPath('fundingStatus', flow, projectId, newFundingId, { newFunding: true }));
       });
     } catch (err) {
       handleApolloError(err, 'createProjectSearchFunder.handleSelectFunder');
-      setErrors(prev => [...prev, (err as Error).message]);
+      setErrors([Flow('funder.errors.addFailed')]);
     }
   }
 

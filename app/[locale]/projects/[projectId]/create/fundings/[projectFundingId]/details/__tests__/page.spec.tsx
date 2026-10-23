@@ -8,8 +8,8 @@ import { useRouter } from '@/i18n/routing';
 
 import {
   ProjectFundingDocument,
-  ProjectFundingStatus,
   ProjectFundingsApiDocument,
+  ProjectFundingStatus,
   UpdateProjectFundingDocument,
 } from '@/generated/graphql';
 import ProjectsCreateProjectFundingDetails from '../page';
@@ -49,6 +49,29 @@ const fundingMock = {
   },
 };
 
+const projectFundingsMock = (fundingIds: number[]) => ({
+  request: { query: ProjectFundingsApiDocument, variables: { projectId: 123 } },
+  result: {
+    data: {
+      project: {
+        __typename: 'Project',
+        fundings: fundingIds.map((id) => ({
+          __typename: 'ProjectFunding',
+          id,
+          status: ProjectFundingStatus.Granted,
+          affiliation: {
+            __typename: 'Affiliation',
+            apiTarget: null,
+            uri: `https://ror.org/funder-${id}`,
+            id,
+            displayName: `Funder ${id}`,
+          },
+        })),
+      },
+    },
+  },
+});
+
 const errorFields = {
   affiliationId: null,
   funderOpportunityNumber: null,
@@ -77,9 +100,9 @@ const updateMock = (errors: object | null) => ({
 
 const mockPush = jest.fn();
 
-function renderPage(mocks: MockedResponse[]) {
+function renderPage(mocks: MockedResponse[], projectFundingIds = [18]) {
   return render(
-    <MockedProvider mocks={mocks}>
+    <MockedProvider mocks={[projectFundingsMock(projectFundingIds), ...mocks]}>
       <ProjectsCreateProjectFundingDetails />
     </MockedProvider>
   );
@@ -92,11 +115,11 @@ describe('ProjectsCreateProjectFundingDetails', () => {
     mockPush.mockReset();
     mockToastAdd.mockReset();
     (useRouter as jest.Mock).mockReturnValue({ push: mockPush });
-    (useParams as jest.Mock).mockReturnValue({ projectId: '123' });
-    (useSearchParams as jest.Mock).mockReturnValue(new URLSearchParams('intent=plan&projectFundingId=18'));
+    (useParams as jest.Mock).mockReturnValue({ projectId: '123', projectFundingId: '18' });
+    (useSearchParams as jest.Mock).mockReturnValue(new URLSearchParams('intent=plan'));
   });
 
-  it('prefills the form from the saved funding', async () => {
+  it('loads the funding named in the path', async () => {
     renderPage([fundingMock]);
 
     expect(await screen.findByDisplayValue('National Science Foundation')).toBeDisabled();
@@ -104,27 +127,61 @@ describe('ProjectsCreateProjectFundingDetails', () => {
     expect(screen.getByTestId('create-flow-stage-addFunder')).toHaveAttribute('aria-current', 'step');
   });
 
-  it('falls back to the project funding when no id is in the URL', async () => {
-    (useSearchParams as jest.Mock).mockReturnValue(new URLSearchParams('intent=plan'));
-    renderPage([
-      {
-        request: { query: ProjectFundingsApiDocument, variables: { projectId: 123 } },
-        result: {
-          data: {
-            project: {
-              fundings: [{
-                id: 18,
-                status: ProjectFundingStatus.Granted,
-                affiliation: { apiTarget: null, uri: 'https://ror.org/nsf', id: 1, displayName: 'NSF' },
-              }],
-            },
-          },
-        },
-      },
-      fundingMock,
-    ]);
+  it.each(['abc', '0', undefined])(
+    'offers to choose a funder instead of the form when the funding id in the path is invalid (%s)',
+    (projectFundingId) => {
+      (useParams as jest.Mock).mockReturnValue({ projectId: '123', projectFundingId });
+      renderPage([]);
 
-    expect(await screen.findByDisplayValue('National Science Foundation')).toBeInTheDocument();
+      // The query is skipped, so the not-found state shows without a loading pass
+      expect(screen.getByText('fundingDetails.messages.notFound')).toBeInTheDocument();
+      expect(screen.queryByLabelText('fundingDetails.grantId')).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'buttons.next' })).not.toBeInTheDocument();
+
+      fireEvent.click(screen.getByRole('button', { name: 'buttons.chooseFunder' }));
+      expect(mockPush).toHaveBeenCalledWith('/projects/123/create/funder?intent=plan');
+    }
+  );
+
+  it('offers to choose a funder instead of the form when the funding fails to load', async () => {
+    renderPage([{ ...fundingMock, result: undefined, error: new Error('Not found') }]);
+
+    expect(await screen.findByText('fundingDetails.messages.notFound')).toBeInTheDocument();
+    expect(screen.queryByLabelText('fundingDetails.grantId')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'buttons.chooseFunder' })).toBeInTheDocument();
+  });
+
+  it('offers to choose a funder instead of the form when the funding belongs to another project', async () => {
+    renderPage([fundingMock], [5]);
+
+    expect(await screen.findByText('fundingDetails.messages.notFound')).toBeInTheDocument();
+    expect(screen.queryByLabelText('fundingDetails.grantId')).not.toBeInTheDocument();
+  });
+
+  it('offers to choose a funder instead of the form when the project fundings fail to load', async () => {
+    render(
+      <MockedProvider mocks={[{ ...projectFundingsMock([18]), result: undefined, error: new Error('Down') }, fundingMock]}>
+        <ProjectsCreateProjectFundingDetails />
+      </MockedProvider>
+    );
+
+    expect(await screen.findByText('fundingDetails.messages.notFound')).toBeInTheDocument();
+    expect(screen.queryByLabelText('fundingDetails.grantId')).not.toBeInTheDocument();
+  });
+
+  it('offers to choose a funder instead of the form when the funding does not exist', async () => {
+    renderPage([{ ...fundingMock, result: { data: { projectFunding: null } } }]);
+
+    expect(await screen.findByText('fundingDetails.messages.notFound')).toBeInTheDocument();
+    expect(screen.queryByLabelText('fundingDetails.grantId')).not.toBeInTheDocument();
+  });
+
+  it('keeps the flow query when sending the user back to choose a funder', async () => {
+    (useSearchParams as jest.Mock).mockReturnValue(new URLSearchParams('intent=project&from=existing'));
+    renderPage([{ ...fundingMock, result: { data: { projectFunding: null } } }]);
+
+    fireEvent.click(await screen.findByRole('button', { name: 'buttons.chooseFunder' }));
+    expect(mockPush).toHaveBeenCalledWith('/projects/123/create/funder?intent=project&from=existing');
   });
 
   it('saves the identifiers and moves on to project details', async () => {
@@ -150,19 +207,6 @@ describe('ProjectsCreateProjectFundingDetails', () => {
     fireEvent.click(screen.getByRole('button', { name: 'buttons.next' }));
 
     expect(await screen.findByText('Bad grant')).toBeInTheDocument();
-    expect(mockPush).not.toHaveBeenCalled();
-  });
-
-  it('says the funding was not found when the project has none', async () => {
-    (useSearchParams as jest.Mock).mockReturnValue(new URLSearchParams('intent=plan'));
-    renderPage([{
-      request: { query: ProjectFundingsApiDocument, variables: { projectId: 123 } },
-      result: { data: { project: { fundings: [] } } },
-    }]);
-
-    fireEvent.click(await screen.findByRole('button', { name: 'buttons.next' }));
-
-    expect(await screen.findByText('fundingDetails.messages.notFound')).toBeInTheDocument();
     expect(mockPush).not.toHaveBeenCalled();
   });
 
@@ -208,6 +252,15 @@ describe('ProjectsCreateProjectFundingDetails', () => {
   it('should pass axe accessibility test', async () => {
     const { container } = renderPage([fundingMock]);
     await screen.findByDisplayValue('G-1');
+    await act(async () => {
+      expect(await axe(container)).toHaveNoViolations();
+    });
+  });
+
+  it('should pass axe accessibility test when the funding is not found', async () => {
+    (useParams as jest.Mock).mockReturnValue({ projectId: '123', projectFundingId: 'abc' });
+    const { container } = renderPage([]);
+    await screen.findByRole('button', { name: 'buttons.chooseFunder' });
     await act(async () => {
       expect(await axe(container)).toHaveNoViolations();
     });

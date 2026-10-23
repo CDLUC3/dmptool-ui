@@ -7,9 +7,13 @@ import { useQuery } from '@apollo/client/react';
 import {
   Breadcrumb,
   Breadcrumbs,
+  Button,
   Form,
+  Input,
+  Label,
   Link,
   Radio,
+  SearchField,
   Text
 } from "react-aria-components";
 
@@ -23,7 +27,7 @@ import { routePath } from '@/utils/routes';
 
 type Gate = 'existing' | 'new';
 
-const PROJECT_LIMIT = 50;
+const PAGE_SIZE = 20;
 
 const ProjectsStartPlan = () => {
   const router = useRouter();
@@ -35,12 +39,57 @@ const ProjectsStartPlan = () => {
   const [gate, setGate] = useState<Gate | ''>('');
   const [projectId, setProjectId] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const [searchInput, setSearchInput] = useState('');
+  const [term, setTerm] = useState('');
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [loadMoreFailed, setLoadMoreFailed] = useState(false);
 
-  const { data, loading, error } = useQuery(MyProjectsDocument, {
-    variables: { paginationOptions: { type: 'CURSOR', limit: PROJECT_LIMIT } },
+  const { data, loading, error, fetchMore } = useQuery(MyProjectsDocument, {
+    variables: { term, paginationOptions: { type: 'CURSOR', limit: PAGE_SIZE } },
     skip: gate !== 'existing',
   });
   const projects = data?.myProjects?.items?.filter((p) => p?.id) ?? [];
+  const totalCount = data?.myProjects?.totalCount ?? 0;
+  const nextCursor = data?.myProjects?.nextCursor;
+  // Loading more keeps the current list on screen, so only a load without data shows the spinner
+  const initialLoading = loading && !data;
+
+  const applySearch = (value: string) => {
+    setTerm(value.trim().toLowerCase());
+    setProjectId('');
+    setSubmitted(false);
+    setLoadMoreFailed(false);
+  };
+
+  const clearSearch = () => {
+    setSearchInput('');
+    applySearch('');
+  };
+
+  const handleLoadMore = async () => {
+    if (!nextCursor) return;
+    setLoadingMore(true);
+    setLoadMoreFailed(false);
+    try {
+      await fetchMore({
+        variables: { paginationOptions: { type: 'CURSOR', limit: PAGE_SIZE, cursor: nextCursor } },
+        updateQuery: (prev, { fetchMoreResult }) => {
+          if (!fetchMoreResult.myProjects) return prev;
+          return {
+            ...fetchMoreResult,
+            myProjects: {
+              ...fetchMoreResult.myProjects,
+              items: [...(prev.myProjects?.items ?? []), ...(fetchMoreResult.myProjects.items ?? [])],
+            },
+          };
+        },
+      });
+    } catch {
+      setLoadMoreFailed(true);
+    } finally {
+      setLoadingMore(false);
+    }
+  };
 
   const handleSubmit = async ({ startTransition }: { startTransition: TransitionStartFunction }) => {
     setSubmitted(true);
@@ -73,7 +122,7 @@ const ProjectsStartPlan = () => {
         className="page-project-start-plan"
       />
       <CreateProjectFlowLayout screen="startPlan" flow={{ intent: 'plan', fromExisting: gate === 'existing' }}>
-        <ErrorMessages errors={error ? [Flow('startPlan.errors.loadProjects')] : []} ref={errorRef} />
+        <ErrorMessages errors={error || loadMoreFailed ? [Flow('startPlan.errors.loadProjects')] : []} ref={errorRef} />
         <Form onSubmit={(e) => e.preventDefault()}>
           <RadioGroupComponent
             name="startPlanGate"
@@ -90,35 +139,77 @@ const ProjectsStartPlan = () => {
             <Radio value="new">{Flow('startPlan.noNew')}</Radio>
           </RadioGroupComponent>
 
+          {gate === 'existing' && (projects.length > 0 || term) && (
+            <div role="search">
+              <SearchField
+                value={searchInput}
+                onChange={setSearchInput}
+                onSubmit={applySearch}
+                onClear={clearSearch}
+              >
+                <Label>{Global('labels.searchByKeyword')}</Label>
+                <Input />
+                <Button slot={null} type="button" onPress={() => applySearch(searchInput)}>
+                  {Global('buttons.search')}
+                </Button>
+              </SearchField>
+            </div>
+          )}
+
           {gate === 'existing' && (
-            loading ? (
+            initialLoading ? (
               <Loading variant="inline" message={Global('messaging.loading')} />
             ) : projects.length === 0 ? (
-              !error && <p>{Flow('startPlan.noProjects')}</p>
+              !error && (term ? (
+                <p>
+                  {Global('messaging.noItemsFound')}{' '}
+                  <Button type="button" className="link" onPress={clearSearch}>
+                    {Global('links.clearFilter')}
+                  </Button>
+                </p>
+              ) : (
+                <p>{Flow('startPlan.noProjects')}</p>
+              ))
             ) : (
-              <RadioGroupComponent
-                name="startPlanProject"
-                value={projectId}
-                radioGroupLabel={Flow('startPlan.projectsLabel')}
-                onChange={(value) => {
-                  setSubmitted(false);
-                  setProjectId(value);
-                }}
-                isInvalid={submitted && !projectId}
-                errorMessage={Flow('startPlan.errors.chooseProject')}
-              >
-                {projects.map((project) => (
-                  <div key={project!.id}>
-                    <Radio value={String(project!.id)}>{project!.title}</Radio>
-                    <Text slot="description">
-                      {Flow('startPlan.projectMeta', {
-                        funder: project!.fundings?.map((f) => f.name).filter(Boolean).join(', ') || Flow('startPlan.noFunder'),
-                        plans: project!.plans?.length ?? 0,
-                      })}
-                    </Text>
+              <>
+                <RadioGroupComponent
+                  name="startPlanProject"
+                  value={projectId}
+                  radioGroupLabel={Flow('startPlan.projectsLabel')}
+                  onChange={(value) => {
+                    setSubmitted(false);
+                    setProjectId(value);
+                  }}
+                  isInvalid={submitted && !projectId}
+                  errorMessage={Flow('startPlan.errors.chooseProject')}
+                >
+                  {projects.map((project) => (
+                    <div key={project!.id}>
+                      <Radio value={String(project!.id)}>{project!.title}</Radio>
+                      <Text slot="description">
+                        {Flow('startPlan.projectMeta', {
+                          funder: project!.fundings?.map((f) => f.name).filter(Boolean).join(', ') || Flow('startPlan.noFunder'),
+                          plans: project!.plans?.length ?? 0,
+                        })}
+                      </Text>
+                    </div>
+                  ))}
+                </RadioGroupComponent>
+                {totalCount > projects.length && (
+                  <div>
+                    <Button
+                      type="button"
+                      className="secondary"
+                      onPress={handleLoadMore}
+                      isDisabled={!nextCursor || loadingMore}
+                      data-testid="load-more-projects"
+                    >
+                      {loadingMore ? Global('messaging.loading') : Global('buttons.loadMore')}
+                    </Button>
+                    <p>{Global('messaging.numDisplaying', { num: projects.length, total: totalCount })}</p>
                   </div>
-                ))}
-              </RadioGroupComponent>
+                )}
+              </>
             )
           )}
 

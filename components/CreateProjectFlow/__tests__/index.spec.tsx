@@ -9,6 +9,7 @@ import CreateProjectFlowLayout, {
   FLOW_SCREENS,
   FlowActions,
   flowPath,
+  fundingFlowPath,
   fundingChoiceFromStatus,
   screenAfterFundingStatus,
   screenAfterProjectDetails,
@@ -66,10 +67,18 @@ describe('CreateProjectFlow', () => {
       expect(flowPath('startPlan', DEFAULT_FLOW)).toBe('/projects/create?intent=plan');
       expect(flowPath('createProject', DEFAULT_FLOW)).toBe('/projects/create/project?intent=plan');
       expect(flowPath('funder', DEFAULT_FLOW, 4)).toBe('/projects/4/create/funder?intent=plan');
-      expect(flowPath('fundingStatus', DEFAULT_FLOW, 4)).toBe('/projects/4/create/funding-status?intent=plan');
-      expect(flowPath('projectSearch', DEFAULT_FLOW, 4)).toBe('/projects/4/create/project-search?intent=plan');
-      expect(flowPath('fundingDetails', DEFAULT_FLOW, 4)).toBe('/projects/4/create/funding-details?intent=plan');
       expect(flowPath('complete', DEFAULT_FLOW, 4)).toBe('/projects/4/create/complete?intent=plan');
+    });
+
+    it('puts the funding id in the path for the funding screens', () => {
+      expect(fundingFlowPath('fundingStatus', DEFAULT_FLOW, 4, 9))
+        .toBe('/projects/4/create/fundings/9/status?intent=plan');
+      expect(fundingFlowPath('projectSearch', DEFAULT_FLOW, 4, 9))
+        .toBe('/projects/4/create/fundings/9/project-search?intent=plan');
+      expect(fundingFlowPath('fundingDetails', DEFAULT_FLOW, 4, 9))
+        .toBe('/projects/4/create/fundings/9/details?intent=plan');
+      expect(fundingFlowPath('fundingStatus', DEFAULT_FLOW, 4, 9, { newFunding: true }))
+        .toBe('/projects/4/create/fundings/9/status?intent=plan&newFunding=true');
     });
 
     it('carries the existing-project flag and extra query values', () => {

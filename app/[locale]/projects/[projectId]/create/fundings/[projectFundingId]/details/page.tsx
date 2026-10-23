@@ -2,12 +2,13 @@
 
 import React, { useEffect, useRef, useState, type TransitionStartFunction } from 'react';
 import { useTranslations } from 'next-intl';
-import { useParams, useSearchParams } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { useRouter } from '@/i18n/routing';
 import { useMutation, useQuery } from '@apollo/client/react';
 import {
   Breadcrumb,
   Breadcrumbs,
+  Button,
   Form,
   Link,
   ListBoxItem,
@@ -16,8 +17,8 @@ import {
 import {
   ProjectFundingDocument,
   ProjectFundingErrors,
-  ProjectFundingStatus,
   ProjectFundingsApiDocument,
+  ProjectFundingStatus,
   UpdateProjectFundingDocument,
 } from '@/generated/graphql';
 
@@ -47,9 +48,8 @@ type FieldErrors = Partial<Record<keyof FundingDetailsForm, string>>;
 const ProjectsCreateProjectFundingDetails = () => {
   const router = useRouter();
   const params = useParams();
-  const searchParams = useSearchParams();
   const projectId = String(params.projectId);
-  const projectFundingIdParam = searchParams?.get('projectFundingId');
+  const projectFundingId = Number(params.projectFundingId);
   const { flow } = useCreateProjectFlow();
   const toastState = useToast();
   const errorRef = useRef<HTMLDivElement | null>(null);
@@ -57,16 +57,14 @@ const ProjectsCreateProjectFundingDetails = () => {
   const Global = useTranslations('Global');
   const Flow = useTranslations('CreateProjectFlow');
 
-  const { data: fundingsData, loading: fundingsLoading } = useQuery(ProjectFundingsApiDocument, {
-    variables: { projectId: Number(projectId) },
-    skip: !!projectFundingIdParam,
+  const { data, loading, error } = useQuery(ProjectFundingDocument, {
+    variables: { projectFundingId },
+    skip: !projectFundingId,
+    fetchPolicy: 'network-only',
   });
-  const projectFundingId = projectFundingIdParam
-    ? Number(projectFundingIdParam)
-    : fundingsData?.project?.fundings?.[0]?.id ?? undefined;
-
-  const { data, loading } = useQuery(ProjectFundingDocument, {
-    variables: { projectFundingId: Number(projectFundingId) },
+  // ProjectFunding doesn't return its project id, so check the id against this project's fundings
+  const { data: fundingsData, loading: fundingsLoading, error: fundingsError } = useQuery(ProjectFundingsApiDocument, {
+    variables: { projectId: Number(projectId) },
     skip: !projectFundingId,
     fetchPolicy: 'network-only',
   });
@@ -81,7 +79,8 @@ const ProjectsCreateProjectFundingDetails = () => {
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [errors, setErrors] = useState<string[]>([]);
 
-  const funding = data?.projectFunding;
+  const belongsToProject = !!fundingsData?.project?.fundings?.some((f) => f.id === projectFundingId);
+  const funding = belongsToProject ? data?.projectFunding : undefined;
 
   useEffect(() => {
     if (!funding) return;
@@ -105,11 +104,6 @@ const ProjectsCreateProjectFundingDetails = () => {
   const handleSubmit = async ({ startTransition }: { startTransition: TransitionStartFunction }) => {
     setErrors([]);
     setFieldErrors({});
-
-    if (!projectFundingId) {
-      setErrors([Flow('fundingDetails.messages.notFound')]);
-      return;
-    }
 
     try {
       const result = await updateProjectFunding({
@@ -150,6 +144,8 @@ const ProjectsCreateProjectFundingDetails = () => {
   };
 
   const isLoading = loading || fundingsLoading;
+  // Without the record, saving would overwrite it with blank defaults, so the form isn't offered
+  const notFound = !isLoading && (!projectFundingId || !!error || !!fundingsError || !funding);
 
   return (
     <>
@@ -171,6 +167,19 @@ const ProjectsCreateProjectFundingDetails = () => {
           <>
             <Loading variant="inline" message={Global('messaging.loading')} />
             <FlowActions />
+          </>
+        ) : notFound ? (
+          <>
+            <ErrorMessages errors={[Flow('fundingDetails.messages.notFound')]} noScroll />
+            <FlowActions>
+              <Button
+                type="button"
+                className="primary"
+                onPress={() => router.push(flowPath('funder', flow, projectId))}
+              >
+                {Flow('buttons.chooseFunder')}
+              </Button>
+            </FlowActions>
           </>
         ) : (
           <Form onSubmit={(e) => e.preventDefault()}>

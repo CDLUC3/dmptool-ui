@@ -130,7 +130,8 @@
   "CreateProjectFlow": {
     "buttons": {
       "back": "Back",
-      "next": "Next"
+      "next": "Next",
+      "chooseFunder": "Choose a funder"
     },
     "rail": {
       "title": "Setup progress",
@@ -172,7 +173,10 @@
       "description": "This includes funders you're planning to apply to — not only ones that have already awarded funding. Adding one now helps us recommend the right template. If you have more than one funder, you can add them in later.",
       "noFunderText": "If you don't have a funder yet, check the box below to continue to the next step.",
       "noFunderLabel": "I don't have a funder",
-      "selectToContinue": "Select a funder, or check “I don't have a funder” to continue."
+      "selectToContinue": "Select a funder, or check “I don't have a funder” to continue.",
+      "errors": {
+        "addFailed": "We couldn't add that funder. Please try again."
+      }
     },
     "fundingStatus": {
       "title": "Funding status",
@@ -190,7 +194,8 @@
       },
       "errors": {
         "noFunding": "We couldn't find the funder for this project. Add a funder first.",
-        "saveFailed": "We couldn't save the funding status. Please try again."
+        "saveFailed": "We couldn't save the funding status. Please try again.",
+        "changeFunderFailed": "We couldn't remove that funder. Please try again."
       }
     },
     "fundingDetails": {

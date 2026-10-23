@@ -9,6 +9,7 @@ import { useLazyQuery, useMutation, useQuery } from '@apollo/client/react';
 import { mockScrollIntoView, mockScrollTo } from '@/__mocks__/common';
 import {
   AffiliationByIdDocument,
+  ProjectDocument,
   ProjectImportDocument,
 } from '@/generated/graphql';
 import ProjectsCreateProjectProjectSearch from '../page';
@@ -82,6 +83,39 @@ const stableAffiliationReturn = {
   error: undefined,
 };
 
+const projectReturn = {
+  data: {
+    project: {
+      __typename: 'Project',
+      title: 'My current project',
+      abstractText: 'Current abstract',
+      startDate: '2025-01-01',
+      endDate: '2025-12-31',
+      isTestProject: true,
+      researchDomain: { __typename: 'ResearchDomain', id: 7, parentResearchDomainId: 1 },
+    },
+  },
+  loading: false,
+  error: undefined,
+};
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
+const mockQueries = (project: any = projectReturn) => {
+  mockUseQuery.mockImplementation((document) => {
+    if (document === AffiliationByIdDocument) return stableAffiliationReturn as any;
+    if (document === ProjectDocument) return project;
+    return { data: null, loading: false, error: undefined } as any;
+  });
+};
+
+const lazySearch = (searchFn: jest.Mock) => {
+  mockUseLazyQuery.mockImplementation(() => [
+    searchFn,
+    { data: undefined, loading: false, error: undefined, called: false },
+  ] as any);
+};
+/* eslint-enable @typescript-eslint/no-explicit-any */
+
 const searchFor = (projectName = 'REU') => {
   fireEvent.change(screen.getByRole('textbox', { name: 'form.projectName' }), { target: { value: projectName } });
   fireEvent.click(screen.getByRole('button', { name: /buttons.search/i }));
@@ -94,14 +128,7 @@ const setupMocks = () => {
     get: (key: string) => (key === 'affId' ? '114' : null),
   });
 
-  mockUseQuery.mockImplementation((document) => {
-    if (document === AffiliationByIdDocument) {
-      /* eslint-disable @typescript-eslint/no-explicit-any */
-      return stableAffiliationReturn as any;
-    }
-    /* eslint-disable @typescript-eslint/no-explicit-any */
-    return { data: null, loading: false, error: undefined } as any;
-  });
+  mockQueries();
 
   mockUseMutation.mockImplementation(() => [
     jest.fn().mockResolvedValue({ data: { projectImport: { errors: null } } }),
@@ -296,9 +323,16 @@ describe('ProjectsCreateProjectProjectSearch', () => {
         expect.objectContaining({
           variables: expect.objectContaining({
             input: expect.objectContaining({
-              project: expect.objectContaining({
+              project: {
+                id: 1,
                 title: 'REU Site: Engineers for Exploration',
-              }),
+                abstractText: 'Engineers for Exploration is an experiential program...',
+                startDate: '2026-10-01',
+                endDate: '2029-09-30',
+                isTestProject: true,
+                researchDomainId: 7,
+              },
+              funding: [expect.objectContaining({ affiliationId: 'https://ror.org/021nxhr62' })],
             }),
           }),
         })
@@ -306,15 +340,55 @@ describe('ProjectsCreateProjectProjectSearch', () => {
     });
   });
 
-  it('should display error message when projectImportMutation returns errors', async () => {
-    // Re-apply useQuery mock so affiliationData is available during handleSelectProject
-    mockUseQuery.mockImplementation((document) => {
-      if (document === AffiliationByIdDocument) {
-        return stableAffiliationReturn as any;
-      }
-      return { data: null, loading: false, error: undefined } as any;
-    });
+  it('should keep the current project values when the external project leaves them empty', async () => {
+    const mockImportFn = jest.fn().mockResolvedValue({ data: { projectImport: { errors: null } } });
+    mockUseMutation.mockImplementation(() => [mockImportFn, { loading: false, error: undefined }] as any);
+    lazySearch(jest.fn().mockResolvedValue({
+      data: {
+        searchExternalProjects: [{
+          ...mockProject, title: null, abstractText: null, startDate: null, endDate: null,
+        }],
+      },
+    }));
 
+    render(<ProjectsCreateProjectProjectSearch />);
+    searchFor();
+    fireEvent.click(await screen.findByRole('button', { name: /^Select/ }));
+
+    await waitFor(() => {
+      expect(mockImportFn).toHaveBeenCalledWith(expect.objectContaining({
+        variables: expect.objectContaining({
+          input: expect.objectContaining({
+            project: {
+              id: 1,
+              title: 'My current project',
+              abstractText: 'Current abstract',
+              startDate: '2025-01-01',
+              endDate: '2025-12-31',
+              isTestProject: true,
+              researchDomainId: 7,
+            },
+          }),
+        }),
+      }));
+    });
+  });
+
+  it('should not import when the current project could not be loaded', async () => {
+    mockQueries({ data: undefined, loading: false, error: new Error('boom') });
+    const mockImportFn = jest.fn();
+    mockUseMutation.mockImplementation(() => [mockImportFn, { loading: false, error: undefined }] as any);
+    lazySearch(jest.fn().mockResolvedValue({ data: { searchExternalProjects: [mockProject] } }));
+
+    render(<ProjectsCreateProjectProjectSearch />);
+    searchFor();
+    fireEvent.click(await screen.findByRole('button', { name: /Select REU Site/i }));
+
+    expect(await screen.findByText('messages.errors.selectedFailed')).toBeInTheDocument();
+    expect(mockImportFn).not.toHaveBeenCalled();
+  });
+
+  it('should display error message when projectImportMutation returns errors', async () => {
     const mockImportFn = jest.fn().mockResolvedValue({
       data: {
         projectImport: {

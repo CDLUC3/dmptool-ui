@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useRef, useState, type TransitionStartFunction } from 'react';
-import { useParams, useSearchParams } from 'next/navigation';
+import React, { useMemo, useRef, useState, type TransitionStartFunction } from 'react';
+import { useParams } from 'next/navigation';
 import { useRouter } from '@/i18n/routing';
 import { useTranslations } from 'next-intl';
 import {
@@ -20,7 +20,8 @@ import { useLazyQuery, useMutation, useQuery } from '@apollo/client/react';
 import {
   ExternalProject,
   SearchExternalProjectsDocument,
-  AffiliationByIdDocument,
+  ProjectDocument,
+  ProjectFundingsApiDocument,
   ProjectImportDocument
 } from '@/generated/graphql';
 
@@ -29,9 +30,11 @@ import PageHeader from "@/components/PageHeader";
 import CreateProjectFlowLayout, {
   FlowActions,
   flowPath,
+  fundingFlowPath,
   useCreateProjectFlow,
 } from '@/components/CreateProjectFlow';
 import ErrorMessages from '@/components/ErrorMessages';
+import Loading from '@/components/Loading';
 
 // Utils and other
 import { routePath } from '@/utils/routes';
@@ -44,10 +47,8 @@ import { TransitionButton } from '@/components/Form';
 const ProjectsCreateProjectProjectSearch = () => {
   const router = useRouter();
   const params = useParams();
-  const searchParams = useSearchParams();
   const { projectId } = params;
-  const affiliationId = searchParams.get('affId');
-  const projectFundingId = searchParams.get('projectFundingId') ?? undefined;
+  const projectFundingId = String(params.projectFundingId);
   const { flow } = useCreateProjectFlow();
   const toastState = useToast();
   //For scrolling to error in page
@@ -55,6 +56,7 @@ const ProjectsCreateProjectProjectSearch = () => {
 
   // Localization
   const Global = useTranslations('Global');
+  const Flow = useTranslations('CreateProjectFlow');
   const t = useTranslations('ProjectsCreateProjectProjectSearch');
 
   // States for each search field
@@ -70,12 +72,23 @@ const ProjectsCreateProjectProjectSearch = () => {
 
   const [searchExternalProjectsQuery, { loading }] = useLazyQuery(SearchExternalProjectsDocument);
 
-  // Get affiliation URI for affiliationId passed from previous page
-  const { data: affiliationData } = useQuery(AffiliationByIdDocument, {
-    variables: {
-      affiliationId: Number(affiliationId)
-    }
+  const { data: fundingsData, loading: fundingsLoading } = useQuery(ProjectFundingsApiDocument, {
+    variables: { projectId: Number(projectId) },
+    fetchPolicy: 'network-only',
   });
+  const { data: projectData, loading: projectLoading } = useQuery(ProjectDocument, {
+    variables: { projectId: Number(projectId) },
+    fetchPolicy: 'network-only',
+  });
+
+  const funding = fundingsData?.project?.fundings?.find((f) => String(f.id) === projectFundingId);
+  const funderUri = funding?.affiliation?.uri;
+  const currentProject = projectData?.project;
+
+  const isLoading = fundingsLoading || projectLoading;
+  const fundingNotFound = !isLoading && !funderUri;
+  // Stable reference so ErrorMessages doesn't re-scroll on every render
+  const noFundingErrors = useMemo(() => [Flow('fundingStatus.errors.noFunding')], [Flow]);
 
   // Initialize useProjectImportMutation for importing project details after selection
   const [projectImportMutation] = useMutation(ProjectImportDocument);
@@ -84,26 +97,10 @@ const ProjectsCreateProjectProjectSearch = () => {
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (!funderUri) return;
+
     if (!projectID.trim() && !projectName.trim() && !awardYear.trim() && !principalInvestigator.trim()) {
       setHasSearched(false);
-      setProjects([]);
-      return;
-    }
-
-    if (!affiliationId) {
-      logECS('error', 'ProjectsCreateProjectProjectSearch', {
-        error: 'Missing affiliationId in search parameters',
-        url: { path: routePath('projects.create.projectSearch', { projectId: projectId as string }) },
-      });
-      return;
-    }
-
-    if (!affiliationData?.affiliationById?.uri) {
-      logECS('error', 'ProjectsCreateProjectProjectSearch', {
-        error: 'Missing affiliation URI',
-        url: { path: routePath('projects.create.projectSearch', { projectId: projectId as string }) },
-      });
-      setHasSearched(true);
       setProjects([]);
       return;
     }
@@ -117,7 +114,7 @@ const ProjectsCreateProjectProjectSearch = () => {
       const { data } = await searchExternalProjectsQuery({
         variables: {
           input: {
-            affiliationId: affiliationData?.affiliationById?.uri,
+            affiliationId: funderUri,
             awardId: projectID.trim() || undefined,
             awardName: projectName.trim() || undefined,
             awardYear: awardYear.trim() || undefined,
@@ -132,7 +129,7 @@ const ProjectsCreateProjectProjectSearch = () => {
     } catch (error) {
       logECS('error', 'searchExternalProjects', {
         error,
-        url: { path: routePath('projects.create.projectSearch', { projectId: projectId as string }) },
+        url: { path: routePath('projects.create.projectSearch', { projectId: projectId as string, projectFundingId }) },
       });
       setHasSearched(true);
       setProjects([]);
@@ -145,20 +142,29 @@ const ProjectsCreateProjectProjectSearch = () => {
   ): Promise<void> => {
     setErrorMessages([]);
 
+    if (!funderUri || !currentProject) {
+      setErrorMessages([t('messages.errors.selectedFailed')]);
+      return;
+    }
+
     try {
       const response = await projectImportMutation({
         variables: {
           input: {
+            // projectImport overwrites every project column, blanking any field not sent here
+            // and resetting isTestProject to false, so carry the current values over.
             project: {
               id: Number(projectId),
-              title: project.title ?? '',
-              abstractText: project.abstractText ?? undefined,
-              startDate: project.startDate ?? undefined,
-              endDate: project.endDate ?? undefined,
+              title: project.title || currentProject.title,
+              abstractText: project.abstractText || currentProject.abstractText,
+              startDate: project.startDate || currentProject.startDate,
+              endDate: project.endDate || currentProject.endDate,
+              isTestProject: currentProject.isTestProject,
+              researchDomainId: currentProject.researchDomain?.id,
             },
             funding: project.fundings?.map((f) => ({
               projectId: Number(projectId),
-              affiliationId: affiliationData!.affiliationById!.uri as string,
+              affiliationId: funderUri,
               funderProjectNumber: f?.funderProjectNumber ?? undefined,
               grantId: f?.grantId ?? undefined,
               funderOpportunityNumber: f?.funderOpportunityNumber ?? undefined,
@@ -194,7 +200,7 @@ const ProjectsCreateProjectProjectSearch = () => {
     } catch (error) {
       logECS('error', 'projectImportMutation', {
         error,
-        url: { path: routePath('projects.create.projectSearch', { projectId: projectId as string }) },
+        url: { path: routePath('projects.create.projectSearch', { projectId: projectId as string, projectFundingId }) },
       });
       setErrorMessages([t('messages.errors.selectedFailed')]);
     }
@@ -204,7 +210,15 @@ const ProjectsCreateProjectProjectSearch = () => {
     { startTransition }: { startTransition: TransitionStartFunction }
   ): Promise<void> => {
     startTransition(() => {
-      router.push(flowPath('fundingDetails', flow, projectId as string, { projectFundingId }));
+      router.push(fundingFlowPath('fundingDetails', flow, projectId as string, projectFundingId));
+    });
+  };
+
+  const handleChooseFunder = async (
+    { startTransition }: { startTransition: TransitionStartFunction }
+  ): Promise<void> => {
+    startTransition(() => {
+      router.push(flowPath('funder', flow, projectId as string));
     });
   };
 
@@ -223,7 +237,21 @@ const ProjectsCreateProjectProjectSearch = () => {
         className="page-project-create-project-search"
       />
       <CreateProjectFlowLayout screen="projectSearch" flow={flow}>
-          <ErrorMessages errors={errorMessages} ref={errorRef} />
+        <ErrorMessages errors={fundingNotFound ? noFundingErrors : errorMessages} ref={errorRef} />
+        {isLoading && <Loading variant="inline" message={Global('messaging.loading')} />}
+        {fundingNotFound && (
+          <FlowActions>
+            <TransitionButton
+              type="button"
+              onPress={handleChooseFunder}
+              loadingLabel={Global('buttons.loading')}
+            >
+              {Flow('buttons.chooseFunder')}
+            </TransitionButton>
+          </FlowActions>
+        )}
+        {!isLoading && !fundingNotFound && (
+          <>
           {/* Search Form */}
           <Form onSubmit={handleSearch} aria-labelledby="search-section">
             <section id="search-section" className={styles.searchSection}>
@@ -399,7 +427,9 @@ const ProjectsCreateProjectProjectSearch = () => {
                 </TransitionButton>
 
               </section>
-          <FlowActions />
+          </>
+        )}
+        {!fundingNotFound && <FlowActions />}
       </CreateProjectFlowLayout>
     </>
   );

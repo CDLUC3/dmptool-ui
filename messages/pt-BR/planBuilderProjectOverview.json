@@ -130,7 +130,8 @@
   "CreateProjectFlow": {
     "buttons": {
       "back": "Voltar",
-      "next": "Próximo"
+      "next": "Próximo",
+      "chooseFunder": "Escolher um financiador"
     },
     "rail": {
       "title": "Progresso da configuração",
@@ -172,7 +173,10 @@
       "description": "Isso inclui financiadores aos quais você planeja se candidatar — não apenas os que já concederam financiamento. Adicionar um agora nos ajuda a recomendar o modelo certo. Se você tiver mais de um financiador, poderá adicioná-los depois.",
       "noFunderText": "Se você ainda não tem um financiador, marque a caixa abaixo para continuar para a próxima etapa.",
       "noFunderLabel": "Não tenho um financiador",
-      "selectToContinue": "Selecione um financiador ou marque “Não tenho um financiador” para continuar."
+      "selectToContinue": "Selecione um financiador ou marque “Não tenho um financiador” para continuar.",
+      "errors": {
+        "addFailed": "Não foi possível adicionar esse financiador. Tente novamente."
+      }
     },
     "fundingStatus": {
       "title": "Situação do financiamento",
@@ -190,7 +194,8 @@
       },
       "errors": {
         "noFunding": "Não encontramos o financiador deste projeto. Adicione um financiador primeiro.",
-        "saveFailed": "Não foi possível salvar a situação do financiamento. Tente novamente."
+        "saveFailed": "Não foi possível salvar a situação do financiamento. Tente novamente.",
+        "changeFunderFailed": "Não foi possível remover esse financiador. Tente novamente."
       }
     },
     "fundingDetails": {
