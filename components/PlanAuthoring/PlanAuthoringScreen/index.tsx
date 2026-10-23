@@ -46,7 +46,11 @@ interface PlanAuthoringProps {
   planDocument?: PlanDocument;
   idPrefix?: string;
   overview?: React.ReactNode;
+  /** Rendered after the last section. */
+  footer?: React.ReactNode;
   researchOutputRowHref?: ResearchOutputRowHref;
+  /** Called instead of opening the customize guidance dialog. */
+  onCustomizeGuidance?: () => void;
 }
 
 const NO_SECTIONS: PlanSectionDefinition[] = [];
@@ -62,7 +66,9 @@ export default function PlanAuthoring({
   planDocument: initialPlanDocument,
   idPrefix = "plan-authoring",
   overview,
+  footer,
   researchOutputRowHref,
+  onCustomizeGuidance,
 }: PlanAuthoringProps) {
   const t = useTranslations("PlanAuthoring");
   const Global = useTranslations("Global");
@@ -290,7 +296,7 @@ export default function PlanAuthoring({
                           question={question}
                           capabilities={model.capabilities}
                           dataSource={dataSource}
-                          onCustomizeGuidance={() => setCustomizeOpen(true)}
+                          onCustomizeGuidance={onCustomizeGuidance ?? (() => setCustomizeOpen(true))}
                           registerUnsavedChange={registerUnsavedChange}
                           researchOutputRowHref={researchOutputRowHref}
                         />
@@ -298,6 +304,7 @@ export default function PlanAuthoring({
                     </PlanSection>
                   ))}
                 </div>
+                {footer ? <div className={styles.footer}>{footer}</div> : null}
               </>
             ) : null}
           </FullWidthSection>

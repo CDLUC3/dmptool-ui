@@ -311,7 +311,8 @@
       "additionalSampleText": "Texto de amostra adicional",
       "requirements": "Requisitos",
       "guidance": "Orientação",
-      "sampleText": "Texto de amostra"
+      "sampleText": "Texto de amostra",
+      "question": "Pergunta"
     },
     "helpText": {
       "additionalGuidanceText": "Esboça a orientação que um usuário deve considerar para esta pergunta.",
@@ -896,5 +897,80 @@
   "DisplayLogicConflictMessage": {
     "questionsHeading": "Edite a lógica de exibição em:",
     "untitledQuestion": "Pergunta {id}"
+  },
+  "TemplatePreview": {
+    "title": "Pré-visualização: {templateName}",
+    "description": "É assim que o seu modelo aparecerá para quem estiver escrevendo um plano.",
+    "breadcrumb": "Pré-visualização",
+    "backToTemplate": "Voltar ao modelo",
+    "notice": {
+      "title": "Esta é uma pré-visualização",
+      "body": "Ela mostra as suas alterações mais recentes, incluindo as que ainda não foram publicadas. Você pode experimentar responder às perguntas, mas nada do que for inserido será salvo. A aba de orientação \"Org. exemplo\" é um texto ilustrativo que mostra onde os pesquisadores também podem ver orientações da própria organização."
+    },
+    "exampleGuidance": {
+      "label": "Exemplo: orientação da organização do pesquisador",
+      "shortName": "Org. exemplo",
+      "notice": "Este é um texto de exemplo, não uma orientação real.",
+      "body": "Quando os pesquisadores escreverem um plano com o seu modelo, eles também poderão ver orientações da própria organização em uma aba como esta. Eles também podem adicionar orientações de outras organizações com \"+ Personalizar\". As suas orientações sempre ficam na própria aba.",
+      "noTemplateGuidanceTitle": "Somente na pré-visualização:",
+      "noTemplateGuidance": "você não adicionou orientações a esta pergunta, então os pesquisadores verão apenas as orientações da própria organização, se houver. Os pesquisadores não verão esta nota."
+    },
+    "researchOutputNotice": {
+      "title": "Pré-visualização: experimente adicionar um resultado de pesquisa",
+      "body": "Esta é a página que os pesquisadores usam para descrever cada resultado de pesquisa do plano. Preencha os campos e selecione \"Salvar\" (ou \"Atualização\" para um que você já adicionou) para ver como ele aparece na lista da sua pré-visualização.",
+      "notSaved": "Nada é salvo. Os seus resultados de pesquisa ficam disponíveis apenas enquanto você estiver na pré-visualização."
+    },
+    "customizeGuidanceUnavailable": "É aqui que os pesquisadores escolhem orientações de outras organizações para exibir junto com as suas. Isso não está disponível na pré-visualização.",
+    "empty": {
+      "noSectionsTitle": "Ainda não há nada para pré-visualizar",
+      "noQuestionsTitle": "O seu modelo ainda não tem perguntas",
+      "body": "Para pré-visualizar o seu modelo, ele precisa de pelo menos uma seção com pelo menos uma pergunta.",
+      "addSection": "Adicionar uma seção",
+      "addQuestion": "Ir para o seu modelo para adicionar uma pergunta"
+    },
+    "questionPreview": {
+      "title": "Pré-visualização da pergunta",
+      "description": "É assim que esta pergunta aparecerá para quem estiver escrevendo um plano.",
+      "breadcrumb": "Pré-visualização da pergunta",
+      "backToQuestion": "Voltar à edição da pergunta",
+      "notice": {
+        "title": "Esta é uma pré-visualização",
+        "draft": "Ela mostra as suas alterações mais recentes nesta pergunta, incluindo as que ainda não foram salvas, e é atualizada enquanto você edita.",
+        "saved": "Ela mostra a última versão salva desta pergunta.",
+        "notSaved": "Apenas a seção desta pergunta é exibida. A lógica de exibição não é aplicada. Você pode experimentar responder, mas nada do que você inserir é salvo."
+      },
+      "loading": "Carregando pré-visualização...",
+      "loadFailed": "Não foi possível carregar a pré-visualização.",
+      "notFoundTitle": "Não há nada para pré-visualizar",
+      "notFound": "Esta pergunta não foi encontrada no seu modelo. Ela pode ter sido excluída.",
+      "notFoundNew": "Esta página pré-visualiza uma pergunta enquanto você a adiciona. Volte para a pergunta e selecione \"Pergunta de visualização\" novamente.",
+      "previousQuestion": "Pergunta anterior, exibida para contexto",
+      "nextQuestion": "Próxima pergunta, exibida para contexto"
+    },
+    "displayLogic": {
+      "label": "Aplicar lógica de exibição",
+      "off": "Desativada: todas as perguntas são exibidas, incluindo as que normalmente ficariam ocultas.",
+      "on": "Ativada: as perguntas são exibidas ou ocultadas com base nas suas respostas, como aconteceria em um plano."
+    },
+    "errors": {
+      "forbidden": {
+        "title": "Você não pode ver esta pré-visualização",
+        "body": "Você não tem permissão para ver esta pré-visualização. Verifique se você entrou com a conta correta."
+      },
+      "notFound": {
+        "title": "Não há nada para pré-visualizar",
+        "body": "Não foi possível encontrar este item. Ele pode ter sido excluído, ou o link pode estar incorreto."
+      },
+      "failed": {
+        "title": "Não foi possível carregar a pré-visualização",
+        "body": "Algo deu errado ao carregar a pré-visualização. Tente novamente em alguns instantes."
+      }
+    },
+    "customization": {
+      "description": "É assim que o modelo, com as suas personalizações, aparecerá para os pesquisadores da sua organização quando escreverem um plano.",
+      "backToCustomization": "Voltar à personalização",
+      "notice": "Ela mostra o modelo publicado com as suas personalizações mais recentes, incluindo as que ainda não foram publicadas. As orientações da sua organização aparecem na própria aba. A lógica de exibição não é aplicada, por isso todas as perguntas são exibidas. Você pode experimentar responder às perguntas, mas nada do que for inserido será salvo.",
+      "empty": "O modelo não tem perguntas para pré-visualizar."
+    }
   }
 }

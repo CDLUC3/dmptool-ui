@@ -311,7 +311,8 @@
       "additionalSampleText": "Additional sample text",
       "requirements": "Requirements",
       "guidance": "Guidance",
-      "sampleText": "Sample text"
+      "sampleText": "Sample text",
+      "question": "Question"
     },
     "helpText": {
       "additionalGuidanceText": "Outline the guidance that a user should consider for this question.",
@@ -896,5 +897,80 @@
   "DisplayLogicConflictMessage": {
     "questionsHeading": "Edit the display logic on:",
     "untitledQuestion": "Question {id}"
+  },
+  "TemplatePreview": {
+    "title": "Preview: {templateName}",
+    "description": "This is how your template will look to someone writing a plan.",
+    "breadcrumb": "Preview",
+    "backToTemplate": "Back to template",
+    "notice": {
+      "title": "This is a preview",
+      "body": "It shows your latest changes, including any you haven't published yet. You can try answering the questions, but nothing you enter is saved. The \"Example org\" guidance tab is placeholder text that shows where researchers may also see guidance from their own organization."
+    },
+    "exampleGuidance": {
+      "label": "Example: guidance from the researcher's organization",
+      "shortName": "Example org",
+      "notice": "This is example text, not real guidance.",
+      "body": "When researchers write a plan with your template, they may also see guidance from their own organization in a tab like this one. They can also add guidance from other organizations with \"+ Customize\". Your guidance always stays in its own tab.",
+      "noTemplateGuidanceTitle": "Preview only:",
+      "noTemplateGuidance": "you haven't added guidance to this question, so researchers will only see guidance from their own organization, if it has any. Researchers won't see this note."
+    },
+    "researchOutputNotice": {
+      "title": "Preview: try adding a research output",
+      "body": "This is the page researchers use to describe each research output in their plan. Fill in the fields and select \"Save\" (or \"Update\" for one you've already added) to see how it appears in the list on your preview.",
+      "notSaved": "Nothing is saved. Your research outputs stay only while you're in the preview."
+    },
+    "customizeGuidanceUnavailable": "This is where researchers choose guidance from other organizations to show alongside yours. It isn't available in a preview.",
+    "empty": {
+      "noSectionsTitle": "There's nothing to preview yet",
+      "noQuestionsTitle": "Your template has no questions yet",
+      "body": "To preview your template, it needs at least one section with at least one question.",
+      "addSection": "Add a section",
+      "addQuestion": "Go to your template to add a question"
+    },
+    "questionPreview": {
+      "title": "Question preview",
+      "description": "This is how this question will look to someone writing a plan.",
+      "breadcrumb": "Question preview",
+      "backToQuestion": "Back to editing question",
+      "notice": {
+        "title": "This is a preview",
+        "draft": "It shows your latest changes to this question, including ones you haven't saved yet, and updates as you edit.",
+        "saved": "It shows the last saved version of this question.",
+        "notSaved": "Only this question's section is shown. Display logic isn't applied. You can try answering, but nothing you enter is saved."
+      },
+      "loading": "Loading preview...",
+      "loadFailed": "The preview couldn't be loaded.",
+      "notFoundTitle": "There's nothing to preview",
+      "notFound": "This question couldn't be found in your template. It may have been deleted.",
+      "notFoundNew": "This page previews a question while you're adding it. Go back to the question and select \"Preview question\" again.",
+      "previousQuestion": "Previous question, shown for context",
+      "nextQuestion": "Next question, shown for context"
+    },
+    "displayLogic": {
+      "label": "Apply display logic",
+      "off": "Off: every question is shown, including ones that would normally be hidden.",
+      "on": "On: questions are shown or hidden based on your answers, as they would be in a plan."
+    },
+    "errors": {
+      "forbidden": {
+        "title": "You can't preview this",
+        "body": "You don't have permission to see this preview. Check that you're signed in with the right account."
+      },
+      "notFound": {
+        "title": "There's nothing to preview",
+        "body": "This couldn't be found. It may have been deleted, or the link may be wrong."
+      },
+      "failed": {
+        "title": "The preview couldn't be loaded",
+        "body": "Something went wrong while loading the preview. Try again in a moment."
+      }
+    },
+    "customization": {
+      "description": "This is how the template, with your customizations, will look to researchers at your organization when they write a plan.",
+      "backToCustomization": "Back to customization",
+      "notice": "It shows the published template with your latest customizations, including any you haven't published yet. Your organization's guidance appears in its own tab. Display logic isn't applied, so every question is shown. You can try answering the questions, but nothing you enter is saved.",
+      "empty": "The template has no questions to preview."
+    }
   }
 }
