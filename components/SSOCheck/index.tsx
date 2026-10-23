@@ -270,18 +270,6 @@ export const SSOCheckContainer: React.FC<SSOCheckContainerProps> = ({ mode, init
       return;
     }
 
-    // Link account request to the Auth service for pending SSO signups
-    const linkRequest = async (token: string | null) => {
-      return await fetch(`${process.env.NEXT_PUBLIC_AUTH_ENDPOINT}/sso/link`, {
-        method: "POST",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-          "X-CSRF-TOKEN": token || "",
-        },
-      });
-    }
-
     // Login or Register request to the Auth service
     const authRequest = async (token: string | null) => {
       const payload: LoginInput | RegisterInput = mode === "login"
@@ -324,15 +312,6 @@ export const SSOCheckContainer: React.FC<SSOCheckContainerProps> = ({ mode, init
       }
 
       if (response.ok) {
-        // If the user is logging in and they have a pending SSO signup, we need to link their account to the SSO provider.
-        if (mode === "login" && isPendingSsoSignup) {
-          const linkResponse = await linkRequest(await getCsrfToken());
-          if (!linkResponse.ok) {
-            await handleErrors(linkResponse, linkRequest, setErrors, router, modePaths[mode]);
-            return;
-          }
-        }
-
         await onFormSubmissionSuccess();
       } else if (response.status === 409) {
         // If it was a 409 conflict, the email is already registered. This should only happen on registration.
@@ -451,15 +430,6 @@ export const SSOCheckContainer: React.FC<SSOCheckContainerProps> = ({ mode, init
         ref={errorRef}
       />
 
-      {isPendingSsoSignup && (
-        <>
-          <p>{t("linkAccount")}</p>
-          <div className={styles.formLinks}>
-            <Link href={routePath("app.login")}>{t("linkButton")}</Link>
-          </div>
-        </>
-      )}
-
       <FormInput
         name="email"
         type="email"
@@ -540,6 +510,7 @@ export const SSOCheckContainer: React.FC<SSOCheckContainerProps> = ({ mode, init
             suggestions={suggestions}
             onSearch={handleSearch}
             isLoading={isSearching}
+            isDisabled={isPendingSsoSignup}
           />
           {otherField && (
             <FormInput

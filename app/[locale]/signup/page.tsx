@@ -5,6 +5,7 @@ import { getTranslations } from "next-intl/server";
 import { ContentContainer, LayoutContainer } from '@/components/Container';
 import { SSOCheckContainer } from "@/components/SSOCheck";
 import { getInitialPendingSignup } from "@/lib/server/auth";
+import { routePath } from "@/utils/index";
 
 const SignUpPage: React.FC = async () => {
   const [t, initialPendingSignup] = await Promise.all([
@@ -12,13 +13,40 @@ const SignUpPage: React.FC = async () => {
     getInitialPendingSignup(),
   ]);
 
-  const isPendingSSO: boolean = initialPendingSignup !== undefined;
+  const isPendingSSO: boolean = true; //initialPendingSignup !== undefined;
 
   return (
     <LayoutContainer className="auth-container">
       <ContentContainer className="auth-card">
-        <h3>{t(isPendingSSO ? "finishRegistering": "registerTitle")}</h3>
-        <SSOCheckContainer mode="register" initialPendingSignup={initialPendingSignup} />
+        {isPendingSSO && (
+          <>
+            <h3>{t("signSignOnSuccess")}</h3>
+
+            <h4>{t("linkAccountHeader")}</h4>
+            <p>{t("linkAccountMessage")}</p>
+            <a
+              href={routePath("app.signup")}
+              className="button"
+            >
+              {t("linkButton")}
+            </a>
+
+            <h4>{t("finishRegistering")}</h4>
+            <SSOCheckContainer
+              mode="register"
+              initialPendingSignup={initialPendingSignup}
+            />
+          </>
+        )}
+        {!isPendingSSO && (
+          <>
+            <h3>{t("registerTitle")}</h3>
+            <SSOCheckContainer
+              mode="register"
+              initialPendingSignup={initialPendingSignup}
+            />
+          </>
+        )}
       </ContentContainer>
     </LayoutContainer>
   );

@@ -16,8 +16,11 @@ const LoginPage: React.FC = async () => {
   return (
     <LayoutContainer className="auth-container">
       <ContentContainer className="auth-card">
-        <h3>{t( isPendingSSO? "loginToLink" : "loginTitle")}</h3>
-        <SSOCheckContainer mode="login" />
+        <h3>{t(isPendingSSO ? "loginToLink" : "loginTitle")}</h3>
+        <SSOCheckContainer
+          mode="login"
+          initialPendingSignup={initialPendingSignup}
+        />
       </ContentContainer>
     </LayoutContainer>
   );
