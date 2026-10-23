@@ -25,16 +25,15 @@ Node **22** (see `.nvmrc`) and **npm**. Don't use yarn or pnpm, and don't create
 
 **Never:**
 - Edit anything in `generated/`. Change the `.graphql` files and run `npm run generate` instead.
-- Edit `public/tinymce/`, `node_modules/`, `.next/`, `coverage/`, or `package-lock.json` by hand.
+- Edit `public/tinymce/` by hand. It's a committed copy of the TinyMCE editor (currently 7.8.0) that the browser loads from `/tinymce/tinymce.min.js`. The `tinymce` npm package only provides types, so bumping it doesn't upgrade the editor. To upgrade, replace the whole folder with the build from `node_modules/tinymce`, and only when asked.
 - Commit secrets, tokens, or `.env*.local` / `.env*.production` files. If you add an env var, put it in `.env.example`, and mention in the PR that `buildspec.yaml` and `Dockerfile.prod` need it too.
 - Lower the Jest `coverageThreshold` in `jest.config.ts`, add coverage ignores to hide untested code, or skip or delete tests so a run passes.
 - Skip the husky pre-commit hook (`--no-verify`).
 - Hand-edit the version in `package.json`, or add a new `## vX.Y.Z` heading to `CHANGELOG.md`. CI does both.
-- Edit `messages/pt-BR/*` translations beyond adding new keys. Crowdin manages them.
 - Run Prettier or a formatter on files you didn't change.
 
 **Ask first:**
-- Before adding, removing, or upgrading a dependency. Versions are pinned exactly (no `^`); keep it that way.
+- Before adding, removing, or upgrading a dependency. Pin exact versions with `npm install --save-exact <package>@<version>`, because plain `npm install <package>` adds a `^`. `package-lock.json` changes only as a result of `npm install`; never edit it by hand.
 - Before changing `proxy.ts`, auth or CSRF code (`context/AuthContext.tsx`, `context/CsrfContext.tsx`, `utils/authHelper.ts`, `utils/authLink.ts`, `utils/server/serverAuthHelper.ts`, `lib/server/auth.ts`, `app/api/`), `next.config.mjs`, Dockerfiles, `buildspec.yaml`, or `.github/workflows/`.
 
 ## Code style
@@ -48,7 +47,6 @@ Node **22** (see `.nvmrc`) and **npm**. Don't use yarn or pnpm, and don't create
 - Every user-facing string comes from `useTranslations()`. Don't hard-code English in JSX.
 - Use the generated `*Document` types with Apollo hooks. Don't write inline `gql` strings.
 - Render user or HTML content with `components/SafeHtml` or the helpers in `utils/sanitize.tsx`, never with raw `dangerouslySetInnerHTML`.
-- Follow the existing import grouping: React and libraries, then `// GraphQL`, `// Components`, `// Utils and other`.
 
 ```tsx
 'use client'
@@ -104,6 +102,21 @@ export default ExamplePage;
 - Give each component its own PascalCase folder containing `index.tsx` (a default export plus exported prop types), `<Name>.module.scss`, and `__tests__/index.spec.tsx`.
 - Search for an existing component before writing a new one. Form controls are in `components/Form` (`FormInput`, `FormSelect`, `FormTextArea`, `CheckboxGroup`, `TransitionLink`, …), and layout is in `components/Container` (`ContentContainer`, `LayoutWithPanel`, `SidebarPanel`). Other shared pieces include `Modal`, `ErrorMessages`, `PageHeader`, `Loading`, `SkeletonListLoading`, and `SafeHtml`.
 - Build interactive elements on React Aria Components so keyboard and screen-reader support come for free. Don't make clickable `div`s. If a React Aria element takes an `href`, wrap it in `AriaRouterProvider` so links keep the locale.
+- If clicking a link or button can be slow (it navigates to another page, saves, or searches), use `TransitionLink` or `TransitionButton` from `@/components/Form`. They show the top progress bar and a busy state, and they block repeat clicks. `TransitionLink` is a drop-in replacement for `Link`. `TransitionButton`'s `onPress` is async and receives `startTransition`; call `router.push` inside it so the busy state lasts until the new page loads:
+
+  ```tsx
+  <TransitionButton
+    onPress={async ({ startTransition }) => {
+      await saveProject();
+      startTransition(() => {
+        router.push(routePath("projects.show", { projectId }));
+      });
+    }}
+    loadingLabel={Global("buttons.saving")}
+  >
+    {Global("buttons.save")}
+  </TransitionButton>
+  ```
 - Use the tokens in `styles/variables.scss` instead of literal spacing, color, or breakpoint values.
 - Update the demo in `app/[locale]/styleguide/` when a shared component's API or appearance changes.
 - `components/PlanAuthoring/` is a self-contained module with its own model (`model.ts`), data source (`planAuthoringDataSource.ts`), and mocks. Extend those rather than calling Apollo from its subcomponents.
@@ -153,14 +166,16 @@ Show translated messages (`t("messages.errors.…")`), not raw backend or except
 - Tokens are issued by the separate `dmptool-auth` service (RS256). This app only verifies them, using the auth service's JWKS keys (`lib/server/auth.ts`). Never sign tokens here or add a shared JWT secret.
 - Tokens are in http-only cookies, so client code can't read them. Get auth state from `useAuthContext()` or `/api/check-auth`.
 - Role checks in the UI (e.g. `useIsOrgAdmin`) only control what's shown. Permissions must be enforced by the backend.
+- **GraphQL requests handle token refresh and CSRF automatically.** The `errorLink` in `lib/graphql/graphqlHelper.ts` refreshes the access token and retries on `UNAUTHENTICATED` or a 401, and gets a new CSRF token and retries on `Invalid CSRF token`. Don't add your own refresh or CSRF handling around `useQuery` / `useMutation`.
+- **Direct `fetch()` calls to the auth service don't get that for you.** These are calls to `NEXT_PUBLIC_AUTH_ENDPOINT`, like password changes, SSO, and sign-out. Get a token with `getCsrfToken()` from `useCsrf()` and send it as the `X-CSRF-TOKEN` header with `credentials: "include"`. CSRF tokens are single-use, so on a 403, retry once with a fresh token. Copy the pattern in `app/[locale]/account/update-password/page.tsx`.
 
 ## Translations (`messages/`)
 
-- `messages/en-US/` is the source of truth. Crowdin manages `messages/pt-BR/`. When you add a key, also add it to pt-BR (copying the English text is fine) so the structure matches.
+- `messages/en-US/` is the source of truth. Whenever you add or change an en-US string, add or update the Brazilian Portuguese translation in `messages/pt-BR/` in the same change, under the same key path. Don't leave English text in pt-BR. Note in the PR which pt-BR strings you translated, so a reviewer can check them.
 - Top-level keys are PascalCase namespaces (`useTranslations("Namespace")`), and nested keys are camelCase. Reuse common labels from `Global` (`Global.buttons.*`, `Global.breadcrumbs.*`) before adding duplicates.
 - A new JSON file must be imported and merged in `i18n/request.ts`, or its keys won't load.
 - Use ICU syntax: `"Hello {name}!"`, `"{count, plural, one {# item} other {# items}}"`, and `"Read <link>the guidelines</link>."` with `t.rich`.
-- Don't reorder existing keys. Reordering creates noisy diffs and Crowdin churn.
+- Don't reorder existing keys. Reordering creates noisy diffs.
 
 ## Testing and verification
 
