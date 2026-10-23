@@ -10,6 +10,7 @@
     "linkAccountHeader": "Já tem uma conta na Ferramenta DMP?",
     "linkAccountMessage": "Faça login com seu e-mail e senha para vincular sua conta SSO à sua conta existente na Ferramenta DMP.",
     "linkButton": "Vincular minha conta",
+    "signUpInstead": "Cadastrar-se em vez disso",
     "finishRegistering": "Ou, conclua a configuração da sua conta",
     "password": "Palavra-passe",
     "passwordConfirm": "Confirmar a senha",

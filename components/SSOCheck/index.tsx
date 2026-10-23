@@ -351,7 +351,9 @@ export const SSOCheckContainer: React.FC<SSOCheckContainerProps> = ({ mode, init
           if (emailError) break;
 
           // Check if it is an SSO email
-          await ssoCheck();
+          if (!isPendingSsoSignup) {
+            await ssoCheck();
+          }
           break;
 
         case "non-sso":
@@ -443,10 +445,10 @@ export const SSOCheckContainer: React.FC<SSOCheckContainerProps> = ({ mode, init
         isInvalid={!!fieldErrors.email}
         errorMessage={fieldErrors.email}
         isRequiredVisualOnly={true}
-        readOnly={["non-sso", "sso"].includes(step) && !isPendingSsoSignup}
-        inputClasses={["non-sso", "sso"].includes(step) ? "disabled-look" : ""}
+        readOnly={step !== "email" && !isPendingSsoSignup}
+        inputClasses={step !== "email" && !isPendingSsoSignup ? "disabled-look" : ""}
         autoComplete={step === "non-sso" ? "off" : "email"}
-        helpMessage={emailHelpMessage}
+        helpMessage={isPendingSsoSignup ? t("pendingSSOEmailHelp") : emailHelpMessage}
         data-testid="emailInput"
       />
 

@@ -25,7 +25,7 @@ const SignUpPage: React.FC = async () => {
             <h4>{t("linkAccountHeader")}</h4>
             <p>{t("linkAccountMessage")}</p>
             <a
-              href={routePath("app.signup")}
+              href={routePath("app.login")}
               className="button"
             >
               {t("linkButton")}
@@ -38,6 +38,7 @@ const SignUpPage: React.FC = async () => {
             />
           </>
         )}
+
         {!isPendingSSO && (
           <>
             <h3>{t("registerTitle")}</h3>
