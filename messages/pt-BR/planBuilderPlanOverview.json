@@ -61,10 +61,7 @@
     "sections": {
       "start": "Iniciar",
       "ariaLabel": "Resposta {action} para: {title}",
-      "progress": "{current} de {total}",
-      "questionsAnswered": "questões respondidas",
       "update": "Atualização",
-      "updateSection": "Editar: {title}",
       "view": "Exibir"
     },
     "errors": {

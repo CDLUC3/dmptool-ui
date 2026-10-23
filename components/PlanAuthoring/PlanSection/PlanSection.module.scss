@@ -79,6 +79,12 @@
   gap: 1.5rem;
 }
 
+.emptySection {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--gray-600);
+}
+
 .backToTop {
   margin: 1.5rem 0 0.5rem;
   text-align: left;

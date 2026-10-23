@@ -73,6 +73,12 @@
     "ucopHomepage": "Página inicial do UCOP",
     "uc3Helpdesk": "UC3 Helpdesk"
   },
+  "AffiliationSearchQuestion": {
+    "label": "Instituição",
+    "helpText": "Procurar sua instituição",
+    "otherLabel": "Outra instituição",
+    "otherPlaceholder": "Digite o nome de outra instituição"
+  },
   "UserProfile": {
     "breadcrumbHome": "Home",
     "headingUpdateProfile": "Atulizar perfil",
@@ -186,7 +192,8 @@
         "passwordMissingLowercase": "A senha deve conter pelo menos uma letra minúscula",
         "passwordMissingSpecialChar": "A senha deve conter pelo menos um caractere especial",
         "incorrectCurrentPassword": "A senha atual está incorreta",
-        "errorUpdatingPassword": "Erro ao atualizar a senha"
+        "errorUpdatingPassword": "Erro ao atualizar a senha",
+        "passwordDoesNotMeetRequirements": "A senha não atende aos requisitos"
       }
     }
   },
@@ -881,6 +888,10 @@
       "loadingPleaseWait": "Aguarde. Carregando...",
       "unPublishBtnTooltipMessage": "Não é possível cancelar a publicação do grupo de orientação porque não há versões publicadas.",
       "publishBtnTooltipMessage": "Grupo de Orientação já foi publicado.",
+      "unsavedChanges": "Alterações não salvas",
+      "savedJustNow": "Salvo há pouco",
+      "lastSavedOneMinuteAgo": "Salvo há 1 minuto",
+      "lastSavedMinutesAgo": "Salvo há {minutes} minutos",
       "success": {
         "guidanceGroupCreated": "Grupo de orientação {groupName} criado com sucesso",
         "guidanceGroupPublished": "Grupo de orientação {groupName} publicado com sucesso",
