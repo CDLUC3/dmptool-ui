@@ -462,7 +462,7 @@ describe("SSOCheckContainer", () => {
       expect(getEmailInput()).toHaveValue("jane.doe@example.edu");
       expect(screen.getByLabelText("firstName")).toHaveValue("Jane");
       expect(screen.getByLabelText("lastName")).toHaveValue("Doe");
-      expect(screen.getByTestId("typeaheadWithOther")).toHaveAttribute("data-pending-value", "Example University");
+      expect(screen.queryByLabelText("institution")).not.toBeInTheDocument();
       expect(screen.queryByLabelText("password")).not.toBeInTheDocument();
       expect(screen.queryByLabelText("passwordConfirm")).not.toBeInTheDocument();
       expect(screen.getByTestId("actionSubmit")).toBeInTheDocument();

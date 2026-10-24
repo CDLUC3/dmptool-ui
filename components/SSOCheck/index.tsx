@@ -499,34 +499,34 @@ export const SSOCheckContainer: React.FC<SSOCheckContainerProps> = ({ mode, init
             />
           </div>
 
-          <TypeAheadWithOther
-            className={styles.typeAhead}
-            label={t("institution")}
-            isRequiredVisualOnly={true}
-            fieldName="institution"
-            setOtherField={setOtherField}
-            helpText={t("institutionHelp")}
-            updateFormData={updateAffiliations}
-            value={affiliation ?? ""}
-            error={fieldErrors?.affiliationId || searchError || ""}
-            suggestions={suggestions}
-            onSearch={handleSearch}
-            isLoading={isSearching}
-            isDisabled={isPendingSsoSignup}
-          />
-          {otherField && (
-            <FormInput
-              name="otherAffiliation"
-              id="fieldInstitution"
-              label={t("institutionOther")}
-              onChange={(e) => setOtherAffiliation(e.target.value)}
-              placeholder={t("institutionOtherPlaceholder")}
-              data-testid="otherAffiliation"
-            />
-          )}
-
           {!isPendingSsoSignup && (
             <>
+              <TypeAheadWithOther
+                className={styles.typeAhead}
+                label={t("institution")}
+                isRequiredVisualOnly={true}
+                fieldName="institution"
+                setOtherField={setOtherField}
+                helpText={t("institutionHelp")}
+                updateFormData={updateAffiliations}
+                value={affiliation ?? ""}
+                error={fieldErrors?.affiliationId || searchError || ""}
+                suggestions={suggestions}
+                onSearch={handleSearch}
+                isLoading={isSearching}
+                isDisabled={isPendingSsoSignup}
+              />
+              {otherField && (
+                <FormInput
+                  name="otherAffiliation"
+                  id="fieldInstitution"
+                  label={t("institutionOther")}
+                  onChange={(e) => setOtherAffiliation(e.target.value)}
+                  placeholder={t("institutionOtherPlaceholder")}
+                  data-testid="otherAffiliation"
+                />
+              )}
+
               <FormInput
                 name="password"
                 type="password"
