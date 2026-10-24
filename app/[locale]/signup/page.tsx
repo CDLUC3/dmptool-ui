@@ -28,7 +28,7 @@ const SignUpPage: React.FC = async () => {
               href={routePath("app.login")}
               className="button"
             >
-              {t("linkButton")}
+              {t("loginTitle")}
             </a>
 
             <h4>{t("finishRegistering")}</h4>

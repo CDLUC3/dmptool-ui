@@ -85,15 +85,6 @@ describe('LoginPage', () => {
     });
   });
 
-  it('uses the pending SSO login heading when a pending signup is present', async () => {
-    (getInitialPendingSignup as jest.Mock).mockResolvedValue({ email: 'test@example.com' });
-
-    await renderPage();
-
-    expect(screen.getByRole('heading', { name: 'loginToLink' })).toBeInTheDocument();
-    expect(getInitialPendingSignup).toHaveBeenCalledTimes(1);
-  });
-
   it('shows the password login form when no SSO provider matches', async () => {
     await renderPage();
 

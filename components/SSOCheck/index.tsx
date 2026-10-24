@@ -166,10 +166,16 @@ export const SSOCheckContainer: React.FC<SSOCheckContainerProps> = ({ mode, init
       if (response.ok) {
         // If successful, the response will contain the affiliationId and displayName for the SSO provider.
         const json = await response.json();
-        setSsoEntityId(json.entityId);
+
+        if (json.entityId) {
+          setSsoEntityId(json.entityId);
+          setStep("sso");
+        }
+
+        // The check may return affiliation info even if its not SSO enabled. We want to use that info to pre-fill the
+        // affiliation field on the form.
         setAffiliation(json.displayName);
         setAffiliationId(json.affiliationId);
-        setStep("sso");
       } else if (response.status === 404) {
         // If a 404 was returned then the email is not associated with an SSO provider, so we can show the non-SSO form.
         setStep("non-sso");
@@ -445,8 +451,8 @@ export const SSOCheckContainer: React.FC<SSOCheckContainerProps> = ({ mode, init
         isInvalid={!!fieldErrors.email}
         errorMessage={fieldErrors.email}
         isRequiredVisualOnly={true}
-        readOnly={step !== "email" && !isPendingSsoSignup}
-        inputClasses={step !== "email" && !isPendingSsoSignup ? "disabled-look" : ""}
+        readOnly={step !== "email"}
+        inputClasses={step !== "email" ? "disabled-look" : ""}
         autoComplete={step === "non-sso" ? "off" : "email"}
         helpMessage={isPendingSsoSignup ? t("pendingSSOEmailHelp") : emailHelpMessage}
         data-testid="emailInput"

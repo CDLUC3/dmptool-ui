@@ -167,7 +167,7 @@ describe('SignUpPage', () => {
 
     expect(screen.getByRole('heading', { name: 'signSignOnSuccess' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'linkAccountHeader' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'linkButton' })).toHaveAttribute('href', '/login');
+    expect(screen.getByRole("link", { name: "loginTitle" })).toHaveAttribute("href", "/login");
     expect(screen.getByTestId('emailInput')).toHaveValue('jane@example.edu');
     expect(screen.getByLabelText('firstName')).toHaveValue('Jane');
     expect(screen.getByLabelText('lastName')).toHaveValue('Doe');
