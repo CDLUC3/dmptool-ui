@@ -3,6 +3,8 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import SignUpPage from '../page';
 import { useCsrf } from '@/context/CsrfContext';
 import { useAuthContext } from '@/context/AuthContext';
+import { getTranslations } from 'next-intl/server';
+import { getInitialPendingSignup } from '@/lib/server/auth';
 
 jest.mock('@/components/Form/TypeAheadWithOther', () => ({
   TypeAheadWithOther: ({ updateFormData }: { updateFormData: (id: string, value: string) => void }) => (
@@ -35,11 +37,23 @@ jest.mock('@/context/CsrfContext', () => ({
   useCsrf: jest.fn(),
 }));
 
+jest.mock('next-intl/server', () => ({
+  getTranslations: jest.fn(),
+}));
+
+jest.mock('@/lib/server/auth', () => ({
+  getInitialPendingSignup: jest.fn(),
+}));
+
 const ssoCheckUrl = `${process.env.NEXT_PUBLIC_AUTH_ENDPOINT}/sso-check`;
 const signUpUrl = `${process.env.NEXT_PUBLIC_AUTH_ENDPOINT}/sign-up`;
 
 describe('SignUpPage', () => {
   const getCsrfToken = jest.fn().mockResolvedValue('mocked-csrf-token');
+
+  const renderPage = async () => {
+    render(await SignUpPage({}));
+  };
 
   const enterEmail = async () => {
     fireEvent.change(screen.getByTestId('emailInput'), {
@@ -60,6 +74,8 @@ describe('SignUpPage', () => {
   };
 
   beforeEach(() => {
+    (getTranslations as jest.Mock).mockResolvedValue((key: string) => key);
+    (getInitialPendingSignup as jest.Mock).mockResolvedValue(undefined);
     (useCsrf as jest.Mock).mockReturnValue({ getCsrfToken });
     (useAuthContext as jest.Mock).mockReturnValue({
       clearCache: jest.fn().mockResolvedValue(undefined),
@@ -76,7 +92,7 @@ describe('SignUpPage', () => {
   });
 
   it('shows registration fields only after an unmatched SSO check', async () => {
-    render(<SignUpPage />);
+    await renderPage();
 
     await enterEmail();
 
@@ -98,7 +114,7 @@ describe('SignUpPage', () => {
         displayName: 'Example University',
       }),
     } as Response);
-    render(<SignUpPage />);
+    await renderPage();
 
     await enterEmail();
 
@@ -111,29 +127,50 @@ describe('SignUpPage', () => {
     (global.fetch as jest.Mock)
       .mockResolvedValueOnce({ ok: false, status: 404 } as Response)
       .mockResolvedValueOnce({ ok: true, status: 200 } as Response);
-    render(<SignUpPage />);
+    await renderPage();
 
     await completeForm();
     fireEvent.click(screen.getByTestId('actionSubmit'));
 
     await waitFor(() => {
-      expect(global.fetch).toHaveBeenLastCalledWith(signUpUrl, {
+      expect(global.fetch).toHaveBeenLastCalledWith(signUpUrl, expect.objectContaining({
         method: 'POST',
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
           'X-CSRF-TOKEN': 'mocked-csrf-token',
         },
-        body: JSON.stringify({
-          givenName: 'John',
-          surName: 'Smith',
-          email: 'test@example.com',
-          password: 'Secret -- 123',
-          affiliationId: 'institution-id',
-          otherAffiliationName: '',
-          acceptedTerms: true,
-        }),
+      }));
+      const [, options] = (global.fetch as jest.Mock).mock.calls.at(-1);
+      expect(JSON.parse(options.body)).toEqual({
+        givenName: 'John',
+        surName: 'Smith',
+        email: 'test@example.com',
+        password: 'Secret -- 123',
+        affiliationId: 'institution-id',
+        otherAffiliationName: '',
+        acceptedTerms: true,
       });
     });
+  });
+
+  it('shows account-linking instructions and prepopulates a pending SSO signup', async () => {
+    (getInitialPendingSignup as jest.Mock).mockResolvedValue({
+      email: 'jane@example.edu',
+      affiliation: 'example-affiliation',
+      displayName: 'Example University',
+      givenName: 'Jane',
+      surName: 'Doe',
+    });
+
+    await renderPage();
+
+    expect(screen.getByRole('heading', { name: 'signSignOnSuccess' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'linkAccountHeader' })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "loginTitle" })).toHaveAttribute("href", "/login");
+    expect(screen.getByTestId('emailInput')).toHaveValue('jane@example.edu');
+    expect(screen.getByLabelText('firstName')).toHaveValue('Jane');
+    expect(screen.getByLabelText('lastName')).toHaveValue('Doe');
+    expect(screen.queryByTestId('pass')).not.toBeInTheDocument();
   });
 });

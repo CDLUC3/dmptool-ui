@@ -1,24 +1,53 @@
-'use client'
-
-import React, { useEffect } from 'react';
-import { useTranslations } from "next-intl";
+import React from 'react';
+import { getTranslations } from "next-intl/server";
 
 //Components
 import { ContentContainer, LayoutContainer } from '@/components/Container';
 import { SSOCheckContainer } from "@/components/SSOCheck";
+import { getInitialPendingSignup } from "@/lib/server/auth";
+import { routePath } from "@/utils/index";
 
-const SignUpPage: React.FC = () => {
-  const t = useTranslations('AuthPage');
+const SignUpPage: React.FC = async () => {
+  const [t, initialPendingSignup] = await Promise.all([
+    getTranslations('AuthPage'),
+    getInitialPendingSignup(),
+  ]);
 
-  useEffect(() => {
-    document.title = `${t("registerTitle")} | DMP Tool`;
-  }, []);
+  const isPendingSSO: boolean = initialPendingSignup !== undefined;
 
   return (
     <LayoutContainer className="auth-container">
       <ContentContainer className="auth-card">
-        <h3>{t("registerTitle")}</h3>
-        <SSOCheckContainer mode="register" />
+        {isPendingSSO && (
+          <>
+            <h3>{t("signSignOnSuccess")}</h3>
+
+            <h4>{t("linkAccountHeader")}</h4>
+            <p>{t("linkAccountMessage")}</p>
+            <a
+              href={routePath("app.login")}
+              className="button"
+            >
+              {t("loginTitle")}
+            </a>
+
+            <h4>{t("finishRegistering")}</h4>
+            <SSOCheckContainer
+              mode="register"
+              initialPendingSignup={initialPendingSignup}
+            />
+          </>
+        )}
+
+        {!isPendingSSO && (
+          <>
+            <h3>{t("registerTitle")}</h3>
+            <SSOCheckContainer
+              mode="register"
+              initialPendingSignup={initialPendingSignup}
+            />
+          </>
+        )}
       </ContentContainer>
     </LayoutContainer>
   );

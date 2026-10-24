@@ -4,6 +4,8 @@ import LoginPage from '../page';
 import { useCsrf } from '@/context/CsrfContext';
 import { useAuthContext } from '@/context/AuthContext';
 import { routePath } from '@/utils/index';
+import { getTranslations } from 'next-intl/server';
+import { getInitialPendingSignup } from '@/lib/server/auth';
 
 jest.mock('@/components/Form/TypeAheadWithOther', () => ({
   TypeAheadWithOther: () => null,
@@ -35,6 +37,14 @@ jest.mock('@/context/CsrfContext', () => ({
   useCsrf: jest.fn(),
 }));
 
+jest.mock('next-intl/server', () => ({
+  getTranslations: jest.fn(),
+}));
+
+jest.mock('@/lib/server/auth', () => ({
+  getInitialPendingSignup: jest.fn(),
+}));
+
 const ssoCheckUrl = `${process.env.NEXT_PUBLIC_AUTH_ENDPOINT}/sso-check`;
 const signInUrl = `${process.env.NEXT_PUBLIC_AUTH_ENDPOINT}/sign-in`;
 
@@ -43,12 +53,18 @@ describe('LoginPage', () => {
   const clearCache = jest.fn().mockResolvedValue(undefined);
   const setIsAuthenticated = jest.fn();
 
+  const renderPage = async () => {
+    render(await LoginPage({}));
+  };
+
   const enterEmail = async (email = 'test@example.com') => {
     fireEvent.change(screen.getByTestId('emailInput'), { target: { value: email } });
     fireEvent.click(screen.getByTestId('actionContinue'));
   };
 
   beforeEach(() => {
+    (getTranslations as jest.Mock).mockResolvedValue((key: string) => key);
+    (getInitialPendingSignup as jest.Mock).mockResolvedValue(undefined);
     (useCsrf as jest.Mock).mockReturnValue({ getCsrfToken });
     (useAuthContext as jest.Mock).mockReturnValue({ clearCache, setIsAuthenticated });
     global.fetch = jest.fn().mockResolvedValue({
@@ -62,15 +78,15 @@ describe('LoginPage', () => {
   });
 
   it('starts with an email-only SSO discovery step', () => {
-    render(<LoginPage />);
-
-    expect(screen.getByTestId('emailInput')).toBeInTheDocument();
-    expect(screen.getByTestId('actionContinue')).toBeInTheDocument();
-    expect(screen.queryByTestId('passInput')).not.toBeInTheDocument();
+    return renderPage().then(() => {
+      expect(screen.getByTestId('emailInput')).toBeInTheDocument();
+      expect(screen.getByTestId('actionContinue')).toBeInTheDocument();
+      expect(screen.queryByTestId('passInput')).not.toBeInTheDocument();
+    });
   });
 
   it('shows the password login form when no SSO provider matches', async () => {
-    render(<LoginPage />);
+    await renderPage();
 
     await enterEmail();
 
@@ -97,7 +113,7 @@ describe('LoginPage', () => {
         displayName: 'Example University',
       }),
     } as Response);
-    render(<LoginPage />);
+    await renderPage();
 
     await enterEmail('person@example.edu');
 
@@ -110,7 +126,7 @@ describe('LoginPage', () => {
     (global.fetch as jest.Mock)
       .mockResolvedValueOnce({ ok: false, status: 404 } as Response)
       .mockResolvedValueOnce({ ok: true, status: 200 } as Response);
-    render(<LoginPage />);
+    await renderPage();
 
     await enterEmail();
     const password = await screen.findByTestId('passInput');

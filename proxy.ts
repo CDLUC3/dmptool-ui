@@ -6,7 +6,7 @@ import createMiddleware from 'next-intl/middleware';
 import { routing } from './i18n/routing';
 import { verifyJwtToken } from './lib/server/auth';
 import logECS from '@/utils/clientLogger';
-import { ACCESS_TOKEN_NAME, REFRESH_TOKEN_NAME, refreshAuthTokens, SSO_PENDING_TOKEN_NAME } from "@/utils/authHelper";
+import { ACCESS_TOKEN_NAME, REFRESH_TOKEN_NAME, refreshAuthTokens } from "@/utils/authHelper";
 import { locales, defaultLocale } from './config/i18nConfig';
 
 interface JWTAccessToken extends JwtPayload {
@@ -115,12 +115,6 @@ export async function proxy(request: NextRequest) {
 
   const accessToken = request.cookies.get(ACCESS_TOKEN_NAME);
   const refreshToken = request.cookies.get(REFRESH_TOKEN_NAME);
-  // TODO: We need to implement SSO soon, so leaving this here for now. The SSO_PENDING_TOKEN_NAME is used to store a
-  //       temporary token in the browser when a user successfully signs in via SSO but they do not yet have an account
-  //       in the DMPTool. This token is used to help create a new account for the user after they fill out the account
-  //       creation form. Once the account is created, the SSO_PENDING_TOKEN_NAME is deleted from the browser.
-  // eslint-disable-next-line unused-imports/no-unused-vars, @typescript-eslint/no-unused-vars
-  const ssoPendingToken = request.cookies.get(SSO_PENDING_TOKEN_NAME);
 
   const jwtResult = await getLocaleFromJWT(accessToken?.value);
 

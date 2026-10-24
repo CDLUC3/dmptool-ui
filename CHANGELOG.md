@@ -60,6 +60,10 @@
 - Added `UpdateAffiliation` and `AffiliationById` queries [#203]
 
 ## Updated
+- Added logic to the `lib/server/auth` file to extract the pending SSO sign up cookie, verify its authenticity, and decode the payload.
+- Updated the `login` and `signup` pages to check for the existence of this cookie, and display the page header accordingly
+- Updated the `SSOCheck` to work with the pending SSO cookie.
+- Updated Zod dependency
 - Updated `next` and `dompurify`
 - Updated `planAuthoringDataSource.ts` to use `hiddenVersionedQuestionIds`, which is returned with every `Save` of a question [#366]
 - Updated `PlanAuthoring` model, and its components like `PlanSectionPickerDialog`, `PlanSection`, `PlanAuthoringScreen` to use the new `visibleQuestions` function to display only those questions in the one-pager [#366]

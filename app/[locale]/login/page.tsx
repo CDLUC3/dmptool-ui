@@ -1,16 +1,11 @@
-'use client'
+import React from "react";
+import { getTranslations } from "next-intl/server";
 
-import React, { useEffect } from "react";
-import { useTranslations } from "next-intl";
 import { ContentContainer, LayoutContainer } from '@/components/Container';
 import { SSOCheckContainer } from "@/components/SSOCheck";
 
-const LoginPage: React.FC = () => {
-  const t = useTranslations("AuthPage");
-
-  useEffect(() => {
-    document.title = `${t("loginTitle")} | DMP Tool`;
-  }, []);
+const LoginPage: React.FC = async () => {
+  const t = await getTranslations("AuthPage");
 
   return (
     <LayoutContainer className="auth-container">
