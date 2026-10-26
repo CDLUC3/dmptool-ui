@@ -34,6 +34,16 @@ const excludedPaths = [
   "/healthcheck",
 ];
 
+// Check if the first path segment (after any locale prefix) is an excluded path. Matching whole
+// segments prevents e.g. "/email" from also excluding "/admin/email-preferences"
+function isExcludedPath(pathname: string): boolean {
+  const segments = pathname.split("/").filter(Boolean);
+  if (segments.length > 0 && locales.includes(segments[0])) {
+    segments.shift();
+  }
+  return excludedPaths.includes(`/${segments[0] ?? ""}`);
+}
+
 // Check if the request is for a server action
 function isServerAction(request: NextRequest): boolean {
   // Server actions are POST requests with specific content types
@@ -102,7 +112,7 @@ export async function proxy(request: NextRequest) {
    login to the original page they were trying to get to.*/
 
   // Exclude paths from authentication checks
-  const isExcludedPath = excludedPaths.some((path) => pathname.includes(path));
+  const isExcluded = isExcludedPath(pathname);
 
   // Also exclude server actions from authentication middleware
   const isServerActionRequest = isServerAction(request);
@@ -131,7 +141,7 @@ export async function proxy(request: NextRequest) {
   const locale = urlLocale ?? (await getLocale(request, jwtResult));
 
   // Redirect to login if no tokens are found
-  if (!isExcludedPath && !isServerActionRequest) {
+  if (!isExcluded && !isServerActionRequest) {
     if (!accessToken && !refreshToken) {
       return NextResponse.redirect(new URL(`/${locale}/login`, request.url));
     }

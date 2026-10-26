@@ -194,6 +194,7 @@
 - Updated `RepoSelectorForAnswer` to wait to query `Re3byUrIsDocument` until we have `preferredReposURIs` because preferred repos don't display even though they eventually do to trigger the display of the "preferred repositories" checkbox [#118]
 
 ## Fixed
+- Updated `proxy.ts` so that `/admin/email-preferences` will not be exluded from `login` requirements. Pages within `email` directory are excluded from `login` though [#580]
 - Updated to used patched version of `Node` `v22.23.4`
 - Fixed `addGuidanceTextAction` reading the wrong `dataPath` (`addGuidanceText` instead of `addGuidance`), which meant the new guidance id was never returned and saving the same tag again failed with `Variable "$input" got invalid value null at "input.guidanceId"` [#193]
 - Fixed the pt-BR `publishingTemplate3Private` translation in the template Publish modal, which described the visibility as public instead of organization only [#381]
@@ -233,6 +234,7 @@
 - Removed the ununused `app/[locale]/users/[userId]/projects` page, since we no longer link to it since we updated the `app/[locale]/users/[userId]/manage` page to link to `projects` instead of `plans` [#379]
 
 ## Chore
+- Updated `zod` to `v4.6.6` to address high vulnerability [#580]
 - Updated `versioning.yml` to just copy `package.json` and `CHANGELOG.md` back to `development` branch [#341]
 - Updated `next` to `v16.3.3`, `js-yaml` to `v4.3.2` and `sharp` to `v0.35.4` due to high vulnerabilities [#341]
 - Updated `@types/react` to `v19.2.18` and `@types/react-dom` `19.2.5` and fixed new type errors resulting from that update [#333]
