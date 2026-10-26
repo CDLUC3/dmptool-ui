@@ -133,7 +133,7 @@ const makeUser = (overrides = {}) => ({
   active: true,
   role: UserRole.Researcher,
   languageId: 'en-US',
-  ssoId: null,
+  hasSSO: false,
   orcid: null,
   affiliation: {
     id: 'org-1',
@@ -523,10 +523,10 @@ describe('OrgUserProfilePage', () => {
 
   describe('identifiers section', () => {
     it('shows SSO ID when present', async () => {
-      renderPage(defaultMocks(UserRole.Superadmin, makeUser({ ssoId: 'sso-abc-123' })));
+      renderPage(defaultMocks(UserRole.Superadmin, makeUser({ hasSSO: true })));
       await waitFor(() => expect(screen.queryByTestId('mock-loading')).not.toBeInTheDocument());
 
-      expect(screen.getByText('sso-abc-123')).toBeInTheDocument();
+      expect(screen.getByText('Yes')).toBeInTheDocument();
     });
 
     it('shows ORCID link when present', async () => {
@@ -538,7 +538,7 @@ describe('OrgUserProfilePage', () => {
     });
 
     it('hides identifiers section when neither ssoId nor orcid are present', async () => {
-      renderPage(defaultMocks(UserRole.Superadmin, makeUser({ ssoId: null, orcid: null })));
+      renderPage(defaultMocks(UserRole.Superadmin, makeUser({ hasSSO: false, orcid: null })));
       await waitFor(() => expect(screen.queryByTestId('mock-loading')).not.toBeInTheDocument());
 
       expect(screen.queryByText('Admin.userProfile.headings.identifiers')).not.toBeInTheDocument();

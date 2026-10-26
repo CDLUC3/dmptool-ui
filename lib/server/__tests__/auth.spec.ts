@@ -1,3 +1,5 @@
+import { logECS } from "@/utils/index";
+
 jest.unmock("@/lib/server/auth");
 
 import { getInitialPendingSignup, verifyJwtToken } from "@/lib/server/auth";
@@ -15,6 +17,10 @@ jest.mock("jose", () => ({
 
 jest.mock("next/headers", () => ({
   cookies: (...args: unknown[]) => mockCookies(...args),
+}));
+
+jest.mock("@/utils/index", () => ({
+  logECS: jest.fn(),
 }));
 
 describe("server auth", () => {
@@ -38,20 +44,16 @@ describe("server auth", () => {
 
   it("returns null and logs when JWT verification fails", async () => {
     const error = new Error("invalid token");
-    const consoleError = jest.spyOn(console, "error").mockImplementation();
     mockJwtVerify.mockRejectedValue(error);
 
     await expect(verifyJwtToken("invalid-token")).resolves.toBeNull();
     expect(mockDecodeJwt).toHaveBeenCalledWith("invalid-token");
-    expect(consoleError).toHaveBeenCalledWith(
-      "JWT verification failed:",
+    expect(logECS).toHaveBeenCalledWith("error", "JWT verification failed", {
+      AUDIENCE: "dmptool-ui",
+      ISSUER: "http://auth:4646",
+      decoded: { sub: "user-1" },
       error,
-      { sub: "user-1" },
-      expect.any(String),
-      expect.any(String)
-    );
-
-    consoleError.mockRestore();
+    });
   });
 
   it("returns undefined when no pending SSO token cookie exists", async () => {

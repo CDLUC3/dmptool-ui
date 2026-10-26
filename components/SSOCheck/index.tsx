@@ -184,10 +184,6 @@ export const SSOCheckContainer: React.FC<SSOCheckContainerProps> = ({ mode, init
         await handleErrors(response, ssoCheckRequest, setErrors, router, modePaths[mode]);
       }
     } catch (err: any) {
-      logECS("error", "SSO Check error", {
-        error: err,
-        url: { path: "/sso-check" },
-      });
       // The SSO check failed for some reason, Log the error and return to the non-SSO step so the user can try to
       // log in via that route.
       logECS("error", "SSO Check error", {

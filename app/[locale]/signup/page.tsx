@@ -6,6 +6,13 @@ import { ContentContainer, LayoutContainer } from '@/components/Container';
 import { SSOCheckContainer } from "@/components/SSOCheck";
 import { getInitialPendingSignup } from "@/lib/server/auth";
 import { routePath } from "@/utils/index";
+import { Metadata } from "next";
+
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "AuthPage" });
+  return { title: `${t("registerTitle")} | DMP Tool` };
+}
 
 const SignUpPage: React.FC = async () => {
   const [t, initialPendingSignup] = await Promise.all([

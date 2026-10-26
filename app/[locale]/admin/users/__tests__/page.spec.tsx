@@ -122,7 +122,7 @@ export const makeTestUser = (overrides?: Partial<UsersPageItem>): UsersPageItem 
   last_sign_in: null,
   plans: [],
   affiliation: null,
-  ssoId: null,
+  hasSSO: false,
   orcid: null,
   ...overrides,
 });

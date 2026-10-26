@@ -176,7 +176,7 @@ function OrgUserProfilePage(): React.ReactElement {
 
   const [columns, setColumns] = useState<DmpTableColumnSet>(initialColumns);
 
-  // URL that directs users back to admin/users page after they archive a user. 
+  // URL that directs users back to admin/users page after they archive a user.
   const ADMIN_USERS_URL = routePath('admin.users');
 
   // GraphQL queries and mutations
@@ -207,7 +207,7 @@ function OrgUserProfilePage(): React.ReactElement {
     fetchPolicy: 'no-cache',
   });
 
-  // This is needed because the GraphQL query returns different field names than the table columns, 
+  // This is needed because the GraphQL query returns different field names than the table columns,
   // so we need to map them for sorting purposes.
   const SORT_FIELD_MAP: Record<string, string> = {
     title: 'p.title',
@@ -237,7 +237,7 @@ function OrgUserProfilePage(): React.ReactElement {
     }
   };
 
-  // Builds the query variables for fetching user projects based on pagination, 
+  // Builds the query variables for fetching user projects based on pagination,
   // search term, and sorting criteria
   const buildQueryVars = (
     page: number,
@@ -413,7 +413,7 @@ when affiliation/institution is changed */
   };
 
 
-  // Handles search input changes - updates the search term state and fetches 
+  // Handles search input changes - updates the search term state and fetches
   // all users if the search term is cleared
   const handleSearchInput = async (term: string) => {
     setSearchTerm(term);
@@ -848,13 +848,13 @@ when affiliation/institution is changed */
               </div>
 
               {/** Identifiers */}
-              {user?.ssoId || user?.orcid && (
+              {user && (user.hasSSO || user.orcid) && (
                 <div className={styles.formSection}>
                   <h2>{t("headings.identifiers")}</h2>
                   <dl>
                     <div role="presentation" className={styles.definitionListItem}>
                       <dt>{t("definitions.ssoId")}:{' '}</dt>
-                      <dd>{user?.ssoId}</dd>
+                      <dd>{user?.hasSSO ? 'Yes' : 'No'}</dd>
                     </div>
                     <div role="presentation" className={styles.definitionListItem}>
                       <dt>{t("definitions.orcid")}:{' '}</dt>

@@ -60,6 +60,8 @@
 - Added `UpdateAffiliation` and `AffiliationById` queries [#203]
 
 ## Updated
+- Updated `/account/connections` page to use the new SSO logic to allow a user to connect/disconnect from their affiliation's SSO. 
+- Updated the `Me` query to include the `hasSSO` boolean and the affiliation's `ssoEntityId`
 - Added logic to the `lib/server/auth` file to extract the pending SSO sign up cookie, verify its authenticity, and decode the payload.
 - Updated the `login` and `signup` pages to check for the existence of this cookie, and display the page header accordingly
 - Updated the `SSOCheck` to work with the pending SSO cookie.
