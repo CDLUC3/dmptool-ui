@@ -1,9 +1,17 @@
 {
   "AuthPage": {
     "loginTitle": "Entrar",
+    "loginToLink": "Faça login para vincular sua conta de Logon Único (SSO) à sua conta existente na Ferramenta DMP",
     "registerTitle": "Criar uma conta de ferramenta DMP",
     "emailAddress": "Endereço de e-mail",
+    "signSignOnSuccess": "Logon Único (SSO) foi bem-sucedido",
     "singleSignOn": "Para ativar o Logon Único (SSO), use o seu endereço institucional. Você será redirecionado para o único sinal da sua instituição na plataforma.",
+    "pendingSSOEmailHelp": "Este e-mail foi devolvido pela sua instituição. Você poderá alterar o e-mail de sua preferência em seu perfil, assim que sua conta for criada.",
+    "linkAccountHeader": "Já tem uma conta na Ferramenta DMP?",
+    "linkAccountMessage": "Faça login com seu e-mail e senha. Você pode vincular sua conta ao SSO na sua página de perfil.",
+    "linkButton": "Vincular minha conta",
+    "signUpInstead": "Cadastrar-se em vez disso",
+    "finishRegistering": "Ou, conclua a configuração da sua conta",
     "password": "Palavra-passe",
     "passwordConfirm": "Confirmar a senha",
     "passMissMatch": "As senhas não conferem",
