@@ -54,7 +54,6 @@ import {
 import { RoleOptions, EXPORT_PAGE_SIZE } from '@/lib/constants';
 import { useFormatDate } from "@/hooks/useFormatDate";
 import styles from './UsersDashboardPage.module.scss';
-import { Metadata } from "next";
 
 // Number of records to display per page in the users table
 const LIMIT = 10;
@@ -376,18 +375,18 @@ function OrgUserAccountsPage(): React.ReactElement {
         return;
       }
 
-      const cellMap: Record<string, (user: NonNullable<typeof items[0]>) => string | number> = {
-        name: user => [user.givenName, user.surName].filter(Boolean).join(' '),
-        email: user => user.email ?? '',
-        plans: user => user.plans?.length ?? 0,
-        nonTestPlans: user => user.plans?.filter(plan => plan?.project?.isTestProject === false).length ?? 0,
-        orcid: user => user.orcid ?? '',
-        sso: user => user.hasSSO ? 'Yes' : 'No',
-        active: user => user.active ? 'Yes' : 'No',
-        role: user => RoleLabels[user.role] ?? user.role,
-        organization: user => user.affiliation?.displayName ?? '',
-        created: user => user.created ? formatDate(user.created) : '',
-        lastActivity: user => user.last_sign_in ? formatDate(user.last_sign_in) : '',
+      const cellMap: Record<string, (user: NonNullable<(typeof items)[0]>) => string | number> = {
+        name: (user) => [user.givenName, user.surName].filter(Boolean).join(" "),
+        email: (user) => user.email ?? "",
+        plans: (user) => user.plans?.length ?? 0,
+        nonTestPlans: (user) => user.plans?.filter((plan) => plan?.project?.isTestProject === false).length ?? 0,
+        orcid: (user) => user.orcid ?? "",
+        sso: (user) => (user.hasSSO ? Global("form.yesLabel") : Global("form.noLabel")),
+        active: (user) => (user.active ? Global("form.yesLabel") : Global("form.noLabel")),
+        role: (user) => RoleLabels[user.role] ?? user.role,
+        organization: (user) => user.affiliation?.displayName ?? "",
+        created: (user) => (user.created ? formatDate(user.created) : ""),
+        lastActivity: (user) => (user.last_sign_in ? formatDate(user.last_sign_in) : ""),
       };
 
       // Define a separate set of columns for export, since it includes additional fields like ORCID and SSO
@@ -460,17 +459,17 @@ function OrgUserAccountsPage(): React.ReactElement {
           id: user.id?.toString(),
           name: (
             <Link
-              href={routePath('admin.users.manage', { userId: String(user.id) })}
-              aria-label={usersTrans('manageUser', { name: fullName })}
+              href={routePath("admin.users.manage", { userId: String(user.id) })}
+              aria-label={usersTrans("manageUser", { name: fullName })}
             >
               {fullName}
             </Link>
           ),
-          email: user.email ?? '',
+          email: user.email ?? "",
           plans: user.plans?.length ?? 0,
-          active: user.active ? 'Yes' : 'No',
+          active: user.active ? Global("form.yesLabel") : Global("form.noLabel"),
           role: RoleLabels[user.role] || user.role,
-          created: user.created ? formatDate(user.created) : '',
+          created: user.created ? formatDate(user.created) : "",
           lastActivity: user.last_sign_in ? formatDate(user.last_sign_in) : null,
           organization: user.affiliation?.displayName || null,
         };

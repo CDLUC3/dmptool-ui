@@ -1,33 +1,28 @@
-import { logECS } from "@/utils/index";
-
 jest.unmock("@/lib/server/auth");
 
 import { getInitialPendingSignup, verifyJwtToken } from "@/lib/server/auth";
 
 const mockCreateRemoteJWKSet = jest.fn();
 const mockJwtVerify = jest.fn();
-const mockDecodeJwt = jest.fn();
 const mockCookies = jest.fn();
 
 jest.mock("jose", () => ({
   createRemoteJWKSet: (...args: unknown[]) => mockCreateRemoteJWKSet(...args),
   jwtVerify: (...args: unknown[]) => mockJwtVerify(...args),
-  decodeJwt: (...args: unknown[]) => mockDecodeJwt(...args),
 }));
 
 jest.mock("next/headers", () => ({
   cookies: (...args: unknown[]) => mockCookies(...args),
 }));
 
-jest.mock("@/utils/index", () => ({
-  logECS: jest.fn(),
+jest.mock("@/utils/server/logger", () => ({
+  createLogger: jest.fn().mockReturnValue({ error: jest.fn() }),
 }));
 
 describe("server auth", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockCreateRemoteJWKSet.mockReturnValue(jest.fn());
-    mockDecodeJwt.mockReturnValue({ sub: "user-1" });
   });
 
   it("returns a verified JWT payload", async () => {
@@ -42,18 +37,10 @@ describe("server auth", () => {
     );
   });
 
-  it("returns null and logs when JWT verification fails", async () => {
+  it("returns null when JWT verification fails", async () => {
     const error = new Error("invalid token");
     mockJwtVerify.mockRejectedValue(error);
-
     await expect(verifyJwtToken("invalid-token")).resolves.toBeNull();
-    expect(mockDecodeJwt).toHaveBeenCalledWith("invalid-token");
-    expect(logECS).toHaveBeenCalledWith("error", "JWT verification failed", {
-      AUDIENCE: "dmptool-ui",
-      ISSUER: "http://auth:4646",
-      decoded: { sub: "user-1" },
-      error,
-    });
   });
 
   it("returns undefined when no pending SSO token cookie exists", async () => {

@@ -70,7 +70,7 @@ describe('LoginPage', () => {
     global.fetch = jest.fn().mockResolvedValue({
       ok: false,
       status: 404,
-    } as Response);
+    });
   });
 
   afterEach(() => {
@@ -112,7 +112,7 @@ describe('LoginPage', () => {
         affiliationId: 'example-affiliation',
         displayName: 'Example University',
       }),
-    } as Response);
+    });
     await renderPage();
 
     await enterEmail('person@example.edu');
@@ -124,8 +124,8 @@ describe('LoginPage', () => {
 
   it('submits credentials after an unmatched SSO check', async () => {
     (global.fetch as jest.Mock)
-      .mockResolvedValueOnce({ ok: false, status: 404 } as Response)
-      .mockResolvedValueOnce({ ok: true, status: 200 } as Response);
+      .mockResolvedValueOnce({ ok: false, status: 404 })
+      .mockResolvedValueOnce({ ok: true, status: 200 });
     await renderPage();
 
     await enterEmail();

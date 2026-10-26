@@ -854,7 +854,7 @@ when affiliation/institution is changed */
                   <dl>
                     <div role="presentation" className={styles.definitionListItem}>
                       <dt>{t("definitions.ssoId")}:{' '}</dt>
-                      <dd>{user?.hasSSO ? 'Yes' : 'No'}</dd>
+                      <dd>{user?.hasSSO ? Global("form.yesLabel") : Global("form.noLabel")}</dd>
                     </div>
                     <div role="presentation" className={styles.definitionListItem}>
                       <dt>{t("definitions.orcid")}:{' '}</dt>

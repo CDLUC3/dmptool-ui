@@ -84,7 +84,7 @@ describe('SignUpPage', () => {
     global.fetch = jest.fn().mockResolvedValue({
       ok: false,
       status: 404,
-    } as Response);
+    });
   });
 
   afterEach(() => {
@@ -113,7 +113,7 @@ describe('SignUpPage', () => {
         affiliationId: 'example-affiliation',
         displayName: 'Example University',
       }),
-    } as Response);
+    });
     await renderPage();
 
     await enterEmail();
@@ -125,8 +125,8 @@ describe('SignUpPage', () => {
 
   it('submits the selected affiliation ID after completing the non-SSO form', async () => {
     (global.fetch as jest.Mock)
-      .mockResolvedValueOnce({ ok: false, status: 404 } as Response)
-      .mockResolvedValueOnce({ ok: true, status: 200 } as Response);
+      .mockResolvedValueOnce({ ok: false, status: 404 })
+      .mockResolvedValueOnce({ ok: true, status: 200 });
     await renderPage();
 
     await completeForm();

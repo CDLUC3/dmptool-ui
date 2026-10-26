@@ -21,12 +21,13 @@ const FAKE_ORCID_ID = "0000-0001-2345-6789";
 
 const ConnectionsPage: React.FC = () => {
   const t = useTranslations("UserConnections");
+  const globalT = useTranslations("Global");
   const toast = useToast();
   const searchParams = useSearchParams();
   const errorRef = useRef<HTMLDivElement | null>(null);
   const [errors, setErrors] = useState<string[]>([]);
   const [connecting, setConnecting] = useState(false);
-  const { data, loading: queryLoading, error: queryError, refetch } = useQuery(MeDocument);
+  const { data, loading: queryLoading, refetch } = useQuery(MeDocument);
   const [disconnectFromSsoMutation, { loading: disconnectLoading }] = useMutation(DisconnectFromSsoDocument);
 
   const processedSsoCallback = useRef(false);
@@ -102,6 +103,7 @@ const ConnectionsPage: React.FC = () => {
         error: err,
         url: { path: "/account/connections" },
       });
+      setErrors([t("ssoConnectionConnected.ssoDisconnectError")]);
     }
   };
 
@@ -182,7 +184,7 @@ const ConnectionsPage: React.FC = () => {
                 <ConnectionSection
                   type="sso"
                   isConnected={data?.me?.hasSSO || false}
-                  connectedIdentifier={data?.me?.hasSSO ? "Yes" : "No"}
+                  connectedIdentifier={data?.me?.hasSSO ? globalT("form.yesLabel") : globalT("noLabel")}
                   title={t("ssoConnection.title")}
                   content={t("ssoConnection.content")}
                   btnText={t("ssoConnection.btnText")}

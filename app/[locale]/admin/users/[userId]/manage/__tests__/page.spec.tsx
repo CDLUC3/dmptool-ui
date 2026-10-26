@@ -525,8 +525,7 @@ describe('OrgUserProfilePage', () => {
     it('shows SSO ID when present', async () => {
       renderPage(defaultMocks(UserRole.Superadmin, makeUser({ hasSSO: true })));
       await waitFor(() => expect(screen.queryByTestId('mock-loading')).not.toBeInTheDocument());
-
-      expect(screen.getByText('Yes')).toBeInTheDocument();
+      expect(screen.getByText("Global.form.yesLabel")).toBeInTheDocument();
     });
 
     it('shows ORCID link when present', async () => {

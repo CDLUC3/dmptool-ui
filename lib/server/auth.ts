@@ -1,8 +1,10 @@
-import { decodeJwt, jwtVerify, createRemoteJWKSet, JWTPayload } from "jose";
+import { jwtVerify, createRemoteJWKSet, JWTPayload } from "jose";
 import { cookies } from "next/headers";
 import type { PendingSSOSignup } from "@/components/SSOCheck";
 import { SSO_PENDING_TOKEN_NAME } from "@/utils/authHelper";
-import { logECS } from "@/utils/index";
+import { createLogger } from "@/utils/server/logger";
+
+const log = createLogger();
 
 // Define the issuer, audience and JWKS URL pointing to the Auth Service
 const ISSUER = process.env.TOKEN_ISSUER || "http://localhost:4646";
@@ -42,8 +44,7 @@ export async function verifyJwtToken(token: string): Promise<JWTPayload | null> 
 
     return payload as JWTPayload;
   } catch (error) {
-    const decoded = decodeJwt(token);
-    logECS('error', "JWT verification failed", { error, decoded, ISSUER, AUDIENCE });
+    log.error({ error, ISSUER, AUDIENCE }, "JWT verification failed");
     return null;
   }
 }
@@ -73,7 +74,7 @@ export const  getInitialPendingSignup = async (): Promise<PendingSSOSignup | und
   try {
     return getPendingSignupPayload(await verifyJwtToken(token));
   } catch (error) {
-    logECS('error', "Unable to verify pending SSO signup token", { error });
+    log.error({ error }, "Unable to verify pending SSO signup token");
     return undefined;
   }
 }
