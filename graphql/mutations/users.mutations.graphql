@@ -43,6 +43,16 @@ mutation UpdateUserInfo($input: UpdateUserInfoInput!) {
   }
 }
 
+mutation DisconnectFromSSO {
+  disconnectSSO {
+    id
+    hasSSO
+    errors {
+      general
+    }
+  }
+}
+
 mutation AddUserEmail($email: String!, $isPrimary: Boolean!) {
   addUserEmail(email: $email, isPrimary: $isPrimary) {
     email

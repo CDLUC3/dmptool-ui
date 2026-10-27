@@ -1,5 +1,6 @@
 ## Added
 - Added AGENTS.md and CLAUDE.md with project rules for AI coding agents [#579]
+- Added `displayLogicAction` and `displayLogicMatchType` to `SaveQuestionDisplayLogic`, to assure that Apollo will update the cached question with the saved values [#586]
 - Added display logic to the `PlanAuthoring` one-pager: questions hidden by their display logic are not rendered, and are left out of the plan progress, section picker counts and section navigation. Hidden questions keep their answers [#366]
 - Added `visibleQuestions` to the `PlanAuthoring` model that filters out the `isHidden` question [#366]
 - Added the `PlanAuthoring` one-pager to the plan page (`/projects/:projectId/dmp/:dmpId`), wired to the GraphQL API through a new `planAuthoring` query: answers save through `addAnswer`/`updateAnswer`, comments and feedback comments show as one thread, and guidance organisations can be added and removed. The old section and question routes redirect to the one-pager, and the demo data source is replaced by mocks and scenarios [#430]
@@ -61,7 +62,12 @@
 - Added `UpdateAffiliation` and `AffiliationById` queries [#203]
 
 ## Updated
-- Updated README env var list for the auth service [#579]
+- Updated `/account/connections` page to use the new SSO logic to allow a user to connect/disconnect from their affiliation's SSO. 
+- Updated the `Me` query to include the `hasSSO` boolean and the affiliation's `ssoEntityId`
+- Added logic to the `lib/server/auth` file to extract the pending SSO sign up cookie, verify its authenticity, and decode the payload.
+- Updated the `login` and `signup` pages to check for the existence of this cookie, and display the page header accordingly
+- Updated the `SSOCheck` to work with the pending SSO cookie.
+- Updated Zod dependency
 - Updated `next` and `dompurify`
 - Updated `planAuthoringDataSource.ts` to use `hiddenVersionedQuestionIds`, which is returned with every `Save` of a question [#366]
 - Updated `PlanAuthoring` model, and its components like `PlanSectionPickerDialog`, `PlanSection`, `PlanAuthoringScreen` to use the new `visibleQuestions` function to display only those questions in the one-pager [#366]
@@ -190,6 +196,7 @@
 - Updated `RepoSelectorForAnswer` to wait to query `Re3byUrIsDocument` until we have `preferredReposURIs` because preferred repos don't display even though they eventually do to trigger the display of the "preferred repositories" checkbox [#118]
 
 ## Fixed
+- Updated `proxy.ts` so that `/admin/email-preferences` will not be exluded from `login` requirements. Pages within `email` directory are excluded from `login` though [#580]
 - Updated to used patched version of `Node` `v22.23.4`
 - Fixed `addGuidanceTextAction` reading the wrong `dataPath` (`addGuidanceText` instead of `addGuidance`), which meant the new guidance id was never returned and saving the same tag again failed with `Variable "$input" got invalid value null at "input.guidanceId"` [#193]
 - Fixed the pt-BR `publishingTemplate3Private` translation in the template Publish modal, which described the visibility as public instead of organization only [#381]
@@ -230,7 +237,7 @@
 - Removed the ununused `app/[locale]/users/[userId]/projects` page, since we no longer link to it since we updated the `app/[locale]/users/[userId]/manage` page to link to `projects` instead of `plans` [#379]
 
 ## Chore
-- Updated `zod` to `v4.6.6`[#579]
+- Updated `zod` to `v4.6.6` to address high vulnerability [#580]
 - Updated `versioning.yml` to just copy `package.json` and `CHANGELOG.md` back to `development` branch [#341]
 - Updated `next` to `v16.3.3`, `js-yaml` to `v4.3.2` and `sharp` to `v0.35.4` due to high vulnerabilities [#341]
 - Updated `@types/react` to `v19.2.18` and `@types/react-dom` `19.2.5` and fixed new type errors resulting from that update [#333]
