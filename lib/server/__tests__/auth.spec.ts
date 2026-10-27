@@ -55,8 +55,8 @@ describe("server auth", () => {
     mockJwtVerify.mockResolvedValue({
       payload: {
         email: "jane@example.edu",
-        affiliation: "example-affiliation",
-        displayName: "Example University",
+        affiliationId: "example-affiliation",
+        affiliation: "Example University",
         givenName: "Jane",
         surName: "Doe",
       },
@@ -64,8 +64,8 @@ describe("server auth", () => {
 
     await expect(getInitialPendingSignup()).resolves.toEqual({
       email: "jane@example.edu",
-      affiliation: "example-affiliation",
-      displayName: "Example University",
+      affiliationId: "example-affiliation",
+      affiliation: "Example University",
       givenName: "Jane",
       surName: "Doe",
     });

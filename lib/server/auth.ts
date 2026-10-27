@@ -58,7 +58,7 @@ function getPendingSignupPayload(payload: Record<string, unknown> | null): Pendi
   return {
     email: payload.email,
     affiliation: typeof payload.affiliation === "string" ? payload.affiliation : undefined,
-    displayName: typeof payload.displayName === "string" ? payload.displayName : undefined,
+    affiliationId: typeof payload.affiliationId === "string" ? payload.affiliationId : undefined,
     givenName: typeof payload.givenName === "string" ? payload.givenName : undefined,
     surName: typeof payload.surName === "string" ? payload.surName : undefined,
   };
