@@ -56,7 +56,7 @@
     "rxjs": "7.8.2",
     "sanitize-html": "^2.18.0",
     "tinymce": "7.9.3",
-    "zod": "4.4.3"
+    "zod": "^4.6.6"
   },
   "devDependencies": {
     "@graphql-codegen/cli": "6.1.2",

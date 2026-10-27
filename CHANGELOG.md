@@ -230,6 +230,7 @@
 - Removed the ununused `app/[locale]/users/[userId]/projects` page, since we no longer link to it since we updated the `app/[locale]/users/[userId]/manage` page to link to `projects` instead of `plans` [#379]
 
 ## Chore
+- Updated `zod` to `v4.6.6`[#579]
 - Updated `versioning.yml` to just copy `package.json` and `CHANGELOG.md` back to `development` branch [#341]
 - Updated `next` to `v16.3.3`, `js-yaml` to `v4.3.2` and `sharp` to `v0.35.4` due to high vulnerabilities [#341]
 - Updated `@types/react` to `v19.2.18` and `@types/react-dom` `19.2.5` and fixed new type errors resulting from that update [#333]

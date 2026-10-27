@@ -203,6 +203,28 @@ npm test            # fails if coverage drops below the thresholds in jest.confi
 - Mock `@/i18n/routing` and the Apollo hooks with `jest.mock`. Legacy server actions are mocked by path (e.g. `jest.mock("@/app/actions/upsertRelatedWorkAction", ...)`). If a component needs the auth, CSRF, intl, or toast providers, render it with `utils/test-utils.tsx`.
 - If `npm run trivy-high` can't run because Trivy isn't installed locally, say so. Don't treat it as passed.
 
+## Accessibility tests
+- Use react aria or existing components using react-aria
+- One <h1> per page, no skipped heading levels.
+- Every server-side page sets a unique, translated title via generateMetadata, and every client-side page sets a page title using <PageHeader /> or <PageHeaderWithTitleChange />
+- Every input has a visible label. Placeholder text is not a label.
+- Images need translated alt; decorative images use alt="".
+- Never convey meaning by colour alone. Use colour tokens, which are contrast-checked; don't use ad-hoc hex values.
+- After async actions (save, search, filter), announce the result with a toast or an aria-live region.
+- Respect prefers-reduced-motion for any animation.
+- Don't add ARIA roles to elements React Aria Components already handles.
+
+## Proof of Work
+Never claim something works without evidence. "Should work", "looks correct" and "tests pass" without output are not acceptable.
+
+- When you finish a task, end with a Verification block:
+
+-- Each command you ran, its exit code, and the last lines of its output (lint, type-check, test, plus any single test file).
+-- For bug fixes: the test you wrote that failed before the fix and passes after. Show both runs.
+-- For UI changes: the route you checked and what you observed, including keyboard behaviour.
+-- Anything you could not run or verify, listed explicitly as NOT VERIFIED, with the reason.
+-- If a check fails, report the failure. Don't summarize around it.
+
 ## Git and PR workflow
 
 - **Branches:** `feature/<issue#>/<INITIALS>-short-description` or `bug/<issue#>/<INITIALS>-short-description`, cut from `development`.
