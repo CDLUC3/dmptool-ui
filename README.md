@@ -79,7 +79,7 @@ All content to be translated will be located under the `messages` directory, wit
 The middleware (`proxy.ts`) determines which locale to use for each request, using the following priority of checks:
 
 1. **Locale in the URL** - If the path starts with a supported locale (e.g., `/pt-BR/projects`), that locale is used.
-2. **Logged-in user's saved language** - The `languageId` from the user's JWT in the `dmspt` cookie.
+2. **Logged-in user's saved language** - The `languageId` from the user's JWT in the access token cookie (named by `ACCESS_TOKEN_NAME`).
 3. **The `NEXT_LOCALE` cookie** - `next-intl` sets this to the last locale the user visited.
 4. **The browser language** - The `Accept-Language` header. An exact match (e.g., `pt-BR`) is preferred, otherwise it falls back to a match on the language only (e.g., `pt`).
 5. **The default locale** - From `config/i18nConfig.ts`, which is currently `en-US`.
@@ -189,7 +189,13 @@ These variables must be set in order for the app to work.
 * `NEXT_PUBLIC_SERVER_ENDPOINT` - Base url for backend server (e.g., "http://localhost:4000")
 * `NEXT_PUBLIC_NARRATIVE_ENDPOINT` - Base url when running the narrative generator locally. The narrative generator (i.e., `dmptool-narrative-generator`) generates the plan in different formats (HTML, PDF, etc)
 * `NEXT_PUBLIC_GRAPHQL_SERVER_ENDPOINT` - Graphql server schema endpoint (e.g., "http://localhost:4000/graphql")
-* `JWT_SECRET` - Secret key for JWT authentication
+* `NEXT_PUBLIC_AUTH_ENDPOINT` - Browser-facing base url for the auth service, `dmptool-auth` (e.g., "http://localhost:4646")
+* `AUTH_ENDPOINT` - Base url for the auth service, used for server-side code. Inside Docker this can differ from the browser-facing url (e.g., "http://auth:4646")
+* `TOKEN_ISSUER` - Expected issuer (`iss`) of tokens from the auth service (e.g., "http://auth:4646")
+* `TOKEN_AUDIENCE` - Expected audience (`aud`) of tokens from the auth service (e.g., "dmptool-ui")
+* `ACCESS_TOKEN_NAME` - Name of the access token cookie (e.g., "dmptool_access")
+* `REFRESH_TOKEN_NAME` - Name of the refresh token cookie (e.g., "dmptool_refresh")
+* `SSO_PENDING_TOKEN_NAME` - Name of the cookie that holds a temporary token for SSO users who don't have an account yet (e.g., "dmptool_sso_pending")
 * `SERVER_ENDPOINT` - Server endpoint for backend Apollo server, used for server-side code (e.g., "http://localhost:4000")
 * `SERVER_LOG_LEVEL` - The log level for the server (e.g., "info", "debug", "error")
 

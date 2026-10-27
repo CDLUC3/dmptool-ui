@@ -1,4 +1,5 @@
 ## Added
+- Added AGENTS.md and CLAUDE.md with project rules for AI coding agents [#579]
 - Added `displayLogicAction` and `displayLogicMatchType` to `SaveQuestionDisplayLogic`, to assure that Apollo will update the cached question with the saved values [#586]
 - Added display logic to the `PlanAuthoring` one-pager: questions hidden by their display logic are not rendered, and are left out of the plan progress, section picker counts and section navigation. Hidden questions keep their answers [#366]
 - Added `visibleQuestions` to the `PlanAuthoring` model that filters out the `isHidden` question [#366]
@@ -232,6 +233,7 @@
 - Fixed issue with Feedback Notification headers displaying for any collaborator on the Plan Overview, Section and Question pages. It should only display to Org Admins and Super Admins. Added shared isOrgAdmin hook for pages. [#249]
 
 ## Removed
+- Removed unused lib/graphql/client.ts [#579]
 - Removed the ununused `app/[locale]/users/[userId]/projects` page, since we no longer link to it since we updated the `app/[locale]/users/[userId]/manage` page to link to `projects` instead of `plans` [#379]
 
 ## Chore
