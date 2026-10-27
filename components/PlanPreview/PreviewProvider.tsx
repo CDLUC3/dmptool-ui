@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useMemo } from "react";
+import { useTranslations } from "next-intl";
 import { createLoadedPreviewDataSource, type LoadedPreview } from "./createLoadedPreviewDataSource";
 import type { LocalPreviewDataSource } from "./localPreviewDataSource";
 import styles from "./preview.module.scss";
@@ -18,7 +19,12 @@ export function PreviewProvider({
   load: () => Promise<LoadedPreview>;
   children: React.ReactNode;
 }) {
-  const dataSource = useMemo(() => createLoadedPreviewDataSource(load), [load]);
+  const t = useTranslations("TemplatePreview");
+  const questionNotFound = t("questionNotFound");
+  const dataSource = useMemo(
+    () => createLoadedPreviewDataSource(load, { questionNotFound }),
+    [load, questionNotFound]
+  );
   return (
     <PreviewContext.Provider value={dataSource}>
       <div className={styles.preview}>{children}</div>

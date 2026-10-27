@@ -1,6 +1,7 @@
 import type { ApolloClient } from "@apollo/client";
 import {
   CustomizableObjectOwnership,
+  CustomizationPreviewConditionGroupsDocument,
   CustomizationPreviewCustomQuestionDocument,
   CustomizationPreviewCustomSectionDocument,
   CustomizationPreviewOverviewDocument,
@@ -9,6 +10,7 @@ import {
   CustomizationPreviewTemplateDocument,
 } from "@/generated/graphql";
 import type { PlanQuestionIdentity, PlanSectionIdentity } from "@/components/PlanAuthoring/model";
+import type { PreviewDisplayLogic } from "@/components/PlanPreview/displayLogic";
 import { loadPreviewGuidance } from "@/components/PlanPreview/loadPreviewGuidance";
 import { PreviewNotFoundError } from "@/components/PlanPreview/previewError";
 import { byDisplayOrder } from "@/components/PlanPreview/previewModel";
@@ -47,9 +49,11 @@ export interface CustomizationPreviewData {
   org: PreviewOrg | null;
   sections: CustomizationPreviewSection[];
   guidance: PreviewGuidanceLookup;
+  /** Keyed by versionedQuestionId. Custom questions have no display logic. */
+  displayLogic: Map<number, PreviewDisplayLogic>;
 }
 
-async function loadEach<T>(ids: number[], load: (id: number) => Promise<T | null | undefined>) {
+async function loadByIds<T>(ids: number[], load: (id: number) => Promise<T | null | undefined>) {
   const unique = [...new Set(ids)];
   const results = await Promise.all(unique.map(load));
   return new Map(unique.map((id, index) => [id, results[index] ?? null]));
@@ -59,6 +63,9 @@ export async function loadCustomizationPreview(
   client: ApolloClient,
   templateCustomizationId: number
 ): Promise<CustomizationPreviewData> {
+  if (!Number.isInteger(templateCustomizationId) || templateCustomizationId <= 0) {
+    throw new PreviewNotFoundError();
+  }
   const { data } = await client.query({
     query: CustomizationPreviewOverviewDocument,
     variables: { templateCustomizationId },
@@ -81,7 +88,7 @@ export async function loadCustomizationPreview(
           fetchPolicy: "network-only",
         })
         .then(({ data }) => data?.versionedTemplate),
-      loadEach(
+      loadByIds(
         overviewSections
           .filter((section) => !isCustom(section.sectionType) && section.sectionCustomizationId)
           .map((section) => section.sectionCustomizationId as number),
@@ -94,7 +101,7 @@ export async function loadCustomizationPreview(
             })
             .then(({ data }) => data?.sectionCustomization)
       ),
-      loadEach(
+      loadByIds(
         overviewSections.filter((section) => isCustom(section.sectionType)).map((section) => section.id),
         (customSectionId) =>
           client
@@ -105,7 +112,7 @@ export async function loadCustomizationPreview(
             })
             .then(({ data }) => data?.customSection)
       ),
-      loadEach(
+      loadByIds(
         overviewQuestions
           .filter((question) => !isCustom(question.questionType) && question.questionCustomizationId)
           .map((question) => question.questionCustomizationId as number),
@@ -118,7 +125,7 @@ export async function loadCustomizationPreview(
             })
             .then(({ data }) => data?.questionCustomization)
       ),
-      loadEach(
+      loadByIds(
         overviewQuestions.filter((question) => isCustom(question.questionType)).map((question) => question.id),
         (customQuestionId) =>
           client
@@ -145,17 +152,17 @@ export async function loadCustomizationPreview(
     )
   );
 
-  const sections = overviewSections.flatMap((entry): CustomizationPreviewSection[] => {
-    const questions = (entry.questions ?? [])
+  const sections = overviewSections.flatMap((overviewSection): CustomizationPreviewSection[] => {
+    const questions = (overviewSection.questions ?? [])
       .slice()
       .sort(byDisplayOrder)
-      .flatMap((item): CustomizationPreviewQuestion[] => {
-        if (isCustom(item.questionType)) {
-          const question = customQuestions.get(item.id);
+      .flatMap((overviewQuestion): CustomizationPreviewQuestion[] => {
+        if (isCustom(overviewQuestion.questionType)) {
+          const question = customQuestions.get(overviewQuestion.id);
           return question
             ? [
                 {
-                  identity: { kind: "custom", customQuestionId: item.id },
+                  identity: { kind: "custom", customQuestionId: overviewQuestion.id },
                   questionText: question.questionText ?? null,
                   requirementText: question.requirementText ?? null,
                   guidanceText: question.guidanceText ?? null,
@@ -167,14 +174,14 @@ export async function loadCustomizationPreview(
               ]
             : [];
         }
-        const question = baseQuestions.get(item.id);
-        const customization = item.questionCustomizationId
-          ? questionCustomizations.get(item.questionCustomizationId)
+        const question = baseQuestions.get(overviewQuestion.id);
+        const customization = overviewQuestion.questionCustomizationId
+          ? questionCustomizations.get(overviewQuestion.questionCustomizationId)
           : null;
         return question
           ? [
               {
-                identity: { kind: "base", versionedQuestionId: item.id },
+                identity: { kind: "base", versionedQuestionId: overviewQuestion.id },
                 questionText: question.questionText ?? null,
                 requirementText: question.requirementText ?? null,
                 guidanceText: question.guidanceText ?? null,
@@ -195,12 +202,12 @@ export async function loadCustomizationPreview(
           : [];
       });
 
-    if (isCustom(entry.sectionType)) {
-      const section = customSections.get(entry.id);
+    if (isCustom(overviewSection.sectionType)) {
+      const section = customSections.get(overviewSection.id);
       return section
         ? [
             {
-              identity: { kind: "custom", customSectionId: entry.id },
+              identity: { kind: "custom", customSectionId: overviewSection.id },
               name: section.name ?? "",
               introduction: section.introduction ?? null,
               requirements: section.requirements ?? null,
@@ -213,17 +220,17 @@ export async function loadCustomizationPreview(
           ]
         : [];
     }
-    const section = baseSections.get(entry.id);
+    const section = baseSections.get(overviewSection.id);
     return section
       ? [
           {
-            identity: { kind: "base", versionedSectionId: entry.id },
+            identity: { kind: "base", versionedSectionId: overviewSection.id },
             name: section.name,
             introduction: section.introduction ?? null,
             requirements: section.requirements ?? null,
             guidance: section.guidance ?? null,
-            customizationGuidance: entry.sectionCustomizationId
-              ? sectionCustomizations.get(entry.sectionCustomizationId)?.guidance ?? null
+            customizationGuidance: overviewSection.sectionCustomizationId
+              ? sectionCustomizations.get(overviewSection.sectionCustomizationId)?.guidance ?? null
               : null,
             // Versioned questions don't expose their own tags, so section tags stand in.
             tagIds: previewTagIds(null, section.tags),
@@ -238,11 +245,51 @@ export async function loadCustomizationPreview(
     ? { uri: affiliation.uri, displayName: affiliation.displayName, acronyms: affiliation.acronyms }
     : null;
   const owner = template.owner ?? null;
-  const guidance = await loadPreviewGuidance(client, {
-    tagIds: sections.flatMap((section) => section.tagIds),
-    ownerAffiliationId: owner?.uri,
-    orgAffiliationId: org?.uri,
-  });
+  const [guidance, conditionGroups] = await Promise.all([
+    loadPreviewGuidance(client, {
+      tagIds: sections.flatMap((section) => section.tagIds),
+      ownerAffiliationId: owner?.uri,
+      orgAffiliationId: org?.uri,
+    }),
+    loadByIds(
+      [...baseQuestions.values()]
+        .filter((question) => (question.versionedQuestionConditions ?? []).length > 0)
+        .map((question) => question.id as number),
+      (versionedQuestionId) =>
+        client
+          .query({
+            query: CustomizationPreviewConditionGroupsDocument,
+            variables: { versionedQuestionId },
+            fetchPolicy: "network-only",
+          })
+          .then(({ data }) => data?.publishedConditionGroupsForQuestion)
+    ),
+  ]);
+
+  // Trigger ids are the draft questions' ids, as in a plan.
+  const versionedIdByQuestionId = new Map(
+    [...baseQuestions.values()].flatMap((question) =>
+      question.questionId != null ? [[question.questionId, question.id as number] as const] : []
+    )
+  );
+  const displayLogic = new Map<number, PreviewDisplayLogic>();
+  for (const [versionedQuestionId, groups] of conditionGroups) {
+    const question = baseQuestions.get(versionedQuestionId);
+    const presentGroups = (groups ?? []).filter((group) => group != null);
+    if (!question || presentGroups.length === 0) {
+      continue;
+    }
+    displayLogic.set(versionedQuestionId, {
+      action: question.displayLogicAction,
+      matchType: question.displayLogicMatchType,
+      groups: presentGroups.map((group) => ({
+        triggerQuestionId: versionedIdByQuestionId.get(group.triggerQuestionId) ?? null,
+        conditions: (group.conditions ?? [])
+          .filter((condition) => condition != null)
+          .map(({ conditionType, conditionMatch }) => ({ conditionType, conditionMatch })),
+      })),
+    });
+  }
 
   return {
     templateName: overview.versionedTemplateName ?? template.name,
@@ -251,5 +298,6 @@ export async function loadCustomizationPreview(
     org,
     sections,
     guidance,
+    displayLogic,
   };
 }

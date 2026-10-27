@@ -7,7 +7,6 @@ import { useTranslations } from "next-intl";
 // Components
 import NotificationHeader from "@/components/Notification";
 import { TransitionLink } from "@/components/Form";
-import DisplayLogicToggle from "@/components/PlanPreview/DisplayLogicToggle";
 import PreviewPlanPage from "@/components/PlanPreview/PreviewPlanPage";
 import { usePreviewDataSource } from "@/components/PlanPreview/PreviewProvider";
 import { usePlanAuthoringState } from "@/components/PlanAuthoring/usePlanAuthoringState";
@@ -41,12 +40,7 @@ export default function TemplatePreviewPage() {
       researchOutputRowHref={(questionKey, rowIndex) =>
         routePath("template.preview.researchOutput", { templateId, questionKey, rowIndex })
       }
-      notice={
-        <>
-          <p>{t("notice.body")}</p>
-          <DisplayLogicToggle dataSource={dataSource} />
-        </>
-      }
+      notice={<p>{t("notice.body")}</p>}
       renderEmpty={(model) => {
         const hasSections = model.sections.length > 0;
         if (hasSections && model.sections.some((section) => section.questions.length > 0)) {

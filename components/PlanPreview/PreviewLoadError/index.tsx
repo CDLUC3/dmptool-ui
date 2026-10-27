@@ -16,7 +16,7 @@ export default function PreviewLoadError({
   onRetry?: () => void;
 }) {
   const t = useTranslations("TemplatePreview");
-  const PlanAuthoring = useTranslations("PlanAuthoring");
+  const Authoring = useTranslations("PlanAuthoring");
 
   return (
     <div role="alert">
@@ -24,7 +24,7 @@ export default function PreviewLoadError({
         <p>{kind === "notFound" && notFoundMessage ? notFoundMessage : t(`errors.${kind}.body`)}</p>
         {kind === "failed" && onRetry ? (
           <Button className="react-aria-Button react-aria-Button--secondary" onPress={onRetry}>
-            {PlanAuthoring("common.retry")}
+            {Authoring("common.retry")}
           </Button>
         ) : null}
       </NotificationHeader>

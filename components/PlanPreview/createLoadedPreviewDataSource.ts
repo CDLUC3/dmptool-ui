@@ -1,7 +1,11 @@
 import type { PlanAuthoringModel } from "@/components/PlanAuthoring/model";
 import type { PreviewDisplayLogic } from "./displayLogic";
-import { createLocalPreviewDataSource, type LocalPreviewDataSource } from "./localPreviewDataSource";
-import { previewErrorKind } from "./previewError";
+import {
+  createLocalPreviewDataSource,
+  type LocalPreviewDataSource,
+  type LocalPreviewMessages,
+} from "./localPreviewDataSource";
+import { logPreviewLoadError, previewErrorKind } from "./previewError";
 
 export interface LoadedPreview {
   model: PlanAuthoringModel;
@@ -13,7 +17,8 @@ export interface LoadedPreview {
  * A failed load's message is its PreviewErrorKind.
  */
 export function createLoadedPreviewDataSource(
-  loadPreview: () => Promise<LoadedPreview>
+  loadPreview: () => Promise<LoadedPreview>,
+  messages: LocalPreviewMessages
 ): LocalPreviewDataSource {
   let loadGeneration = 0;
 
@@ -31,12 +36,12 @@ export function createLoadedPreviewDataSource(
         if (generation !== loadGeneration) {
           return;
         }
-        console.error("Failed to load preview", error);
+        logPreviewLoadError(error);
         source.setState({ status: "error", message: previewErrorKind(error) });
       });
   };
 
-  const source = createLocalPreviewDataSource({ status: "loading" }, load);
+  const source = createLocalPreviewDataSource({ status: "loading" }, messages, load);
 
   return {
     ...source,

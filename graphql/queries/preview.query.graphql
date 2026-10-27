@@ -74,7 +74,23 @@ query CustomizationPreviewTemplate($versionedTemplateId: Int!) {
         useSampleTextAsDefault
         required
         json
+        questionId
+        displayLogicAction
+        displayLogicMatchType
+        versionedQuestionConditions {
+          id
+        }
       }
+    }
+  }
+}
+
+query CustomizationPreviewConditionGroups($versionedQuestionId: Int!) {
+  publishedConditionGroupsForQuestion(versionedQuestionId: $versionedQuestionId) {
+    triggerQuestionId
+    conditions {
+      conditionType
+      conditionMatch
     }
   }
 }

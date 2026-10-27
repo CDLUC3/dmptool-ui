@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { logPreviewLoadError } from "./previewError";
 
 type PreviewResource<T> =
   | { status: "loading" }
@@ -24,7 +25,7 @@ export function usePreviewResource<T>(
       })
       .catch((error: unknown) => {
         if (!cancelled) {
-          console.error("Failed to load preview", error);
+          logPreviewLoadError(error);
           setResource({ status: "error", error });
         }
       });

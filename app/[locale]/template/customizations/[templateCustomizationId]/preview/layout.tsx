@@ -11,9 +11,10 @@ export default function CustomizationPreviewLayout({ children }: { children: Rea
   const { templateCustomizationId } = useParams<{ templateCustomizationId: string }>();
   const client = useApolloClient();
   const load = useCallback(
-    async () => ({
-      model: toCustomizationPreviewModel(await loadCustomizationPreview(client, Number(templateCustomizationId))),
-    }),
+    async () => {
+      const data = await loadCustomizationPreview(client, Number(templateCustomizationId));
+      return { model: toCustomizationPreviewModel(data), displayLogic: data.displayLogic };
+    },
     [client, templateCustomizationId]
   );
   return <PreviewProvider load={load}>{children}</PreviewProvider>;

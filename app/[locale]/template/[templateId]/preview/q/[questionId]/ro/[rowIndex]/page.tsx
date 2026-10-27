@@ -15,7 +15,7 @@ export default function TemplateQuestionPreviewResearchOutputPage() {
   }>();
   const t = useTranslations("TemplatePreview");
   const Global = useTranslations("Global");
-  const { slice } = useQuestionPreview();
+  const { preview } = useQuestionPreview();
   const editorHref = useTemplateQuestionEditorHref();
 
   return (
@@ -25,7 +25,7 @@ export default function TemplateQuestionPreviewResearchOutputPage() {
       breadcrumbs={(currentPage, previewHref) => (
         <TemplatePreviewBreadcrumbs
           templateId={templateId}
-          templateName={slice?.model.templateName ?? ""}
+          templateName={preview?.model.templateName ?? ""}
           trail={[
             { label: Global("breadcrumbs.question"), href: editorHref },
             { label: t("questionPreview.breadcrumb"), href: previewHref },

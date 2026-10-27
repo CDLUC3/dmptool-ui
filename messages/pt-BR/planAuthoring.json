@@ -16,6 +16,7 @@
       "percentComplete": "{percent}% concluído",
       "writeYourPlan": "Escreva seu plano",
       "writePlanIntro": "Trabalhe em cada seção abaixo — as respostas são salvas automaticamente. Use Ir para seção para navegar entre as seções.",
+      "writePlanIntroPreview": "Nada do que você inserir aqui é salvo. Experimente responder às perguntas para ver como elas funcionam para quem escreve o plano e use Ir para seção para navegar entre as seções.",
       "questionsAnswered": "{answered} de {total} perguntas respondidas",
       "planDocument": "Documento do plano",
       "planDocumentIntro": "Este plano é representado por um único documento DMP enviado. Use <strong>Atualizar documento</strong> para substituí-lo por um novo arquivo.",
@@ -66,12 +67,13 @@
       "dateLabel": "Encontro"
     },
     "saveStatus": {
-      "unsavedChanges": "Alterações não Salvas",
+      "unsavedChanges": "Alterações não salvas",
       "saving": "Salvando…",
       "saved": "Salvo",
       "lastSaved": "Salvo pela última vez {relative}",
       "saveFailed": "Gravação falhou",
-      "unableToSave": "Não é possível salvar resposta."
+      "unableToSave": "Não é possível salvar resposta.",
+      "previewNotSaved": "Esta é uma pré-visualização, então nada foi salvo. Quem escreve o plano vê \"Salvo há pouco\" ao salvar."
     },
     "sidebar": {
       "ariaLabel": "Orientação e comentários para perguntas",

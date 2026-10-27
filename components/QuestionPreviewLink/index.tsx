@@ -1,10 +1,10 @@
-'use client'
+"use client";
 
-import React from 'react';
-import { useTranslations } from 'next-intl';
-import { Button } from 'react-aria-components';
-import { Link } from '@/i18n/routing';
-import { withPreviewDraft, type QuestionPreviewDraftSync } from './questionPreviewDraft';
+import React, { useId } from "react";
+import { useTranslations } from "next-intl";
+import { Button } from "react-aria-components";
+import { Link } from "@/i18n/routing";
+import { withPreviewDraft, type QuestionPreviewDraftSync } from "./questionPreviewDraft";
 
 interface QuestionPreviewLinkProps {
   href: string;
@@ -19,28 +19,41 @@ const QuestionPreviewLink: React.FC<QuestionPreviewLinkProps> = ({
   isDisabled = false,
   draftSync,
 }) => {
-  const Global = useTranslations('Global');
+  const t = useTranslations("TemplatePreview");
+  const helpId = useId();
   const { previewId } = draftSync;
+
+  const help = (
+    <p id={helpId} className="help-text">
+      {t("questionPreview.linkHelp")}
+    </p>
+  );
 
   if (isDisabled || !previewId) {
     return (
-      <Button isDisabled data-testid="preview-button">
-        {label}
-      </Button>
+      <>
+        <Button isDisabled aria-describedby={helpId} data-testid="preview-button">
+          {label}
+        </Button>
+        {help}
+      </>
     );
   }
 
   return (
-    <Link
-      href={withPreviewDraft(href, previewId)}
-      target="_blank"
-      rel="noopener"
-      className="react-aria-Button"
-      data-testid="preview-button"
-    >
-      {label}
-      <span className="hidden-accessibly"> ({Global('opensInNewTab')})</span>
-    </Link>
+    <>
+      <Link
+        href={withPreviewDraft(href, previewId)}
+        target="_blank"
+        rel="noopener"
+        className="react-aria-Button"
+        aria-describedby={helpId}
+        data-testid="preview-button"
+      >
+        {label}
+      </Link>
+      {help}
+    </>
   );
 };
 

@@ -175,6 +175,7 @@ describe("toTemplatePreviewModel", () => {
       canComment: false,
       canModerateComments: false,
       canCustomizeGuidance: true,
+      isPreview: true,
     });
     expect(model).toMatchObject({
       title: "NSF DMP",

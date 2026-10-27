@@ -60,6 +60,13 @@ describe("loadTemplatePreview", () => {
 
     await expect(loadTemplatePreview(client, 7)).rejects.toBeInstanceOf(PreviewNotFoundError);
   });
+
+  it.each([NaN, 0, -1, 1.5])("reports the malformed id %p as not found without asking the API", async (templateId) => {
+    const { client, query } = clientReturning(TEMPLATE);
+
+    await expect(loadTemplatePreview(client, templateId)).rejects.toBeInstanceOf(PreviewNotFoundError);
+    expect(query).not.toHaveBeenCalled();
+  });
 });
 
 describe("loadTemplatePreviewPlan", () => {

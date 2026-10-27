@@ -12,7 +12,7 @@ import NotificationHeader from "@/components/Notification";
 import { TransitionLink } from "@/components/Form";
 import type { LocalPreviewDataSource } from "../localPreviewDataSource";
 import PreviewLoadError from "../PreviewLoadError";
-import type { PreviewErrorKind } from "../previewError";
+import { toPreviewErrorKind } from "../previewError";
 import { usePreviewCustomizeGuidance } from "../usePreviewCustomizeGuidance";
 import styles from "../preview.module.scss";
 
@@ -55,7 +55,7 @@ export default function PreviewPlanPage({
   if (state.status === "error") {
     body = (
       <ContentContainer>
-        <PreviewLoadError kind={state.message as PreviewErrorKind} onRetry={() => dataSource.reload()} />
+        <PreviewLoadError kind={toPreviewErrorKind(state.message)} onRetry={() => dataSource.reload()} />
       </ContentContainer>
     );
   } else if (empty) {
@@ -68,10 +68,11 @@ export default function PreviewPlanPage({
         researchOutputRowHref={researchOutputRowHref}
         onCustomizeGuidance={onCustomizeGuidance}
         overview={
-          <ContentContainer>
+          <ContentContainer className={styles.notice}>
             <NotificationHeader title={t("notice.title")}>{notice}</NotificationHeader>
           </ContentContainer>
         }
+        compactSpacing
         footer={backLink}
       />
     );

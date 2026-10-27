@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams, useSearchParams } from "next/navigation";
-import { NEW_QUESTION_ID } from "@/components/QuestionPreviewLink/questionPreviewDraft";
+import { NEW_QUESTION_ID, SECTION_ID_PARAM } from "@/components/QuestionPreviewLink/questionPreviewDraft";
 import { routePath } from "@/utils/routes";
 import { parseCustomizationQuestionKey } from "./buildCustomizationQuestionPreview";
 
@@ -15,7 +15,7 @@ export function useCustomizationQuestionEditorHref(): string {
     return routePath(
       "template.customize.question.create",
       { templateCustomizationId },
-      { section_id: searchParams.get("section_id") ?? undefined, step: 1 }
+      { [SECTION_ID_PARAM]: searchParams.get(SECTION_ID_PARAM) ?? undefined, step: 1 }
     );
   }
   const identity = parseCustomizationQuestionKey(questionKey);

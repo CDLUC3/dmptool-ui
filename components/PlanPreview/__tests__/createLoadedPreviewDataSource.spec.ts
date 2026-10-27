@@ -40,8 +40,10 @@ function model(questions: PlanQuestionDefinition[]): PlanAuthoringModel {
 
 const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
 
+const MESSAGES = { questionNotFound: "TemplatePreview.questionNotFound" };
+
 async function loaded(load = jest.fn().mockResolvedValue({ model: model([question(10), question(11)]) })) {
-  const dataSource = createLoadedPreviewDataSource(load);
+  const dataSource = createLoadedPreviewDataSource(load, MESSAGES);
   dataSource.subscribe(() => {});
   await flush();
   return dataSource;
@@ -50,7 +52,7 @@ async function loaded(load = jest.fn().mockResolvedValue({ model: model([questio
 describe("createLoadedPreviewDataSource", () => {
   it("doesn't load until something subscribes, and loads once", () => {
     const load = jest.fn().mockResolvedValue({ model: model([]) });
-    const dataSource = createLoadedPreviewDataSource(load);
+    const dataSource = createLoadedPreviewDataSource(load, MESSAGES);
 
     expect(load).not.toHaveBeenCalled();
     expect(dataSource.getState()).toEqual({ status: "loading" });
@@ -105,12 +107,12 @@ describe("createLoadedPreviewDataSource", () => {
     expect(state.model.progress).toEqual({ answeredQuestions: 1, totalQuestions: 2, percentComplete: 50 });
   });
 
-  it("fails to save an unknown question", async () => {
+  it("fails to save an unknown question with the translated message", async () => {
     const dataSource = await loaded();
 
     await expect(dataSource.saveAnswer("base-question-999", { answer: "x" })).resolves.toEqual({
       kind: "failed",
-      message: "Question not found.",
+      message: "TemplatePreview.questionNotFound",
     });
   });
 
@@ -122,7 +124,7 @@ describe("createLoadedPreviewDataSource", () => {
     await expect(dataSource.setSelectedGuidanceOrgs(["x"])).resolves.toEqual([]);
   });
 
-  it("hides questions by display logic only while it's turned on", async () => {
+  it("hides questions by display logic", async () => {
     const load = jest.fn().mockResolvedValue({
       model: model([question(10, ["yes", "no"]), question(11)]),
       displayLogic: new Map([
@@ -141,19 +143,15 @@ describe("createLoadedPreviewDataSource", () => {
       const state = dataSource.getState();
       return state.status === "ready" ? Boolean(state.model.sections[0].questions[1].isHidden) : undefined;
     };
-    await dataSource.saveAnswer("base-question-10", { type: "radioButtons", answer: "no" });
-
-    expect(dataSource.hasDisplayLogic()).toBe(true);
     expect(isHidden()).toBe(false);
 
-    dataSource.setDisplayLogicApplied(true);
+    await dataSource.saveAnswer("base-question-10", { type: "radioButtons", answer: "no" });
     expect(isHidden()).toBe(true);
 
     await dataSource.saveAnswer("base-question-10", { type: "radioButtons", answer: "yes" });
     expect(isHidden()).toBe(false);
 
     await dataSource.saveAnswer("base-question-10", { type: "radioButtons", answer: "no" });
-    dataSource.setDisplayLogicApplied(false);
-    expect(isHidden()).toBe(false);
+    expect(isHidden()).toBe(true);
   });
 });

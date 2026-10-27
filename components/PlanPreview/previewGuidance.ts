@@ -58,7 +58,7 @@ export function previewTagIds(
   return own.length > 0 ? own : ids(sectionTags);
 }
 
-function present(html: (string | null | undefined)[] | undefined): string[] {
+function nonBlank(html: (string | null | undefined)[] | undefined): string[] {
   return (html ?? []).filter((item): item is string => Boolean(item?.trim()));
 }
 
@@ -120,18 +120,18 @@ export function toPreviewGuidanceSources({
 
   const ownerSources = owner
     ? orgSource(owner, GuidanceSourceType.TemplateOwner, [
-        ...present(ownerGuidanceHtml),
+        ...nonBlank(ownerGuidanceHtml),
         ...tagGuidanceHtml(guidance.owner, tagIds),
       ])
     : [];
 
   if (researcher.kind === "org") {
-    const orgHtml = [...present(researcher.guidanceHtml), ...tagGuidanceHtml(guidance.org, tagIds)];
+    const orgHtml = [...nonBlank(researcher.guidanceHtml), ...tagGuidanceHtml(guidance.org, tagIds)];
     // The plan shows one tab per org, with the customization's guidance first.
     if (owner && owner.uri === researcher.org.uri) {
       const merged = orgSource(owner, GuidanceSourceType.TemplateOwner, [
-        ...present(researcher.guidanceHtml),
-        ...present(ownerGuidanceHtml),
+        ...nonBlank(researcher.guidanceHtml),
+        ...nonBlank(ownerGuidanceHtml),
         ...tagGuidanceHtml(guidance.owner, tagIds),
       ]);
       return [...bestPractice, ...merged];

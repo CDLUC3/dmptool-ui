@@ -1,7 +1,8 @@
 import { questionKey, type PlanQuestionIdentity } from "@/components/PlanAuthoring/model";
-import { sliceQuestionPreview, type QuestionPreviewSlice } from "@/components/PlanPreview/questionPreviewSlice";
+import { toSingleQuestionPreview, type SingleQuestionPreview } from "@/components/PlanPreview/singleQuestionPreview";
 import {
   NEW_QUESTION_ID,
+  UNSAVED_QUESTION_ID,
   type QuestionPreviewDraft,
 } from "@/components/QuestionPreviewLink/questionPreviewDraft";
 import type { CustomizationPreviewData, CustomizationPreviewQuestion } from "../customizationPreviewData";
@@ -13,8 +14,6 @@ export interface QuestionCustomizationPreviewDraft {
 }
 
 export type CustomizationQuestionPreviewDraft = QuestionPreviewDraft | QuestionCustomizationPreviewDraft;
-
-export const UNSAVED_CUSTOM_QUESTION_ID = -1;
 
 export interface CustomizationQuestionPreviewTarget {
   /** A question key such as base-question-12, or NEW_QUESTION_ID. */
@@ -69,7 +68,7 @@ function applyDraft(
 export function buildCustomizationQuestionPreview(
   data: CustomizationPreviewData,
   { questionKey: key, sectionId, draft }: CustomizationQuestionPreviewTarget
-): QuestionPreviewSlice | null {
+): SingleQuestionPreview | null {
   const isNew = key === NEW_QUESTION_ID;
   let currentKey: string;
   let sections = data.sections;
@@ -86,7 +85,7 @@ export function buildCustomizationQuestionPreview(
     if (index < 0) {
       return null;
     }
-    const identity: PlanQuestionIdentity = { kind: "custom", customQuestionId: UNSAVED_CUSTOM_QUESTION_ID };
+    const identity: PlanQuestionIdentity = { kind: "custom", customQuestionId: UNSAVED_QUESTION_ID };
     sections = sections.map((section, sectionIndex) =>
       sectionIndex === index ? { ...section, questions: [...section.questions, fromFullDraft(identity, draft)] } : section
     );
@@ -115,5 +114,5 @@ export function buildCustomizationQuestionPreview(
     }
   }
 
-  return sliceQuestionPreview(toCustomizationPreviewModel({ ...data, sections }), currentKey);
+  return toSingleQuestionPreview(toCustomizationPreviewModel({ ...data, sections }), currentKey);
 }

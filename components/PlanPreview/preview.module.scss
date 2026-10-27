@@ -12,6 +12,15 @@
   }
 }
 
+// NotificationHeader takes no className, so its side margins are removed from here.
+.notice {
+  padding-bottom: 0;
+
+  > div {
+    margin-inline: 0;
+  }
+}
+
 // The layoutContainer mixin's overflow: auto would make this a scroll
 // container and break position: sticky on the plan section navigation.
 .layout {

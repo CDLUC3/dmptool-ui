@@ -168,12 +168,19 @@ export default function PlanQuestion({
                   <PlanQuestionSaveStatus
                     state={controller.saveState}
                     lastSavedAt={question.lastSavedAt}
+                    isPreview={capabilities.isPreview}
                   />
                 ) : null}
                 {canEditAnswer && (!isResearchOutput || saveFailed) ? (
                   <Button
                     onPress={() => {
                       void controller.saveNow();
+                      if (capabilities.isPreview) {
+                        toast.add(t("saveStatus.previewNotSaved"), {
+                          type: "info",
+                          timeout: 4000,
+                        });
+                      }
                     }}
                   >
                     {Global("buttons.save")}

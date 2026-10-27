@@ -15,6 +15,9 @@ export async function loadTemplatePreview(
   client: ApolloClient,
   templateId: number
 ): Promise<TemplatePreviewData> {
+  if (!Number.isInteger(templateId) || templateId <= 0) {
+    throw new PreviewNotFoundError();
+  }
   const { data } = await client.query({
     query: TemplatePreviewDocument,
     variables: { templateId },

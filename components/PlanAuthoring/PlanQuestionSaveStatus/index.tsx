@@ -11,12 +11,14 @@ const MINUTE_MS = 60 * 1000;
 interface PlanQuestionSaveStatusProps {
   state: PlanQuestionSaveState;
   lastSavedAt?: number;
+  isPreview?: boolean;
   className?: string;
 }
 
 export default function PlanQuestionSaveStatus({
   state,
   lastSavedAt,
+  isPreview = false,
   className,
 }: PlanQuestionSaveStatusProps) {
   const t = useTranslations("PlanAuthoring");
@@ -37,6 +39,9 @@ export default function PlanQuestionSaveStatus({
   }, [showLastSaved, lastSavedAt]);
 
   const text = (() => {
+    if (isPreview && state.status !== "invalid" && state.status !== "failed") {
+      return "";
+    }
     if (showLastSaved) {
       return now - lastSavedAt < MINUTE_MS
         ? QuestionPage("messages.savedJustNow")

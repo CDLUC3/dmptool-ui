@@ -1,13 +1,9 @@
 import { questionKey } from "@/components/PlanAuthoring/model";
 import type { TemplatePreviewTemplate } from "../../toTemplatePreviewModel";
 import { EMPTY_GUIDANCE_LOOKUP } from "@/components/PlanPreview/previewGuidance";
-import { withAnswersFrom } from "@/components/PlanPreview/questionPreviewSlice";
-import {
-  buildTemplateQuestionPreview,
-  UNSAVED_QUESTION_ID,
-  type TemplateQuestionPreviewTarget,
-} from "../buildTemplateQuestionPreview";
-import type { QuestionPreviewDraft } from "@/components/QuestionPreviewLink/questionPreviewDraft";
+import { withAnswersFrom } from "@/components/PlanPreview/singleQuestionPreview";
+import { buildTemplateQuestionPreview, type TemplateQuestionPreviewTarget } from "../buildTemplateQuestionPreview";
+import { UNSAVED_QUESTION_ID, type QuestionPreviewDraft } from "@/components/QuestionPreviewLink/questionPreviewDraft";
 
 const EXAMPLE_GUIDANCE = {
   label: "Example org",
@@ -53,47 +49,33 @@ const titles = (preview: ReturnType<typeof buildQuestionPreview>) =>
   preview!.model.sections[0].questions.map((q) => q.title);
 
 describe("buildTemplateQuestionPreview", () => {
-  it("shows only the question's section with the questions either side of it", () => {
+  it("shows only the question, in its section", () => {
     const preview = buildQuestionPreview(TEMPLATE, { questionId: "22", draft: null }, EXAMPLE_GUIDANCE);
 
     expect(preview!.model.sections).toHaveLength(1);
     expect(preview!.model.sections[0].title).toBe("Second");
-    expect(titles(preview)).toEqual(["Question 21", "Question 22", "Question 23"]);
+    expect(titles(preview)).toEqual(["Question 22"]);
     expect(preview!.sectionIndex).toBe(1);
     expect(preview!.totalSections).toBe(3);
     expect(preview!.currentKey).toBe(questionKey({ kind: "base", versionedQuestionId: 22 }));
   });
 
-  it("leaves out the neighbours that don't exist", () => {
-    expect(titles(buildQuestionPreview(TEMPLATE, { questionId: "21", draft: null }, EXAMPLE_GUIDANCE))).toEqual([
-      "Question 21",
-      "Question 22",
-    ]);
-    expect(titles(buildQuestionPreview(TEMPLATE, { questionId: "24", draft: null }, EXAMPLE_GUIDANCE))).toEqual([
-      "Question 23",
-      "Question 24",
-    ]);
-    expect(titles(buildQuestionPreview(TEMPLATE, { questionId: "11", draft: null }, EXAMPLE_GUIDANCE))).toEqual([
-      "Question 11",
-    ]);
-  });
-
   it("applies the editor's unsaved draft to the question", () => {
     const preview = buildQuestionPreview(TEMPLATE, { questionId: "22", draft: DRAFT }, EXAMPLE_GUIDANCE);
-    const current = preview!.model.sections[0].questions[1];
+    const current = preview!.model.sections[0].questions[0];
 
     expect(current.title).toBe("Edited question");
     expect(current.required).toBe(true);
     expect(current.parsedJson?.type).toBe("textArea");
-    expect(preview!.model.sections[0].questions[0].title).toBe("Question 21");
   });
 
-  it("adds a new question to the end of its section from the draft", () => {
+  it("previews a new question being added to its section from the draft", () => {
     const preview = buildQuestionPreview(TEMPLATE, { questionId: "new", sectionId: 2, draft: DRAFT }, EXAMPLE_GUIDANCE);
 
-    expect(titles(preview)).toEqual(["Question 24", "Edited question"]);
+    expect(preview!.model.sections[0].title).toBe("Second");
+    expect(titles(preview)).toEqual(["Edited question"]);
     expect(preview!.currentKey).toBe(questionKey({ kind: "base", versionedQuestionId: UNSAVED_QUESTION_ID }));
-    expect(preview!.model.sections[0].questions[1].identity).toEqual({
+    expect(preview!.model.sections[0].questions[0].identity).toEqual({
       kind: "base",
       versionedQuestionId: UNSAVED_QUESTION_ID,
     });
@@ -120,24 +102,50 @@ describe("buildTemplateQuestionPreview", () => {
 });
 
 describe("withAnswersFrom", () => {
-  it("keeps answers typed in the preview when the model is rebuilt", () => {
-    const first = buildQuestionPreview(TEMPLATE, { questionId: "22", draft: null }, EXAMPLE_GUIDANCE)!.model;
-    const answered = {
-      ...first,
-      sections: first.sections.map((section) => ({
-        ...section,
-        questions: section.questions.map((q, index) =>
-          index === 1 ? { ...q, answerJson: { type: "text", answer: "Typed" }, hasAnswer: true } : q
-        ),
-      })),
-    };
-    const rebuilt = buildQuestionPreview(TEMPLATE, { questionId: "22", draft: DRAFT }, EXAMPLE_GUIDANCE)!.model;
+  const TEXT_DRAFT: QuestionPreviewDraft = { ...DRAFT, json: '{"type":"text"}' };
 
-    const merged = withAnswersFrom(answered, rebuilt);
+  const previewOf = (draft: QuestionPreviewDraft | null) =>
+    buildQuestionPreview(TEMPLATE, { questionId: "22", draft }, EXAMPLE_GUIDANCE)!.model;
 
-    expect(merged.sections[0].questions[1].title).toBe("Edited question");
-    expect(merged.sections[0].questions[1].answerJson).toEqual({ type: "text", answer: "Typed" });
+  const withTypedAnswer = (model: ReturnType<typeof previewOf>) => ({
+    ...model,
+    sections: model.sections.map((section) => ({
+      ...section,
+      questions: section.questions.map((q) => ({ ...q, answerJson: { type: "text", answer: "Typed" }, hasAnswer: true })),
+    })),
+  });
+
+  it("keeps answers typed in the preview when the question's wording changes", () => {
+    const merged = withAnswersFrom(withTypedAnswer(previewOf(null)), previewOf(TEXT_DRAFT));
+
+    expect(merged.sections[0].questions[0].title).toBe("Edited question");
+    expect(merged.sections[0].questions[0].answerJson).toEqual({ type: "text", answer: "Typed" });
+    expect(merged.progress).toEqual({ answeredQuestions: 1, totalQuestions: 1, percentComplete: 100 });
+  });
+
+  it("drops the answer when the question type changes", () => {
+    const merged = withAnswersFrom(withTypedAnswer(previewOf(null)), previewOf(DRAFT));
+
+    expect(merged.sections[0].questions[0].questionType).toBe("textArea");
     expect(merged.sections[0].questions[0].hasAnswer).toBe(false);
+    expect(merged.progress.answeredQuestions).toBe(0);
+  });
+
+  it("drops the answer when the question's options change", () => {
+    const limited = (maxLength: number) => ({
+      ...TEXT_DRAFT,
+      json: JSON.stringify({ type: "text", attributes: { maxLength } }),
+    });
+
+    const merged = withAnswersFrom(withTypedAnswer(previewOf(limited(100))), previewOf(limited(10)));
+
+    expect(merged.sections[0].questions[0].hasAnswer).toBe(false);
+  });
+
+  it("uses the new model as-is when there's nothing to carry over", () => {
+    const rebuilt = previewOf(TEXT_DRAFT);
+
+    expect(withAnswersFrom(previewOf(null), rebuilt).sections[0].questions[0].hasAnswer).toBe(false);
     expect(withAnswersFrom(null, rebuilt)).toBe(rebuilt);
   });
 });

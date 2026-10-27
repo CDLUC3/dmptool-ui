@@ -1,16 +1,16 @@
 import { questionKey } from "@/components/PlanAuthoring/model";
 import { EMPTY_GUIDANCE_LOOKUP } from "@/components/PlanPreview/previewGuidance";
-import { NEW_QUESTION_ID, type QuestionPreviewDraft } from "@/components/QuestionPreviewLink/questionPreviewDraft";
+import {
+  NEW_QUESTION_ID,
+  UNSAVED_QUESTION_ID,
+  type QuestionPreviewDraft,
+} from "@/components/QuestionPreviewLink/questionPreviewDraft";
 import type {
   CustomizationPreviewData,
   CustomizationPreviewQuestion,
   CustomizationPreviewSection,
 } from "../../customizationPreviewData";
-import {
-  buildCustomizationQuestionPreview,
-  parseCustomizationQuestionKey,
-  UNSAVED_CUSTOM_QUESTION_ID,
-} from "../buildCustomizationQuestionPreview";
+import { buildCustomizationQuestionPreview, parseCustomizationQuestionKey } from "../buildCustomizationQuestionPreview";
 
 const ORG = { uri: "https://ror.org/uni", displayName: "University of Example" };
 
@@ -46,6 +46,7 @@ const DATA: CustomizationPreviewData = {
   owner: null,
   org: ORG,
   guidance: EMPTY_GUIDANCE_LOOKUP,
+  displayLogic: new Map(),
   sections: [
     section({ kind: "base", versionedSectionId: 1 }, "Base section", [
       question({ kind: "base", versionedQuestionId: 11 }, "Base question"),
@@ -85,7 +86,7 @@ describe("buildCustomizationQuestionPreview", () => {
 
     expect(preview!.model.sections[0].title).toBe("Base section");
     expect(preview!.currentKey).toBe("custom-question-31");
-    expect(titles(preview)).toEqual(["Base question", "Custom question"]);
+    expect(titles(preview)).toEqual(["Custom question"]);
   });
 
   it("adds a base question's draft customization as the org's guidance", () => {
@@ -112,7 +113,7 @@ describe("buildCustomizationQuestionPreview", () => {
   it("ignores a full draft sent for a base question", () => {
     const preview = buildCustomizationQuestionPreview(DATA, { questionKey: "base-question-11", draft: FULL_DRAFT });
 
-    expect(titles(preview)).toEqual(["Base question", "Custom question"]);
+    expect(titles(preview)).toEqual(["Base question"]);
   });
 
   it("adds a new question to the end of the section it's being added to", () => {
@@ -123,8 +124,8 @@ describe("buildCustomizationQuestionPreview", () => {
     });
 
     expect(preview!.model.sections[0].title).toBe("Base section");
-    expect(titles(preview)).toEqual(["Custom question", "Draft question"]);
-    expect(preview!.currentKey).toBe(questionKey({ kind: "custom", customQuestionId: UNSAVED_CUSTOM_QUESTION_ID }));
+    expect(titles(preview)).toEqual(["Draft question"]);
+    expect(preview!.currentKey).toBe(questionKey({ kind: "custom", customQuestionId: UNSAVED_QUESTION_ID }));
   });
 
   it("falls back to the draft's section when the URL has none", () => {

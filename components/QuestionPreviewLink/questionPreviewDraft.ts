@@ -20,7 +20,11 @@ export type QuestionPreviewMessage<T> =
   | { type: "closed" };
 
 export const NEW_QUESTION_ID = "new";
+/** The id given to a new question's draft until it is saved. */
+export const UNSAVED_QUESTION_ID = -1;
 export const PREVIEW_DRAFT_PARAM = "draft";
+/** Where a new question is being added. */
+export const SECTION_ID_PARAM = "section_id";
 export const DRAFT_SEND_DELAY_MS = 300;
 /** How long the preview waits for the editor to answer before showing the saved question. */
 export const EDITOR_REPLY_TIMEOUT_MS = 500;

@@ -56,6 +56,7 @@ const data = (sections: CustomizationPreviewSection[], overrides: Partial<Custom
     owner: [{ tagId: 5, guidanceText: "<p>Owner tag</p>" }],
     org: [{ tagId: 5, guidanceText: "<p>Org tag</p>" }],
   },
+  displayLogic: new Map(),
   ...overrides,
 });
 

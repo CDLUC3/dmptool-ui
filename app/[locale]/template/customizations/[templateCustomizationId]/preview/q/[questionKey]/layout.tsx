@@ -20,13 +20,13 @@ export default function CustomizationQuestionPreviewLayout({ children }: { child
     () => loadCustomizationPreview(client, Number(templateCustomizationId)),
     [client, templateCustomizationId]
   );
-  const buildSlice = useCallback(
+  const buildPreview = useCallback(
     (data: CustomizationPreviewData, { draft, sectionId }: QuestionPreviewTarget<CustomizationQuestionPreviewDraft>) =>
       buildCustomizationQuestionPreview(data, { questionKey, sectionId, draft }),
     [questionKey]
   );
   return (
-    <QuestionPreviewRoute load={load} buildSlice={buildSlice}>
+    <QuestionPreviewRoute load={load} buildPreview={buildPreview}>
       {children}
     </QuestionPreviewRoute>
   );

@@ -15,13 +15,13 @@ export default function TemplateQuestionPreviewLayout({ children }: { children: 
   const client = useApolloClient();
   const exampleGuidance = useTemplatePreviewExampleGuidance();
   const load = useCallback(() => loadTemplatePreview(client, Number(templateId)), [client, templateId]);
-  const buildSlice = useCallback(
+  const buildPreview = useCallback(
     (data: TemplatePreviewData, { draft, sectionId }: QuestionPreviewTarget<QuestionPreviewDraft>) =>
       buildTemplateQuestionPreview(data, { questionId, sectionId, draft }, exampleGuidance),
     [questionId, exampleGuidance]
   );
   return (
-    <QuestionPreviewRoute load={load} buildSlice={buildSlice}>
+    <QuestionPreviewRoute load={load} buildPreview={buildPreview}>
       {children}
     </QuestionPreviewRoute>
   );

@@ -1,7 +1,8 @@
 import { questionKey } from "@/components/PlanAuthoring/model";
-import { sliceQuestionPreview, type QuestionPreviewSlice } from "@/components/PlanPreview/questionPreviewSlice";
+import { toSingleQuestionPreview, type SingleQuestionPreview } from "@/components/PlanPreview/singleQuestionPreview";
 import {
   NEW_QUESTION_ID,
+  UNSAVED_QUESTION_ID,
   type QuestionPreviewDraft,
 } from "@/components/QuestionPreviewLink/questionPreviewDraft";
 import {
@@ -10,8 +11,6 @@ import {
   type TemplatePreviewExampleGuidance,
   type TemplatePreviewQuestion,
 } from "../toTemplatePreviewModel";
-
-export const UNSAVED_QUESTION_ID = -1;
 
 export interface TemplateQuestionPreviewTarget {
   /** A saved question's id, or NEW_QUESTION_ID. */
@@ -37,7 +36,7 @@ export function buildTemplateQuestionPreview(
   { template, guidance }: TemplatePreviewData,
   { questionId, sectionId, draft }: TemplateQuestionPreviewTarget,
   exampleGuidance: TemplatePreviewExampleGuidance
-): QuestionPreviewSlice | null {
+): SingleQuestionPreview | null {
   const isNew = questionId === NEW_QUESTION_ID;
   const savedId = Number(questionId);
   const targetSectionId = isNew ? sectionId ?? draft?.sectionId : undefined;
@@ -79,7 +78,7 @@ export function buildTemplateQuestionPreview(
   }
 
   const model = toTemplatePreviewModel({ ...template, sections }, exampleGuidance, guidance);
-  return sliceQuestionPreview(
+  return toSingleQuestionPreview(
     model,
     questionKey({ kind: "base", versionedQuestionId: isNew ? UNSAVED_QUESTION_ID : savedId })
   );

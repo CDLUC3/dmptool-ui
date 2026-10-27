@@ -110,24 +110,18 @@ describe("TemplateQuestionPreviewPage", () => {
     channels.splice(0).forEach((channel) => channel.close());
   });
 
-  it("shows only the question's section, with its neighbours labelled, blurred and hidden from assistive tech", async () => {
+  it("shows only the question, under its section's heading", async () => {
     renderPage("22");
 
     expect(await screen.findByText("Current")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Data collection" })).toBeInTheDocument();
-    expect(screen.queryByText("Other section")).not.toBeInTheDocument();
-    expect(screen.getByText("Current").parentElement).not.toHaveAttribute("aria-hidden");
-    for (const title of ["Before", "After"]) {
-      const neighbour = screen.getByText(title).parentElement!;
-      expect(neighbour).toHaveAttribute("aria-hidden", "true");
-      expect(neighbour).toHaveAttribute("inert");
+    for (const title of ["Before", "After", "Other section"]) {
+      expect(screen.queryByText(title)).not.toBeInTheDocument();
     }
-    expect(screen.getByText("questionPreview.previousQuestion")).toBeInTheDocument();
-    expect(screen.getByText("questionPreview.nextQuestion")).toBeInTheDocument();
     expect(screen.getByText("questionPreview.notice.saved")).toBeInTheDocument();
   });
 
-  it("goes back to editing the question, not to the whole template preview", async () => {
+  it("goes back to editing the question, not to the whole template preview, when opened on its own", async () => {
     const close = jest.spyOn(window, "close").mockImplementation(() => {});
     renderPage("22");
     await screen.findByText("Current");
@@ -138,8 +132,22 @@ describe("TemplateQuestionPreviewPage", () => {
     expect(screen.getByRole("link", { name: "breadcrumbs.question" })).toHaveAttribute("href", "/template/7/q/22");
 
     fireEvent.click(back);
-    expect(close).toHaveBeenCalled();
+    expect(close).not.toHaveBeenCalled();
     expect(mockPush).toHaveBeenCalledWith("/template/7/q/22");
+    close.mockRestore();
+  });
+
+  it("closes itself to go back to the editor tab that's still open", async () => {
+    const close = jest.spyOn(window, "close").mockImplementation(() => {});
+    openEditorTab("abc", DRAFT);
+    renderPage("22", { draft: "abc" });
+    await screen.findByText("Unsaved wording");
+
+    fireEvent.click(
+      screen.getByRole("link", { name: "questionPreview.backToQuestion (questionPreview.closesThisTab)" })
+    );
+
+    expect(close).toHaveBeenCalled();
     close.mockRestore();
   });
 
@@ -159,8 +167,8 @@ describe("TemplateQuestionPreviewPage", () => {
     renderPage("new", { draft: "abc", section_id: "2" });
 
     expect(await screen.findByText("Brand new")).toBeInTheDocument();
-    expect(screen.getByText("After")).toBeInTheDocument();
-    expect(screen.queryByText("Before")).not.toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Data collection" })).toBeInTheDocument();
+    expect(screen.queryByText("After")).not.toBeInTheDocument();
   });
 
   it("asks for a new question to be previewed from its editor when the editor isn't open", async () => {

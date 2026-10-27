@@ -46,6 +46,8 @@ interface PlanAuthoringProps {
   planDocument?: PlanDocument;
   idPrefix?: string;
   overview?: React.ReactNode;
+  /** Tightens the space between the overview and the first question. */
+  compactSpacing?: boolean;
   /** Rendered after the last section. */
   footer?: React.ReactNode;
   researchOutputRowHref?: ResearchOutputRowHref;
@@ -66,6 +68,7 @@ export default function PlanAuthoring({
   planDocument: initialPlanDocument,
   idPrefix = "plan-authoring",
   overview,
+  compactSpacing = false,
   footer,
   researchOutputRowHref,
   onCustomizeGuidance,
@@ -226,7 +229,9 @@ export default function PlanAuthoring({
             ) : null}
           </FullWidthSection>
         ) : (
-          <FullWidthSection className={styles.writePlanRegion}>
+          <FullWidthSection
+            className={[styles.writePlanRegion, compactSpacing && styles.compactSpacing].filter(Boolean).join(" ")}
+          >
             {model && !model.capabilities.canEditAnswers ? (
               <div className={styles.readOnlyNotice}>
                 <NotificationHeader title={t("screen.readOnlyTitle")}>
@@ -236,7 +241,11 @@ export default function PlanAuthoring({
             ) : null}
             <div className={styles.writePlanIntro}>
               <h2>{t("screen.writeYourPlan")}</h2>
-              <p>{t("screen.writePlanIntro")}</p>
+              <p>
+                {model?.capabilities.isPreview
+                  ? t("screen.writePlanIntroPreview")
+                  : t("screen.writePlanIntro")}
+              </p>
               {model ? (
                 <p className={styles.progressSummary}>
                   {t("screen.questionsAnswered", {

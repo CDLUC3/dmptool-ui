@@ -6,6 +6,7 @@ export const PREVIEW_CAPABILITIES: PlanCapabilities = {
   canComment: false,
   canModerateComments: false,
   canCustomizeGuidance: true,
+  isPreview: true,
 };
 
 export function byDisplayOrder(

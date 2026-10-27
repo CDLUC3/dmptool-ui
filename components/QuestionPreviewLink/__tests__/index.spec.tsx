@@ -20,6 +20,16 @@ describe("QuestionPreviewLink", () => {
     expect(link).toHaveAttribute("href", "/template/7/preview/q/22?draft=abc");
   });
 
+  it("explains that the preview includes unsaved changes", () => {
+    render(
+      <QuestionPreviewLink href="/template/7/preview/q/22" label="Preview question" draftSync={{ previewId: "abc" }} />
+    );
+
+    expect(screen.getByRole("link", { name: /Preview question/ })).toHaveAccessibleDescription(
+      "questionPreview.linkHelp"
+    );
+  });
+
   it("shows a disabled button until the editor has a preview id", () => {
     render(
       <QuestionPreviewLink href="/template/7/preview/q/22" label="Preview question" draftSync={{ previewId: null }} />

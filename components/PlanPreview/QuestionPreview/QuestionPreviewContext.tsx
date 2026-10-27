@@ -2,12 +2,14 @@
 
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import {
   PREVIEW_DRAFT_PARAM,
+  SECTION_ID_PARAM,
   useQuestionPreviewDraft,
 } from "@/components/QuestionPreviewLink/questionPreviewDraft";
 import { createLocalPreviewDataSource, type LocalPreviewDataSource } from "../localPreviewDataSource";
-import { withAnswersFrom, type QuestionPreviewSlice } from "../questionPreviewSlice";
+import { withAnswersFrom, type SingleQuestionPreview } from "../singleQuestionPreview";
 import { previewErrorKind, type PreviewErrorKind } from "../previewError";
 import { usePreviewResource } from "../usePreviewResource";
 import { useReloadWhenDraftCloses } from "../useReloadWhenDraftCloses";
@@ -16,7 +18,7 @@ type QuestionPreviewStatus = "loading" | "ready" | PreviewErrorKind;
 
 interface QuestionPreviewValue {
   status: QuestionPreviewStatus;
-  slice: QuestionPreviewSlice | null;
+  preview: SingleQuestionPreview | null;
   dataSource: LocalPreviewDataSource;
   hasDraft: boolean;
   /** Query parameters to keep on links between the question preview pages. */
@@ -29,21 +31,19 @@ export interface QuestionPreviewTarget<TDraft> {
   sectionId?: number;
 }
 
-const SECTION_ID_PARAM = "section_id";
-
 const QuestionPreviewContext = createContext<QuestionPreviewValue | null>(null);
 
 /**
  * Shared by a question preview and its research output row page, so answers carry across.
- * `load` and `buildSlice` should be stable, as each change reloads or rebuilds the preview.
+ * `load` and `buildPreview` should be stable, as each change reloads or rebuilds the preview.
  */
 export function QuestionPreviewRoute<TData, TDraft extends object>({
   load,
-  buildSlice,
+  buildPreview,
   children,
 }: {
   load: () => Promise<TData>;
-  buildSlice: (data: TData, target: QuestionPreviewTarget<TDraft>) => QuestionPreviewSlice | null;
+  buildPreview: (data: TData, target: QuestionPreviewTarget<TDraft>) => SingleQuestionPreview | null;
   children: React.ReactNode;
 }) {
   const searchParams = useSearchParams();
@@ -54,15 +54,15 @@ export function QuestionPreviewRoute<TData, TDraft extends object>({
   useReloadWhenDraftCloses(draft, resource.reload);
 
   const sectionId = Number(sectionIdParam);
-  const slice = useMemo(
+  const preview = useMemo(
     () =>
       resource.status === "ready" && !isWaiting
-        ? buildSlice(resource.data, {
+        ? buildPreview(resource.data, {
             draft,
             sectionId: Number.isFinite(sectionId) && sectionId > 0 ? sectionId : undefined,
           })
         : null,
-    [resource, isWaiting, buildSlice, draft, sectionId]
+    [resource, isWaiting, buildPreview, draft, sectionId]
   );
 
   const query = useMemo(() => {
@@ -72,16 +72,19 @@ export function QuestionPreviewRoute<TData, TDraft extends object>({
     return params;
   }, [previewId, sectionIdParam]);
 
-  const [dataSource] = useState(() => createLocalPreviewDataSource({ status: "loading" }));
+  const t = useTranslations("TemplatePreview");
+  const [dataSource] = useState(() =>
+    createLocalPreviewDataSource({ status: "loading" }, { questionNotFound: t("questionNotFound") })
+  );
   useEffect(() => {
-    if (slice) {
+    if (preview) {
       const previous = dataSource.getState();
       dataSource.setState({
         status: "ready",
-        model: withAnswersFrom(previous.status === "ready" ? previous.model : null, slice.model),
+        model: withAnswersFrom(previous.status === "ready" ? previous.model : null, preview.model),
       });
     }
-  }, [dataSource, slice]);
+  }, [dataSource, preview]);
 
   let status: QuestionPreviewStatus;
   if (resource.status === "error") {
@@ -89,12 +92,12 @@ export function QuestionPreviewRoute<TData, TDraft extends object>({
   } else if (resource.status === "loading" || isWaiting) {
     status = "loading";
   } else {
-    status = slice ? "ready" : "notFound";
+    status = preview ? "ready" : "notFound";
   }
   const hasDraft = Boolean(draft);
   const value = useMemo(
-    () => ({ status, slice, dataSource, hasDraft, query }),
-    [status, slice, dataSource, hasDraft, query]
+    () => ({ status, preview, dataSource, hasDraft, query }),
+    [status, preview, dataSource, hasDraft, query]
   );
   return <QuestionPreviewContext.Provider value={value}>{children}</QuestionPreviewContext.Provider>;
 }

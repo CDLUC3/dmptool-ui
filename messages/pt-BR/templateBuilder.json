@@ -416,7 +416,7 @@
     "title": "Editar Pergunta",
     "buttons": {
       "changeType": "Mudar os Tipos",
-      "previewQuestion": "Pergunta de visualização",
+      "previewQuestion": "Pré-visualizar pergunta",
       "deleteQuestion": "Excluir questão",
       "addOutput": "Adicionar saída"
     },
@@ -625,7 +625,7 @@
     },
     "buttons": {
       "addRow": "Adicionar linha",
-      "previewQuestion": "Pergunta de visualização",
+      "previewQuestion": "Pré-visualizar pergunta",
       "changeType": "Mudar os Tipos",
       "removeType": "Remover {type}",
       "removeAccessLevel": "Remover {level}"
@@ -905,7 +905,7 @@
     "backToTemplate": "Voltar ao modelo",
     "notice": {
       "title": "Esta é uma pré-visualização",
-      "body": "Ela mostra as suas alterações mais recentes, incluindo as que ainda não foram publicadas. Você pode experimentar responder às perguntas, mas nada do que for inserido será salvo. A aba de orientação \"Org. exemplo\" é um texto ilustrativo que mostra onde os pesquisadores também podem ver orientações da própria organização."
+      "body": "Ela mostra as suas alterações mais recentes, incluindo as que ainda não foram publicadas. A aba de orientação \"Org. exemplo\" é um texto ilustrativo que mostra onde os pesquisadores também podem ver orientações da própria organização."
     },
     "exampleGuidance": {
       "label": "Exemplo: orientação da organização do pesquisador",
@@ -921,6 +921,7 @@
       "notSaved": "Nada é salvo. Os seus resultados de pesquisa ficam disponíveis apenas enquanto você estiver na pré-visualização."
     },
     "customizeGuidanceUnavailable": "É aqui que os pesquisadores escolhem orientações de outras organizações para exibir junto com as suas. Isso não está disponível na pré-visualização.",
+    "questionNotFound": "Não foi possível encontrar esta pergunta. Recarregue a página e tente novamente.",
     "empty": {
       "noSectionsTitle": "Ainda não há nada para pré-visualizar",
       "noQuestionsTitle": "O seu modelo ainda não tem perguntas",
@@ -933,24 +934,17 @@
       "description": "É assim que esta pergunta aparecerá para quem estiver escrevendo um plano.",
       "breadcrumb": "Pré-visualização da pergunta",
       "backToQuestion": "Voltar à edição da pergunta",
+      "closesThisTab": "Fecha esta aba",
+      "linkHelp": "Abre em uma nova aba. A pré-visualização inclui alterações que você ainda não salvou e é atualizada conforme você edita.",
       "notice": {
         "title": "Esta é uma pré-visualização",
         "draft": "Ela mostra as suas alterações mais recentes nesta pergunta, incluindo as que ainda não foram salvas, e é atualizada enquanto você edita.",
         "saved": "Ela mostra a última versão salva desta pergunta.",
-        "notSaved": "Apenas a seção desta pergunta é exibida. A lógica de exibição não é aplicada. Você pode experimentar responder, mas nada do que você inserir é salvo."
+        "notSaved": "Apenas esta pergunta é exibida. Para vê-la com o restante do seu modelo, pré-visualize o modelo completo. Você pode experimentar responder, mas nada do que você inserir é salvo."
       },
       "loading": "Carregando pré-visualização...",
-      "loadFailed": "Não foi possível carregar a pré-visualização.",
-      "notFoundTitle": "Não há nada para pré-visualizar",
       "notFound": "Esta pergunta não foi encontrada no seu modelo. Ela pode ter sido excluída.",
-      "notFoundNew": "Esta página pré-visualiza uma pergunta enquanto você a adiciona. Volte para a pergunta e selecione \"Pergunta de visualização\" novamente.",
-      "previousQuestion": "Pergunta anterior, exibida para contexto",
-      "nextQuestion": "Próxima pergunta, exibida para contexto"
-    },
-    "displayLogic": {
-      "label": "Aplicar lógica de exibição",
-      "off": "Desativada: todas as perguntas são exibidas, incluindo as que normalmente ficariam ocultas.",
-      "on": "Ativada: as perguntas são exibidas ou ocultadas com base nas suas respostas, como aconteceria em um plano."
+      "notFoundNew": "Esta página pré-visualiza uma pergunta enquanto você a adiciona. Volte para a pergunta e selecione \"Pré-visualizar pergunta\" novamente."
     },
     "errors": {
       "forbidden": {
@@ -969,7 +963,7 @@
     "customization": {
       "description": "É assim que o modelo, com as suas personalizações, aparecerá para os pesquisadores da sua organização quando escreverem um plano.",
       "backToCustomization": "Voltar à personalização",
-      "notice": "Ela mostra o modelo publicado com as suas personalizações mais recentes, incluindo as que ainda não foram publicadas. As orientações da sua organização aparecem na própria aba. A lógica de exibição não é aplicada, por isso todas as perguntas são exibidas. Você pode experimentar responder às perguntas, mas nada do que for inserido será salvo.",
+      "notice": "Ela mostra o modelo publicado com as suas personalizações mais recentes, incluindo as que ainda não foram publicadas. As orientações da sua organização aparecem na própria aba.",
       "empty": "O modelo não tem perguntas para pré-visualizar."
     }
   }
