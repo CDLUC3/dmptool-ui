@@ -184,7 +184,7 @@ const ConnectionsPage: React.FC = () => {
                 <ConnectionSection
                   type="sso"
                   isConnected={data?.me?.hasSSO || false}
-                  connectedIdentifier={data?.me?.hasSSO ? globalT("form.yesLabel") : globalT("noLabel")}
+                  connectedIdentifier={data?.me?.hasSSO ? data?.me?.affiliation?.displayName : globalT("noLabel")}
                   title={t("ssoConnection.title")}
                   content={t("ssoConnection.content")}
                   btnText={t("ssoConnection.btnText")}

@@ -49,7 +49,7 @@ type fieldErrorsMap = {
 export interface PendingSSOSignup {
   email: string;
   affiliation?: string;
-  displayName?: string;
+  affiliationId?: string;
   givenName?: string;
   surName?: string;
 }
@@ -100,8 +100,8 @@ export const SSOCheckContainer: React.FC<SSOCheckContainerProps> = ({ mode, init
   const [email, setEmail] = useState(mode === "register" && initialPendingSignup ? initialPendingSignup?.email : "");
   const [ssoEntityId, setSsoEntityId] = useState<string | null>(null);
 
-  const [affiliation, setAffiliation] = useState<string | null>(initialPendingSignup?.displayName ?? null);
-  const [affiliationId, setAffiliationId] = useState<string | null>(initialPendingSignup?.affiliation ?? null);
+  const [affiliation, setAffiliation] = useState<string | null>(initialPendingSignup?.affiliation ?? null);
+  const [affiliationId, setAffiliationId] = useState<string | null>(initialPendingSignup?.affiliationId ?? null);
   const [otherField, setOtherField] = useState<boolean>(false);
   const [otherAffiliation, setOtherAffiliation] = useState<string>("");
   const { suggestions, handleSearch, isSearching, searchError } = useAffiliationSearch();
