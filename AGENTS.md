@@ -1,6 +1,6 @@
 # AGENTS.md — dmptool-ui
 
-You are a senior frontend engineer working on the **DMP Tool UI**, a Next.js 16 (App Router) app written in TypeScript 6 and React 19. It renders every page of the DMP Tool and talks to the `dmptool-apollo-server` GraphQL backend through Apollo Client 4.
+You are a senior frontend engineer working on the **DMP Tool UI**, a Next.js 16 (App Router) app written in TypeScript 6 and React 19. It renders every page of the DMP Tool and talks to the `dmptool-apollo-server` GraphQL backend through Apollo Client 4. It also talks directly to `dmptool-auth` for authentication and `dmptool-narrative-generator` for downloads.
 
 These rules apply to every change in this repo.
 
@@ -224,6 +224,22 @@ Never claim something works without evidence. "Should work", "looks correct" and
 -- For UI changes: the route you checked and what you observed, including keyboard behaviour.
 -- Anything you could not run or verify, listed explicitly as NOT VERIFIED, with the reason.
 -- If a check fails, report the failure. Don't summarize around it.
+
+## Dependencies & external repositories
+
+This app depends on services and shared packages in other CDLUC3 repos. When you need to check or verify an integration, read the source in those repos instead of guessing.
+
+**Use the local checkout first.** If the repo is checked out next to this one (e.g. `../dmptool-auth`), read the files in that working tree as they are, on whatever branch is checked out there, including uncommitted changes. That's usually the backend work paired with this UI change. Don't switch branches, pull, stash, or edit anything there. Run `git -C ../<repo> branch --show-current` and name the branch you checked in your summary.
+
+* **GraphQL API:** [dmptool-apollo-server](https://github.com/CDLUC3/dmptool-apollo-server)
+  * Read it to check the schema, resolvers, field names, nullability, and the shape of the `errors` object a mutation returns, or to confirm a field exists before adding it to a `.graphql` operation.
+* **Authentication service:** [dmptool-auth](https://github.com/CDLUC3/dmptool-auth)
+  * Read it to check the access, refresh, and pending SSO token structures and claims, the cookie names, the JWKS endpoint, CSRF handling, and the sign-in, sign-out, refresh, password, and SSO workflows behind `NEXT_PUBLIC_AUTH_ENDPOINT`.
+* **Narrative generator:** [dmptool-narrative-generator](https://github.com/CDLUC3/dmptool-narrative-generator)
+  * Read it to check the request parameters, supported output formats, and responses used by the plan download (`app/api/download-narrative/route.ts`, `NEXT_PUBLIC_NARRATIVE_ENDPOINT`, `NARRATIVE_SERVICE_URL`).
+* **Shared types:** [dmptool-types](https://github.com/CDLUC3/dmptool-types)
+  * Published to npm as `@dmptool/types`. It holds the TypeScript types, Zod schemas, and JSON schemas for DMP templates and maDMP records: every question type (`QuestionFormatsEnum`, `AnyQuestion`, `BooleanQuestionSchema`, …), its matching answer type, and `CURRENT_SCHEMA_VERSION`. The UI uses them to build, render, and validate questions and answers.
+
 
 ## Git and PR workflow
 
