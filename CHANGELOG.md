@@ -197,6 +197,7 @@
 - Updated `RepoSelectorForAnswer` to wait to query `Re3byUrIsDocument` until we have `preferredReposURIs` because preferred repos don't display even though they eventually do to trigger the display of the "preferred repositories" checkbox [#118]
 
 ## Fixed
+- Fixed high vulnerability in `tinymce` and copied over some files from `node_modules/tinymce` to `public/tinymce` to replace the files that were associated with the vulnerable version. Also, removed the use of `deepmerge` in `i18n/request.ts` since there was no patch for it, and replaced it with a custom `mergeMessages` function [#604].
 - Updated `proxy.ts` so that `/admin/email-preferences` will not be exluded from `login` requirements. Pages within `email` directory are excluded from `login` though [#580]
 - Updated to used patched version of `Node` `v22.23.4`
 - Fixed `addGuidanceTextAction` reading the wrong `dataPath` (`addGuidanceText` instead of `addGuidance`), which meant the new guidance id was never returned and saving the same tag again failed with `Variable "$input" got invalid value null at "input.guidanceId"` [#193]
