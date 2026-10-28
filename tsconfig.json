@@ -49,6 +49,7 @@
     "cypress",
     "./cypress.config.ts",
     "**/cypress.config.ts",
-    ".next"
+    ".next",
+    "public"
   ]
 }
