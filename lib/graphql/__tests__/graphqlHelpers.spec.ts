@@ -105,3 +105,64 @@ describe("errorLink with an invalid CSRF token", () => {
     expect(navigateTo).toHaveBeenCalledWith('/login');
   });
 });
+
+describe("errorLink with an INTERNAL_SERVER_ERROR", () => {
+  const client = new ApolloClient({ cache: new InMemoryCache(), link: ApolloLink.empty() });
+  const query = gql`query Test { test }`;
+  const serverError = { message: 'Something broke', extensions: { code: 'INTERNAL_SERVER_ERROR' } };
+
+  // Sends one request through errorLink to a server that responds with the given errors
+  const run = (errors: ApolloLink.Result['errors'], context?: Record<string, unknown>) => new Promise<void>((resolve) => {
+    const serverLink = new ApolloLink(() => new Observable<ApolloLink.Result>((observer) => {
+      observer.next({ errors });
+      observer.complete();
+    }));
+    ApolloLink.execute(ApolloLink.from([errorLink, serverLink]), { query, context }, { client }).subscribe({
+      next: () => resolve(),
+      error: () => resolve(),
+      complete: () => resolve(),
+    });
+  });
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    window.history.pushState({}, '', '/en-US/projects');
+  });
+
+  afterAll(() => {
+    window.history.pushState({}, '', '/');
+  });
+
+  it("should redirect to the 500 error page", async () => {
+    await run([serverError]);
+
+    expect(navigateTo).toHaveBeenCalledTimes(1);
+    expect(navigateTo).toHaveBeenCalledWith('/500-error');
+  });
+
+  it("should redirect only once when the response has more than one INTERNAL_SERVER_ERROR", async () => {
+    await run([serverError, { ...serverError, message: 'Something else broke' }]);
+
+    expect(navigateTo).toHaveBeenCalledTimes(1);
+  });
+
+  it("should not redirect when the operation sets skipErrorRedirect", async () => {
+    await run([serverError], { skipErrorRedirect: true });
+
+    expect(navigateTo).not.toHaveBeenCalled();
+  });
+
+  it("should not redirect when already on the 500 error page, so the page doesn't reload forever", async () => {
+    window.history.pushState({}, '', '/en-US/500-error');
+
+    await run([serverError]);
+
+    expect(navigateTo).not.toHaveBeenCalled();
+  });
+
+  it("should not redirect for other GraphQL errors", async () => {
+    await run([{ message: 'Bad input', extensions: { code: 'BAD_USER_INPUT' } }]);
+
+    expect(navigateTo).not.toHaveBeenCalled();
+  });
+});

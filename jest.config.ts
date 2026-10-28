@@ -17,7 +17,8 @@ const customJestConfig = {
   setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
   testPathIgnorePatterns: [
     '/node_modules/',
-    '/app/\\[locale\\]/styleguide/'],
+    '/app/\\[locale\\]/styleguide/',
+    '<rootDir>/e2e/'], // Playwright end-to-end tests run separately (see e2e/)
   collectCoverage: true,
   collectCoverageFrom: [
     "app/**",  // Include all pages

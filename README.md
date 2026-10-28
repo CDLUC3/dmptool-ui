@@ -281,9 +281,10 @@ When adding a new page that should bypass the shared Header/Footer, it can be ad
 |   |-- context
 |       |-- AuthContext.tsx
 |       |-- CsrfContext.tsx
-|-- cypress
-|   |-- e2e
-|       |-- spec.cy.ts
+|-- e2e
+|   |-- tests
+|       |-- login.spec.ts
+|   |-- playwright.config.ts
 |-- generated
 |   |-- fragment-masking.ts
 |   |-- gql.ts
@@ -338,34 +339,64 @@ When new components or functions are added, corresponding unit tests should idea
 
 Unit tests should generally be placed in a `__tests__` folder adjacent to the component or file being tested.
 
-Functional tests are conducted using Cypress. These tests can be run in headless mode using the command `npm run cypress:run` or in headed mode is `npm run cypress:open`. Functional tests should be placed in the `cypress` directory. `e2e` tests will be placed in the `cypress/e2e` directory.
+End-to-end tests are written with [Playwright](https://playwright.dev) and live in the `e2e/` directory. `e2e/` is a separate npm package with its own `package.json`, `package-lock.json`, `playwright.config.ts` and `tsconfig.json`, so Playwright doesn't get installed with the app. It is ignored by Jest, ESLint, the root `tsconfig.json` and the Docker image.
 
-### Cypress configuration
-In order to prevent `cypress` tests from clashing with `jest` tests, two different tsconfig files were created: one for cypress - `tsconfig.cypress.json` and one for jest - `tsconfig.json`. We specifically excluded `cypress` from the `tsconfig.json` file.
+### Setting up Playwright
+The tests run against real services, so start the UI (`npm run dev`), `dmptool-apollo-server` and `dmptool-auth` locally first, with the local seed data loaded.
 
-Also, there is a very simple `cypress.config.ts` file that we need to add.
-
-### Running cypress tests
-`cypress` can be opened using the `cypress:open` script in `package.json`. This will open cypress in your browser, and allow you to navigate to your test and run it.
-
-You can use the `cypress:run` script to run your tests in headless mode in the terminal window.
-
-By default, Cypress looks for tests in `cypress/e2e` directory. tests are run from the `cypress/e2e` directory. You can customize this and add your own test directories by updating the `cypress.config.ts` file:
-```
-export default defineConfig({
-  e2e: {
-    baseUrl: process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000',
-    specPattern: 'tests/**/*.cy.{js,jsx,ts,tsx}', // Custom directory
-    setupNodeEvents(on, config) {
-      return config;
-    },
-  },
-  // ... rest of config
-});
+```bash
+cd e2e
+npm ci                   # install @playwright/test
+npx playwright install   # download the browsers (repeat after upgrading Playwright). This is run once per machine, then again only when Playwright's version changes. Browsers go into a shared cache, which on macOS is ~/Library/Caches/ms-playwright.
+cp .env.example .env     # then check the test account emails and passwords
 ```
 
-### Cypress documentation
-`cypress` provides good documentation at: https://docs.cypress.io/app/end-to-end-testing/writing-your-first-end-to-end-test
+`.env` is git-ignored. It holds the emails and passwords of the test accounts the tests log in as.
+
+### Test accounts
+The tests log in as two dedicated test accounts, which belong to the "Test Organization" affiliation (`https://dmptool.org/affiliations/532910`). They are created by the `2026-10-28-1224-add-test-users-for-playwright.sql` migration in `dmptool-apollo-server`.
+
+| Role | Email | Used for |
+| --- | --- | --- |
+| `RESEARCHER` | `testresearcher@example.com` | Login, logout and researcher pages |
+| `ADMIN` | `testadmin@example.com` | Admin pages, such as organization templates |
+
+- **Never use a `SUPERADMIN` account in the tests.** A super admin can see and change data across every organization, so a test bug or a leaked session could affect data far beyond the test organization. Super admins can also see pages and data that admins can't, so tests run as one could pass even when the admin permission checks are broken.
+- **Keep the test accounts for tests.** Don't use them for manual testing. Changing their affiliation or deleting their data can break the tests.
+- **Tests clean up after themselves.** A test that creates data (for example a template) deletes or archives it when it finishes, so runs don't build up data in the test organization.
+- **Adding a role:** add it to `ROLES` in `tests/helpers/roles.ts` and add `E2E_<ROLE>_EMAIL` and `E2E_<ROLE>_PASSWORD` to `.env.example`.
+
+### Running Playwright tests
+From the repository root:
+
+| Task | Command |
+| --- | --- |
+| Run all tests in Chromium, Firefox and WebKit | `npm run test:e2e` |
+| Open the Playwright UI | `npm run test:e2e:ui` |
+
+From `e2e/`:
+
+| Task | Command |
+| --- | --- |
+| Run all browsers | `npx playwright test` |
+| Run Chromium only | `npx playwright test --project=chromium` |
+| Run headed in Chromium | `npm run test:headed` |
+| Open the latest HTML report | `npx playwright show-report` |
+
+Before the browser projects run, the `setup` project (`tests/auth.setup.ts`) logs in once per role and saves each session to `e2e/playwright/.auth/`. A spec can start logged in with `test.use(asRole('admin'))`, or logged out with `test.use(loggedOut)` (see `tests/helpers/roles.ts`).
+
+Reports are written to `e2e/playwright-report/` and `e2e/test-results/`. Both are git-ignored.
+
+### Handling traces, reports and saved sessions
+Playwright traces record each action, the text typed with `fill()`, network requests (including session cookies), and page snapshots. The HTML report embeds the traces, so treat reports, traces and saved sessions as sensitive.
+
+- **Passwords are never traced.** The `setup` project and the specs that log in (`login.spec.ts`, `logout.spec.ts`) turn tracing off. A new spec that types a password must add `test.use(NO_TRACE)` from `tests/helpers/login.ts`. Don't pass `--trace on` on the command line, because it overrides these settings.
+- **Saved sessions only last for the run.** `playwright/.auth/*.json` holds login cookies. It is git-ignored, and the `cleanup` project (`tests/auth.teardown.ts`) deletes it after each run.
+- **Never upload `playwright/`.** When CI is added, upload only `playwright-report/` and `test-results/`, to a private S3 bucket with a short retention period and access limited to the team.
+- **Share links, not files.** Don't attach traces or reports to Slack messages or GitHub issues. Link to their S3 location instead.
+
+### Playwright documentation
+https://playwright.dev/docs/writing-tests
 
 ## API Routes
 * `GET /api/check-auth`: returns whether user is authenticated based on presence of auth token in cookie

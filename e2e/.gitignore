@@ -1,0 +1,11 @@
+# Playwright
+node_modules/
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+# Saved login sessions (contain auth cookies)
+/playwright/.auth/
+
+# Local credentials
+.env
