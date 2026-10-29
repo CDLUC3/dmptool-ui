@@ -25,5 +25,6 @@ services:
     # this next line was needed to populate some missing modules in /app/node_modules when starting docker container
     # NextJS 16 is using Turbopack as the default bundler now for both development and production builds, but I am
     # specifying webpack here to avoid issues with some of the existing code that may not be compatible with Turbopack yet.
-    command: /bin/sh -c "npm install && npm run dev -- --webpack"
+    # install the e2e packages
+    command: /bin/sh -c "npm install && npm --prefix e2e ci && npm run dev -- --webpack"
 

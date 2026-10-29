@@ -5,6 +5,10 @@
   "description": "Playwright end-to-end tests for dmptool-ui, run against dmptool-apollo-server and dmptool-auth",
   "type": "module",
   "scripts": {
+    "pretest": "playwright install",
+    "pretest:chromium": "playwright install chromium",
+    "pretest:ui": "playwright install",
+    "pretest:headed": "playwright install chromium",
     "test": "playwright test",
     "test:chromium": "playwright test --project=chromium",
     "test:ui": "playwright test --ui",

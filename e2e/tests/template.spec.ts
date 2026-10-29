@@ -7,9 +7,10 @@ const GRAPHQL_URL = process.env.GRAPHQL_URL ?? 'http://localhost:4000/graphql';
 // Templates are an admin page; start already logged in as the admin saved by auth.setup.ts
 test.use(asRole('admin'));
 
-// Creates a blank template through the UI and returns its id. The template belongs to the admin's
-// current affiliation, so the test doesn't depend on which affiliation the admin has or on seeded templates.
-async function createTemplate(page: Page, name: string): Promise<number> {
+// Creates a blank template through the UI. The template belongs to the admin's current affiliation,
+// so the test doesn't depend on which affiliation the admin has or on seeded templates.
+// onCreated gets the new id as soon as Apollo returns it, so the template is cleaned up even if the page fails afterwards.
+async function createTemplate(page: Page, name: string, onCreated: (id: number) => void) {
   await page.goto(`/${LOCALE}/template/create`);
 
   // Step 1: name the template. Retry until React has hydrated; a click on Next before hydration is ignored.
@@ -22,12 +23,18 @@ async function createTemplate(page: Page, name: string): Promise<number> {
   }).toPass();
 
   // Step 2: start from a blank template, which opens the new template's page
+  const addTemplateResponse = page.waitForResponse(
+    (res) => res.url().includes('/graphql') && res.request().postDataJSON()?.operationName === 'AddTemplate'
+  );
   await startNewButton.click();
-  await page.waitForURL(new RegExp(`/${LOCALE}/template/\\d+$`));
+  const body = await (await addTemplateResponse).json();
+  const id: number | undefined = body.data?.addTemplate?.id;
+  expect(id, 'the AddTemplate mutation returns the new template id').toBeTruthy();
+  onCreated(id as number);
+
+  await page.waitForURL(new RegExp(`/${LOCALE}/template/${id}$`));
   // Wait for the new template's page to render, so a later page.goto doesn't interrupt the navigation
   await expect(page.getByRole('heading', { level: 1, name })).toBeVisible();
-
-  return Number(new URL(page.url()).pathname.split('/').pop());
 }
 
 let templateId: number | undefined;
@@ -51,7 +58,7 @@ test.afterEach(async ({ page }) => {
 
 test('a template created by the admin is listed on the templates page', async ({ page }, testInfo) => {
   const name = `E2E template ${testInfo.project.name} ${Date.now()}`;
-  templateId = await createTemplate(page, name);
+  await createTemplate(page, name, (id) => { templateId = id; });
 
   await page.goto(`/${LOCALE}/template`);
   await expect(page).toHaveTitle(/Organization templates/);

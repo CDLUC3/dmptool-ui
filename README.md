@@ -344,6 +344,9 @@ End-to-end tests are written with [Playwright](https://playwright.dev) and live 
 ### Setting up Playwright
 The tests run against real services, so start the UI (`npm run dev`), `dmptool-apollo-server` and `dmptool-auth` locally first, with the local seed data loaded.
 
+Start the container with `docker-compose up`, copy `.env.example` to `.env`, and run `npm run test:e2e`. The packages and browsers are then installed automatically, and the manual commands are only needed when running without Docker. 
+ 
+ Manual commands:
 ```bash
 cd e2e
 npm ci                   # install @playwright/test
@@ -362,7 +365,6 @@ The tests log in as two dedicated test accounts, which belong to the "Test Organ
 | `ADMIN` | `testadmin@example.com` | Admin pages, such as organization templates |
 
 - **Never use a `SUPERADMIN` account in the tests.** A super admin can see and change data across every organization, so a test bug or a leaked session could affect data far beyond the test organization. Super admins can also see pages and data that admins can't, so tests run as one could pass even when the admin permission checks are broken.
-- **Keep the test accounts for tests.** Don't use them for manual testing. Changing their affiliation or deleting their data can break the tests.
 - **Tests clean up after themselves.** A test that creates data (for example a template) deletes or archives it when it finishes, so runs don't build up data in the test organization.
 - **Adding a role:** add it to `ROLES` in `tests/helpers/roles.ts` and add `E2E_<ROLE>_EMAIL` and `E2E_<ROLE>_PASSWORD` to `.env.example`.
 
