@@ -383,7 +383,7 @@ cp .env.example .env     # then check the test account emails and passwords
 `.env` is git-ignored. It holds the emails and passwords of the test accounts the tests log in as.
 
 ### Test accounts
-The tests log in as two dedicated test accounts, which belong to the "Test Organization" affiliation (`https://dmptool.org/affiliations/532910`). They are created by the `2026-10-28-1224-add-test-users-for-playwright.sql` migration in `dmptool-apollo-server`.
+The tests log in as two dedicated test accounts, which belong to the "Test Organization" affiliation (`https://dmptool.org/affiliations/532910`). They are created by a data migration script in `dmptool-apollo-server`.
 
 | Role | Email | Used for |
 | --- | --- | --- |

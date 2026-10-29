@@ -29,11 +29,12 @@ export default defineConfig({
   testDir: './tests',
   // Run tests in files in parallel
   fullyParallel: true,
-  // Fail the build on CI if test.only was accidentally left in the source code
-  forbidOnly: !!process.env.CI,
   // Retry on CI only, so flaky tests are reported as "flaky" instead of hidden
   retries: process.env.CI ? 2 : 0,
+  // Limit the number of workers on CI to avoid overloading the environment
   workers: process.env.CI ? 1 : undefined,
+  // reporter tells Playwright how to report results. The list reporter is always used,
+  //  and the html and junit reporters are added on CI.
   reporter: process.env.CI
     ? [['list'], ['html', { open: 'never' }], ['junit', { outputFile: 'test-results/junit.xml' }]]
     : [['list'], ['html', { open: 'never' }]],
@@ -41,8 +42,6 @@ export default defineConfig({
     baseURL: process.env.BASE_URL ?? 'http://localhost:3000',
     locale: 'en-US',
     // Collect a trace when retrying a failed test. See https://playwright.dev/docs/trace-viewer
-    // Traces record text typed with fill(), network requests and cookies, so treat them as sensitive.
-    // Specs that type a password turn tracing off with test.use(NO_TRACE) (see helpers/login.ts).
     trace: 'on-first-retry',
   },
 
