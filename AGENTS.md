@@ -25,7 +25,7 @@ Node **22** (see `.nvmrc`) and **npm**. Don't use yarn or pnpm, and don't create
 
 **Never:**
 - Edit anything in `generated/`. Change the `.graphql` files and run `npm run generate` instead.
-- Edit `public/tinymce/` by hand. It's a committed copy of the TinyMCE editor (currently 7.8.0) that the browser loads from `/tinymce/tinymce.min.js`. The `tinymce` npm package only provides types, so bumping it doesn't upgrade the editor. To upgrade, replace the whole folder with the build from `node_modules/tinymce`, and only when asked.
+- Edit `public/tinymce/` by hand. It's a committed copy of the TinyMCE editor (currently 8.9.3) that the browser loads from `/tinymce/tinymce.min.js`. The `tinymce` npm package only provides types, so bumping it doesn't upgrade the editor. To upgrade, replace the whole folder with the build from `node_modules/tinymce`, and only when asked.
 - Commit secrets, tokens, or `.env*.local` / `.env*.production` files. If you add an env var, put it in `.env.example`, and mention in the PR that `buildspec.yaml` and `Dockerfile.prod` need it too.
 - Lower the Jest `coverageThreshold` in `jest.config.ts`, add coverage ignores to hide untested code, or skip or delete tests so a run passes.
 - Skip the husky pre-commit hook (`--no-verify`).

@@ -46,7 +46,11 @@
   ],
   "exclude": [
     "node_modules",
+    "cypress",
+    "./cypress.config.ts",
+    "**/cypress.config.ts",
     ".next",
-    "e2e"
+    "e2e",
+    "public"
   ]
 }
