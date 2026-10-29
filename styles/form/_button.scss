@@ -325,7 +325,7 @@ a.button-link {
 
 // Primary button styles
 // Note: Default buttons without a class use primary styling as fallback
-.react-aria-Button:not(.secondary):not(.tertiary):not(.link):not(.danger):not(.selectButton):not(.order-button),
+.react-aria-Button:not(.secondary):not(.react-aria-Button--secondary):not(.tertiary):not(.react-aria-Button--tertiary):not(.link):not(.react-aria-Button--link):not(.danger):not(.react-aria-Button--danger):not(.selectButton):not(.order-button),
 .react-aria-Button.primary,
 .react-aria-Button--primary,
 button.primary,

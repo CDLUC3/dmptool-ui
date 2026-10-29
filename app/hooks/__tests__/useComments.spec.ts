@@ -1,19 +1,19 @@
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { useToast } from '@/context/ToastContext';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/i18n/routing';
 import * as actions from '../../actions';
 import { UserRole } from '@/generated/graphql';
 import { useComments, AnswerComment, FeedbackComment } from '../useComments';
 import { MergedComment } from '@/app/types';
 
-
-// Mock the useRouter from next/navigation
-jest.mock('next/navigation', () => ({
-  useRouter: jest.fn(),
-}));
 jest.mock('next-intl', () => ({
   useTranslations: () => (key: string) => key,
 }));
+
+jest.mock('@/i18n/routing', () => ({
+  useRouter: jest.fn(() => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn() })),
+}));
+
 const mockToast = { add: jest.fn() };
 
 // Mock Server Actions

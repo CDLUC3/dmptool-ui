@@ -44,6 +44,10 @@
   background: var(--background-color);
 }
 
+.documentRegion {
+  padding-bottom: var(--space-8, 3rem);
+}
+
 .writePlanIntro {
   display: flex;
   flex-direction: column;

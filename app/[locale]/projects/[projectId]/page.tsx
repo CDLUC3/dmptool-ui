@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
+import { useRouter } from "@/i18n/routing";
 import { useFormatter, useTranslations } from "next-intl";
 import {
   Breadcrumb,
@@ -16,6 +17,7 @@ import {
 // GraphQL
 import { useQuery } from '@apollo/client/react';
 import {
+  CustomizableObjectOwnership,
   MeDocument,
   PlanSearchResult,
   PlanSectionProgress,
@@ -25,10 +27,9 @@ import {
 
 // Components
 import PageHeader from "@/components/PageHeader";
-import { Card } from "@/components/Card/card";
 import { ContentContainer, LayoutWithPanel, SidebarPanel } from "@/components/Container";
 import OverviewSection from "@/components/OverviewSection";
-import { TransitionLink } from "@/components/Form";
+import PlanCard from "@/components/PlanCard";
 import Loading from "@/components/Loading";
 
 // Utils and other
@@ -87,6 +88,7 @@ const ProjectOverviewPage: React.FC = () => {
   const { data, loading, error } = useQuery(ProjectDocument, {
     variables: { projectId: Number(projectId) },
     notifyOnNetworkStatusChange: true,
+    fetchPolicy: "cache-and-network", // Use cache first, then network
   });
 
   // Run me query to get user's info to determine if they are a collaborator with edit access
@@ -159,7 +161,7 @@ const ProjectOverviewPage: React.FC = () => {
           versionedSections: plan.versionedSections?.map(section => ({
             ...section,
             // add sectionType if missing
-            sectionType: section.sectionType ?? "BASE",
+            sectionType: section.sectionType ?? CustomizableObjectOwnership.Base,
             answeredRequiredQuestions: section.answeredRequiredQuestions ?? 0,
             totalRequiredQuestions: section.totalRequiredQuestions ?? 0,
           }))
@@ -331,7 +333,7 @@ const ProjectOverviewPage: React.FC = () => {
                 {!isReadOnly ? (
                   <Link
                     href={`/projects/${projectId}/dmp/upload`}
-                    className="react-aria-Button react-aria-Button--secondary"
+                    className="react-aria-Button secondary"
                     aria-label={ProjectOverview("uploadPlan")}
                   >
                     {ProjectOverview("upload")}
@@ -378,99 +380,50 @@ const ProjectOverviewPage: React.FC = () => {
                 )}
               </div>
             </div>
-            {/** Plans */}
             {project.plans.map((plan) => {
-              // Use the plan ID for routing, not the DOI extraction
-              const planId = plan?.id?.toString() || "";
-              const modifiedDate = formatDate(plan?.modified ?? "");
-              const createdDate = formatDate(plan?.created ?? "");
+              const planId = plan.id != null ? String(plan.id) : "";
               const sortedSections = sortSections(plan.versionedSections ?? []);
-
               const canEditSections = !isReadOnly || isEditCollaborator;
-              // Determine the action label for the plan card
-              const planActionLabel = !canEditSections
-                ? ProjectOverview("view")
-                : ProjectOverview("update")
 
               return (
-                <Card
-                  className="plan-item"
-                  key={plan.id}
-                >
-                  <p className="mb-1">
-                    {ProjectOverview("funding")}: {plan.funding || ProjectOverview("noFunderSelected")}
-                  </p>
-                  <h3 className="mt-0">{plan.templateTitle}</h3>
-                  <div className="plan-sections mb-4">
-                    <h4 className="plan-section-heading">{ProjectOverview("sections")}</h4>
-                    <ul
-                      className="plan-sections-list"
-                      aria-label={ProjectOverview("planSections")}
-                    >
-                      {sortedSections.map((section, idx) => {
-                        const sectionId = section.versionedSectionId ?? section.customSectionId;
-                        return (
-                          <li
-                            key={sectionId ?? `section-${idx}`}
-                            className="plan-sections-list-item"
-                          >
-                            {sectionId != null ? (
-                              <Link
-                                href={routePath("projects.dmp.versionedSection", {
-                                  projectId: String(projectId),
-                                  dmpId: planId,
-                                  versionedSectionId: Number(sectionId),
-                                }, { sectionType: section.sectionType })}
-                                className="text-link"
-                              >
-                                {section.title}
-                              </Link>
-                            ) : (
-                              <span>{section.title}</span>
-                            )}
-                            <span className="plan-sections-list-item-progress">
-                              {ProjectOverview("progress", {
-                                current: section.answeredQuestions,
-                                total: section.totalQuestions,
-                              })}
-                            </span>
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  </div>
-                  <div className="plan-meta">
-                    <p>
-                      {ProjectOverview("doi")}: {plan.dmpId} <br />
-                      {ProjectOverview("lastUpdated")}: {modifiedDate}
-                      <br />
-                      {ProjectOverview("created")}: {createdDate}
-                    </p>
-                  </div>
-                  <div className="plan-footer">
-                    <div className="plan-links">
-                      <Link
-                        href={routePath("projects.dmp.download", {
-                          projectId: String(projectId),
-                          dmpId: planId,
-                        })}
-                        className="text-link"
-                        aria-label={ProjectOverview("downloadPlan")}
-                      >
-                        {ProjectOverview("download")}
-                      </Link>
-                    </div>
-                    <div className="plan-action">
-                      <TransitionLink
-                        href={routePath("projects.dmp.show", { projectId, dmpId: String(plan.id) })}
-                        className="react-aria-Button react-aria-Button--primary"
-                        aria-label={ProjectOverview("updatePlan")}
-                      >
-                        {planActionLabel}
-                      </TransitionLink>
-                    </div>
-                  </div>
-                </Card>
+                <PlanCard
+                  key={plan.id ?? planId}
+                  plan={{
+                    // PlanSearchResult has no variant field yet; cast until GraphQL adds it.
+                    // Prefer API value when present, otherwise default to template.
+                    variant: (plan as { variant?: "template" | "uploaded" }).variant || "template",
+                    title: plan.title || plan.templateTitle,
+                    funding: plan.funding,
+                    dmpId: plan.dmpId,
+                    created: plan.created ? formatDate(plan.created) : null,
+                    modified: plan.modified ? formatDate(plan.modified) : null,
+                    versionedSections: sortedSections.map((section) => {
+                      const sectionId = section.versionedSectionId ?? section.customSectionId;
+                      return {
+                        ...section,
+                        href: planId && sectionId != null
+                          ? routePath("projects.dmp.versionedSection", {
+                            projectId: String(projectId),
+                            dmpId: planId,
+                            versionedSectionId: Number(sectionId),
+                          }, { sectionType: section.sectionType })
+                          : undefined,
+                      };
+                    }),
+                    downloadHref: planId
+                      ? routePath("projects.dmp.download", {
+                        projectId: String(projectId),
+                        dmpId: planId,
+                      })
+                      : undefined,
+                    actionHref: planId
+                      ? routePath("projects.dmp.show", { projectId, dmpId: planId })
+                      : undefined,
+                    actionLabel: canEditSections
+                      ? ProjectOverview("update")
+                      : ProjectOverview("view"),
+                  }}
+                />
               );
             })}
           </section>

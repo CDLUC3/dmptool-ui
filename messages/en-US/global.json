@@ -657,9 +657,11 @@
         "noProjectsDescription": "When researchers in your organization create data management plans, they will be listed here."
       },
       "errors": {
-        "errorRetrievingProjects": "Something went wrong with retrieving projects. Please try again later."
+        "errorRetrievingProjects": "Something went wrong with retrieving projects. Please try again later.",
+        "failedToLoadMore": "Failed to load more projects"
       }
-    }
+    },
+    "projectsList": "Organization projects"
   },
   "Departments": {
     "title": "Schools/Departments",
@@ -1099,7 +1101,8 @@
         "passMissMatch": "Passwords don't match"
       },
       "numDisplaying": "Showing {num} of {total}",
-      "unsavedChangesWarning": "You have unsaved changes. Are you sure you want to leave this page?"
+      "unsavedChangesWarning": "You have unsaved changes. Are you sure you want to leave this page?",
+      "detailsToggleAria": "{action} details for {title}"
     },
     "tabs": {
       "editQuestion": "Edit question",

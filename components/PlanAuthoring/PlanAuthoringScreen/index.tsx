@@ -12,7 +12,11 @@ import {
   SidebarPanel,
 } from "@/components/Container";
 import type { PlanAuthoringDataSource } from "../dataSource";
-import type { PlanAuthoringModel } from "../model";
+import type {
+  PlanAuthoringModel,
+  PlanAuthoringVariant,
+  PlanDocument,
+} from "../model";
 import {
   collectLockedGuidanceOrgIds,
   questionKey,
@@ -25,24 +29,41 @@ import PlanSectionPickerDialog from "../PlanSectionPickerDialog";
 import PlanSection from "../PlanSection";
 import PlanQuestion from "../PlanQuestion";
 import PlanGuidanceCustomizeDialog from "../PlanGuidanceCustomizeDialog";
+import PlanDocumentCard from "../PlanDocumentCard";
+import PlanDocumentUploadDialog from "../PlanDocumentUploadDialog";
 import styles from "./PlanAuthoringScreen.module.scss";
 
 interface PlanAuthoringProps {
   dataSource: PlanAuthoringDataSource;
   className?: string;
+  variant?: PlanAuthoringVariant;
+  planDocument?: PlanDocument;
+  idPrefix?: string;
+}
+
+function fileTypeFromName(fileName: string): string {
+  return fileName.split(".").pop()?.toUpperCase() || "FILE";
 }
 
 export default function PlanAuthoring({
   dataSource,
   className,
+  variant = "questions",
+  planDocument: initialPlanDocument,
+  idPrefix = "plan-authoring",
 }: PlanAuthoringProps) {
   const t = useTranslations("PlanAuthoring");
   const Global = useTranslations("Global");
+  const isDocument = variant === "document";
   const [model, setModel] = useState<PlanAuthoringModel>(() =>
     dataSource.getModel()
   );
   const [pickerOpen, setPickerOpen] = useState(false);
   const [customizeOpen, setCustomizeOpen] = useState(false);
+  const [uploadOpen, setUploadOpen] = useState(false);
+  const [planDocument, setPlanDocument] = useState<PlanDocument | undefined>(
+    initialPlanDocument
+  );
 
   useEffect(() => {
     return dataSource.subscribe(() => {
@@ -50,8 +71,16 @@ export default function PlanAuthoring({
     });
   }, [dataSource]);
 
+  useEffect(() => {
+    setPlanDocument(initialPlanDocument);
+  }, [initialPlanDocument]);
+
   useSectionPickerShortcut(
-    useCallback(() => setPickerOpen((open) => !open), [])
+    useCallback(() => {
+      if (!isDocument) {
+        setPickerOpen((open) => !open);
+      }
+    }, [isDocument])
   );
 
   const navigation = usePlanSectionNavigation({ sections: model.sections });
@@ -80,7 +109,7 @@ export default function PlanAuthoring({
               <div className="project-overview">
                 <OverviewSection
                   heading={t("screen.fundingTitle")}
-                  headingId="plan-authoring-funding"
+                  headingId={`${idPrefix}-funding`}
                   linkHref="#"
                   linkText={t("screen.adjustForPlan")}
                   linkAriaLabel={t("screen.adjustFundingAria")}
@@ -90,7 +119,7 @@ export default function PlanAuthoring({
                 </OverviewSection>
                 <OverviewSection
                   heading={t("screen.membersTitle")}
-                  headingId="plan-authoring-members"
+                  headingId={`${idPrefix}-members`}
                   linkHref="#"
                   linkText={t("screen.adjustForPlan")}
                   linkAriaLabel={t("screen.adjustMembersAria")}
@@ -100,7 +129,7 @@ export default function PlanAuthoring({
                 </OverviewSection>
                 <OverviewSection
                   heading={t("screen.relatedWorksTitle")}
-                  headingId="plan-authoring-related-works"
+                  headingId={`${idPrefix}-related-works`}
                   linkHref="#"
                   linkText={t("screen.adjustForPlan")}
                   linkAriaLabel={t("screen.adjustRelatedWorksAria")}
@@ -155,74 +184,116 @@ export default function PlanAuthoring({
           </SidebarPanel>
         </LayoutWithPanel>
 
-        <FullWidthSection className={styles.writePlanRegion}>
-          <div className={styles.writePlanIntro}>
-            <h2>{t("screen.writeYourPlan")}</h2>
-            <p>{t("screen.writePlanIntro")}</p>
-            <p className={styles.progressSummary}>
-              {t("screen.questionsAnswered", {
-                answered: model.progress.answeredQuestions,
-                total: model.progress.totalQuestions,
-              })}
-              <span>
-                {" "}
-                · {model.progress.percentComplete}%
-              </span>
-            </p>
-          </div>
+        {isDocument ? (
+          <FullWidthSection className={`${styles.writePlanRegion} ${styles.documentRegion}`}>
+            <div className={styles.writePlanIntro}>
+              <h2>{t("screen.planDocument")}</h2>
+              <p>
+                {t.rich("screen.planDocumentIntro", {
+                  strong: (chunks) => <strong>{chunks}</strong>,
+                })}
+              </p>
+            </div>
+            {planDocument ? (
+              <PlanDocumentCard
+                planDocument={planDocument}
+                onUpdate={() => setUploadOpen(true)}
+                onDelete={() => {
+                  setUploadOpen(false);
+                  setPlanDocument(undefined);
+                }}
+              />
+            ) : null}
+          </FullWidthSection>
+        ) : (
+          <FullWidthSection className={styles.writePlanRegion}>
+            <div className={styles.writePlanIntro}>
+              <h2>{t("screen.writeYourPlan")}</h2>
+              <p>{t("screen.writePlanIntro")}</p>
+              <p className={styles.progressSummary}>
+                {t("screen.questionsAnswered", {
+                  answered: model.progress.answeredQuestions,
+                  total: model.progress.totalQuestions,
+                })}
+                <span>
+                  {" "}
+                  · {model.progress.percentComplete}%
+                </span>
+              </p>
+            </div>
 
-          <PlanSectionNavigation
-            sections={model.sections}
-            activeSection={navigation.activeSection}
-            activeIndex={navigation.activeIndex}
-            activeSectionProgress={navigation.activeSectionProgress}
-            onOpenPicker={() => setPickerOpen(true)}
-            onSelectSection={navigation.jumpToSection}
-          />
+            <PlanSectionNavigation
+              sections={model.sections}
+              activeSection={navigation.activeSection}
+              activeIndex={navigation.activeIndex}
+              activeSectionProgress={navigation.activeSectionProgress}
+              onOpenPicker={() => setPickerOpen(true)}
+              onSelectSection={navigation.jumpToSection}
+            />
 
-          <div className={styles.sectionsStack}>
-            {model.sections.map((section, index) => (
-              <PlanSection
-                key={sectionKey(section.identity)}
-                section={section}
-                index={index}
-                total={model.sections.length}
-              >
-                {section.questions.map((question) => (
-                  <PlanQuestion
-                    key={questionKey(question.identity)}
-                    question={question}
-                    capabilities={model.capabilities}
-                    currentUserId={model.currentUserId}
-                    dataSource={dataSource}
-                    onCustomizeGuidance={() => setCustomizeOpen(true)}
-                  />
-                ))}
-              </PlanSection>
-            ))}
-          </div>
-        </FullWidthSection>
+            <div className={styles.sectionsStack}>
+              {model.sections.map((section, index) => (
+                <PlanSection
+                  key={sectionKey(section.identity)}
+                  section={section}
+                  index={index}
+                  total={model.sections.length}
+                >
+                  {section.questions.map((question) => (
+                    <PlanQuestion
+                      key={questionKey(question.identity)}
+                      question={question}
+                      capabilities={model.capabilities}
+                      currentUserId={model.currentUserId}
+                      dataSource={dataSource}
+                      onCustomizeGuidance={() => setCustomizeOpen(true)}
+                    />
+                  ))}
+                </PlanSection>
+              ))}
+            </div>
+          </FullWidthSection>
+        )}
       </LayoutSplitPanel>
 
-      <PlanSectionPickerDialog
-        isOpen={pickerOpen}
-        onOpenChange={setPickerOpen}
-        sections={model.sections}
-        activeSectionKey={navigation.activeSectionKey}
-        onSelect={navigation.jumpToSection}
-      />
+      {!isDocument && (
+        <>
+          <PlanSectionPickerDialog
+            isOpen={pickerOpen}
+            onOpenChange={setPickerOpen}
+            sections={model.sections}
+            activeSectionKey={navigation.activeSectionKey}
+            onSelect={navigation.jumpToSection}
+          />
 
-      <PlanGuidanceCustomizeDialog
-        isOpen={customizeOpen}
-        onOpenChange={setCustomizeOpen}
-        selectedOrgIds={model.selectedGuidanceOrgIds}
-        lockedOrgIds={lockedOrgIds}
-        availableOrgs={model.availableGuidanceOrgs}
-        onSearch={(term) => dataSource.searchGuidanceOrgs(term)}
-        onSave={async (orgIds) => {
-          await dataSource.setSelectedGuidanceOrgs(orgIds);
-        }}
-      />
+          <PlanGuidanceCustomizeDialog
+            isOpen={customizeOpen}
+            onOpenChange={setCustomizeOpen}
+            selectedOrgIds={model.selectedGuidanceOrgIds}
+            lockedOrgIds={lockedOrgIds}
+            availableOrgs={model.availableGuidanceOrgs}
+            onSearch={(term) => dataSource.searchGuidanceOrgs(term)}
+            onSave={async (orgIds) => {
+              await dataSource.setSelectedGuidanceOrgs(orgIds);
+            }}
+          />
+        </>
+      )}
+
+      {isDocument && planDocument ? (
+        <PlanDocumentUploadDialog
+          isOpen={uploadOpen}
+          onOpenChange={setUploadOpen}
+          fileName={planDocument.fileName}
+          onUpload={(file) => {
+            setPlanDocument((current) => ({
+              ...(current ?? { fileName: file.name }),
+              fileName: file.name,
+              fileType: fileTypeFromName(file.name),
+            }));
+          }}
+        />
+      ) : null}
     </div>
   );
 }

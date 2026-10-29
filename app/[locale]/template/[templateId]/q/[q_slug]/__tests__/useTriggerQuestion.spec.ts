@@ -32,17 +32,17 @@ describe('useTriggerQuestions', () => {
   });
 
   it('should return an empty array when questions is null', () => {
-    const { result } = renderHook(() => useTriggerQuestions(null, 1, 5));
+    const { result } = renderHook(() => useTriggerQuestions(null, 1));
     expect(result.current.triggerQuestions).toEqual([]);
   });
 
   it('should return an empty array when questions is undefined', () => {
-    const { result } = renderHook(() => useTriggerQuestions(undefined, 1, 5));
+    const { result } = renderHook(() => useTriggerQuestions(undefined, 1));
     expect(result.current.triggerQuestions).toEqual([]);
   });
 
   it('should return an empty array when questions is an empty array', () => {
-    const { result } = renderHook(() => useTriggerQuestions([], 1, 5));
+    const { result } = renderHook(() => useTriggerQuestions([], 1));
     expect(result.current.triggerQuestions).toEqual([]);
   });
 
@@ -54,8 +54,7 @@ describe('useTriggerQuestions', () => {
     const { result } = renderHook(() =>
       useTriggerQuestions(
         [null, { id: 2, questionText: 'Q2', displayOrder: 1, json: '{}' }],
-        1,
-        5
+        1
       )
     );
 
@@ -70,8 +69,7 @@ describe('useTriggerQuestions', () => {
           { id: null, questionText: 'No id', displayOrder: 1, json: '{}' },
           { id: undefined, questionText: 'Also no id', displayOrder: 1, json: '{}' },
         ],
-        1,
-        5
+        1
       )
     );
 
@@ -90,8 +88,7 @@ describe('useTriggerQuestions', () => {
           { id: 1, questionText: 'Current question', displayOrder: 1, json: '{}' },
           { id: 2, questionText: 'Other question', displayOrder: 1, json: '{}' },
         ],
-        1, // currentQuestionId
-        5
+        1 // currentQuestionId
       )
     );
 
@@ -99,8 +96,8 @@ describe('useTriggerQuestions', () => {
     expect(result.current.triggerQuestions[0].id).toBe(2);
   });
 
-  describe('displayOrder filtering', () => {
-    it('should only include questions with a lower displayOrder than currentDisplayOrder', () => {
+  describe('backend-provided candidate list behavior', () => {
+    it('should include candidates regardless of displayOrder because backend pre-filters prior questions', () => {
       mockParsedResultsById({
         2: { parsed: { type: 'radioButtons', options: [{ label: 'Yes', value: 'yes' }] } },
         3: { parsed: { type: 'radioButtons', options: [{ label: 'Yes', value: 'yes' }] } },
@@ -112,29 +109,7 @@ describe('useTriggerQuestions', () => {
             { id: 2, questionText: 'Earlier question', displayOrder: 1, json: '{}' },
             { id: 3, questionText: 'Later question', displayOrder: 10, json: '{}' },
           ],
-          1,
-          5 // currentDisplayOrder
-        )
-      );
-
-      expect(result.current.triggerQuestions).toHaveLength(1);
-      expect(result.current.triggerQuestions[0].id).toBe(2);
-    });
-
-    it('should include all eligible questions when currentDisplayOrder is undefined', () => {
-      mockParsedResultsById({
-        2: { parsed: { type: 'radioButtons', options: [{ label: 'Yes', value: 'yes' }] } },
-        3: { parsed: { type: 'radioButtons', options: [{ label: 'Yes', value: 'yes' }] } },
-      });
-
-      const { result } = renderHook(() =>
-        useTriggerQuestions(
-          [
-            { id: 2, questionText: 'Q2', displayOrder: 1, json: '{}' },
-            { id: 3, questionText: 'Q3', displayOrder: 100, json: '{}' },
-          ],
-          1,
-          undefined
+          1
         )
       );
 
@@ -145,7 +120,7 @@ describe('useTriggerQuestions', () => {
   describe('JSON parsing / options-type filtering', () => {
     it('should exclude a question with no json', () => {
       const { result } = renderHook(() =>
-        useTriggerQuestions([{ id: 2, questionText: 'No json', displayOrder: 1, json: null }], 1, 5)
+        useTriggerQuestions([{ id: 2, questionText: 'No json', displayOrder: 1, json: null }], 1)
       );
 
       expect(result.current.triggerQuestions).toEqual([]);
@@ -156,7 +131,7 @@ describe('useTriggerQuestions', () => {
       mockParsedResultsById({ 2: { parsed: null } });
 
       const { result } = renderHook(() =>
-        useTriggerQuestions([{ id: 2, questionText: 'Unparseable', displayOrder: 1, json: '{}' }], 1, 5)
+        useTriggerQuestions([{ id: 2, questionText: 'Unparseable', displayOrder: 1, json: '{}' }], 1)
       );
 
       expect(result.current.triggerQuestions).toEqual([]);
@@ -167,7 +142,7 @@ describe('useTriggerQuestions', () => {
       mockParsedResultsById({ 2: { parsed: { type: 'text' } } });
 
       const { result } = renderHook(() =>
-        useTriggerQuestions([{ id: 2, questionText: 'Text question', displayOrder: 1, json: '{}' }], 1, 5)
+        useTriggerQuestions([{ id: 2, questionText: 'Text question', displayOrder: 1, json: '{}' }], 1)
       );
 
       expect(result.current.triggerQuestions).toEqual([]);
@@ -177,7 +152,7 @@ describe('useTriggerQuestions', () => {
       mockParsedResultsById({ 2: { parsed: { type: 'radioButtons' } } }); // no `options` key
 
       const { result } = renderHook(() =>
-        useTriggerQuestions([{ id: 2, questionText: 'Missing options', displayOrder: 1, json: '{}' }], 1, 5)
+        useTriggerQuestions([{ id: 2, questionText: 'Missing options', displayOrder: 1, json: '{}' }], 1)
       );
 
       expect(result.current.triggerQuestions).toEqual([]);
@@ -187,7 +162,7 @@ describe('useTriggerQuestions', () => {
       mockParsedResultsById({ 2: { parsed: { type: 'radioButtons', options: 'not-an-array' } } });
 
       const { result } = renderHook(() =>
-        useTriggerQuestions([{ id: 2, questionText: 'Bad options', displayOrder: 1, json: '{}' }], 1, 5)
+        useTriggerQuestions([{ id: 2, questionText: 'Bad options', displayOrder: 1, json: '{}' }], 1)
       );
 
       expect(result.current.triggerQuestions).toEqual([]);
@@ -211,8 +186,7 @@ describe('useTriggerQuestions', () => {
       const { result } = renderHook(() =>
         useTriggerQuestions(
           [{ id: 2, questionText: 'Is this a test?', displayOrder: 1, json: '{}' }],
-          1,
-          5
+          1
         )
       );
 
@@ -238,7 +212,7 @@ describe('useTriggerQuestions', () => {
         });
 
         const { result } = renderHook(() =>
-          useTriggerQuestions([{ id: 2, questionText: 'Q', displayOrder: 1, json: '{}' }], 1, 5)
+          useTriggerQuestions([{ id: 2, questionText: 'Q', displayOrder: 1, json: '{}' }], 1)
         );
 
         expect(result.current.triggerQuestions[0].isMultiValue).toBe(true);
@@ -253,7 +227,7 @@ describe('useTriggerQuestions', () => {
         });
 
         const { result } = renderHook(() =>
-          useTriggerQuestions([{ id: 2, questionText: 'Q', displayOrder: 1, json: '{}' }], 1, 5)
+          useTriggerQuestions([{ id: 2, questionText: 'Q', displayOrder: 1, json: '{}' }], 1)
         );
 
         expect(result.current.triggerQuestions[0].isMultiValue).toBe(false);
@@ -266,7 +240,7 @@ describe('useTriggerQuestions', () => {
       });
 
       const { result } = renderHook(() =>
-        useTriggerQuestions([{ id: 2, questionText: null, displayOrder: 1, json: '{}' }], 1, 5)
+        useTriggerQuestions([{ id: 2, questionText: null, displayOrder: 1, json: '{}' }], 1)
       );
 
       expect(result.current.triggerQuestions[0].questionText).toBe('');
@@ -286,7 +260,7 @@ describe('useTriggerQuestions', () => {
       });
 
       const { result } = renderHook(() =>
-        useTriggerQuestions([{ id: 2, questionText: 'Q', displayOrder: 1, json: '{}' }], 1, 5)
+        useTriggerQuestions([{ id: 2, questionText: 'Q', displayOrder: 1, json: '{}' }], 1)
       );
 
       expect(result.current.triggerQuestions[0].options).toEqual([
@@ -301,7 +275,7 @@ describe('useTriggerQuestions', () => {
       });
 
       const { result } = renderHook(() =>
-        useTriggerQuestions([{ id: 2, questionText: 'Q', displayOrder: 1, json: '{}' }], 1, 5)
+        useTriggerQuestions([{ id: 2, questionText: 'Q', displayOrder: 1, json: '{}' }], 1)
       );
 
       expect(result.current.triggerQuestions[0].options).toEqual([{ value: '', label: '' }]);
@@ -317,15 +291,15 @@ describe('useTriggerQuestions', () => {
       const questions = [{ id: 2, questionText: 'Q', displayOrder: 1, json: '{}' }];
 
       const { result, rerender } = renderHook(
-        ({ q, currentQuestionId, currentDisplayOrder }) =>
-          useTriggerQuestions(q, currentQuestionId, currentDisplayOrder),
-        { initialProps: { q: questions, currentQuestionId: 1, currentDisplayOrder: 5 } }
+        ({ q, currentQuestionId }) =>
+          useTriggerQuestions(q, currentQuestionId),
+        { initialProps: { q: questions, currentQuestionId: 1 } }
       );
 
       const firstResult = result.current.triggerQuestions;
 
       // Rerender with the exact same props/values
-      rerender({ q: questions, currentQuestionId: 1, currentDisplayOrder: 5 });
+      rerender({ q: questions, currentQuestionId: 1 });
 
       expect(result.current.triggerQuestions).toBe(firstResult); // same reference — memoized
     });
@@ -338,7 +312,7 @@ describe('useTriggerQuestions', () => {
       const questions = [{ id: 2, questionText: 'Q', displayOrder: 1, json: '{}' }];
 
       const { result, rerender } = renderHook(
-        ({ currentQuestionId }) => useTriggerQuestions(questions, currentQuestionId, 5),
+        ({ currentQuestionId }) => useTriggerQuestions(questions, currentQuestionId),
         { initialProps: { currentQuestionId: 1 } }
       );
 

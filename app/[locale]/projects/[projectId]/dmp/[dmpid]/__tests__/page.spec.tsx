@@ -1,7 +1,8 @@
 import React, { ReactNode } from 'react';
 import { act, render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { axe, toHaveNoViolations } from 'jest-axe';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
+import { useRouter } from "@/i18n/routing";
 import { RichTranslationValues } from 'next-intl';
 import { cookies } from "next/headers";
 import {
@@ -98,10 +99,15 @@ jest.mock("next/headers", () => ({
   cookies: jest.fn(),
 }));
 
-
 jest.mock('next/navigation', () => ({
-  useRouter: jest.fn(),
   useParams: jest.fn()
+}));
+
+jest.mock('@/i18n/routing', () => ({
+  Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
+    <a href={href} {...props}>{children}</a>
+  ),
+  useRouter: jest.fn(() => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn() })),
 }));
 
 const mockRouter = {
