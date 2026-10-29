@@ -14,6 +14,7 @@
     - [Docker Setup](#docker-setup)
 - [Localization](#localization)
 - [Checking for vulnerabilities](#scans)
+- [Upgrading TinyMCE](#upgrading-tinymce)
 - [Environment variables](#environment-variables)
 - [Project Structure](#project-structure)
 - [Authentication](#authentication)
@@ -179,6 +180,31 @@ For more documentation on Crowdin, go to:
 We provide npm scripts for different scan levels: `trivy-high` runs a blocking scan for `HIGH` and `CRITICAL` vulnerabilities, `trivy-med` runs a non-blocking scan for `MEDIUM` and `LOW` vulnerabilities, and trivy-all runs both scans in sequence. 
 
 To help ensure code security, this project uses `Trivy` for vulnerability scanning. The pre-commit hook automatically runs `trivy-high` script to prevent commits with serious vulnerabilities, and also runs `trivy-med` to report (but not block) lower-severity issues. You need to install `trivy` locally for this to work.
+
+### Upgrading TinyMCE
+The browser loads the TinyMCE editor from a copy committed to `public/tinymce/` (`/tinymce/tinymce.min.js`), not from `node_modules`. The `tinymce` npm package only provides the TypeScript types, so bumping its version in `package.json` does not upgrade the editor that users run. When upgrading TinyMCE (for example, to fix a vulnerability), update both.
+
+1. Install the new version, pinned to an exact version:
+```bash
+npm install --save-exact tinymce@<version>
+```
+2. From the project root, replace `public/tinymce/` with the files the app needs from `node_modules/tinymce`. Deleting the folder first makes sure no files from the old version are left behind.
+```bash
+rm -rf public/tinymce && mkdir -p public/tinymce/icons public/tinymce/models public/tinymce/themes
+cd node_modules/tinymce
+cp -R icons/default ../../public/tinymce/icons/
+cp -R models/dom ../../public/tinymce/models/
+cp -R themes/silver ../../public/tinymce/themes/
+cp -R plugins skins ../../public/tinymce/
+cp tinymce.min.js tinymce.js tinymce.d.ts package.json license.md composer.json bower.json README.md CHANGELOG.md ../../public/tinymce/
+cd ../..
+```
+3. Confirm the copied version matches the version you installed:
+```bash
+grep '"version"' public/tinymce/package.json node_modules/tinymce/package.json
+```
+4. For a major version upgrade, check TinyMCE's migration notes against the editor config in `components/TinyMCEEditor/tinyMCEConfig.ts`.
+5. Test the editor in the browser (formatting, lists, links, tables, and loading existing content), then run `npm run lint`, `npm run type-check`, and `npm test`.
 
 
 ### Environment Variables
