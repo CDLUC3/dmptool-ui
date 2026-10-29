@@ -73,6 +73,12 @@
     "ucopHomepage": "Página inicial do UCOP",
     "uc3Helpdesk": "UC3 Helpdesk"
   },
+  "AffiliationSearchQuestion": {
+    "label": "Instituição",
+    "helpText": "Procurar sua instituição",
+    "otherLabel": "Outra instituição",
+    "otherPlaceholder": "Digite o nome de outra instituição"
+  },
   "UserProfile": {
     "breadcrumbHome": "Home",
     "headingUpdateProfile": "Atulizar perfil",
@@ -186,7 +192,8 @@
         "passwordMissingLowercase": "A senha deve conter pelo menos uma letra minúscula",
         "passwordMissingSpecialChar": "A senha deve conter pelo menos um caractere especial",
         "incorrectCurrentPassword": "A senha atual está incorreta",
-        "errorUpdatingPassword": "Erro ao atualizar a senha"
+        "errorUpdatingPassword": "Erro ao atualizar a senha",
+        "passwordDoesNotMeetRequirements": "A senha não atende aos requisitos"
       }
     }
   },
@@ -195,6 +202,7 @@
     "breadcrumbProfile": "Perfil de usuário",
     "breadcrumbConnections": "Conexões",
     "title": "Conexões",
+    "loading": "Carregando...",
     "orcidConnection": {
       "title": "ORCID iD",
       "content": "O ORCID fornece um identificador persistente — um ORCID iD — que distingue você de outros usuários. Saiba mais em <link>ORCID.org</link>.",
@@ -221,7 +229,10 @@
       "disconnectAria": "Desconecte suas credenciais institucionais",
       "disconnectConfirmTitle": "Confirmar desconexão",
       "disconnectConfirmMessage": "Tem certeza de que deseja desconectar suas credenciais institucionais? Você pode se reconectar a qualquer momento.",
-      "disconnectSuccess": "As suas credenciais institucionais foram desconectadas."
+      "disconnectSuccess": "As suas credenciais institucionais foram desconectadas.",
+      "ssoNotEnabled": "O Single Sign On não está habilitado para sua instituição. Por favor, entre em contato com seu administrador para obter assistência.",
+      "ssoConnectError": "Houve um erro ao conectar suas credenciais institucionais. Por favor, tente novamente mais tarde.",
+      "ssoDisconnectError": "Houve um erro ao desconectar suas credenciais institucionais. Por favor, tente novamente mais tarde."
     },
     "btnCancel": "Cancelar",
     "previewStatesHeading": "Pré-visualizações do estado",
@@ -401,7 +412,7 @@
         "searchUsers": "Buscar usuários para mesclar"
       },
       "definitions": {
-        "ssoId": "ID SSO institucional",
+        "ssoId": "Conectado ao SSO institucional?",
         "orcid": "ORCiD"
       },
       "profileForm": {
@@ -881,6 +892,10 @@
       "loadingPleaseWait": "Aguarde. Carregando...",
       "unPublishBtnTooltipMessage": "Não é possível cancelar a publicação do grupo de orientação porque não há versões publicadas.",
       "publishBtnTooltipMessage": "Grupo de Orientação já foi publicado.",
+      "unsavedChanges": "Alterações não salvas",
+      "savedJustNow": "Salvo há pouco",
+      "lastSavedOneMinuteAgo": "Salvo há 1 minuto",
+      "lastSavedMinutesAgo": "Salvo há {minutes} minutos",
       "success": {
         "guidanceGroupCreated": "Grupo de orientação {groupName} criado com sucesso",
         "guidanceGroupPublished": "Grupo de orientação {groupName} publicado com sucesso",

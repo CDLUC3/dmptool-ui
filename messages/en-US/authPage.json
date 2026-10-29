@@ -1,0 +1,82 @@
+{
+  "AuthPage": {
+    "loginTitle": "Login",
+    "loginToLink": "Login to link your Single Sign on (SSO) account to your existing DMP Tool account",
+    "registerTitle": "Create a DMP tool account",
+    "signSignOnSuccess": "Single Sign On (SSO) was successful",
+    "emailAddress": "Email address",
+    "singleSignOn": "To enable Single Sign On (SSO), use your institutional address. You will be redirected to your institution's single sign on platform.",
+    "pendingSSOEmailHelp": "This email was returned by your institution. You can change your preferred email in your profile once your account has been created.",
+    "linkAccountHeader": "Already have a DMP Tool account?",
+    "linkAccountMessage": "Sign in with your email and password. You can link your account to SSO on your profile page.",
+    "signUpInstead": "Sign up instead",
+    "finishRegistering": "Or, finish setting up a new account",
+    "password": "Password",
+    "passwordConfirm": "Confirm password",
+    "passMissMatch": "Passwords don't match",
+    "firstName": "First name",
+    "lastName": "Last name",
+    "institution": "Institution",
+    "institutionHelp": "Search for your institution",
+    "institutionOther": "Other institution",
+    "institutionOtherPlaceholder": "Enter custom institution name",
+    "acceptTerms": "Accept terms?",
+    "ssoReasoning": "Your email address is associated with:",
+    "sso": "Sign in with your institution (SSO)",
+    "nonSsoLink": "Sign in with non SSO",
+    "continue": "Continue",
+    "submitLogin": "Login",
+    "submitSignup": "Sign Up",
+    "loggingIn": "Logging in",
+    "signingUp": "Signing up",
+    "registerLink": "Don't have a DMP Tool Account?",
+    "loginLink": "Already have a DMP Tool Account?",
+    "getHelpText": "Get Help",
+    "ssoCheckError": "Single sign on is down. Please try logging in with your DMP Tool password.",
+    "ssoError": "Single sign on failed. Please try logging in with your DMP Tool password.",
+    "loginError": "Login failed. Please check your email and password and try again.",
+    "registerError": "Account creation failed. Please fix the errors below and try again.",
+    "accountExists": "An account already exists for this email address. Please log in or reset your password.",
+    "emailRequired": "Email address is required",
+    "invalidEmail": "Please enter a valid email address",
+    "firstNameRequired": "First name is required",
+    "lastNameRequired": "Last name is required",
+    "institutionRequired": "Institution is required",
+    "termsRequired": "You must accept the terms and conditions",
+    "passwordRequired": "Password is required",
+    "passwordRequirements": "Password must meet the requirements below",
+    "forgotPassword": {
+      "title": "Forgot your password?",
+      "emailLabel": "Email address",
+      "invalidEmail": "Please enter a valid email address",
+      "checkEmailTitle": "Check your email",
+      "checkEmailMessage": "If an account exists for that email, we've sent instructions to reset your password.",
+      "buttons": {
+        "backToLogin": "Back to login",
+        "sendReset": "Send me reset password instructions",
+        "sending": "Sending..."
+      },
+      "help": {
+        "problemSigningIn": "Problem signing in? <link>Contact us</link>"
+      }
+    },
+    "resetPassword": {
+      "title": "Change your password",
+      "passwordLabel": "New password",
+      "passwordHelpText": "(8 characters minimum)",
+      "confirmPasswordLabel": "Confirm new password",
+      "invalidPassword": "Please enter a valid password",
+      "passwordRequirements": "Password must meet the requirements below",
+      "passwordUpdatedTitle": "Password updated",
+      "expiredTokenMessage": "Your password reset link has expired. Please request a new password reset.",
+      "passwordUpdatedMessage": "Your password has been changed successfully. You can now sign in using your new password.",
+      "buttons": {
+        "changeMyPassword": "Change my password",
+        "backToLogin": "Back to login"
+      }
+    },
+    "buttons": {
+      "sending": "Sending..."
+    }
+  }
+}

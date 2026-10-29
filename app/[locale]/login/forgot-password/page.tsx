@@ -27,7 +27,7 @@ const ForgotPassword: React.FC = () => {
   const errorRef = useRef<HTMLDivElement>(null);
 
   //Localization
-  const t = useTranslations('LoginPage.forgotPassword');
+  const t = useTranslations('AuthPage.forgotPassword');
   const Global = useTranslations('Global');
 
   //States

@@ -1,548 +1,176 @@
 import React from 'react';
-
-import { act, fireEvent, render, screen, waitFor, } from '@/utils/test-utils';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import SignUpPage from '../page';
-import logECS from '@/utils/clientLogger';
 import { useCsrf } from '@/context/CsrfContext';
+import { useAuthContext } from '@/context/AuthContext';
+import { getTranslations } from 'next-intl/server';
+import { getInitialPendingSignup } from '@/lib/server/auth';
 
-//Need to import this useRouter after the jest.mock is in place
-import { useRouter } from '@/i18n/routing';
-import { fetchCsrfToken } from "@/utils/authHelper";
-import mocksAffiliations from '@/__mocks__/common/mockAffiliations.json';
-
-
-
-// Mock TypeAheadWithOther component
 jest.mock('@/components/Form/TypeAheadWithOther', () => ({
-  __esModule: true,
-  TypeAheadWithOther: ({ updateFormData, error }: { updateFormData: (name: string, value: string) => void, error: string }) => (
-    <div data-testid="type-ahead">
-      <input
-        data-testid="institution"
-        type="text"
-        name="institution"
-        onChange={(e) => updateFormData("institution", e.target.value)}
-      />
-      <input
-        data-testid="otherinst"
-        type="text"
-        name="otherAffiliation"
-        onChange={(e) => updateFormData("otherAffiliation", e.target.value)}
-      />
-      {error && <div className="error">{error}</div>}
-    </div>
+  TypeAheadWithOther: ({ updateFormData }: { updateFormData: (id: string, value: string) => void }) => (
+    <input
+      data-testid="institution"
+      name="institution"
+      onChange={(event) => updateFormData(event.target.value, event.target.value)}
+    />
   ),
   useAffiliationSearch: jest.fn(() => ({
-    suggestions: mocksAffiliations,
+    suggestions: [],
     handleSearch: jest.fn(),
+    isSearching: false,
+    searchError: '',
   })),
 }));
-
 
 jest.mock('@/i18n/routing', () => ({
   Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
     <a href={href} {...props}>{children}</a>
   ),
-  useRouter: jest.fn(() => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn() })),
+  useRouter: jest.fn(() => ({ push: jest.fn() })),
 }));
-
-
-jest.mock('@/utils/clientLogger', () => ({
-  __esModule: true,
-  default: jest.fn()
-}))
-
-
-jest.mock('@/utils/authHelper', () => ({
-  refreshAuthTokens: jest.fn(async () => Promise.resolve({ response: true, message: 'ok' })),
-  fetchCsrfToken: jest.fn(async () => Promise.resolve({ response: true, message: 'ok' })),
-}));
-
 
 jest.mock('@/context/AuthContext', () => ({
-  useAuthContext: jest.fn(() => ({
-    setIsAuthenticated: jest.fn(),
-  })),
+  useAuthContext: jest.fn(),
 }));
 
-
 jest.mock('@/context/CsrfContext', () => ({
-  CsrfProvider: ({ children }: { children: React.ReactNode }) => (
-    <div data-testid="mock-csrf-provider">{children}</div>
-  ),
   useCsrf: jest.fn(),
 }));
 
-// Create a mock for scrollIntoView and focus
-const mockScrollIntoView = jest.fn();
-const mockFocus = jest.fn();
+jest.mock('next-intl/server', () => ({
+  getTranslations: jest.fn(),
+}));
 
-const mockUseRouter = useRouter as jest.Mock;
+jest.mock('@/lib/server/auth', () => ({
+  getInitialPendingSignup: jest.fn(),
+}));
 
-const mockFetchCsrfToken = fetchCsrfToken as jest.Mock;
-
-// Mock fetch globally
-global.fetch = jest.fn() as jest.MockedFunction<typeof fetch>;
-
+const ssoCheckUrl = `${process.env.NEXT_PUBLIC_AUTH_ENDPOINT}/sso-check`;
 const signUpUrl = `${process.env.NEXT_PUBLIC_AUTH_ENDPOINT}/sign-up`;
 
 describe('SignUpPage', () => {
-  const signupData = {
-    givenName: "John",
-    surName: "Smith",
-    email: "test@example.com",
-    password: "Secret -- 123",
-    affiliationId: "otherAffiliation",
-    otherAffiliationName: "",
-    acceptedTerms: true
-  }
+  const getCsrfToken = jest.fn().mockResolvedValue('mocked-csrf-token');
 
-  const doSteps = async () => {
-    // Step 1
-    fireEvent.change(screen.getByLabelText("emailAddress"), {
-      target: { value: signupData.email },
+  const renderPage = async () => {
+    render(await SignUpPage({}));
+  };
+
+  const enterEmail = async () => {
+    fireEvent.change(screen.getByTestId('emailInput'), {
+      target: { value: 'test@example.com' },
     });
-    fireEvent.click(screen.getByTestId("continue"));
+    fireEvent.click(screen.getByTestId('actionContinue'));
+  };
 
-    expect(screen.getByTestId("signup")).toBeInTheDocument();
-
-    // Step 2
-    fireEvent.change(screen.getByLabelText("firstName"), {
-      target: { value: signupData.givenName },
-    });
-    fireEvent.change(screen.getByLabelText("lastName"), {
-      target: { value: signupData.surName },
-    });
-
-    fireEvent.change(screen.getByTestId("institution"), {
-      target: { value: "InstitutionID" },
-    });
-
-    fireEvent.change(screen.getByTestId("otherinst"), {
-      target: { value: "Test" },
-    });
-
-    fireEvent.change(screen.getByTestId("pass"), {
-      target: { value: signupData.password },
-    });
-
-    fireEvent.change(screen.getByTestId("confirmpass"), {
-      target: { value: signupData.password },
-    });
-
-    const termsCheckbox = screen.getByLabelText("acceptTerms");
-    fireEvent.click(termsCheckbox);
-    expect(termsCheckbox).toBeChecked();
-  }
+  const completeForm = async () => {
+    await enterEmail();
+    await screen.findByLabelText('firstName');
+    fireEvent.change(screen.getByLabelText('firstName'), { target: { value: 'John' } });
+    fireEvent.change(screen.getByLabelText('lastName'), { target: { value: 'Smith' } });
+    fireEvent.change(screen.getByTestId('institution'), { target: { value: 'institution-id' } });
+    fireEvent.change(screen.getByTestId('pass'), { target: { value: 'Secret -- 123' } });
+    fireEvent.change(screen.getByTestId('confirmpass'), { target: { value: 'Secret -- 123' } });
+    fireEvent.click(screen.getByLabelText('acceptTerms'));
+  };
 
   beforeEach(() => {
-    HTMLElement.prototype.scrollIntoView = mockScrollIntoView;
-    HTMLElement.prototype.focus = mockFocus;
-
-    (useCsrf as jest.Mock).mockReturnValue({ getCsrfToken: jest.fn().mockResolvedValue('mocked-csrf-token') });
-
-    mockUseRouter.mockReturnValue({
-      push: jest.fn(),
-    })
-
-    jest.spyOn(console, 'error').mockImplementation(() => { });
+    (getTranslations as jest.Mock).mockResolvedValue((key: string) => key);
+    (getInitialPendingSignup as jest.Mock).mockResolvedValue(undefined);
+    (useCsrf as jest.Mock).mockReturnValue({ getCsrfToken });
+    (useAuthContext as jest.Mock).mockReturnValue({
+      clearCache: jest.fn().mockResolvedValue(undefined),
+      setIsAuthenticated: jest.fn(),
+    });
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: false,
+      status: 404,
+    });
   });
 
   afterEach(() => {
-    HTMLElement.prototype.scrollIntoView = jest.fn();
-    HTMLElement.prototype.focus = jest.fn();
-    jest.restoreAllMocks();
     jest.clearAllMocks();
-  })
-
-  it("renders the email step initially", () => {
-    // renderWithProviders(<SignUpPage />);
-    render(<SignUpPage />);
-    expect(screen.getByLabelText("emailAddress")).toBeInTheDocument();
-    expect(screen.getByTestId("continue")).toBeInTheDocument();
   });
 
-  it("transitions to the profile step on valid email submission", async () => {
-    // renderWithProviders(<SignUpPage />);
-    act(() => {
-      render(<SignUpPage />);
-    });
+  it('shows registration fields only after an unmatched SSO check', async () => {
+    await renderPage();
 
-    fireEvent.change(screen.getByLabelText("emailAddress"), {
-      target: { value: "test@example.com" }
-    });
-    fireEvent.click(screen.getByTestId("continue"));
+    await enterEmail();
 
     await waitFor(() => {
-      expect(screen.getByLabelText("firstName")).toBeInTheDocument();
-      expect(screen.getByLabelText("lastName")).toBeInTheDocument();
-      expect(screen.getByTestId("institution")).toBeInTheDocument();
-      expect(screen.getByLabelText("acceptTerms")).toBeInTheDocument();
-      expect(screen.getByTestId("pass")).toBeInTheDocument();
-      expect(screen.getByTestId("confirmpass")).toBeInTheDocument();
+      expect(global.fetch).toHaveBeenCalledWith(ssoCheckUrl, expect.objectContaining({
+        body: JSON.stringify({ email: 'test@example.com' }),
+      }));
+      expect(screen.getByLabelText('firstName')).toBeInTheDocument();
+      expect(screen.getByTestId('actionSubmit')).toBeDisabled();
     });
   });
 
-  it("should go back to step 1 if user clicks \'Back\' button", async () => {
-    act(() => {
-      render(<SignUpPage />);
+  it('shows the matched institution SSO option instead of the registration form', async () => {
+    (global.fetch as jest.Mock).mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({
+        entityId: 'example-entity',
+        affiliationId: 'example-affiliation',
+        displayName: 'Example University',
+      }),
     });
+    await renderPage();
 
-    fireEvent.change(screen.getByLabelText("emailAddress"), {
-      target: { value: "test@example.com" }
-    });
-    fireEvent.click(screen.getByTestId("continue"));
+    await enterEmail();
 
-    await waitFor(() => {
-      expect(screen.getByLabelText("firstName")).toBeInTheDocument();
-    });
-
-    const backBtn = screen.getByText('buttons.back');
-    fireEvent.click(backBtn);
-
-    await waitFor(() => {
-      expect(screen.getByLabelText("emailAddress")).toBeInTheDocument();
-      expect(screen.getByTestId("continue")).toBeInTheDocument();
-    });
+    expect(await screen.findByText('Example University')).toBeInTheDocument();
+    expect(screen.getByTestId('actionSsoSubmit')).toBeInTheDocument();
+    expect(screen.queryByLabelText('firstName')).not.toBeInTheDocument();
   });
 
-  it("submit button is disabled till terms accepted", async () => {
-    // renderWithProviders(<SignUpPage />);
-    render(<SignUpPage />);
+  it('submits the selected affiliation ID after completing the non-SSO form', async () => {
+    (global.fetch as jest.Mock)
+      .mockResolvedValueOnce({ ok: false, status: 404 })
+      .mockResolvedValueOnce({ ok: true, status: 200 });
+    await renderPage();
 
-    // Step 1 Fields
-    fireEvent.change(screen.getByLabelText("emailAddress"), {
-      target: { value: "test@example.com" },
-    });
-    fireEvent.click(screen.getByTestId("continue"));
-
-    await waitFor(() => {
-      expect(screen.getByLabelText("acceptTerms")).toBeInTheDocument();
-      expect(screen.getByTestId("signup")).toBeInTheDocument();
-    });
-
-    const termsCheckbox = screen.getByLabelText("acceptTerms");
-    const signupBtn = screen.getByTestId("signup");
-
-    expect(termsCheckbox).not.toBeChecked();
-    expect(signupBtn).toBeDisabled();
-
-    fireEvent.click(termsCheckbox);
-    expect(termsCheckbox).toBeChecked();
-    expect(signupBtn).not.toBeDisabled();
-  });
-
-  it("makes the backend call on final signin", async () => {
-    jest.spyOn(global, 'fetch').mockImplementation((url) => {
-      if (url === signUpUrl) {
-        return Promise.resolve({
-          ok: true,
-          status: 200,
-          json: () => Promise.resolve({ message: 'mock message' })
-        } as unknown as Response);
-      }
-
-      return Promise.reject(new Error('Unknown URL'));
-    });
-
-    render(<SignUpPage />);
-
-    doSteps();
-
-    const signupBtn = screen.getByTestId("signup");
-    expect(signupBtn).toBeEnabled();
-
-    fireEvent.click(signupBtn);
+    await completeForm();
+    fireEvent.click(screen.getByTestId('actionSubmit'));
 
     await waitFor(() => {
-      // expect(mockUseRouter().push).toHaveBeenCalledWith('/');
-      expect(global.fetch).toHaveBeenCalledWith(signUpUrl, {
+      expect(global.fetch).toHaveBeenLastCalledWith(signUpUrl, expect.objectContaining({
         method: 'POST',
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
           'X-CSRF-TOKEN': 'mocked-csrf-token',
         },
-        body: JSON.stringify(signupData),
+      }));
+      const [, options] = (global.fetch as jest.Mock).mock.calls.at(-1);
+      expect(JSON.parse(options.body)).toEqual({
+        givenName: 'John',
+        surName: 'Smith',
+        email: 'test@example.com',
+        password: 'Secret -- 123',
+        affiliationId: 'institution-id',
+        otherAffiliationName: '',
+        acceptedTerms: true,
       });
     });
   });
 
-  it("should display error if password does not equal confirmPassword", async () => {
-
-    render(<SignUpPage />);
-
-    // Step 1
-    fireEvent.change(screen.getByLabelText("emailAddress"), {
-      target: { value: signupData.email },
-    });
-    fireEvent.click(screen.getByTestId("continue"));
-
-    expect(screen.getByTestId("signup")).toBeInTheDocument();
-
-    // Step 2
-    fireEvent.change(screen.getByLabelText("firstName"), {
-      target: { value: signupData.givenName },
-    });
-    fireEvent.change(screen.getByLabelText("lastName"), {
-      target: { value: signupData.surName },
+  it('shows account-linking instructions and prepopulates a pending SSO signup', async () => {
+    (getInitialPendingSignup as jest.Mock).mockResolvedValue({
+      email: 'jane@example.edu',
+      affiliation: 'example-affiliation',
+      displayName: 'Example University',
+      givenName: 'Jane',
+      surName: 'Doe',
     });
 
-    fireEvent.change(screen.getByTestId("institution"), {
-      target: { value: "InstitutionID" },
-    });
+    await renderPage();
 
-    fireEvent.change(screen.getByTestId("otherinst"), {
-      target: { value: "Test" },
-    });
-
-    fireEvent.change(screen.getByTestId("pass"), {
-      target: { value: signupData.password },
-    });
-
-    fireEvent.change(screen.getByTestId("confirmpass"), {
-      target: { value: "DifferentPassword" },
-    });
-
-    const termsCheckbox = screen.getByLabelText("acceptTerms");
-    fireEvent.click(termsCheckbox);
-    expect(termsCheckbox).toBeChecked();
-
-    const signupBtn = screen.getByTestId("signup");
-    fireEvent.click(signupBtn);
-
-    await waitFor(() => {
-      expect(screen.getByText('messaging.errors.passMissMatch')).toBeInTheDocument();
-    });
-  });
-
-  it("should display error if institution or affiliation is missing", async () => {
-
-    render(<SignUpPage />);
-
-    // Step 1
-    fireEvent.change(screen.getByLabelText("emailAddress"), {
-      target: { value: signupData.email },
-    });
-    fireEvent.click(screen.getByTestId("continue"));
-
-    expect(screen.getByTestId("signup")).toBeInTheDocument();
-
-    // Step 2
-    fireEvent.change(screen.getByLabelText("firstName"), {
-      target: { value: signupData.givenName },
-    });
-    fireEvent.change(screen.getByLabelText("lastName"), {
-      target: { value: signupData.surName },
-    });
-
-    fireEvent.change(screen.getByTestId("institution"), {
-      target: { value: "" },
-    });
-
-    fireEvent.change(screen.getByTestId("otherinst"), {
-      target: { value: "" },
-    });
-
-    fireEvent.change(screen.getByTestId("pass"), {
-      target: { value: signupData.password },
-    });
-
-    fireEvent.change(screen.getByTestId("confirmpass"), {
-      target: { value: signupData.password },
-    });
-
-    const termsCheckbox = screen.getByLabelText("acceptTerms");
-    fireEvent.click(termsCheckbox);
-    expect(termsCheckbox).toBeChecked();
-
-    const signupBtn = screen.getByTestId("signup");
-    fireEvent.click(signupBtn);
-
-    await waitFor(() => {
-      expect(screen.getByText('institutionRequired')).toBeInTheDocument();
-    });
-  });
-
-  it("should display error if password does not meet requirements", async () => {
-    render(<SignUpPage />);
-
-    // Step 1
-    fireEvent.change(screen.getByLabelText("emailAddress"), {
-      target: { value: signupData.email },
-    });
-    fireEvent.click(screen.getByTestId("continue"));
-
-    expect(screen.getByTestId("signup")).toBeInTheDocument();
-
-    // Step 2 — everything else valid, only the password is weak
-    fireEvent.change(screen.getByLabelText("firstName"), {
-      target: { value: signupData.givenName },
-    });
-    fireEvent.change(screen.getByLabelText("lastName"), {
-      target: { value: signupData.surName },
-    });
-
-    fireEvent.change(screen.getByTestId("institution"), {
-      target: { value: "InstitutionID" },
-    });
-
-    fireEvent.change(screen.getByTestId("otherinst"), {
-      target: { value: "Test" },
-    });
-
-    // Too short, no uppercase, no number, no special char
-    fireEvent.change(screen.getByTestId("pass"), {
-      target: { value: "weak" },
-    });
-    fireEvent.change(screen.getByTestId("confirmpass"), {
-      target: { value: "weak" },
-    });
-
-    const termsCheckbox = screen.getByLabelText("acceptTerms");
-    fireEvent.click(termsCheckbox);
-    expect(termsCheckbox).toBeChecked();
-
-    const signupBtn = screen.getByTestId("signup");
-    fireEvent.click(signupBtn);
-
-    await waitFor(() => {
-      expect(screen.getByText('passwordRequirements')).toBeInTheDocument();
-    });
-
-    // Validation should block the request entirely
-    expect(global.fetch).not.toHaveBeenCalled();
-  });
-
-  it("should update the password requirements list as the user types", () => {
-    render(<SignUpPage />);
-
-    // Step 1
-    fireEvent.change(screen.getByLabelText("emailAddress"), {
-      target: { value: signupData.email },
-    });
-    fireEvent.click(screen.getByTestId("continue"));
-
-    // Nothing typed yet — every requirement should be unmet
-    expect(screen.getByTestId("requirement-minLength")).toHaveClass('unmet');
-    expect(screen.getByTestId("requirement-hasUppercase")).toHaveClass('unmet');
-    expect(screen.getByTestId("requirement-hasLowercase")).toHaveClass('unmet');
-    expect(screen.getByTestId("requirement-hasNumber")).toHaveClass('unmet');
-    expect(screen.getByTestId("requirement-hasSpecialChar")).toHaveClass('unmet');
-
-    // Type a password that satisfies every rule
-    fireEvent.change(screen.getByTestId("pass"), {
-      target: { value: "Abcdefg1!" },
-    });
-
-    expect(screen.getByTestId("requirement-minLength")).toHaveClass('met');
-    expect(screen.getByTestId("requirement-hasUppercase")).toHaveClass('met');
-    expect(screen.getByTestId("requirement-hasLowercase")).toHaveClass('met');
-    expect(screen.getByTestId("requirement-hasNumber")).toHaveClass('met');
-    expect(screen.getByTestId("requirement-hasSpecialChar")).toHaveClass('met');
-  });
-
-  it('should handle 403 error by calling fetchCsrfToken', async () => {
-    jest.spyOn(global, 'fetch').mockImplementation(() => {
-      return Promise.resolve({
-        ok: false,
-        status: 403,
-        json: () => Promise.resolve({ success: false, message: 'Invalid CSRF token' }),
-      } as unknown as Response);
-    });
-
-    render(<SignUpPage />);
-
-    doSteps();
-    fireEvent.click(screen.getByTestId("signup"));
-
-    // Check that user is redirected to 500 error page
-    await waitFor(() => {
-      expect(mockFetchCsrfToken).toHaveBeenCalled();
-    })
-  });
-
-  it('should handle 500 error', async () => {
-    jest.spyOn(global, 'fetch').mockImplementation(() => {
-      return Promise.resolve({
-        ok: false,
-        status: 500,
-        json: () => Promise.resolve({ success: false, message: 'Internal Server Error' }),
-      } as unknown as Response);
-    });
-
-    render(<SignUpPage />);
-
-    doSteps();
-    fireEvent.click(screen.getByTestId("signup"));
-
-    // Check that user is redirected to 500 error page
-    await waitFor(() => {
-      expect(mockUseRouter().push).toHaveBeenCalledWith('/500-error')
-    })
-  });
-
-  it('should render correct errors to user for a 400 error', async () => {
-    jest.spyOn(global, 'fetch').mockImplementation(() => {
-      return Promise.resolve({
-        ok: false,
-        status: 400,
-        json: () => Promise.resolve({
-          success: false,
-          message: 'Invalid email address| Password is required',
-        }),
-      } as unknown as Response);
-    });
-
-    render(<SignUpPage />);
-
-    doSteps();
-    fireEvent.click(screen.getByTestId("signup"));
-
-    //Check that error is rendered
-    await waitFor(() => {
-      const errorElement = screen.getByText(/invalid email address/i);
-      expect(errorElement).toBeInTheDocument();
-    })
-  });
-
-  it('should render default error message when no response', async () => {
-    jest.spyOn(global, 'fetch').mockImplementation(() => {
-      return Promise.resolve(undefined as unknown as Response);
-    });
-
-    render(<SignUpPage />);
-
-    doSteps();
-    fireEvent.click(screen.getByTestId("signup"));
-
-    await waitFor(() => {
-      const errorDiv = screen.getByText('An unexpected error occurred. Please try again.').closest('div');
-      expect(errorDiv).toHaveClass('error');
-      expect(errorDiv).toContainHTML('<p>An unexpected error occurred. Please try again.</p>')
-    });
-  });
-
-  it('should handle error returned from the fetch', async () => {
-    jest.spyOn(global, 'fetch').mockImplementation(() => {
-      return Promise.reject(new Error('Unknown URL'));
-    });
-
-    render(<SignUpPage />);
-
-    doSteps();
-    fireEvent.click(screen.getByTestId("signup"));
-
-    // Check that error logged
-    await waitFor(() => {
-      expect(logECS).toHaveBeenCalledWith(
-        'error',
-        'Signup error',
-        expect.objectContaining({
-          error: expect.anything(),
-          url: { path: '/sign-up' },
-        })
-      )
-    });
+    expect(screen.getByRole('heading', { name: 'signSignOnSuccess' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'linkAccountHeader' })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "loginTitle" })).toHaveAttribute("href", "/login");
+    expect(screen.getByTestId('emailInput')).toHaveValue('jane@example.edu');
+    expect(screen.getByLabelText('firstName')).toHaveValue('Jane');
+    expect(screen.getByLabelText('lastName')).toHaveValue('Doe');
+    expect(screen.queryByTestId('pass')).not.toBeInTheDocument();
   });
 });

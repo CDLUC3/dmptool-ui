@@ -3,14 +3,12 @@
 import { useCallback, useEffect, useState } from "react";
 import type { PlanComment } from "./model";
 
-/**
- * Comment edit/delete state + handlers, shaped like app/hooks/useComments
- * so PlanComments can mirror CommentList and later swap in real mutations.
- */
+export type PlanCommentMutationError = "updateFailed" | "deleteFailed";
+
 export interface UsePlanCommentsArgs {
   comments: PlanComment[];
-  onUpdateComment: (commentId: number, text: string) => Promise<PlanComment>;
-  onDeleteComment: (commentId: number) => Promise<void>;
+  onUpdateComment: (commentId: string, text: string) => Promise<PlanComment>;
+  onDeleteComment: (commentId: string) => Promise<void>;
 }
 
 export function usePlanComments({
@@ -19,9 +17,11 @@ export function usePlanComments({
   onDeleteComment,
 }: UsePlanCommentsArgs) {
   const [localComments, setLocalComments] = useState<PlanComment[]>(comments);
-  const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
+  const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
   const [editingCommentText, setEditingCommentText] = useState("");
   const [mutating, setMutating] = useState(false);
+  const [mutationError, setMutationError] =
+    useState<PlanCommentMutationError | null>(null);
 
   useEffect(() => {
     setLocalComments(comments);
@@ -30,11 +30,13 @@ export function usePlanComments({
   }, [comments]);
 
   const handleEditComment = useCallback((comment: PlanComment) => {
+    setMutationError(null);
     setEditingCommentId(comment.id);
     setEditingCommentText(comment.text);
   }, []);
 
   const handleCancelEdit = useCallback(() => {
+    setMutationError(null);
     setEditingCommentId(null);
     setEditingCommentText("");
   }, []);
@@ -57,6 +59,7 @@ export function usePlanComments({
         prev.map((item) => (item.id === comment.id ? optimistic : item))
       );
       setMutating(true);
+      setMutationError(null);
 
       try {
         const saved = await onUpdateComment(comment.id, nextText);
@@ -65,10 +68,12 @@ export function usePlanComments({
         );
         setEditingCommentId(null);
         setEditingCommentText("");
-      } catch {
+      } catch (error) {
+        console.error("Failed to update plan comment", error);
         setLocalComments((prev) =>
           prev.map((item) => (item.id === comment.id ? original : item))
         );
+        setMutationError("updateFailed");
       } finally {
         setMutating(false);
       }
@@ -89,11 +94,14 @@ export function usePlanComments({
         setEditingCommentText("");
       }
       setMutating(true);
+      setMutationError(null);
 
       try {
         await onDeleteComment(comment.id);
-      } catch {
+      } catch (error) {
+        console.error("Failed to delete plan comment", error);
         setLocalComments(originalComments);
+        setMutationError("deleteFailed");
       } finally {
         setMutating(false);
       }
@@ -107,6 +115,7 @@ export function usePlanComments({
     editingCommentText,
     setEditingCommentText,
     mutating,
+    mutationError,
     handleEditComment,
     handleUpdateComment,
     handleCancelEdit,

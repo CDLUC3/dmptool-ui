@@ -126,7 +126,7 @@ function OrgUserAccountsPage(): React.ReactElement {
 
   const isSuperAdmin = meData?.me?.role === UserRole.Superadmin;
 
-  // This is needed because the GraphQL query returns different field names than the table columns, 
+  // This is needed because the GraphQL query returns different field names than the table columns,
   // so we need to map them for sorting purposes.
   const SORT_FIELD_MAP: Record<string, string> = {
     name: 'u.surName',
@@ -166,7 +166,7 @@ function OrgUserAccountsPage(): React.ReactElement {
     ...(selectedAffiliationId ? { affiliationId: selectedAffiliationId } : {}),
   });
 
-  // Build the query variables for fetching users based on the current page, search term, role, sorting, 
+  // Build the query variables for fetching users based on the current page, search term, role, sorting,
   // and organization filters
   const buildQueryVars = (
     page: number,
@@ -247,7 +247,7 @@ function OrgUserAccountsPage(): React.ReactElement {
   };
 
 
-  // Updates the search term state as the user types in the search input. 
+  // Updates the search term state as the user types in the search input.
   // If the search term is cleared, it fetches all users again to refresh the data.
   const handleSearchInput = async (term: string) => {
     setSearchTerm(term);
@@ -267,7 +267,7 @@ function OrgUserAccountsPage(): React.ReactElement {
     await fetchUsers({ page, context: 'handlePageClick' });
   };
 
-  // Handle sorting changes from the users table. Updates the sortField and sortDir state, and fetches 
+  // Handle sorting changes from the users table. Updates the sortField and sortDir state, and fetches
   // the users again with the new sorting applied.
   const onSortChangeHandler = async (newColumns: DmpTableColumnSet) => {
     setColumns(newColumns);
@@ -324,7 +324,7 @@ function OrgUserAccountsPage(): React.ReactElement {
       const pagesData: UsersPageItems[] = new Array(totalPages);
       pagesData[0] = firstItems;
 
-      // Build an array of length = totalPages - 1, with values [1, 2, ..., totalPages - 1] 
+      // Build an array of length = totalPages - 1, with values [1, 2, ..., totalPages - 1]
       // representing the remaining pages to fetch
       const remainingPages = Array.from({ length: totalPages - 1 }, (_, i) => i + 1);
       let cursor = 0;
@@ -375,18 +375,18 @@ function OrgUserAccountsPage(): React.ReactElement {
         return;
       }
 
-      const cellMap: Record<string, (user: NonNullable<typeof items[0]>) => string | number> = {
-        name: user => [user.givenName, user.surName].filter(Boolean).join(' '),
-        email: user => user.email ?? '',
-        plans: user => user.plans?.length ?? 0,
-        nonTestPlans: user => user.plans?.filter(plan => plan?.project?.isTestProject === false).length ?? 0,
-        orcid: user => user.orcid ?? '',
-        sso: user => user.ssoId ?? '',
-        active: user => user.active ? 'Yes' : 'No',
-        role: user => RoleLabels[user.role] ?? user.role,
-        organization: user => user.affiliation?.displayName ?? '',
-        created: user => user.created ? formatDate(user.created) : '',
-        lastActivity: user => user.last_sign_in ? formatDate(user.last_sign_in) : '',
+      const cellMap: Record<string, (user: NonNullable<(typeof items)[0]>) => string | number> = {
+        name: (user) => [user.givenName, user.surName].filter(Boolean).join(" "),
+        email: (user) => user.email ?? "",
+        plans: (user) => user.plans?.length ?? 0,
+        nonTestPlans: (user) => user.plans?.filter((plan) => plan?.project?.isTestProject === false).length ?? 0,
+        orcid: (user) => user.orcid ?? "",
+        sso: (user) => (user.hasSSO ? Global("form.yesLabel") : Global("form.noLabel")),
+        active: (user) => (user.active ? Global("form.yesLabel") : Global("form.noLabel")),
+        role: (user) => RoleLabels[user.role] ?? user.role,
+        organization: (user) => user.affiliation?.displayName ?? "",
+        created: (user) => (user.created ? formatDate(user.created) : ""),
+        lastActivity: (user) => (user.last_sign_in ? formatDate(user.last_sign_in) : ""),
       };
 
       // Define a separate set of columns for export, since it includes additional fields like ORCID and SSO
@@ -441,7 +441,7 @@ function OrgUserAccountsPage(): React.ReactElement {
       setIsInitialLoad(false);
     } finally {
       setExportProgress(null);
-      //Clear the phase after a short delay so "done"/"error" can be 
+      //Clear the phase after a short delay so "done"/"error" can be
       // announced by screen readers before resetting to idle
       setTimeout(() => {
         setExportPhase('idle');
@@ -459,17 +459,17 @@ function OrgUserAccountsPage(): React.ReactElement {
           id: user.id?.toString(),
           name: (
             <Link
-              href={routePath('admin.users.manage', { userId: String(user.id) })}
-              aria-label={usersTrans('manageUser', { name: fullName })}
+              href={routePath("admin.users.manage", { userId: String(user.id) })}
+              aria-label={usersTrans("manageUser", { name: fullName })}
             >
               {fullName}
             </Link>
           ),
-          email: user.email ?? '',
+          email: user.email ?? "",
           plans: user.plans?.length ?? 0,
-          active: user.active ? 'Yes' : 'No',
+          active: user.active ? Global("form.yesLabel") : Global("form.noLabel"),
           role: RoleLabels[user.role] || user.role,
-          created: user.created ? formatDate(user.created) : '',
+          created: user.created ? formatDate(user.created) : "",
           lastActivity: user.last_sign_in ? formatDate(user.last_sign_in) : null,
           organization: user.affiliation?.displayName || null,
         };
@@ -520,10 +520,9 @@ function OrgUserAccountsPage(): React.ReactElement {
     setColumns(initialColumns);
   }, [initialColumns]);
 
-
   // Add a loading state guard before rendering pageTools to avoid flashing of the organization select field for superadmins
   const isSuperAdminResolved = meData?.me !== undefined;
-  // If SuperAdmins haven't selected an organization, we block the export button to avoid exporting all users across all 
+  // If SuperAdmins haven't selected an organization, we block the export button to avoid exporting all users across all
   // organizations.
   const isExportBlocked = isSuperAdmin && !selectedAffiliationId;
   return (

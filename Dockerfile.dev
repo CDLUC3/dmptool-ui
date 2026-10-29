@@ -1,6 +1,6 @@
 # Dockerfile
 # preferred node version chosen here (Active LTS = 22 as of 10/2024)
-FROM public.ecr.aws/docker/library/node:22.22-alpine3.23
+FROM public.ecr.aws/docker/library/node:22.23.4-alpine3.23
 
 # Create the directory on the node image
 # where our Next.js app will live

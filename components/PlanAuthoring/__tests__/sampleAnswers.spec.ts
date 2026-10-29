@@ -4,24 +4,18 @@ import {
   resolveInitialAnswer,
 } from "../sampleAnswers";
 import type { PlanQuestionDefinition } from "../model";
+import { makeQuestion } from "../mocks";
 
 function baseQuestion(
   overrides: Partial<PlanQuestionDefinition> = {}
 ): PlanQuestionDefinition {
-  return {
+  return makeQuestion({
     identity: { kind: "base", versionedQuestionId: 1 },
-    sectionIdentity: { kind: "base", versionedSectionId: 1 },
     title: "Sample question",
-    required: false,
     questionType: "textArea",
     parsedJson: { type: "textArea" },
-    answerJson: null,
-    hasAnswer: false,
-    guidanceSources: [],
-    comments: [],
-    displayOrder: 1,
     ...overrides,
-  };
+  });
 }
 
 describe("getPlanSampleAnswers", () => {
