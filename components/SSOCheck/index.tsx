@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useEffect, useRef, useState } from "react";
 import { FormInput } from "@/components/Form";
 import styles from "./ssoCheck.module.scss"
@@ -16,11 +18,12 @@ import { handleErrors, isValidPassword, isValidEmail, routePath } from "@/utils/
 
 interface SSOCheckContainerProps {
   mode: Modes;
+  initialPendingSignup?: PendingSSOSignup;
 }
 
 interface LoginInput {
   email: string;
-  password: string;
+  password?: string;
 }
 
 interface RegisterInput {
@@ -43,6 +46,14 @@ type fieldErrorsMap = {
   confirmPassword: string;
 };
 
+export interface PendingSSOSignup {
+  email: string;
+  affiliation?: string;
+  affiliationId?: string;
+  givenName?: string;
+  surName?: string;
+}
+
 type Modes = "login" | "register";
 type LoginSteps = "email" | "sso" | "non-sso";
 
@@ -63,7 +74,7 @@ const modePathText = {
   register: "registerLink",
 };
 
-export const SSOCheckContainer: React.FC<SSOCheckContainerProps> = ({ mode }) => {
+export const SSOCheckContainer: React.FC<SSOCheckContainerProps> = ({ mode, initialPendingSignup }) => {
   const t = useTranslations("AuthPage");
   const globalT = useTranslations("Global");
   const errorRef = useRef<HTMLDivElement>(null);
@@ -82,24 +93,27 @@ export const SSOCheckContainer: React.FC<SSOCheckContainerProps> = ({ mode }) =>
   const { getCsrfToken } = useCsrf();
   const router = useRouter();
 
-  const [step, setStep] = useState<LoginSteps>("email");
+  const [step, setStep] = useState<LoginSteps>(
+    mode === "register" && initialPendingSignup ? "non-sso" : "email"
+  );
 
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(mode === "register" && initialPendingSignup ? initialPendingSignup?.email : "");
   const [ssoEntityId, setSsoEntityId] = useState<string | null>(null);
 
-  const [affiliation, setAffiliation] = useState<string | null>(null);
-  const [affiliationId, setAffiliationId] = useState<string | null>(null);
+  const [affiliation, setAffiliation] = useState<string | null>(initialPendingSignup?.affiliation ?? null);
+  const [affiliationId, setAffiliationId] = useState<string | null>(initialPendingSignup?.affiliationId ?? null);
   const [otherField, setOtherField] = useState<boolean>(false);
   const [otherAffiliation, setOtherAffiliation] = useState<string>("");
   const { suggestions, handleSearch, isSearching, searchError } = useAffiliationSearch();
 
   const [password, setPassword] = useState("");
-  const [firstName, setFirstName] = useState<string>("");
-  const [lastName, setLastName] = useState<string>("");
+  const [firstName, setFirstName] = useState(initialPendingSignup?.givenName ?? "");
+  const [lastName, setLastName] = useState(initialPendingSignup?.surName ?? "");
   const [confirmPassword, setConfirmPassword] = useState<string>("");
   const [termsAccepted, setTermsAccepted] = useState<boolean>(false);
 
   const { setIsAuthenticated, clearCache } = useAuthContext();
+  const isPendingSsoSignup = mode === "register" && initialPendingSignup?.email === email;
 
   const returnToEmail = () => {
     setStep("email");
@@ -152,10 +166,16 @@ export const SSOCheckContainer: React.FC<SSOCheckContainerProps> = ({ mode }) =>
       if (response.ok) {
         // If successful, the response will contain the affiliationId and displayName for the SSO provider.
         const json = await response.json();
-        setSsoEntityId(json.entityId);
+
+        if (json.entityId) {
+          setSsoEntityId(json.entityId);
+          setStep("sso");
+        }
+
+        // The check may return affiliation info even if its not SSO enabled. We want to use that info to pre-fill the
+        // affiliation field on the form.
         setAffiliation(json.displayName);
         setAffiliationId(json.affiliationId);
-        setStep("sso");
       } else if (response.status === 404) {
         // If a 404 was returned then the email is not associated with an SSO provider, so we can show the non-SSO form.
         setStep("non-sso");
@@ -164,10 +184,6 @@ export const SSOCheckContainer: React.FC<SSOCheckContainerProps> = ({ mode }) =>
         await handleErrors(response, ssoCheckRequest, setErrors, router, modePaths[mode]);
       }
     } catch (err: any) {
-      logECS("error", "SSO Check error", {
-        error: err,
-        url: { path: "/sso-check" },
-      });
       // The SSO check failed for some reason, Log the error and return to the non-SSO step so the user can try to
       // log in via that route.
       logECS("error", "SSO Check error", {
@@ -221,12 +237,14 @@ export const SSOCheckContainer: React.FC<SSOCheckContainerProps> = ({ mode }) =>
           newFieldErrors.surName = t("lastNameRequired");
         }
 
-        if (!isValidPassword(password)) {
-          newFieldErrors.password = t("passwordRequirements");
-        }
+        if (!isPendingSsoSignup) {
+          if (!isValidPassword(password)) {
+            newFieldErrors.password = t("passwordRequirements");
+          }
 
-        if (password !== confirmPassword) {
-          newFieldErrors.confirmPassword = globalT("messaging.errors.passMissMatch");
+          if (password !== confirmPassword) {
+            newFieldErrors.confirmPassword = globalT("messaging.errors.passMissMatch");
+          }
         }
 
         if (!affiliationId && !otherAffiliation) {
@@ -265,10 +283,10 @@ export const SSOCheckContainer: React.FC<SSOCheckContainerProps> = ({ mode }) =>
             givenName: firstName,
             surName: lastName,
             email,
-            password,
             affiliationId: affiliationId || undefined,
             otherAffiliationName: otherAffiliation,
             acceptedTerms: termsAccepted,
+            ...(isPendingSsoSignup ? {} : { password }),
           };
 
       return await fetch(`${process.env.NEXT_PUBLIC_AUTH_ENDPOINT}${authTargets[mode]}`, {
@@ -335,7 +353,9 @@ export const SSOCheckContainer: React.FC<SSOCheckContainerProps> = ({ mode }) =>
           if (emailError) break;
 
           // Check if it is an SSO email
-          await ssoCheck();
+          if (!isPendingSsoSignup) {
+            await ssoCheck();
+          }
           break;
 
         case "non-sso":
@@ -397,6 +417,10 @@ export const SSOCheckContainer: React.FC<SSOCheckContainerProps> = ({ mode }) =>
     }
   }, [step]);
 
+  const emailHelpMessage = step === "email"
+    ? t("singleSignOn")
+    : isPendingSsoSignup ? t("pendingSSOEmailHelp") : undefined;
+
   return (
     <Form
       className={styles.authForm}
@@ -423,10 +447,10 @@ export const SSOCheckContainer: React.FC<SSOCheckContainerProps> = ({ mode }) =>
         isInvalid={!!fieldErrors.email}
         errorMessage={fieldErrors.email}
         isRequiredVisualOnly={true}
-        readOnly={["non-sso", "sso"].includes(step)}
-        inputClasses={["non-sso", "sso"].includes(step) ? "disabled-look" : ""}
+        readOnly={step !== "email"}
+        inputClasses={step !== "email" ? "disabled-look" : ""}
         autoComplete={step === "non-sso" ? "off" : "email"}
-        helpMessage={step === "email" ? t("singleSignOn") : undefined}
+        helpMessage={isPendingSsoSignup ? t("pendingSSOEmailHelp") : emailHelpMessage}
         data-testid="emailInput"
       />
 
@@ -462,6 +486,7 @@ export const SSOCheckContainer: React.FC<SSOCheckContainerProps> = ({ mode }) =>
               label={t("firstName")}
               ariaLabel={t("firstName")}
               isRequiredVisualOnly={true}
+              value={firstName}
               onChange={(e) => setFirstName(e.target.value)}
             />
 
@@ -471,61 +496,68 @@ export const SSOCheckContainer: React.FC<SSOCheckContainerProps> = ({ mode }) =>
               label={t("lastName")}
               ariaLabel={t("lastName")}
               isRequiredVisualOnly={true}
+              value={lastName}
               onChange={(e) => setLastName(e.target.value)}
             />
           </div>
 
-          <TypeAheadWithOther
-            className={styles.typeAhead}
-            label={t("institution")}
-            isRequiredVisualOnly={true}
-            fieldName="institution"
-            setOtherField={setOtherField}
-            helpText={t("institutionHelp")}
-            updateFormData={updateAffiliations}
-            error={fieldErrors?.affiliationId || searchError || ""}
-            suggestions={suggestions}
-            onSearch={handleSearch}
-            isLoading={isSearching}
-          />
-          {otherField && (
-            <FormInput
-              name="otherAffiliation"
-              id="fieldInstitution"
-              label={t("institutionOther")}
-              onChange={(e) => setOtherAffiliation(e.target.value)}
-              placeholder={t("institutionOtherPlaceholder")}
-              data-testid="otherAffiliation"
-            />
+          {!isPendingSsoSignup && (
+            <>
+              <TypeAheadWithOther
+                className={styles.typeAhead}
+                label={t("institution")}
+                isRequiredVisualOnly={true}
+                fieldName="institution"
+                setOtherField={setOtherField}
+                helpText={t("institutionHelp")}
+                updateFormData={updateAffiliations}
+                value={affiliation ?? ""}
+                error={fieldErrors?.affiliationId || searchError || ""}
+                suggestions={suggestions}
+                onSearch={handleSearch}
+                isLoading={isSearching}
+                isDisabled={isPendingSsoSignup}
+              />
+              {otherField && (
+                <FormInput
+                  name="otherAffiliation"
+                  id="fieldInstitution"
+                  label={t("institutionOther")}
+                  onChange={(e) => setOtherAffiliation(e.target.value)}
+                  placeholder={t("institutionOtherPlaceholder")}
+                  data-testid="otherAffiliation"
+                />
+              )}
+
+              <FormInput
+                name="password"
+                type="password"
+                label={t("password")}
+                ariaLabel={t("password")}
+                passwordToggleLabel={t("password")}
+                isRequiredVisualOnly={true}
+                onChange={(e) => setPassword(e.target.value)}
+                isInvalid={!!fieldErrors.password}
+                errorMessage={fieldErrors.password}
+                data-testid="pass"
+              />
+
+              <PasswordRequirementsList password={password} />
+
+              <FormInput
+                name="confirmPassword"
+                type="password"
+                label={t("passwordConfirm")}
+                ariaLabel={t("passwordConfirm")}
+                passwordToggleLabel={t("passwordConfirm")}
+                isRequiredVisualOnly={true}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                isInvalid={!!fieldErrors.confirmPassword}
+                errorMessage={fieldErrors.confirmPassword}
+                data-testid="confirmpass"
+              />
+            </>
           )}
-
-          <FormInput
-            name="password"
-            type="password"
-            label={t("password")}
-            ariaLabel={t("password")}
-            passwordToggleLabel={t("password")}
-            isRequiredVisualOnly={true}
-            onChange={(e) => setPassword(e.target.value)}
-            isInvalid={!!fieldErrors.password}
-            errorMessage={fieldErrors.password}
-            data-testid="pass"
-          />
-
-          <PasswordRequirementsList password={password} />
-
-          <FormInput
-            name="confirmPassword"
-            type="password"
-            label={t("passwordConfirm")}
-            ariaLabel={t("passwordConfirm")}
-            passwordToggleLabel={t("passwordConfirm")}
-            isRequiredVisualOnly={true}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            isInvalid={!!fieldErrors.confirmPassword}
-            errorMessage={fieldErrors.confirmPassword}
-            data-testid="confirmpass"
-          />
 
           <Checkbox
             isSelected={termsAccepted}

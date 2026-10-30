@@ -1,5 +1,5 @@
 import { getRequestConfig } from 'next-intl/server';
-import deepmerge from 'deepmerge';
+import { mergeMessages } from '@/utils/mergeMessages';
 import { routing } from './routing';
 
 export default getRequestConfig(async ({ requestLocale }) => {
@@ -55,7 +55,7 @@ export default getRequestConfig(async ({ requestLocale }) => {
   if (locale !== fallbackLocale && ['en-US', 'pt-BR'].includes(locale)) {
     const localeMessages = await loadMessages(locale as AllowedLocale);  // Cast locale as AllowedLocale
     // Merge fallback messages with locale messages, prioritizing the locale messages
-    messages = deepmerge(fallbackMessages, localeMessages);
+    messages = mergeMessages(fallbackMessages, localeMessages);
   }
 
   return {
