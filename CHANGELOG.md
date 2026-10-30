@@ -197,6 +197,7 @@
 - Updated `RepoSelectorForAnswer` to wait to query `Re3byUrIsDocument` until we have `preferredReposURIs` because preferred repos don't display even though they eventually do to trigger the display of the "preferred repositories" checkbox [#118]
 
 ## Fixed
+- Fixed cards on the project and template lists (and the sub-header) losing their white background, rounded corners and shadow in production builds. In compressed output, Sass adds a byte-order mark to any file containing non-ASCII characters (such as `content: "•"`), and once the CSS modules are concatenated that mark invalidates each module's first rule. Set `sassOptions: { charset: false }` in `next.config.mjs` so Sass no longer adds it [#610]
 - Fixed `tinymce` vulnerability by updating to `v8.9.3` and I replaced the `tinymce` files in `public/tinymce`. I also removed `deepmerge` and replace with our custom `mergeMessages` since there was no fix for `deepmerge` whose version was 4 years old. I also updated `README.md` with info about `tinymce` and `AGENTS.md` [#604]
 - Updated `proxy.ts` so that `/admin/email-preferences` will not be exluded from `login` requirements. Pages within `email` directory are excluded from `login` though [#580]
 - Updated to used patched version of `Node` `v22.23.4`
