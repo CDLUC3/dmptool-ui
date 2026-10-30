@@ -1,4 +1,5 @@
-# Runs the Playwright E2E tests in CodeBuild after a deployment (see dmptool-infrastructure templates/codebuild/e2e.yaml).
+# Run by the E2E CodePipeline (see dmptool-infrastructure templates/codepipeline/e2e.yaml), which starts after the nextJS, 
+# apollo, authShib or narrative generator pipeline deploys successfully
 # Runs on mcr.microsoft.com/playwright, so keep that image tag aligned with @playwright/test in package.json.
 # The CodeBuild project provides BASE_URL, GRAPHQL_URL, CI, E2E_REPORT_BUCKET, the auth cookie names and the
 # test account credentials.
