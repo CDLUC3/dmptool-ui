@@ -6,11 +6,8 @@ import { useParams } from 'next/navigation';
 import { useRouter } from '@/i18n/routing';
 import { useMutation, useQuery } from '@apollo/client/react';
 import {
-  Breadcrumb,
-  Breadcrumbs,
   Button,
   Form,
-  Link,
   ListBoxItem,
 } from 'react-aria-components';
 
@@ -25,8 +22,10 @@ import {
 import PageHeader from '@/components/PageHeader';
 import CreateProjectFlowLayout, {
   FlowActions,
+  FlowBreadcrumbs,
   flowPath,
-  useCreateProjectFlow,
+  nextPath,
+  useFlowState,
 } from '@/components/CreateProjectFlow';
 import { FormInput, FormSelect, TransitionButton } from '@/components/Form';
 import ErrorMessages from '@/components/ErrorMessages';
@@ -50,7 +49,7 @@ const ProjectsCreateProjectFundingDetails = () => {
   const params = useParams();
   const projectId = String(params.projectId);
   const projectFundingId = Number(params.projectFundingId);
-  const { flow } = useCreateProjectFlow();
+  const flow = useFlowState();
   const toastState = useToast();
   const errorRef = useRef<HTMLDivElement | null>(null);
 
@@ -135,7 +134,7 @@ const ProjectsCreateProjectFundingDetails = () => {
 
       toastState.add(Flow('fundingDetails.messages.saved'), { type: 'success' });
       startTransition(() => {
-        router.push(flowPath('projectDetails', flow, projectId));
+        router.push(nextPath({ from: 'fundingDetails' }, flow, projectId));
       });
     } catch (err) {
       handleApolloError(err, 'ProjectsCreateProjectFundingDetails.handleSubmit');
@@ -153,12 +152,7 @@ const ProjectsCreateProjectFundingDetails = () => {
         title={Flow('fundingDetails.title')}
         description={Flow('fundingDetails.description')}
         showBackButton={false}
-        breadcrumbs={
-          <Breadcrumbs>
-            <Breadcrumb><Link href="/">{Global('breadcrumbs.home')}</Link></Breadcrumb>
-            <Breadcrumb><Link href="/projects">{Global('breadcrumbs.projects')}</Link></Breadcrumb>
-          </Breadcrumbs>
-        }
+        breadcrumbs={<FlowBreadcrumbs current={Flow('fundingDetails.title')} />}
         className="page-project-create-project-funding"
       />
       <CreateProjectFlowLayout screen="fundingDetails" flow={flow}>

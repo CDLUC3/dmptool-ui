@@ -29,7 +29,9 @@ jest.mock('@apollo/client/react', () => ({
 jest.mock('next-intl', () => ({
   ...jest.requireActual('next-intl'),
   useTranslations: jest.fn(),
-  useLocale: jest.fn(() => 'en-US'),
+  useFormatter: jest.fn(() => ({
+    list: (items: Iterable<string>) => new Intl.ListFormat('en-US', { type: 'conjunction' }).format(items),
+  })),
 }));
 
 type QueryResult = ReturnType<typeof useQuery>;

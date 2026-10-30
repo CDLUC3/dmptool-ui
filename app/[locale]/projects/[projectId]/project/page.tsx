@@ -4,7 +4,6 @@ import {
   useEffect,
   useRef,
   useState,
-  type ReactNode,
   type TransitionStartFunction
 } from 'react';
 import { useMutation, useQuery } from '@apollo/client/react';
@@ -34,7 +33,6 @@ import {
 
 //Components
 import PageHeader from "@/components/PageHeader";
-import { ContentContainer, LayoutContainer } from "@/components/Container";
 import {
   FormInput,
   FormTextArea,
@@ -46,10 +44,10 @@ import {
 import ErrorMessages from '@/components/ErrorMessages';
 import ResearchDomainCascadingDropdown
   from '@/components/ResearchDomainCascadingDropdown';
-import CreateProjectFlowLayout, {
+import {
   FlowActions,
-  flowPath,
-  screenAfterProjectDetails,
+  FlowAwareLayout,
+  nextPath,
   useCreateProjectFlow,
 } from '@/components/CreateProjectFlow';
 
@@ -272,7 +270,7 @@ const ProjectsProjectDetail = () => {
           });
         } else if (inFlow) {
           startTransition(() => {
-            router.push(flowPath(screenAfterProjectDetails(flow), flow, projectId));
+            router.push(nextPath({ from: 'projectDetails' }, flow, projectId));
           });
         } else {
           startTransition(() => {
@@ -326,10 +324,6 @@ const ProjectsProjectDetail = () => {
     return <div>{Global('messaging.loading')}...</div>;
   }
 
-  const wrapLayout = (children: ReactNode) => inFlow
-    ? <CreateProjectFlowLayout screen="projectDetails" flow={flow}>{children}</CreateProjectFlowLayout>
-    : <LayoutContainer><ContentContainer>{children}</ContentContainer></LayoutContainer>;
-
   return (
     <>
       <div ref={topRef} />
@@ -350,7 +344,7 @@ const ProjectsProjectDetail = () => {
         actions={null}
         className="page-project-list"
       />
-      {wrapLayout(<>
+      <FlowAwareLayout screen="projectDetails">
           <ErrorMessages errors={errors} ref={errorRef} />
           <Form onSubmit={(e) => e.preventDefault()} className="project-detail-form">
             <FormInput
@@ -488,7 +482,7 @@ const ProjectsProjectDetail = () => {
               </div>
             </div>
           )}
-      </>)}
+      </FlowAwareLayout>
     </>
   )
     ;

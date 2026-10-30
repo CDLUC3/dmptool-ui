@@ -167,6 +167,12 @@ describe('ProjectsCreateProjectProjectSearch', () => {
     expect(screen.getByRole('textbox', { name: 'form.projectName' })).toHaveValue('');
   });
 
+  it('should end the breadcrumbs with the current screen', () => {
+    render(<ProjectsCreateProjectProjectSearch />);
+    const breadcrumbs = screen.getByRole('link', { name: 'breadcrumbs.projects' }).closest('ol');
+    expect(breadcrumbs?.lastElementChild).toHaveTextContent(/^title$/);
+  });
+
   it('should render the search form fields', () => {
     render(<ProjectsCreateProjectProjectSearch />);
     expect(screen.getByRole('textbox', { name: 'form.projectId' })).toBeInTheDocument();

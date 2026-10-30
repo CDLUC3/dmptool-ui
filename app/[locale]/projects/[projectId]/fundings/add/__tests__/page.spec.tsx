@@ -422,6 +422,35 @@ describe('AddProjectFunderManually', () => {
     });
   });
 
+  it('should keep the progress rail and Back button inside the create flow', async () => {
+    (useSearchParams as jest.Mock).mockReturnValue(new URLSearchParams('intent=plan'));
+
+    await act(async () => {
+      render(
+        <MockedProvider mocks={successMocks}>
+          <AddProjectFunderManually />
+        </MockedProvider>
+      );
+    });
+
+    expect(screen.getByTestId('create-flow-stage-addFunder')).toHaveAttribute('aria-current', 'step');
+    expect(screen.getByTestId('create-flow-back')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /buttons.saveChanges/i })).toBeInTheDocument();
+  });
+
+  it('should not show the progress rail outside the create flow', async () => {
+    await act(async () => {
+      render(
+        <MockedProvider mocks={successMocks}>
+          <AddProjectFunderManually />
+        </MockedProvider>
+      );
+    });
+
+    expect(screen.queryByTestId('create-flow-stage-addFunder')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('create-flow-back')).not.toBeInTheDocument();
+  });
+
   it('should display error when addAffiliation returns an error', async () => {
     const mockPush = jest.fn();
     (useRouter as jest.Mock).mockReturnValue({ push: mockPush });

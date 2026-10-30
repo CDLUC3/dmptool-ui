@@ -1,16 +1,18 @@
 'use client';
 
 import React, { useMemo } from 'react';
-import { useLocale, useTranslations } from 'next-intl';
+import { useFormatter, useTranslations } from 'next-intl';
 import { useParams, useSearchParams } from 'next/navigation';
 import { useQuery } from '@apollo/client/react';
-import { Breadcrumb, Breadcrumbs, Link } from 'react-aria-components';
+import { Link } from 'react-aria-components';
 
 import { ProjectDocument } from '@/generated/graphql';
 import PageHeader from '@/components/PageHeader';
 import CreateProjectFlowLayout, {
+  DEFAULT_FLOW,
+  FlowBreadcrumbs,
   flowPath,
-  useCreateProjectFlow,
+  useFlowState,
 } from '@/components/CreateProjectFlow';
 import TransitionLink from '@/components/TransitionLink';
 import ErrorMessages from '@/components/ErrorMessages';
@@ -23,10 +25,10 @@ const strong = (chunks: React.ReactNode) => <strong>{chunks}</strong>;
 const ProjectsCreateProjectSetupComplete = () => {
   const params = useParams();
   const searchParams = useSearchParams();
-  const locale = useLocale();
+  const format = useFormatter();
   const projectId = String(params.projectId);
   const planId = searchParams?.get('planId');
-  const { flow } = useCreateProjectFlow();
+  const flow = useFlowState();
   const errorRef = React.useRef<HTMLDivElement | null>(null);
 
   const Global = useTranslations('Global');
@@ -43,8 +45,8 @@ const ProjectsCreateProjectSetupComplete = () => {
     const names = (project?.fundings ?? [])
       .map(funding => funding?.affiliation?.displayName || funding?.affiliation?.name)
       .filter((name): name is string => !!name);
-    return new Intl.ListFormat(locale, { type: 'conjunction' }).format([...new Set(names)]);
-  }, [project?.fundings, locale]);
+    return format.list(new Set(names));
+  }, [project?.fundings, format]);
 
   const planTitle = planId
     ? project?.plans?.find(plan => String(plan?.id) === planId)?.title ?? ''
@@ -68,13 +70,7 @@ const ProjectsCreateProjectSetupComplete = () => {
         title={heading}
         description=""
         showBackButton={false}
-        breadcrumbs={
-          <Breadcrumbs>
-            <Breadcrumb><Link href="/">{Global('breadcrumbs.home')}</Link></Breadcrumb>
-            <Breadcrumb><Link href="/projects">{Global('breadcrumbs.projects')}</Link></Breadcrumb>
-            <Breadcrumb>{heading}</Breadcrumb>
-          </Breadcrumbs>
-        }
+        breadcrumbs={<FlowBreadcrumbs current={heading} />}
         className="page-project-create-complete"
       />
       <CreateProjectFlowLayout screen="complete" flow={flow}>
@@ -105,7 +101,7 @@ const ProjectsCreateProjectSetupComplete = () => {
                 </TransitionLink>
               ) : (
                 <TransitionLink
-                  href={flowPath('planStart', { intent: 'plan', fromExisting: false }, projectId)}
+                  href={flowPath('planStart', DEFAULT_FLOW, projectId)}
                   className="button-link button--primary"
                 >
                   {Flow('complete.createFirstPlan')}

@@ -1,4 +1,5 @@
 ## Added
+- Added a guided create-project / create-DMP flow with a "Setup progress" rail: `/projects/create` (new or existing project, then a plan) and `/projects/create/project?intent=project` (project only). Flow screens live under `/projects/create…` and `/projects/:projectId/create/…`; the old `create-project`, `funding-search` and `project-funding` routes are removed
 - Added display logic to the `PlanAuthoring` one-pager: questions hidden by their display logic are not rendered, and are left out of the plan progress, section picker counts and section navigation. Hidden questions keep their answers [#366]
 - Added `visibleQuestions` to the `PlanAuthoring` model that filters out the `isHidden` question [#366]
 - Added the `PlanAuthoring` one-pager to the plan page (`/projects/:projectId/dmp/:dmpId`), wired to the GraphQL API through a new `planAuthoring` query: answers save through `addAnswer`/`updateAnswer`, comments and feedback comments show as one thread, and guidance organisations can be added and removed. The old section and question routes redirect to the one-pager, and the demo data source is replaced by mocks and scenarios [#430]

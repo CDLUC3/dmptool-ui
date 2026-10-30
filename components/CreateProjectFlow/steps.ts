@@ -18,6 +18,7 @@ export type FlowScreen =
   | 'fundingStatus'
   | 'projectSearch'
   | 'fundingDetails'
+  | 'fundingAdd'
   | 'projectDetails'
   | 'planStart'
   | 'planCreate'
@@ -39,6 +40,7 @@ export const FLOW_SCREENS: Record<FlowScreen, ScreenConfig> = {
   fundingStatus: { stage: 'addFunder', route: 'projects.create.fundingStatus', allowBack: true },
   projectSearch: { stage: 'addFunder', route: 'projects.create.projectSearch', allowBack: true },
   fundingDetails: { stage: 'addFunder', route: 'projects.create.fundingDetails', allowBack: true },
+  fundingAdd: { stage: 'addFunder', route: 'projects.fundings.add', allowBack: true },
   projectDetails: { stage: 'projectDetails', route: 'projects.project.info', allowBack: true },
   planStart: { stage: 'setupComplete', route: 'projects.dmp.start', allowBack: true },
   planCreate: { stage: 'setupComplete', route: 'projects.dmp.create', allowBack: true },
@@ -56,6 +58,12 @@ export function flowQuery(flow: FlowState): Record<string, string | undefined> {
 }
 
 export type FundingFlowScreen = 'fundingStatus' | 'projectSearch' | 'fundingDetails';
+
+const FUNDING_FLOW_SCREENS: readonly FlowScreen[] = ['fundingStatus', 'projectSearch', 'fundingDetails'];
+
+export function isFundingFlowScreen(screen: FlowScreen): screen is FundingFlowScreen {
+  return FUNDING_FLOW_SCREENS.includes(screen);
+}
 
 type FlowQuery = Record<string, string | number | boolean | undefined>;
 
@@ -93,13 +101,57 @@ export function fundingChoiceFromStatus(status?: ProjectFundingStatus | null): F
   return status === ProjectFundingStatus.Granted ? 'funded' : 'planned';
 }
 
-export function screenAfterFundingStatus(
-  choice: FundingChoice,
-  funderHasApi: boolean
-): 'projectSearch' | 'projectDetails' {
-  return choice !== 'planned' && funderHasApi ? 'projectSearch' : 'projectDetails';
+// Each step that can lead to a funding screen carries the funding id that screen needs in its path.
+export type FlowStep =
+  | { from: 'startPlan'; project: 'existing' | 'new' }
+  | { from: 'createProject' }
+  | { from: 'funder'; funder: 'selected'; projectFundingId: string | number }
+  | { from: 'funder'; funder: 'none' | 'manual' }
+  | { from: 'fundingStatus'; choice: FundingChoice; funderHasApi: boolean; projectFundingId: string | number }
+  | { from: 'projectSearch'; project: 'imported' }
+  | { from: 'projectSearch'; project: 'manual'; projectFundingId: string | number }
+  | { from: 'fundingDetails' | 'fundingAdd' | 'projectDetails' }
+  | { from: 'planStart'; plan: 'create' | 'upload' }
+  | { from: 'planCreate' | 'planUpload' };
+
+export function nextScreen(step: FlowStep, flow: FlowState): FlowScreen {
+  switch (step.from) {
+    case 'startPlan':
+      return step.project === 'existing' ? 'planStart' : 'createProject';
+    case 'createProject':
+      return 'funder';
+    case 'funder':
+      if (step.funder === 'selected') return 'fundingStatus';
+      return step.funder === 'manual' ? 'fundingAdd' : 'projectDetails';
+    case 'fundingStatus':
+      return step.choice !== 'planned' && step.funderHasApi ? 'projectSearch' : 'projectDetails';
+    case 'projectSearch':
+      return step.project === 'manual' ? 'fundingDetails' : 'projectDetails';
+    case 'fundingDetails':
+    case 'fundingAdd':
+      return 'projectDetails';
+    case 'projectDetails':
+      return flow.intent === 'project' ? 'complete' : 'planStart';
+    case 'planStart':
+      return step.plan === 'upload' ? 'planUpload' : 'planCreate';
+    case 'planCreate':
+    case 'planUpload':
+      return 'complete';
+  }
 }
 
-export function screenAfterProjectDetails(flow: FlowState): 'complete' | 'planStart' {
-  return flow.intent === 'project' ? 'complete' : 'planStart';
+export function nextPath(
+  step: FlowStep,
+  flow: FlowState,
+  projectId?: string | number,
+  extraQuery: FlowQuery = {}
+): string {
+  const screen = nextScreen(step, flow);
+  if (!isFundingFlowScreen(screen)) return flowPath(screen, flow, projectId, extraQuery);
+
+  const projectFundingId = 'projectFundingId' in step ? step.projectFundingId : undefined;
+  if (projectId === undefined || projectFundingId === undefined) {
+    throw new Error(`The ${screen} screen needs a projectId and projectFundingId`);
+  }
+  return fundingFlowPath(screen, flow, projectId, projectFundingId, extraQuery);
 }

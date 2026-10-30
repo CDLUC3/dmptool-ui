@@ -5,13 +5,9 @@ import { useTranslations } from 'next-intl';
 import { useParams } from 'next/navigation';
 import { useRouter } from '@/i18n/routing';
 import { useMutation, useLazyQuery } from '@apollo/client/react';
-import { routePath } from '@/utils/routes';
 import {
-  Breadcrumb,
-  Breadcrumbs,
   Button,
   Checkbox,
-  Link,
   Radio,
 } from "react-aria-components";
 
@@ -29,9 +25,9 @@ import {
 import PageHeader from "@/components/PageHeader";
 import CreateProjectFlowLayout, {
   FlowActions,
-  flowPath,
-  fundingFlowPath,
-  useCreateProjectFlow,
+  FlowBreadcrumbs,
+  nextPath,
+  useFlowState,
 } from '@/components/CreateProjectFlow';
 import FunderSearch from '@/components/FunderSearch';
 import ErrorMessages from "@/components/ErrorMessages";
@@ -52,7 +48,7 @@ const CreateProjectSearchFunder = () => {
   const Flow = useTranslations('CreateProjectFlow');
   const router = useRouter();
   const params = useParams();
-  const { flow } = useCreateProjectFlow();
+  const flow = useFlowState();
   const [projectFundingsQuery] = useLazyQuery(ProjectFundingsApiDocument, { fetchPolicy: 'network-only' });
 
   const [hasSearched, setHasSearched] = useState<boolean>(false);
@@ -123,7 +119,11 @@ const CreateProjectSearchFunder = () => {
       const existingFundingId = existingFunding?.id;
       if (existingFundingId) {
         startTransition(() => {
-          router.push(fundingFlowPath('fundingStatus', flow, projectId, existingFundingId));
+          router.push(nextPath(
+            { from: 'funder', funder: 'selected', projectFundingId: existingFundingId },
+            flow,
+            projectId
+          ));
         });
         return;
       }
@@ -154,7 +154,12 @@ const CreateProjectSearchFunder = () => {
       }
 
       startTransition(() => {
-        router.push(fundingFlowPath('fundingStatus', flow, projectId, newFundingId, { newFunding: true }));
+        router.push(nextPath(
+          { from: 'funder', funder: 'selected', projectFundingId: newFundingId },
+          flow,
+          projectId,
+          { newFunding: true }
+        ));
       });
     } catch (err) {
       handleApolloError(err, 'createProjectSearchFunder.handleSelectFunder');
@@ -169,7 +174,7 @@ const CreateProjectSearchFunder = () => {
     if (noFunder) {
       const projectId = params.projectId as string;
       startTransition(() => {
-        router.push(flowPath('projectDetails', flow, projectId));
+        router.push(nextPath({ from: 'funder', funder: 'none' }, flow, projectId));
       });
       return;
     }
@@ -183,7 +188,7 @@ const CreateProjectSearchFunder = () => {
   ): Promise<void> {
     const projectId = params.projectId as string;
     startTransition(() => {
-      router.push(routePath('projects.fundings.add', { projectId }, { intent: flow.intent }));
+      router.push(nextPath({ from: 'funder', funder: 'manual' }, flow, projectId));
     });
   }
 
@@ -248,12 +253,7 @@ const CreateProjectSearchFunder = () => {
         title={Flow('funder.title')}
         description={Flow('funder.description')}
         showBackButton={false}
-        breadcrumbs={
-          <Breadcrumbs>
-            <Breadcrumb><Link href="/">{Global('breadcrumbs.home')}</Link></Breadcrumb>
-            <Breadcrumb><Link href="/projects">{Global('breadcrumbs.projects')}</Link></Breadcrumb>
-          </Breadcrumbs>
-        }
+        breadcrumbs={<FlowBreadcrumbs current={Flow('funder.title')} />}
         className="page-project-create-project-funding"
       />
 

@@ -5,11 +5,8 @@ import { useTranslations } from 'next-intl';
 import { useParams, useSearchParams } from 'next/navigation';
 import { useRouter } from '@/i18n/routing';
 import {
-  Breadcrumb,
-  Breadcrumbs,
   Button,
   Form,
-  Link,
   Radio,
   Text
 } from "react-aria-components";
@@ -27,12 +24,12 @@ import CreateProjectFlowLayout, {
   FUNDING_CHOICES,
   FUNDING_CHOICE_STATUS,
   FlowActions,
+  FlowBreadcrumbs,
   FundingChoice,
   flowPath,
   fundingChoiceFromStatus,
-  fundingFlowPath,
-  screenAfterFundingStatus,
-  useCreateProjectFlow,
+  nextPath,
+  useFlowState,
 } from '@/components/CreateProjectFlow';
 import { RadioGroupComponent, TransitionButton } from '@/components/Form';
 import ErrorMessages from '@/components/ErrorMessages';
@@ -49,7 +46,7 @@ const ProjectsCreateProjectFunding = () => {
   const projectId = String(params.projectId);
   const projectFundingId = String(params.projectFundingId);
   const isNewFunding = searchParams?.get('newFunding') === 'true';
-  const { flow } = useCreateProjectFlow();
+  const flow = useFlowState();
   const errorRef = useRef<HTMLDivElement | null>(null);
 
   const Global = useTranslations('Global');
@@ -111,11 +108,17 @@ const ProjectsCreateProjectFunding = () => {
         return;
       }
 
-      const next = screenAfterFundingStatus(choice, !!funding.affiliation?.apiTarget);
       startTransition(() => {
-        router.push(next === 'projectSearch'
-          ? fundingFlowPath(next, flow, projectId, fundingId)
-          : flowPath(next, flow, projectId));
+        router.push(nextPath(
+          {
+            from: 'fundingStatus',
+            choice,
+            funderHasApi: !!funding.affiliation?.apiTarget,
+            projectFundingId: fundingId,
+          },
+          flow,
+          projectId
+        ));
       });
     } catch (err) {
       handleApolloError(err, 'ProjectsCreateProjectFunding.handleSubmit');
@@ -164,12 +167,7 @@ const ProjectsCreateProjectFunding = () => {
           ? Flow('fundingStatus.description', { funder: funderName })
           : Flow('fundingStatus.descriptionNoFunder')}
         showBackButton={false}
-        breadcrumbs={
-          <Breadcrumbs>
-            <Breadcrumb><Link href="/">{Global('breadcrumbs.home')}</Link></Breadcrumb>
-            <Breadcrumb><Link href="/projects">{Global('breadcrumbs.projects')}</Link></Breadcrumb>
-          </Breadcrumbs>
-        }
+        breadcrumbs={<FlowBreadcrumbs current={Flow('fundingStatus.title')} />}
         className="page-project-create-project-funding"
       />
       <CreateProjectFlowLayout screen="fundingStatus" flow={flow}>

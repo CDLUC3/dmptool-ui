@@ -25,9 +25,10 @@ import {
   LayoutWithPanel,
   SidebarPanel
 } from "@/components/Container";
-import CreateProjectFlowLayout, {
+import {
   FlowActions,
-  flowPath,
+  FlowAwareLayout,
+  nextPath,
   useCreateProjectFlow,
 } from '@/components/CreateProjectFlow';
 import ErrorMessages from '@/components/ErrorMessages';
@@ -105,22 +106,13 @@ const PlanCreateUpload = () => {
       }
 
       router.push(inFlow
-        ? flowPath('complete', flow, projectId, { planId: plan.id })
+        ? nextPath({ from: 'planUpload' }, flow, projectId, { planId: plan.id })
         : routePath('projects.dmp.show', { projectId, dmpId: plan.id }));
     } catch (err) {
       handleApolloError(err, 'PlanCreateUpload.handleSubmit');
       setServerErrors([Flow('upload.notAvailable')]);
     }
   };
-
-  const wrapLayout = (content: ReactNode, sidebar: ReactNode) => inFlow
-    ? <CreateProjectFlowLayout screen="planUpload" flow={flow}>{content}</CreateProjectFlowLayout>
-    : (
-      <LayoutWithPanel>
-        <ContentContainer>{content}</ContentContainer>
-        <SidebarPanel>{sidebar}</SidebarPanel>
-      </LayoutWithPanel>
-    );
 
   return (
     <>
@@ -140,7 +132,7 @@ const PlanCreateUpload = () => {
         }
         className="page-project-create-project-funding"
       />
-      {wrapLayout(<>
+      <FlowAwareLayout screen="planUpload" fallback={withBestPracticeSidebar}>
           <ErrorMessages errors={serverErrors} ref={errorRef} />
           <Form onSubmit={handleSubmit}
             data-testid="upload-form"
@@ -191,41 +183,48 @@ const PlanCreateUpload = () => {
               </Button>
             </FlowActions>
           </Form>
-        </>, <>
-          <h2>Best Practice by DMP Tool</h2>
-          <p>
-            <strong>Recommend: online plan creator</strong>
-          </p>
-          <p>
-            To ensure your submission meets all necessary standards and
-            guidelines, we strongly advise using our online plan creator instead
-            of uploading PDF or DOC files. Here’s why:
-          </p>
-          <ul>
-            <li>
-              <strong>Funder and Organization Requirements:</strong> The online
-              tool is tailored to meet specific requirements set by the funder
-              and our organization, ensuring your plan aligns perfectly with
-              their expectations.
-            </li>
-            <li>
-              <strong>Guidance:</strong> The online creator provides
-              step-by-step guidance on how to effectively answer questions,
-              which is not available in standard document formats.
-            </li>
-            <li>
-              <strong>Portability:</strong> Plans created online are easier to
-              share and access across different platforms, making them more
-              versatile than documents in PDF or DOC formats.
-            </li>
-          </ul>
-          <p>
-            For a smooth and successful submission please adhere to using our
-            designated online tool. Thank you for your cooperation!
-          </p>
-        </>)}
+      </FlowAwareLayout>
     </>
   );
 };
+
+const withBestPracticeSidebar = (content: ReactNode) => (
+  <LayoutWithPanel>
+    <ContentContainer>{content}</ContentContainer>
+    <SidebarPanel>
+      <h2>Best Practice by DMP Tool</h2>
+      <p>
+        <strong>Recommend: online plan creator</strong>
+      </p>
+      <p>
+        To ensure your submission meets all necessary standards and
+        guidelines, we strongly advise using our online plan creator instead
+        of uploading PDF or DOC files. Here’s why:
+      </p>
+      <ul>
+        <li>
+          <strong>Funder and Organization Requirements:</strong> The online
+          tool is tailored to meet specific requirements set by the funder
+          and our organization, ensuring your plan aligns perfectly with
+          their expectations.
+        </li>
+        <li>
+          <strong>Guidance:</strong> The online creator provides
+          step-by-step guidance on how to effectively answer questions,
+          which is not available in standard document formats.
+        </li>
+        <li>
+          <strong>Portability:</strong> Plans created online are easier to
+          share and access across different platforms, making them more
+          versatile than documents in PDF or DOC formats.
+        </li>
+      </ul>
+      <p>
+        For a smooth and successful submission please adhere to using our
+        designated online tool. Thank you for your cooperation!
+      </p>
+    </SidebarPanel>
+  </LayoutWithPanel>
+);
 
 export default PlanCreateUpload;

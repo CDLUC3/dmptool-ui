@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, type ReactNode, type TransitionStartFunction } from 'react';
+import { useState, type TransitionStartFunction } from 'react';
 import { useTranslations } from 'next-intl';
 import { useParams } from 'next/navigation';
 import { useRouter } from '@/i18n/routing';
@@ -15,14 +15,14 @@ import {
 
 //Components
 import PageHeader from "@/components/PageHeader";
-import { ContentContainer, LayoutContainer } from "@/components/Container";
 import {
   RadioGroupComponent,
   TransitionButton
 } from "@/components/Form";
-import CreateProjectFlowLayout, {
+import {
   FlowActions,
-  flowPath,
+  FlowAwareLayout,
+  nextPath,
   useCreateProjectFlow,
 } from '@/components/CreateProjectFlow';
 
@@ -36,10 +36,10 @@ const ProjectsProjectPlanNew = () => {
   const { inFlow, flow } = useCreateProjectFlow();
 
   const REDIRECT_TO_DMP_CREATE = inFlow
-    ? flowPath('planCreate', flow, projectId)
+    ? nextPath({ from: 'planStart', plan: 'create' }, flow, projectId)
     : routePath('projects.dmp.create', { projectId });
   const REDIRECT_TO_DMP_UPLOAD = inFlow
-    ? flowPath('planUpload', flow, projectId)
+    ? nextPath({ from: 'planStart', plan: 'upload' }, flow, projectId)
     : routePath('projects.dmp.upload', { projectId });
 
   // Localization keys
@@ -80,10 +80,6 @@ const ProjectsProjectPlanNew = () => {
     });
   };
 
-  const wrapLayout = (children: ReactNode) => inFlow
-    ? <CreateProjectFlowLayout screen="planStart" flow={flow}>{children}</CreateProjectFlowLayout>
-    : <LayoutContainer><ContentContainer>{children}</ContentContainer></LayoutContainer>;
-
   return (
     <>
       <PageHeader
@@ -103,7 +99,7 @@ const ProjectsProjectPlanNew = () => {
         actions={null}
         className="page-project-list"
       />
-      {wrapLayout(
+      <FlowAwareLayout screen="planStart">
         <Form onSubmit={(e) => e.preventDefault()} className="project-detail-form">
           {inFlow && <p data-testid="plan-start-intro">{Flow('planStart.description')}</p>}
           <div className="project-type-section">
@@ -137,7 +133,7 @@ const ProjectsProjectPlanNew = () => {
             </TransitionButton>
           </FlowActions>
         </Form>
-      )}
+      </FlowAwareLayout>
     </>
   );
 };

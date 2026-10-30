@@ -25,11 +25,15 @@ import {
 
 // Components
 import PageHeader from "@/components/PageHeader";
-import { ContentContainer, LayoutContainer } from "@/components/Container";
 import { FormInput, FormSelect } from "@/components/Form";
 import ErrorMessages from '@/components/ErrorMessages';
 import { TypeAheadWithOther, useAffiliationSearch } from '@/components/Form/TypeAheadWithOther';
-import { flowPath, useCreateProjectFlow } from '@/components/CreateProjectFlow';
+import {
+  FlowActions,
+  FlowAwareLayout,
+  nextPath,
+  useCreateProjectFlow,
+} from '@/components/CreateProjectFlow';
 
 // Utils and other
 import { routePath } from '@/utils/routes';
@@ -281,7 +285,7 @@ const AddProjectFunderManually = () => {
       // Success
       showSuccessToast();
       router.push(inFlow
-        ? flowPath('projectDetails', flow, projectId)
+        ? nextPath({ from: 'fundingAdd' }, flow, projectId)
         : routePath('projects.fundings.index', { projectId }));
 
     } catch (err) {
@@ -315,8 +319,7 @@ const AddProjectFunderManually = () => {
         }
         className="page-funding-edit"
       />
-      <LayoutContainer>
-        <ContentContainer>
+      <FlowAwareLayout screen="fundingAdd">
           <ErrorMessages errors={errors} ref={errorRef} />
           <Form onSubmit={handleFormSubmit}>
             <TypeAheadWithOther
@@ -393,10 +396,11 @@ const AddProjectFunderManually = () => {
               errorMessage={fieldErrors.funderOpportunityNumber}
             />
 
-            <Button type="submit" className="submit-button">{global('buttons.saveChanges')}</Button>
+            <FlowActions>
+              <Button type="submit" className="submit-button">{global('buttons.saveChanges')}</Button>
+            </FlowActions>
           </Form>
-        </ContentContainer>
-      </LayoutContainer>
+      </FlowAwareLayout>
     </>
   );
 };

@@ -4,13 +4,15 @@ import React, { createContext, useContext } from 'react';
 import { useTranslations } from 'next-intl';
 import { useSearchParams } from 'next/navigation';
 import { useRouter } from '@/i18n/routing';
-import { Button } from 'react-aria-components';
+import { Breadcrumb, Breadcrumbs, Button, Link } from 'react-aria-components';
 
 import {
   ContentContainer,
+  LayoutContainer,
   LayoutWithPanel,
   SidebarPanel,
 } from '@/components/Container';
+import { routePath } from '@/utils/routes';
 
 import {
   DEFAULT_FLOW,
@@ -24,15 +26,23 @@ import styles from './CreateProjectFlow.module.scss';
 
 export * from './steps';
 
-export function useCreateProjectFlow() {
+export type CreateProjectFlow =
+  | { inFlow: true; flow: FlowState }
+  | { inFlow: false; flow: null };
+
+export function useCreateProjectFlow(): CreateProjectFlow {
   const searchParams = useSearchParams();
   const intent = searchParams?.get('intent');
-  const inFlow = intent === 'plan' || intent === 'project';
-  const flow: FlowState = {
-    intent: intent === 'project' ? 'project' : DEFAULT_FLOW.intent,
-    fromExisting: searchParams?.get('from') === 'existing',
+  if (intent !== 'plan' && intent !== 'project') return { inFlow: false, flow: null };
+  return {
+    inFlow: true,
+    flow: { intent, fromExisting: searchParams?.get('from') === 'existing' },
   };
-  return { inFlow, flow };
+}
+
+// For screens that only exist inside the flow, where a missing intent means the plan flow.
+export function useFlowState(): FlowState {
+  return useCreateProjectFlow().flow ?? DEFAULT_FLOW;
 }
 
 type StageState = 'done' | 'current' | 'upcoming' | 'skipped';
@@ -71,6 +81,17 @@ export function FlowActions({ children }: { children?: React.ReactNode }) {
   );
 }
 
+export function FlowBreadcrumbs({ current }: { current: string }) {
+  const Global = useTranslations('Global');
+  return (
+    <Breadcrumbs>
+      <Breadcrumb><Link href={routePath('app.home')}>{Global('breadcrumbs.home')}</Link></Breadcrumb>
+      <Breadcrumb><Link href={routePath('projects.index')}>{Global('breadcrumbs.projects')}</Link></Breadcrumb>
+      <Breadcrumb>{current}</Breadcrumb>
+    </Breadcrumbs>
+  );
+}
+
 const CreateProjectFlowLayout = ({ screen, flow, children }: CreateProjectFlowLayoutProps) => {
   const t = useTranslations('CreateProjectFlow');
   const router = useRouter();
@@ -95,7 +116,7 @@ const CreateProjectFlowLayout = ({ screen, flow, children }: CreateProjectFlowLa
       </ContentContainer>
 
       <SidebarPanel className={styles.rail}>
-        <nav aria-labelledby="setup-progress-heading" className={styles.railPanel}>
+        <section aria-labelledby="setup-progress-heading" className={styles.railPanel}>
           <h2 id="setup-progress-heading" className={styles.railTitle}>{t('rail.title')}</h2>
           <ol className={styles.checklist}>
             {RAIL_STAGES.map((stage, index) => {
@@ -118,10 +139,28 @@ const CreateProjectFlowLayout = ({ screen, flow, children }: CreateProjectFlowLa
               );
             })}
           </ol>
-        </nav>
+        </section>
       </SidebarPanel>
     </LayoutWithPanel>
   );
 };
+
+const defaultFallback = (children: React.ReactNode) => (
+  <LayoutContainer><ContentContainer>{children}</ContentContainer></LayoutContainer>
+);
+
+interface FlowAwareLayoutProps {
+  screen: FlowScreen;
+  children: React.ReactNode;
+  fallback?: (children: React.ReactNode) => React.ReactNode;
+}
+
+// For pages that are also used outside the flow: the rail only shows when an intent is in the URL.
+export function FlowAwareLayout({ screen, children, fallback = defaultFallback }: FlowAwareLayoutProps) {
+  const { inFlow, flow } = useCreateProjectFlow();
+  return inFlow
+    ? <CreateProjectFlowLayout screen={screen} flow={flow}>{children}</CreateProjectFlowLayout>
+    : <>{fallback(children)}</>;
+}
 
 export default CreateProjectFlowLayout;

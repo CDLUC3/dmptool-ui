@@ -5,13 +5,10 @@ import { useTranslations } from 'next-intl';
 import { useRouter } from '@/i18n/routing';
 import { useQuery } from '@apollo/client/react';
 import {
-  Breadcrumb,
-  Breadcrumbs,
   Button,
   Form,
   Input,
   Label,
-  Link,
   Radio,
   SearchField,
   Text
@@ -19,11 +16,15 @@ import {
 
 import { MyProjectsDocument } from '@/generated/graphql';
 import PageHeader from "@/components/PageHeader";
-import CreateProjectFlowLayout, { FlowActions, flowPath } from '@/components/CreateProjectFlow';
+import CreateProjectFlowLayout, {
+  DEFAULT_FLOW,
+  FlowActions,
+  FlowBreadcrumbs,
+  nextPath,
+} from '@/components/CreateProjectFlow';
 import { RadioGroupComponent, TransitionButton } from '@/components/Form';
 import ErrorMessages from '@/components/ErrorMessages';
 import Loading from '@/components/Loading';
-import { routePath } from '@/utils/routes';
 import styles from './projectsStartPlan.module.scss';
 
 type Gate = 'existing' | 'new';
@@ -96,13 +97,13 @@ const ProjectsStartPlan = () => {
     if (!gate) return;
     if (gate === 'new') {
       startTransition(() => {
-        router.push(routePath('projects.create', {}, { intent: 'plan' }));
+        router.push(nextPath({ from: 'startPlan', project: 'new' }, DEFAULT_FLOW));
       });
       return;
     }
     if (!projectId) return;
     startTransition(() => {
-      router.push(flowPath('planStart', { intent: 'plan', fromExisting: true }, projectId));
+      router.push(nextPath({ from: 'startPlan', project: 'existing' }, { ...DEFAULT_FLOW, fromExisting: true }, projectId));
     });
   };
 
@@ -112,16 +113,10 @@ const ProjectsStartPlan = () => {
         title={Flow('startPlan.title')}
         description={Flow('startPlan.description')}
         showBackButton={false}
-        breadcrumbs={
-          <Breadcrumbs>
-            <Breadcrumb><Link href="/">{Global('breadcrumbs.home')}</Link></Breadcrumb>
-            <Breadcrumb><Link href="/projects">{Global('breadcrumbs.projects')}</Link></Breadcrumb>
-            <Breadcrumb>{Flow('startPlan.title')}</Breadcrumb>
-          </Breadcrumbs>
-        }
+        breadcrumbs={<FlowBreadcrumbs current={Flow('startPlan.title')} />}
         className="page-project-start-plan"
       />
-      <CreateProjectFlowLayout screen="startPlan" flow={{ intent: 'plan', fromExisting: gate === 'existing' }}>
+      <CreateProjectFlowLayout screen="startPlan" flow={{ ...DEFAULT_FLOW, fromExisting: gate === 'existing' }}>
         <ErrorMessages errors={error || loadMoreFailed ? [Flow('startPlan.errors.loadProjects')] : []} ref={errorRef} />
         <Form onSubmit={(e) => e.preventDefault()}>
           <RadioGroupComponent

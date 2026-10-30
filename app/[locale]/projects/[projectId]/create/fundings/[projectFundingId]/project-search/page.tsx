@@ -5,12 +5,9 @@ import { useParams } from 'next/navigation';
 import { useRouter } from '@/i18n/routing';
 import { useTranslations } from 'next-intl';
 import {
-  Breadcrumb,
-  Breadcrumbs,
   Form,
   Input,
   Label,
-  Link,
   Text,
   TextField
 } from "react-aria-components";
@@ -29,9 +26,10 @@ import {
 import PageHeader from "@/components/PageHeader";
 import CreateProjectFlowLayout, {
   FlowActions,
+  FlowBreadcrumbs,
   flowPath,
-  fundingFlowPath,
-  useCreateProjectFlow,
+  nextPath,
+  useFlowState,
 } from '@/components/CreateProjectFlow';
 import ErrorMessages from '@/components/ErrorMessages';
 import Loading from '@/components/Loading';
@@ -49,7 +47,7 @@ const ProjectsCreateProjectProjectSearch = () => {
   const params = useParams();
   const { projectId } = params;
   const projectFundingId = String(params.projectFundingId);
-  const { flow } = useCreateProjectFlow();
+  const flow = useFlowState();
   const toastState = useToast();
   //For scrolling to error in page
   const errorRef = useRef<HTMLDivElement | null>(null);
@@ -196,7 +194,7 @@ const ProjectsCreateProjectProjectSearch = () => {
           { type: 'success' }
         );
         startTransition(() => {
-          router.push(flowPath('projectDetails', flow, projectId as string));
+          router.push(nextPath({ from: 'projectSearch', project: 'imported' }, flow, projectId as string));
         });
       }
     } catch (error) {
@@ -212,7 +210,11 @@ const ProjectsCreateProjectProjectSearch = () => {
     { startTransition }: { startTransition: TransitionStartFunction }
   ): Promise<void> => {
     startTransition(() => {
-      router.push(fundingFlowPath('fundingDetails', flow, projectId as string, projectFundingId));
+      router.push(nextPath(
+        { from: 'projectSearch', project: 'manual', projectFundingId },
+        flow,
+        projectId as string
+      ));
     });
   };
 
@@ -230,12 +232,7 @@ const ProjectsCreateProjectProjectSearch = () => {
         title={t('title')}
         description={t('description')}
         showBackButton={false}
-        breadcrumbs={
-          <Breadcrumbs>
-            <Breadcrumb><Link href={routePath('app.home')}>{Global('breadcrumbs.home')}</Link></Breadcrumb>
-            <Breadcrumb><Link href={routePath('projects.index')}>{Global('breadcrumbs.projects')}</Link></Breadcrumb>
-          </Breadcrumbs>
-        }
+        breadcrumbs={<FlowBreadcrumbs current={t('title')} />}
         className="page-project-create-project-search"
       />
       <CreateProjectFlowLayout screen="projectSearch" flow={flow}>

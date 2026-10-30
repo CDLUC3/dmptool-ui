@@ -10,10 +10,7 @@ import { useRouter } from '@/i18n/routing';
 import { useTranslations } from 'next-intl';
 import { useMutation } from '@apollo/client/react';
 import {
-  Breadcrumb,
-  Breadcrumbs,
   Form,
-  Link,
   Radio,
   Text
 } from "react-aria-components";
@@ -28,8 +25,9 @@ import {
 import PageHeader from "@/components/PageHeader";
 import CreateProjectFlowLayout, {
   FlowActions,
-  flowPath,
-  useCreateProjectFlow,
+  FlowBreadcrumbs,
+  nextPath,
+  useFlowState,
 } from '@/components/CreateProjectFlow';
 import {
   FormInput,
@@ -59,7 +57,7 @@ interface CreateProjectErrorsInterface {
 const ProjectsCreateProject = () => {
   const toastState = useToast();
   const router = useRouter();
-  const { flow } = useCreateProjectFlow();
+  const flow = useFlowState();
   //For scrolling to error in page
   const errorRef = useRef<HTMLDivElement | null>(null);
   const inputFieldRef = useRef<HTMLInputElement | null>(null);
@@ -184,7 +182,7 @@ const ProjectsCreateProject = () => {
         // Called synchronously inside startTransition — this is the part that
         // makes isPending actually track the real navigation.
         startTransition(() => {
-          router.push(flowPath('funder', flow, String(result!.id)));
+          router.push(nextPath({ from: 'createProject' }, flow, String(result!.id)));
         });
       }
     } catch (error) {
@@ -208,13 +206,7 @@ const ProjectsCreateProject = () => {
           ? Flow('createProject.descriptionProject')
           : Flow('createProject.descriptionPlan')}
         showBackButton={false}
-        breadcrumbs={
-          <Breadcrumbs>
-            <Breadcrumb><Link href="/">{Global('breadcrumbs.home')}</Link></Breadcrumb>
-            <Breadcrumb><Link href="/projects">{Global('breadcrumbs.projects')}</Link></Breadcrumb>
-            <Breadcrumb>{CreateProject('pageTitle')}</Breadcrumb>
-          </Breadcrumbs>
-        }
+        breadcrumbs={<FlowBreadcrumbs current={CreateProject('pageTitle')} />}
         actions={null}
         className="page-project-create-project"
       />
