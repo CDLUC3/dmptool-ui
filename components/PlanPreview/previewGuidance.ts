@@ -1,5 +1,8 @@
 import { GuidanceSourceType } from "@/generated/graphql";
-import type { PlanGuidanceSource } from "@/components/PlanAuthoring/model";
+import {
+  BEST_PRACTICE_GUIDANCE_LABEL,
+  type PlanGuidanceSource,
+} from "@/components/PlanAuthoring/model";
 
 export interface PreviewOrg {
   uri: string;
@@ -36,8 +39,6 @@ export type PreviewResearcherGuidance =
   | { kind: "none" };
 
 export const EXAMPLE_ORG_GUIDANCE_ID = "template-preview-example-org";
-// Matches the label the API gives best practice guidance.
-const BEST_PRACTICE_LABEL = "DMP Tool";
 
 function orgShortName(org: PreviewOrg): string {
   return org.displayAbbreviation || org.acronyms?.find(Boolean) || org.displayName;
@@ -111,8 +112,8 @@ export function toPreviewGuidanceSources({
           {
             id: "bestPractice",
             type: GuidanceSourceType.BestPractice,
-            label: BEST_PRACTICE_LABEL,
-            shortName: BEST_PRACTICE_LABEL,
+            label: BEST_PRACTICE_GUIDANCE_LABEL,
+            shortName: BEST_PRACTICE_GUIDANCE_LABEL,
             bodyHtml: bestPracticeHtml.join(""),
           },
         ]

@@ -329,6 +329,78 @@ describe("toPlanAuthoringModel guidance", () => {
     ]);
   });
 
+  it("keeps best practice in its own DMP Tool tab when it shares an org with another source", () => {
+    const [mapped] = mapQuestions(
+      [
+        makeRawQuestion({
+          guidanceSources: [
+            makeRawGuidanceSource({
+              id: "bestPractice",
+              orgURI: UCOP,
+              type: GuidanceSourceType.BestPractice,
+              label: "UCOP",
+              shortName: "UCOP",
+              items: [{ guidanceText: "<p>best practice</p>" }],
+            }),
+            makeRawGuidanceSource({
+              orgURI: UCOP,
+              type: GuidanceSourceType.UserAffiliation,
+              label: "UCOP",
+              shortName: "UCOP",
+              items: [{ guidanceText: "<p>own</p>" }],
+            }),
+          ],
+        }),
+      ],
+      EMPTY_PLAN_AUTHORING_VIEWER,
+      plan
+    );
+
+    expect(mapped.guidanceSources).toEqual([
+      {
+        id: "bestPractice",
+        type: "BEST_PRACTICE",
+        label: "DMP Tool",
+        shortName: "DMP Tool",
+        locked: false,
+        bodyHtml: "<p>best practice</p>",
+      },
+      {
+        id: UCOP,
+        type: "USER_AFFILIATION",
+        label: "UCOP",
+        shortName: "UCOP",
+        locked: true,
+        bodyHtml: "<p>own</p>",
+      },
+    ]);
+  });
+
+  it("puts each tag name above its tagged guidance", () => {
+    const [mapped] = mapQuestions(
+      [
+        makeRawQuestion({
+          guidanceSources: [
+            makeRawGuidanceSource({
+              orgURI: NSF,
+              type: GuidanceSourceType.TemplateOwner,
+              items: [
+                { title: null, guidanceText: "<p>question</p>" },
+                { title: "Data & <Metadata>", guidanceText: "<p>tagged</p>" },
+              ],
+            }),
+          ],
+        }),
+      ],
+      EMPTY_PLAN_AUTHORING_VIEWER,
+      plan
+    );
+
+    expect(mapped.guidanceSources[0].bodyHtml).toBe(
+      "<p>question</p><h5>Data &amp; &lt;Metadata&gt;</h5><p>tagged</p>"
+    );
+  });
+
   it("does not lock USER_SELECTED orgs", () => {
     const [mapped] = mapQuestions(
       [

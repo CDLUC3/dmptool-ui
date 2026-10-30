@@ -16,6 +16,7 @@ import {
   type NewCommentTarget,
 } from "./commentCapabilities";
 import {
+  BEST_PRACTICE_GUIDANCE_LABEL,
   computeProgress,
   questionKey,
   type PlanAuthoringModel,
@@ -316,16 +317,43 @@ function isAlwaysShownSource(source: PlanAuthoringGuidanceSource): boolean {
   );
 }
 
+const HTML_ESCAPES: Record<string, string> = {
+  "&": "&amp;",
+  "<": "&lt;",
+  ">": "&gt;",
+  '"': "&quot;",
+  "'": "&#39;",
+};
+
+function escapeHtml(text: string): string {
+  return text.replace(/[&<>"']/g, (char) => HTML_ESCAPES[char]);
+}
+
+// Tagged items carry their tag name as the title; template-specific items have none.
+function guidanceItemHtml(
+  item: PlanAuthoringGuidanceSource["items"][number]
+): string {
+  if (!item.guidanceText) {
+    return "";
+  }
+  return item.title
+    ? `<h5>${escapeHtml(item.title)}</h5>${item.guidanceText}`
+    : item.guidanceText;
+}
+
 // Both `affiliation-<uri>` and `customization-<uri>` sources can appear for
 // one org on a question; they share a label, so they render as one tab keyed
-// by orgURI, which is also what add/removePlanGuidance take.
+// by orgURI, which is also what add/removePlanGuidance take. Best practice
+// carries the orgURI of the org that publishes it, so it gets its own tab.
 function toGuidanceSources(
   sources: PlanAuthoringGuidanceSource[]
 ): PlanGuidanceSource[] {
   const byOrg = new Map<string, { source: PlanGuidanceSource; html: string[] }>();
   sources.forEach((source) => {
-    const html = source.items.map((item) => item.guidanceText).filter(Boolean);
-    const existing = byOrg.get(source.orgURI);
+    const html = source.items.map(guidanceItemHtml).filter(Boolean);
+    const isBestPractice = source.type === GuidanceSourceType.BestPractice;
+    const key = isBestPractice ? source.id : source.orgURI;
+    const existing = byOrg.get(key);
     if (existing) {
       existing.html = source.id.startsWith(CUSTOMIZATION_SOURCE_PREFIX)
         ? [...html, ...existing.html]
@@ -334,13 +362,13 @@ function toGuidanceSources(
         existing.source.locked || isAlwaysShownSource(source);
       return;
     }
-    byOrg.set(source.orgURI, {
+    byOrg.set(key, {
       html,
       source: {
-        id: source.orgURI,
+        id: key,
         type: source.type,
-        label: source.label,
-        shortName: source.shortName,
+        label: isBestPractice ? BEST_PRACTICE_GUIDANCE_LABEL : source.label,
+        shortName: isBestPractice ? BEST_PRACTICE_GUIDANCE_LABEL : source.shortName,
         locked: isAlwaysShownSource(source),
         bodyHtml: "",
       },

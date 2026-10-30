@@ -196,6 +196,8 @@
 - Updated `RepoSelectorForAnswer` to wait to query `Re3byUrIsDocument` until we have `preferredReposURIs` because preferred repos don't display even though they eventually do to trigger the display of the "preferred repositories" checkbox [#118]
 
 ## Fixed
+- Fixed tagged guidance in the `PlanAuthoring` guidance sidebar so each tag's name shows as a heading above its guidance. The `PlanAuthoring` query now selects `title` on guidance items [#603]
+- Fixed best practice guidance being merged into the tab of the org that publishes it (CDL) in the `PlanAuthoring` guidance sidebar. It now has its own "DMP Tool" tab, matching the template preview [#603]
 - Fixed `tinymce` vulnerability by updating to `v8.9.3` and I replaced the `tinymce` files in `public/tinymce`. I also removed `deepmerge` and replace with our custom `mergeMessages` since there was no fix for `deepmerge` whose version was 4 years old. I also updated `README.md` with info about `tinymce` and `AGENTS.md` [#604]
 - Updated `proxy.ts` so that `/admin/email-preferences` will not be exluded from `login` requirements. Pages within `email` directory are excluded from `login` though [#580]
 - Updated to used patched version of `Node` `v22.23.4`
