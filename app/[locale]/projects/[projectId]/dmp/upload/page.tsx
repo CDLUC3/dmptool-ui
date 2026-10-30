@@ -1,6 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useRef, useState, type ReactNode } from 'react';
+import { useParams } from 'next/navigation';
+import { useTranslations } from 'next-intl';
+import { useMutation } from '@apollo/client/react';
 import { useRouter } from '@/i18n/routing';
 import {
   Breadcrumb,
@@ -15,17 +18,33 @@ import {
 import type { DropEvent, FileDropItem } from 'react-aria';
 
 
+import { UploadPlanDocument } from '@/generated/graphql';
 import PageHeader from "@/components/PageHeader";
 import {
   ContentContainer,
   LayoutWithPanel,
   SidebarPanel
 } from "@/components/Container";
+import {
+  FlowActions,
+  FlowAwareLayout,
+  nextPath,
+  useCreateProjectFlow,
+} from '@/components/CreateProjectFlow';
+import ErrorMessages from '@/components/ErrorMessages';
 import { routePath } from '@/utils/routes';
+import { handleApolloError } from '@/utils/apolloErrorHandler';
 
 
 const PlanCreateUpload = () => {
   const router = useRouter();
+  const params = useParams();
+  const projectId = String(params.projectId);
+  const { inFlow, flow } = useCreateProjectFlow();
+  const Flow = useTranslations('CreateProjectFlow');
+  const [uploadPlan, { loading: uploading }] = useMutation(UploadPlanDocument);
+  const [serverErrors, setServerErrors] = useState<string[]>([]);
+  const errorRef = useRef<HTMLDivElement | null>(null);
   const [fileName, setFileName] = useState<string | null>(null); // Holds uploaded file name
   const [error, setError] = useState<string | null>(null); // Tracks any upload errors
   //const [isDragging, setIsDragging] = useState<boolean>(false); // State for drag-hover effect
@@ -67,16 +86,32 @@ const PlanCreateUpload = () => {
   };
 
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // The file content is not sent yet; Apollo's uploadPlan resolver is a stub
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setServerErrors([]);
 
     if (!fileName) {
       setError('Please upload a valid file before submitting.');
       return;
     }
 
-    // Perform further actions or navigation here
-    router.push(routePath('projects.show', { projectId: 'proj_2425' }))
+    try {
+      const { data } = await uploadPlan({ variables: { projectId: Number(projectId), fileName } });
+      const plan = data?.uploadPlan;
+
+      if (!plan?.id || plan.errors?.general) {
+        setServerErrors([plan?.errors?.general, Flow('upload.notAvailable')].filter(Boolean) as string[]);
+        return;
+      }
+
+      router.push(inFlow
+        ? nextPath({ from: 'planUpload' }, flow, projectId, { planId: plan.id })
+        : routePath('projects.dmp.show', { projectId, dmpId: plan.id }));
+    } catch (err) {
+      handleApolloError(err, 'PlanCreateUpload.handleSubmit');
+      setServerErrors([Flow('upload.notAvailable')]);
+    }
   };
 
   return (
@@ -84,7 +119,7 @@ const PlanCreateUpload = () => {
       <PageHeader
         title="Upload a DMSP"
         description="You can upload a Data Management Plan (DMP) that was created elsewhere and add it to your project. Uploaded plans can be tracked by your organization administrators but cannot be edited in the same way a plan created in the DMP Tool can."
-        showBackButton={true}
+        showBackButton={!inFlow}
         breadcrumbs={
           <Breadcrumbs>
             <Breadcrumb>
@@ -97,8 +132,8 @@ const PlanCreateUpload = () => {
         }
         className="page-project-create-project-funding"
       />
-      <LayoutWithPanel>
-        <ContentContainer>
+      <FlowAwareLayout screen="planUpload" fallback={withBestPracticeSidebar}>
+          <ErrorMessages errors={serverErrors} ref={errorRef} />
           <Form onSubmit={handleSubmit}
             data-testid="upload-form"
             aria-labelledby="upload-form">
@@ -139,54 +174,57 @@ const PlanCreateUpload = () => {
               )}
             </DropZone>
 
-            {/* Submit Button */}
-            <Button
-              type="submit"
-            >
-              Upload
-            </Button>
+            <FlowActions>
+              <Button
+                type="submit"
+                isDisabled={uploading}
+              >
+                Upload
+              </Button>
+            </FlowActions>
           </Form>
-        </ContentContainer>
-
-        {/* Sidebar Panel */}
-        <SidebarPanel>
-          <h2>Best Practice by DMP Tool</h2>
-          <p>
-            <strong>Recommend: online plan creator</strong>
-          </p>
-          <p>
-            To ensure your submission meets all necessary standards and
-            guidelines, we strongly advise using our online plan creator instead
-            of uploading PDF or DOC files. Here’s why:
-          </p>
-          <ul>
-            <li>
-              <strong>Funder and Organization Requirements:</strong> The online
-              tool is tailored to meet specific requirements set by the funder
-              and our organization, ensuring your plan aligns perfectly with
-              their expectations.
-            </li>
-            <li>
-              <strong>Guidance:</strong> The online creator provides
-              step-by-step guidance on how to effectively answer questions,
-              which is not available in standard document formats.
-            </li>
-            <li>
-              <strong>Portability:</strong> Plans created online are easier to
-              share and access across different platforms, making them more
-              versatile than documents in PDF or DOC formats.
-            </li>
-          </ul>
-          <p>
-            For a smooth and successful submission please adhere to using our
-            designated online tool. Thank you for your cooperation!
-          </p>
-        </SidebarPanel>
-      </LayoutWithPanel>
-
-
+      </FlowAwareLayout>
     </>
   );
 };
+
+const withBestPracticeSidebar = (content: ReactNode) => (
+  <LayoutWithPanel>
+    <ContentContainer>{content}</ContentContainer>
+    <SidebarPanel>
+      <h2>Best Practice by DMP Tool</h2>
+      <p>
+        <strong>Recommend: online plan creator</strong>
+      </p>
+      <p>
+        To ensure your submission meets all necessary standards and
+        guidelines, we strongly advise using our online plan creator instead
+        of uploading PDF or DOC files. Here’s why:
+      </p>
+      <ul>
+        <li>
+          <strong>Funder and Organization Requirements:</strong> The online
+          tool is tailored to meet specific requirements set by the funder
+          and our organization, ensuring your plan aligns perfectly with
+          their expectations.
+        </li>
+        <li>
+          <strong>Guidance:</strong> The online creator provides
+          step-by-step guidance on how to effectively answer questions,
+          which is not available in standard document formats.
+        </li>
+        <li>
+          <strong>Portability:</strong> Plans created online are easier to
+          share and access across different platforms, making them more
+          versatile than documents in PDF or DOC formats.
+        </li>
+      </ul>
+      <p>
+        For a smooth and successful submission please adhere to using our
+        designated online tool. Thank you for your cooperation!
+      </p>
+    </SidebarPanel>
+  </LayoutWithPanel>
+);
 
 export default PlanCreateUpload;

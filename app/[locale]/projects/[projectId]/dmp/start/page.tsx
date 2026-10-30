@@ -10,15 +10,21 @@ import {
   Form,
   Link,
   Radio,
+  Text,
 } from "react-aria-components";
 
 //Components
 import PageHeader from "@/components/PageHeader";
-import { ContentContainer, LayoutContainer } from "@/components/Container";
 import {
   RadioGroupComponent,
   TransitionButton
 } from "@/components/Form";
+import {
+  FlowActions,
+  FlowAwareLayout,
+  nextPath,
+  useCreateProjectFlow,
+} from '@/components/CreateProjectFlow';
 
 import { routePath } from '@/utils/index';
 
@@ -27,13 +33,19 @@ const ProjectsProjectPlanNew = () => {
   const params = useParams();
   const router = useRouter();
   const projectId = String(params.projectId); // From route /projects/:projectId
+  const { inFlow, flow } = useCreateProjectFlow();
 
-  const REDIRECT_TO_DMP_CREATE = routePath('projects.dmp.create', { projectId });
-  const REDIRECT_TO_DMP_UPLOAD = routePath('projects.dmp.upload', { projectId });
+  const REDIRECT_TO_DMP_CREATE = inFlow
+    ? nextPath({ from: 'planStart', plan: 'create' }, flow, projectId)
+    : routePath('projects.dmp.create', { projectId });
+  const REDIRECT_TO_DMP_UPLOAD = inFlow
+    ? nextPath({ from: 'planStart', plan: 'upload' }, flow, projectId)
+    : routePath('projects.dmp.upload', { projectId });
 
   // Localization keys
   const t = useTranslations('ProjectsProjectPlanNew');
   const Global = useTranslations('Global');
+  const Flow = useTranslations('CreateProjectFlow');
 
   const [dmpPlan, setDmpPlan] = useState({
     startNewPlan: 'true',
@@ -71,7 +83,7 @@ const ProjectsProjectPlanNew = () => {
   return (
     <>
       <PageHeader
-        title={t('title')}
+        title={inFlow ? Flow('planStart.title') : t('title')}
         description=""
         showBackButton={false}
         breadcrumbs={
@@ -87,38 +99,41 @@ const ProjectsProjectPlanNew = () => {
         actions={null}
         className="page-project-list"
       />
-      <LayoutContainer>
-        <ContentContainer>
-          <Form onSubmit={(e) => e.preventDefault()} className="project-detail-form">
-            <div className="project-type-section">
-              <RadioGroupComponent
-                name="projectType"
-                value={dmpPlan.startNewPlan}
-                aria-label={t('labels.startNewOrUploadExisting')}
-                radioGroupLabel=""
-                onChange={handleRadioChange}
-              >
-                <div>
-                  <Radio value="true">{t('labels.startNewPlan')}</Radio>
-                </div>
+      <FlowAwareLayout screen="planStart">
+        <Form onSubmit={(e) => e.preventDefault()} className="project-detail-form">
+          {inFlow && <p data-testid="plan-start-intro">{Flow('planStart.description')}</p>}
+          <div className="project-type-section">
+            <RadioGroupComponent
+              name="projectType"
+              value={dmpPlan.startNewPlan}
+              aria-label={t('labels.startNewOrUploadExisting')}
+              radioGroupLabel={inFlow ? Flow('planStart.label') : ''}
+              onChange={handleRadioChange}
+            >
+              <div>
+                <Radio value="true">{inFlow ? Flow('planStart.options.create') : t('labels.startNewPlan')}</Radio>
+                {inFlow && <Text slot="description">{Flow('planStart.options.createDescription')}</Text>}
+              </div>
 
-                <div>
-                  <Radio value="false">{t('labels.uploadExistingPlan')}</Radio>
-                </div>
-              </RadioGroupComponent>
-            </div>
+              <div>
+                <Radio value="false">{inFlow ? Flow('planStart.options.upload') : t('labels.uploadExistingPlan')}</Radio>
+                {inFlow && <Text slot="description">{Flow('planStart.options.uploadDescription')}</Text>}
+              </div>
+            </RadioGroupComponent>
+          </div>
 
+          <FlowActions>
             <TransitionButton
               type="submit"
               className="submit-button"
               onPress={handleFormSubmit}
               loadingLabel={Global('buttons.loading')}
             >
-              {Global('buttons.next')}
+              {inFlow ? Flow('buttons.next') : Global('buttons.next')}
             </TransitionButton>
-          </Form>
-        </ContentContainer>
-      </LayoutContainer >
+          </FlowActions>
+        </Form>
+      </FlowAwareLayout>
     </>
   );
 };

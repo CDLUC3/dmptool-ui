@@ -9,6 +9,16 @@ mutation AddPlan($projectId: Int!, $versionedTemplateId: Int!) {
   }
 }
 
+mutation UploadPlan($projectId: Int!, $fileName: String, $fileContent: String) {
+  uploadPlan(projectId: $projectId, fileName: $fileName, fileContent: $fileContent) {
+    id
+    errors {
+      general
+      projectId
+    }
+  }
+}
+
 mutation AddPlanFunding($planId: Int!, $projectFundingIds: [Int!]!) {
   addPlanFunding(planId: $planId, projectFundingIds: $projectFundingIds) {
     errors {

@@ -1,4 +1,5 @@
 ## Added
+- Added a guided create-project / create-DMP flow with a "Setup progress" rail: `/projects/create` (new or existing project, then a plan) and `/projects/create/project?intent=project` (project only). Flow screens live under `/projects/create…` and `/projects/:projectId/create/…`; the old `create-project`, `funding-search` and `project-funding` routes are removed
 - Added a preview mode that shows a template as researchers will see it when writing a plan, using the `PlanAuthoring` one-pager. Answers can be tried out but are never saved. It's opened from Preview on the template and customization overview pages, and from "Preview question" on the add, edit and customize question pages, where it opens in a new tab and shows unsaved edits as they're made [#65]
 - Added AGENTS.md and CLAUDE.md with project rules for AI coding agents [#579]
 - Added `displayLogicAction` and `displayLogicMatchType` to `SaveQuestionDisplayLogic`, to assure that Apollo will update the cached question with the saved values [#586]
