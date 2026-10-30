@@ -1,5 +1,5 @@
 import React from "react";
-import { act, fireEvent, render, screen, waitFor } from '@/utils/test-utils';
+import { act, fireEvent, render, screen, waitFor, within } from '@/utils/test-utils';
 import { useQuery, useMutation } from '@apollo/client/react';
 import {
   AddQuestionCustomizationDocument,
@@ -7,7 +7,6 @@ import {
   RemoveQuestionCustomizationDocument,
   QuestionCustomizationByVersionedQuestionDocument,
   PublishedQuestionDocument,
-  MeDocument,
 } from '@/generated/graphql';
 
 import { axe, toHaveNoViolations } from 'jest-axe';
@@ -16,6 +15,12 @@ import { useRouter } from '@/i18n/routing';
 import { useToast } from '@/context/ToastContext';
 import logECS from '@/utils/clientLogger';
 import QuestionCustomizePage from '../page';
+import {
+  PREVIEW_DRAFT_PARAM,
+  questionPreviewChannelName,
+  type QuestionPreviewMessage,
+} from '@/components/QuestionPreviewLink/questionPreviewDraft';
+import type { QuestionCustomizationPreviewDraft } from '../../../preview/q/buildCustomizationQuestionPreview';
 import { mockScrollIntoView, mockScrollTo } from "@/__mocks__/common";
 
 expect.extend(toHaveNoViolations);
@@ -81,17 +86,6 @@ const mockPublishedQuestionNoOptionalFields = {
   },
 };
 
-const mockMeData = {
-  me: {
-    __typename: "User",
-    affiliation: {
-      __typename: "Affiliation",
-      displayName: "Test University",
-      name: "Test University",
-    },
-  },
-};
-
 const mockExistingCustomization = {
   questionCustomizationByVersionedQuestion: {
     __typename: "QuestionCustomization",
@@ -123,10 +117,6 @@ const setupMocks = (
     if (document === PublishedQuestionDocument) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return { data: publishedQuestionData, loading: false, error: undefined } as any;
-    }
-    if (document === MeDocument) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return { data: mockMeData, loading: false, error: undefined } as any;
     }
     if (document === QuestionCustomizationByVersionedQuestionDocument) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -217,6 +207,39 @@ describe("QuestionCustomizePage", () => {
     it("should render the sidebar preview section", () => {
       render(<QuestionCustomizePage />);
       expect(screen.getByRole('heading', { name: /headings.preview/i })).toBeInTheDocument();
+    });
+
+    it("should show the base question's answer field read-only", () => {
+      setupMocks(mockExistingCustomization, {
+        publishedQuestion: { ...mockPublishedQuestion.publishedQuestion, json: '{"type":"text","meta":{"schemaVersion":"1.0"}}' },
+      });
+      render(<QuestionCustomizePage />);
+
+      const card = screen.getByTestId('question-card');
+      expect(card).toHaveTextContent('What data will you collect?');
+      expect(within(card).getByRole('textbox')).toBeDisabled();
+    });
+
+    it("should send the unsaved customization to the question preview", async () => {
+      render(<QuestionCustomizePage />);
+
+      const previewLink = await screen.findByRole('link', { name: /buttons.previewQuestion/i });
+      const previewUrl = new URL(previewLink.getAttribute('href')!, 'http://localhost');
+      expect(previewUrl.pathname).toBe('/template/customizations/8/preview/q/base-question-101');
+
+      const previewTab = new BroadcastChannel(questionPreviewChannelName(previewUrl.searchParams.get(PREVIEW_DRAFT_PARAM)!));
+      const drafts: QuestionCustomizationPreviewDraft[] = [];
+      previewTab.onmessage = (event: MessageEvent<QuestionPreviewMessage<QuestionCustomizationPreviewDraft>>) => {
+        if (event.data.type === 'draft') drafts.push(event.data.draft);
+      };
+      try {
+        previewTab.postMessage({ type: 'request' });
+        await waitFor(() =>
+          expect(drafts.at(-1)).toEqual({ guidanceText: '<p>Existing guidance</p>', sampleText: '<p>Existing sample text</p>' })
+        );
+      } finally {
+        previewTab.close();
+      }
     });
 
     it("should show loading spinner while publishedQuestion query is in flight", async () => {

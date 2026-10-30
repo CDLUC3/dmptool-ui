@@ -1,0 +1,28 @@
+.preview {
+  display: contents;
+
+  :global(.template-preview-only-note) {
+    margin-top: var(--space-3);
+    padding: var(--space-2) var(--space-3);
+    border: 1px dashed var(--border-color-subtle);
+    border-radius: var(--radius);
+    background-color: var(--gray-50);
+    color: var(--gray-600);
+    font-size: var(--fs-small);
+  }
+}
+
+// NotificationHeader takes no className, so its side margins are removed from here.
+.notice {
+  padding-bottom: 0;
+
+  > div {
+    margin-inline: 0;
+  }
+}
+
+// The layoutContainer mixin's overflow: auto would make this a scroll
+// container and break position: sticky on the plan section navigation.
+.layout {
+  overflow: visible;
+}

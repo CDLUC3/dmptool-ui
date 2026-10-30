@@ -13,10 +13,10 @@ jest.mock("next-intl", () => jest.requireActual("next-intl"));
 
 const messages = { ...planOverviewMessages, ...planAuthoringMessages };
 
-function renderStatus(state: PlanQuestionSaveState, lastSavedAt?: number) {
+function renderStatus(state: PlanQuestionSaveState, lastSavedAt?: number, isPreview?: boolean) {
   return render(
     <NextIntlClientProvider locale="en-US" messages={messages} timeZone="UTC">
-      <PlanQuestionSaveStatus state={state} lastSavedAt={lastSavedAt} />
+      <PlanQuestionSaveStatus state={state} lastSavedAt={lastSavedAt} isPreview={isPreview} />
     </NextIntlClientProvider>
   );
 }
@@ -83,6 +83,22 @@ describe("PlanQuestionSaveStatus", () => {
     renderStatus({ status: "dirty" }, Date.now());
 
     expect(screen.getByRole("status")).toHaveTextContent("Unsaved changes");
+  });
+
+  it.each<[string, PlanQuestionSaveState]>([
+    ["dirty", { status: "dirty" }],
+    ["saving", { status: "saving" }],
+    ["saved", { status: "saved" }],
+  ])("shows nothing for a preview's %s answer, as nothing is saved", (_label, state) => {
+    renderStatus(state, Date.now(), true);
+
+    expect(screen.queryByRole("status")).not.toBeInTheDocument();
+  });
+
+  it("still shows a preview's failures", () => {
+    renderStatus({ status: "failed", message: "Too long." }, Date.now(), true);
+
+    expect(screen.getByRole("status")).toHaveTextContent("Too long.");
   });
 
   it("has no accessibility violations", async () => {

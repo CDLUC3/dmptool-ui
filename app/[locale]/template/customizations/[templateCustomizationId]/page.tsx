@@ -39,6 +39,7 @@ import ErrorMessages from "@/components/ErrorMessages";
 import CustomizedSectionEdit from "@/components/CustomizedTemplate/CustomizedSectionEdit";
 import { DmpIcon } from "@/components/Icons";
 import Loading from "@/components/Loading";
+import { TransitionLink } from "@/components/Form";
 
 // Hooks
 import { useFormatDate } from "@/hooks/useFormatDate";
@@ -494,13 +495,12 @@ if (loading && !data) {
                 <div>
                   <h3>{EditTemplate("button.previewTemplate")}</h3>
                 </div>
-                <Link
-                  href="#"
-                  onPress={() => console.log("Preview")}
+                <TransitionLink
+                  href={routePath("template.customize.preview", { templateCustomizationId })}
                   className="side-panel-link"
                 >
                   {Global('buttons.preview')}
-                </Link>
+                </TransitionLink>
               </div>
 
               <div className="panelRow mb-5">

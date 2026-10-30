@@ -18,6 +18,12 @@ import { useParams } from 'next/navigation';
 import { useRouter } from '@/i18n/routing';
 import { useToast } from '@/context/ToastContext';
 import QuestionAdd from '@/components/QuestionAdd';
+import {
+  PREVIEW_DRAFT_PARAM,
+  questionPreviewChannelName,
+  type QuestionPreviewDraft,
+  type QuestionPreviewMessage,
+} from '@/components/QuestionPreviewLink/questionPreviewDraft';
 import { AffiliationSearchQuestionType } from "@dmptool/types";
 import { TypeAheadInputProps } from '@/components/Form/TypeAheadWithOther/TypeAheadWithOther';
 import mocksAffiliations from '@/__mocks__/common/mockAffiliations.json';
@@ -158,6 +164,23 @@ const mockQuestionDisplayData = {
     },
   ]
 }
+
+// Acts as the preview tab, asking the editor for its draft
+const expectPreviewDraftJsonToContain = async (text: string) => {
+  const previewLink = await screen.findByRole('link', { name: /buttons.previewQuestion/i });
+  const previewId = new URL(previewLink.getAttribute('href')!, 'http://localhost').searchParams.get(PREVIEW_DRAFT_PARAM)!;
+  const previewTab = new BroadcastChannel(questionPreviewChannelName(previewId));
+  const drafts: QuestionPreviewDraft[] = [];
+  previewTab.onmessage = (event: MessageEvent<QuestionPreviewMessage<QuestionPreviewDraft>>) => {
+    if (event.data.type === 'draft') drafts.push(event.data.draft);
+  };
+  try {
+    previewTab.postMessage({ type: 'request' });
+    await waitFor(() => expect(drafts.at(-1)?.json).toContain(text));
+  } finally {
+    previewTab.close();
+  }
+};
 
 // Cast with jest.mocked utility
 const mockUseQuery = jest.mocked(useQuery);
@@ -338,6 +361,7 @@ describe("QuestionAdd", () => {
     await act(async () => {
       render(
         <QuestionAdd
+          previewHref="/preview"
           questionType="textArea"
           questionName="Text Area"
           questionJSON={json}
@@ -389,6 +413,7 @@ describe("QuestionAdd", () => {
     await act(async () => {
       render(
         <QuestionAdd
+          previewHref="/preview"
           questionType="textArea"
           questionName="Text Area"
           questionJSON={json}
@@ -411,6 +436,7 @@ describe("QuestionAdd", () => {
     await act(async () => {
       render(
         <QuestionAdd
+          previewHref="/preview"
           questionType="textArea"
           questionName="Text Area"
           questionJSON={json}
@@ -443,6 +469,7 @@ describe("QuestionAdd", () => {
     await act(async () => {
       render(
         <QuestionAdd
+          previewHref="/preview"
           questionName="Text"
           questionJSON={json}
           sectionId="1"
@@ -474,6 +501,7 @@ describe("QuestionAdd", () => {
     await act(async () => {
       render(
         <QuestionAdd
+          previewHref="/preview"
           questionType="text"
           questionName="Text"
           questionJSON={json}
@@ -500,6 +528,7 @@ describe("QuestionAdd", () => {
     await act(async () => {
       render(
         <QuestionAdd
+          previewHref="/preview"
           questionType="radioButtons"
           questionName="Radio buttons"
           questionJSON={json}
@@ -564,6 +593,7 @@ describe("QuestionAdd", () => {
     await act(async () => {
       render(
         <QuestionAdd
+          previewHref="/preview"
           questionType="text"
           questionName="Text Field"
           questionJSON={json}
@@ -628,6 +658,7 @@ describe("QuestionAdd", () => {
     await act(async () => {
       render(
         <QuestionAdd
+          previewHref="/preview"
           questionType="text"
           questionName="Text Field"
           questionJSON={json}
@@ -704,6 +735,7 @@ describe("QuestionAdd", () => {
     await act(async () => {
       render(
         <QuestionAdd
+          previewHref="/preview"
           questionType="textArea"
           questionName="Text Area"
           questionJSON={json}
@@ -768,6 +800,7 @@ describe("QuestionAdd", () => {
     await act(async () => {
       render(
         <QuestionAdd
+          previewHref="/preview"
           questionType="number"
           questionName="Number Field"
           questionJSON={json}
@@ -822,6 +855,7 @@ describe("QuestionAdd", () => {
     await act(async () => {
       render(
         <QuestionAdd
+          previewHref="/preview"
           questionType="currency"
           questionName="Currency Field"
           questionJSON={json}
@@ -875,6 +909,7 @@ describe("QuestionAdd", () => {
     await act(async () => {
       render(
         <QuestionAdd
+          previewHref="/preview"
           questionType="url"
           questionName="Url Field"
           questionJSON={json}
@@ -924,6 +959,7 @@ describe("QuestionAdd", () => {
     await act(async () => {
       render(
         <QuestionAdd
+          previewHref="/preview"
           questionType="radioButtons"
           questionName="Radio buttons"
           questionJSON={json}
@@ -948,6 +984,7 @@ describe("QuestionAdd", () => {
     await act(async () => {
       render(
         <QuestionAdd
+          previewHref="/preview"
           questionType="radioButtons"
           questionName="Radio buttons"
           questionJSON={mockQuestionJSON}
@@ -1021,6 +1058,7 @@ describe("QuestionAdd", () => {
     await act(async () => {
       render(
         <QuestionAdd
+          previewHref="/preview"
           questionType="radioButtons"
           questionName="Radio buttons"
           questionJSON={json}
@@ -1053,6 +1091,7 @@ describe("QuestionAdd", () => {
     await act(async () => {
       render(
         <QuestionAdd
+          previewHref="/preview"
           questionType="textArea"
           questionName="Text Area"
           questionJSON={json}
@@ -1097,6 +1136,7 @@ describe("QuestionAdd", () => {
     });
     render(
       <QuestionAdd
+        previewHref="/preview"
         questionType="dateRange"
         questionName="Range label"
         questionJSON={mockDateRangeJSON}
@@ -1151,6 +1191,7 @@ describe("QuestionAdd", () => {
     });
     render(
       <QuestionAdd
+        previewHref="/preview"
         questionType="numberRange"
         questionName="Number Range Label"
         questionJSON={mockDateRangeJSON}
@@ -1219,6 +1260,7 @@ describe("QuestionAdd", () => {
     await act(async () => {
       render(
         <QuestionAdd
+          previewHref="/preview"
           questionType="radioButtons"
           questionName="Radio buttons"
           questionJSON={json}
@@ -1309,6 +1351,7 @@ describe("QuestionAdd", () => {
     await act(async () => {
       render(
         <QuestionAdd
+          previewHref="/preview"
           questionType="affiliationSearch"
           questionName="Affiliation Search"
           questionJSON={mockTypeAheadJSON}
@@ -1331,25 +1374,10 @@ describe("QuestionAdd", () => {
 
     expect(labelInput).toHaveValue('New Institution Label');
 
-    // Click the preview button
-    const previewButton = screen.getByRole('button', { name: /buttons.previewQuestion/i });
-
-    await act(async () => {
-      fireEvent.click(previewButton);
-    });
-
-    // Wait for the modal to appear
-    await waitFor(() => {
-      expect(screen.getByTestId('modal-overlay')).toBeInTheDocument();
-    });
-
-    // Check if the new label appears in the preview
-    await waitFor(() => {
-      expect(screen.getByText('New Institution Label')).toBeInTheDocument();
-    });
+    await expectPreviewDraftJsonToContain('New Institution Label');
   });
 
-  it('should call handleTypeAheadHelpTextChange when typeaheadSearch help text value changes and pass correct value to Question Preview', async () => {
+  it('should call handleTypeAheadHelpTextChange when typeaheadSearch help text value changes and pass correct value to the question preview', async () => {
     const json: AffiliationSearchQuestionType = {
       meta: {
         schemaVersion: "1.0"
@@ -1385,6 +1413,7 @@ describe("QuestionAdd", () => {
 
     render(
       <QuestionAdd
+        previewHref="/preview"
         questionType="affiliationSearch"
         questionName="Affiliation Search"
         questionJSON={mockTypeAheadJSON}
@@ -1403,22 +1432,7 @@ describe("QuestionAdd", () => {
 
     expect(helpTextInput).toHaveValue('Enter a search term');
 
-    // Click the preview button
-    const previewButton = screen.getByRole('button', { name: /buttons.previewQuestion/i });
-
-    await act(async () => {
-      fireEvent.click(previewButton);
-    });
-
-    // Wait for the modal to appear
-    await waitFor(() => {
-      expect(screen.getByTestId('modal-overlay')).toBeInTheDocument();
-    });
-
-    // Check if the new label appears in the preview
-    await waitFor(() => {
-      expect(screen.getByText('Search Term')).toBeInTheDocument();
-    });
+    await expectPreviewDraftJsonToContain('Enter a search term');
   });
 
 });
@@ -1475,6 +1489,7 @@ describe("Research Output Question Type", () => {
 
     render(
       <QuestionAdd
+        previewHref="/preview"
         questionType="researchOutputTable"
         questionName="Research Output"
         questionJSON={json}
@@ -1514,6 +1529,7 @@ describe("Research Output Question Type", () => {
     await act(async () => {
       render(
         <QuestionAdd
+          previewHref="/preview"
           questionType="researchOutputTable"
           questionName="Research Output"
           questionJSON={json}
@@ -1548,6 +1564,7 @@ describe("Research Output Question Type", () => {
     await act(async () => {
       render(
         <QuestionAdd
+          previewHref="/preview"
           questionType="researchOutputTable"
           questionName="Research Output"
           questionJSON={json}
@@ -1589,6 +1606,7 @@ describe("Research Output Question Type", () => {
     await act(async () => {
       render(
         <QuestionAdd
+          previewHref="/preview"
           questionType="researchOutputTable"
           questionName="Research Output"
           questionJSON={json}
@@ -1624,6 +1642,7 @@ describe("Research Output Question Type", () => {
     await act(async () => {
       render(
         <QuestionAdd
+          previewHref="/preview"
           questionType="researchOutputTable"
           questionName="Research Output"
           questionJSON={json}
@@ -1657,6 +1676,7 @@ describe("Research Output Question Type", () => {
     await act(async () => {
       render(
         <QuestionAdd
+          previewHref="/preview"
           questionType="researchOutputTable"
           questionName="Research Output"
           questionJSON={json}
@@ -1693,6 +1713,7 @@ describe("Research Output Question Type", () => {
     await act(async () => {
       render(
         <QuestionAdd
+          previewHref="/preview"
           questionType="researchOutputTable"
           questionName="Research Output"
           questionJSON={json}
@@ -1743,6 +1764,7 @@ describe("Research Output Question Type", () => {
 
     render(
       <QuestionAdd
+        previewHref="/preview"
         questionType="researchOutputTable"
         questionName="Research Output"
         questionJSON={json}
@@ -1797,6 +1819,7 @@ describe("Research Output Question Type", () => {
 
     render(
       <QuestionAdd
+        previewHref="/preview"
         questionType="researchOutputTable"
         questionName="Research Output"
         questionJSON={json}
@@ -1833,6 +1856,7 @@ describe("Research Output Question Type", () => {
 
     render(
       <QuestionAdd
+        previewHref="/preview"
         questionType="researchOutputTable"
         questionName="Research Output"
         questionJSON={json}
@@ -1870,6 +1894,7 @@ describe("Research Output Question Type", () => {
     await act(async () => {
       render(
         <QuestionAdd
+          previewHref="/preview"
           questionType="researchOutputTable"
           questionName="Research Output"
           questionJSON={json}
@@ -1905,6 +1930,7 @@ describe("Research Output Question Type", () => {
     await act(async () => {
       render(
         <QuestionAdd
+          previewHref="/preview"
           questionType="researchOutputTable"
           questionName="Research Output"
           questionJSON={json}
@@ -1951,6 +1977,7 @@ describe("Research Output Question Type", () => {
     await act(async () => {
       render(
         <QuestionAdd
+          previewHref="/preview"
           questionType="text"
           questionName="Text Field"
           questionJSON={json}
@@ -1979,6 +2006,7 @@ describe("Research Output Question Type", () => {
     await act(async () => {
       render(
         <QuestionAdd
+          previewHref="/preview"
           questionType="researchOutputTable"
           questionName="Research Output"
           questionJSON={json}
@@ -2007,6 +2035,7 @@ describe("Research Output Question Type", () => {
     await act(async () => {
       render(
         <QuestionAdd
+          previewHref="/preview"
           questionType="researchOutputTable"
           questionName="Research Output"
           questionJSON={json}
@@ -2061,6 +2090,7 @@ describe("Research Output Question Type", () => {
     await act(async () => {
       render(
         <QuestionAdd
+          previewHref="/preview"
           questionType="researchOutputTable"
           questionName="Research Output"
           questionJSON={json}
@@ -2152,6 +2182,7 @@ describe("Accessibility", () => {
 
     const { container } = render(
       <QuestionAdd
+        previewHref="/preview"
         questionType="radioButtons"
         questionName="Radio buttons"
         questionJSON={json}
@@ -2222,6 +2253,7 @@ describe("Error handling", () => {
     await act(async () => {
       render(
         <QuestionAdd
+          previewHref="/preview"
           questionType="radioButtons"
           questionName="Radio buttons"
           questionJSON={json}
@@ -2267,6 +2299,7 @@ describe("Error handling", () => {
     await act(async () => {
       render(
         <QuestionAdd
+          previewHref="/preview"
           questionType="radioButtons"
           questionName="Radio buttons"
           questionJSON={json}
@@ -2319,6 +2352,7 @@ describe("Error handling", () => {
     await act(async () => {
       render(
         <QuestionAdd
+          previewHref="/preview"
           questionType="radioButtons"
           questionName="Radio buttons"
           questionJSON={json}

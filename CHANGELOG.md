@@ -1,4 +1,5 @@
 ## Added
+- Added a preview mode that shows a template as researchers will see it when writing a plan, using the `PlanAuthoring` one-pager. Answers can be tried out but are never saved. It's opened from Preview on the template and customization overview pages, and from "Preview question" on the add, edit and customize question pages, where it opens in a new tab and shows unsaved edits as they're made [#65]
 - Added AGENTS.md and CLAUDE.md with project rules for AI coding agents [#579]
 - Added `displayLogicAction` and `displayLogicMatchType` to `SaveQuestionDisplayLogic`, to assure that Apollo will update the cached question with the saved values [#586]
 - Added display logic to the `PlanAuthoring` one-pager: questions hidden by their display logic are not rendered, and are left out of the plan progress, section picker counts and section navigation. Hidden questions keep their answers [#366]
@@ -90,7 +91,6 @@
 - Updated `routes.ts` to not require `locale` to be passed in because it was defaulting to `en-US` and changing the language for a user that had a `languageId` of `pt-BR` [#367]
 - Updated all pages to use `useRouter` from `@/i18n/routing` so that it would retain the `locale` specified in the `path`. Also, updated `proxy.ts` so that it accurately applies `locale` to a path that does not contain one. [#367]
 - Updated `README.md` to include more info on localization [#367]
->>>>>>> development
 - Updated `PlanCard` section progress to prefer required counts (`X of Y required`), falling back to all-question counts (`X of Y`) when none are required [#93]
 - Redesigned `ProjectListItem` and project list pages (`/projects`, `/admin/projects`, `/admin/users/[userId]/projects`) with expandable plan details, skeleton loading, and GraphQL-backed plan and collaborator data
 - Updated `DisplayLogicComponent.tsx` to show condition joiner within condition groups as well as between condition groups [#360]
@@ -234,6 +234,7 @@
 - Fixed issue with Feedback Notification headers displaying for any collaborator on the Plan Overview, Section and Question pages. It should only display to Org Admins and Super Admins. Added shared isOrgAdmin hook for pages. [#249]
 
 ## Removed
+- Removed the old `QuestionPreview` pop-up and `QuestionView` component, replaced by the new preview mode [#65]
 - Removed unused lib/graphql/client.ts [#579]
 - Removed the ununused `app/[locale]/users/[userId]/projects` page, since we no longer link to it since we updated the `app/[locale]/users/[userId]/manage` page to link to `projects` instead of `plans` [#379]
 

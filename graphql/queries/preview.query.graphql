@@ -1,0 +1,134 @@
+query PreviewGuidance($tagIds: [Int!]!, $ownerAffiliationId: String!, $orgAffiliationId: String!, $includeOrg: Boolean!) {
+  bestPracticeGuidance(tagIds: $tagIds) {
+    tagId
+    guidanceText
+  }
+  ownerGuidance: versionedGuidance(affiliationId: $ownerAffiliationId, tagIds: $tagIds) {
+    tagId
+    guidanceText
+  }
+  orgGuidance: versionedGuidance(affiliationId: $orgAffiliationId, tagIds: $tagIds) @include(if: $includeOrg) {
+    tagId
+    guidanceText
+  }
+}
+
+query CustomizationPreviewOverview($templateCustomizationId: Int!) {
+  templateCustomizationOverview(templateCustomizationId: $templateCustomizationId) {
+    customizationId
+    versionedTemplateId
+    versionedTemplateName
+    versionedTemplateVersion
+    sections {
+      id
+      sectionType
+      sectionCustomizationId
+      displayOrder
+      questions {
+        id
+        questionType
+        questionCustomizationId
+        displayOrder
+      }
+    }
+  }
+  me {
+    id
+    affiliation {
+      uri
+      displayName
+      acronyms
+    }
+  }
+}
+
+query CustomizationPreviewTemplate($versionedTemplateId: Int!) {
+  versionedTemplate(id: $versionedTemplateId) {
+    id
+    name
+    version
+    owner {
+      uri
+      displayName
+      displayAbbreviation
+      acronyms
+    }
+    versionedSections {
+      id
+      name
+      introduction
+      requirements
+      guidance
+      displayOrder
+      tags {
+        id
+        name
+      }
+      versionedQuestions {
+        id
+        displayOrder
+        questionText
+        requirementText
+        guidanceText
+        sampleText
+        useSampleTextAsDefault
+        required
+        json
+        questionId
+        displayLogicAction
+        displayLogicMatchType
+        versionedQuestionConditions {
+          id
+        }
+      }
+    }
+  }
+}
+
+query CustomizationPreviewConditionGroups($versionedQuestionId: Int!) {
+  publishedConditionGroupsForQuestion(versionedQuestionId: $versionedQuestionId) {
+    triggerQuestionId
+    conditions {
+      conditionType
+      conditionMatch
+    }
+  }
+}
+
+query CustomizationPreviewQuestionCustomization($questionCustomizationId: Int!) {
+  questionCustomization(questionCustomizationId: $questionCustomizationId) {
+    id
+    guidanceText
+    sampleText
+  }
+}
+
+query CustomizationPreviewSectionCustomization($sectionCustomizationId: Int!) {
+  sectionCustomization(sectionCustomizationId: $sectionCustomizationId) {
+    id
+    guidance
+  }
+}
+
+query CustomizationPreviewCustomSection($customSectionId: Int!) {
+  customSection(customSectionId: $customSectionId) {
+    id
+    name
+    introduction
+    requirements
+    guidance
+  }
+}
+
+query CustomizationPreviewCustomQuestion($customQuestionId: Int!) {
+  customQuestion(customQuestionId: $customQuestionId) {
+    id
+    questionText
+    requirementText
+    guidanceText
+    sampleText
+    useSampleTextAsDefault
+    required
+    json
+  }
+}

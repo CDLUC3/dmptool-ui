@@ -25,7 +25,6 @@ import {
   QuestionCustomizationByVersionedQuestionDocument,
   PublishedQuestionDocument,
   QuestionCustomizationErrors,
-  MeDocument,
 } from '@/generated/graphql';
 
 import { Question } from '@/app/types';
@@ -41,8 +40,11 @@ import FormTextArea from '@/components/Form/FormTextArea';
 import ErrorMessages from '@/components/ErrorMessages';
 import Loading from '@/components/Loading';
 import { DmpIcon } from "@/components/Icons";
-import QuestionView from '@/components/QuestionView';
-import QuestionPreview from '@/components/QuestionPreview';
+import BaseQuestionCard from './BaseQuestionCard';
+import QuestionPreviewLink from '@/components/QuestionPreviewLink';
+import { useQuestionPreviewDraftSync } from '@/components/QuestionPreviewLink/questionPreviewDraft';
+import { questionKey } from '@/components/PlanAuthoring/model';
+import type { QuestionCustomizationPreviewDraft } from '../../preview/q/buildCustomizationQuestionPreview';
 
 // Utils
 import { SanitizeHTML } from '@/utils/sanitize';
@@ -73,9 +75,7 @@ const QuestionCustomizePage: React.FC = () => {
   const [questionCustomizationId, setQuestionCustomizationId] = useState<number | null>(null);
   const [errorMessages, setErrorMessages] = useState<string[]>([]);
 
-  // Base question data from the published question - used for preview and as reference for customization
   const [baseQuestion, setBaseQuestion] = useState<Question | undefined>(undefined);
-  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
   // Customizable fields
   const [customQuestionData, setCustomQuestionData] = useState({
@@ -102,8 +102,6 @@ const QuestionCustomizePage: React.FC = () => {
     variables: { versionedQuestionId: Number(versionedQuestionId) },
   });
 
-  const { data: meData, loading: meLoading } = useQuery(MeDocument);
-
   const { data: questionCustomization, loading: questionCustomizationLoading } = useQuery(
     QuestionCustomizationByVersionedQuestionDocument,
     {
@@ -112,6 +110,10 @@ const QuestionCustomizePage: React.FC = () => {
         versionedQuestionId: Number(versionedQuestionId),
       },
     }
+  );
+
+  const previewDraftSync = useQuestionPreviewDraftSync(
+    (): QuestionCustomizationPreviewDraft => ({ ...customQuestionData })
   );
 
   const updateCustomQuestionContent = (key: string, value: string | boolean) => {
@@ -274,7 +276,7 @@ const QuestionCustomizePage: React.FC = () => {
   }, [publishedQuestion]);
 
 
-  if (publishedQuestionLoading || meLoading || questionCustomizationLoading) return <Loading message={Global('messaging.loading')} />;
+  if (publishedQuestionLoading || questionCustomizationLoading) return <Loading message={Global('messaging.loading')} />;
   if (isRedirecting) return <Loading message={Global('messaging.loading')} />;
 
   return (
@@ -310,22 +312,12 @@ const QuestionCustomizePage: React.FC = () => {
               )}
 
               {baseQuestion && (
-                <div className={styles.baseQuestionPreview}>
-                  {/**Key the inert div so it remounts when preview closes */}
-                  <div
-                    key={String(isPreviewOpen)}
-                    className={styles.baseQuestionView}
-                    inert
-                  >
-                    <QuestionView
-                      isPreview={true}
-                      question={baseQuestion}
-                      isDisabled={true}
-                      path={routePath('template.customize', { templateCustomizationId })}
-                      cardOnly={true}
-                    />
-                  </div>
-                </div>
+                <BaseQuestionCard
+                  versionedQuestionId={Number(versionedQuestionId)}
+                  versionedSectionId={publishedQuestion?.publishedQuestion?.versionedSectionId ?? 0}
+                  questionText={baseQuestion.questionText ?? ''}
+                  json={baseQuestion.json ?? null}
+                />
               )}
 
 
@@ -421,25 +413,15 @@ const QuestionCustomizePage: React.FC = () => {
           <>
             <h2>{Global('headings.preview')}</h2>
             <p>{QuestionEdit('descriptions.previewText')}</p>
-            {/** When modal closes, isPreviewOpen flips from true -> false, the key changes and React unmounts and remounts the inert QuestionView 
-             * with a fresh TinyMCEEditor instance. This was needed because sometimes the TinyMCEEditor did not rerender after coming back from Preview*/}
-            <QuestionPreview
-              buttonLabel={QuestionEdit('buttons.previewQuestion')}
-              previewDisabled={baseQuestion ? false : true}
-              onOpenChange={setIsPreviewOpen}
-            >
-              <QuestionView
-                isPreview={true}
-                question={baseQuestion}
-                path={routePath('template.customize.question', {
-                  templateCustomizationId,
-                  versionedQuestionId,
-                })}
-                isDisabled={true}
-                orgGuidance={customQuestionData.guidanceText}
-                org={meData?.me?.affiliation?.displayName ?? meData?.me?.affiliation?.name ?? ''}
-              />
-            </QuestionPreview>
+            <QuestionPreviewLink
+              href={routePath('template.customize.preview.question', {
+                templateCustomizationId,
+                questionKey: questionKey({ kind: 'base', versionedQuestionId: Number(versionedQuestionId) }),
+              })}
+              label={QuestionEdit('buttons.previewQuestion')}
+              isDisabled={!baseQuestion}
+              draftSync={previewDraftSync}
+            />
 
             <h3>{QuestionEdit('headings.bestPractice')}</h3>
             <p>{QuestionEdit('descriptions.bestPracticePara1')}</p>
