@@ -3,10 +3,6 @@ import logECS from '@/utils/clientLogger';
 // Cookie names for Auth Service https://github.com/CDLUC3/dmptool-auth tokens in the browser
 export const ACCESS_TOKEN_NAME = process.env.ACCESS_TOKEN_NAME || "access_token";
 export const REFRESH_TOKEN_NAME = process.env.REFRESH_TOKEN_NAME || "refresh_token";
-// TODO: We need to implement SSO soon, so leaving this here for now. The SSO_PENDING_TOKEN_NAME is used to store a
-//       temporary token in the browser when a user successfully signs in via SSO but they do not yet have an account
-//       in the DMPTool. This token is used to help create a new account for the user after they fill out the account
-//       creation form. Once the account is created, the SSO_PENDING_TOKEN_NAME is deleted from the browser.
 export const SSO_PENDING_TOKEN_NAME = process.env.SSO_PENDING_TOKEN_NAME || "sso_pending_token";
 
 export class AuthError extends Error {
@@ -151,4 +147,3 @@ export const fetchCsrfToken = async (cookies?: string, endpoint?: string) => {
     return null;
   }
 };
-

@@ -14,6 +14,7 @@
     - [Docker Setup](#docker-setup)
 - [Localization](#localization)
 - [Checking for vulnerabilities](#scans)
+- [Upgrading TinyMCE](#upgrading-tinymce)
 - [Environment variables](#environment-variables)
 - [Project Structure](#project-structure)
 - [Authentication](#authentication)
@@ -79,7 +80,7 @@ All content to be translated will be located under the `messages` directory, wit
 The middleware (`proxy.ts`) determines which locale to use for each request, using the following priority of checks:
 
 1. **Locale in the URL** - If the path starts with a supported locale (e.g., `/pt-BR/projects`), that locale is used.
-2. **Logged-in user's saved language** - The `languageId` from the user's JWT in the `dmspt` cookie.
+2. **Logged-in user's saved language** - The `languageId` from the user's JWT in the access token cookie (named by `ACCESS_TOKEN_NAME`).
 3. **The `NEXT_LOCALE` cookie** - `next-intl` sets this to the last locale the user visited.
 4. **The browser language** - The `Accept-Language` header. An exact match (e.g., `pt-BR`) is preferred, otherwise it falls back to a match on the language only (e.g., `pt`).
 5. **The default locale** - From `config/i18nConfig.ts`, which is currently `en-US`.
@@ -180,6 +181,31 @@ We provide npm scripts for different scan levels: `trivy-high` runs a blocking s
 
 To help ensure code security, this project uses `Trivy` for vulnerability scanning. The pre-commit hook automatically runs `trivy-high` script to prevent commits with serious vulnerabilities, and also runs `trivy-med` to report (but not block) lower-severity issues. You need to install `trivy` locally for this to work.
 
+### Upgrading TinyMCE
+The browser loads the TinyMCE editor from a copy committed to `public/tinymce/` (`/tinymce/tinymce.min.js`), not from `node_modules`. The `tinymce` npm package only provides the TypeScript types, so bumping its version in `package.json` does not upgrade the editor that users run. When upgrading TinyMCE (for example, to fix a vulnerability), update both.
+
+1. Install the new version, pinned to an exact version:
+```bash
+npm install --save-exact tinymce@<version>
+```
+2. From the project root, replace `public/tinymce/` with the files the app needs from `node_modules/tinymce`. Deleting the folder first makes sure no files from the old version are left behind.
+```bash
+rm -rf public/tinymce && mkdir -p public/tinymce/icons public/tinymce/models public/tinymce/themes
+cd node_modules/tinymce
+cp -R icons/default ../../public/tinymce/icons/
+cp -R models/dom ../../public/tinymce/models/
+cp -R themes/silver ../../public/tinymce/themes/
+cp -R plugins skins ../../public/tinymce/
+cp tinymce.min.js tinymce.js tinymce.d.ts package.json license.md composer.json bower.json README.md CHANGELOG.md ../../public/tinymce/
+cd ../..
+```
+3. Confirm the copied version matches the version you installed:
+```bash
+grep '"version"' public/tinymce/package.json node_modules/tinymce/package.json
+```
+4. For a major version upgrade, check TinyMCE's migration notes against the editor config in `components/TinyMCEEditor/tinyMCEConfig.ts`.
+5. Test the editor in the browser (formatting, lists, links, tables, and loading existing content), then run `npm run lint`, `npm run type-check`, and `npm test`.
+
 
 ### Environment Variables
 For the development environment, the environment variables are stored at `.env.local`. This is set as the default env file in jest.setup.ts.
@@ -189,7 +215,13 @@ These variables must be set in order for the app to work.
 * `NEXT_PUBLIC_SERVER_ENDPOINT` - Base url for backend server (e.g., "http://localhost:4000")
 * `NEXT_PUBLIC_NARRATIVE_ENDPOINT` - Base url when running the narrative generator locally. The narrative generator (i.e., `dmptool-narrative-generator`) generates the plan in different formats (HTML, PDF, etc)
 * `NEXT_PUBLIC_GRAPHQL_SERVER_ENDPOINT` - Graphql server schema endpoint (e.g., "http://localhost:4000/graphql")
-* `JWT_SECRET` - Secret key for JWT authentication
+* `NEXT_PUBLIC_AUTH_ENDPOINT` - Browser-facing base url for the auth service, `dmptool-auth` (e.g., "http://localhost:4646")
+* `AUTH_ENDPOINT` - Base url for the auth service, used for server-side code. Inside Docker this can differ from the browser-facing url (e.g., "http://auth:4646")
+* `TOKEN_ISSUER` - Expected issuer (`iss`) of tokens from the auth service (e.g., "http://auth:4646")
+* `TOKEN_AUDIENCE` - Expected audience (`aud`) of tokens from the auth service (e.g., "dmptool-ui")
+* `ACCESS_TOKEN_NAME` - Name of the access token cookie (e.g., "dmptool_access")
+* `REFRESH_TOKEN_NAME` - Name of the refresh token cookie (e.g., "dmptool_refresh")
+* `SSO_PENDING_TOKEN_NAME` - Name of the cookie that holds a temporary token for SSO users who don't have an account yet (e.g., "dmptool_sso_pending")
 * `SERVER_ENDPOINT` - Server endpoint for backend Apollo server, used for server-side code (e.g., "http://localhost:4000")
 * `SERVER_LOG_LEVEL` - The log level for the server (e.g., "info", "debug", "error")
 

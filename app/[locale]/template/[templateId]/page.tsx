@@ -657,13 +657,12 @@ const TemplateEditPage: React.FC = () => {
                 <div>
                   <h3>{EditTemplate("button.previewTemplate")}</h3>
                 </div>
-                <Link
-                  href="#"
-                  onPress={() => console.log("Preview")}
+                <TransitionLink
+                  href={routePath("template.preview", { templateId })}
                   className="side-panel-link"
                 >
                   {Global('buttons.preview')}
-                </Link>
+                </TransitionLink>
               </div>
 
               {(template.isDirty && !template.latestPublishDate) && (

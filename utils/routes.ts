@@ -110,6 +110,10 @@ const routes = {
   "template.show": "/template/:templateId",
   "template.access": "/template/:templateId/access",
   "template.history": "/template/:templateId/history",
+  "template.preview": "/template/:templateId/preview",
+  "template.preview.researchOutput": "/template/:templateId/preview/ro/:questionKey/:rowIndex",
+  "template.preview.question": "/template/:templateId/preview/q/:questionId",
+  "template.preview.question.researchOutput": "/template/:templateId/preview/q/:questionId/ro/:rowIndex",
   "template.q": "/template/:templateId/q",
   "template.q.slug": "/template/:templateId/q/:q_slug",
   "template.q.new": "/template/:templateId/q/new",
@@ -127,6 +131,10 @@ const routes = {
   "template.customize.section.create": "/template/customizations/:templateCustomizationId/section/create",
   "template.customize.question.create": "/template/customizations/:templateCustomizationId/q/new",
   "template.customQuestion": "/template/customizations/:templateCustomizationId/customQuestion/:customQuestionId",
+  "template.customize.preview": "/template/customizations/:templateCustomizationId/preview",
+  "template.customize.preview.researchOutput": "/template/customizations/:templateCustomizationId/preview/ro/:questionKey/:rowIndex",
+  "template.customize.preview.question": "/template/customizations/:templateCustomizationId/preview/q/:questionKey",
+  "template.customize.preview.question.researchOutput": "/template/customizations/:templateCustomizationId/preview/q/:questionKey/ro/:rowIndex",
 
   // account/profile
   "account.index": "/account",

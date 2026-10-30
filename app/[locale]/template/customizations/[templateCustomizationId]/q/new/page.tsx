@@ -29,6 +29,7 @@ import {
 import PageHeader from "@/components/PageHeader";
 import { ContentContainer, LayoutContainer, } from '@/components/Container';
 import QuestionAdd from '@/components/QuestionAdd';
+import { NEW_QUESTION_ID } from '@/components/QuestionPreviewLink/questionPreviewDraft';
 import QuestionTypeCard from '@/components/QuestionTypeCard';
 import ErrorMessages from '@/components/ErrorMessages';
 import Loading from '@/components/Loading';
@@ -328,6 +329,7 @@ const CustomQuestionNew: React.FC = () => {
             breadcrumbs={<CustomQuestionBreadcrumbs templateCustomizationId={String(templateCustomizationId)} Global={Global} />}
             backUrl={routePath('template.customize.question.create', { templateCustomizationId }, { section_id: sectionId, step: 1 })}
             successUrl={routePath('template.customize', { templateCustomizationId })}
+            previewHref={routePath('template.customize.preview.question', { templateCustomizationId, questionKey: NEW_QUESTION_ID }, { section_id: sectionId })}
             onSave={async (commonFields) => {
               // Filter out displayOrder from the commonFields since it's not needed for the mutation input and is causing issues with the type.
               // We will set displayOrder in the backend based on the pinnedQuestionId and pinnedQuestionType that we are passing in to pin the 

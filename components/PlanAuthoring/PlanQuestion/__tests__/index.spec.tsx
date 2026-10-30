@@ -288,6 +288,22 @@ describe("PlanQuestion", () => {
       });
     });
 
+    it("says nothing was saved when Save is pressed in a preview", async () => {
+      const user = userEvent.setup();
+      renderQuestion({ capabilities: { ...editableCapabilities, isPreview: true } });
+
+      await user.type(answerField(), "Logs");
+      expect(screen.queryByRole("status")).not.toBeInTheDocument();
+
+      await user.click(screen.getByRole("button", { name: "Save" }));
+
+      expect(toastAdd).toHaveBeenCalledWith(
+        'This is a preview, so nothing was saved. Plan writers see "Saved just now" when they save.',
+        { type: "info", timeout: 4000 }
+      );
+      expect(screen.queryByRole("status")).not.toBeInTheDocument();
+    });
+
     it("shows the save error messages of an invalid save", async () => {
       const user = userEvent.setup();
       const dataSource = createDataSource();

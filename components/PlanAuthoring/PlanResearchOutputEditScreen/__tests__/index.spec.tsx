@@ -175,7 +175,13 @@ function renderScreen({
   dataSource = buildDataSource(),
   questionKey = questionKeyParam,
   rowIndex = '0',
-}: { dataSource?: SpiedMockDataSource; questionKey?: string; rowIndex?: string } = {}) {
+  notice,
+}: {
+  dataSource?: SpiedMockDataSource;
+  questionKey?: string;
+  rowIndex?: string;
+  notice?: React.ReactNode;
+} = {}) {
   const view = render(
     <PlanResearchOutputEditScreen
       dataSource={dataSource}
@@ -183,6 +189,7 @@ function renderScreen({
       rowIndexParam={rowIndex}
       planHref={planHref}
       breadcrumbs={(currentPage) => <nav aria-label="Breadcrumb">{currentPage}</nav>}
+      notice={notice}
     />
   );
   return { ...view, dataSource };
@@ -235,6 +242,15 @@ describe('PlanResearchOutputEditScreen', () => {
     expect(
       screen.getByRole('link', { name: 'PlanAuthoring.researchOutput.backToPlan' })
     ).toHaveAttribute('href', planHref);
+  });
+
+  it('shows the notice above the form only when one is given', () => {
+    const { unmount } = renderScreen({ notice: <p>Preview notice</p> });
+    expect(screen.getByText('Preview notice')).toBeInTheDocument();
+    unmount();
+
+    renderScreen();
+    expect(screen.queryByText('Preview notice')).not.toBeInTheDocument();
   });
 
   it('shows the not-found state when the row index is out of range', () => {

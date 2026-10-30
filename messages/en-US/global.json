@@ -202,6 +202,7 @@
     "breadcrumbProfile": "User profile",
     "breadcrumbConnections": "Connections",
     "title": "Connections",
+    "loading": "Loading...",
     "orcidConnection": {
       "title": "ORCID iD",
       "content": "ORCID provides a persistent identifier — an ORCID iD — that distinguishes you from other users. Learn more at <link>ORCID.org</link>.",
@@ -228,7 +229,10 @@
       "disconnectAria": "Disconnect your institutional credentials",
       "disconnectConfirmTitle": "Confirm disconnection",
       "disconnectConfirmMessage": "Are you sure you want to disconnect your institutional credentials? You can reconnect at any time.",
-      "disconnectSuccess": "Your institutional credentials have been disconnected."
+      "disconnectSuccess": "Your institutional credentials have been disconnected.",
+      "ssoNotEnabled": "Single Sign On is not enabled for your institution. Please contact your administrator for assistance.",
+      "ssoConnectError": "There was an error connecting your institutional credentials. Please try again later.",
+      "ssoDisconnectError": "There was an error disconnecting your institutional credentials. Please try again later."
     },
     "btnCancel": "Cancel",
     "previewStatesHeading": "State previews",
@@ -406,7 +410,7 @@
         "searchUsers": "Search for users to merge"
       },
       "definitions": {
-        "ssoId": "Institutional SSO ID",
+        "ssoId": "Connected to institutional SSO?",
         "orcid": "ORCiD"
       },
       "profileForm": {

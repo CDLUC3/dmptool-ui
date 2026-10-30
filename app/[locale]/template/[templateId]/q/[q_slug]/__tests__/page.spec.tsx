@@ -27,6 +27,11 @@ import { useRouter } from '@/i18n/routing';
 import { useToast } from '@/context/ToastContext';
 import logECS from '@/utils/clientLogger';
 import QuestionEdit from '../page';
+import {
+  questionPreviewChannelName,
+  type QuestionPreviewDraft,
+  type QuestionPreviewMessage,
+} from '@/components/QuestionPreviewLink/questionPreviewDraft';
 import { mockScrollIntoView, mockScrollTo } from "@/__mocks__/common";
 import mockQuestionData from '../__mocks__/mockQuestionData.json';
 import mockRadioQuestion from '@/__mocks__/common/mockRadioQuestion.json';
@@ -583,6 +588,45 @@ describe("QuestionEditPage", () => {
         tags: []
       })
     });
+  });
+
+  it('should open the question preview page in a new tab with the unsaved changes', async () => {
+    const mockQuestionResult = { data: { question: mockRadioQuestion.question }, loading: false, error: undefined };
+    const mockEmptyResult = { data: null, loading: false, error: undefined };
+    mockUseQuery.mockImplementation((document) =>
+      (document === QuestionDocument ? mockQuestionResult : mockEmptyResult) as any
+    );
+    (useSearchParams as jest.MockedFunction<typeof useSearchParams>).mockImplementation(
+      () => new URLSearchParams({ questionType: 'radioButtons' }) as unknown as ReturnType<typeof useSearchParams>
+    );
+
+    render(
+      <QuestionEdit />
+    );
+
+    const previewLink = await screen.findByRole('link', { name: /buttons.previewQuestion/ });
+    const previewUrl = new URL(previewLink.getAttribute('href')!, 'http://localhost');
+    expect(previewUrl.pathname).toBe('/template/123/preview/q/67');
+    expect(previewLink).toHaveAttribute('target', '_blank');
+
+    // Acts as the preview tab
+    const previewTab = new BroadcastChannel(questionPreviewChannelName(previewUrl.searchParams.get('draft')!));
+    const drafts: QuestionPreviewDraft[] = [];
+    previewTab.onmessage = (event: MessageEvent<QuestionPreviewMessage<QuestionPreviewDraft>>) => {
+      if (event.data.type === 'draft') drafts.push(event.data.draft);
+    };
+    try {
+      previewTab.postMessage({ type: 'request' });
+      await waitFor(() => expect(drafts.at(-1)).toMatchObject({ questionText: 'Testing' }));
+
+      fireEvent.change(screen.getByRole('textbox', { name: /labels.questionText/i }), {
+        target: { value: 'Edited before saving' },
+      });
+      await waitFor(() => expect(drafts.at(-1)?.questionText).toBe('Edited before saving'));
+      expect(drafts.at(-1)?.json).toContain('"type":"radioButtons"');
+    } finally {
+      previewTab.close();
+    }
   });
 
   it('should display error when no value is entered in question Text field', async () => {

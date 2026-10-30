@@ -1,9 +1,16 @@
 {
   "AuthPage": {
     "loginTitle": "Login",
+    "loginToLink": "Login to link your Single Sign on (SSO) account to your existing DMP Tool account",
     "registerTitle": "Create a DMP tool account",
+    "signSignOnSuccess": "Single Sign On (SSO) was successful",
     "emailAddress": "Email address",
     "singleSignOn": "To enable Single Sign On (SSO), use your institutional address. You will be redirected to your institution's single sign on platform.",
+    "pendingSSOEmailHelp": "This email was returned by your institution. You can change your preferred email in your profile once your account has been created.",
+    "linkAccountHeader": "Already have a DMP Tool account?",
+    "linkAccountMessage": "Sign in with your email and password. You can link your account to SSO on your profile page.",
+    "signUpInstead": "Sign up instead",
+    "finishRegistering": "Or, finish setting up a new account",
     "password": "Password",
     "passwordConfirm": "Confirm password",
     "passMissMatch": "Passwords don't match",

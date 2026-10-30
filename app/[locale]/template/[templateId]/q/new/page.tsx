@@ -35,6 +35,7 @@ import ErrorMessages from '@/components/ErrorMessages';
 //Other
 import { scrollToTop } from '@/utils/general';
 import { routePath } from '@/utils/routes';
+import { NEW_QUESTION_ID } from '@/components/QuestionPreviewLink/questionPreviewDraft';
 import { useQueryStep } from '@/app/[locale]/template/[templateId]/q/new/utils';
 import { QuestionFormatInterface } from '@/app/types';
 import styles from './newQuestion.module.scss';
@@ -306,6 +307,7 @@ const QuestionTypeSelectPage: React.FC = () => {
             breadcrumbs={<TemplateQuestionBreadcrumbs templateId={templateId} sectionId={sectionId} Global={Global} />}
             backUrl={routePath('template.q.new', { templateId }, { section_id: sectionId, step: 1 })}
             successUrl={routePath('template.show', { templateId })}
+            previewHref={routePath('template.preview.question', { templateId, questionId: NEW_QUESTION_ID }, { section_id: sectionId })}
             showDisplayLogicAfterSaveMessage
             onSave={async (commonFields) => {
               const input = {
