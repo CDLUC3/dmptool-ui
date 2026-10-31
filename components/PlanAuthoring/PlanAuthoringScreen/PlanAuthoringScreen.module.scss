@@ -44,7 +44,30 @@
   background: var(--background-color);
 }
 
+.compactSpacing {
+  margin-top: var(--space-4, 1rem);
+
+  .writePlanIntro {
+    margin-bottom: var(--space-2, 0.5rem);
+  }
+
+  .writePlanIntro .progressSummary {
+    margin-top: var(--space-1, 0.25rem);
+  }
+
+  .sectionsStack {
+    padding-top: 0;
+  }
+}
+
 .documentRegion {
+  padding-bottom: var(--space-8, 3rem);
+}
+
+.footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-3, 0.75rem);
   padding-bottom: var(--space-8, 3rem);
 }
 

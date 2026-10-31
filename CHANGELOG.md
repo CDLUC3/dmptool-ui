@@ -1,5 +1,7 @@
 ## Added
 - Added Playwright end-to-end tests in a separate `e2e/` package, with login, logout, GraphQL and templates tests, and `test:e2e` and `test:e2e:ui` scripts. `e2e/` is excluded from Jest, ESLint, the root `tsconfig.json` and the Docker image [#559]
+- Added a guided create-project / create-DMP flow with a "Setup progress" rail: `/projects/create` (new or existing project, then a plan) and `/projects/create/project?intent=project` (project only). Flow screens live under `/projects/create…` and `/projects/:projectId/create/…`; the old `create-project`, `funding-search` and `project-funding` routes are removed
+- Added a preview mode that shows a template as researchers will see it when writing a plan, using the `PlanAuthoring` one-pager. Answers can be tried out but are never saved. It's opened from Preview on the template and customization overview pages, and from "Preview question" on the add, edit and customize question pages, where it opens in a new tab and shows unsaved edits as they're made [#65]
 - Added AGENTS.md and CLAUDE.md with project rules for AI coding agents [#579]
 - Added `displayLogicAction` and `displayLogicMatchType` to `SaveQuestionDisplayLogic`, to assure that Apollo will update the cached question with the saved values [#586]
 - Added display logic to the `PlanAuthoring` one-pager: questions hidden by their display logic are not rendered, and are left out of the plan progress, section picker counts and section navigation. Hidden questions keep their answers [#366]
@@ -91,7 +93,6 @@
 - Updated `routes.ts` to not require `locale` to be passed in because it was defaulting to `en-US` and changing the language for a user that had a `languageId` of `pt-BR` [#367]
 - Updated all pages to use `useRouter` from `@/i18n/routing` so that it would retain the `locale` specified in the `path`. Also, updated `proxy.ts` so that it accurately applies `locale` to a path that does not contain one. [#367]
 - Updated `README.md` to include more info on localization [#367]
->>>>>>> development
 - Updated `PlanCard` section progress to prefer required counts (`X of Y required`), falling back to all-question counts (`X of Y`) when none are required [#93]
 - Redesigned `ProjectListItem` and project list pages (`/projects`, `/admin/projects`, `/admin/users/[userId]/projects`) with expandable plan details, skeleton loading, and GraphQL-backed plan and collaborator data
 - Updated `DisplayLogicComponent.tsx` to show condition joiner within condition groups as well as between condition groups [#360]
@@ -197,6 +198,7 @@
 - Updated `RepoSelectorForAnswer` to wait to query `Re3byUrIsDocument` until we have `preferredReposURIs` because preferred repos don't display even though they eventually do to trigger the display of the "preferred repositories" checkbox [#118]
 
 ## Fixed
+- Fixed cards on the project and template lists (and the sub-header) losing their white background, rounded corners and shadow in production builds. In compressed output, Sass adds a byte-order mark to any file containing non-ASCII characters (such as `content: "•"`), and once the CSS modules are concatenated that mark invalidates each module's first rule. Set `sassOptions: { charset: false }` in `next.config.mjs` so Sass no longer adds it [#610]
 - Fixed `tinymce` vulnerability by updating to `v8.9.3` and I replaced the `tinymce` files in `public/tinymce`. I also removed `deepmerge` and replace with our custom `mergeMessages` since there was no fix for `deepmerge` whose version was 4 years old. I also updated `README.md` with info about `tinymce` and `AGENTS.md` [#604]
 - Updated `proxy.ts` so that `/admin/email-preferences` will not be exluded from `login` requirements. Pages within `email` directory are excluded from `login` though [#580]
 - Updated to used patched version of `Node` `v22.23.4`
@@ -236,6 +238,7 @@
 
 ## Removed
 - Removed Cypress, its config and its tests, which were replaced by Playwright [#559]
+- Removed the old `QuestionPreview` pop-up and `QuestionView` component, replaced by the new preview mode [#65]
 - Removed unused lib/graphql/client.ts [#579]
 - Removed the ununused `app/[locale]/users/[userId]/projects` page, since we no longer link to it since we updated the `app/[locale]/users/[userId]/manage` page to link to `projects` instead of `plans` [#379]
 

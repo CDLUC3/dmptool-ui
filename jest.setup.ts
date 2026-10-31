@@ -1,6 +1,7 @@
 import '@testing-library/jest-dom';
 import dotenv from 'dotenv';
 import DOMException from 'domexception';
+import { BroadcastChannel as NodeBroadcastChannel } from 'worker_threads';
 
 
 //Load environment variables from .env.local
@@ -37,6 +38,9 @@ afterAll(() => {
 
 // DOMException polyfill used by Apollo Client's MockedProvider, but is not available in Node.js environment
 global.DOMException = DOMException as any;
+
+// jsdom has no BroadcastChannel; Node's delivers between channels in the same test like separate tabs.
+global.BroadcastChannel = NodeBroadcastChannel as unknown as typeof BroadcastChannel;
 
 // Also set it on window if it exists (for jsdom)
 if (typeof window !== 'undefined') {
@@ -98,7 +102,8 @@ jest.mock('@/lib/server/auth', () => ({
 // Mock the useParams and useRouter hooks
 jest.mock('next/navigation', () => ({
   useParams: jest.fn(),
-  useRouter: jest.fn()
+  useRouter: jest.fn(),
+  useSearchParams: jest.fn(() => new URLSearchParams()),
 }))
 
 

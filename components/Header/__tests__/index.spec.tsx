@@ -196,7 +196,7 @@ describe("Header", () => {
     // Verify routePath was called for key routes
     expect(routePath).toHaveBeenCalledWith("app.home");
     expect(routePath).toHaveBeenCalledWith("projects.index");
-    expect(routePath).toHaveBeenCalledWith("projects.create");
+    expect(routePath).toHaveBeenCalledWith("projects.create.start");
   });
 
   it("should handle authentication state changes", () => {

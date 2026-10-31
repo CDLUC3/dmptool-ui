@@ -74,6 +74,57 @@ query Template($templateId: Int!) {
   }
 }
 
+query TemplatePreview($templateId: Int!) {
+  template(templateId: $templateId) {
+    id
+    name
+    latestPublishVersion
+    owner {
+      id
+      uri
+      displayName
+      displayAbbreviation
+      acronyms
+    }
+    sections {
+      id
+      name
+      introduction
+      requirements
+      guidance
+      displayOrder
+      tags {
+        id
+        name
+      }
+      questions {
+        id
+        displayOrder
+        questionText
+        requirementText
+        guidanceText
+        sampleText
+        useSampleTextAsDefault
+        required
+        json
+        tags {
+          id
+          name
+        }
+        displayLogicAction
+        displayLogicMatchType
+        conditionGroups {
+          triggerQuestionId
+          conditions {
+            conditionType
+            conditionMatch
+          }
+        }
+      }
+    }
+  }
+}
+
 query TemplateCollaborators($templateId: Int!) {
     template(templateId: $templateId) {
       id

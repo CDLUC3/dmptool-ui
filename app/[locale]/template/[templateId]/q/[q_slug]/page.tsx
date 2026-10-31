@@ -57,12 +57,16 @@ import {
   UpdateQuestionErrors,
 } from '@/app/types';
 import { DisplayLogic } from '@/app/types/displayLogic';
+import {
+  useQuestionPreviewDraftSync,
+  type QuestionPreviewDraft,
+} from '@/components/QuestionPreviewLink/questionPreviewDraft';
 
 // Components
 import PageHeader from "@/components/PageHeader";
 import QuestionOptionsComponent
   from '@/components/Form/QuestionOptionsComponent';
-import QuestionPreview from '@/components/QuestionPreview';
+import QuestionPreviewLink from '@/components/QuestionPreviewLink';
 import {
   FormTextArea,
   RadioGroupComponent,
@@ -72,7 +76,6 @@ import {
 } from '@/components/Form';
 import DisplayLogicComponent from './DisplayLogicComponent';
 import ErrorMessages from '@/components/ErrorMessages';
-import QuestionView from '@/components/QuestionView';
 import { getParsedQuestionJSON } from '@/components/hooks/getParsedQuestionJSON';
 import { TransitionButton } from "@/components/Form";
 import Loading from '@/components/Loading';
@@ -455,7 +458,11 @@ const QuestionEdit = () => {
 
   // Prepare input for the questionTypeHandler. For options questions, we update the 
   // values with rows state. For non-options questions, we use the parsed JSON
-  const getFormState = (question: Question, rowsOverride?: QuestionOptions[]) => {
+  const getFormState = (
+    question: Question,
+    rowsOverride?: QuestionOptions[],
+    onError: (error: string) => void = (error) => setErrors([error])
+  ) => {
     if (hasOptions) {
       const useRows = rowsOverride ?? rows;
       return {
@@ -475,7 +482,7 @@ const QuestionEdit = () => {
 
     if (!parsed) {
       if (error) {
-        setErrors([error]);
+        onError(error);
       }
       return;
     }
@@ -489,13 +496,17 @@ const QuestionEdit = () => {
   };
 
   // Pass the merged userInput to questionTypeHandlers to generate json and do type and schema validation
-  const buildUpdatedJSON = (question: Question, rowsOverride?: QuestionOptions[]) => {
-    const userInput = getFormState(question, rowsOverride);
+  const buildUpdatedJSON = (
+    question: Question,
+    rowsOverride?: QuestionOptions[],
+    onError: (error: string) => void = (error) => setErrors([error])
+  ) => {
+    const userInput = getFormState(question, rowsOverride, onError);
     const { parsed, error } = getParsedQuestionJSON(question, routePath('template.q.slug', { templateId, q_slug: questionId }), Global);
 
     if (!parsed) {
       if (error) {
-        setErrors([error])
+        onError(error);
       }
       return;
     }
@@ -509,6 +520,33 @@ const QuestionEdit = () => {
     setErrors([]);
     setDisplayLogicError(null);
   };
+
+  const buildPreviewDraft = (): QuestionPreviewDraft | null => {
+    if (!question) {
+      return null;
+    }
+    let json = question.json ?? null;
+    try {
+      const updatedJSON = questionType ? buildUpdatedJSON(question, undefined, () => {}) : undefined;
+      if (updatedJSON?.success && updatedJSON.data) {
+        json = JSON.stringify(updatedJSON.data);
+      }
+    } catch {
+      // The preview falls back to the question's current JSON.
+    }
+    return {
+      sectionId: Number(selectedQuestion?.question?.sectionId),
+      questionText: stripHtmlTags(question.questionText ?? ''),
+      requirementText: question.requirementText ?? null,
+      guidanceText: question.guidanceText ?? null,
+      sampleText: question.sampleText ?? null,
+      useSampleTextAsDefault: Boolean(question.useSampleTextAsDefault),
+      required: Boolean(question.required),
+      json,
+    };
+  };
+
+  const previewDraftSync = useQuestionPreviewDraftSync(buildPreviewDraft);
 
   // Handle form submission to update the question
   const handleUpdate = async (e: React.FormEvent) => {
@@ -1238,17 +1276,12 @@ const QuestionEdit = () => {
         <div className="sidebar">
           <h2>{Global('headings.preview')}</h2>
           <p>{t('descriptions.previewText')}</p>
-          <QuestionPreview
-            buttonLabel={t('buttons.previewQuestion')}
-            previewDisabled={question ? false : true}
-          >
-            <QuestionView
-              isPreview={true}
-              question={question}
-              templateId={Number(templateId)}
-              path={routePath('template.q.slug', { templateId, q_slug: questionId })}
-            />
-          </QuestionPreview>
+          <QuestionPreviewLink
+            href={routePath('template.preview.question', { templateId, questionId })}
+            label={t('buttons.previewQuestion')}
+            isDisabled={!question}
+            draftSync={previewDraftSync}
+          />
 
           <h3>{t('headings.bestPractice')}</h3>
           <p>{t('descriptions.bestPracticePara1')}</p>

@@ -138,7 +138,7 @@ function toQuestionIdentity(question: PlanAuthoringQuestion): PlanQuestionIdenti
   throw new Error(`${question.questionType} plan question is missing its id`);
 }
 
-function parseQuestionJson(json: Nullable<string>): {
+export function parseQuestionJson(json: Nullable<string>): {
   parsedJson: Record<string, unknown>;
   jsonError?: PlanQuestionJsonError;
 } {

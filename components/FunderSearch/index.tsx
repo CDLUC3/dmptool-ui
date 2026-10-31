@@ -15,8 +15,14 @@ import {
 import { useLazyQuery } from '@apollo/client/react';
 import { AffiliationFundersDocument } from '@/generated/graphql';
 
+// Components
+import ErrorMessages from '@/components/ErrorMessages';
+
 // Utils and other
 import { FunderSearchResults } from '@/app/types';
+import { handleApolloError } from '@/utils/apolloErrorHandler';
+
+const logSearchError = (err: unknown) => handleApolloError(err, 'FunderSearch.fetchAffiliations');
 
 interface FunderSearchProps extends React.HTMLAttributes<HTMLDivElement> {
   // Call back to return the results
@@ -60,7 +66,7 @@ const FunderSearch = ({
         name: searchTerm.toLowerCase(),
         funderOnly: true,
       },
-    });
+    }).catch(logSearchError);
   };
 
   useEffect(() => {
@@ -88,7 +94,7 @@ const FunderSearch = ({
           name: searchTerm.toLowerCase(),
           funderOnly: true,
         },
-      });
+      }).catch(logSearchError);
       setMoreCounter(moreTrigger);
     }
   }, [moreTrigger]);
@@ -120,6 +126,7 @@ const FunderSearch = ({
               {t('helpText.funderSearch')}
             </Text>
           </SearchField>
+          {error && <ErrorMessages errors={[t('messaging.somethingWentWrong')]} noScroll />}
         </section>
       </Form>
     </>

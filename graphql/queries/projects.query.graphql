@@ -207,10 +207,12 @@ query ProjectFundingsApi($projectId: Int!) {
   project(projectId: $projectId) {
     fundings {
       id
+      status
       affiliation {
         apiTarget
         uri
         id
+        displayName
       }
     }
   }

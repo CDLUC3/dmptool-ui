@@ -43,7 +43,12 @@ import {
 import PageHeader from "@/components/PageHeader";
 import QuestionOptionsComponent
   from '@/components/Form/QuestionOptionsComponent';
-import QuestionPreview from '@/components/QuestionPreview';
+import QuestionPreviewLink from '@/components/QuestionPreviewLink';
+import {
+  useQuestionPreviewDraftSync,
+  type QuestionPreviewDraft,
+} from '@/components/QuestionPreviewLink/questionPreviewDraft';
+import { questionKey } from '@/components/PlanAuthoring/model';
 import {
   FormInput,
   RadioGroupComponent,
@@ -53,7 +58,6 @@ import {
 } from '@/components/Form';
 import FormTextArea from '@/components/Form/FormTextArea';
 import ErrorMessages from '@/components/ErrorMessages';
-import QuestionView from '@/components/QuestionView';
 import { getParsedQuestionJSON } from '@/components/hooks/getParsedQuestionJSON';
 import Loading from '@/components/Loading';
 import {
@@ -306,7 +310,11 @@ const CustomQuestionEdit = () => {
 
   // Prepare input for the questionTypeHandler. For options questions, we update the 
   // values with rows state. For non-options questions, we use the parsed JSON
-  const getFormState = (question: Question, rowsOverride?: QuestionOptions[]) => {
+  const getFormState = (
+    question: Question,
+    rowsOverride?: QuestionOptions[],
+    onError: (error: string) => void = (error) => setErrors([error])
+  ) => {
     if (hasOptions) {
       const useRows = rowsOverride ?? rows;
       return {
@@ -326,7 +334,7 @@ const CustomQuestionEdit = () => {
 
     if (!parsed) {
       if (error) {
-        setErrors([error]);
+        onError(error);
       }
       return;
     }
@@ -340,13 +348,17 @@ const CustomQuestionEdit = () => {
   };
 
   // Pass the merged userInput to questionTypeHandlers to generate json and do type and schema validation
-  const buildUpdatedJSON = (question: Question, rowsOverride?: QuestionOptions[]) => {
-    const userInput = getFormState(question, rowsOverride);
+  const buildUpdatedJSON = (
+    question: Question,
+    rowsOverride?: QuestionOptions[],
+    onError: (error: string) => void = (error) => setErrors([error])
+  ) => {
+    const userInput = getFormState(question, rowsOverride, onError);
     const { parsed, error } = getParsedQuestionJSON(question, routePath('template.customize', { templateCustomizationId }), Global);
 
     if (!parsed) {
       if (error) {
-        setErrors([error]);
+        onError(error);
       }
       return;
     }
@@ -355,6 +367,33 @@ const CustomQuestionEdit = () => {
       userInput
     );
   };
+
+  const buildPreviewDraft = (): QuestionPreviewDraft | null => {
+    if (!question) {
+      return null;
+    }
+    let json = question.json ?? null;
+    try {
+      const updatedJSON = questionType ? buildUpdatedJSON(question, undefined, () => {}) : undefined;
+      if (updatedJSON?.success && updatedJSON.data) {
+        json = JSON.stringify(updatedJSON.data);
+      }
+    } catch {
+      // The preview falls back to the question's current JSON.
+    }
+    return {
+      sectionId: Number(selectedQuestion?.customQuestion?.sectionId),
+      questionText: stripHtmlTags(question.questionText ?? ''),
+      requirementText: question.requirementText ?? null,
+      guidanceText: question.guidanceText ?? null,
+      sampleText: question.sampleText ?? null,
+      useSampleTextAsDefault: Boolean(question.useSampleTextAsDefault),
+      required: Boolean(question.required),
+      json,
+    };
+  };
+
+  const previewDraftSync = useQuestionPreviewDraftSync(buildPreviewDraft);
 
   // Make GraphQL mutation request to update the custom question
   const handleUpdateCustomQuestion = async (e: React.FormEvent) => {
@@ -904,19 +943,15 @@ const CustomQuestionEdit = () => {
           <>
             <h2>{Global('headings.preview')}</h2>
             <p>{QuestionEdit('descriptions.previewText')}</p>
-            <QuestionPreview
-              buttonLabel={QuestionEdit('buttons.previewQuestion')}
-              previewDisabled={question ? false : true}
-            >
-              <QuestionView
-                isPreview={true}
-                question={question}
-                path={routePath('template.customQuestion', {
-                  templateCustomizationId,
-                  customQuestionId,
-                })}
-              />
-            </QuestionPreview>
+            <QuestionPreviewLink
+              href={routePath('template.customize.preview.question', {
+                templateCustomizationId,
+                questionKey: questionKey({ kind: 'custom', customQuestionId: Number(customQuestionId) }),
+              })}
+              label={QuestionEdit('buttons.previewQuestion')}
+              isDisabled={!question}
+              draftSync={previewDraftSync}
+            />
 
             <h3>{QuestionEdit('headings.bestPractice')}</h3>
             <p>{QuestionEdit('descriptions.bestPracticePara1')}</p>

@@ -16,6 +16,7 @@
       "percentComplete": "{percent}% complete",
       "writeYourPlan": "Write your plan",
       "writePlanIntro": "Work through each section below — answers save automatically. Use Jump to section to move between sections.",
+      "writePlanIntroPreview": "Nothing you enter here is saved. Try answering the questions to see how they work for plan writers, and use Jump to section to move between sections.",
       "questionsAnswered": "{answered} of {total} questions answered",
       "planDocument": "Plan document",
       "planDocumentIntro": "This plan is represented by a single uploaded DMP document. Use <strong>Update document</strong> to replace it with a new file.",
@@ -71,7 +72,8 @@
       "saved": "Saved",
       "lastSaved": "Last saved {relative}",
       "saveFailed": "Save failed",
-      "unableToSave": "Unable to save answer."
+      "unableToSave": "Unable to save answer.",
+      "previewNotSaved": "This is a preview, so nothing was saved. Plan writers see \"Saved just now\" when they save."
     },
     "sidebar": {
       "ariaLabel": "Question guidance and comments",

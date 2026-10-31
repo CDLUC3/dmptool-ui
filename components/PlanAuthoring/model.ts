@@ -22,6 +22,8 @@ export interface PlanCapabilities {
   /** Plan owners / moderators can delete any comment (mirrors planOwners in useComments). */
   canModerateComments: boolean;
   canCustomizeGuidance: boolean;
+  /** Answers are only kept in memory. */
+  isPreview?: boolean;
 }
 
 export interface PlanGuidanceSource {
