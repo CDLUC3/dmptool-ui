@@ -1,0 +1,37 @@
+# Run by the E2E CodePipeline (see dmptool-infrastructure templates/codepipeline/e2e.yaml), which starts after the nextJS, 
+# apollo, authShib or narrative generator pipeline deploys successfully
+# Runs on mcr.microsoft.com/playwright, so keep that image tag aligned with @playwright/test in package.json.
+# The CodeBuild project provides BASE_URL, GRAPHQL_URL, CI, E2E_REPORT_BUCKET, the auth cookie names and the
+# test account credentials.
+version: 0.2
+
+phases:
+  install:
+    commands:
+      # The AWS CLI isn't in the Playwright image (and Ubuntu 24.04 no longer packages it), so use the official installer
+      - apt-get update && apt-get install -y --no-install-recommends curl unzip
+      - curl -sSL "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o /tmp/awscliv2.zip
+      - unzip -q /tmp/awscliv2.zip -d /tmp && /tmp/aws/install
+      - cd "$CODEBUILD_SRC_DIR/e2e" && npm ci
+      # Safety net if the image and package versions become misaligned (a no-op when they match)
+      - cd "$CODEBUILD_SRC_DIR/e2e" && npx playwright install --with-deps chromium
+
+  build:
+    commands:
+      - cd "$CODEBUILD_SRC_DIR/e2e" && npx playwright test --project=chromium
+
+  post_build:
+    commands:
+      # Runs even when the tests fail. The HTML report includes the traces of failed tests
+      - REPORT_PREFIX="$(date -u +%Y-%m-%d)/${CODEBUILD_BUILD_NUMBER}"
+      - |
+        if [ -d "$CODEBUILD_SRC_DIR/e2e/playwright-report" ]; then
+          aws s3 cp "$CODEBUILD_SRC_DIR/e2e/playwright-report" "s3://${E2E_REPORT_BUCKET}/${REPORT_PREFIX}/" --recursive --only-show-errors
+          echo "Playwright report: s3://${E2E_REPORT_BUCKET}/${REPORT_PREFIX}/index.html"
+        fi
+
+reports:
+  e2e-results:
+    files:
+      - e2e/test-results/junit.xml
+    file-format: JUNITXML

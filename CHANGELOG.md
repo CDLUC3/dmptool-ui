@@ -1,4 +1,5 @@
 ## Added
+- Added Playwright end-to-end tests in a separate `e2e/` package, with login, logout, GraphQL and templates tests, and `test:e2e` and `test:e2e:ui` scripts. `e2e/` is excluded from Jest, ESLint, the root `tsconfig.json` and the Docker image [#559]
 - Added a guided create-project / create-DMP flow with a "Setup progress" rail: `/projects/create` (new or existing project, then a plan) and `/projects/create/project?intent=project` (project only). Flow screens live under `/projects/create…` and `/projects/:projectId/create/…`; the old `create-project`, `funding-search` and `project-funding` routes are removed
 - Added a preview mode that shows a template as researchers will see it when writing a plan, using the `PlanAuthoring` one-pager. Answers can be tried out but are never saved. It's opened from Preview on the template and customization overview pages, and from "Preview question" on the add, edit and customize question pages, where it opens in a new tab and shows unsaved edits as they're made [#65]
 - Added AGENTS.md and CLAUDE.md with project rules for AI coding agents [#579]
@@ -236,6 +237,7 @@
 - Fixed issue with Feedback Notification headers displaying for any collaborator on the Plan Overview, Section and Question pages. It should only display to Org Admins and Super Admins. Added shared isOrgAdmin hook for pages. [#249]
 
 ## Removed
+- Removed Cypress, its config and its tests, which were replaced by Playwright [#559]
 - Removed the old `QuestionPreview` pop-up and `QuestionView` component, replaced by the new preview mode [#65]
 - Removed unused lib/graphql/client.ts [#579]
 - Removed the ununused `app/[locale]/users/[userId]/projects` page, since we no longer link to it since we updated the `app/[locale]/users/[userId]/manage` page to link to `projects` instead of `plans` [#379]

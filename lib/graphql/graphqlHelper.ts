@@ -87,18 +87,31 @@ export const errorLink = new ErrorLink(({ error, operation, forward }) => {
     }
 
     // INTERNAL SERVER ERROR
+    const serverError = error.errors.find(
+      ({ extensions }) => extensions?.code === 'INTERNAL_SERVER_ERROR'
+    );
     error.errors.forEach(({ message, extensions }) => {
       if (extensions?.code === 'INTERNAL_SERVER_ERROR') {
         logECS('error', `[GraphQL Error]: INTERNAL_SERVER_ERROR - ${message}`, {
           errorCode: 'INTERNAL_SERVER_ERROR'
         });
-        navigateTo('/500-error');
       } else {
         logECS('error', `[GraphQL Error]: ${message}`, {
           errorCode: 'GRAPHQL'
         });
       }
     });
+
+    // Non-critical queries (header, widgets) can pass context: { skipErrorRedirect: true } to handle their own errors.
+    // Never redirect from the 500 page itself: the redirect reloads the page, so a failing query there would reload it forever.
+    const { skipErrorRedirect } = operation.getContext();
+    const alreadyOnErrorPage = typeof window !== 'undefined'
+      && window.location.pathname.endsWith('/500-error');
+
+    // Redirect once after logging, even if the response has more than one server error
+    if (serverError && !skipErrorRedirect && !alreadyOnErrorPage) {
+      navigateTo('/500-error');
+    }
   } else {
     // Network error or other error types
     // Filter out AbortErrors globally - these are expected when React Strict Mode unmounts/remounts
