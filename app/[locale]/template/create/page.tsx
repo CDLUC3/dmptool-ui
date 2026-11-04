@@ -9,6 +9,7 @@ import React, {
 } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from '@/i18n/routing';
+import { useLazyQuery } from '@apollo/client/react';
 import NProgress from 'nprogress';
 import {
   Breadcrumb,
@@ -26,9 +27,13 @@ import FormInput from '@/components/Form/FormInput';
 import Loading from '@/components/Loading';
 import { TransitionButton } from '@/components/Form';
 
+// GraphQL
+import { TemplateNameAvailableDocument } from '@/generated/graphql';
+
 // Utils
 import { debounce } from '@/hooks/debounce';
 import { useQueryStep } from '@/app/[locale]/template/create/useQueryStep';
+import { handleApolloError } from '@/utils/apolloErrorHandler';
 
 const TemplateCreatePage: React.FC = () => {
   const router = useRouter();
@@ -40,6 +45,10 @@ const TemplateCreatePage: React.FC = () => {
   //Localization keys
   const TemplateCreate = useTranslations('TemplateCreatePage');
   const Global = useTranslations('Global');
+
+  const [checkTemplateName] = useLazyQuery(TemplateNameAvailableDocument, {
+    fetchPolicy: 'network-only',
+  });
 
   // Debounced input handler
   const debouncedInputHandler = useMemo(
@@ -64,6 +73,37 @@ const TemplateCreatePage: React.FC = () => {
 
     if (templateName.length <= 2) {
       setErrors({ templateName: TemplateCreate('messages.templateNameError') });
+      return;
+    }
+
+    try {
+      const { data, error } = await checkTemplateName({
+        variables: { name: templateName.trim() },
+      });
+
+      if (error) {
+        const { wasRealError } = handleApolloError(error, 'TemplateCreatePage.handleNext');
+        if (wasRealError) {
+          setErrors({ templateName: TemplateCreate('messages.templateNameCheckError') });
+        }
+        return;
+      }
+
+      const isAvailable = data?.templateNameAvailable;
+      if (isAvailable === undefined) {
+        setErrors({ templateName: TemplateCreate('messages.templateNameCheckError') });
+        return;
+      }
+
+      if (!isAvailable) {
+        setErrors({ templateName: TemplateCreate('messages.templateNameTaken') });
+        return;
+      }
+    } catch (err) {
+      const { wasRealError } = handleApolloError(err, 'TemplateCreatePage.handleNext');
+      if (wasRealError) {
+        setErrors({ templateName: TemplateCreate('messages.templateNameCheckError') });
+      }
       return;
     }
 
