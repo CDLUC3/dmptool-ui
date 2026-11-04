@@ -19,8 +19,13 @@ import {
 } from '@/generated/graphql';
 import logECS from '@/utils/clientLogger';
 import { routePath } from '@/utils/routes';
+import { useResendEmailConfirmation } from '@/app/hooks/useResendEmailConfirmation';
 
 expect.extend(toHaveNoViolations);
+
+jest.mock('@/app/hooks/useResendEmailConfirmation', () => ({
+  useResendEmailConfirmation: jest.fn(),
+}));
 
 const GET_USER = MeDocument;
 jest.mock('next/navigation', () => ({
@@ -102,14 +107,38 @@ const mockEmailData = {
 }
 
 
+const mockEmailAddressesWithUnconfirmed = [
+  ...mockEmailAddresses,
+  {
+    email: 'pending@test.com',
+    isPrimary: false,
+    isConfirmed: false
+  },
+]
+
 // Cast with jest.mocked utility
 const mockUseMutation = jest.mocked(useMutation);
+const mockUseResendEmailConfirmation = jest.mocked(useResendEmailConfirmation);
 
 let mockSetPrimaryUserEmailMutationFn: jest.Mock;
 let mockAddUserEmailMutationFn: jest.Mock;
 let mockRemoveUserEmailMutationFn: jest.Mock;
+let mockResendEmailConfirmationFn: jest.Mock;
 
 const setupMocks = () => {
+
+  mockResendEmailConfirmationFn = jest.fn().mockResolvedValue({
+    data: {
+      resendUserEmailConfirmation: {
+        email: 'pending@test.com',
+        isPrimary: false,
+        isConfirmed: false,
+        errors: null
+      }
+    }
+  });
+  /* eslint-disable @typescript-eslint/no-explicit-any */
+  mockUseResendEmailConfirmation.mockReturnValue([mockResendEmailConfirmationFn, { loading: false }] as any);
 
   mockSetPrimaryUserEmailMutationFn = jest.fn().mockResolvedValue({
     data: { key: 'value' }
@@ -319,7 +348,7 @@ describe('UpdateEmailAddressPage', () => {
 
       // Check that the errorDiv exists
       expect(errorDiv).toBeInTheDocument();
-      expect(screen.getByText('messages.errorDeletingEmail')).toBeInTheDocument();
+      expect(screen.getByText('messages.errors.errorDeletingEmail')).toBeInTheDocument();
     });
 
     // Verify logECS was called with correct parameters
@@ -372,7 +401,7 @@ describe('UpdateEmailAddressPage', () => {
     // Verify the mutation was called twice
     await waitFor(() => {
       expect(mockRemoveEmailResponse).toHaveBeenCalledTimes(1);
-      expect(screen.getByText('messages.errorDeletingEmail')).toBeInTheDocument();
+      expect(screen.getByText('messages.errors.errorDeletingEmail')).toBeInTheDocument();
     });
   });
 
@@ -420,7 +449,7 @@ describe('UpdateEmailAddressPage', () => {
 
       // Check that the errorDiv exists
       expect(errorDiv).toBeInTheDocument();
-      expect(screen.getByText('messages.errorAddingNewEmail')).toBeInTheDocument();
+      expect(screen.getByText('messages.errors.errorAddingNewEmail')).toBeInTheDocument();
     });
 
     // Verify logECS was called with correct parameters
@@ -474,7 +503,7 @@ describe('UpdateEmailAddressPage', () => {
 
       // Check that the errorDiv exists
       expect(errorDiv).toBeInTheDocument();
-      expect(screen.getByText('messages.errorSettingPrimaryEmail')).toBeInTheDocument();
+      expect(screen.getByText('messages.errors.errorSettingPrimaryEmail')).toBeInTheDocument();
     });
 
     // Verify logECS was called with correct parameters
@@ -561,7 +590,7 @@ describe('UpdateEmailAddressPage', () => {
     // Verify the mutation was called twice
     await waitFor(() => {
       expect(mockSetPrimaryUserEmailResponse).toHaveBeenCalledTimes(1);
-      expect(screen.getByText('messages.errorSettingPrimaryEmail')).toBeInTheDocument();
+      expect(screen.getByText('messages.errors.errorSettingPrimaryEmail')).toBeInTheDocument();
     });
   })
 
@@ -656,14 +685,173 @@ describe('UpdateEmailAddressPage', () => {
     // Verify the mutation was called twice
     await waitFor(() => {
       expect(mockAddUserEmailMutationResponse).toHaveBeenCalledTimes(1);
-      expect(screen.getByText('messages.errorAddingNewEmail')).toBeInTheDocument();
+      expect(screen.getByText('messages.errors.errorAddingNewEmail')).toBeInTheDocument();
     });
+  });
+
+  it('should add an alias, clear the input and tell the user a verification link was sent', async () => {
+    mockAddUserEmailMutationFn.mockResolvedValueOnce({
+      data: {
+        addUserEmail: {
+          ...mockEmailData,
+          email: 'msmith@test.com',
+          errors: { general: null, userId: null, email: null }
+        }
+      }
+    });
+
+    render(
+      <UpdateEmailAddress
+        emailAddresses={mockEmailAddresses}
+      />
+    );
+
+    const addAliasInput = screen.getByLabelText(/headingAddAliasEmail/i);
+    fireEvent.change(addAliasInput, { target: { value: 'msmith@test.com' } });
+
+    const addContainer = document.querySelector('.addContainer') as HTMLElement;
+    await act(async () => {
+      fireEvent.click(within(addContainer).getByRole('button', { name: 'btnAdd' }));
+    });
+
+    expect(mockAddUserEmailMutationFn).toHaveBeenCalledWith({
+      variables: { email: 'msmith@test.com', isPrimary: false },
+      refetchQueries: [{ query: GET_USER }],
+    });
+    await waitFor(() => {
+      expect(mockToastAdd).toHaveBeenCalledWith('messages.emailAddressUpdateSuccess', {
+        type: 'success',
+        priority: 1,
+        timeout: 10000,
+      });
+    });
+    expect(screen.getByLabelText(/headingAddAliasEmail/i)).toHaveValue('');
+  });
+
+  it('should show confirmed and unconfirmed states and only offer make primary on confirmed aliases', () => {
+    render(
+      <UpdateEmailAddress
+        emailAddresses={mockEmailAddressesWithUnconfirmed}
+      />
+    );
+
+    const confirmedRow = screen.getByText('test@test.com').closest('[class*="emailRow"]') as HTMLElement;
+    const pendingRow = screen.getByText('pending@test.com').closest('[class*="emailRow"]') as HTMLElement;
+    const primaryRow = screen.getByText('me@test.com').closest('[class*="emailRow"]') as HTMLElement;
+
+    expect(within(confirmedRow).getByText('confirmedBadge')).toBeInTheDocument();
+    expect(within(confirmedRow).getByRole('button', { name: 'linkMakePrimary' })).toBeInTheDocument();
+    expect(within(confirmedRow).queryByRole('button', { name: 'btnResendVerification' })).not.toBeInTheDocument();
+
+    expect(within(pendingRow).getByText('unconfirmedBadge')).toBeInTheDocument();
+    expect(within(pendingRow).getByText('unconfirmedEmailDesc')).toBeInTheDocument();
+    expect(within(pendingRow).queryByRole('button', { name: 'linkMakePrimary' })).not.toBeInTheDocument();
+    expect(within(pendingRow).getByRole('button', { name: 'btnResendVerification' })).toBeInTheDocument();
+
+    expect(within(primaryRow).queryByText('confirmedBadge')).not.toBeInTheDocument();
+    expect(within(primaryRow).queryByText('unconfirmedBadge')).not.toBeInTheDocument();
+  });
+
+  it('should resend the verification link and show a success toast', async () => {
+    render(
+      <UpdateEmailAddress
+        emailAddresses={mockEmailAddressesWithUnconfirmed}
+      />
+    );
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'btnResendVerification' }));
+    });
+
+    expect(mockResendEmailConfirmationFn).toHaveBeenCalledWith({
+      variables: { email: 'pending@test.com' }
+    });
+    await waitFor(() => {
+      expect(mockToastAdd).toHaveBeenCalledWith('messages.verificationResent', {
+        type: 'success',
+        priority: 1,
+        timeout: 10000,
+      });
+    });
+  });
+
+  it('should show an error toast with the backend message when resending returns errors', async () => {
+    mockResendEmailConfirmationFn.mockResolvedValueOnce({
+      data: {
+        resendUserEmailConfirmation: {
+          email: 'pending@test.com',
+          isPrimary: false,
+          isConfirmed: false,
+          errors: { general: 'Please wait before requesting another link', email: null, userId: null }
+        }
+      }
+    });
+
+    render(
+      <UpdateEmailAddress
+        emailAddresses={mockEmailAddressesWithUnconfirmed}
+      />
+    );
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'btnResendVerification' }));
+    });
+
+    await waitFor(() => {
+      expect(mockToastAdd).toHaveBeenCalledWith('Please wait before requesting another link', { type: 'error' });
+    });
+    expect(mockToastAdd).not.toHaveBeenCalledWith('messages.verificationResent', expect.anything());
+  });
+
+  it('should log and show an error toast when resending throws', async () => {
+    const resendError = new Error('Network error');
+    mockResendEmailConfirmationFn.mockRejectedValueOnce(resendError);
+
+    render(
+      <UpdateEmailAddress
+        emailAddresses={mockEmailAddressesWithUnconfirmed}
+      />
+    );
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'btnResendVerification' }));
+    });
+
+    await waitFor(() => {
+      expect(mockToastAdd).toHaveBeenCalledWith('messages.errors.errorResendingVerification', { type: 'error' });
+    });
+    expect(logECS).toHaveBeenCalledWith(
+      'error',
+      'UpdateEmailAddress.resendConfirmation',
+      { error: 'Network error' }
+    );
+  });
+
+  it('should not show an error toast when the resend request is aborted', async () => {
+    const abortError = new Error('The operation was aborted');
+    abortError.name = 'AbortError';
+    mockResendEmailConfirmationFn.mockRejectedValueOnce(abortError);
+
+    render(
+      <UpdateEmailAddress
+        emailAddresses={mockEmailAddressesWithUnconfirmed}
+      />
+    );
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'btnResendVerification' }));
+    });
+
+    await waitFor(() => {
+      expect(mockResendEmailConfirmationFn).toHaveBeenCalled();
+    });
+    expect(mockToastAdd).not.toHaveBeenCalled();
   });
 
   it('should pass axe accessibility test', async () => {
     const { container } = render(
       <UpdateEmailAddress
-        emailAddresses={mockEmailAddresses}
+        emailAddresses={mockEmailAddressesWithUnconfirmed}
       />
     );
     await act(async () => {
