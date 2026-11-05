@@ -42,7 +42,7 @@
     "jsonwebtoken": "9.0.3",
     "loglevel": "1.9.2",
     "next": "16.4.2",
-    "next-intl": "4.9.2",
+    "next-intl": "4.14.9",
     "node-fetch": "3.3.2",
     "nprogress": "0.2.0",
     "papaparse": "5.5.4",
