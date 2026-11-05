@@ -344,12 +344,14 @@ describe("SSOCheckContainer", () => {
       await screen.findByTestId("passInput");
     };
 
-    it("renders the forgot password link", async () => {
+    it("renders the reset password link", async () => {
       const user = userEvent.setup();
       renderComponent("login");
       await goToLogin(user);
 
-      expect(screen.getByText("forgotPassword.title")).toBeInTheDocument();
+      const link = screen.getByRole("link", { name: "resetPasswordLink" });
+      expect(link).toHaveAttribute("href", expect.stringContaining("login.forgotPassword"));
+      expect(screen.queryByText("forgotPassword.title")).not.toBeInTheDocument();
     });
 
     it("shows a password required error and does not submit", async () => {
