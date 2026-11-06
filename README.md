@@ -400,7 +400,10 @@ From the repository root:
 | Task | Command |
 | --- | --- |
 | Run all tests in Chromium, Firefox and WebKit | `npm run test:e2e` |
+| Run all tests in Chromium only | `npm run test:e2e:chromium` |
 | Open the Playwright UI | `npm run test:e2e:ui` |
+
+To pass other Playwright options from the root, add a second `--`, because the root scripts call npm again: `npm run test:e2e -- -- plan.spec.ts --project=firefox`. Running `npx playwright test` from `e2e/` avoids this.
 
 From `e2e/`:
 
@@ -409,11 +412,25 @@ From `e2e/`:
 | Run all browsers | `npx playwright test` |
 | Run Chromium only | `npx playwright test --project=chromium` |
 | Run headed in Chromium | `npm run test:headed` |
+| Run one spec file in Chromium | `npx playwright test plan.spec.ts --project=chromium` |
 | Open the latest HTML report | `npx playwright show-report` |
+
+`npx playwright` commands only work from `e2e/`, where Playwright and its config are installed.
 
 Before the browser projects run, the `setup` project (`tests/auth.setup.ts`) logs in once per role and saves each session to `e2e/playwright/.auth/`. A spec can start logged in with `test.use(asRole('admin'))`, or logged out with `test.use(loggedOut)` (see `tests/helpers/roles.ts`).
 
 Reports are written to `e2e/playwright-report/` and `e2e/test-results/`. Both are git-ignored.
+
+### Running against the local dev server
+The tests run one at a time (`workers: 1` in `playwright.config.ts`), locally as well as on CI. Locally they run against the Next.js dev server, which builds each page the first time it's visited, so several tests at once slow it down and tests time out. A full run takes longer this way, but its failures are real ones. For a short run, you can run more at once with `--workers`, for example `npx playwright test plan.spec.ts --workers=3`.
+
+The dev server also keeps every page it builds in memory. During long runs it can reach its memory limit and restart itself, printing "Server is approaching the used memory threshold, restarting..." in the container's log (`docker compose logs dmsp-frontend-prototype`). Tests that are loading a page at that moment fail with errors like `net::ERR_CONNECTION_RESET`. To avoid this:
+
+- **Restart the UI container before a full run**, so it starts with little memory in use: `docker compose restart dmsp-frontend-prototype`.
+- **While working on tests, run only the spec file you're changing**, in Chromium.
+- **The memory limit is already raised:** the UI service in `docker-compose.yml` sets `NODE_OPTIONS=--max-old-space-size=8192` (8 GB, up from Node's default of about 4 GB). This delays the restart, but doesn't prevent it. If you change the value, recreate the container with `docker compose up -d dmsp-frontend-prototype`; a plain restart keeps the old setting.
+
+CI isn't affected: the deployed environments run a production build, which builds every page in advance and doesn't restart itself.
 
 ### Handling traces, reports and saved sessions
 Playwright traces record each action, the text typed with `fill()`, network requests (including session cookies), and page snapshots. The HTML report embeds the traces, so treat reports, traces and saved sessions as sensitive.

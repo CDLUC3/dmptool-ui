@@ -179,6 +179,8 @@ Show translated messages (`t("messages.errors.…")`), not raw backend or except
 
 ## Testing and verification
 
+End-to-end tests live in `e2e/`, which has its own rules in `e2e/AGENTS.md`. Read them before writing or running e2e tests. Most importantly, never publish a plan: it registers a real DOI.
+
 Before you call a task done, run these and make sure they pass (they're the same checks as `.husky/pre-commit`):
 
 ```bash
