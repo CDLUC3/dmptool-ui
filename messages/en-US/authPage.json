@@ -45,6 +45,7 @@
     "termsRequired": "You must accept the terms and conditions",
     "passwordRequired": "Password is required",
     "passwordRequirements": "Password must meet the requirements below",
+    "resetPasswordLink": "Reset password",
     "forgotPassword": {
       "title": "Forgot your password?",
       "emailLabel": "Email address",

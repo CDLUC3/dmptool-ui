@@ -470,7 +470,7 @@ export const SSOCheckContainer: React.FC<SSOCheckContainerProps> = ({ mode, init
               href={routePath("login.forgotPassword")}
               className={styles.forgotPasswordLink}
             >
-              {t("forgotPassword.title")}
+              {t("resetPasswordLink")}
             </Link>
           }
           data-testid="passInput"
