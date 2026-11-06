@@ -64,16 +64,33 @@ describe('EmailAddressRow', () => {
     expect(screen.getByRole('button', { name: 'deleteEmailAria' })).toBeInTheDocument();
   });
 
-  it('should explain why the alias is unconfirmed in a tooltip when the info button gets keyboard focus', async () => {
+  it('should explain why the alias is unconfirmed in a popover when the info button is pressed', async () => {
     const user = userEvent.setup();
     render(<EmailAddressRow email="alias@test.com" isAlias isConfirmed={false} />);
 
-    expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'unconfirmedInfoAria' }));
+
+    expect(await screen.findByRole('dialog', { name: 'unconfirmedBadge' })).toHaveTextContent('unconfirmedTooltip');
+  });
+
+  it('should open the unconfirmed popover from the keyboard and close it with Escape, returning focus', async () => {
+    const user = userEvent.setup();
+    render(<EmailAddressRow email="alias@test.com" isAlias isConfirmed={false} />);
 
     await user.tab();
+    const infoButton = screen.getByRole('button', { name: 'unconfirmedInfoAria' });
+    expect(infoButton).toHaveFocus();
 
-    expect(screen.getByRole('button', { name: 'unconfirmedInfoAria' })).toHaveFocus();
-    expect(await screen.findByRole('tooltip')).toHaveTextContent('unconfirmedTooltip');
+    await user.keyboard('{Enter}');
+    expect(await screen.findByRole('dialog', { name: 'unconfirmedBadge' })).toBeInTheDocument();
+
+    await user.keyboard('{Escape}');
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      expect(infoButton).toHaveFocus();
+    });
   });
 
   it('should not show the resend action when no resend handler is provided', () => {
@@ -83,7 +100,8 @@ describe('EmailAddressRow', () => {
     expect(screen.queryByRole('button', { name: 'btnResendVerification' })).not.toBeInTheDocument();
   });
 
-  it('should call the resend handler and show a disabled sending label until it finishes', async () => {
+  it('should call the resend handler, show a pending sending label, and keep focus on the button', async () => {
+    const user = userEvent.setup();
     let finishResend!: () => void;
     const resendConfirmation = jest.fn(
       () => new Promise<void>((resolve) => { finishResend = resolve; })
@@ -97,36 +115,41 @@ describe('EmailAddressRow', () => {
       />
     );
 
-    await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: 'btnResendVerification' }));
-    });
+    const resendButton = screen.getByRole('button', { name: 'btnResendVerification' });
+    resendButton.focus();
+    await user.keyboard('{Enter}');
 
     expect(resendConfirmation).toHaveBeenCalledWith('alias@test.com');
-    const busyButton = screen.getByRole('button', { name: 'btnResendingVerification' });
-    expect(busyButton).toBeDisabled();
+    expect(resendButton).toHaveTextContent('btnResendingVerification');
+    expect(resendButton).toHaveAttribute('aria-disabled', 'true');
+    expect(resendButton).toHaveFocus();
+
+    await user.keyboard('{Enter}');
+    expect(resendConfirmation).toHaveBeenCalledTimes(1);
 
     await act(async () => {
       finishResend();
     });
 
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: 'btnResendVerification' })).toBeEnabled();
+      expect(resendButton).toHaveTextContent('btnResendVerification');
     });
+    expect(resendButton).not.toHaveAttribute('aria-disabled');
+    expect(resendButton).toHaveFocus();
   });
 
-  it('should pass axe accessibility test with the unconfirmed tooltip open', async () => {
+  it('should pass axe accessibility test with the unconfirmed popover open', async () => {
     const user = userEvent.setup();
     const { container } = render(
       <EmailAddressRow email="alias@test.com" isAlias isConfirmed={false} resendConfirmation={jest.fn()} />
     );
 
-    await user.tab();
-    const tooltip = await screen.findByRole('tooltip');
-    expect(screen.getByRole('button', { name: 'unconfirmedInfoAria' })).toHaveAttribute('aria-describedby', tooltip.id);
+    await user.click(screen.getByRole('button', { name: 'unconfirmedInfoAria' }));
+    const dialog = await screen.findByRole('dialog', { name: 'unconfirmedBadge' });
 
     await act(async () => {
       expect(await axe(container)).toHaveNoViolations();
-      expect(await axe(tooltip)).toHaveNoViolations();
+      expect(await axe(dialog)).toHaveNoViolations();
     });
   });
 

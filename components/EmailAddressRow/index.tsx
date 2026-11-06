@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import classNames from 'classnames';
 import { useTranslations } from 'next-intl';
 import {
@@ -9,11 +10,10 @@ import {
   Heading,
   Modal,
   ModalOverlay,
-  Tooltip,
-  TooltipTrigger
+  OverlayArrow,
+  Popover
 } from 'react-aria-components';
 import { DmpIcon } from '@/components/Icons';
-import { TransitionButton } from '@/components/Form';
 import styles from './emailAddressRow.module.scss';
 
 interface DeleteRowInterface {
@@ -30,7 +30,7 @@ interface DeleteRowInterface {
 export default function EmailAddressRow({
   email,
   isAlias,
-  isConfirmed = true,
+  isConfirmed = false,
   additionalClassName,
   deleteDisabled = false,
   makePrimaryEmail,
@@ -39,6 +39,16 @@ export default function EmailAddressRow({
 }: DeleteRowInterface) {
 
   const t = useTranslations('UserProfile');
+  const [isResending, setIsResending] = useState(false);
+
+  const handleResend = async (resend: (email: string) => Promise<void>) => {
+    setIsResending(true);
+    try {
+      await resend(email);
+    } finally {
+      setIsResending(false);
+    }
+  }
 
   const handleMakePrimary = (email: string) => {
     if (makePrimaryEmail) {
@@ -66,17 +76,24 @@ export default function EmailAddressRow({
                   <DmpIcon icon="warning" classes={styles.statusBadgeIcon} width="16px" height="16px" />
                   {t('unconfirmedBadge')}
                 </span>
-                <TooltipTrigger delay={0}>
+                <DialogTrigger>
                   <Button
                     className={styles.infoButton}
                     aria-label={t('unconfirmedInfoAria', { email })}
                   >
                     <DmpIcon icon="info" classes={styles.infoIcon} width="18px" height="18px" />
                   </Button>
-                  <Tooltip placement="top" className={styles.tooltip}>
-                    {t('unconfirmedTooltip')}
-                  </Tooltip>
-                </TooltipTrigger>
+                  <Popover className="dynamic-popover-width react-aria-Popover">
+                    <OverlayArrow>
+                      <svg width={12} height={12} viewBox="0 0 12 12" aria-hidden="true">
+                        <path d="M0 0 L6 6 L12 0" />
+                      </svg>
+                    </OverlayArrow>
+                    <Dialog aria-label={t('unconfirmedBadge')} className="popoverContent">
+                      {t('unconfirmedTooltip')}
+                    </Dialog>
+                  </Popover>
+                </DialogTrigger>
               </>
             )
           )}
@@ -93,16 +110,13 @@ export default function EmailAddressRow({
           <>
             <p className={styles.unconfirmedMessage}>{t('unconfirmedEmailDesc')}</p>
             {resendConfirmation && (
-              <TransitionButton
+              <Button
                 className={styles.emailLink}
-                showLoading={false}
-                loadingLabel={t('btnResendingVerification')}
-                onPress={async () => {
-                  await resendConfirmation(email);
-                }}
+                isPending={isResending}
+                onPress={() => handleResend(resendConfirmation)}
               >
-                {t('btnResendVerification')}
-              </TransitionButton>
+                {isResending ? t('btnResendingVerification') : t('btnResendVerification')}
+              </Button>
             )}
           </>
         )}
