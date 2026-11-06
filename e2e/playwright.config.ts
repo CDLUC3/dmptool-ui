@@ -43,6 +43,11 @@ export default defineConfig({
     locale: 'en-US',
     // Collect a trace when retrying a failed test. See https://playwright.dev/docs/trace-viewer
     trace: 'on-first-retry',
+    // On AWS dev, the load balancer sends every request to the CDL SSO (Cognito) login unless it has this header,
+    // so the CodeBuild project sets E2E_TEST_SECRET_KEY. It isn't needed locally, so no header is sent when it's unset
+    extraHTTPHeaders: process.env.E2E_TEST_SECRET_KEY
+      ? { 'X-E2E-Test-Token': process.env.E2E_TEST_SECRET_KEY }
+      : {},
   },
 
   projects: [
