@@ -2,9 +2,9 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 16px;
-  padding: 16px;
-  margin: 12px 0;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  margin: var(--space-3) 0;
   border: 1px solid var(--gray-100);
   border-radius: 8px;
   background: var(--gray-50);
@@ -32,11 +32,44 @@
       text-decoration: underline;
     }
 
+    &[data-pending] {
+      cursor: progress;
+      color: var(--gray-500);
+    }
+
     &:focus-visible {
       outline: 2px solid var(--blue-900);
       outline-offset: 2px;
       background: none;
       color: var(--blue-900);
+    }
+  }
+
+  .infoButton {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: help;
+    background: none;
+    border: none;
+    padding: var(--space-1);
+    margin: 0;
+    border-radius: 50%;
+    transition: none;
+
+    &:hover:not(:disabled),
+    &:active:not(:disabled) {
+      background: none;
+
+      .infoIcon {
+        fill: var(--blue-900);
+      }
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--blue-900);
+      outline-offset: 2px;
+      background: none;
     }
   }
 
@@ -48,7 +81,7 @@
     cursor: pointer;
     background: none;
     border: none;
-    padding: 4px;
+    padding: var(--space-1);
     margin: 0;
     border-radius: 4px;
     transition: none;
@@ -73,7 +106,15 @@
 .emailContent {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.emailHeader {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
   min-width: 0;
 }
 
@@ -81,6 +122,48 @@
   margin: 0;
   padding: 0;
   font-weight: 700;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.statusBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-3);
+  border-radius: 999px;
+  font-size: var(--fs-small);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.confirmedBadge {
+  background: var(--messaging-success);
+  color: var(--green-600);
+
+  .statusBadgeIcon {
+    fill: var(--green-600);
+  }
+}
+
+.unconfirmedBadge {
+  background: var(--yellow-400);
+  color: var(--gray-600);
+
+  .statusBadgeIcon {
+    fill: var(--gray-600);
+  }
+}
+
+.infoIcon {
+  fill: var(--gray-500);
+}
+
+.unconfirmedMessage {
+  margin: 0;
+  padding: 0;
+  font-size: var(--fs-small);
+  color: var(--gray-500);
   line-height: 1.4;
 }
 
@@ -102,7 +185,7 @@
   align-items: center;
   gap: 6px;
   flex-shrink: 0;
-  padding: 4px 12px;
+  padding: var(--space-1) var(--space-3);
   border-radius: 999px;
   background: var(--blue-100, var(--gray-100));
   color: var(--blue-900);
@@ -119,5 +202,5 @@
   display: flex;
   justify-content: flex-end;
   gap: 10px;
-  margin-top: var(--space-4, 16px);
+  margin-top: var(--space-4);
 }

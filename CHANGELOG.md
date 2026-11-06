@@ -1,4 +1,5 @@
 ## Added
+- Alias emails on the profile page show Confirmed/Unconfirmed badges. Unconfirmed aliases can't be made primary, explain that they're awaiting confirmation, and offer "Resend verification link" (stand-in hook until the backend mutation lands). Add-alias help text and toast mention the verification link [#488]
 - Added the `X-E2E-Test-Token` header to the Playwright E2E requests when `E2E_TEST_SECRET_KEY` is set, so the tests run by the AWS E2E pipeline get past the dev load balancer's CDL SSO (Cognito) login [#560]
 - Added Playwright end-to-end tests in a separate `e2e/` package, with login, logout, GraphQL and templates tests, and `test:e2e` and `test:e2e:ui` scripts. `e2e/` is excluded from Jest, ESLint, the root `tsconfig.json` and the Docker image [#559]
 - Added a guided create-project / create-DMP flow with a "Setup progress" rail: `/projects/create` (new or existing project, then a plan) and `/projects/create/project?intent=project` (project only). Flow screens live under `/projects/create…` and `/projects/:projectId/create/…`; the old `create-project`, `funding-search` and `project-funding` routes are removed
