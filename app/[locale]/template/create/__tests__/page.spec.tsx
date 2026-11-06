@@ -40,6 +40,29 @@ jest.mock('@/i18n/routing', () => ({
   usePathname: jest.fn(() => '/template/create'),
 }));
 
+const mockStartTransition = jest.fn();
+
+jest.mock('@/components/TransitionButton', () => {
+  const { default: ActualTransitionButton } = jest.requireActual<
+    typeof import('@/components/TransitionButton')
+  >('@/components/TransitionButton');
+  return {
+    __esModule: true,
+    default: ({ onPress, ...props }: React.ComponentProps<typeof ActualTransitionButton>) => (
+      <ActualTransitionButton
+        {...props}
+        onPress={onPress && (({ startTransition }) =>
+          onPress({
+            startTransition: (callback) => {
+              mockStartTransition(callback);
+              startTransition(callback);
+            },
+          }))}
+      />
+    ),
+  };
+});
+
 jest.mock('@/components/SelectExistingTemplate', () => ({
   __esModule: true,
   default: () => <div data-testid="select-existing-template">Mocked TemplateSelectTemplatePage Component</div>,
@@ -63,6 +86,7 @@ describe('TemplateCreatePage', () => {
 
   beforeEach(() => {
     pushMock = jest.fn();
+    mockStartTransition.mockClear();
     checkTemplateNameMock = jest.fn().mockResolvedValue({
       data: { templateNameAvailable: true },
       error: undefined,
@@ -70,13 +94,6 @@ describe('TemplateCreatePage', () => {
     (useRouter as jest.Mock).mockReturnValue({ push: pushMock });
     (useLazyQuery as jest.Mock).mockReturnValue([checkTemplateNameMock, { loading: false }]);
     mockScrollTo();
-  });
-
-  it('should render loading state initially', () => {
-    (useQueryStep as jest.Mock).mockReturnValue(null); // No step in query initially
-
-    render(<TemplateCreatePage />);
-    expect(screen.getByTestId('loading-component')).toBeInTheDocument();
   });
 
   it('should render step 1 form when step is 1', () => {
@@ -114,6 +131,19 @@ describe('TemplateCreatePage', () => {
       });
       expect(pushMock).toHaveBeenCalledWith('/template/create?step=2');
     });
+  });
+
+  it('should navigate inside the startTransition provided by TransitionButton so its loading overlay stays up', async () => {
+    (useQueryStep as jest.Mock).mockReturnValue(1);
+
+    render(<TemplateCreatePage />);
+    enterName('Brand New Template');
+    await clickNext();
+
+    await waitFor(() => {
+      expect(pushMock).toHaveBeenCalledWith('/template/create?step=2');
+    });
+    expect(mockStartTransition).toHaveBeenCalledTimes(1);
   });
 
   it('should show an error and not navigate when the template name is already taken', async () => {

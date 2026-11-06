@@ -1,16 +1,13 @@
 'use client';
 
 import React, {
-  useEffect,
   useMemo,
-  useRef,
   useState,
-  useTransition
+  type TransitionStartFunction
 } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from '@/i18n/routing';
 import { useLazyQuery } from '@apollo/client/react';
-import NProgress from 'nprogress';
 import {
   Breadcrumb,
   Breadcrumbs,
@@ -24,7 +21,6 @@ import PageHeader from "@/components/PageHeader";
 import TemplateSelectTemplatePage from '@/components/SelectExistingTemplate';
 import { ContentContainer, LayoutContainer, } from '@/components/Container';
 import FormInput from '@/components/Form/FormInput';
-import Loading from '@/components/Loading';
 import { TransitionButton } from '@/components/Form';
 
 // GraphQL
@@ -37,10 +33,9 @@ import { handleApolloError } from '@/utils/apolloErrorHandler';
 
 const TemplateCreatePage: React.FC = () => {
   const router = useRouter();
-  const [step, setStep] = useState<number | null>(null);
   const [templateName, setTemplateName] = useState('');
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
-  const stepQueryValue = useQueryStep();
+  const step = useQueryStep();
 
   //Localization keys
   const TemplateCreate = useTranslations('TemplateCreatePage');
@@ -65,10 +60,7 @@ const TemplateCreatePage: React.FC = () => {
     debouncedInputHandler(e.target.value);
   }
 
-  const [, startTransition] = useTransition();
-  const progressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const handleNext = async () => {
+  const handleNext = async ({ startTransition }: { startTransition: TransitionStartFunction }) => {
     setErrors({});
 
     if (templateName.length <= 2) {
@@ -107,31 +99,10 @@ const TemplateCreatePage: React.FC = () => {
       return;
     }
 
-    if (progressTimer.current) clearTimeout(progressTimer.current);
-    progressTimer.current = setTimeout(() => {
-      NProgress.start();
-      window.dispatchEvent(new CustomEvent('app:navigation:start'));
-    }, 100);
-
-    await new Promise<void>((resolve) => {
-      startTransition(() => {
-        router.push('/template/create?step=2');
-        resolve();
-      });
+    startTransition(() => {
+      router.push('/template/create?step=2');
     });
   };
-
-  useEffect(() => {
-    // If a step was specified in a query param, then set that step (step 1 or 2)
-    if (step !== stepQueryValue) {
-      setStep(stepQueryValue);
-    }
-  }, [stepQueryValue, step])
-
-  // TODO: Need to implement a shared loading component
-  if (step === null) {
-    return <Loading message={Global('messaging.loading')} />;
-  }
 
   return (
     <>
