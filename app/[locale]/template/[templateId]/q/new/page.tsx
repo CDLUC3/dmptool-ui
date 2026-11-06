@@ -34,6 +34,7 @@ import ErrorMessages from '@/components/ErrorMessages';
 
 //Other
 import { scrollToTop } from '@/utils/general';
+import { extractErrors } from '@/utils/errorHandler';
 import { routePath } from '@/utils/routes';
 import { NEW_QUESTION_ID } from '@/components/QuestionPreviewLink/questionPreviewDraft';
 import { useQueryStep } from '@/app/[locale]/template/[templateId]/q/new/utils';
@@ -176,9 +177,8 @@ const QuestionTypeSelectPage: React.FC = () => {
     // Search title, funder and description fields for terms
     const filteredQuestionTypes = filterQuestionTypes(questionTypes, term);
 
-    if (filteredQuestionTypes.length > 0) {
-      setFilteredQuestionTypes(filteredQuestionTypes.length > 0 ? filteredQuestionTypes : null);
-    }
+    // Always replace the results, so a search with no matches shows "no items found" instead of the previous results
+    setFilteredQuestionTypes(filteredQuestionTypes);
   }
 
   useEffect(() => {
@@ -317,7 +317,10 @@ const QuestionTypeSelectPage: React.FC = () => {
                 isDirty: true,
                 ...commonFields,
               };
-              await addQuestionMutation({ variables: { input } });
+              const { data } = await addQuestionMutation({ variables: { input } });
+              // Validation errors come back in the response rather than being thrown
+              const responseErrors = data?.addQuestion?.errors;
+              return responseErrors ? extractErrors(responseErrors, ['general', 'questionText']) : [];
             }}
             showTags={true}
           />

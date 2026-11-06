@@ -11,11 +11,6 @@ jest.mock('@/app/[locale]/template/create/useQueryStep', () => ({
   useQueryStep: jest.fn(),
 }));
 
-// Mock the debounce function
-jest.mock('@/hooks/debounce', () => ({
-  debounce: (fn: (..._args: unknown[]) => unknown) => fn,
-}));
-
 // Mock the Next.js router
 
 jest.mock('@/i18n/routing', () => ({

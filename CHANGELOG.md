@@ -1,4 +1,5 @@
 ## Added
+- Added Playwright integration tests for the admin template flow in `e2e/tests/template.spec.ts`: starting a template from scratch or from a copy of a public template, adding a section, adding one question of every type, changing question types before and after saving, searching question types and templates, saving a draft, publishing, changing visibility, previewing, and template history. Added `e2e/tests/template.spec.md`, which describes the tested flows in plain English, and shared helpers in `e2e/tests/helpers/template.ts` [#559]
 - Added the `X-E2E-Test-Token` header to the Playwright E2E requests when `E2E_TEST_SECRET_KEY` is set, so the tests run by the AWS E2E pipeline get past the dev load balancer's CDL SSO (Cognito) login [#560]
 - Added Playwright end-to-end tests in a separate `e2e/` package, with login, logout, GraphQL and templates tests, and `test:e2e` and `test:e2e:ui` scripts. `e2e/` is excluded from Jest, ESLint, the root `tsconfig.json` and the Docker image [#559]
 - Added a guided create-project / create-DMP flow with a "Setup progress" rail: `/projects/create` (new or existing project, then a plan) and `/projects/create/project?intent=project` (project only). Flow screens live under `/projects/create…` and `/projects/:projectId/create/…`; the old `create-project`, `funding-search` and `project-funding` routes are removed
@@ -199,6 +200,12 @@
 - Updated `RepoSelectorForAnswer` to wait to query `Re3byUrIsDocument` until we have `preferredReposURIs` because preferred repos don't display even though they eventually do to trigger the display of the "preferred repositories" checkbox [#118]
 
 ## Fixed
+- Fixed the add-question form's "Additional comment box" and "Mark as required?" radio groups sharing one `name`, which let only one of their radios be checked in Chrome and Safari [#559]
+- Fixed the question type search on the add-question pages still showing the previous results when a new search matched nothing [#559]
+- Fixed template history dates showing in the wrong time zone: `dateUtils` now reads timestamps with no time zone as UTC [#559]
+- Fixed the "Edit question" link's accessible name ("Edit question: undefined"), template descriptions showing raw HTML on the "Select an existing template" page, and a stray debug line in the Research Output Table form [#559]
+- Fixed the best practice tags' "Click for more info" button sitting inside the checkbox label, and gave it and the Research Output Table "Customize" buttons translated names that include the tag or field [#559]
+- Translated the "Template search" label on the "Select an existing template" page [#559]
 - Fixed cards on the project and template lists (and the sub-header) losing their white background, rounded corners and shadow in production builds. In compressed output, Sass adds a byte-order mark to any file containing non-ASCII characters (such as `content: "•"`), and once the CSS modules are concatenated that mark invalidates each module's first rule. Set `sassOptions: { charset: false }` in `next.config.mjs` so Sass no longer adds it [#610]
 - Fixed `tinymce` vulnerability by updating to `v8.9.3` and I replaced the `tinymce` files in `public/tinymce`. I also removed `deepmerge` and replace with our custom `mergeMessages` since there was no fix for `deepmerge` whose version was 4 years old. I also updated `README.md` with info about `tinymce` and `AGENTS.md` [#604]
 - Updated `proxy.ts` so that `/admin/email-preferences` will not be exluded from `login` requirements. Pages within `email` directory are excluded from `login` though [#580]

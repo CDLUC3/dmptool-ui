@@ -385,6 +385,7 @@
     "resultsText": "{name} results match your search",
     "numDisplaying": "Showing {num} of {total}",
     "clearFilter": "clear filter",
+    "searchLabel": "Template search",
     "buttons": {
       "loadMore": "Load {name} more",
       "load3More": "Load 3 more",
@@ -628,7 +629,11 @@
       "previewQuestion": "Preview question",
       "changeType": "Change type",
       "removeType": "Remove {type}",
-      "removeAccessLevel": "Remove {level}"
+      "removeAccessLevel": "Remove {level}",
+      "tagInfo": "More information about {name}",
+      "customizeField": "Customize {name}",
+      "closeField": "Close {name}",
+      "expandField": "Expand {name}"
     },
     "helpText": {
       "textField": "Changing the question type, for example from Text Field to Radio Buttons, may result in some data being lost.",

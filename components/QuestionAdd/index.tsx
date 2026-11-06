@@ -117,7 +117,9 @@ const QuestionAdd = ({
     questionName?: string | null,
     questionJSON: string,
     sectionId?: string,
-    onSave: (commonFields: QuestionCommonFields) => Promise<void>;
+    // Resolve with validation error messages from the mutation response (e.g. errors.general) to keep the
+    // user on the form and show them. Resolve with nothing or [] on success. Throw for network/GraphQL errors.
+    onSave: (commonFields: QuestionCommonFields) => Promise<string[] | void>;
     backUrl: string;        // where "Change Type" and breadcrumbs point
     successUrl: string;     // where to redirect on save success
     breadcrumbs: React.ReactNode;
@@ -138,6 +140,7 @@ const QuestionAdd = ({
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState<boolean>(false);
   // Form state
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const submittingRef = useRef(false);
 
   const [question, setQuestion] = useState<Question>(() => ({
     ...defaultQuestion,
@@ -446,7 +449,7 @@ const QuestionAdd = ({
     }
     let json = question.json ?? null;
     try {
-      const updatedJSON = questionType ? buildUpdatedJSON(question, undefined, () => {}) : undefined;
+      const updatedJSON = questionType ? buildUpdatedJSON(question, undefined, () => { }) : undefined;
       if (updatedJSON?.success && updatedJSON.data) {
         json = JSON.stringify(updatedJSON.data);
       }
@@ -471,8 +474,16 @@ const QuestionAdd = ({
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormSubmitted(true);
-    if (isSubmitting) return;// Prevent double submission
+    // Prevent double submission. A ref is checked rather than isSubmitting state, because
+    // state updates aren't visible to a second submit fired before the next render
+    if (submittingRef.current) return;
+    submittingRef.current = true;
     setIsSubmitting(true);
+
+    const resetSubmitting = () => {
+      submittingRef.current = false;
+      setIsSubmitting(false);
+    };
 
     const updatedJSON = buildUpdatedJSON(question);
     const { success, error } = updatedJSON ?? {};
@@ -481,7 +492,7 @@ const QuestionAdd = ({
     if (!success || error) {
       setErrors([error ?? QuestionAdd('messages.errors.questionAddingError')]);
       announce(QuestionAdd('researchOutput.announcements.errorOccurred'));
-      setIsSubmitting(false);
+      resetSubmitting();
       return;
     }
 
@@ -498,15 +509,23 @@ const QuestionAdd = ({
     };
 
     try {
-      await onSave(commonFields);
+      const saveErrors = await onSave(commonFields);
+      if (saveErrors && saveErrors.length > 0) {
+        // The backend rejected the question, so stay on the form and let the user fix it
+        setErrors(saveErrors);
+        announce(QuestionAdd('researchOutput.announcements.errorOccurred'));
+        resetSubmitting();
+        return;
+      }
       setHasUnsavedChanges(false);
       toastState.add(QuestionAdd('messages.success.questionAdded'), { type: 'success' });
+      // Leave the button disabled on success: router.push doesn't wait for navigation,
+      // so re-enabling here would let a second click create a duplicate question
       router.push(successUrl);
     } catch (error) {
       setErrors([QuestionAdd('messages.errors.questionAddingError')]);
       logECS('error', 'Adding Question in QuestionAdd', { error });
-    } finally {
-      setIsSubmitting(false);
+      resetSubmitting();
     }
   };
 
@@ -702,7 +721,7 @@ const QuestionAdd = ({
 
                 {!QUESTION_TYPES_EXCLUDED_FROM_COMMENT_FIELD.includes(questionType ?? '') && (
                   <RadioGroupComponent
-                    name="radioGroup"
+                    name="showCommentField"
                     value={question?.showCommentField ? 'yes' : 'no'}
                     radioGroupLabel={QuestionAdd('labels.additionalCommentBox')}
                     onChange={(value) => handleInputChange('showCommentField', value === 'yes')}
@@ -809,38 +828,37 @@ const QuestionAdd = ({
                       {tags && tags.map(tag => {
                         const id = (tag.id)?.toString();
                         return (
-                          <Checkbox
-                            value={tag.name}
-                            key={tag.name}
-                            id={id}
-                            onChange={() => handleCheckboxChange(tag)}
-                          >
-                            <div className="checkbox">
-                              <svg viewBox="0 0 18 18" aria-hidden="true">
-                                <polyline points="1 9 7 14 15 4" />
-                              </svg>
-                            </div>
-                            <span className="checkbox-label" data-testid='checkboxLabel'>
-                              <div className="checkbox-wrapper">
-                                <div>{tag.name}</div>
-                                <DialogTrigger>
-                                  <Button className="popover-btn" aria-label="Click for more info"><div className="icon info"><DmpIcon icon="info" /></div></Button>
-                                  <Popover>
-                                    <OverlayArrow>
-                                      <svg width={12} height={12} viewBox="0 0 12 12">
-                                        <path d="M0 0 L6 6 L12 0" />
-                                      </svg>
-                                    </OverlayArrow>
-                                    <Dialog>
-                                      <div className="flex-col">
-                                        {tag.description}
-                                      </div>
-                                    </Dialog>
-                                  </Popover>
-                                </DialogTrigger>
+                          // The info button sits next to the checkbox rather than inside its label, so pressing the
+                          // label always ticks the box and the button isn't part of the checkbox's name
+                          <div className="checkbox-wrapper" key={tag.name}>
+                            <Checkbox
+                              value={tag.name}
+                              id={id}
+                              onChange={() => handleCheckboxChange(tag)}
+                            >
+                              <div className="checkbox">
+                                <svg viewBox="0 0 18 18" aria-hidden="true">
+                                  <polyline points="1 9 7 14 15 4" />
+                                </svg>
                               </div>
-                            </span>
-                          </Checkbox>
+                              <span className="checkbox-label" data-testid='checkboxLabel'>{tag.name}</span>
+                            </Checkbox>
+                            <DialogTrigger>
+                              <Button className="popover-btn" aria-label={QuestionAdd('buttons.tagInfo', { name: tag.name })}><div className="icon info"><DmpIcon icon="info" /></div></Button>
+                              <Popover>
+                                <OverlayArrow>
+                                  <svg width={12} height={12} viewBox="0 0 12 12">
+                                    <path d="M0 0 L6 6 L12 0" />
+                                  </svg>
+                                </OverlayArrow>
+                                <Dialog>
+                                  <div className="flex-col">
+                                    {tag.description}
+                                  </div>
+                                </Dialog>
+                              </Popover>
+                            </DialogTrigger>
+                          </div>
                         )
                       })}
                     </div>
@@ -849,7 +867,7 @@ const QuestionAdd = ({
 
                 {/** Research Output question types have "required" at individual fields, and not on the whole question */}
                 <RadioGroupComponent
-                  name="radioGroup"
+                  name="requiredQuestion"
                   value={question?.required ? 'yes' : 'no'}
                   radioGroupLabel={Global('labels.requiredField')}
                   description={Global('descriptions.requiredFieldDescription')}

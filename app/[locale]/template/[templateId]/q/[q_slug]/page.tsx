@@ -1163,38 +1163,37 @@ const QuestionEdit = () => {
                     {tags && tags.map(tag => {
                       const id = (tag.id)?.toString();
                       return (
-                        <Checkbox
-                          value={tag.name}
-                          key={tag.name}
-                          id={id}
-                          onChange={() => handleCheckboxChange(tag)}
-                        >
-                          <div className="checkbox">
-                            <svg viewBox="0 0 18 18" aria-hidden="true">
-                              <polyline points="1 9 7 14 15 4" />
-                            </svg>
-                          </div>
-                          <span className="checkbox-label" data-testid='checkboxLabel'>
-                            <div className="checkbox-wrapper">
-                              <div>{tag.name}</div>
-                              <DialogTrigger>
-                                <Button className="popover-btn" aria-label="Click for more info"><div className="icon info"><DmpIcon icon="info" /></div></Button>
-                                <Popover>
-                                  <OverlayArrow>
-                                    <svg width={12} height={12} viewBox="0 0 12 12">
-                                      <path d="M0 0 L6 6 L12 0" />
-                                    </svg>
-                                  </OverlayArrow>
-                                  <Dialog>
-                                    <div className="flex-col">
-                                      {tag.description}
-                                    </div>
-                                  </Dialog>
-                                </Popover>
-                              </DialogTrigger>
+                        // The info button sits next to the checkbox rather than inside its label, so pressing the
+                        // label always ticks the box and the button isn't part of the checkbox's name
+                        <div className="checkbox-wrapper" key={tag.name}>
+                          <Checkbox
+                            value={tag.name}
+                            id={id}
+                            onChange={() => handleCheckboxChange(tag)}
+                          >
+                            <div className="checkbox">
+                              <svg viewBox="0 0 18 18" aria-hidden="true">
+                                <polyline points="1 9 7 14 15 4" />
+                              </svg>
                             </div>
-                          </span>
-                        </Checkbox>
+                            <span className="checkbox-label" data-testid='checkboxLabel'>{tag.name}</span>
+                          </Checkbox>
+                          <DialogTrigger>
+                            <Button className="popover-btn" aria-label={QuestionAdd('buttons.tagInfo', { name: tag.name })}><div className="icon info"><DmpIcon icon="info" /></div></Button>
+                            <Popover>
+                              <OverlayArrow>
+                                <svg width={12} height={12} viewBox="0 0 12 12">
+                                  <path d="M0 0 L6 6 L12 0" />
+                                </svg>
+                              </OverlayArrow>
+                              <Dialog>
+                                <div className="flex-col">
+                                  {tag.description}
+                                </div>
+                              </Dialog>
+                            </Popover>
+                          </DialogTrigger>
+                        </div>
                       )
                     })}
                   </div>
