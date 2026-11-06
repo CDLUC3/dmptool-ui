@@ -1,13 +1,14 @@
 # Template tests (`template.spec.ts`)
 
-These tests follow an organization admin through the whole life of a template: creating it, adding a section and questions, changing question types, saving a draft, publishing, copying it, changing who can see it, previewing it, and checking its history.
+These tests follow an organization admin through the whole life of a template: creating it, adding sections (from scratch and from an existing section) and questions, changing question types, saving a draft, publishing, copying it, archiving the copy, changing who can see it, previewing it, and checking its history.
 
 ## How the tests are organized
 
 - **One template per run.** The tests build a single template step by step, and each test picks up where the previous one left off. For example, the publishing tests need the questions added earlier. Because of this they run in order, and if one fails, the rest are skipped.
 - **Each browser builds its own template.** The template's name includes the browser and a timestamp, for example `E2E template chromium 1793915111104`, so runs in different browsers never touch each other's data.
 - **Logged in as the test admin.** The tests start from the admin session saved by the login setup, so they never type a password. The account is the `ADMIN` test account described in the README.
-- **Nothing is left behind.** When the tests finish, even after a failure, every template they created is archived. Archiving a template with no plans deletes it. The copy is archived before the original, because the original can't be archived while a copy of it exists.
+- **Nothing is left behind.** The copy is archived through the page's **Archive template** button (flow 13). When the tests finish, even after a failure, any template they created that's still there is archived through Apollo. Archiving a template with no plans deletes it. A copy is always archived before its original, because the original can't be archived while a copy of it exists.
+- **No dependence on existing data.** The tests create everything they check, so they pass whether or not the test organization already has templates or sections. Some page headings only appear when their list has items (for example "My organization templates"), so the tests check those areas in other ways.
 
 ## The flows, in order
 
@@ -16,20 +17,17 @@ These tests follow an organization admin through the whole life of a template: c
 The admin goes to **Create a template**, enters a name, and clicks **Next**.
 
 On the second step, "Start with a copy of an existing template", the test checks that the page shows:
-- the "My organization templates" and "Public templates" lists,
+- the areas for "My organization templates" and "Public templates". Each list's heading only shows when it has templates, so a new organization sees just "No items found" there,
 - the "Build a new template" area,
 - the search box and its help text.
 
-The admin searches for something that doesn't exist, and both lists show "No items found". Finding a real template here is tested later (flow 8), once there's a published one to find.
+The admin searches for something that doesn't exist, and both lists show "No items found". Finding a real template here is tested later (flow 10), once there's a published one to find.
 
 The admin then clicks **Start**. The new template's page opens with the name as its heading, an **Add section** link, and no sections yet. The sidebar shows the template as a **Draft**.
 
 ### 2. Adding a section from scratch
 
-From the template page, the admin clicks **Add section**. The test checks that the "Add new section" page offers all three options:
-- using a section they created before,
-- using a DMP Tool best practice section,
-- building a new section.
+From the template page, the admin clicks **Add section**. The test checks that the "Add new section" page explains its three options (using a section they created before, using a DMP Tool best practice section, or building a new section) and shows the "Build a new section" area. The headings for the first two options only show when there are sections to choose from, so the test doesn't rely on them.
 
 The admin chooses **Create new section**. On the "Create section" form, the test checks:
 - the three tabs: Edit section, Options and Logic,
@@ -115,11 +113,27 @@ The admin starts creating another template, named after the first one with "copy
 
 A new template opens. It has a different id from the original and the "copy" name, plus the original's section and all 15 of its questions.
 
-### 11. Searching the organization's templates
+### 11. Adding a section from an existing section
+
+This runs on the copy, so the original template's section and question counts stay the same for the flows after it. Existing sections come from the organization's published templates, which is why it runs after the original was published in flow 9.
+
+On the copy's page, the admin clicks **Add section**, then searches the "Add new section" page for the original's section name. It's listed among the sections they created before, showing the template it came from and "15 pre-built questions". The admin clicks its **Select** button.
+
+The test checks that Apollo created a new section (with its own id) without errors, and that the new section's edit page opens with the existing section's name, introduction, requirements and guidance.
+
+Back on the copy's page there are now two sections, "Section 1" (copied with the template) and "Section 2" (just added), and each of the 15 questions appears in both.
+
+### 12. Searching the organization's templates
 
 On the **Organization templates** page (`/template`), the admin searches for the original template's name. Both the original and the copy are found, and nothing else. A search that matches nothing shows "No items found".
 
-### 12. Changing who can see the template
+### 13. Archiving the copy
+
+The admin opens the copy's page. The test checks the **Archive template** section at the bottom, including the warning that archiving can't be undone. The admin clicks **Archive template**. There's no confirmation step.
+
+The test checks that Apollo archived it without errors, that the admin is taken back to the **Organization templates** page with "Successfully archived the template", and that searching for the original's name now finds only the original.
+
+### 14. Changing who can see the template
 
 First the admin makes a small change: they add " (updated)" to the section guidance. Apollo won't publish a template that hasn't changed since its last publish, even when only the visibility is different.
 
@@ -130,7 +144,7 @@ Then the admin opens the **Edit** link next to **Visibility settings** in the si
 
 The version is now **v3**. Reopening the dialog shows that v3 was published with Organization only visibility, now selected.
 
-### 13. Previewing the template
+### 15. Previewing the template
 
 The admin clicks **Preview** in the sidebar. The preview page shows:
 - "Preview:" followed by the template's name, and the explanation that this is how the template will look to plan writers,
@@ -139,10 +153,10 @@ The admin clicks **Preview** in the sidebar. The preview page shows:
 
 **Back to template** returns to the template page.
 
-### 14. Checking the history
+### 16. Checking the history
 
 The admin opens the history twice: once from **View history** under the page title, and once from **History** in the sidebar. Both open the "Template history" page. Its table has the columns Action, User, and Time and Date, and lists three versions, newest first:
-- **PUBLISHED v3**, with the change log from flow 12,
+- **PUBLISHED v3**, with the change log from flow 14,
 - **PUBLISHED v2**, with the change log from flow 9,
 - **DRAFT v1**.
 
@@ -150,8 +164,8 @@ Each row shows the admin's name. The test gets the expected name from Apollo ins
 
 ## Things to know when changing these tests
 
-- **Clicking too early.** A click on a page that has just loaded can be ignored, because the page's JavaScript isn't ready yet. Clicks that open the next step are retried until the step appears, and never repeated once it has. Save as draft is never clicked again once a save has been sent, so it can't create an extra version.
-- **Checkboxes and radio buttons** are selected with the keyboard (focus, then Space). The visible box is drawn by React Aria, and some labels contain other buttons, like the tags' "Click for more info", so clicking them isn't reliable.
+- **Clicking too early.** A click on a page that has just loaded can be ignored, because the page's JavaScript isn't ready yet. Clicks that open the next step are retried until the step appears, and never repeated once it has. **Save as draft** and **Archive template** are never clicked again once their request has been sent, so a retry can't save an extra version or archive twice.
+- **Checkboxes and radio buttons** are selected with the keyboard (focus, then Space), as a keyboard user would. React Aria hides the real input and draws its own box, so clicking the input itself isn't reliable.
 - **Rich text editors** (TinyMCE) can drop keystrokes while they're starting up. Typing into them is retried until the text appears, without ever typing it twice.
 - **Leaving a form with unsaved changes** opens a "Leave site?" dialog. The tests accept it automatically.
 - **Run time:** about 2 minutes in Chromium alone, and about 5.5 minutes for all three browsers.

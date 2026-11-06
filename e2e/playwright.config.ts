@@ -31,8 +31,10 @@ export default defineConfig({
   fullyParallel: true,
   // Retry on CI only, so flaky tests are reported as "flaky" instead of hidden
   retries: process.env.CI ? 2 : 0,
-  // Limit the number of workers on CI to avoid overloading the environment
-  workers: process.env.CI ? 1 : undefined,
+  // Run one test at a time, locally and on CI. On CI it avoids overloading the environment. Locally, several tests
+  // at once overload the Next.js dev server, which builds each page on its first visit, so tests time out.
+  // To run more at once for a short run, pass --workers, e.g. npx playwright test plan.spec.ts --workers=3
+  workers: 1,
   // reporter tells Playwright how to report results. The list reporter is always used,
   //  and the html and junit reporters are added on CI.
   reporter: process.env.CI

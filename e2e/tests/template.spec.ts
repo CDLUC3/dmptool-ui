@@ -13,6 +13,7 @@ import {
   sidebarRow,
   typeInEditor,
 } from './helpers/template';
+import { clickAndWaitFor, clickWhenHydrated, fillWhenHydrated } from './helpers/navigation';
 
 // Templates are an admin page; start already logged in as the admin saved by auth.setup.ts
 test.use(asRole('admin'));
@@ -54,6 +55,7 @@ let templateName: string;
 let templateId: number;
 let sectionName: string;
 let sectionId: number;
+let copyId: number;
 const section = {
   introduction: 'E2E section introduction',
   requirements: 'E2E section requirements',
@@ -107,17 +109,27 @@ async function selectQuestionType(page: Page, type: QuestionType, opened: RegExp
   }).toPass();
 }
 
-// The edit link for a question on the template page, which is named after the question
-function editQuestionLink(page: Page, text: string) {
-  return page.getByRole('main').getByRole('link', { name: `Edit question: ${text}`, exact: true });
+// Opens a question's edit page from the template page, using its edit link, which is named after the question.
+// Retries until the edit page opens: a click before the page has hydrated can be ignored
+async function openQuestion(page: Page, text: string) {
+  const link = page.getByRole('main').getByRole('link', { name: `Edit question: ${text}`, exact: true });
+  const editUrl = new RegExp(`/template/${templateId}/q/\\d+$`);
+  await expect(async () => {
+    if (!editUrl.test(page.url())) {
+      await link.click({ timeout: 2000 });
+    }
+    await expect(page).toHaveURL(editUrl, { timeout: 5000 });
+  }).toPass();
 }
 
 test('step 2 of creating a template has a search, and Start builds a new template from scratch', async ({ page }) => {
   await nameNewTemplate(page, templateName);
 
   await expect(page.getByRole('heading', { level: 1, name: 'Start with a copy of an existing template' })).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'My organization templates' })).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Public templates' })).toBeVisible();
+  // The "My organization templates" and "Public templates" headings only show when their list has templates,
+  // so check for the two areas instead. An organization with no templates yet shows "No items found" there
+  await expect(page.getByTestId('my-org-templates')).toBeVisible();
+  await expect(page.getByTestId('published-templates')).toBeVisible();
   await expect(page.getByRole('region', { name: 'Build a new template' })).toBeVisible();
   await expect(page.getByText('Search by research organization, field station or lab, template description, etc.')).toBeVisible();
 
@@ -127,7 +139,7 @@ test('step 2 of creating a template has a search, and Start builds a new templat
   });
 
   const added = graphqlResponse(page, 'AddTemplate');
-  await page.getByRole('button', { name: 'Start', exact: true }).click();
+  await clickWhenHydrated(page.getByRole('button', { name: 'Start', exact: true }));
   const body = await (await added).json();
   templateId = body.data?.addTemplate?.id;
   expect(templateId, 'the AddTemplate mutation returns the new template id').toBeTruthy();
@@ -143,16 +155,13 @@ test('step 2 of creating a template has a search, and Start builds a new templat
 
 test('a section built from scratch is saved with all its fields and shows on the template', async ({ page }) => {
   await page.goto(`/${LOCALE}/template/${templateId}`);
-  await page.getByRole('link', { name: 'Add section' }).click();
-
-  await page.waitForURL(new RegExp(`/template/${templateId}/section/new$`));
+  await clickAndWaitFor(page, page.getByRole('link', { name: 'Add section' }), new RegExp(`/template/${templateId}/section/new$`));
   await expect(page.getByRole('heading', { level: 1, name: 'Add new section' })).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Use one of your previously created sections' })).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Use a best practice section created by DMP Tool' })).toBeVisible();
+  // The headings for previously created and best practice sections only show when there are some, so check
+  // the description of the three options instead, which always shows
+  await expect(page.getByText('You have three options. You can use a section you created previously, use a DMP Tool best practice section or build a new section.')).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Build a new section' })).toBeVisible();
-  await page.getByRole('link', { name: 'Create new section' }).click();
-
-  await page.waitForURL(new RegExp(`/template/${templateId}/section/create$`));
+  await clickAndWaitFor(page, page.getByRole('link', { name: 'Create new section' }), new RegExp(`/template/${templateId}/section/create$`));
   await expect(page.getByRole('heading', { level: 1, name: 'Create section' })).toBeVisible();
   for (const tab of ['Edit section', 'Options', 'Logic']) {
     await expect(page.getByRole('tab', { name: tab })).toBeVisible();
@@ -169,13 +178,13 @@ test('a section built from scratch is saved with all its fields and shows on the
     await expect(page.getByText(text, { exact: true })).toBeVisible();
   }
 
-  await page.getByLabel('Section name').fill(sectionName);
+  await fillWhenHydrated(page.getByLabel('Section name'), sectionName);
   await typeInEditor(page, 'sectionIntroduction', section.introduction);
   await typeInEditor(page, 'sectionRequirements', section.requirements);
   await typeInEditor(page, 'sectionGuidance', section.guidance);
 
   const added = graphqlResponse(page, 'AddSection');
-  await page.getByRole('button', { name: 'Create section' }).click();
+  await clickWhenHydrated(page.getByRole('button', { name: 'Create section' }));
   const body = await (await added).json();
   sectionId = body.data?.addSection?.id;
   expect(sectionId, 'the AddSection mutation returns the new section id').toBeTruthy();
@@ -187,8 +196,7 @@ test('a section built from scratch is saved with all its fields and shows on the
   await expect(page.getByRole('link', { name: 'Add question' })).toBeVisible();
 
   // Every field was saved
-  await sectionItem.getByRole('link', { name: 'Edit section' }).click();
-  await page.waitForURL(new RegExp(`/template/${templateId}/section/${sectionId}$`));
+  await clickAndWaitFor(page, sectionItem.getByRole('link', { name: 'Edit section' }), new RegExp(`/template/${templateId}/section/${sectionId}$`));
   await expect(page.getByRole('heading', { level: 1, name: 'Update section' })).toBeVisible();
   await expect(page.getByLabel('Section name')).toHaveValue(sectionName);
   await expect(editorBody(page, 'sectionIntroduction')).toHaveText(section.introduction);
@@ -198,8 +206,7 @@ test('a section built from scratch is saved with all its fields and shows on the
 
 test('the question type search filters the types, and clearing it shows them all again', async ({ page }) => {
   await page.goto(`/${LOCALE}/template/${templateId}`);
-  await page.getByRole('link', { name: 'Add question' }).click();
-  await page.waitForURL(new RegExp(`/template/${templateId}/q/new\\?section_id=${sectionId}`));
+  await clickAndWaitFor(page, page.getByRole('link', { name: 'Add question' }), new RegExp(`/template/${templateId}/q/new\\?section_id=${sectionId}`));
   await expect(page.locator('button[data-type]')).toHaveCount(QUESTION_TYPES.length);
   for (const { title } of QUESTION_TYPES) {
     await expect(page.getByRole('heading', { name: title, exact: true })).toBeVisible();
@@ -224,7 +231,7 @@ test('the question type search filters the types, and clearing it shows them all
   await search(page, 'date', async () => {
     await expect(page.locator('button[data-type]')).toHaveCount(2, { timeout: 2000 });
   });
-  await page.getByRole('button', { name: 'clear filter' }).first().click();
+  await clickWhenHydrated(page.getByRole('button', { name: 'clear filter' }).first());
   await expect(page.locator('button[data-type]')).toHaveCount(QUESTION_TYPES.length);
 });
 
@@ -251,7 +258,7 @@ for (const { type, title } of QUESTION_TYPES) {
     await expect(page.getByRole('group', { name: 'Question Best Practices to include' })).toBeVisible();
     await expect(page.getByRole('link', { name: 'Preview question' })).toBeVisible();
 
-    await page.getByLabel('Question text').fill(questionText(title));
+    await fillWhenHydrated(page.getByLabel('Question text'), questionText(title));
     await typeInEditor(page, 'question_requirements', `E2E ${title} requirements`);
     await typeInEditor(page, 'question_guidance', `E2E ${title} guidance`);
 
@@ -268,7 +275,7 @@ for (const { type, title } of QUESTION_TYPES) {
     if (CHOICE_TYPES.includes(type)) {
       await expect(page.getByText('Answer choices', { exact: true })).toBeVisible();
       await page.getByRole('textbox', { name: 'Choice 1' }).fill('E2E choice 1');
-      await page.getByRole('button', { name: 'Add choice' }).click();
+      await clickWhenHydrated(page.getByRole('button', { name: 'Add choice' }));
       await page.getByRole('textbox', { name: 'Choice 2' }).fill('E2E choice 2');
       // Its name changes from "Set choice 1 as default" to "Clear choice 1 as default" once checked
       await checkAria(page.getByRole('group', { name: 'Choice 1' }).getByRole('checkbox'));
@@ -310,7 +317,7 @@ for (const { type, title } of QUESTION_TYPES) {
     }
 
     const added = graphqlResponse(page, 'AddQuestion');
-    await page.getByRole('button', { name: 'Save and add' }).click();
+    await clickWhenHydrated(page.getByRole('button', { name: 'Save and add' }));
     const response = await added;
     const input = response.request().postDataJSON()?.variables?.input;
     expect(input.required, 'the question is saved as required').toBe(true);
@@ -331,9 +338,7 @@ for (const { type, title } of QUESTION_TYPES) {
 
 test('a saved question keeps every value entered when it was added', async ({ page }) => {
   await page.goto(`/${LOCALE}/template/${templateId}`);
-  await editQuestionLink(page, questionText('Text Area')).click();
-
-  await page.waitForURL(new RegExp(`/template/${templateId}/q/\\d+$`));
+  await openQuestion(page, questionText('Text Area'));
   await expect(page.getByRole('heading', { level: 1, name: 'Edit Question' })).toBeVisible();
   // The edit page names types differently from the add page: "Text area" rather than "Text Area"
   await expect(page.getByRole('textbox', { name: 'Type' })).toHaveValue('Text area');
@@ -354,7 +359,7 @@ test('the type of a new question can be changed before it is saved', async ({ pa
   await expect(page.getByRole('textbox', { name: 'Type' })).toHaveValue('Text Field');
   await page.getByLabel('Question text').fill('E2E unsaved question');
 
-  await page.getByRole('button', { name: 'Change type' }).click();
+  await clickWhenHydrated(page.getByRole('button', { name: 'Change type' }));
   await expect(page).toHaveURL(/step=1/);
   await expect(page.locator('button[data-type]')).toHaveCount(QUESTION_TYPES.length);
 
@@ -367,14 +372,13 @@ test('the type of a new question can be changed before it is saved', async ({ pa
 
 test('the type of a saved question can be changed, and the new type is saved', async ({ page }) => {
   await page.goto(`/${LOCALE}/template/${templateId}`);
-  await editQuestionLink(page, questionText('Text Field')).click();
-  await page.waitForURL(new RegExp(`/template/${templateId}/q/\\d+$`));
+  await openQuestion(page, questionText('Text Field'));
   const questionUrl = page.url();
   const questionId = new URL(questionUrl).pathname.split('/').pop();
   // The edit page names types differently from the add page: "Text" rather than "Text Field"
   await expect(page.getByRole('textbox', { name: 'Type' })).toHaveValue('Text');
 
-  await page.getByRole('button', { name: 'Change type' }).click();
+  await clickWhenHydrated(page.getByRole('button', { name: 'Change type' }));
   await expect(page).toHaveURL(new RegExp(`questionId=${questionId}`));
   await selectQuestionType(page, 'checkBoxes', /questionType=checkBoxes/);
 
@@ -382,8 +386,7 @@ test('the type of a saved question can be changed, and the new type is saved', a
   await expect(page.getByLabel('Question text')).toHaveValue(questionText('Text Field'));
   await page.getByRole('textbox', { name: 'Choice 1' }).fill('E2E changed choice');
 
-  await page.getByRole('button', { name: 'Save and update' }).click();
-  await page.waitForURL(templateUrl());
+  await clickAndWaitFor(page, page.getByRole('button', { name: 'Save and update' }), templateUrl());
 
   await page.goto(questionUrl);
   await expect(page.getByRole('textbox', { name: 'Type' })).toHaveValue('Checkbox');
@@ -431,7 +434,7 @@ test('Publish template checks the form, then publishes the template as public', 
   }
 
   // Visibility and the change log are both required
-  await dialog.getByRole('button', { name: 'Save and publish' }).click();
+  await clickWhenHydrated(dialog.getByRole('button', { name: 'Save and publish' }));
   await expect(dialog.getByText('Please select a visibility option before publishing.')).toBeVisible();
   await expect(dialog.getByText('A change log is required. Please describe what has changed in this version before publishing.')).toBeVisible();
 
@@ -440,7 +443,7 @@ test('Publish template checks the form, then publishes the template as public', 
   await dialog.getByRole('textbox', { name: 'Change log' }).fill('E2E first publish');
 
   const published = graphqlResponse(page, 'CreateTemplateVersion');
-  await dialog.getByRole('button', { name: 'Save and publish' }).click();
+  await clickWhenHydrated(dialog.getByRole('button', { name: 'Save and publish' }));
   const body = await (await published).json();
   expect(body.data?.createTemplateVersion?.errors?.general ?? null).toBeNull();
 
@@ -459,9 +462,9 @@ test('step 2 search finds the published template under Public templates, and sel
   });
 
   const added = graphqlResponse(page, 'AddTemplate');
-  await publicTemplates.getByRole('button', { name: `Select ${templateName}`, exact: true }).click();
+  await clickWhenHydrated(publicTemplates.getByRole('button', { name: `Select ${templateName}`, exact: true }));
   const body = await (await added).json();
-  const copyId: number = body.data?.addTemplate?.id;
+  copyId = body.data?.addTemplate?.id;
   expect(copyId, 'the AddTemplate mutation returns the copied template id').toBeTruthy();
   createdTemplateIds.push(copyId);
   expect(copyId).not.toBe(templateId);
@@ -472,6 +475,48 @@ test('step 2 search finds the published template under Public templates, and sel
   await expect(page.getByRole('heading', { name: `Section 1 ${sectionName}` })).toBeVisible();
   for (const { title } of QUESTION_TYPES) {
     await expect(page.getByRole('main').getByText(questionText(title), { exact: true })).toBeVisible();
+  }
+});
+
+test('a section can be added from one of the organization\'s existing sections', async ({ page }) => {
+  // Runs on the copy, so the original's section and question counts stay the same for the tests after this.
+  // Existing sections come from the organization's published templates, so this needs the original published (flow 9)
+  await page.goto(`/${LOCALE}/template/${copyId}`);
+  await clickAndWaitFor(page, page.getByRole('link', { name: 'Add section' }), new RegExp(`/template/${copyId}/section/new$`));
+
+  // The original's published section, with the template it came from and its number of questions
+  const existingSection = page.locator('section')
+    .filter({ has: page.getByRole('heading', { name: sectionName, exact: true }) })
+    .filter({ hasText: `Template: ${templateName}` })
+    .first();
+  await search(page, sectionName, async () => {
+    await expect(existingSection).toBeVisible({ timeout: 2000 });
+  });
+  await expect(existingSection).toContainText(`${QUESTION_TYPES.length} pre-built questions`);
+
+  const added = graphqlResponse(page, 'AddSection');
+  await clickWhenHydrated(existingSection.getByRole('button', { name: 'Select' }));
+  const body = await (await added).json();
+  expect(body.errors).toBeUndefined();
+  expect(body.data?.addSection?.errors?.general ?? null).toBeNull();
+  const newSectionId: number = body.data?.addSection?.id;
+  expect(newSectionId, 'the AddSection mutation returns the new section id').toBeTruthy();
+  expect(newSectionId).not.toBe(sectionId);
+
+  // It opens the new section, with the existing section's values
+  await page.waitForURL(new RegExp(`/template/${copyId}/section/${newSectionId}$`));
+  await expect(page.getByRole('heading', { level: 1, name: 'Update section' })).toBeVisible();
+  await expect(page.getByLabel('Section name')).toHaveValue(sectionName);
+  await expect(editorBody(page, 'sectionIntroduction')).toHaveText(section.introduction);
+  await expect(editorBody(page, 'sectionRequirements')).toHaveText(section.requirements);
+  await expect(editorBody(page, 'sectionGuidance')).toHaveText(section.guidance);
+
+  // The copy now has a second section, with all of the existing section's questions
+  await page.goto(`/${LOCALE}/template/${copyId}`);
+  await expect(page.getByRole('heading', { name: `Section 1 ${sectionName}` })).toBeVisible();
+  await expect(page.getByRole('heading', { name: `Section 2 ${sectionName}` })).toBeVisible();
+  for (const { title } of QUESTION_TYPES) {
+    await expect(page.getByRole('main').getByText(questionText(title), { exact: true })).toHaveCount(2);
   }
 });
 
@@ -495,13 +540,48 @@ test('the templates page search finds the organization templates by name', async
   await expect(heading(templateName)).toBeHidden();
 });
 
+test('Archive template archives the copy and returns to the templates page', async ({ page }) => {
+  await page.goto(`/${LOCALE}/template/${copyId}`);
+  await expect(page.getByRole('heading', { level: 1, name: `${templateName} copy` })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 2, name: 'Archive template' })).toBeVisible();
+  await expect(page.getByText('This template will no longer be visible to plan creators. Pre-existing plans that use this template will be unaffected. This is not reversible.')).toBeVisible();
+
+  // Retry the click until React has hydrated, but never once the archive was sent
+  let sent = false;
+  page.on('request', (req) => {
+    if (req.url().includes('/graphql') && req.postDataJSON()?.operationName === 'ArchiveTemplate') sent = true;
+  });
+  const archived = graphqlResponse(page, 'ArchiveTemplate');
+  await expect(async () => {
+    if (!sent) {
+      await page.getByTestId('archive-template').click({ timeout: 2000 });
+    }
+    await expect.poll(() => sent, { timeout: 2000 }).toBe(true);
+  }).toPass();
+  const body = await (await archived).json();
+  expect(body.errors).toBeUndefined();
+  expect(body.data?.archiveTemplate?.errors?.general ?? null).toBeNull();
+  // It's gone, so the cleanup doesn't need to archive it
+  createdTemplateIds.splice(createdTemplateIds.indexOf(copyId), 1);
+
+  await page.waitForURL(new RegExp(`/${LOCALE}/template$`));
+  await expect(page.getByText('Successfully archived the template')).toBeVisible();
+
+  // Only the original is left
+  const templates = page.getByRole('list', { name: 'List of templates' });
+  await search(page, templateName, async () => {
+    await expect(templates.getByRole('heading', { name: new RegExp(`${escapeRegExp(templateName)}$`) })).toBeVisible({ timeout: 2000 });
+  });
+  await expect(templates.getByRole('heading', { name: new RegExp(escapeRegExp(templateName)) })).toHaveCount(1);
+});
+
 test('the visibility can be changed from the Edit link in the sidebar', async ({ page }) => {
   // Apollo refuses to publish with "There are no changes to publish" unless something changed since the last
   // publish, even if only the visibility is new. So make a change first: update the section guidance
   await page.goto(`/${LOCALE}/template/${templateId}/section/${sectionId}`);
   await typeInEditor(page, 'sectionGuidance', ' (updated)');
   const updated = graphqlResponse(page, 'UpdateSection');
-  await page.getByRole('button', { name: 'Save and update' }).click();
+  await clickWhenHydrated(page.getByRole('button', { name: 'Save and update' }));
   expect((await (await updated).json()).data?.updateSection?.errors?.general ?? null).toBeNull();
   await page.waitForURL(templateUrl());
 
@@ -516,7 +596,7 @@ test('the visibility can be changed from the Edit link in the sidebar', async ({
   await dialog.getByRole('textbox', { name: 'Change log' }).fill('E2E visibility changed to organization only');
 
   const published = graphqlResponse(page, 'CreateTemplateVersion');
-  await dialog.getByRole('button', { name: 'Save and publish' }).click();
+  await clickWhenHydrated(dialog.getByRole('button', { name: 'Save and publish' }));
   const body = await (await published).json();
   expect(body.data?.createTemplateVersion?.errors?.general ?? null).toBeNull();
 
@@ -524,16 +604,14 @@ test('the visibility can be changed from the Edit link in the sidebar', async ({
   await expect(page.getByText(/Version: v3/)).toBeVisible();
 
   // Reopening the dialog shows the new visibility
-  await sidebarRow(page, 'Visibility settings').getByRole('link', { name: 'Edit' }).click();
+  await clickWhenHydrated(sidebarRow(page, 'Visibility settings').getByRole('link', { name: 'Edit' }));
   await expect(dialog.getByTestId('lastPublishedVisibility')).toContainText(/Version v3 was published on .+ with Organization only visibility/);
   await expect(dialog.getByRole('radio', { name: /^Organization only/ })).toBeChecked();
 });
 
 test('the Preview link in the sidebar shows the section and every question', async ({ page }) => {
   await page.goto(`/${LOCALE}/template/${templateId}`);
-  await sidebarRow(page, 'Preview template').getByRole('link', { name: 'Preview' }).click();
-
-  await page.waitForURL(new RegExp(`/template/${templateId}/preview$`));
+  await clickAndWaitFor(page, sidebarRow(page, 'Preview template').getByRole('link', { name: 'Preview' }), new RegExp(`/template/${templateId}/preview$`));
   await expect(page.getByRole('heading', { level: 1, name: `Preview: ${templateName}` })).toBeVisible();
   await expect(page.getByText('This is how your template will look to someone writing a plan.')).toBeVisible();
 
@@ -546,8 +624,7 @@ test('the Preview link in the sidebar shows the section and every question', asy
     await expect(sectionRegion.getByRole('heading', { name: questionText(title), exact: true })).toBeVisible();
   }
 
-  await page.getByRole('link', { name: 'Back to template' }).first().click();
-  await page.waitForURL(templateUrl());
+  await clickAndWaitFor(page, page.getByRole('link', { name: 'Back to template' }).first(), templateUrl());
 });
 
 test('both History links open the template history, which lists every version', async ({ page }) => {
@@ -576,13 +653,11 @@ test('both History links open the template history, which lists every version', 
 
   // "View history" below the page title
   await page.goto(`/${LOCALE}/template/${templateId}`);
-  await page.getByRole('link', { name: 'View history' }).click();
-  await page.waitForURL(historyUrl);
+  await clickAndWaitFor(page, page.getByRole('link', { name: 'View history' }), historyUrl);
   await expectHistory();
 
   // "History" in the sidebar
   await page.goto(`/${LOCALE}/template/${templateId}`);
-  await sidebarRow(page, 'History').getByRole('link', { name: 'History' }).click();
-  await page.waitForURL(historyUrl);
+  await clickAndWaitFor(page, sidebarRow(page, 'History').getByRole('link', { name: 'History' }), historyUrl);
   await expectHistory();
 });
