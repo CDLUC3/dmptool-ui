@@ -5,10 +5,10 @@ These tests follow a researcher creating a project and writing a plan for it: th
 ## How the tests are organized
 
 - **Logged in as the test researcher.** The tests start from the researcher session saved by the login setup, so they never type a password. The account is the `RESEARCHER` test account described in the README.
-- **Their own template.** Before the plan tests start, the test admin creates and publishes a small template through Apollo in the researcher's organization: one section and three questions (a Text Area with sample text, Radio Buttons and a Text Field). The tests don't use the templates from `template.spec.ts`, which runs at the same time and removes its templates when it finishes.
+- **Their own template.** Before the plan tests start, the test admin creates and publishes a small template through Apollo in the researcher's organization: one section and three questions (a Text Area with sample text, Radio Buttons and a Text Field). The tests don't use the templates from `template.spec.ts`, which may run before, after or alongside these tests and removes its templates when it finishes.
 - **Unique names.** Every project and template name includes the browser and a timestamp, so runs in different browsers never touch each other's data.
 - **Nothing is left behind.** When the tests finish, even after a failure, every project they created is archived through Apollo, which also deletes its plans. Then the template is archived, which deletes it once it has no plans.
-- **Two groups.** The "Creating a project" tests are independent of each other and can run in parallel. The plan tests build on each other (one project, one plan), so they run in order, and if one fails, the rest are skipped.
+**Two groups**. The "Creating a project" tests are independent of each other, so they can run in any order, or at the same time when you pass `--workers`. (By default the tests run one at a time; see the README, with `worker=1`.) The plan tests build on each other (one project, one plan), so they always run in order, and if one fails, the rest are skipped.
 
 ## Creating a project
 

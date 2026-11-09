@@ -55,6 +55,8 @@ export default defineConfig({
   projects: [
     // Logs in once per role and saves each session for the browser projects below. It types passwords,
     // so it never records a trace, screenshot or video. The cleanup project deletes the saved sessions after the run.
+    // Each browser project uses "['setup']" depdendency, sot "auth.setup.ts" runs once before any test run.
+    // It saves each session to its own file, writes the browser cookies to "e2e/playwright/.auth/researcher.json" and "e2e/playwright/.auth/admin.json"
     {
       name: 'setup',
       testMatch: /.*\.setup\.ts/,

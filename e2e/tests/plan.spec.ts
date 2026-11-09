@@ -1,6 +1,6 @@
 import { test, expect, type Locator, type Page } from '@playwright/test';
 import { LOCALE } from './helpers/login';
-import { asRole, authFile } from './helpers/roles';
+import { asRole, freshSession } from './helpers/roles';
 import { PLAN_QUESTIONS, PLAN_SECTION, archiveProject, createPublishedTemplate } from './helpers/plan';
 import { clickAndWaitFor, clickWhenHydrated, fillWhenHydrated } from './helpers/navigation';
 import { archiveTemplate, checkAria, graphql, graphqlResponse } from './helpers/template';
@@ -27,12 +27,12 @@ const createdTemplateIds: number[] = [];
 
 test.afterAll(async ({ playwright }) => {
   const failures: unknown[] = [];
-  const researcher = await playwright.request.newContext({ storageState: authFile('researcher') });
+  const researcher = await playwright.request.newContext({ storageState: await freshSession('researcher') });
   for (const id of createdProjectIds) {
     await archiveProject(researcher, id).catch((err) => failures.push(err));
   }
   await researcher.dispose();
-  const admin = await playwright.request.newContext({ storageState: authFile('admin') });
+  const admin = await playwright.request.newContext({ storageState: await freshSession('admin') });
   for (const id of createdTemplateIds) {
     await archiveTemplate(admin, id).catch((err) => failures.push(err));
   }
@@ -42,8 +42,10 @@ test.afterAll(async ({ playwright }) => {
   expect(failures, 'archiving the test projects and templates').toEqual([]);
 });
 
-// A title no other test or browser uses. Apollo rejects a second project with the same title, and tests run in
-// parallel, so add a random part as well as the time
+// A title no other test or browser uses. Apollo rejects a second project with the same title for the same user,
+// and every run logs in as the same test researcher. Tests run one at a time by default, but --workers or two
+// runs against the same environment can create projects in the same millisecond, so add a random part as well
+// as the time
 const uniqueTitle = (label: string) =>
   `E2E ${label} ${test.info().project.name} ${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
 
@@ -279,7 +281,7 @@ test.describe('a researcher writes a plan', () => {
   test.beforeAll(async ({ playwright }, testInfo) => {
     // The admin builds and publishes the template the plan is written with, in the researcher's organization
     templateName = `E2E plan template ${testInfo.project.name} ${Date.now()}`;
-    const admin = await playwright.request.newContext({ storageState: authFile('admin') });
+    const admin = await playwright.request.newContext({ storageState: await freshSession('admin') });
     createdTemplateIds.push(await createPublishedTemplate(admin, templateName));
     await admin.dispose();
   });

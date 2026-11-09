@@ -12,11 +12,12 @@ These rules apply to the Playwright tests in `e2e/`, and to anything you run aga
   - never test making a plan public.
 
   You may open the Publish dialog and check its first step (the checklist), then close it.
-- **Never use a `SUPERADMIN` account, or any account other than the test accounts** in `e2e/.env` (`E2E_RESEARCHER_*`, `E2E_ADMIN_*`). The README explains why.
+- **Never use a `SUPERADMIN` account, or any account other than the test accounts** in `e2e/.env` (`E2E_RESEARCHER_*`, `E2E_ADMIN_*`, `E2E_FUNDERADMIN_*`). The README explains why.
 - **Never record a password in a trace.**
   - A spec that types a password must use `test.use(NO_TRACE)` from `tests/helpers/login.ts`.
   - Never pass `--trace on`, because it overrides that.
   - Specs that only need a logged-in user should start from a saved session with `asRole()` instead of logging in.
+  - Hooks that call Apollo with `playwright.request.newContext()` should use `storageState: await freshSession(role)`, not `authFile(role)`. A session saved more than 15 minutes earlier has an expired access token, and `freshSession()` refreshes it.
 - **Never commit, upload or share** `e2e/.env`, `e2e/playwright/` (saved sessions with login cookies), `test-results/` or `playwright-report/`.
 - **Never call live external services from a test.** For example:
   - "Search for projects" queries NIH's award database, so use "Add project manually" instead.
@@ -33,7 +34,7 @@ These rules apply to the Playwright tests in `e2e/`, and to anything you run aga
   - Record each id as soon as the API returns it, and archive them all in `afterAll`.
   - Remove things in dependency order: a template's copies before the template, and projects (which also deletes their plans) before the templates their plans use.
   - Archiving a template with no plans deletes it; one with plans is only unpublished.
-- **Give everything a unique name** that includes the browser (`test.info().project.name`), the time and a random part. Tests run in parallel across browsers, and Apollo rejects a project whose title matches one the user already has.
+- **Give everything a unique name** that includes the browser (`test.info().project.name`), the time and a random part. Apollo rejects a project whose title matches one the user already has.
 - **Use the helpers for timing-sensitive steps:**
   - in `tests/helpers/navigation.ts`, `clickAndWaitFor`, `clickWhenHydrated` and `fillWhenHydrated`,
   - in `tests/helpers/template.ts`, `checkAria` for React Aria checkboxes and radios, and `typeInEditor` for TinyMCE editors.

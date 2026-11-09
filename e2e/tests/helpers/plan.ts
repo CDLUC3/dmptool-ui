@@ -54,8 +54,13 @@ function expectNoErrors(body: { errors?: unknown; data?: Record<string, { errors
 
 // Creates a template with one section and the PLAN_QUESTIONS through Apollo, and publishes it so researchers
 // in the admin's organization can write plans with it. `request` must be logged in as an admin.
+// Pass visibility 'PUBLIC' to publish it for every organization, e.g. so other organizations can customize it.
 // Returns the template's id; remove it with archiveTemplate once its plans are gone.
-export async function createPublishedTemplate(request: APIRequestContext, name: string): Promise<number> {
+export async function createPublishedTemplate(
+  request: APIRequestContext,
+  name: string,
+  visibility: 'ORGANIZATION' | 'PUBLIC' = 'ORGANIZATION'
+): Promise<number> {
   const template = await graphql(
     request,
     'mutation AddTemplate($name: String!) { addTemplate(name: $name) { id errors { general name } } }',
@@ -99,7 +104,7 @@ export async function createPublishedTemplate(request: APIRequestContext, name: 
     `mutation CreateTemplateVersion($templateId: Int!, $comment: String, $versionType: TemplateVersionType, $latestPublishVisibility: TemplateVisibility!) {
       createTemplateVersion(templateId: $templateId, comment: $comment, versionType: $versionType, latestPublishVisibility: $latestPublishVisibility) { id errors { general } }
     }`,
-    { templateId, comment: 'E2E plan template', versionType: 'PUBLISHED', latestPublishVisibility: 'ORGANIZATION' }
+    { templateId, comment: 'E2E plan template', versionType: 'PUBLISHED', latestPublishVisibility: visibility }
   );
   expectNoErrors(published, 'publishing the plan template');
 

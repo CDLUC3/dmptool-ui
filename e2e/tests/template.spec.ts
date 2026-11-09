@@ -1,6 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
 import { LOCALE } from './helpers/login';
-import { asRole, authFile } from './helpers/roles';
+import { asRole, freshSession } from './helpers/roles';
 import {
   archiveTemplate,
   checkAria,
@@ -76,7 +76,7 @@ test.beforeAll(async ({}, testInfo) => {
 // Newest first: Apollo can't archive a template while a copy made from it still exists. Every template is tried
 // before any failure is reported
 test.afterAll(async ({ playwright }) => {
-  const request = await playwright.request.newContext({ storageState: authFile('admin') });
+  const request = await playwright.request.newContext({ storageState: await freshSession('admin') });
   const failures: unknown[] = [];
   for (const id of [...createdTemplateIds].reverse()) {
     await archiveTemplate(request, id).catch((err) => failures.push(err));
