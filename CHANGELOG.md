@@ -1,4 +1,10 @@
 ## Added
+- Added Playwright integration tests for template customization in `e2e/tests/customization.spec.ts`: a funder admin's public template is customized by an admin in another organization (a custom question in the funder's section, and a custom section with a question), the customization is published, and a researcher in the admin's organization writes a plan that shows it. Added `e2e/tests/customization.spec.md`, helpers in `e2e/tests/helpers/customization.ts`, and a `visibility` option to `createPublishedTemplate` [#561]
+- Added `npm run test:e2e:chromium`, which runs the e2e tests in Chromium only [#561]
+- Added `e2e/tests/helpers/navigation.ts`, with `clickAndWaitFor`, `clickWhenHydrated` and `fillWhenHydrated`, which wait until React has hydrated an element before using it, and only click again while the clicked element is still on the page, so a retry can't skip a step [#561]
+- Added `e2e/AGENTS.md` (and `e2e/CLAUDE.md`, which loads it) with rules for AI coding agents working on the e2e tests, including never publishing a plan, because that registers a real DOI. The root `AGENTS.md` points to it [#561]
+- Added Playwright integration tests for a researcher creating a project and plan in `e2e/tests/plan.spec.ts`: mock and real projects, choosing NIH from a funder search, adding a funder manually, having no funder, the three funding statuses, Back on each step, project details, creating a plan from a template, answering questions (including the sample answer), and updating the plan from the project page. Added `e2e/tests/plan.spec.md`, which describes the tested flows, and helpers in `e2e/tests/helpers/plan.ts` [#561]
+- Added Playwright integration tests for the admin template flow in `e2e/tests/template.spec.ts`: starting a template from scratch or from a copy of a public template, adding a section from scratch and from an existing section, adding one question of every type, changing question types before and after saving, searching question types and templates, saving a draft, publishing, archiving a template, changing visibility, previewing, and template history. Added `e2e/tests/template.spec.md`, which describes the tested flows in plain English, and shared helpers in `e2e/tests/helpers/template.ts` [#561]
 - Added the `X-E2E-Test-Token` header to the Playwright E2E requests when `E2E_TEST_SECRET_KEY` is set, so the tests run by the AWS E2E pipeline get past the dev load balancer's CDL SSO (Cognito) login [#560]
 - Added Playwright end-to-end tests in a separate `e2e/` package, with login, logout, GraphQL and templates tests, and `test:e2e` and `test:e2e:ui` scripts. `e2e/` is excluded from Jest, ESLint, the root `tsconfig.json` and the Docker image [#559]
 - Added a guided create-project / create-DMP flow with a "Setup progress" rail: `/projects/create` (new or existing project, then a plan) and `/projects/create/project?intent=project` (project only). Flow screens live under `/projects/create…` and `/projects/:projectId/create/…`; the old `create-project`, `funding-search` and `project-funding` routes are removed
@@ -66,6 +72,10 @@
 - Added `UpdateAffiliation` and `AffiliationById` queries [#203]
 
 ## Updated
+- Updated the e2e tests to run one at a time (`workers: 1`) locally as well as on CI, because several tests at once overload the Next.js dev server and cause timeouts [#561]
+- Updated the e2e login helper to retry the whole login if the page reloads part way through [#561]
+- Updated `README.md` with how to pass Playwright options from the root, and a "Running against the local dev server" section on the dev server's memory restarts during long runs [#561]
+- Updated `docker-compose.yml` to give the dev server more memory (`NODE_OPTIONS=--max-old-space-size=8192`), so it restarts itself less often during long e2e runs [#561]
 - Updated `/account/connections` page to use the new SSO logic to allow a user to connect/disconnect from their affiliation's SSO. 
 - Updated the `Me` query to include the `hasSSO` boolean and the affiliation's `ssoEntityId`
 - Added logic to the `lib/server/auth` file to extract the pending SSO sign up cookie, verify its authenticity, and decode the payload.
@@ -199,6 +209,14 @@
 - Updated `RepoSelectorForAnswer` to wait to query `Re3byUrIsDocument` until we have `preferredReposURIs` because preferred repos don't display even though they eventually do to trigger the display of the "preferred repositories" checkbox [#118]
 
 ## Fixed
+- Fixed the Template customizations page showing "No items found" and leaving the Search button disabled when the same term was searched again. The results now come from each request's own response, so a search answered from the Apollo cache is still shown [#561]
+- Fixed the title link of a template that isn't customized yet going to `/template/customizations/0`, a "Not Found" page. The title now creates the customization first, like the Update button [#561]
+- Fixed the add-question form's "Additional comment box" and "Mark as required?" radio groups sharing one `name`, which let only one of their radios be checked in Chrome and Safari [#561]
+- Fixed the question type search on the add-question pages still showing the previous results when a new search matched nothing [#561]
+- Fixed template history dates showing in the wrong time zone: `dateUtils` now reads timestamps with no time zone as UTC [#561]
+- Fixed the "Edit question" link's accessible name ("Edit question: undefined"), template descriptions showing raw HTML on the "Select an existing template" page, and a stray debug line in the Research Output Table form [#561]
+- Fixed the best practice tags' "Click for more info" button sitting inside the checkbox label, and gave it and the Research Output Table "Customize" buttons translated names that include the tag or field [#561]
+- Translated the "Template search" label on the "Select an existing template" page [#561]
 - Fixed the login password link reading "Forgot your password?" instead of "Reset password". The wording was lost when the forgot-password pages were added, and the link in `SSOCheck` now uses a new `AuthPage.resetPasswordLink` string [#79]
 - Fixed cards on the project and template lists (and the sub-header) losing their white background, rounded corners and shadow in production builds. In compressed output, Sass adds a byte-order mark to any file containing non-ASCII characters (such as `content: "•"`), and once the CSS modules are concatenated that mark invalidates each module's first rule. Set `sassOptions: { charset: false }` in `next.config.mjs` so Sass no longer adds it [#610]
 - Fixed `tinymce` vulnerability by updating to `v8.9.3` and I replaced the `tinymce` files in `public/tinymce`. I also removed `deepmerge` and replace with our custom `mergeMessages` since there was no fix for `deepmerge` whose version was 4 years old. I also updated `README.md` with info about `tinymce` and `AGENTS.md` [#604]

@@ -2,7 +2,6 @@
 
 import React, {
   useEffect,
-  useMemo,
   useRef,
   useState,
   useTransition
@@ -27,7 +26,6 @@ import Loading from '@/components/Loading';
 import { TransitionButton } from '@/components/Form';
 
 // Utils
-import { debounce } from '@/hooks/debounce';
 import { useQueryStep } from '@/app/[locale]/template/create/useQueryStep';
 
 const TemplateCreatePage: React.FC = () => {
@@ -41,20 +39,10 @@ const TemplateCreatePage: React.FC = () => {
   const TemplateCreate = useTranslations('TemplateCreatePage');
   const Global = useTranslations('Global');
 
-  // Debounced input handler
-  const debouncedInputHandler = useMemo(
-    () =>
-      debounce((value: string) => {
-        setErrors({});
-        const sanitizedTemplateName = sanitizeHtml(value);
-        setTemplateName(sanitizedTemplateName);
-      }, 30),
-    []
-  );
-
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    debouncedInputHandler(e.target.value);
-  }
+    setErrors({});
+    setTemplateName(e.target.value);
+  };
 
   const [, startTransition] = useTransition();
   const progressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -62,10 +50,12 @@ const TemplateCreatePage: React.FC = () => {
   const handleNext = async () => {
     setErrors({});
 
-    if (templateName.length <= 2) {
+    const sanitizedName = sanitizeHtml(templateName);
+    if (sanitizedName.length <= 2) {
       setErrors({ templateName: TemplateCreate('messages.templateNameError') });
       return;
     }
+
 
     if (progressTimer.current) clearTimeout(progressTimer.current);
     progressTimer.current = setTimeout(() => {
@@ -136,7 +126,7 @@ const TemplateCreatePage: React.FC = () => {
       )}
       {step == 2 && (
         <TemplateSelectTemplatePage
-          templateName={templateName}
+          templateName={sanitizeHtml(templateName)}
         />
       )}
 
