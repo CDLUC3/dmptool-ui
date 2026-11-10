@@ -209,6 +209,7 @@
 - Updated `RepoSelectorForAnswer` to wait to query `Re3byUrIsDocument` until we have `preferredReposURIs` because preferred repos don't display even though they eventually do to trigger the display of the "preferred repositories" checkbox [#118]
 
 ## Fixed
+- Fixed the `plan.spec.ts` e2e tests failing on AWS dev, where the full ROR data makes a funder search for "NIH" match about 80 funders, with NIH not on the first page. The tests now search for "National Institutes of Health" and click "Load more" until NIH is listed, and the "Add funder manually" test picks NIH instead of NSF, which isn't in dev's data [#561]
 - Fixed the Template customizations page showing "No items found" and leaving the Search button disabled when the same term was searched again. The results now come from each request's own response, so a search answered from the Apollo cache is still shown [#561]
 - Fixed the title link of a template that isn't customized yet going to `/template/customizations/0`, a "Not Found" page. The title now creates the customization first, like the Update button [#561]
 - Fixed the add-question form's "Additional comment box" and "Mark as required?" radio groups sharing one `name`, which let only one of their radios be checked in Chrome and Safari [#561]

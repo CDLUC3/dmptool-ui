@@ -22,7 +22,7 @@ The researcher chooses **Mock project**, ticks **I don't have a funder**, and go
 
 ### 2. A real project that already applied to NIH, with the project added manually
 
-The researcher searches the funders for "NIH" and selects **National Institutes of Health (nih.gov)**. On **Funding status** they choose **Already applied**. NIH has an award database, so this opens **Search for projects**, where they choose **Add project manually**.
+The researcher searches the funders for "National Institutes of Health" and selects **National Institutes of Health (nih.gov)**. On **Funding status** they choose **Already applied**. NIH has an award database, so this opens **Search for projects**, where they choose **Add project manually**.
 
 On **Add funding details**, the funder is shown as NIH, and they enter a grant number, a project number and an opportunity number. Apollo saves all three. The status is saved as "planned", because Apollo has no "applied" status yet.
 
@@ -32,7 +32,7 @@ As in flow 2, but with **Already funded**. The funding is saved as "granted".
 
 ### 4. A real project with its funder added manually
 
-After a funder search, the researcher clicks **Add funder manually**. On the **Add Funding Details** form they type "National Science" and pick **National Science Foundation (nsf.gov)** from the suggestions, then enter a grant number and save. The test picks an existing funder because typing a new name would create a new organization, which the tests can't remove afterwards.
+After a funder search, the researcher clicks **Add funder manually**. On the **Add Funding Details** form they type "National Institutes of Health" and pick **National Institutes of Health (nih.gov)** from the suggestions, then enter a grant number and save. The test picks an existing funder because typing a new name would create a new organization, which the tests can't remove afterwards.
 
 ### 5. Back returns to the previous step
 
@@ -91,5 +91,5 @@ The researcher clicks **Update plan**, which opens the plan. They change the Tex
 
 - **Clicking too early.** A click on a page that has just loaded can be ignored, because the page's JavaScript isn't ready yet. Clicks that move to the next step are retried until the next step appears, and never repeated once it has.
 - **Checkboxes and radio buttons** are selected with the keyboard (focus, then Space), as a keyboard user would.
-- **Finding NIH.** "Most popular funders" changes with the data, so the tests always find NIH by searching for it.
+- **Finding NIH.** "Most popular funders" changes with the data, so the tests always find NIH by searching for it. Apollo sorts the results by name and shows 5 at a time, and on an environment with the full ROR data (like AWS dev) "NIH" matches about 80 funders, with NIH last. So the tests search for its full name, and click **Load more** until it is listed. For the same reason, flow 4 types NIH's full name into **Funder name**, whose suggestions are a single page with no **Load more**. Flow 4 uses NIH rather than another funder because NIH is the one funder the tests know is in every environment (NSF isn't in AWS dev's data).
 - **Date fields** have a segment for each part of the date. The tests click the month segment and type the digits, for example `01152027`.
