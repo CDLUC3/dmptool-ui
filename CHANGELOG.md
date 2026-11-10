@@ -1,4 +1,5 @@
 ## Added
+- Added Playwright integration tests for template customization in `e2e/tests/customization.spec.ts`: a funder admin's public template is customized by an admin in another organization (a custom question in the funder's section, and a custom section with a question), the customization is published, and a researcher in the admin's organization writes a plan that shows it. Added `e2e/tests/customization.spec.md`, helpers in `e2e/tests/helpers/customization.ts`, and a `visibility` option to `createPublishedTemplate` [#561]
 - Added `npm run test:e2e:chromium`, which runs the e2e tests in Chromium only [#561]
 - Added `e2e/tests/helpers/navigation.ts`, with `clickAndWaitFor`, `clickWhenHydrated` and `fillWhenHydrated`, which wait until React has hydrated an element before using it, and only click again while the clicked element is still on the page, so a retry can't skip a step [#561]
 - Added `e2e/AGENTS.md` (and `e2e/CLAUDE.md`, which loads it) with rules for AI coding agents working on the e2e tests, including never publishing a plan, because that registers a real DOI. The root `AGENTS.md` points to it [#561]
@@ -208,6 +209,8 @@
 - Updated `RepoSelectorForAnswer` to wait to query `Re3byUrIsDocument` until we have `preferredReposURIs` because preferred repos don't display even though they eventually do to trigger the display of the "preferred repositories" checkbox [#118]
 
 ## Fixed
+- Fixed the Template customizations page showing "No items found" and leaving the Search button disabled when the same term was searched again. The results now come from each request's own response, so a search answered from the Apollo cache is still shown [#561]
+- Fixed the title link of a template that isn't customized yet going to `/template/customizations/0`, a "Not Found" page. The title now creates the customization first, like the Update button [#561]
 - Fixed the add-question form's "Additional comment box" and "Mark as required?" radio groups sharing one `name`, which let only one of their radios be checked in Chrome and Safari [#561]
 - Fixed the question type search on the add-question pages still showing the previous results when a new search matched nothing [#561]
 - Fixed template history dates showing in the wrong time zone: `dateUtils` now reads timestamps with no time zone as UTC [#561]

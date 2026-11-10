@@ -370,7 +370,9 @@ End-to-end tests are written with [Playwright](https://playwright.dev) and live 
 ### Setting up Playwright
 The tests run against real services, so start the UI (`npm run dev`), `dmptool-apollo-server` and `dmptool-auth` locally first, with the local seed data loaded.
 
-Start the container with `docker-compose up`, copy `.env.example` to `.env`, and run `npm run test:e2e`. The packages and browsers are then installed automatically, and the manual commands are only needed when running without Docker. 
+Start the services with `docker-compose up`. The UI container runs `npm --prefix e2e ci` when it starts, and because the repo is bind-mounted, the packages land in `e2e/node_modules` on your machine. Then copy `e2e/.env.example` to `e2e/.env` and run `npm run test:e2e` from the root. The Playwright browsers are downloaded the first time by the `pretest` script in `e2e/package.json`.
+
+Without Docker, install the packages yourself:
  
  Manual commands:
 ```bash
@@ -380,19 +382,20 @@ npx playwright install   # download the browsers (repeat after upgrading Playwri
 cp .env.example .env     # then check the test account emails and passwords
 ```
 
-`.env` is git-ignored. It holds the emails and passwords of the test accounts the tests log in as.
+`e2e/.env` is git-ignored. It holds the emails and passwords of the test accounts the tests log in as.
 
 ### Test accounts
-The tests log in as two dedicated test accounts, which belong to the "Test Organization" affiliation (`https://dmptool.org/affiliations/532910`). They are created by a data migration script in `dmptool-apollo-server`.
+The tests log in as three dedicated test accounts. The researcher and admin belong to the "DMP Tool API Testing" affiliation (`https://dmptool.org/9a23da33da11`). The funder admin belongs to a separate "DMP Tool API Testing Funder" affiliation, so it can publish public templates that the admin can customize (an organization can't customize its own templates). They are created by data migration scripts in `dmptool-apollo-server` (`data-migrations/local-only`).
 
-| Role | Email | Used for |
-| --- | --- | --- |
-| `RESEARCHER` | `testresearcher@example.com` | Login, logout and researcher pages |
-| `ADMIN` | `testadmin@example.com` | Admin pages, such as organization templates |
+| Role | `ROLES` name | Email | Used for |
+| --- | --- | --- | --- |
+| `RESEARCHER` | `researcher` | `testresearcher@example.com` | Login, logout and researcher pages |
+| `ADMIN` | `admin` | `testadmin@example.com` | Admin pages, such as organization templates and template customizations |
+| `ADMIN` (funder) | `funderAdmin` | `testfunderadmin@example.com` | Publishing the funder templates that the admin customizes |
 
 - **Never use a `SUPERADMIN` account in the tests.** A super admin can see and change data across every organization, so a test bug or a leaked session could affect data far beyond the test organization. Super admins can also see pages and data that admins can't, so tests run as one could pass even when the admin permission checks are broken.
 - **Tests clean up after themselves.** A test that creates data (for example a template) deletes or archives it when it finishes, so runs don't build up data in the test organization.
-- **Adding a role:** add it to `ROLES` in `tests/helpers/roles.ts` and add `E2E_<ROLE>_EMAIL` and `E2E_<ROLE>_PASSWORD` to `.env.example`.
+- **Adding a role:** add it to `ROLES` in `tests/helpers/roles.ts` and add `E2E_<ROLE>_EMAIL` and `E2E_<ROLE>_PASSWORD` to `.env.example` (the role name is upper-cased, so `funderAdmin` reads `E2E_FUNDERADMIN_*`). `auth.setup.ts` then saves a session for it. For the AWS E2E pipeline, also add both variables to the CodeBuild project in `dmptool-infrastructure` (`templates/codebuild/e2e.yaml`), and create their SSM parameters in dev and stage.
 
 ### Running Playwright tests
 From the repository root:
@@ -403,7 +406,12 @@ From the repository root:
 | Run all tests in Chromium only | `npm run test:e2e:chromium` |
 | Open the Playwright UI | `npm run test:e2e:ui` |
 
-To pass other Playwright options from the root, add a second `--`, because the root scripts call npm again: `npm run test:e2e -- -- plan.spec.ts --project=firefox`. Running `npx playwright test` from `e2e/` avoids this.
+To pass Playwright arguments, such as a test file or `--project`, put them after two `--`:
+
+`npm run test:e2e -- -- plan.spec.ts --project=firefox`
+
+You need two because `npm run test:e2e` calls a second npm command (`npm --prefix e2e test`), and each npm command uses up one `--`. With only one, the second npm treats flags like `--project=firefox` as its own settings and silently drops them, so the tests run in every browser. To avoid this, run Playwright directly from `e2e/: cd e2e && npx playwright test plan.spec.ts --project=firefox`.
+
 
 From `e2e/`:
 
@@ -417,7 +425,9 @@ From `e2e/`:
 
 `npx playwright` commands only work from `e2e/`, where Playwright and its config are installed.
 
-Before the browser projects run, the `setup` project (`tests/auth.setup.ts`) logs in once per role and saves each session to `e2e/playwright/.auth/`. A spec can start logged in with `test.use(asRole('admin'))`, or logged out with `test.use(loggedOut)` (see `tests/helpers/roles.ts`).
+Before the browser projects run, the `setup` project (`tests/auth.setup.ts`) logs in once per role and saves the login cookies to `e2e/playwright/.auth/<role>.json`. A spec with `test.use(asRole('admin'))` loads those cookies into each test's new browser, so it starts logged in. A spec with `test.use(loggedOut)` starts with no cookies (see `tests/helpers/roles.ts`). The `cleanup` project deletes the saved sessions when the run ends.
+
+Access tokens expire after 15 minutes, and a full run takes longer than that. So before a test uses a saved session, `asRole()` refreshes it if its access token has less than 5 minutes left. Hooks that call Apollo directly get the session from `freshSession(role)` for the same reason, rather than reading `authFile(role)`.
 
 Reports are written to `e2e/playwright-report/` and `e2e/test-results/`. Both are git-ignored.
 
@@ -427,17 +437,29 @@ The tests run one at a time (`workers: 1` in `playwright.config.ts`), locally as
 The dev server also keeps every page it builds in memory. During long runs it can reach its memory limit and restart itself, printing "Server is approaching the used memory threshold, restarting..." in the container's log (`docker compose logs dmsp-frontend-prototype`). Tests that are loading a page at that moment fail with errors like `net::ERR_CONNECTION_RESET`. To avoid this:
 
 - **Restart the UI container before a full run**, so it starts with little memory in use: `docker compose restart dmsp-frontend-prototype`.
-- **While working on tests, run only the spec file you're changing**, in Chromium.
-- **The memory limit is already raised:** the UI service in `docker-compose.yml` sets `NODE_OPTIONS=--max-old-space-size=8192` (8 GB, up from Node's default of about 4 GB). This delays the restart, but doesn't prevent it. If you change the value, recreate the container with `docker compose up -d dmsp-frontend-prototype`; a plain restart keeps the old setting.
+- **While working on tests, run only the spec file you're changing**, in Chromium. From `e2e/`:
+  ```bash
+  # One spec file
+  npx playwright test plan.spec.ts --project=chromium
+
+  # One test, by the line its test() starts on
+  npx playwright test plan.spec.ts:142 --project=chromium
+
+  # One test, by its name (-g matches any part of the name, including the describe block's title)
+  npx playwright test -g "a mock project with no funder" --project=chromium
+  ```
+  The `setup` and `cleanup` projects still run first and last, so the test starts logged in.
+- **The memory limit is already raised:** the UI service in `docker-compose.yml` sets `NODE_OPTIONS=--max-old-space-size=8192` (8 GB, up from Node's default of about 4 GB). This delays the restart, but doesn't prevent it. If you change the value, recreate the container with `docker compose up dmsp-frontend-prototype`; a plain restart keeps the old setting.
 
 CI isn't affected: the deployed environments run a production build, which builds every page in advance and doesn't restart itself.
 
 ### Handling traces, reports and saved sessions
 Playwright traces record each action, the text typed with `fill()`, network requests (including session cookies), and page snapshots. The HTML report embeds the traces, so treat reports, traces and saved sessions as sensitive.
 
-- **Passwords are never traced.** The `setup` project and the specs that log in (`login.spec.ts`, `logout.spec.ts`) turn tracing off. A new spec that types a password must add `test.use(NO_TRACE)` from `tests/helpers/login.ts`. Don't pass `--trace on` on the command line, because it overrides these settings.
+- **Traces are only recorded on CI**. `trace: 'on-first-retry'` records a trace when a failed test is retried, and tests are only retried on CI. Locally, no traces are recorded unless you pass `--trace`.
+- **Passwords are never traced.** The `setup` project turns tracing, screenshots and video off, and the specs that log in (`login.spec.ts`, `logout.spec.ts`) use `test.use(NO_TRACE)` from `test/helpers/login.ts`. A new spec that types a password must do the same. Don't pass `--trace on`: it overrides the `setup` project's setting, and `setup` types the test accounts' passwords on every run.
 - **Saved sessions only last for the run.** `playwright/.auth/*.json` holds login cookies. It is git-ignored, and the `cleanup` project (`tests/auth.teardown.ts`) deletes it after each run.
-- **Never upload `playwright/`.** When CI is added, upload only `playwright-report/` and `test-results/`, to a private S3 bucket with a short retention period and access limited to the team.
+- **Never upload `playwright/`.** CI uploads only `playwright-report/`to the private E2E S3 bucket, where reports expire after 30 days.
 - **Share links, not files.** Don't attach traces or reports to Slack messages or GitHub issues. Link to their S3 location instead.
 
 ### Playwright documentation
