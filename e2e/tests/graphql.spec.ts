@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { ROLES, asRole, loggedOut } from './helpers/roles';
+import { API_ROLES, ROLES, asRole, loggedOut } from './helpers/roles';
 
 // Sends GraphQL requests straight to dmptool-apollo-server, using the auth cookies that
 // dmptool-auth set during login (page.request shares the browser context's cookies).
@@ -20,7 +20,7 @@ for (const role of ROLES) {
       const body = await response.json();
       expect(body.errors).toBeUndefined();
       expect(body.data.me.id).toBeTruthy();
-      expect(body.data.me.role).toBe(role.toUpperCase());
+      expect(body.data.me.role).toBe(API_ROLES[role]);
     });
   });
 }

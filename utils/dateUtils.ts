@@ -11,6 +11,23 @@ type DateTimeFormatterFn = {
 };
 
 
+// A date and time with no time zone, like "2025-09-24 17:10:11"
+const ZONELESS_DATE_TIME = /^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}(:\d{2}(\.\d+)?)?$/;
+
+// Parse a timestamp from the API: milliseconds ("1758733811000"), a date and time with no time zone
+// ("2025-09-24 17:10:11"), or any other string Date understands (e.g. ISO with a time zone).
+// The API sends date-times with no time zone in UTC, but `new Date()` reads them as local time, which
+// shifts them by the browser's UTC offset. So read them as UTC.
+export const parseTimestamp = (timestamp: string): Date => {
+  if (/^\d+$/.test(timestamp)) {
+    return new Date(parseInt(timestamp));
+  }
+  if (ZONELESS_DATE_TIME.test(timestamp)) {
+    return new Date(`${timestamp.replace(' ', 'T')}Z`);
+  }
+  return new Date(timestamp);
+};
+
 // Format timestamp with time and date using next-intl formatter
 export const formatWithTimeAndDate = (
   timestamp: string,
@@ -19,15 +36,7 @@ export const formatWithTimeAndDate = (
   if (!timestamp) return 'No date';
 
   try {
-    // Check if timestamp is a number (milliseconds) or a date string
-    let date: Date;
-    if (/^\d+$/.test(timestamp)) {
-      // If it's all digits, treat as milliseconds timestamp
-      date = new Date(parseInt(timestamp));
-    } else {
-      // Otherwise, treat as date string
-      date = new Date(timestamp);
-    }
+    const date = parseTimestamp(timestamp);
 
     // Use the formatter with options for time and date
     return formatter(date, {
@@ -78,7 +87,7 @@ export const formatToDateOnly = (
   if (!dateString) return 'No date';
 
   try {
-    const date = new Date(dateString);
+    const date = parseTimestamp(dateString);
 
     // Get the formatted parts from the formatter
     const formatted = formatter(date, {

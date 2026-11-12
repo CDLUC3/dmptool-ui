@@ -29,7 +29,6 @@ const QuestionEditCard: React.FC<QuestionEditCardProps> = ({
   id,
   text,
   link,
-  name,
   displayOrder,
   handleDisplayOrderChange,
   questionAuthorType,
@@ -186,7 +185,7 @@ const QuestionEditCard: React.FC<QuestionEditCardProps> = ({
         <TransitionLink
           href={link}
           className={styles.questionEditCard__link}
-          aria-label={`${getLinkText()}: ${name}`}
+          aria-label={`${getLinkText()}: ${questionText}`}
         >
           {getLinkText()}
         </TransitionLink>

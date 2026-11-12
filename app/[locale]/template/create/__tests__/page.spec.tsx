@@ -16,11 +16,6 @@ jest.mock('@/app/[locale]/template/create/useQueryStep', () => ({
   useQueryStep: jest.fn(),
 }));
 
-// Mock the debounce function
-jest.mock('@/hooks/debounce', () => ({
-  debounce: (fn: (..._args: unknown[]) => unknown) => fn,
-}));
-
 jest.mock('@apollo/client/react', () => ({
   ...jest.requireActual('@apollo/client/react'),
   useLazyQuery: jest.fn(),

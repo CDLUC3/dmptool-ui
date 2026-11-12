@@ -1,7 +1,6 @@
 'use client';
 
 import React, {
-  useMemo,
   useState,
   type TransitionStartFunction
 } from 'react';
@@ -27,7 +26,6 @@ import { TransitionButton } from '@/components/Form';
 import { TemplateNameAvailableDocument } from '@/generated/graphql';
 
 // Utils
-import { debounce } from '@/hooks/debounce';
 import { useQueryStep } from '@/app/[locale]/template/create/useQueryStep';
 import { handleApolloError } from '@/utils/apolloErrorHandler';
 
@@ -45,32 +43,23 @@ const TemplateCreatePage: React.FC = () => {
     fetchPolicy: 'network-only',
   });
 
-  // Debounced input handler
-  const debouncedInputHandler = useMemo(
-    () =>
-      debounce((value: string) => {
-        setErrors({});
-        const sanitizedTemplateName = sanitizeHtml(value);
-        setTemplateName(sanitizedTemplateName);
-      }, 30),
-    []
-  );
-
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    debouncedInputHandler(e.target.value);
-  }
+    setErrors({});
+    setTemplateName(e.target.value);
+  };
 
   const handleNext = async ({ startTransition }: { startTransition: TransitionStartFunction }) => {
     setErrors({});
 
-    if (templateName.length <= 2) {
+    const sanitizedName = sanitizeHtml(templateName);
+    if (sanitizedName.length <= 2) {
       setErrors({ templateName: TemplateCreate('messages.templateNameError') });
       return;
     }
 
     try {
       const { data, error } = await checkTemplateName({
-        variables: { name: templateName.trim() },
+        variables: { name: sanitizedName.trim() },
       });
 
       if (error) {
@@ -147,7 +136,7 @@ const TemplateCreatePage: React.FC = () => {
       )}
       {step == 2 && (
         <TemplateSelectTemplatePage
-          templateName={templateName}
+          templateName={sanitizeHtml(templateName)}
         />
       )}
 

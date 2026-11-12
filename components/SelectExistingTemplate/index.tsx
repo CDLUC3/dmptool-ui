@@ -507,7 +507,7 @@ const TemplateSelectTemplatePage = ({ templateName }: { templateName: string }) 
           <>
             <ErrorMessages errors={errors} ref={errorRef} />
             <div className="searchSection" role="search" ref={topRef}>
-              <SearchField aria-label="Template search">
+              <SearchField aria-label={SelectTemplate('searchLabel')}>
                 <Label>{Global('labels.searchByKeyword')}</Label>
                 <Input
                   aria-describedby="search-help"

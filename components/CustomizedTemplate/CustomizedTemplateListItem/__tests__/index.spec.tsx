@@ -183,6 +183,33 @@ describe('CustomizedTemplateListItem', () => {
   });
 
 
+  it('should start a customization from the title and the update button when the template is not customized yet', async () => {
+    const notCustomizedItem: CustomizedTemplatesProps = {
+      ...baseItem,
+      id: undefined,
+      link: undefined,
+      lastCustomized: null,
+      lastCustomizedByName: undefined,
+      customizationStatus: 'templateStatus.notCustomized',
+    };
+    render(<CustomizedTemplateListItem
+      item={notCustomizedItem}
+      handleAddCustomization={mockHandleAddCustomization}
+    />);
+
+    const links = screen.getAllByRole('link', { name: 'links.update NSF-DMS: Mathematical Sciences' });
+    // Both the title and the update button, and neither goes to a customization page that doesn't exist yet
+    expect(links).toHaveLength(2);
+    for (const link of links) {
+      expect(link).not.toHaveAttribute('href');
+    }
+
+    fireEvent.click(links[0]);
+    await waitFor(() => {
+      expect(mockHandleAddCustomization).toHaveBeenCalledWith(notCustomizedItem);
+    });
+  });
+
   it('should have correct ARIA attributes', () => {
     render(<CustomizedTemplateListItem
       item={baseItem}

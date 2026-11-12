@@ -19,6 +19,8 @@ services:
       - LOCALSTACK_ENDPOINT=http://localstack:4566
       - AUTH_ENDPOINT=http://auth:4646
       - TOKEN_ISSUER=http://auth:4646
+      # Raise Node's memory limit (MB) so the Next.js dev server doesn't restart itself under heavy use, e.g. e2e runs
+      - NODE_OPTIONS=--max-old-space-size=8192
     volumes:
     - .:/app
     - /app/node_modules

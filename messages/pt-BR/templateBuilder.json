@@ -387,6 +387,7 @@
     "resultsText": "Os resultados {name} correspondem à sua pesquisa",
     "numDisplaying": "Mostrando {num} de {total}",
     "clearFilter": "filtros transparentes",
+    "searchLabel": "Pesquisa de modelos",
     "buttons": {
       "loadMore": "Carregue mais {name}",
       "load3More": "Carregue mais 3",
@@ -630,7 +631,11 @@
       "previewQuestion": "Pré-visualizar pergunta",
       "changeType": "Mudar os Tipos",
       "removeType": "Remover {type}",
-      "removeAccessLevel": "Remover {level}"
+      "removeAccessLevel": "Remover {level}",
+      "tagInfo": "Mais informações sobre {name}",
+      "customizeField": "Personalizar {name}",
+      "closeField": "Fechar {name}",
+      "expandField": "Expandir {name}"
     },
     "helpText": {
       "textField": "Alterar o tipo de questão, por exemplo, de campo de texto para botões de rádio, pode resultar na perda de alguns dados.",

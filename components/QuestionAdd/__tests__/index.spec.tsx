@@ -74,7 +74,8 @@ jest.mock('@apollo/client/react', () => ({
 }));
 
 jest.mock('next/navigation', () => ({
-  useParams: jest.fn(),}))
+  useParams: jest.fn(),
+}))
 
 jest.mock('@/i18n/routing', () => ({
   Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
@@ -520,6 +521,43 @@ describe("QuestionAdd", () => {
   });
 
 
+  it('should keep the comment box and required choices independent of each other', async () => {
+    // Both radio groups used to share name="radioGroup", so the browser let only one of their radios be checked
+    const json = "{\"type\":\"radioButtons\",\"attributes\":{},\"options\":[{\"label\":\"Yes\",\"value\":\"Yes\",\"selected\":false}],\"meta\":{\"schemaVersion\":\"1.0\"}}"
+
+    let container: HTMLElement;
+    await act(async () => {
+      ({ container } = render(
+        <QuestionAdd
+          previewHref="/preview"
+          questionType="radioButtons"
+          questionName="Radio buttons"
+          questionJSON={json}
+          sectionId="1"
+          onSave={jest.fn()}
+          backUrl="/back"
+          successUrl="/success"
+          breadcrumbs={<div>Breadcrumbs</div>}
+        />
+      ));
+    });
+
+    const showCommentField = container!.querySelector<HTMLInputElement>('input[type="radio"][name="showCommentField"][value="yes"]');
+    const required = container!.querySelector<HTMLInputElement>('input[type="radio"][name="requiredQuestion"][value="yes"]');
+    expect(showCommentField).not.toBeNull();
+    expect(required).not.toBeNull();
+
+    await act(async () => {
+      fireEvent.click(showCommentField!);
+    });
+    await act(async () => {
+      fireEvent.click(required!);
+    });
+
+    expect(showCommentField).toBeChecked();
+    expect(required).toBeChecked();
+  });
+
   it('should call addQuestionMutation when Save button is clicked after entering data', async () => {
     const mockOnSave = jest.fn().mockResolvedValue(undefined); // ← named mock
 
@@ -624,6 +662,114 @@ describe("QuestionAdd", () => {
         required: false,
         tags: []
       });
+    });
+  });
+
+  describe('saving', () => {
+    const textJson = JSON.stringify({
+      meta: { asRichText: true, schemaVersion: "1.0" },
+      type: "text",
+      attributes: { pattern: null, maxLength: null, minLength: 0 }
+    });
+
+    const renderTextQuestion = async (onSave: jest.Mock) => {
+      await act(async () => {
+        render(
+          <QuestionAdd
+            previewHref="/preview"
+            questionType="text"
+            questionName="Text Field"
+            questionJSON={textJson}
+            sectionId="1"
+            onSave={onSave}
+            backUrl="/back"
+            successUrl="/success"
+            breadcrumbs={<div>Breadcrumbs</div>}
+          />
+        );
+      });
+
+      fireEvent.change(screen.getByLabelText(/labels.questionText/), {
+        target: { value: 'New Question' },
+      });
+    };
+
+    it('should only save once when "Save and add" is clicked again after a successful save', async () => {
+      const mockOnSave = jest.fn().mockResolvedValue(undefined);
+      await renderTextQuestion(mockOnSave);
+
+      const saveButton = screen.getByRole('button', { name: /buttons.saveAndAdd/i });
+
+      // First click: save resolves and navigation starts
+      await act(async () => {
+        fireEvent.click(saveButton);
+      });
+      await waitFor(() => expect(mockRouter.push).toHaveBeenCalledWith('/success'));
+
+      // Second click lands before the page has navigated away
+      await act(async () => {
+        fireEvent.click(saveButton);
+      });
+
+      expect(mockOnSave).toHaveBeenCalledTimes(1);
+      expect(saveButton).toBeDisabled();
+    });
+
+    it('should only save once when the form is submitted twice in the same tick', async () => {
+      const mockOnSave = jest.fn().mockResolvedValue(undefined);
+      await renderTextQuestion(mockOnSave);
+
+      const form = screen.getByRole('button', { name: /buttons.saveAndAdd/i }).closest('form') as HTMLFormElement;
+
+      await act(async () => {
+        fireEvent.submit(form);
+        fireEvent.submit(form);
+      });
+
+      await waitFor(() => expect(mockRouter.push).toHaveBeenCalledWith('/success'));
+      expect(mockOnSave).toHaveBeenCalledTimes(1);
+    });
+
+    it('should re-enable "Save and add" so the user can retry when the save fails', async () => {
+      const mockOnSave = jest.fn()
+        .mockRejectedValueOnce(new Error('network'))
+        .mockResolvedValueOnce(undefined);
+      await renderTextQuestion(mockOnSave);
+
+      const saveButton = screen.getByRole('button', { name: /buttons.saveAndAdd/i });
+
+      await act(async () => {
+        fireEvent.click(saveButton);
+      });
+      await waitFor(() => expect(screen.getByText('messages.errors.questionAddingError')).toBeInTheDocument());
+      expect(saveButton).not.toBeDisabled();
+
+      await act(async () => {
+        fireEvent.click(saveButton);
+      });
+
+      await waitFor(() => expect(mockRouter.push).toHaveBeenCalledWith('/success'));
+      expect(mockOnSave).toHaveBeenCalledTimes(2);
+    });
+
+    it('should show the validation errors returned by onSave and stay on the form', async () => {
+      (useToast as jest.Mock).mockReturnValue(mockToast);
+      mockToast.add.mockClear();
+      const mockOnSave = jest.fn().mockResolvedValue(['Unable to add question', 'Question text is required']);
+      await renderTextQuestion(mockOnSave);
+
+      const saveButton = screen.getByRole('button', { name: /buttons.saveAndAdd/i });
+
+      await act(async () => {
+        fireEvent.click(saveButton);
+      });
+
+      await waitFor(() => expect(screen.getByText('Unable to add question')).toBeInTheDocument());
+      expect(screen.getByText('Question text is required')).toBeInTheDocument();
+      expect(mockRouter.push).not.toHaveBeenCalled();
+      expect(mockToast.add).not.toHaveBeenCalledWith('messages.success.questionAdded', { type: 'success' });
+      // The user can fix the problem and try again
+      expect(saveButton).not.toBeDisabled();
     });
   });
 
