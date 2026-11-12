@@ -1,45 +1,31 @@
 import styles from "./RelatedWorksList.module.scss";
-import RelatedWorksListItem from "@/components/RelatedWorksListItem";
+import RelatedWorksListItem, { RelatedWorkAction } from "@/components/RelatedWorksListItem";
 import Pagination from "@/components/Pagination";
-import LinkFilter from "@/components/LinkFilter";
-import React, {useCallback, useMemo, useState} from "react";
-import {Switch,} from "react-aria-components";
-import {useToast} from "@/context/ToastContext";
-import {useTranslations} from "next-intl";
-import {useQuery} from '@apollo/client/react';
+import React, { useCallback, useId, useMemo, useState } from "react";
+import { Button } from "react-aria-components";
+import { TransitionLink } from "@/components/Form";
+import RelatedWorksEmptyState from "@/components/RelatedWorksEmptyState";
+import SkeletonListLoading from "@/components/SkeletonListLoading";
+import { useToast } from "@/context/ToastContext";
+import { useTranslations } from "next-intl";
+import { useMutation, useQuery } from "@apollo/client/react";
 import {
-  RelatedWorkConfidence,
   RelatedWorksDocument,
   RelatedWorkSearchResult,
   RelatedWorksIdentifierType,
   RelatedWorkStatus,
-  WorkType,
+  UpdateRelatedWorkStatusDocument,
 } from "@/generated/graphql";
-import {updateRelatedWorkStatusAction} from "@/app/actions";
-import {
-  ProjectPlanSelect,
-  RelatedWorksSelect
-} from "@/components/RelatedWorksSelect";
+import { ProjectPlanSelect, RelatedWorksSelect } from "@/components/RelatedWorksSelect";
+import { handleApolloError } from "@/utils/index";
 
-const LIMIT = 20;
-const FADEOUT_TIMEOUT = 550;
-
-export enum ConfidenceOptions {
-  All = "ALL",
-  High = "HIGH",
-  Medium = "MEDIUM",
-  Low = "LOW",
-}
+const LIMIT = 10;
 
 export enum SortByOptions {
-  ConfidenceHigh = "ConfidenceHigh",
-  ConfidenceLow = "ConfidenceLow",
-  ReviewedNew = "ReviewedNew",
-  ReviewedOld = "ReviewedOld",
-  PublishedNew = "PublishedNew",
-  PublishedOld = "PublishedOld",
+  LikelihoodHigh = "LikelihoodHigh",
   DateFoundNew = "DateFoundNew",
-  DateFoundOld = "DateFoundOld",
+  DateConfirmedNew = "DateConfirmedNew",
+  DateDismissedNew = "DateDismissedNew",
 }
 
 export enum RelatedWorksSortBy {
@@ -54,24 +40,47 @@ export enum RelatedWorksSortDir {
   Descending = "DESC",
 }
 
-const SORT_MAP = new Map<SortByOptions | string | null, [RelatedWorksSortBy, RelatedWorksSortDir]>([
-  [SortByOptions.ConfidenceHigh, [RelatedWorksSortBy.ScoreNorm, RelatedWorksSortDir.Descending]],
-  [SortByOptions.ConfidenceLow, [RelatedWorksSortBy.ScoreNorm, RelatedWorksSortDir.Ascending]],
-  [SortByOptions.ReviewedNew, [RelatedWorksSortBy.Modified, RelatedWorksSortDir.Descending]],
-  [SortByOptions.ReviewedOld, [RelatedWorksSortBy.Modified, RelatedWorksSortDir.Ascending]],
-  [SortByOptions.PublishedNew, [RelatedWorksSortBy.PublicationDate, RelatedWorksSortDir.Descending]],
-  [SortByOptions.PublishedOld, [RelatedWorksSortBy.PublicationDate, RelatedWorksSortDir.Ascending]],
+const SORT_MAP = new Map<string, [RelatedWorksSortBy, RelatedWorksSortDir]>([
+  [SortByOptions.LikelihoodHigh, [RelatedWorksSortBy.ScoreNorm, RelatedWorksSortDir.Descending]],
   [SortByOptions.DateFoundNew, [RelatedWorksSortBy.Created, RelatedWorksSortDir.Descending]],
-  [SortByOptions.DateFoundOld, [RelatedWorksSortBy.Created, RelatedWorksSortDir.Ascending]],
+  [SortByOptions.DateConfirmedNew, [RelatedWorksSortBy.Modified, RelatedWorksSortDir.Descending]],
+  [SortByOptions.DateDismissedNew, [RelatedWorksSortBy.Modified, RelatedWorksSortDir.Descending]],
 ]);
+
+const SORT_OPTIONS_BY_STATUS: Record<RelatedWorkStatus, SortByOptions[]> = {
+  [RelatedWorkStatus.Pending]: [SortByOptions.LikelihoodHigh, SortByOptions.DateFoundNew],
+  [RelatedWorkStatus.Accepted]: [SortByOptions.DateConfirmedNew],
+  [RelatedWorkStatus.Rejected]: [SortByOptions.DateDismissedNew, SortByOptions.LikelihoodHigh],
+};
+
+// UI actions are stored using the existing backend statuses
+const ACTION_STATUS: Record<RelatedWorkAction, RelatedWorkStatus> = {
+  confirm: RelatedWorkStatus.Accepted,
+  dismiss: RelatedWorkStatus.Rejected,
+  restore: RelatedWorkStatus.Pending,
+  unmatch: RelatedWorkStatus.Rejected,
+};
+
+const EMPTY_STATE_ICONS: Record<RelatedWorkStatus, string> = {
+  [RelatedWorkStatus.Accepted]: "check_circle",
+  [RelatedWorkStatus.Pending]: "search",
+  [RelatedWorkStatus.Rejected]: "cancel",
+};
+
+export interface RelatedWorksPlanScope {
+  title?: string | null;
+  allPlansHref: string;
+}
 
 interface RelatedWorksListProps {
   identifierType: RelatedWorksIdentifierType;
   identifier: number;
   status: RelatedWorkStatus;
-  defaultConfidence?: ConfidenceOptions;
-  defaultType?: WorkType | null;
-  defaultHighlightMatches?: boolean;
+  unpublishedPlanIds?: number[];
+  /** Plan page only: shown where the project page has its plan filter */
+  planScope?: RelatedWorksPlanScope;
+  addHref?: string;
+  onReviewMatches?: () => void;
   defaultPage?: number;
 }
 
@@ -79,36 +88,22 @@ export const RelatedWorksList = ({
   identifierType,
   identifier,
   status,
-  defaultConfidence = ConfidenceOptions.All,
-  defaultType = null,
-  defaultHighlightMatches = false,
+  unpublishedPlanIds = [],
+  planScope,
+  addHref,
+  onReviewMatches,
   defaultPage = 1,
 }: RelatedWorksListProps) => {
   const t = useTranslations("RelatedWorksList");
-  const dataTypes = useTranslations("RelatedWorksDataTypes");
+  const toastState = useToast();
+  const planScopeLabelId = useId();
 
   // UI State
-  const [confidence, setConfidence] = useState<string>(defaultConfidence);
-  const [workType, setWorkType] = useState<string | null>(defaultType);
-  const [highlightMatches, setHighlightMatches] = useState<boolean>(defaultHighlightMatches);
   const [currentPage, setCurrentPage] = useState<number>(defaultPage);
-  const [sortBy, setSortBy] = useState<string | null>(getDefaultSortBy(status));
+  const [sortBy, setSortBy] = useState<string | null>(SORT_OPTIONS_BY_STATUS[status][0]);
   const [planId, setPlanId] = useState<number | null>(null);
 
-  // Derived API values
-  const apiConfidence = useMemo(() => {
-    return confidence === ConfidenceOptions.All ? undefined : (confidence.toUpperCase() as RelatedWorkConfidence);
-  }, [confidence]);
-  const [sortField, sortDir] = useMemo(() => {
-    const sortConfig = SORT_MAP.get(sortBy);
-    if (sortConfig != null) {
-      return sortConfig;
-    }
-    return [undefined, undefined];
-  }, [sortBy]);
-  const apiWorkType = useMemo(() => {
-    return workType == null ? undefined : (workType as WorkType);
-  }, [workType]);
+  const [sortField, sortDir] = useMemo(() => SORT_MAP.get(sortBy ?? "") ?? [undefined, undefined], [sortBy]);
 
   // Query data
   const {
@@ -123,8 +118,6 @@ export const RelatedWorksList = ({
       filterOptions: {
         planId,
         status,
-        workType: apiWorkType,
-        confidence: apiConfidence,
       },
       paginationOptions: {
         offset: (currentPage - 1) * LIMIT,
@@ -137,181 +130,205 @@ export const RelatedWorksList = ({
     fetchPolicy: "cache-and-network", // required so that results in different tabs update when status of a related work is updated
   });
 
+  const [updateRelatedWorkStatusMutation] = useMutation(UpdateRelatedWorkStatusDocument, {
+    // Counts shown on the project and plan overview pages change with every status update
+    update(cache) {
+      cache.evict({ fieldName: "relatedWorksByPlanStats" });
+      cache.evict({ fieldName: "relatedWorksByProjectStats" });
+      cache.gc();
+    },
+  });
+
   // Use previous data when loading new data, stops flickering results
   const relatedWorksData = data?.relatedWorks || previousData?.relatedWorks;
+  const items = relatedWorksData?.items ?? [];
 
   // Remaining pagination variables
   const statusOnlyCount = relatedWorksData?.statusOnlyCount ?? 0;
   const totalCount = relatedWorksData?.totalCount ?? 0;
-  const totalPages = Math.ceil((relatedWorksData?.totalCount ?? 0) / LIMIT);
+  const totalPages = Math.ceil(totalCount / LIMIT);
   const hasPreviousPage = relatedWorksData?.hasPreviousPage ?? null;
   const hasNextPage = relatedWorksData?.hasNextPage ?? null;
-  const handlePageClick = async (page: number) => {
-    setCurrentPage(page);
-  };
+  const pageStart = (currentPage - 1) * LIMIT + 1;
+  const pageEnd = pageStart + items.length - 1;
 
-  const toastState = useToast();
-  const updateRelatedWorkStatus = useCallback(
-    async (relatedWorkId: number, status: RelatedWorkStatus) => {
-      // Update related works status and wait at least FADEOUT_TIMEOUT
-      // until updating UI so that the fadeout can complete
-      const updatePromise = updateRelatedWorkStatusAction({
-        id: relatedWorkId,
-        status,
-      });
-      const delayPromise = new Promise((resolve) => setTimeout(resolve, FADEOUT_TIMEOUT));
-      const [response] = await Promise.all([updatePromise, delayPromise]);
+  const handleAction = useCallback(
+    async (relatedWorkId: number, action: RelatedWorkAction) => {
+      try {
+        await updateRelatedWorkStatusMutation({
+          variables: { input: { id: relatedWorkId, status: ACTION_STATUS[action] } },
+        });
 
-      if (response.success) {
-        // Refreshes the related works query in this component
-        await relatedWorksRefetch();
-      } else {
-        toastState.add(`Error updating related work. ${response?.errors?.join(", ")}`, { type: "error" });
+        if (items.length === 1 && currentPage > 1) {
+          setCurrentPage(currentPage - 1);
+        } else {
+          await relatedWorksRefetch();
+        }
+        toastState.add(t(`messages.actions.${action}`), { type: "success" });
+      } catch (err) {
+        const { wasRealError } = handleApolloError(err, "RelatedWorksList.updateRelatedWorkStatus");
+        if (wasRealError) {
+          toastState.add(t("messages.errors.updateStatus"), { type: "error" });
+        }
       }
     },
-    [toastState],
+    [updateRelatedWorkStatusMutation, relatedWorksRefetch, items.length, currentPage, toastState, t],
   );
 
-  // Confidence items
-  const confidenceCounts = new Map(
-    relatedWorksData?.confidenceCounts?.map((item) => [item.typeId, item.count]),
-  );
-  const confidenceItems = Object.values(ConfidenceOptions).map((key: string) => ({
-    id: key,
-    label: dataTypes(`confidence.${key}`),
-    count: key === ConfidenceOptions.All ? undefined : (confidenceCounts.get(key) ?? 0),
-  }));
+  const sortItems = SORT_OPTIONS_BY_STATUS[status].map((id) => ({ id, label: t(`filters.sortBy.${id}`) }));
+  const unpublishedPlans = new Set(unpublishedPlanIds);
 
-  // Work type items
-  const typeItems =
-    relatedWorksData?.workTypeCounts
-      ?.map((item) => ({ id: item.typeId, label: `${dataTypes(`workType.${item.typeId}`)} (${item.count ?? 0})` }))
-      .sort((a, b) => a.label.toLowerCase().localeCompare(b.label.toLowerCase())) ?? [];
-
-  const sortItems = Object.values(SortByOptions)
-    .map((id) => ({ id, label: t(`filters.sortBy.${id}`) }))
-    .filter((item) => {
-      const pendingReviewed =
-        [RelatedWorkStatus.Pending].includes(status) &&
-        [SortByOptions.ReviewedNew, SortByOptions.ReviewedOld].includes(item.id);
-      const relatedDiscardedDateFound =
-        [RelatedWorkStatus.Accepted, RelatedWorkStatus.Rejected].includes(status) &&
-        [SortByOptions.DateFoundNew, SortByOptions.DateFoundOld].includes(item.id);
-      return !(pendingReviewed || relatedDiscardedDateFound);
-    });
-
+  const isInitialLoading = relatedWorksDataLoading && relatedWorksData == null;
+  const isEmpty = !relatedWorksDataLoading && relatedWorksData != null && statusOnlyCount == 0 && totalCount == 0;
+  const isFilteredEmpty = !relatedWorksDataLoading && statusOnlyCount > 0 && totalCount == 0;
+  const showFilters = !isInitialLoading && !isEmpty;
+  const showReviewMatches = onReviewMatches != null && status !== RelatedWorkStatus.Pending;
+  const showAdd = addHref != null && status !== RelatedWorkStatus.Rejected;
 
   return (
     <div className={styles.container}>
+      <p className={styles.lede}>{t(`intro.${status}`)}</p>
+
       <div className={styles.filters}>
-        <div className={styles.filter}>
-          <span className={styles.filterLabel}>{t("filters.filterByConfidence")}</span>
-          <div className={styles.spacer}>
-            <LinkFilter
-              aria-label={t("filters.filterByConfidence")}
-              selected={confidence}
-              setSelected={setConfidence}
-              items={confidenceItems}
-            />
-          </div>
-        </div>
-
-        {
-          identifierType === RelatedWorksIdentifierType.ProjectId && (
-            <div className={styles.filter}>
-              <span className={styles.filterLabel}>{t("filters.planId")}</span>
-              <div className={styles.spacer}>
-                <ProjectPlanSelect projectId={identifier} selectedKey={planId} setSelectedKey={setPlanId} />
-              </div>
-            </div>
-          )
-        }
-
-        <div className={styles.filter}>
-          <span className={styles.filterLabel}>{t("filters.filterByType")}</span>
-          <div className={styles.spacer}>
-            <RelatedWorksSelect<string>
-              placeholder={t("filters.filterByTypePlaceholder")}
-              selectedKey={workType}
-              setSelectedKey={setWorkType}
-              items={typeItems}
-              containerClassName={styles.filterByType}
-              includeEmptyValue
-            />
-          </div>
-        </div>
-
-        <div className={styles.filter}>
-          <span className={styles.filterLabel}>Sort by</span>
-          <div className={styles.spacer}>
-            <RelatedWorksSelect<string>
-              placeholder={t("filters.sort")}
-              selectedKey={sortBy}
-              setSelectedKey={setSortBy}
-              items={sortItems}
-              containerClassName={styles.sortBy}
-            />
-          </div>
-        </div>
-
-        <div className={styles.filter}>
-          <span className={styles.filterLabel}>{t("filters.highlightMatches")}</span>
-          <div className={styles.spacer}>
-            <Switch
-              aria-label={t("filters.highlightMatches")}
-              style={{ marginBottom: 0 }}
-              isSelected={highlightMatches}
-              onChange={setHighlightMatches}
+        {identifierType === RelatedWorksIdentifierType.PlanId && planScope && !isInitialLoading && (
+          <div
+            className={`${styles.filter} ${styles.planScope}`}
+            role="group"
+            aria-labelledby={planScopeLabelId}
+          >
+            <span
+              id={planScopeLabelId}
+              className={styles.planScopeLabel}
             >
-              <div className="indicator" />
-            </Switch>
+              {t("planScope.label")}
+            </span>
+            <p className={styles.planScopeValue}>
+              {planScope.title && <span className={styles.planScopeTitle}>{planScope.title}</span>}
+              <TransitionLink
+                href={planScope.allPlansHref}
+                className={styles.planScopeLink}
+              >
+                {t("planScope.viewAllPlans")}
+              </TransitionLink>
+            </p>
           </div>
-        </div>
-      </div>
+        )}
 
-      <div
-        className={styles.list}
-        data-testid="related-works-list"
-        role="list"
-      >
-        {relatedWorksData?.items?.map((relatedWork) => (
-          <RelatedWorksListItem
-            identifierType={identifierType}
-            key={relatedWork?.id}
-            relatedWork={relatedWork as RelatedWorkSearchResult}
-            highlightMatches={highlightMatches}
-            updateRelatedWorkStatus={updateRelatedWorkStatus}
+        {showFilters && identifierType === RelatedWorksIdentifierType.ProjectId && (
+          <ProjectPlanSelect
+            label={t("filters.planId")}
+            projectId={identifier}
+            selectedKey={planId}
+            setSelectedKey={(key) => {
+              setPlanId(key);
+              setCurrentPage(1);
+            }}
+            containerClassName={styles.filter}
           />
-        ))}
+        )}
 
-        {!relatedWorksDataLoading && statusOnlyCount == 0 && totalCount == 0 && (
-          <div className={styles.noResults}>{t("messages." + status + ".noResults")}</div>
-        )}
-        {!relatedWorksDataLoading && statusOnlyCount > 0 && totalCount == 0 && (
-          <div className={styles.noResults}>{t("messages." + status + ".noFilteredResults")}</div>
+        {showFilters && (
+          <RelatedWorksSelect<string>
+            label={t("filters.sort")}
+            placeholder={t("filters.sort")}
+            selectedKey={sortBy}
+            setSelectedKey={(key) => {
+              setSortBy(key);
+              setCurrentPage(1);
+            }}
+            items={sortItems}
+            containerClassName={styles.filter}
+          />
         )}
       </div>
-      <div className={styles.footer}>
-        <Pagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          hasPreviousPage={hasPreviousPage}
-          hasNextPage={hasNextPage}
-          handlePageClick={handlePageClick}
-        />
+
+      {isInitialLoading && <SkeletonListLoading count={3} />}
+
+      <div aria-live="polite">
+        {status === RelatedWorkStatus.Rejected && totalCount > 0 && items.length > 0 && (
+          <p className={styles.summary}>{t("summary.REJECTED", { start: pageStart, end: pageEnd, total: totalCount })}</p>
+        )}
+        {isEmpty && (
+          <RelatedWorksEmptyState
+            icon={EMPTY_STATE_ICONS[status]}
+            title={t(`emptyStates.${status}.title`)}
+            description={t(`emptyStates.${status}.description`)}
+            actions={
+              (showReviewMatches || showAdd) && (
+                <>
+                  {showReviewMatches && (
+                    <Button
+                      className="secondary"
+                      onPress={onReviewMatches}
+                    >
+                      {t("emptyStates.actions.reviewMatches")}
+                    </Button>
+                  )}
+                  {showAdd && (
+                    <TransitionLink
+                      href={addHref}
+                      className={`button-link ${status === RelatedWorkStatus.Accepted ? "button--primary" : "button--secondary"}`}
+                    >
+                      {t("emptyStates.actions.addResearchOutput")}
+                    </TransitionLink>
+                  )}
+                </>
+              )
+            }
+          />
+        )}
+        {isFilteredEmpty && (
+          <RelatedWorksEmptyState
+            icon="search"
+            title={t(`messages.${status}.noFilteredResults`)}
+            description={t("emptyStates.filtered.description")}
+            actions={
+              planId != null && (
+                <Button
+                  className="secondary"
+                  onPress={() => {
+                    setPlanId(null);
+                    setCurrentPage(1);
+                  }}
+                >
+                  {t("emptyStates.filtered.showAllPlans")}
+                </Button>
+              )
+            }
+          />
+        )}
       </div>
+
+      {items.length > 0 && (
+        <div
+          className={`${styles.list} ${relatedWorksDataLoading ? styles.listUpdating : ""}`.trim()}
+          data-testid="related-works-list"
+          role="list"
+          aria-busy={relatedWorksDataLoading || undefined}
+        >
+          {items.map((relatedWork) => (
+            <RelatedWorksListItem
+              identifierType={identifierType}
+              key={relatedWork?.id}
+              relatedWork={relatedWork as RelatedWorkSearchResult}
+              onAction={handleAction}
+              isPlanPublished={relatedWork?.planId == null || !unpublishedPlans.has(relatedWork.planId)}
+            />
+          ))}
+        </div>
+      )}
+
+      {totalPages > 1 && (
+        <div className={styles.footer}>
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            hasPreviousPage={hasPreviousPage}
+            hasNextPage={hasNextPage}
+            handlePageClick={setCurrentPage}
+          />
+        </div>
+      )}
     </div>
   );
-};
-
-const getDefaultSortBy = (status: RelatedWorkStatus): SortByOptions => {
-  if (status === RelatedWorkStatus.Pending) {
-    return SortByOptions.ConfidenceHigh;
-  } else if (status === RelatedWorkStatus.Accepted) {
-    return SortByOptions.PublishedNew;
-  } else if (status === RelatedWorkStatus.Rejected) {
-    return SortByOptions.ReviewedNew;
-  }
-
-  return SortByOptions.ConfidenceHigh;
 };

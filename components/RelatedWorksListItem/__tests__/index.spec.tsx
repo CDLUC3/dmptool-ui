@@ -1,11 +1,12 @@
 import React from "react";
-import {act, render, screen, waitFor} from "@testing-library/react";
+import {act, render, screen, waitFor, within} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import RelatedWorksListItem from "../index";
 import "@testing-library/jest-dom";
 import {axe, toHaveNoViolations} from "jest-axe";
 import {NextIntlClientProvider} from "next-intl";
 import {
+  RelatedWorkConfidence,
   RelatedWorkSearchResult,
   RelatedWorksIdentifierType,
   RelatedWorkSourceType,
@@ -18,6 +19,7 @@ expect.extend(toHaveNoViolations);
 const RELATED_WORK: RelatedWorkSearchResult = {
   id: 4,
   planId: 1,
+  planTitle: "My Plan",
   workVersion: {
     id: 3,
     work: {
@@ -55,6 +57,7 @@ const RELATED_WORK: RelatedWorkSearchResult = {
   scoreMax: 1.0,
   scoreNorm: 1.0,
   status: RelatedWorkStatus.Pending,
+  confidence: RelatedWorkConfidence.High,
   doiMatch: {
     found: true,
     score: 15,
@@ -70,80 +73,328 @@ const RELATED_WORK: RelatedWorkSearchResult = {
   funderMatches: [{ index: 0, score: 2.0 }],
   awardMatches: [{ index: 0, score: 2.0 }],
   created: "2025-08-21",
-  modified: "2025-08-21",
+  modified: "2025-09-02",
 };
 
-function RelatedWorksListItemHarness({ updateRelatedWorkStatus = jest.fn() }: { updateRelatedWorkStatus?: jest.Mock }) {
+interface HarnessProps {
+  onAction?: jest.Mock;
+  relatedWork?: Partial<RelatedWorkSearchResult>;
+  identifierType?: RelatedWorksIdentifierType;
+  highlightMatches?: boolean;
+  isPlanPublished?: boolean;
+}
+
+function RelatedWorksListItemHarness({
+  onAction = jest.fn().mockResolvedValue(undefined),
+  relatedWork = {},
+  identifierType = RelatedWorksIdentifierType.PlanId,
+  highlightMatches = false,
+  isPlanPublished = true,
+}: HarnessProps) {
   return (
     <NextIntlClientProvider
       locale={"en"}
       timeZone={"UTC"}
       messages={{}}
     >
-      <RelatedWorksListItem
-        identifierType={RelatedWorksIdentifierType.PlanId}
-        relatedWork={RELATED_WORK}
-        highlightMatches={false}
-        updateRelatedWorkStatus={updateRelatedWorkStatus}
-      />
+      <div role="list">
+        <RelatedWorksListItem
+          identifierType={identifierType}
+          relatedWork={{ ...RELATED_WORK, ...relatedWork }}
+          highlightMatches={highlightMatches}
+          isPlanPublished={isPlanPublished}
+          onAction={onAction}
+        />
+      </div>
     </NextIntlClientProvider>
   );
 }
 
+const getStatusBarText = () => screen.getByRole("group", { name: "summaryLabel" }).textContent;
+
 describe("RelatedWorksListItem", () => {
+  it("should render the title link, subtitle and pending status bar", () => {
+    render(<RelatedWorksListItemHarness />);
+
+    const heading = screen.getByRole("heading", { level: 3 });
+    const link = within(heading).getByRole("link");
+    expect(link).toHaveAttribute("href", "https://doi.org/10.1126/fake.2025.084512");
+    expect(link).toHaveAttribute("target", "_blank");
+    expect(link).toHaveTextContent("Title (opensInNewTab)");
+
+    expect(screen.getByText("Journal Name")).toBeInTheDocument();
+    expect(screen.getByText("2020")).toBeInTheDocument();
+
+    const statusBar = getStatusBarText();
+    expect(statusBar).toContain("fieldNames.dateFound: Aug 21, 2025");
+    expect(statusBar).toContain("fieldNames.type: workType.ARTICLE");
+    expect(statusBar).toContain("fieldNames.source:");
+    expect(statusBar).toContain("OpenAlex");
+    expect(statusBar).toContain("fieldNames.likelihood: confidence.HIGH");
+    // Plan title only shows on the project level page
+    expect(statusBar).not.toContain("fieldNames.planTitle");
+    expect(screen.queryByTestId("sourceBadge")).not.toBeInTheDocument();
+  });
+
   it("should open and close details", async () => {
     render(<RelatedWorksListItemHarness />);
 
-    // Expand details
-    expect(screen.queryAllByRole("details").length).toEqual(0);
-    const expand = screen.getByRole("button", { name: "buttons.expand details for Title" });
-    await userEvent.click(expand);
+    const toggle = screen.getByRole("button", { name: "messaging.detailsToggleAria" });
+    const region = screen.getByRole("region", { hidden: true });
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
+    expect(toggle).toHaveAttribute("aria-controls", region.id);
+    expect(region).toHaveAttribute("aria-hidden", "true");
+    expect(region).toHaveAttribute("inert");
 
-    // Check that details panel now exists
-    expect(screen.queryAllByRole("details").length).toEqual(1);
+    await userEvent.click(toggle);
+    expect(toggle).toHaveAttribute("aria-expanded", "true");
+    expect(region).toHaveAttribute("aria-hidden", "false");
+    expect(region).not.toHaveAttribute("inert");
+    expect(within(region).getByText("instructions.review")).toBeVisible();
+    expect(within(region).getAllByRole("heading", { level: 4 }).map((h) => h.textContent)).toEqual([
+      "fieldNames.doi",
+      "fieldNames.title",
+      "fieldNames.abstract",
+      "fieldNames.authors",
+      "fieldNames.institutions",
+      "fieldNames.awardIds",
+      "fieldNames.funders",
+    ]);
 
-    // Collapse details
-    await userEvent.click(expand);
-    expect(screen.queryAllByRole("details").length).toEqual(0);
+    await userEvent.click(toggle);
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
+    expect(region).toHaveAttribute("aria-hidden", "true");
   });
 
-  it("should accept work", async () => {
-    const updateRelatedWorkStatus = jest.fn();
-    render(<RelatedWorksListItemHarness updateRelatedWorkStatus={updateRelatedWorkStatus} />);
+  it("should show the external link icon and new tab text on every new tab link", async () => {
+    render(<RelatedWorksListItemHarness />);
+    await userEvent.click(screen.getByRole("button", { name: "messaging.detailsToggleAria" }));
 
-    // Click Accept
-    const accept = screen.getByRole("button", { name: "buttons.accept" });
-    await userEvent.click(accept);
-
-    // Check acceptWork called with DOI
-    await waitFor(() => {
-      expect(updateRelatedWorkStatus).toHaveBeenCalledTimes(1);
-      expect(updateRelatedWorkStatus).toHaveBeenCalledWith(RELATED_WORK.id, RelatedWorkStatus.Accepted);
+    const links = screen.getAllByRole("link");
+    expect(links.map((link) => link.getAttribute("href"))).toEqual([
+      "https://doi.org/10.1126/fake.2025.084512",
+      "https://doi.org/10.1126/fake.2025.084512",
+      "https://orcid.org/0000-0003-1234-5678",
+      "https://ror.org/08t3yqz51",
+      "https://ror.org/098k2sk96",
+      "https://openalex.org/works/w2060245136",
+    ]);
+    links.forEach((link) => {
+      expect(link).toHaveAttribute("target", "_blank");
+      expect(link).toHaveAccessibleName(expect.stringMatching(/\(opensInNewTab\)$/));
+      const icon = within(link).getByTestId("dmpIconSvg");
+      expect(icon).toHaveClass("icon-external_link");
+      expect(icon).toHaveAttribute("aria-hidden", "true");
     });
   });
 
-  it("should reject work", async () => {
-    const updateRelatedWorkStatus = jest.fn();
-    render(<RelatedWorksListItemHarness updateRelatedWorkStatus={updateRelatedWorkStatus} />);
+  it("should toggle details with the keyboard", async () => {
+    render(<RelatedWorksListItemHarness />);
 
-    // Click Discard
-    const discard = screen.getByRole("button", { name: "buttons.reject" });
-    await userEvent.click(discard);
+    const toggle = screen.getByRole("button", { name: "messaging.detailsToggleAria" });
+    act(() => toggle.focus());
+    await userEvent.keyboard("{Enter}");
+    expect(toggle).toHaveAttribute("aria-expanded", "true");
+    await userEvent.keyboard(" ");
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
+  });
 
-    // Check discardWork called with DOI
+  it("should confirm a pending match", async () => {
+    const onAction = jest.fn().mockResolvedValue(undefined);
+    render(<RelatedWorksListItemHarness onAction={onAction} />);
+
+    const confirm = screen.getByRole("button", { name: "actionsAria.confirm" });
+    expect(confirm).toHaveTextContent("buttons.confirm");
+    await userEvent.click(confirm);
+
     await waitFor(() => {
-      expect(updateRelatedWorkStatus).toHaveBeenCalledTimes(1);
-      expect(updateRelatedWorkStatus).toHaveBeenCalledWith(RELATED_WORK.id, RelatedWorkStatus.Rejected);
+      expect(onAction).toHaveBeenCalledTimes(1);
+      expect(onAction).toHaveBeenCalledWith(RELATED_WORK.id, "confirm");
     });
+  });
+
+  it("should dismiss a pending match", async () => {
+    const onAction = jest.fn().mockResolvedValue(undefined);
+    render(<RelatedWorksListItemHarness onAction={onAction} />);
+
+    await userEvent.click(screen.getByRole("button", { name: "actionsAria.dismiss" }));
+
+    await waitFor(() => {
+      expect(onAction).toHaveBeenCalledWith(RELATED_WORK.id, "dismiss");
+    });
+  });
+
+  it("should disable the actions while an action is in progress", async () => {
+    let resolveAction: () => void = () => {};
+    const onAction = jest.fn(() => new Promise<void>((resolve) => (resolveAction = resolve)));
+    render(<RelatedWorksListItemHarness onAction={onAction} />);
+
+    await userEvent.click(screen.getByRole("button", { name: "actionsAria.confirm" }));
+    const confirm = screen.getByRole("button", { name: "actionsAria.confirm" });
+    expect(confirm).toBeDisabled();
+    expect(confirm).toHaveTextContent("buttons.loading.confirm");
+    expect(screen.getByRole("button", { name: "actionsAria.dismiss" })).toBeDisabled();
+
+    await act(async () => resolveAction());
+    expect(confirm).toBeEnabled();
+    expect(confirm).toHaveTextContent("buttons.confirm");
+  });
+
+  it("should show restore and confirm for a dismissed match", async () => {
+    const onAction = jest.fn().mockResolvedValue(undefined);
+    render(
+      <RelatedWorksListItemHarness
+        onAction={onAction}
+        relatedWork={{ status: RelatedWorkStatus.Rejected }}
+      />,
+    );
+
+    expect(screen.getByRole("button", { name: "actionsAria.confirm" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "actionsAria.dismiss" })).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "actionsAria.restore" }));
+    await waitFor(() => expect(onAction).toHaveBeenCalledWith(RELATED_WORK.id, "restore"));
+
+    const statusBar = getStatusBarText();
+    expect(statusBar).toContain("fieldNames.dateDismissed: Sep 2, 2025");
+    expect(statusBar).toContain("fieldNames.dateFound: Aug 21, 2025");
+    expect(screen.queryByText("instructions.review", { exact: false })).not.toBeInTheDocument();
+  });
+
+  it("should show unmatch and the confirmed badge for a confirmed match", async () => {
+    const onAction = jest.fn().mockResolvedValue(undefined);
+    render(
+      <RelatedWorksListItemHarness
+        onAction={onAction}
+        relatedWork={{ status: RelatedWorkStatus.Accepted }}
+      />,
+    );
+
+    expect(screen.getByTestId("sourceBadge")).toHaveTextContent("badges.confirmedMatch");
+    expect(getStatusBarText()).toContain("fieldNames.dateConfirmed: Sep 2, 2025");
+    expect(screen.queryByRole("button", { name: "actionsAria.confirm" })).not.toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("button", { name: "actionsAria.unmatch" }));
+    await waitFor(() => expect(onAction).toHaveBeenCalledWith(RELATED_WORK.id, "unmatch"));
+  });
+
+  it("should show unmatch and the added manually badge for a user added output", async () => {
+    const onAction = jest.fn().mockResolvedValue(undefined);
+    render(
+      <RelatedWorksListItemHarness
+        onAction={onAction}
+        relatedWork={{ status: RelatedWorkStatus.Accepted, sourceType: RelatedWorkSourceType.UserAdded }}
+      />,
+    );
+
+    expect(screen.getByTestId("sourceBadge")).toHaveTextContent("badges.addedManually");
+    expect(getStatusBarText()).toContain("fieldNames.dateAdded: Aug 21, 2025");
+
+    await userEvent.click(screen.getByRole("button", { name: "actionsAria.unmatch" }));
+    await waitFor(() => expect(onAction).toHaveBeenCalledWith(RELATED_WORK.id, "unmatch"));
+  });
+
+  it("should show the plan title and unpublished tag on the project page", () => {
+    render(
+      <RelatedWorksListItemHarness
+        identifierType={RelatedWorksIdentifierType.ProjectId}
+        isPlanPublished={false}
+      />,
+    );
+
+    const statusBar = getStatusBarText();
+    expect(statusBar).toContain("fieldNames.planTitle: My Plan");
+    expect(statusBar).toContain("badges.unpublished");
+  });
+
+  it("should accept epoch timestamps for dates", () => {
+    render(<RelatedWorksListItemHarness relatedWork={{ created: String(Date.UTC(2024, 0, 5)) }} />);
+
+    expect(getStatusBarText()).toContain("fieldNames.dateFound: Jan 5, 2024");
+  });
+
+  it("should keep the full text of a long title for screen readers and in the details", async () => {
+    const longTitle = "A very long research output title ".repeat(8).trim();
+    render(
+      <RelatedWorksListItemHarness
+        relatedWork={{
+          workVersion: { ...RELATED_WORK.workVersion, title: longTitle },
+          contentMatch: { score: 0, titleHighlight: null, abstractHighlights: [] },
+        }}
+      />,
+    );
+
+    const link = within(screen.getByRole("heading", { level: 3 })).getByRole("link");
+    expect(link).toHaveAccessibleName(`${longTitle} (opensInNewTab)`);
+    expect(link.querySelector(".titleText")).toHaveTextContent(longTitle);
+
+    await userEvent.click(screen.getByRole("button", { name: /messaging.detailsToggleAria/ }));
+    expect(screen.getByRole("region")).toHaveTextContent(longTitle);
+  });
+
+  it("should handle a missing title, authors, venue, dates, source link and likelihood", () => {
+    render(
+      <RelatedWorksListItemHarness
+        relatedWork={{
+          created: "not a date",
+          confidence: null,
+          workVersion: {
+            ...RELATED_WORK.workVersion,
+            title: null,
+            authors: [],
+            publicationVenue: null,
+            publicationDate: null,
+            sourceUrl: null,
+          },
+        }}
+      />,
+    );
+
+    // The DOI stands in for a missing title
+    const heading = screen.getByRole("heading", { level: 3 });
+    expect(heading).toHaveTextContent(RELATED_WORK.workVersion.work.doi);
+    expect(screen.queryByText("Journal Name")).not.toBeInTheDocument();
+    expect(screen.queryByText("2020")).not.toBeInTheDocument();
+
+    const statusBar = getStatusBarText();
+    expect(statusBar).toContain("fieldNames.dateFound: ");
+    expect(statusBar).not.toContain("Invalid Date");
+    expect(statusBar).toContain("fieldNames.source:");
+    expect(statusBar).toContain("OpenAlex");
+    expect(statusBar).not.toContain("fieldNames.likelihood");
+    // Without a source URL the source name is plain text
+    expect(screen.queryByRole("link", { name: /OpenAlex/ })).not.toBeInTheDocument();
+  });
+
+  it("should only highlight matches when enabled", async () => {
+    const { unmount } = render(<RelatedWorksListItemHarness />);
+    const region = screen.getByRole("region", { hidden: true });
+    expect(region.querySelectorAll(".match").length).toBe(0);
+    expect(region.querySelectorAll(".hideContentHighlights").length).toBe(1);
+    unmount();
+
+    render(<RelatedWorksListItemHarness highlightMatches={true} />);
+    const highlighted = screen.getByRole("region", { hidden: true });
+    expect(highlighted.querySelectorAll(".match").length).toBeGreaterThan(0);
+    expect(highlighted.querySelectorAll(".showContentHighlights").length).toBe(1);
   });
 
   it("should pass axe accessibility test", async () => {
+    const { container } = render(<RelatedWorksListItemHarness />);
+
+    await act(async () => {
+      const results = await axe(container);
+      expect(results).toHaveNoViolations();
+    });
+  });
+
+  it("should pass axe accessibility test when expanded", async () => {
     const { container } = render(
-      <div role="list">
-        {/* RelatedWorksList has role list and wraps RelatedWorksListItems */}
-        <RelatedWorksListItemHarness />,
-      </div>,
+      <RelatedWorksListItemHarness
+        identifierType={RelatedWorksIdentifierType.ProjectId}
+        relatedWork={{ status: RelatedWorkStatus.Accepted }}
+      />,
     );
+    await userEvent.click(screen.getByRole("button", { name: "messaging.detailsToggleAria" }));
 
     await act(async () => {
       const results = await axe(container);

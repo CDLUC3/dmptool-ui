@@ -1,0 +1,32 @@
+@use "@/styles/responsive.scss" as r;
+
+.panel {
+  background: var(--gray-75);
+  border-radius: var(--border-radius-lg);
+  padding: var(--space-5);
+  margin-bottom: var(--space-5);
+
+  @include r.device(lg) {
+    width: 21rem;
+    margin-top: var(--space-6);
+    margin-bottom: 0;
+  }
+}
+
+.heading {
+  font-size: var(--fs-base);
+  font-weight: var(--fw-bold);
+  margin: 0 0 var(--space-2);
+}
+
+.text {
+  font-size: var(--fs-small);
+  color: var(--slate-800);
+  line-height: 1.45;
+  margin: 0;
+}
+
+.button {
+  display: inline-block;
+  margin-top: var(--space-4);
+}

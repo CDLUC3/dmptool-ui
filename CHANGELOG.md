@@ -1,4 +1,5 @@
 ## Added
+- Added an `ExternalLink` component for links that open in a new tab [#216]
 - Alias emails on the profile page show Confirmed/Unconfirmed badges. Unconfirmed aliases can't be made primary, explain that they're awaiting confirmation, and offer "Resend verification link" (stand-in hook until the backend mutation lands). Add-alias help text and toast mention the verification link [#488]
 - Added Playwright integration tests for template customization in `e2e/tests/customization.spec.ts`: a funder admin's public template is customized by an admin in another organization (a custom question in the funder's section, and a custom section with a question), the customization is published, and a researcher in the admin's organization writes a plan that shows it. Added `e2e/tests/customization.spec.md`, helpers in `e2e/tests/helpers/customization.ts`, and a `visibility` option to `createPublishedTemplate` [#561]
 - Added `npm run test:e2e:chromium`, which runs the e2e tests in Chromium only [#561]
@@ -73,6 +74,7 @@
 - Added `UpdateAffiliation` and `AffiliationById` queries [#203]
 
 ## Updated
+- Redesigned the related works pages with "Your research outputs", "Confirm matches" and "Dismissed" tabs, new cards, and empty and loading states [#216]
 - Updated the e2e tests to run one at a time (`workers: 1`) locally as well as on CI, because several tests at once overload the Next.js dev server and cause timeouts [#561]
 - Updated the e2e login helper to retry the whole login if the page reloads part way through [#561]
 - Updated `README.md` with how to pass Playwright options from the root, and a "Running against the local dev server" section on the dev server's memory restarts during long runs [#561]

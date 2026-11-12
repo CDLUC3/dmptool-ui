@@ -39,6 +39,7 @@ query RelatedWorks($id: Int!, $idType: RelatedWorksIdentifierType!, $paginationO
         sourceName
         sourceUrl
       }
+      sourceType
       scoreNorm
       confidence
       status

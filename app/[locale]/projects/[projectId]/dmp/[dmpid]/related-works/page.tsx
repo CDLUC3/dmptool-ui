@@ -1,16 +1,24 @@
 "use client";
 
 import React from "react";
+import { useQuery } from "@apollo/client/react";
+import { useParams } from "next/navigation";
+import { useTranslations } from "next-intl";
+import { Breadcrumb, Breadcrumbs, Link } from "react-aria-components";
 
+// GraphQL
+import { ProjectDocument, RelatedWorksIdentifierType } from "@/generated/graphql";
+
+// Components
 import PageHeader from "@/components/PageHeader";
 import { ContentContainer, LayoutContainer } from "@/components/Container";
-import { Breadcrumb, Breadcrumbs, Link } from "react-aria-components";
-import { useTranslations } from "next-intl";
-import styles from "./RelatedWorksPlanPage.module.scss";
-import { RelatedWorksIdentifierType } from "@/generated/graphql";
-import { useParams } from "next/navigation";
-import { routePath } from "@/utils/routes";
 import { RelatedWorksTabs } from "@/components/RelatedWorksTabs";
+import RelatedWorksAddPanel from "@/components/RelatedWorksAddPanel";
+import RelatedWorksUnpublished from "@/components/RelatedWorksUnpublished";
+
+// Utils and other
+import { routePath } from "@/utils/routes";
+import styles from "./RelatedWorksPlanPage.module.scss";
 
 const RelatedWorksPlanPage = () => {
   const Global = useTranslations("Global");
@@ -21,12 +29,24 @@ const RelatedWorksPlanPage = () => {
   const projectId = parseInt(String(params.projectId));
   const planId = parseInt(String(params.dmpid));
 
+  const { data: projectData } = useQuery(ProjectDocument, {
+    variables: { projectId },
+    skip: Number.isNaN(projectId),
+  });
+  const plan = projectData?.project?.plans?.find((item) => item.id === planId);
+  const hasPublishedPlan = plan ? plan.registered != null : undefined;
+  const addHref = routePath("projects.dmp.related-works.add", { projectId, dmpId: planId });
+  const allPlansHref = routePath("projects.related-works.index", { projectId });
+
   return (
     <>
       <PageHeader
         title={t("title")}
-        description={t("description")}
+        description={t.rich("description", {
+          strong: (chunks) => <strong>{chunks}</strong>,
+        })}
         showBackButton={true}
+        className={styles.header}
         breadcrumbs={
           <Breadcrumbs>
             <Breadcrumb>
@@ -47,21 +67,28 @@ const RelatedWorksPlanPage = () => {
           </Breadcrumbs>
         }
         actions={
-          <>
-            <Link
-              href={routePath("projects.dmp.related-works.add", { projectId, dmpId: planId })}
-              className="button-link button--primary"
-            >
-              {t("buttons.addRelatedWorkManually")}
-            </Link>
-          </>
+          <RelatedWorksAddPanel
+            href={addHref}
+            hasPublishedPlan={hasPublishedPlan !== false}
+          />
         }
       />
-      <LayoutContainer>
-        <ContentContainer className={`layout-content-container-full ${styles.tabWrapper}`}>
+      <LayoutContainer className={styles.layout}>
+        <ContentContainer className="layout-content-container-full">
           <RelatedWorksTabs
             identifierType={RelatedWorksIdentifierType.PlanId}
             identifier={planId}
+            hasPublishedPlan={hasPublishedPlan}
+            planScope={{ title: plan?.title, allPlansHref }}
+            addHref={addHref}
+            unpublishedContent={
+              <RelatedWorksUnpublished
+                planTitle={plan?.title}
+                viewAllPlansHref={allPlansHref}
+                publishHref={routePath("projects.dmp.show", { projectId, dmpId: planId })}
+                addHref={addHref}
+              />
+            }
           />
         </ContentContainer>
       </LayoutContainer>

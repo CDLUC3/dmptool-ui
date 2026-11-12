@@ -5,6 +5,7 @@ import type { Key } from "react-aria-components";
 import {
   Button,
   FieldError,
+  Label,
   ListBox,
   ListBoxItem,
   Popover,
@@ -20,9 +21,17 @@ export interface ProjectPlanSelectProps {
   projectId: number;
   selectedKey: number | null;
   setSelectedKey: (selectedKey: number | null) => void;
+  label?: string;
+  containerClassName?: string;
 }
 
-export const ProjectPlanSelect = ({ projectId, selectedKey, setSelectedKey }: ProjectPlanSelectProps) => {
+export const ProjectPlanSelect = ({
+  projectId,
+  selectedKey,
+  setSelectedKey,
+  label,
+  containerClassName = styles.filterByType,
+}: ProjectPlanSelectProps) => {
   const t = useTranslations("RelatedWorksSelect");
 
   const { data } = useQuery(ProjectDocument, {
@@ -36,11 +45,12 @@ export const ProjectPlanSelect = ({ projectId, selectedKey, setSelectedKey }: Pr
 
   return (
     <RelatedWorksSelect<number>
+      label={label}
       placeholder={t("planSelectPlaceholder")}
       selectedKey={selectedKey}
       setSelectedKey={setSelectedKey}
       items={projectItems}
-      containerClassName={styles.filterByType}
+      containerClassName={containerClassName}
       includeEmptyValue
     />
   );
@@ -70,7 +80,7 @@ export const RelatedWorksSelect = <TKey extends Key>({
   return (
     <div className={containerClassName}>
       <ReactAriaSelect
-        aria-label={placeholder}
+        aria-label={label == null ? placeholder : undefined}
         placeholder={placeholder}
         selectedKey={selectedKeyForSelect}
         onSelectionChange={(key) => {
@@ -82,7 +92,7 @@ export const RelatedWorksSelect = <TKey extends Key>({
         }}
         style={{ marginBottom: 0 }}
       >
-        {label != null && <span>{placeholder}</span>}
+        {label != null && <Label>{label}</Label>}
         <Button
           type="button"
           className="react-aria-Button selectButton"
