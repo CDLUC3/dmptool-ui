@@ -381,7 +381,12 @@ function toGuidanceSources(
 }
 
 // The resolver carries question and customization samples on their guidance items.
-function toQuestionSamples(sources: PlanAuthoringGuidanceSource[]) {
+// A template question's sample belongs to the template owner, but the resolver can
+// file it under another org's source, so `templateOwnerName` overrides that label.
+function toQuestionSamples(
+  sources: PlanAuthoringGuidanceSource[],
+  templateOwnerName: string | undefined
+) {
   const samples = sources.flatMap(({ id, label, items }) => {
     const sampleText = items.find((item) => item.sampleText)?.sampleText;
     return sampleText
@@ -395,7 +400,7 @@ function toQuestionSamples(sources: PlanAuthoringGuidanceSource[]) {
     ...(questionSample
       ? {
           sampleText: questionSample.sampleText,
-          sampleTextOrgLabel: questionSample.label,
+          sampleTextOrgLabel: templateOwnerName || questionSample.label,
         }
       : {}),
     ...(customizationSample
@@ -441,7 +446,12 @@ function toQuestion(
     guidanceSources: toGuidanceSources(sources),
     comments: toComments(question.answer, viewer),
     useSampleTextAsDefault: question.useSampleTextAsDefault ?? false,
-    ...toQuestionSamples(sources),
+    ...toQuestionSamples(
+      sources,
+      question.questionType === "BASE"
+        ? (plan.versionedTemplate?.owner?.name ?? undefined)
+        : undefined
+    ),
   };
 }
 

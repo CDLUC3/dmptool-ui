@@ -213,6 +213,54 @@ describe("toPlanAuthoringModel question fields", () => {
     expect(plain.customizationSampleText).toBeUndefined();
   });
 
+  it("labels a template question's sample with the template owner, whichever source carries it", () => {
+    const [question] = mapQuestions(
+      [
+        makeRawQuestion({
+          versionedQuestionId: 1,
+          guidanceSources: [
+            makeRawGuidanceSource({
+              orgURI: UCOP,
+              type: GuidanceSourceType.UserAffiliation,
+              label: "University of California",
+              items: [{ guidanceText: "<p>nih</p>", sampleText: "<p>NIH sample</p>" }],
+            }),
+          ],
+        }),
+      ],
+      EMPTY_PLAN_AUTHORING_VIEWER,
+      { versionedTemplate: { name: "NIH", version: "v1", owner: { name: "National Institutes of Health", uri: "https://ror.org/nih" } } }
+    );
+
+    expect(question).toMatchObject({
+      sampleText: "<p>NIH sample</p>",
+      sampleTextOrgLabel: "National Institutes of Health",
+    });
+  });
+
+  it("labels a custom question's sample with the org that added the question", () => {
+    const [question] = mapQuestions(
+      [
+        makeRawQuestion({
+          questionType: "CUSTOM",
+          customQuestionId: 7,
+          guidanceSources: [
+            makeRawGuidanceSource({
+              orgURI: UCOP,
+              type: GuidanceSourceType.UserAffiliation,
+              label: "University of California",
+              items: [{ guidanceText: "", sampleText: "<p>UC sample</p>" }],
+            }),
+          ],
+        }),
+      ],
+      EMPTY_PLAN_AUTHORING_VIEWER,
+      { versionedTemplate: { name: "NIH", version: "v1", owner: { name: "National Institutes of Health", uri: "https://ror.org/nih" } } }
+    );
+
+    expect(question.sampleTextOrgLabel).toBe("University of California");
+  });
+
   it.each([
     [
       "dateRange",

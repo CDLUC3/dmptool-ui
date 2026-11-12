@@ -212,6 +212,7 @@
 ## Fixed
 - Fixed tagged guidance in the `PlanAuthoring` guidance sidebar so each tag's name shows as a heading above its guidance. The `PlanAuthoring` query now selects `title` on guidance items [#603]
 - Fixed best practice guidance being merged into the tab of the org that publishes it (CDL) in the `PlanAuthoring` guidance sidebar. It now has its own "DMP Tool" tab, matching the template preview [#603]
+- Fixed a template question's sample text in the `PlanAuthoring` "View sample answers" being labelled with the user's or customizing org (e.g. UCI) instead of the template owner (e.g. NIH). The label now comes from the plan's template owner [#603]
 - Fixed Create Template so a taken name shows an error on Next, using the new `TemplateNameAvailable` query. [#88]
 - Fixed the Template customizations page showing "No items found" and leaving the Search button disabled when the same term was searched again. The results now come from each request's own response, so a search answered from the Apollo cache is still shown [#561]
 - Fixed the title link of a template that isn't customized yet going to `/template/customizations/0`, a "Not Found" page. The title now creates the customization first, like the Update button [#561]
