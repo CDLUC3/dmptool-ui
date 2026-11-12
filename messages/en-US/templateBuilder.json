@@ -377,7 +377,9 @@
     "helpText": "Don't worry, you can change this later.",
     "nameOfYourTemplate": "Name of your template",
     "messages": {
-      "templateNameError": "Please enter a valid value for template name."
+      "templateNameError": "Please enter a valid value for template name.",
+      "templateNameTaken": "A template with this name already exists. Please choose a unique name.",
+      "templateNameCheckError": "Unable to check whether this template name is available. Please try again."
     }
   },
   "TemplateSelectTemplatePage": {

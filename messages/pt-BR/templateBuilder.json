@@ -377,7 +377,9 @@
     "helpText": "Não se preocupe, você pode mudar isso depois.",
     "nameOfYourTemplate": "Nome do seu modelo",
     "messages": {
-      "templateNameError": "Por favor, insira um valor válido para o nome do tema."
+      "templateNameError": "Por favor, insira um valor válido para o nome do tema.",
+      "templateNameTaken": "Já existe um modelo com este nome. Escolha um nome único.",
+      "templateNameCheckError": "Não foi possível verificar se este nome de modelo está disponível. Tente novamente."
     }
   },
   "TemplateSelectTemplatePage": {
