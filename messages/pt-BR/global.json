@@ -102,10 +102,15 @@
     "linkMakePrimary": "Endereço de e-mail principal",
     "primaryEmailCannotBeDeleted": "Para alterar seu e-mail principal, adicione outro endereço abaixo e defina-o como principal.",
     "primaryBadge": "Principal",
+    "confirmedBadge": "Confirmado",
+    "unconfirmedBadge": "Não confirmado",
+    "unconfirmedEmailDesc": "Aguardando confirmação. Clique no link do e-mail que enviamos para este endereço para começar a usá-lo.",
+    "unconfirmedTooltip": "Até ser confirmado, este endereço não fica vinculado à sua conta. Planos e modelos compartilhados com ele não chegarão até você. Se o e-mail não chegou ou o link expirou, reenvie o link de verificação.",
+    "unconfirmedInfoAria": "Por que {email} não está confirmado?",
     "deleteEmailAria": "Excluir endereço de e-mail {email}",
     "deleteEmailConfirmTitle": "Excluir endereço de e-mail?",
-    "deleteEmailConfirmMessage": "Are you sure you want to delete {email}? This action cannot be undone.",
-    "helpTextForAddAlias": "Você receberá um e-mail para confirmar esta adição",
+    "deleteEmailConfirmMessage": "Tem certeza de que deseja excluir {email}? Esta ação não pode ser desfeita.",
+    "helpTextForAddAlias": "Um link de verificação será enviado para este endereço. Clique nele antes que o endereço possa ser usado.",
     "helpTextSelectYourLanguage": "Selecione seu idioma preferido",
     "helpTextSearchForInstitution": "Procurar sua instituição",
     "btnCancel": "Cancelar",
@@ -114,13 +119,16 @@
     "btnUpdate": "Atualização",
     "btnAdd": "Adicionar",
     "btnDelete": "Apagar",
+    "btnResendVerification": "Reenviar link de verificação",
+    "btnResendingVerification": "Enviando...",
     "linkUpdatePassword": "Atualizar senha",
     "linkUpdateConnections": "Atualizar conexão?",
     "linkManageNotifications": "Atualizar conexão?",
     "messages": {
       "profileUpdateSuccess": "Formulário de perfil atualizado com sucesso.",
-      "emailAddressUpdateSuccess": "O e-mail foi adicionado com sucesso ao seu perfil.",
-      "emailAddressDeleteSuccess": "The email was successfully removed from your profile.",
+      "emailAddressUpdateSuccess": "Um link de verificação foi enviado para {email}. Ele aparecerá como não confirmado até que você clique no link.",
+      "emailAddressDeleteSuccess": "O e-mail foi removido com sucesso do seu perfil.",
+      "verificationResent": "Um novo link de verificação foi enviado para {email}.",
       "errors": {
         "givenNameValidation": "O nome deve ter pelo menos 2 caracteres",
         "surNameValidation": "O nome deve ter pelo menos 2 caracteres",
@@ -128,8 +136,9 @@
         "otherAffiliationValidation": "Outro nome de instituição não pode estar em branco e deve ter pelo menos 2 caracteres",
         "errorUpdatingProfile": "Erro ao atualizar perfil",
         "errorSettingPrimaryEmail": "Erro ao definir o e-mail principal",
-        "errorAddingNewEmail": "Erro ao adicionar pergunta",
-        "errorDeletingEmail": "Erro ao excluir e-mail"
+        "errorAddingNewEmail": "Erro ao adicionar novo e-mail",
+        "errorDeletingEmail": "Erro ao excluir e-mail",
+        "errorResendingVerification": "Erro ao reenviar o link de verificação"
       }
     }
   },
@@ -262,8 +271,6 @@
     "addManuallyText": "Se seu colaborador não estiver mostrado, você pode adicionar seus detalhes manualmente.",
     "addManuallyLabel": "Adicionar professor manualmente",
     "noFunderHeading": "Ainda não tem um financiador?",
-    "noFunderText": "Se você ainda não tem um fundo, você pode usar o link abaixo para prosseguir para a próxima etapa.",
-    "noFunderButtonLabel": "Não tenho um fundador",
     "messages": {
       "success": {
         "addProjectFunding": "O financiador foi adicionado ao projeto com sucesso."
@@ -1019,6 +1026,7 @@
       "moreInfo": "Mais informações",
       "lessInfo": "Menos informações",
       "createNewPlan": "Criar nova DMP",
+      "createProject": "Criar projeto",
       "deletingCustomization": "Excluindo personalização...",
       "deleteCustomization": "Excluir personalização",
       "view": "Exibir",

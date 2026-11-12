@@ -18,7 +18,7 @@ Node **22** (see `.nvmrc`) and **npm**. Don't use yarn or pnpm, and don't create
 | Run a single test file | `npx jest path/to/__tests__/file.spec.tsx --coverage=false` |
 | Regenerate GraphQL types | `npm run generate` (needs the backend at `NEXT_PUBLIC_GRAPHQL_SERVER_ENDPOINT`) |
 | Production build | `npm run build` |
-| E2E tests (headless) | `npm run cypress:run` (needs the app running) |
+| E2E tests (Playwright) | `npm run test:e2e` (needs the UI, Apollo, and auth services running; see `e2e/`) |
 | Vulnerability scan | `npm run trivy-high` (blocking), `npm run trivy-med` (report only) |
 
 ## Boundaries
@@ -178,6 +178,8 @@ Show translated messages (`t("messages.errors.…")`), not raw backend or except
 - Don't reorder existing keys. Reordering creates noisy diffs.
 
 ## Testing and verification
+
+End-to-end tests live in `e2e/`, which has its own rules in `e2e/AGENTS.md`. Read them before writing or running e2e tests. Most importantly, never publish a plan: it registers a real DOI.
 
 Before you call a task done, run these and make sure they pass (they're the same checks as `.husky/pre-commit`):
 

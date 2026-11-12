@@ -97,6 +97,13 @@ describe("QuestionEditCard", () => {
       const buttonMoveUp = screen.getByRole("button", { name: /move up/i });
       expect(buttonMoveUp).toHaveAttribute("aria-label", "Move up Sample question text");
     });
+
+    it("should name the edit link after the question text when no name is passed", () => {
+      // The template page doesn't pass a name, which used to make the link "Edit Question: undefined"
+      render(<QuestionEditCard {...defaultProps} name={undefined} />);
+
+      expect(screen.getByRole("link", { name: "Edit Question: Sample question text" })).toBeInTheDocument();
+    });
   });
 
   describe("Move Up Button", () => {

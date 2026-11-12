@@ -5,6 +5,11 @@ const withNextIntl = createNextIntlPlugin();
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: "standalone",
+  // In compressed (production) output, Sass prefixes any file containing non-ASCII characters with a BOM.
+  // Once modules are concatenated into one chunk, that BOM sits mid-file and invalidates the module's first selector.
+  sassOptions: {
+    charset: false,
+  },
   experimental: {
     serverActions: {
       allowedOrigins: [

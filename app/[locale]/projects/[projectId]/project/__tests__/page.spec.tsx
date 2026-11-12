@@ -601,3 +601,75 @@ describe('when isReadOnly is true', () => {
     expect(screen.queryByTestId('search-projects-button')).not.toBeInTheDocument();
   });
 });
+
+describe('ProjectsProjectDetail inside the create flow', () => {
+  let mockRouter: { push: jest.Mock };
+  const mockUpdateProjectMutation = jest.fn();
+
+  const renderInFlow = (query: string) => {
+    (useSearchParams as jest.Mock).mockReturnValue(new URLSearchParams(query));
+    render(<ProjectsProjectDetail />);
+  };
+
+  beforeEach(() => {
+    setupMocks();
+    HTMLElement.prototype.scrollIntoView = mockScrollIntoView;
+    mockScrollTo();
+    (useParams as jest.Mock).mockReturnValue({ projectId: '1' });
+    mockRouter = { push: jest.fn() };
+    (useRouter as jest.Mock).mockReturnValue(mockRouter);
+
+    mockUpdateProjectMutation.mockReset();
+    mockUpdateProjectMutation.mockResolvedValue({ data: { updateProject: { errors: null } } });
+    mockUseMutation.mockImplementation(() => (
+      [mockUpdateProjectMutation, { loading: false, error: undefined }] as any
+    ));
+  });
+
+  it('shows the rail with project details as the current stage and hides the project type', () => {
+    renderInFlow('intent=plan');
+
+    expect(screen.getByTestId('create-flow-stage-projectDetails')).toHaveAttribute('aria-current', 'step');
+    expect(screen.getByText('projectDetails.skipHint')).toBeInTheDocument();
+    expect(screen.queryByText('labels.projectType')).not.toBeInTheDocument();
+  });
+
+  it('goes on to create a plan when intent=plan', async () => {
+    renderInFlow('intent=plan');
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'buttons.next' }));
+    });
+
+    expect(mockRouter.push).toHaveBeenCalledWith('/projects/1/dmp/start?intent=plan');
+  });
+
+  it('does not offer the standalone project search inside the flow, even for an API funder', () => {
+    const projectReturn = {
+      data: {
+        project: {
+          title: 'Test Project',
+          readOnly: false,
+          fundings: [{ id: '99', affiliation: { apiTarget: 'someTarget' } }],
+        },
+      },
+      loading: false,
+      refetch: jest.fn(),
+    };
+    const emptyReturn = { data: null, loading: false, error: undefined };
+    mockUseQuery.mockImplementation((document) => (
+      (document === ProjectDocument ? projectReturn : emptyReturn) as any
+    ));
+    renderInFlow('intent=plan&projectFundingId=99');
+
+    expect(screen.queryByTestId('search-projects-button')).not.toBeInTheDocument();
+  });
+
+  it('finishes on the project created screen when intent=project', async () => {
+    renderInFlow('intent=project');
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'buttons.next' }));
+    });
+
+    expect(mockRouter.push).toHaveBeenCalledWith('/projects/1/create/complete?intent=project');
+  });
+});

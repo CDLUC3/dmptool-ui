@@ -8,6 +8,7 @@ import { TransitionButton, TransitionLink } from "@/components/Form";
 import { useToast } from "@/context/ToastContext";
 import { toTitleCase } from "@/utils/general";
 import { DmpIcon } from "@/components/Icons";
+import SafeHtml from "@/components/SafeHtml";
 
 interface TemplateSelectListItemProps {
   onSelect?: (versionedTemplateId: number, startTransition: TransitionStartFunction) => Promise<void>;
@@ -103,7 +104,8 @@ function TemplateSelectListItem({ item, onSelect }: TemplateSelectListItemProps)
                 item.title
               )}
             </h2>
-            {item.description && <p className={styles.description}>{item.description}</p>}
+            {/* Descriptions can contain HTML from the template editor */}
+            <SafeHtml html={item.description} className={styles.description} />
 
             <div
               className={styles.metadata}

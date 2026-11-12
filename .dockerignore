@@ -1,3 +1,4 @@
 node_modules
 Dockerfile.dev
 Dockerfile.prod
+e2e

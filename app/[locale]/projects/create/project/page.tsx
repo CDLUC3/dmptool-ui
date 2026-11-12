@@ -1,0 +1,271 @@
+'use client';
+
+import {
+  useEffect,
+  useRef,
+  useState,
+  TransitionStartFunction
+} from 'react';
+import { useRouter } from '@/i18n/routing';
+import { useTranslations } from 'next-intl';
+import { useMutation } from '@apollo/client/react';
+import {
+  Form,
+  Radio,
+  Text
+} from "react-aria-components";
+
+//GraphQL
+import {
+  AddProjectDocument,
+  ProjectErrors,
+} from '@/generated/graphql';
+
+// Components
+import PageHeader from "@/components/PageHeader";
+import CreateProjectFlowLayout, {
+  FlowActions,
+  FlowBreadcrumbs,
+  nextPath,
+  useFlowState,
+} from '@/components/CreateProjectFlow';
+import {
+  FormInput,
+  RadioGroupComponent,
+  TransitionButton
+} from '@/components/Form';
+import ErrorMessages from '@/components/ErrorMessages';
+
+// Utils and other
+import { scrollToTop } from '@/utils/general';
+import { useToast } from '@/context/ToastContext';
+import { checkErrors } from '@/utils/errorHandler';
+import styles from './projectsCreateProject.module.scss';
+import { handleApolloError } from '@/utils/apolloErrorHandler';
+
+
+interface CreateProjectInterface {
+  projectName: string;
+  radioGroup?: string;
+}
+
+interface CreateProjectErrorsInterface {
+  projectName: string;
+  radioGroup?: string;
+}
+
+const ProjectsCreateProject = () => {
+  const toastState = useToast();
+  const router = useRouter();
+  const flow = useFlowState();
+  //For scrolling to error in page
+  const errorRef = useRef<HTMLDivElement | null>(null);
+  const inputFieldRef = useRef<HTMLInputElement | null>(null);
+
+  const [fieldErrors, setFieldErrors] = useState<CreateProjectErrorsInterface>({
+    projectName: '',
+    radioGroup: '',
+  });
+  const [formData, setFormData] = useState<CreateProjectInterface>({
+    projectName: '',
+    radioGroup: ''
+  })
+  const [formSubmitted, setFormSubmitted] = useState(false);
+  const [errors, setErrors] = useState<string[]>([]);
+
+  // localization keys
+  const Global = useTranslations('Global');
+  const CreateProject = useTranslations('ProjectsCreateProject');
+  const Flow = useTranslations('CreateProjectFlow');
+
+  const [addProjectMutation] = useMutation(AddProjectDocument);
+
+  // Update form data
+  const handleUpdate = (name: string, value: string | string[]) => {
+    setFormSubmitted(false);
+    setFormData({ ...formData, [name]: value });
+  };
+
+  // Handle any changes to form field values
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    handleUpdate(name, value);
+  };
+
+  const updateProjectContent = (
+    key: string,
+    value: string
+  ) => {
+    setFormData((prev) => ({
+      ...prev,
+      [key]: value
+    }))
+  };
+
+  // Handle changes from CheckboxGroup
+  const handleRadioChange = (value: string) => {
+    setFormSubmitted(false);
+    updateProjectContent('radioGroup', value);
+  };
+
+
+  // Show Success Message
+  const showSuccessToast = () => {
+    const successMessage = CreateProject('messages.success');
+    toastState.add(successMessage, { type: 'success' });
+  }
+
+  // Client-side validation of fields
+  const validateField = (name: keyof CreateProjectInterface, value: string | string[]) => {
+    switch (name) {
+      case 'projectName':
+        if (!value || value.length <= 2) {
+          return CreateProject('messages.errors.titleLength')
+        }
+        break;
+    }
+    return '';
+  }
+
+  // Check whether form is valid before submitting
+  const isFormValid = (): boolean => {
+    const errors: CreateProjectErrorsInterface = {
+      projectName: '',
+      radioGroup: '',
+    };
+
+    let hasError = false;
+
+    // Validate all fields and collect errors
+    Object.keys(formData).forEach((key) => {
+      const name = key as keyof CreateProjectInterface;
+      const value = formData[name];
+      const error = validateField(name, value ? value : '');
+
+      if (error) {
+        hasError = true;
+        errors[name] = error as string;
+      }
+    });
+
+    // Update state with all errors
+    setFieldErrors(errors);
+
+    return !hasError;
+  };
+
+  // Handle form submit - must be async to allow for the use of startTransition so that isPending can track the real page transition 
+  // instead of just the promise resolving.
+  const handleFormSubmit = async ({ startTransition }: { startTransition: TransitionStartFunction }) => {
+    setFormSubmitted(true);
+    setErrors([]);
+
+    if (!isFormValid()) {
+      return; // formSubmitted is already set to true, so the error messages will be displayed
+    }
+
+    const isTestProject = formData.radioGroup === "true";
+
+    try {
+      const { data } = await addProjectMutation({
+        variables: { isTestProject, title: formData.projectName }
+      });
+
+      const result = data!.addProject;
+      const [hasErrors, errs] = checkErrors(result?.errors as ProjectErrors, ['general', 'title']);
+
+      if (hasErrors) {
+        setFieldErrors({ ...fieldErrors, projectName: String(errs.title) });
+        setErrors([String(errs.general || CreateProject('messages.errors.createProjectError'))]);
+      } else {
+        showSuccessToast();
+        // Called synchronously inside startTransition — this is the part that
+        // makes isPending actually track the real navigation.
+        startTransition(() => {
+          router.push(nextPath({ from: 'createProject' }, flow, String(result!.id)));
+        });
+      }
+    } catch (error) {
+      handleApolloError(error, 'ProjectsCreateProject.handleFormSubmit');
+      setErrors(prevErrors => [...prevErrors, CreateProject('messages.errors.createProjectError')]);
+    }
+  };
+
+  useEffect(() => {
+    // Scroll to the Project name field if there is a field-level error
+    if (fieldErrors.projectName.length > 0) {
+      scrollToTop(inputFieldRef);
+    }
+  }, [fieldErrors.projectName])
+
+  return (
+    <>
+      <PageHeader
+        title={CreateProject('pageTitle')}
+        description={flow.intent === 'project'
+          ? Flow('createProject.descriptionProject')
+          : Flow('createProject.descriptionPlan')}
+        showBackButton={false}
+        breadcrumbs={<FlowBreadcrumbs current={CreateProject('pageTitle')} />}
+        actions={null}
+        className="page-project-create-project"
+      />
+      <CreateProjectFlowLayout screen="createProject" flow={flow}>
+          <ErrorMessages errors={errors} ref={errorRef} />
+          <Form onSubmit={(e) => e.preventDefault()}>
+            <FormInput
+              ref={inputFieldRef}
+              name="projectName"
+              type="text"
+              value={formData.projectName}
+              label={CreateProject('form.projectTitle')}
+              helpMessage={CreateProject('form.projectTitleHelpText')}
+              isRequiredVisualOnly={true}
+              onChange={handleInputChange}
+              isInvalid={(!formData.projectName || !!fieldErrors.projectName) && formSubmitted}
+              errorMessage={fieldErrors.projectName.length > 0 ? fieldErrors.projectName : CreateProject('messages.errors.title')}
+              id="projectName"
+            />
+
+            <RadioGroupComponent
+              name="projectType"
+              value={formData.radioGroup}
+              classes={`${styles.radioGroup} react-aria-RadioGroup`}
+              radioGroupLabel={CreateProject('form.radioGroupLabel')}
+              onChange={handleRadioChange}
+            >
+              <div>
+                <Radio value="true">{CreateProject('labels.mockProject')}</Radio>
+                <Text
+                  slot="description"
+                >
+                  {CreateProject('descriptions.mockProject')}
+                </Text>
+              </div>
+
+              <div>
+                <Radio value="false">{CreateProject('labels.realProject')}</Radio>
+                <Text
+                  slot="description"
+                >
+                  {CreateProject('descriptions.realProject')}
+                </Text>
+              </div>
+            </RadioGroupComponent>
+
+            <FlowActions>
+              <TransitionButton
+                type="submit"
+                onPress={handleFormSubmit}
+                loadingLabel={Global('buttons.loading')}
+              >
+                {Flow('buttons.next')}
+              </TransitionButton>
+            </FlowActions>
+          </Form>
+      </CreateProjectFlowLayout>
+    </>
+  );
+};
+
+export default ProjectsCreateProject;

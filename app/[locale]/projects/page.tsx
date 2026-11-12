@@ -28,6 +28,7 @@ import { ContentContainer, LayoutContainer } from '@/components/Container';
 import ErrorMessages from '@/components/ErrorMessages';
 import SkeletonListLoading from '@/components/SkeletonListLoading';
 import { TransitionLink } from "@/components/Form";
+import { flowPath } from '@/components/CreateProjectFlow';
 
 //GraphQL
 import { MyProjectsDocument, MyProjectsQuery } from '@/generated/graphql';
@@ -485,7 +486,13 @@ const ProjectsListPage: React.FC = () => {
         actions={
           <>
             <TransitionLink
-              href={routePath('projects.create')}
+              href={flowPath('createProject', { intent: 'project', fromExisting: false })}
+              className="button-link secondary"
+            >
+              {Global('buttons.createProject')}
+            </TransitionLink>
+            <TransitionLink
+              href={routePath('projects.create.start')}
               className="button-link button--primary"
             >
               {Global('buttons.createNewPlan')}
@@ -569,7 +576,7 @@ const ProjectsListPage: React.FC = () => {
                 {Project('messages.info.noProjectsDescription')}
               </p>
               <TransitionLink
-                href={routePath('projects.create')}
+                href={routePath('projects.create.start')}
                 className="button-link button--primary"
               >
                 {Global('buttons.createNewPlan')}

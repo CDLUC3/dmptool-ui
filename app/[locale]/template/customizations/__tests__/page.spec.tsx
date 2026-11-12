@@ -219,6 +219,64 @@ describe('TemplateListCustomizationsPage', () => {
     expect(allItemsAfterClear.some(item => item.textContent?.includes('NSF-ENG: Engineering'))).toBe(true);
   })
 
+  it('should still show the results when searching again with the same term', async () => {
+    // Add the fields the shared mocks leave out (versionedTemplateVersion and limit), so the cache holds the whole
+    // result and the second search is answered from it, as it is in the browser
+    /* eslint-disable @typescript-eslint/no-explicit-any */
+    const completeMocks = mocks.map((mock: any) => !mock.result?.data?.customizableTemplates ? mock : ({
+      ...mock,
+      result: {
+        data: {
+          customizableTemplates: {
+            ...mock.result.data.customizableTemplates,
+            limit: 5,
+            items: mock.result.data.customizableTemplates.items.map((item: any) => ({ ...item, versionedTemplateVersion: 'v1' })),
+          },
+        },
+      },
+    }));
+    /* eslint-enable @typescript-eslint/no-explicit-any */
+    renderPage(completeMocks);
+    await screen.findAllByTestId('template-list-item');
+
+    const searchInput = await screen.findByLabelText(/searchLabel/i);
+    await act(async () => {
+      fireEvent.change(searchInput, { target: { value: 'biological' } });
+    });
+    const searchButton = (await screen.findByText('buttons.search')).closest('button')!;
+    await act(async () => {
+      fireEvent.click(searchButton);
+    });
+    await waitFor(() => {
+      const items = screen.getAllByTestId('template-list-item');
+      expect(items.some(item => item.textContent?.includes('NSF-BIO: Biological Sciences'))).toBe(true);
+      expect(items.some(item => item.textContent?.includes('NSF-ENG: Engineering'))).toBe(false);
+    });
+
+    // The second search with the same term is answered from the Apollo cache. It must still show only the
+    // matching template (not the full list or "No items found"), and the Search button must be usable again
+    // The page shows its loading state while a query runs, which re-mounts the search field, so find the button again
+    const searchAgainButton = (await screen.findByText('buttons.search')).closest('button')!;
+    await act(async () => {
+      fireEvent.click(searchAgainButton);
+    });
+    await waitFor(() => {
+      const items = screen.getAllByTestId('template-list-item');
+      expect(items.some(item => item.textContent?.includes('NSF-BIO: Biological Sciences'))).toBe(true);
+      expect(items.some(item => item.textContent?.includes('NSF-ENG: Engineering'))).toBe(false);
+    });
+    expect(screen.queryByText('messaging.noItemsFound')).not.toBeInTheDocument();
+    expect((await screen.findByText('buttons.search')).closest('button')).toBeEnabled();
+  });
+
+  it('should not link a template that is not customized yet to a customization page', async () => {
+    renderPage(mutationErrorMock);
+
+    const heading = await screen.findByRole('heading', { level: 3, name: /Test Template/ });
+    const titleLink = within(heading).getByRole('link');
+    expect(titleLink).not.toHaveAttribute('href');
+  });
+
   it('should show error message when we cannot find item anything matching search term', async () => {
     renderPage();
 

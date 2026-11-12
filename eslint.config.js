@@ -9,13 +9,12 @@ module.exports = [
     ignores: [
       "app/dmps/*",
       "generated/graphql.ts",
-      "cypress.config.ts",
       "public/tinymce/*",
       "coverage/*",
       "node_modules/**",
       ".next/**",
       "next-env.d.ts",
-      "cypress/**",
+      "e2e/**",
       "eslint.config.js",
       "scripts/**",
       "__mocks__/"

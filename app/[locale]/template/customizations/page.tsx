@@ -27,7 +27,6 @@ import {
 
 import {
   CustomizedTemplatesProps,
-  PaginatedCustomizedTemplateSearchResultsInterface,
   CustomizedTemplatesSearchResultInterface
 } from '@/app/types';
 
@@ -91,7 +90,7 @@ const TemplateListCustomizationsPage: React.FC = () => {
   const SelectTemplate = useTranslations('TemplateSelectTemplatePage');
 
   // Lazy query for organization templates
-  const [fetchCustomizableTemplates, { data: customizableTemplatesData, loading, error: queryError }] = useLazyQuery<CustomizableTemplatesQuery>(CustomizableTemplatesDocument);
+  const [fetchCustomizableTemplates, { loading, error: queryError }] = useLazyQuery<CustomizableTemplatesQuery>(CustomizableTemplatesDocument);
 
   // Mutation for adding template customization
   const [addTemplateCustomizationMutation] = useMutation(AddTemplateCustomizationDocument);
@@ -191,6 +190,58 @@ const TemplateListCustomizationsPage: React.FC = () => {
     }
   };
 
+  // Transform customizable templates into the format expected by the CustomizedTemplateListItem component
+  const toListItems = (templates: CustomizableTemplatesQuery['customizableTemplates']): CustomizedTemplatesProps[] =>
+    ((templates?.items ?? [])
+      .filter((item): item is NonNullable<typeof item> => item !== null) as CustomizedTemplatesSearchResultInterface[])
+      .map((template) => ({
+        id: template.customizationId ?? undefined,
+        title: template.versionedTemplateName,
+        // Only a template that has been customized has a page to link to. Without one, pressing the title or Update
+        // creates the customization first (handleAddCustomization)
+        link: template.customizationId
+          ? routePath('template.customize', { templateCustomizationId: template.customizationId })
+          : undefined,
+        funder: template.versionedTemplateAffiliationName,
+        lastCustomized: template.customizationLastCustomized ? formatDate(template.customizationLastCustomized) : null,
+        lastCustomizedByName: template.customizationLastCustomizedByName ?? undefined,
+        customizationStatus: getCustomization(template),
+        status: template.customizationStatus ?? undefined,
+        defaultExpanded: false,
+        templateModified: template.versionedTemplateLastModified ? formatDate(template.versionedTemplateLastModified) : null,
+        versionedTemplateId: template.versionedTemplateId ?? undefined,
+      }));
+
+  // Fetch a page of customizable templates and show it, either as the search results or as the full list, replacing
+  // what's shown or (for "Load more") adding to it. The results come from what this request returns, not from an effect
+  // on the query's data: a repeated request, like searching again for the same term, is answered from the cache with
+  // the same data object, so an effect on it wouldn't run and the results would never be shown
+  const loadTemplates = async (
+    variables: { paginationOptions: { type: string; limit: number; cursor?: string }; term?: string },
+    { isSearch, append }: { isSearch: boolean; append: boolean }
+  ) => {
+    let results: CustomizableTemplatesQuery['customizableTemplates'] | undefined;
+    try {
+      const { data } = await fetchCustomizableTemplates({ variables });
+      results = data?.customizableTemplates;
+    } catch {
+      // The query's error state is shown by the queryError effect below
+      return;
+    }
+    if (!results) return;
+
+    const items = toListItems(results);
+    if (isSearch) {
+      setSearchResults(prev => append ? [...prev, ...items] : items);
+      setSearchNextCursor(results.nextCursor ?? null);
+      setSearchTotalCount(results.totalCount ?? null);
+    } else {
+      setCustomizedTemplates(prev => append ? [...prev, ...items] : items);
+      setNextCursor(results.nextCursor ?? null);
+      setTotalCount(results.totalCount ?? null);
+    }
+  };
+
   // zero out search and filters
   const resetSearch = async () => {
     setSearchTerm('');
@@ -204,14 +255,10 @@ const TemplateListCustomizationsPage: React.FC = () => {
     setCustomizedTemplates([]);
     setNextCursor(null); // Reset cursor
     setTotalCount(0);
-    await fetchCustomizableTemplates({
-      variables: {
-        paginationOptions: {
-          type: "CURSOR",
-          limit: LIMIT,
-        },
-      },
-    });
+    await loadTemplates(
+      { paginationOptions: { type: "CURSOR", limit: LIMIT } },
+      { isSearch: false, append: false }
+    );
     scrollToTop(topRef);
   }
 
@@ -239,46 +286,34 @@ const TemplateListCustomizationsPage: React.FC = () => {
     setSearchResults([]); // Clear previous search results
     setSearchNextCursor(null); // Reset search cursor
 
-    await fetchCustomizableTemplates({
-      variables: {
-        paginationOptions: {
-          type: "CURSOR",
-          limit: LIMIT,
-        },
-        term: searchTerm.toLowerCase(),
-      },
-    });
+    try {
+      await loadTemplates(
+        { paginationOptions: { type: "CURSOR", limit: LIMIT }, term: searchTerm.toLowerCase() },
+        { isSearch: true, append: false }
+      );
+    } finally {
+      setIsSearching(false); // Re-enable search button
+    }
   }
 
   // Handler for search "Load more"
   const handleSearchLoadMore = async () => {
     if (!searchNextCursor) return;
     setFirstNewIndex(searchResults.length);
-    await fetchCustomizableTemplates({
-      variables: {
-        paginationOptions: {
-          type: "CURSOR",
-          cursor: searchNextCursor,
-          limit: LIMIT,
-        },
-        term: searchTerm.toLowerCase(),
-      },
-    });
+    await loadTemplates(
+      { paginationOptions: { type: "CURSOR", cursor: searchNextCursor, limit: LIMIT }, term: searchTerm.toLowerCase() },
+      { isSearch: true, append: true }
+    );
   };
 
 
   const handleLoadMore = async () => {
     if (!nextCursor) return;
     setFirstNewIndex(customizedTemplates.length);
-    await fetchCustomizableTemplates({
-      variables: {
-        paginationOptions: {
-          type: "CURSOR",
-          cursor: nextCursor,
-          limit: LIMIT,
-        },
-      },
-    });
+    await loadTemplates(
+      { paginationOptions: { type: "CURSOR", cursor: nextCursor, limit: LIMIT } },
+      { isSearch: false, append: true }
+    );
   };
 
   useEffect(() => {
@@ -316,80 +351,12 @@ const TemplateListCustomizationsPage: React.FC = () => {
     }
   }, [customizedTemplates, searchResults, firstNewIndex]);
 
-  // Process templates data returned from query and transform into format needed for CustomizedTemplateListItem component. 
-  // Also handles appending new items for pagination and search results
-  useEffect(() => {
-    if (!customizableTemplatesData || !customizableTemplatesData.customizableTemplates) return;
-    // Transform customized templates into format expected by TemplateSelectListItem component
-    const processTemplates = async (templates: PaginatedCustomizedTemplateSearchResultsInterface | null) => {
-      const items = templates?.items ?? [];
-
-      const transformedTemplates = await Promise.all(
-        items.map(async (template: CustomizedTemplatesSearchResultInterface | null) => {
-
-          const statusForCustomization = getCustomization(template as CustomizedTemplatesSearchResultInterface);
-          return {
-            id: template?.customizationId,
-            title: template?.versionedTemplateName,
-            link: routePath('template.customize', { templateCustomizationId: Number(template?.customizationId) }),
-            funder: template?.versionedTemplateAffiliationName,
-            lastCustomized: (template?.customizationLastCustomized) ? formatDate(template?.customizationLastCustomized) : null,
-            lastCustomizedByName: template?.customizationLastCustomizedByName,
-            customizationStatus: statusForCustomization,
-            status: template?.customizationStatus ?? undefined,
-            defaultExpanded: false,
-            templateModified: template?.versionedTemplateLastModified ? formatDate(template?.versionedTemplateLastModified) : null,
-            versionedTemplateId: template?.versionedTemplateId,
-          }
-        }));
-
-      if (isSearchFetch) {
-        // Handle search results - backend returns only new items for cursor pagination
-        if (searchResults.length === 0) {
-          // First search request - set all results
-          setSearchResults(transformedTemplates);
-        } else {
-          // Subsequent search requests - append new items
-          setSearchResults(prev => [...prev, ...transformedTemplates]);
-        }
-        setSearchNextCursor(customizableTemplatesData?.customizableTemplates?.nextCursor ?? null);
-        setSearchTotalCount(customizableTemplatesData?.customizableTemplates?.totalCount ?? null);
-        setIsSearching(false); // Re-enable search button
-      } else {
-        // Handle regular pagination - backend returns only new items for cursor pagination
-        if (customizedTemplates.length === 0) {
-          // First load - set all results
-          setCustomizedTemplates(transformedTemplates);
-        } else {
-          // Subsequent loads - append new items (backend sends only new items)
-          setCustomizedTemplates(prev => [...prev, ...transformedTemplates]);
-        }
-
-        setNextCursor(customizableTemplatesData?.customizableTemplates?.nextCursor ?? null);
-        setTotalCount(customizableTemplatesData?.customizableTemplates?.totalCount ?? null);
-      }
-    }
-
-    const filteredItems = (customizableTemplatesData.customizableTemplates.items ?? [])
-      .filter((item): item is NonNullable<typeof item> => item !== null) as CustomizedTemplatesSearchResultInterface[];
-
-    processTemplates({
-      ...customizableTemplatesData.customizableTemplates,
-      items: filteredItems,
-    });
-
-  }, [customizableTemplatesData, isSearchFetch]);
-
   // Load templates when page loads
   useEffect(() => {
-    fetchCustomizableTemplates({
-      variables: {
-        paginationOptions: {
-          type: "CURSOR",
-          limit: LIMIT,
-        },
-      },
-    });
+    loadTemplates(
+      { paginationOptions: { type: "CURSOR", limit: LIMIT } },
+      { isSearch: false, append: false }
+    );
   }, []);
 
 

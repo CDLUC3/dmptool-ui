@@ -163,9 +163,8 @@ const CustomQuestionNew: React.FC = () => {
     // Search title, funder and description fields for terms
     const filteredQuestionTypes = filterQuestionTypes(questionTypes, term);
 
-    if (filteredQuestionTypes.length > 0) {
-      setFilteredQuestionTypes(filteredQuestionTypes.length > 0 ? filteredQuestionTypes : []);
-    }
+    // Always replace the results, so a search with no matches shows "no items found" instead of the previous results
+    setFilteredQuestionTypes(filteredQuestionTypes);
   }
 
   useEffect(() => {

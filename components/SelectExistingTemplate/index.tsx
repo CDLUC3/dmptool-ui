@@ -36,6 +36,7 @@ import {
   TemplatesDocument,
   PublishedTemplatesDocument,
   VersionedTemplateSearchResult,
+  TemplateErrors,
 } from '@/generated/graphql';
 
 // Other
@@ -49,6 +50,7 @@ import { toSentenceCase } from '@/utils/general';
 import { useToast } from '@/context/ToastContext';
 import { useFormatDate } from '@/hooks/useFormatDate';
 import { handleApolloError } from '@/utils/apolloErrorHandler';
+import { checkErrors } from '@/utils/errorHandler';
 
 // # of templates displayed
 const LIMIT = 5;
@@ -211,6 +213,19 @@ const TemplateSelectTemplatePage = ({ templateName }: { templateName: string }) 
     ]);
   };
 
+  const collectAddTemplateErrors = (errors: TemplateErrors | null | undefined): string[] => {
+    if (!errors) {
+      return [];
+    }
+
+    const [hasErrors, errs] = checkErrors(errors, ['general', 'name', 'ownerId']);
+    if (!hasErrors) {
+      return [];
+    }
+
+    return [errs.general, errs.name, errs.ownerId].filter((message): message is string => !!message);
+  };
+
   // When user selects a template from myTemplates (org templates)
   const onSelectMyTemplate = async (templateId: number, startTransition: TransitionStartFunction) => {
     try {
@@ -223,15 +238,15 @@ const TemplateSelectTemplatePage = ({ templateName }: { templateName: string }) 
 
       if (response?.data) {
         const responseData = response?.data?.addTemplate;
-        if (responseData && responseData.errors) {
-          const errorMessages = Object.values(responseData.errors)
-            .filter((error) => error) as string[];
+        const errorMessages = collectAddTemplateErrors(responseData?.errors);
+        if (errorMessages.length > 0) {
           setErrors(errorMessages);
+          return;
         }
-        clearErrors();
 
-        const newTemplateId = response?.data?.addTemplate?.id;
+        const newTemplateId = responseData?.id;
         if (newTemplateId) {
+          clearErrors();
           startTransition(() => {
             router.push(routePath('template.show', { templateId: newTemplateId }));
           });
@@ -257,15 +272,15 @@ const TemplateSelectTemplatePage = ({ templateName }: { templateName: string }) 
 
       if (response?.data) {
         const responseData = response?.data?.addTemplate;
-        if (responseData && responseData.errors) {
-          const errorMessages = Object.values(responseData.errors)
-            .filter((error) => error) as string[];
+        const errorMessages = collectAddTemplateErrors(responseData?.errors);
+        if (errorMessages.length > 0) {
           setErrors(errorMessages);
+          return;
         }
-        clearErrors();
 
-        const newTemplateId = response?.data?.addTemplate?.id;
+        const newTemplateId = responseData?.id;
         if (newTemplateId) {
+          clearErrors();
           startTransition(() => {
             router.push(routePath('template.show', { templateId: newTemplateId }));
           });
@@ -280,29 +295,31 @@ const TemplateSelectTemplatePage = ({ templateName }: { templateName: string }) 
   };
 
   async function handleStartNew() {
-    addTemplateMutation({
-      variables: { name: templateName },
-    }).then(response => {
+    try {
+      const response = await addTemplateMutation({
+        variables: { name: templateName },
+      });
+
       if (response?.data) {
         const responseData = response?.data?.addTemplate;
-        if (responseData && responseData.errors) {
-          const errorMessages = Object.values(responseData.errors)
-            .filter((error) => error) as string[];
+        const errorMessages = collectAddTemplateErrors(responseData?.errors);
+        if (errorMessages.length > 0) {
           setErrors(errorMessages);
+          return;
         }
-        clearErrors();
 
-        const newTemplateId = response?.data?.addTemplate?.id;
+        const newTemplateId = responseData?.id;
         if (newTemplateId) {
+          clearErrors();
           router.push(routePath('template.show', { templateId: newTemplateId }));
         }
       }
-    }).catch(err => {
+    } catch (err) {
       logECS('error', 'handleStartNew', {
         error: err,
         url: { path: routePath('template.create') }
       });
-    });
+    }
   }
 
   // Transform public templates into easier to use properties
@@ -490,7 +507,7 @@ const TemplateSelectTemplatePage = ({ templateName }: { templateName: string }) 
           <>
             <ErrorMessages errors={errors} ref={errorRef} />
             <div className="searchSection" role="search" ref={topRef}>
-              <SearchField aria-label="Template search">
+              <SearchField aria-label={SelectTemplate('searchLabel')}>
                 <Label>{Global('labels.searchByKeyword')}</Label>
                 <Input
                   aria-describedby="search-help"

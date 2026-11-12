@@ -587,7 +587,7 @@ const OrganizationProjectsListPage: React.FC = () => {
                 {Project("messages.info.noProjectsDescription")}
               </p>
               <TransitionLink
-                href={routePath("projects.create")}
+                href={routePath("projects.create.start")}
                 className="button-link button--primary"
               >
                 {Global("buttons.createNewPlan")}

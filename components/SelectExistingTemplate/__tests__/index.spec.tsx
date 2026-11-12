@@ -570,13 +570,13 @@ describe('TemplateSelectTemplatePage', () => {
     });
   });
 
-  it('should handle response errors when user clicks a \'Select\' button', async () => {
+  it('should show duplicate name errors when user clicks a \'Select\' button', async () => {
     mockAddTemplateFn = jest.fn().mockResolvedValue({
       data: {
         addTemplate: {
-          id: 1,
+          id: null,
           errors: {
-            global: 'New Template, something went wrong...',
+            general: 'Template with this name already exists',
           },
         }
       }
@@ -600,10 +600,10 @@ describe('TemplateSelectTemplatePage', () => {
     const selectButton = screen.getAllByRole('button', { name: /select/i });
     fireEvent.click(selectButton[0]);
 
-    // Wait for the mutation to be called
     await waitFor(() => {
-      expect(mockUseMutation).toHaveBeenCalled();
+      expect(screen.getByText('Template with this name already exists')).toBeInTheDocument();
     });
+    expect(pushMock).not.toHaveBeenCalled();
   });
 
   it('should log error when useAddTemplateMutation rejects with an error', async () => {
@@ -673,13 +673,13 @@ describe('TemplateSelectTemplatePage', () => {
     });
   });
 
-  it('should handle response errors when user clicks start a new template', async () => {
+  it('should show duplicate name errors when user clicks start a new template', async () => {
     mockAddTemplateFn = jest.fn().mockResolvedValue({
       data: {
         addTemplate: {
-          id: 1,
+          id: null,
           errors: {
-            global: 'New Template, something went wrong...',
+            general: 'Template with this name already exists',
           },
         },
       },
@@ -704,8 +704,9 @@ describe('TemplateSelectTemplatePage', () => {
     fireEvent.click(selectButton);
 
     await waitFor(() => {
-      expect(mockUseMutation).toHaveBeenCalled();
+      expect(screen.getByText('Template with this name already exists')).toBeInTheDocument();
     });
+    expect(pushMock).not.toHaveBeenCalled();
   });
 
   it('should handle errors when a user clicks on start a new template', async () => {

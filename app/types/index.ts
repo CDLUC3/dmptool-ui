@@ -119,7 +119,8 @@ export interface TemplateItemProps {
 export interface CustomizedTemplatesProps {
   id?: number;
   title?: string;
-  link: string;
+  // The customization's page. Missing until the template has been customized
+  link?: string;
   funder?: string;
   lastCustomized: string | null;
   lastCustomizedByName?: string;

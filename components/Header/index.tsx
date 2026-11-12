@@ -110,7 +110,7 @@ function Header() {
                   <Link href={routePath("projects.index")}>{t("menuProjectsPlans")}</Link>
                 </li>
                 <li role="menuitem">
-                  <Link href={routePath("projects.create")}>{t("menuCreatePlan")}</Link>
+                  <Link href={routePath("projects.create.start")}>{t("menuCreatePlan")}</Link>
                 </li>
               </>
             )}
@@ -398,7 +398,7 @@ function Header() {
                   <Link href={routePath("projects.index")}>{t("menuProjectsPlans")}</Link>
                 </li>
                 <li role="menuitem">
-                  <Link href={routePath("projects.create")}>{t("menuCreatePlan")}</Link>
+                  <Link href={routePath("projects.create.start")}>{t("menuCreatePlan")}</Link>
                 </li>
               </>
             )}

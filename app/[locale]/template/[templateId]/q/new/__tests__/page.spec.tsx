@@ -54,11 +54,16 @@ jest.mock('@/components/BackButton', () => {
   };
 });
 
-// Mock QuestionAdd component since it has it's own separate unit test
+// Mock QuestionAdd component since it has it's own separate unit test.
+// Props are captured so the page's onSave handler can be tested directly.
+const mockQuestionAddProps = jest.fn();
 jest.mock('@/components/QuestionAdd', () => {
   return {
     __esModule: true,
-    default: () => <div>Mocked Question Add Component</div>,
+    default: (props: Record<string, unknown>) => {
+      mockQuestionAddProps(props);
+      return <div>Mocked Question Add Component</div>;
+    },
   };
 });
 
@@ -179,6 +184,33 @@ describe("QuestionTypeSelectPage", () => {
     expect(textArea).not.toBeInTheDocument();
   })
 
+  it('should show no results when a search matches nothing, even after a search that did', async () => {
+    await act(async () => {
+      render(
+        <QuestionTypeSelectPage />
+      );
+    });
+
+    const searchInput = screen.getByLabelText(/labels.searchByKeyword/i);
+    const searchButton = screen.getByRole('button', { name: /clear search/i });
+
+    await act(async () => {
+      fireEvent.change(searchInput, { target: { value: 'Text' } });
+    });
+    fireEvent.click(searchButton);
+    expect(screen.getByText('Text Field')).toBeInTheDocument();
+
+    // A second search with no matches used to keep showing the "Text" results
+    await act(async () => {
+      fireEvent.change(searchInput, { target: { value: 'no-such-question-type' } });
+    });
+    fireEvent.click(searchButton);
+
+    expect(screen.getByText('messaging.noItemsFound')).toBeInTheDocument();
+    expect(screen.queryByText('Text Field')).not.toBeInTheDocument();
+    expect(screen.queryAllByText('buttons.select')).toHaveLength(0);
+  })
+
   it('should load QuestionAdd component when a user selects a question type', async () => {
     await act(async () => {
       render(
@@ -200,6 +232,77 @@ describe("QuestionTypeSelectPage", () => {
     // Should load the QuestionAdd component once a user selects a question type with options
     expect(screen.getByText('Mocked Question Add Component')).toBeInTheDocument();
   })
+
+  describe('onSave passed to QuestionAdd', () => {
+    const commonFields = {
+      questionText: 'New Question',
+      json: '{}',
+      required: false,
+      displayOrder: 3,
+    };
+
+    const renderAndGetOnSave = async (mutationResult: unknown) => {
+      const mockAddQuestion = jest.fn().mockResolvedValue(mutationResult);
+      mockUseMutation.mockImplementation(() => [
+        mockAddQuestion,
+        { loading: false, error: undefined }
+      ] as any);
+
+      await act(async () => {
+        render(<QuestionTypeSelectPage />);
+      });
+
+      const selectButton = screen.getAllByText('buttons.select')
+        .find(button => button.getAttribute('data-type') === 'selectBox');
+      fireEvent.click(selectButton!);
+
+      const { onSave } = mockQuestionAddProps.mock.calls.at(-1)![0] as {
+        onSave: (fields: typeof commonFields) => Promise<string[] | void>;
+      };
+      return { onSave, mockAddQuestion };
+    };
+
+    it('should return the validation errors from the addQuestion response', async () => {
+      const { onSave, mockAddQuestion } = await renderAndGetOnSave({
+        data: {
+          addQuestion: {
+            id: null,
+            errors: { general: 'Unable to add question', questionText: 'Question text is required' },
+          },
+        },
+      });
+
+      let result: string[] | void = undefined;
+      await act(async () => {
+        result = await onSave(commonFields);
+      });
+
+      expect(mockAddQuestion).toHaveBeenCalledWith({
+        variables: {
+          input: expect.objectContaining({ templateId: 123, sectionId: 123, questionText: 'New Question' }),
+        },
+      });
+      expect(result).toEqual(['Unable to add question', 'Question text is required']);
+    });
+
+    it('should return no errors when the question is added successfully', async () => {
+      const { onSave } = await renderAndGetOnSave({
+        data: {
+          addQuestion: {
+            id: 99,
+            errors: { general: null, questionText: null },
+          },
+        },
+      });
+
+      let result: string[] | void = undefined;
+      await act(async () => {
+        result = await onSave(commonFields);
+      });
+
+      expect(result).toEqual([]);
+    });
+  });
 
   it('should pass axe accessibility test', async () => {
     const { container } = render(

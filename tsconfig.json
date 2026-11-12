@@ -50,6 +50,7 @@
     "./cypress.config.ts",
     "**/cypress.config.ts",
     ".next",
+    "e2e",
     "public"
   ]
 }

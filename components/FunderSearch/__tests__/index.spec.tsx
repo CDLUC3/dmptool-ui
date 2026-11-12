@@ -242,6 +242,21 @@ describe("FunderSearch", () => {
     });
   });
 
+  it("should show an error when the search fails", async () => {
+    const failingMock = [{ ...mocks[0], result: undefined, error: new Error('Network down') }];
+    render(
+      <MockedProvider mocks={failingMock}>
+        <WrappedSearch />
+      </MockedProvider>
+    );
+
+    fireEvent.change(screen.getByTestId('search-field').querySelector('input')!, { target: { value: "nih" } });
+    fireEvent.click(screen.getByTestId('search-btn'));
+
+    expect(await screen.findByText('messaging.somethingWentWrong')).toBeInTheDocument();
+    expect(screen.getByTestId('search-btn')).not.toBeDisabled();
+  });
+
   it("should load more when the moretrigger is activated", async () => {
     render(
       <MockedProvider mocks={mocks}>

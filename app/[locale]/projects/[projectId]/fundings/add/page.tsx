@@ -25,10 +25,15 @@ import {
 
 // Components
 import PageHeader from "@/components/PageHeader";
-import { ContentContainer, LayoutContainer } from "@/components/Container";
 import { FormInput, FormSelect } from "@/components/Form";
 import ErrorMessages from '@/components/ErrorMessages';
 import { TypeAheadWithOther, useAffiliationSearch } from '@/components/Form/TypeAheadWithOther';
+import {
+  FlowActions,
+  FlowAwareLayout,
+  nextPath,
+  useCreateProjectFlow,
+} from '@/components/CreateProjectFlow';
 
 // Utils and other
 import { routePath } from '@/utils/routes';
@@ -67,6 +72,7 @@ const AddProjectFunderManually = () => {
   const router = useRouter();
   const params = useParams();
   const projectId = Number(params.projectId);
+  const { inFlow, flow } = useCreateProjectFlow();
 
   // For TypeAhead component
   const { suggestions, handleSearch, isSearching, searchError } = useAffiliationSearch();
@@ -278,7 +284,9 @@ const AddProjectFunderManually = () => {
       }
       // Success
       showSuccessToast();
-      router.push(routePath('projects.fundings.index', { projectId }));
+      router.push(inFlow
+        ? nextPath({ from: 'fundingAdd' }, flow, projectId)
+        : routePath('projects.fundings.index', { projectId }));
 
     } catch (err) {
       const error = err as Error;
@@ -311,8 +319,7 @@ const AddProjectFunderManually = () => {
         }
         className="page-funding-edit"
       />
-      <LayoutContainer>
-        <ContentContainer>
+      <FlowAwareLayout screen="fundingAdd">
           <ErrorMessages errors={errors} ref={errorRef} />
           <Form onSubmit={handleFormSubmit}>
             <TypeAheadWithOther
@@ -389,10 +396,11 @@ const AddProjectFunderManually = () => {
               errorMessage={fieldErrors.funderOpportunityNumber}
             />
 
-            <Button type="submit" className="submit-button">{global('buttons.saveChanges')}</Button>
+            <FlowActions>
+              <Button type="submit" className="submit-button">{global('buttons.saveChanges')}</Button>
+            </FlowActions>
           </Form>
-        </ContentContainer>
-      </LayoutContainer>
+      </FlowAwareLayout>
     </>
   );
 };
