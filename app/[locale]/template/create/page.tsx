@@ -1,15 +1,12 @@
 'use client';
 
 import React, {
-  useEffect,
-  useMemo,
-  useRef,
   useState,
-  useTransition
+  type TransitionStartFunction
 } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from '@/i18n/routing';
-import NProgress from 'nprogress';
+import { useLazyQuery } from '@apollo/client/react';
 import {
   Breadcrumb,
   Breadcrumbs,
@@ -23,75 +20,78 @@ import PageHeader from "@/components/PageHeader";
 import TemplateSelectTemplatePage from '@/components/SelectExistingTemplate';
 import { ContentContainer, LayoutContainer, } from '@/components/Container';
 import FormInput from '@/components/Form/FormInput';
-import Loading from '@/components/Loading';
 import { TransitionButton } from '@/components/Form';
 
+// GraphQL
+import { TemplateNameAvailableDocument } from '@/generated/graphql';
+
 // Utils
-import { debounce } from '@/hooks/debounce';
 import { useQueryStep } from '@/app/[locale]/template/create/useQueryStep';
+import { handleApolloError } from '@/utils/apolloErrorHandler';
 
 const TemplateCreatePage: React.FC = () => {
   const router = useRouter();
-  const [step, setStep] = useState<number | null>(null);
   const [templateName, setTemplateName] = useState('');
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
-  const stepQueryValue = useQueryStep();
+  const step = useQueryStep();
 
   //Localization keys
   const TemplateCreate = useTranslations('TemplateCreatePage');
   const Global = useTranslations('Global');
 
-  // Debounced input handler
-  const debouncedInputHandler = useMemo(
-    () =>
-      debounce((value: string) => {
-        setErrors({});
-        const sanitizedTemplateName = sanitizeHtml(value);
-        setTemplateName(sanitizedTemplateName);
-      }, 30),
-    []
-  );
+  const [checkTemplateName] = useLazyQuery(TemplateNameAvailableDocument, {
+    fetchPolicy: 'network-only',
+  });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    debouncedInputHandler(e.target.value);
-  }
+    setErrors({});
+    setTemplateName(e.target.value);
+  };
 
-  const [, startTransition] = useTransition();
-  const progressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const handleNext = async () => {
+  const handleNext = async ({ startTransition }: { startTransition: TransitionStartFunction }) => {
     setErrors({});
 
-    if (templateName.length <= 2) {
+    const sanitizedName = sanitizeHtml(templateName);
+    if (sanitizedName.length <= 2) {
       setErrors({ templateName: TemplateCreate('messages.templateNameError') });
       return;
     }
 
-    if (progressTimer.current) clearTimeout(progressTimer.current);
-    progressTimer.current = setTimeout(() => {
-      NProgress.start();
-      window.dispatchEvent(new CustomEvent('app:navigation:start'));
-    }, 100);
-
-    await new Promise<void>((resolve) => {
-      startTransition(() => {
-        router.push('/template/create?step=2');
-        resolve();
+    try {
+      const { data, error } = await checkTemplateName({
+        variables: { name: sanitizedName.trim() },
       });
+
+      if (error) {
+        const { wasRealError } = handleApolloError(error, 'TemplateCreatePage.handleNext');
+        if (wasRealError) {
+          setErrors({ templateName: TemplateCreate('messages.templateNameCheckError') });
+        }
+        return;
+      }
+
+      const isAvailable = data?.templateNameAvailable;
+      if (isAvailable === undefined) {
+        setErrors({ templateName: TemplateCreate('messages.templateNameCheckError') });
+        return;
+      }
+
+      if (!isAvailable) {
+        setErrors({ templateName: TemplateCreate('messages.templateNameTaken') });
+        return;
+      }
+    } catch (err) {
+      const { wasRealError } = handleApolloError(err, 'TemplateCreatePage.handleNext');
+      if (wasRealError) {
+        setErrors({ templateName: TemplateCreate('messages.templateNameCheckError') });
+      }
+      return;
+    }
+
+    startTransition(() => {
+      router.push('/template/create?step=2');
     });
   };
-
-  useEffect(() => {
-    // If a step was specified in a query param, then set that step (step 1 or 2)
-    if (step !== stepQueryValue) {
-      setStep(stepQueryValue);
-    }
-  }, [stepQueryValue, step])
-
-  // TODO: Need to implement a shared loading component
-  if (step === null) {
-    return <Loading message={Global('messaging.loading')} />;
-  }
 
   return (
     <>
@@ -136,7 +136,7 @@ const TemplateCreatePage: React.FC = () => {
       )}
       {step == 2 && (
         <TemplateSelectTemplatePage
-          templateName={templateName}
+          templateName={sanitizeHtml(templateName)}
         />
       )}
 

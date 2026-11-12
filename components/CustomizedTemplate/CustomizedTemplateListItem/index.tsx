@@ -36,17 +36,15 @@ function CustomizedTemplateListItem({
               className={styles.TemplateItemHeading}
               id={headingId}
             >
-              {item.link ? (
-                <Link
-                  href={item.link}
-                  aria-label={`${Global("links.update")} ${item.title}`}
-                  className={styles.titleLink}
-                >
-                  {item.title}
-                </Link>
-              ) : (
-                item.title
-              )}
+              {/* A template that hasn't been customized has no customization page yet, so its title creates the
+                  customization first, like the Update action */}
+              <Link
+                {...(item.link ? { href: item.link } : { onPress: () => handleAddCustomization(item) })}
+                aria-label={`${Global("links.update")} ${item.title}`}
+                className={styles.titleLink}
+              >
+                {item.title}
+              </Link>
             </h3>
 
             {/**Display customization metadata */}
@@ -87,15 +85,13 @@ function CustomizedTemplateListItem({
           </div>
 
           <div className={styles.TemplateItemActions}>
-            {item.link && (
-              <Link
-                aria-label={`${Global("links.update")} ${item.title}`}
-                className="button-link button--primary"
-                onPress={() => handleAddCustomization(item)}
-              >
-                {Global("links.update")}
-              </Link>
-            )}
+            <Link
+              aria-label={`${Global("links.update")} ${item.title}`}
+              className="button-link button--primary"
+              onPress={() => handleAddCustomization(item)}
+            >
+              {Global("links.update")}
+            </Link>
           </div>
 
         </div>

@@ -86,6 +86,16 @@ describe('TemplateSelectListItem', () => {
     expect(screen.getByText('messages.additionalGuidance')).toBeInTheDocument();
   });
 
+  it('should render an HTML description as formatted text, not as raw tags', async () => {
+    const item = { ...props.item, description: '<p>Researching <strong>dolphins</strong> in Fiji</p>' };
+    await act(async () => {
+      render(<TemplateSelectListItem item={item} onSelect={props.onSelect} />);
+    });
+
+    expect(screen.getByText('dolphins', { selector: 'strong' })).toBeInTheDocument();
+    expect(screen.queryByText(/<p>/)).not.toBeInTheDocument();
+  });
+
   it('should call onSelect method when user clicks the onSelect button', async () => {
     await act(async () => {
       render(

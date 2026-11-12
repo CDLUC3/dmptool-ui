@@ -94,9 +94,6 @@ const ResearchOutputComponent: React.FC<ResearchOutputComponentProps> = ({
           {QuestionAdd('researchOutput.description')}
         </p>
         <div className={styles.fieldsList}>
-
-          {standardFields.map(sf => sf.commonStandardId).join(', ')}
-
           {standardFields.map((field) => {
             // Required fields will always have their checkbox checked and disabled to
             // prevent changes, and a tooltip explaining why it's disabled
@@ -143,6 +140,12 @@ const ResearchOutputComponent: React.FC<ResearchOutputComponentProps> = ({
                       className={`buttonLink link`}
                       aria-expanded={expandedFields.includes(field.id)}
                       aria-controls={`panel-${field.id}`}
+                      // Name the field, since every row has one of these buttons
+                      aria-label={expandedFields.includes(field.id)
+                        ? QuestionAdd("buttons.closeField", { name: field.label })
+                        : nonCustomizableFieldIds.includes(field.id)
+                          ? QuestionAdd("buttons.expandField", { name: field.label })
+                          : QuestionAdd("buttons.customizeField", { name: field.label })}
                       onPress={() => onCustomizeField(field.id)}
                     >
                       {expandedFields.includes(field.id)
@@ -404,6 +407,9 @@ const ResearchOutputComponent: React.FC<ResearchOutputComponentProps> = ({
                         className={`buttonLink link`}
                         aria-expanded={expandedFields.includes(field.id)}
                         aria-controls={`panel-${field.id}`}
+                        aria-label={expandedFields.includes(field.id)
+                          ? QuestionAdd('buttons.closeField', { name: field.heading })
+                          : QuestionAdd('buttons.customizeField', { name: field.heading })}
                         onPress={() => onCustomizeField(field.id)}
                       >
                         {expandedFields.includes(field.id) ? Global('buttons.close') : Global('buttons.customize')}

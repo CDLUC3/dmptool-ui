@@ -377,7 +377,9 @@
     "helpText": "Don't worry, you can change this later.",
     "nameOfYourTemplate": "Name of your template",
     "messages": {
-      "templateNameError": "Please enter a valid value for template name."
+      "templateNameError": "Please enter a valid value for template name.",
+      "templateNameTaken": "A template with this name already exists. Please choose a unique name.",
+      "templateNameCheckError": "Unable to check whether this template name is available. Please try again."
     }
   },
   "TemplateSelectTemplatePage": {
@@ -385,6 +387,7 @@
     "resultsText": "{name} results match your search",
     "numDisplaying": "Showing {num} of {total}",
     "clearFilter": "clear filter",
+    "searchLabel": "Template search",
     "buttons": {
       "loadMore": "Load {name} more",
       "load3More": "Load 3 more",
@@ -628,7 +631,11 @@
       "previewQuestion": "Preview question",
       "changeType": "Change type",
       "removeType": "Remove {type}",
-      "removeAccessLevel": "Remove {level}"
+      "removeAccessLevel": "Remove {level}",
+      "tagInfo": "More information about {name}",
+      "customizeField": "Customize {name}",
+      "closeField": "Close {name}",
+      "expandField": "Expand {name}"
     },
     "helpText": {
       "textField": "Changing the question type, for example from Text Field to Radio Buttons, may result in some data being lost.",
