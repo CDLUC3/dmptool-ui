@@ -37,7 +37,7 @@
   }
 
   :global(.react-aria-Label) {
-    font-weight: var(--fw-normal);
+    font-weight: var(--fw-bold);
   }
 
   // Overrides the global 600 button weight
@@ -69,7 +69,7 @@
 }
 
 .planScopeLabel {
-  font-weight: var(--fw-normal);
+  font-weight: var(--fw-bold);
 }
 
 .planScopeValue {

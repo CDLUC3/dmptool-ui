@@ -188,13 +188,12 @@ describe("RelatedWorksList", () => {
     ]);
   });
 
-  it("should display sort by options: accepted", async () => {
-    setupMocks({ items: MOCK_PENDING_WORKS, totalCount: 2, statusOnlyCount: 2 });
-    renderList(RelatedWorkStatus.Accepted);
+  it("should not display sort by on accepted, but still sort by date confirmed", () => {
+    setupMocks({ items: MOCK_ACCEPTED_WORKS, totalCount: 2, statusOnlyCount: 2 });
+    renderList(RelatedWorkStatus.Accepted, { identifierType: RelatedWorksIdentifierType.ProjectId });
 
-    expect(await openSelect("filters.sortBy.DateConfirmedNew filters.sort")).toEqual([
-      "filters.sortBy.DateConfirmedNew",
-    ]);
+    expect(screen.getByText("filters.planId")).toBeInTheDocument();
+    expect(screen.queryByText("filters.sort")).not.toBeInTheDocument();
     expect(relatedWorksVariables().paginationOptions).toMatchObject({ sortField: "modified", sortDir: "DESC" });
   });
 

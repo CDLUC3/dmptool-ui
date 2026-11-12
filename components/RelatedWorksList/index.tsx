@@ -182,6 +182,7 @@ export const RelatedWorksList = ({
   const isEmpty = !relatedWorksDataLoading && relatedWorksData != null && statusOnlyCount == 0 && totalCount == 0;
   const isFilteredEmpty = !relatedWorksDataLoading && statusOnlyCount > 0 && totalCount == 0;
   const showFilters = !isInitialLoading && !isEmpty;
+  const showSort = showFilters && sortItems.length > 1;
   const showReviewMatches = onReviewMatches != null && status !== RelatedWorkStatus.Pending;
   const showAdd = addHref != null && status !== RelatedWorkStatus.Rejected;
 
@@ -227,7 +228,7 @@ export const RelatedWorksList = ({
           />
         )}
 
-        {showFilters && (
+        {showSort && (
           <RelatedWorksSelect<string>
             label={t("filters.sort")}
             placeholder={t("filters.sort")}
