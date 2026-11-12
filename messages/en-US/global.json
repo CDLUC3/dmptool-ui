@@ -102,10 +102,15 @@
     "linkMakePrimary": "Make primary email address",
     "primaryEmailCannotBeDeleted": "To change your primary email, add another address below and set it as primary.",
     "primaryBadge": "Primary",
+    "confirmedBadge": "Confirmed",
+    "unconfirmedBadge": "Unconfirmed",
+    "unconfirmedEmailDesc": "Awaiting confirmation. Click the link in the email we sent to this address to start using it.",
+    "unconfirmedTooltip": "Until confirmed, this address isn't linked to your account. Plans and templates shared with it won't reach you. If the email hasn't arrived or the link expired, resend the verification link.",
+    "unconfirmedInfoAria": "Why is {email} unconfirmed?",
     "deleteEmailAria": "Delete email address {email}",
     "deleteEmailConfirmTitle": "Delete email address?",
     "deleteEmailConfirmMessage": "Are you sure you want to delete {email}? This action cannot be undone.",
-    "helpTextForAddAlias": "You will be sent an email to confirm this addition",
+    "helpTextForAddAlias": "A verification link will be sent to this address. Click it before the address can be used.",
     "helpTextSelectYourLanguage": "Select your preferred language",
     "helpTextSearchForInstitution": "Search for your institution",
     "btnCancel": "Cancel",
@@ -114,13 +119,16 @@
     "btnUpdate": "Update",
     "btnAdd": "Add",
     "btnDelete": "Delete",
+    "btnResendVerification": "Resend verification link",
+    "btnResendingVerification": "Sending...",
     "linkUpdatePassword": "Update password",
     "linkUpdateConnections": "Update connections",
     "linkManageNotifications": "Manage notifications",
     "messages": {
       "profileUpdateSuccess": "The profile form was successfully updated.",
-      "emailAddressUpdateSuccess": "The email was successfully added to your profile.",
+      "emailAddressUpdateSuccess": "A verification link was sent to {email}. It will show as unconfirmed until you click the link.",
       "emailAddressDeleteSuccess": "The email was successfully removed from your profile.",
+      "verificationResent": "A new verification link was sent to {email}.",
       "errors": {
         "givenNameValidation": "Name must be at least 2 characters",
         "surNameValidation": "Surname must be at least 2 characters",
@@ -129,7 +137,8 @@
         "errorUpdatingProfile": "Error when updating profile",
         "errorSettingPrimaryEmail": "Error when setting primary email",
         "errorAddingNewEmail": "Error when adding new email",
-        "errorDeletingEmail": "Error when deleting email"
+        "errorDeletingEmail": "Error when deleting email",
+        "errorResendingVerification": "Error when resending the verification link"
       }
     }
   },
