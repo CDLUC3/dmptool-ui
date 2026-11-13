@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useTranslations } from "next-intl";
 import styles from "./ExpandableNameList.module.scss";
 import { Button } from "react-aria-components";
 import { ItemMatch } from "@/generated/graphql";
@@ -11,6 +12,7 @@ type ExpandableNameListProps<T> = {
 };
 
 export default function ExpandableNameList<T>({ items, matches, maxItems, renderItem }: ExpandableNameListProps<T>) {
+  const t = useTranslations("ExpandableNameList");
   const tooMany = items.length > maxItems;
   const remainder = items.length - maxItems;
   const [isOpen, setOpen] = useState(!tooMany);
@@ -21,7 +23,7 @@ export default function ExpandableNameList<T>({ items, matches, maxItems, render
     return null;
   }
 
-  const label = isOpen ? "less" : `+${remainder} more`;
+  const label = isOpen ? t("showLess") : t("showMore", { count: remainder });
 
   return (
     <>
@@ -42,7 +44,7 @@ export default function ExpandableNameList<T>({ items, matches, maxItems, render
         <Button
           className={`${styles.collapseButton} link`}
           aria-expanded={isOpen}
-          onClick={() => setOpen(!isOpen)}
+          onPress={() => setOpen(!isOpen)}
         >
           {label}
         </Button>

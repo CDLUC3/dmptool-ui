@@ -1,0 +1,46 @@
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 0;
+  padding: var(--space-6) var(--space-5);
+  border: 1px dashed var(--border-color-subtle);
+  border-radius: var(--card-border-radius);
+  background: var(--gray-50);
+  text-align: center;
+}
+
+.icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.5rem;
+  height: 3.5rem;
+  margin-bottom: var(--space-4);
+  border-radius: 50%;
+  background: var(--blue-100);
+  color: var(--blue-500);
+}
+
+.title {
+  margin: 0 0 var(--space-2);
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-bold);
+  line-height: var(--lh-tight);
+}
+
+.description {
+  max-width: 32rem;
+  margin: 0;
+  color: var(--slate-800);
+  line-height: 1.5;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: var(--space-3) var(--space-4);
+  margin-top: var(--space-5);
+}

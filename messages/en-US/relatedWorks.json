@@ -1,66 +1,94 @@
 {
   "RelatedWorksPlanPage": {
-    "title": "Published Research Outputs",
-    "description": "Match published research outputs to your research project.",
-    "buttons": {
-      "addRelatedWorkManually": "Add Published Research Output"
-    }
+    "title": "Published research outputs",
+    "description": "Enrich your plans by linking them to published research outputs, such as datasets, software and papers. Linking makes your outputs easier to find, adds them to your DMP-ID's metadata, and shows you met funder sharing requirements. For published plans, we'll find outputs that may match — just review and <strong>Confirm matches</strong>. You can also add your own using a DOI."
   },
   "RelatedWorksProjectPage": {
-    "title": "Published Research Outputs",
-    "description": "Match published research outputs to your research project.",
-    "buttons": {
-      "addRelatedWorkManually": "Add Published Research Output"
-    }
+    "title": "Published research outputs",
+    "description": "Enrich your plans by linking them to published research outputs, such as datasets, software and papers. Linking makes your outputs easier to find, adds them to your DMP-ID's metadata, and shows you met funder sharing requirements. For published plans, we'll find outputs that may match — just review and <strong>Confirm matches</strong>. You can also add your own using a DOI."
   },
   "RelatedWorksList": {
     "filters": {
       "planId": "Select Plan",
-      "filterByConfidence": "Filter by Confidence",
-      "filterByType": "Filter by Type",
-      "filterByTypePlaceholder": "All Types",
-      "highlightMatches": "Highlight Matches",
-      "sort": "Sort",
-      "reset": "Reset",
+      "sort": "Sort by",
       "sortBy": {
-        "ConfidenceHigh": "Confidence: High to Low",
-        "ConfidenceLow": "Confidence: Low to High",
-        "ReviewedNew": "Reviewed: New to Old",
-        "ReviewedOld": "Reviewed: Old to New",
-        "PublishedNew": "Published: New to Old",
-        "PublishedOld": "Published: Old to New",
-        "DateFoundNew": "Date Found: New to Old",
-        "DateFoundOld": "Date Found: Old to New"
+        "LikelihoodHigh": "Likelihood of match: High to Low",
+        "DateFoundNew": "Date found: New to Old",
+        "DateConfirmedNew": "Date confirmed or added: New to Old",
+        "DateDismissedNew": "Date dismissed: New to Old"
       }
     },
     "messages": {
       "PENDING": {
-        "noResults": "No pending outputs found.\n You have no pending outputs to review.",
-        "noFilteredResults": "No pending outputs match your current filters."
+        "noFilteredResults": "No suggestions match these filters."
       },
       "ACCEPTED": {
-        "noResults": "No published outputs found.\nYou haven’t marked any outputs as published yet. Check the Pending tab to get started.",
-        "noFilteredResults": "No published outputs match your current filters."
+        "noFilteredResults": "No research outputs match these filters."
       },
       "REJECTED": {
-        "noResults": "No rejected outputs found.\nYou haven’t rejected any outputs.",
-        "noFilteredResults": "No rejected outputs match your current filters."
+        "noFilteredResults": "No dismissed matches for these filters."
+      },
+      "actions": {
+        "confirm": "Research output confirmed as a match.",
+        "dismiss": "Match dismissed.",
+        "restore": "Match restored for review.",
+        "unmatch": "Research output unmatched and moved to Dismissed."
+      },
+      "errors": {
+        "updateStatus": "Something went wrong updating this research output. Please try again."
+      }
+    },
+    "intro": {
+      "ACCEPTED": "Published research outputs you've confirmed, plus any you added manually.",
+      "PENDING": "These might be related. Confirm any that look right — you can ignore the rest.",
+      "REJECTED": "Matches you dismissed. If you dismissed one by mistake, confirm it or restore it for review."
+    },
+    "summary": {
+      "REJECTED": "Showing {start}–{end} of {total} dismissed matches"
+    },
+    "planScope": {
+      "label": "Plan",
+      "viewAllPlans": "View all plans in this project"
+    },
+    "emptyStates": {
+      "ACCEPTED": {
+        "title": "No research outputs linked yet",
+        "description": "When you confirm a match or add a research output using its DOI, it will be listed here and linked to your plan's DMP-ID."
+      },
+      "PENDING": {
+        "title": "No matches to review",
+        "description": "We regularly search public scholarly sources for research outputs that may relate to your published plans. New matches will appear here for you to confirm."
+      },
+      "REJECTED": {
+        "title": "No dismissed matches",
+        "description": "Matches you dismiss are kept here, so you can restore them for review or confirm them later if you change your mind."
+      },
+      "filtered": {
+        "description": "Try choosing a different plan, or show results for all plans.",
+        "showAllPlans": "Show all plans"
+      },
+      "actions": {
+        "reviewMatches": "Review matches",
+        "addResearchOutput": "Add research output"
       }
     }
   },
   "RelatedWorksListItem": {
-    "title": "Open the published version of this output",
     "buttons": {
-      "expand": "Expand",
-      "collapse": "Collapse",
-      "accept": "Accept",
-      "reject": "Reject"
+      "confirm": "Confirm match",
+      "dismiss": "Dismiss",
+      "restore": "Restore for review",
+      "unmatch": "Unmatch",
+      "loading": {
+        "confirm": "Confirming…",
+        "dismiss": "Dismissing…",
+        "restore": "Restoring…",
+        "unmatch": "Unmatching…"
+      }
     },
     "fieldNames": {
       "planTitle": "Plan",
-      "confidence": "Confidence",
-      "dateFound": "Date Found",
-      "dateReviewed": "Reviewed",
+      "dateFound": "Date found",
       "type": "Type",
       "source": "Source",
       "doi": "DOI",
@@ -69,16 +97,27 @@
       "awardIds": "Award IDs",
       "authors": "Authors",
       "institutions": "Institutions",
-      "funders": "Funders"
+      "funders": "Funders",
+      "likelihood": "Likelihood of match",
+      "dateAdded": "Added",
+      "dateConfirmed": "Confirmed",
+      "dateDismissed": "Dismissed"
     },
     "instructions": {
-      "review": "Review the information about this candidate published research output below, and then accept it as published or reject it as unrelated.",
-      "actions": {
-        "PENDING": "If you reject this output, you can recover it later from the Rejected tab.",
-        "ACCEPTED": "If you reject this output, you can recover it later from the Rejected tab.",
-        "REJECTED": "You can recover this output by accepting it, you will then see it in the Accepted tab."
-      }
-    }
+      "review": "Review this candidate and confirm it as a match if it belongs to your project."
+    },
+    "badges": {
+      "unpublished": "Unpublished",
+      "addedManually": "Added manually",
+      "confirmedMatch": "Confirmed match"
+    },
+    "actionsAria": {
+      "confirm": "Confirm match: {title}",
+      "dismiss": "Dismiss: {title}",
+      "restore": "Restore for review: {title}",
+      "unmatch": "Unmatch: {title}"
+    },
+    "summaryLabel": "Research output summary"
   },
   "RelatedWorksDataTypes": {
     "confidence": {
@@ -88,9 +127,9 @@
       "LOW": "Low"
     },
     "status": {
-      "PENDING": "Pending",
-      "ACCEPTED": "Published",
-      "REJECTED": "Rejected"
+      "PENDING": "Awaiting review",
+      "ACCEPTED": "Confirmed",
+      "REJECTED": "Dismissed"
     },
     "workType": {
       "ARTICLE": "Article",
@@ -133,14 +172,29 @@
   },
   "RelatedWorksTabs": {
     "tabs": {
-      "pending": "Pending",
-      "accepted": "Published",
-      "rejected": "Rejected"
-    }
+      "pending": "Confirm matches",
+      "accepted": "Your research outputs",
+      "rejected": "Dismissed"
+    },
+    "ariaLabel": "Published research outputs"
   },
   "AddRelatedWorkProjectPage": {
     "title": "Add Published Research Output",
-    "description": "To manually add a published research output to a project, select a plan, then enter output's DOI below and click Lookup to find it. Click Accept to add the output to the project. You can run multiple searches on this page to add more than one output."
+    "description": "Each published research output is linked to one plan in this project. Choose the plan this output belongs to, then add it using its DOI.",
+    "planLabel": "Which plan is this research output for?",
+    "planDescription": "You can add outputs to unpublished plans. They'll be included when the plan is published.",
+    "planStatus": {
+      "published": "Published",
+      "unpublished": "Not yet published"
+    },
+    "noPlans": "This project doesn't have any plans yet. Create a plan from the project overview, then add your research outputs to it.",
+    "buttons": {
+      "projectOverview": "Go to project overview"
+    },
+    "errors": {
+      "choosePlan": "Choose a plan to continue.",
+      "loadPlans": "Something went wrong loading this project's plans. Please try again."
+    }
   },
   "AddRelatedWorkPlanPage": {
     "title": "Add Published Research Output",
@@ -149,8 +203,6 @@
   "RelatedWorksAdd": {
     "title": "Add Published Research Output",
     "searchLabel": "Digital Object Identifier (DOI)",
-    "planSelectLabel": "Select Plan",
-    "planSelectDescription": "Select a plan to add a published research output.",
     "searchDescription": "Enter the output's DOI in either short or URL form (e.g. <code>10.1000/182</code> or <code>https://doi.org/10.1000/182</code>), then click Lookup.",
     "invalidDoi": "Please enter a valid DOI",
     "buttons": {
@@ -160,7 +212,6 @@
       "reject": "Reject"
     },
     "fieldNames": {
-      "planTitle": "Plan",
       "status": "Status",
       "type": "Type",
       "source": "Source",
@@ -169,5 +220,30 @@
   },
   "RelatedWorksSelect": {
     "planSelectPlaceholder": "All Plans"
+  },
+  "RelatedWorksAddPanel": {
+    "title": "Add your own research output",
+    "descriptionPublished": "Know of a published dataset, article or piece of software we haven't found? Add it to one of your plans using its DOI.",
+    "descriptionUnpublished": "Add a published dataset, article or piece of software to one of your plans using its DOI.",
+    "button": "Add research output"
+  },
+  "RelatedWorksUnpublished": {
+    "title": "Publish your plan to find research outputs",
+    "planLabel": "Plan",
+    "viewAllPlans": "View all plans",
+    "intro": "You need to publish your plan before we can find published research outputs that may relate to it. In the meantime, you can add your own. Once it's published:",
+    "steps": {
+      "search": "We search public scholarly sources for published research outputs — datasets, software and papers — that may relate to your plan.",
+      "review": "You review the matches we find and confirm the ones that belong.",
+      "linked": "Confirmed outputs are linked to your plan and its DMP-ID. You can also add your own at any time using a DOI."
+    },
+    "buttons": {
+      "publish": "Publish plan",
+      "add": "Add your own research output"
+    }
+  },
+  "ExpandableNameList": {
+    "showMore": "+{count} more",
+    "showLess": "less"
   }
 }

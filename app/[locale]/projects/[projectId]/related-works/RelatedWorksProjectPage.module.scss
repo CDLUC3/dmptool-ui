@@ -1,36 +1,8 @@
-@use "@/styles/responsive.scss" as r;
-
-.container {
-  display: flex;
-  flex-direction: column;
+.header :global(.pageheader-intro) {
+  max-width: 40rem;
 }
 
-.tabWrapper :global(.react-aria-Tab) {
-  font-weight: 600;
-  font-size: var(--fs-md);
-  line-height: 1.5rem;
-
-  color: var(--text-color);
-  padding: var(--space-2) var(--space-4) !important;
-  border: 0 !important;
-
-  @include r.device(md) {
-    font-size: var(--fs-xl);
-    line-height: 1.75rem;
-  }
-
-  h2 {
-    padding: 0;
-  }
-}
-
-.tabWrapper :global(.react-aria-Tab[data-selected]) {
-  background-color: #eaeaea;
-}
-
-.tabWrapper :global(.react-aria-TabPanel) {
-  background-color: #eaeaea;
-  border-top-left-radius: 0;
-  padding: var(--space-4) var(--space-4) var(--space-5);
-  box-shadow: none;
+// Scroll with the page, not inside .layout-container
+.layout {
+  overflow: visible;
 }

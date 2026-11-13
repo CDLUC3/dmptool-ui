@@ -8,6 +8,7 @@ import { ContentContainer, LayoutContainer } from "@/components/Container";
 import Pagination from "@/components/Pagination";
 import PageLinkCard from "@/components/PageLinkCard";
 import LinkFilter from "@/components/LinkFilter";
+import ExternalLink from "@/components/ExternalLink";
 
 import {
   SGComponentExample,
@@ -87,6 +88,9 @@ export default function NavigationPage() {
                 </li>
                 <li>
                   <a href="#page-link-card">Page Link Card</a>
+                </li>
+                <li>
+                  <a href="#external-link">External Link</a>
                 </li>
               </ul>
             </SGTocSection>
@@ -210,6 +214,40 @@ const sections = [
 ];
 
 <PageLinkCard sections={sections} />`}</SGCodeBlock>
+            </SGComponentExampleContent>
+          </SGComponentExample>
+        </section>
+
+        {/* External Link */}
+        <section id="external-link">
+          <h2>External Link</h2>
+          <p>A link that opens in a new tab, with a visible icon and screen reader text that warn the user first.</p>
+
+          <SGComponentExample>
+            <SGComponentExampleHeader title="External Link" />
+            <SGComponentExampleContent>
+              <SGComponentExampleDemo>
+                <p>
+                  Read the <ExternalLink href="https://dmptool.org">DMP Tool help pages</ExternalLink> for more
+                  information.
+                </p>
+              </SGComponentExampleDemo>
+
+              <h4>Usage</h4>
+              <SGCodeBlock>{`import ExternalLink from '@/components/ExternalLink';
+
+<ExternalLink href={doiToUrl(doi)}>{title}</ExternalLink>`}</SGCodeBlock>
+
+              <h4>Accessibility</h4>
+              <ul>
+                <li>Adds <code>target=&quot;_blank&quot;</code> and <code>rel=&quot;noopener noreferrer&quot;</code></li>
+                <li>Appends hidden &quot;(Opens in a new tab)&quot; text, so screen readers announce it as part of the link name</li>
+                <li>The icon is <code>aria-hidden</code>, uses the link&apos;s text colour, and scales with the font size</li>
+                <li>
+                  <code>aria-label</code> isn&apos;t accepted, because it would replace the new tab text; the link text
+                  is the name
+                </li>
+              </ul>
             </SGComponentExampleContent>
           </SGComponentExample>
         </section>

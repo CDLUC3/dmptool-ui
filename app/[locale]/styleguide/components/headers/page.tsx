@@ -208,6 +208,9 @@ const [title, setTitle] = useState("Page Title");
               <ul>
                 <li>Clean, consistent header layout</li>
                 <li>Optional subtitle for additional context</li>
+                <li>
+                  <code>description</code> accepts rich content (e.g. <code>{`t.rich("description", { strong: (c) => <strong>{c}</strong> })`}</code>)
+                </li>
                 <li>Flexible actions area for buttons and controls</li>
                 <li>Responsive design with proper spacing</li>
                 <li>Typography integration with design system</li>
