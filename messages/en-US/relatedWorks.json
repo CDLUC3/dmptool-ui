@@ -180,7 +180,21 @@
   },
   "AddRelatedWorkProjectPage": {
     "title": "Add Published Research Output",
-    "description": "To manually add a published research output to a project, select a plan, then enter output's DOI below and click Lookup to find it. Click Accept to add the output to the project. You can run multiple searches on this page to add more than one output."
+    "description": "Each published research output is linked to one plan in this project. Choose the plan this output belongs to, then add it using its DOI.",
+    "planLabel": "Which plan is this research output for?",
+    "planDescription": "You can add outputs to unpublished plans. They'll be included when the plan is published.",
+    "planStatus": {
+      "published": "Published",
+      "unpublished": "Not yet published"
+    },
+    "noPlans": "This project doesn't have any plans yet. Create a plan from the project overview, then add your research outputs to it.",
+    "buttons": {
+      "projectOverview": "Go to project overview"
+    },
+    "errors": {
+      "choosePlan": "Choose a plan to continue.",
+      "loadPlans": "Something went wrong loading this project's plans. Please try again."
+    }
   },
   "AddRelatedWorkPlanPage": {
     "title": "Add Published Research Output",
@@ -189,8 +203,6 @@
   "RelatedWorksAdd": {
     "title": "Add Published Research Output",
     "searchLabel": "Digital Object Identifier (DOI)",
-    "planSelectLabel": "Select Plan",
-    "planSelectDescription": "Select a plan to add a published research output.",
     "searchDescription": "Enter the output's DOI in either short or URL form (e.g. <code>10.1000/182</code> or <code>https://doi.org/10.1000/182</code>), then click Lookup.",
     "invalidDoi": "Please enter a valid DOI",
     "buttons": {
@@ -200,7 +212,6 @@
       "reject": "Reject"
     },
     "fieldNames": {
-      "planTitle": "Plan",
       "status": "Status",
       "type": "Type",
       "source": "Source",

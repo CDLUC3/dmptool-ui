@@ -75,6 +75,7 @@
 
 ## Updated
 - Redesigned the related works pages with "Your research outputs", "Confirm matches" and "Dismissed" tabs, new cards, and empty and loading states [#216]
+- Updated the project related-works add flow to choose a plan with radio buttons, then continue to that plan's add page (one plan skips straight there) [#216]
 - Updated the e2e tests to run one at a time (`workers: 1`) locally as well as on CI, because several tests at once overload the Next.js dev server and cause timeouts [#561]
 - Updated the e2e login helper to retry the whole login if the page reloads part way through [#561]
 - Updated `README.md` with how to pass Playwright options from the root, and a "Running against the local dev server" section on the dev server's memory restarts during long runs [#561]

@@ -150,13 +150,23 @@ describe("RelatedWorksProjectPage", () => {
     });
   });
 
-  it("should link to adding a research output to the project", () => {
+  it("should link to choosing a plan when the project has several plans", () => {
     renderPage();
 
     expect(screen.getByText("RelatedWorksAddPanel.descriptionPublished")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "RelatedWorksAddPanel.button" })).toHaveAttribute(
       "href",
       "/projects/1/related-works/add",
+    );
+  });
+
+  it("should link straight to the plan's add page when the project has one plan", () => {
+    setupMocks({ plans: [PUBLISHED_PLAN, { ...DRAFT_PLAN, id: null }] });
+    renderPage();
+
+    expect(screen.getByRole("link", { name: "RelatedWorksAddPanel.button" })).toHaveAttribute(
+      "href",
+      "/projects/1/dmp/1/related-works/add",
     );
   });
 
@@ -202,7 +212,7 @@ describe("RelatedWorksProjectPage", () => {
     );
     expect(within(explainer).getByRole("link", { name: "RelatedWorksUnpublished.buttons.add" })).toHaveAttribute(
       "href",
-      "/projects/1/related-works/add",
+      "/projects/1/dmp/2/related-works/add",
     );
   });
 

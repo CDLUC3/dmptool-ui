@@ -180,7 +180,21 @@
   },
   "AddRelatedWorkProjectPage": {
     "title": "Adicionar Saída de Pesquisa Publicada",
-    "description": "Para adicionar manualmente uma saída de pesquisa publicada a um projeto, selecione um plano, depois insira o DOI de saída abaixo e clique em Pesquisar para encontrá-lo. Clique em Aceitar para adicionar a saída ao projeto. Você pode executar várias pesquisas nesta página para adicionar mais de uma saída."
+    "description": "Cada resultado de pesquisa publicado é vinculado a um plano deste projeto. Escolha o plano ao qual este resultado pertence e, em seguida, adicione-o usando o DOI.",
+    "planLabel": "Para qual plano é este resultado de pesquisa?",
+    "planDescription": "Você pode adicionar resultados a planos não publicados. Eles serão incluídos quando o plano for publicado.",
+    "planStatus": {
+      "published": "Publicado",
+      "unpublished": "Ainda não publicado"
+    },
+    "noPlans": "Este projeto ainda não tem planos. Crie um plano na visão geral do projeto e, em seguida, adicione seus resultados de pesquisa a ele.",
+    "buttons": {
+      "projectOverview": "Ir para a visão geral do projeto"
+    },
+    "errors": {
+      "choosePlan": "Escolha um plano para continuar.",
+      "loadPlans": "Ocorreu um erro ao carregar os planos deste projeto. Tente novamente."
+    }
   },
   "AddRelatedWorkPlanPage": {
     "title": "Adicionar Saída de Pesquisa Publicada",
@@ -189,8 +203,6 @@
   "RelatedWorksAdd": {
     "title": "Adicionar Saída de Pesquisa Publicada",
     "searchLabel": "Digital Object Identifier (DOI)",
-    "planSelectLabel": "Selecionar plano",
-    "planSelectDescription": "Selecione um plano para adicionar uma saída de pesquisa publicada.",
     "searchDescription": "Insira o DOI da saída em formato curto ou URL (por exemplo, <code>10.1000/182</code> ou <code>https://doi.org/10.1000/182</code>), e clique em Procurar.",
     "invalidDoi": "Por favor, insira um DOI válido",
     "buttons": {
@@ -200,7 +212,6 @@
       "reject": "Recusar"
     },
     "fieldNames": {
-      "planTitle": "Planejamento",
       "status": "Situação",
       "type": "Tipo",
       "source": "Fonte",

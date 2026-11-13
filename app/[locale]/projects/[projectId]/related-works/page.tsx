@@ -37,7 +37,11 @@ const RelatedWorksProjectPage = () => {
     () => (plans ?? []).filter((plan) => plan.registered == null && plan.id != null).map((plan) => plan.id as number),
     [plans],
   );
-  const addHref = routePath("projects.related-works.add", { projectId });
+  const plansWithIds = (plans ?? []).filter((plan) => plan.id != null);
+  const addHref =
+    plansWithIds.length === 1
+      ? routePath("projects.dmp.related-works.add", { projectId, dmpId: plansWithIds[0].id as number })
+      : routePath("projects.related-works.add", { projectId });
 
   return (
     <>
