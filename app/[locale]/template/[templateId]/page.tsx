@@ -49,6 +49,7 @@ import PageHeaderWithTitleChange from "@/components/PageHeaderWithTitleChange";
 import AddSectionButton from "@/components/AddSectionButton";
 import ErrorMessages, { ErrorMessage } from "@/components/ErrorMessages";
 import SectionEditContainer from "@/components/SectionEditContainer";
+import TemplateLinks from "@/components/TemplateLinks";
 import { TransitionButton, TransitionLink } from "@/components/Form";
 
 // Hooks
@@ -721,6 +722,13 @@ const TemplateEditPage: React.FC = () => {
               </div>
             </div>
           </div>
+
+          {/* Funder and sample plan links are only shown for templates owned by a funder */}
+          {template.owner?.funder && (
+            <div className={`status-panel-content side-panel ${styles.linksPanel}`} data-testid="template-links-panel">
+              <TemplateLinks templateId={Number(templateId)} />
+            </div>
+          )}
         </SidebarPanel>
         <div className="template-archive-container">
           <div className="main-content">

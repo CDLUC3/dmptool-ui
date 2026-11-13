@@ -18,6 +18,7 @@ export const TYPES_WITH_ERRORS = [
   'CustomQuestion',
   'VersionedSection',
   'SectionCustomizationOverview', // Added for cache policy
+  'TemplateLink', // Added for cache policy
 ] as const;
 
 // Map of typeName to additional fields needing merge: false

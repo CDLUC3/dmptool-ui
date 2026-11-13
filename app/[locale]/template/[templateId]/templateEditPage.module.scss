@@ -27,3 +27,8 @@
     color: var(--gray-600);
   }
 }
+
+// Standard spacing between the sidebar panels
+.linksPanel {
+  margin-top: var(--space-4); // 1rem
+}
