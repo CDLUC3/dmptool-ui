@@ -1,4 +1,5 @@
 ## Added
+- Alias emails on the profile page show Confirmed/Unconfirmed badges. Unconfirmed aliases can't be made primary, explain that they're awaiting confirmation, and offer "Resend verification link" (stand-in hook until the backend mutation lands). Add-alias help text and toast mention the verification link [#488]
 - Added Playwright integration tests for template customization in `e2e/tests/customization.spec.ts`: a funder admin's public template is customized by an admin in another organization (a custom question in the funder's section, and a custom section with a question), the customization is published, and a researcher in the admin's organization writes a plan that shows it. Added `e2e/tests/customization.spec.md`, helpers in `e2e/tests/helpers/customization.ts`, and a `visibility` option to `createPublishedTemplate` [#561]
 - Added `npm run test:e2e:chromium`, which runs the e2e tests in Chromium only [#561]
 - Added `e2e/tests/helpers/navigation.ts`, with `clickAndWaitFor`, `clickWhenHydrated` and `fillWhenHydrated`, which wait until React has hydrated an element before using it, and only click again while the clicked element is still on the page, so a retry can't skip a step [#561]
@@ -210,6 +211,7 @@
 
 ## Fixed
 - Fixed the `plan.spec.ts` e2e tests failing on AWS dev, where the full ROR data makes a funder search for "NIH" match about 80 funders, with NIH not on the first page. The tests now search for "National Institutes of Health" and click "Load more" until NIH is listed, and the "Add funder manually" test picks NIH instead of NSF, which isn't in dev's data [#561]
+- Fixed Create Template so a taken name shows an error on Next, using the new `TemplateNameAvailable` query. [#88]
 - Fixed the Template customizations page showing "No items found" and leaving the Search button disabled when the same term was searched again. The results now come from each request's own response, so a search answered from the Apollo cache is still shown [#561]
 - Fixed the title link of a template that isn't customized yet going to `/template/customizations/0`, a "Not Found" page. The title now creates the customization first, like the Update button [#561]
 - Fixed the add-question form's "Additional comment box" and "Mark as required?" radio groups sharing one `name`, which let only one of their radios be checked in Chrome and Safari [#561]

@@ -19,8 +19,11 @@ import FormInput from '@/components/Form/FormInput';
 import ErrorMessages from '@/components/ErrorMessages';
 //Interfaces
 import { EmailInterface } from '@/app/types';
+// Hooks
+import { useResendEmailConfirmation } from '@/app/hooks/useResendEmailConfirmation';
 // Utils and other
 import logECS from '@/utils/clientLogger';
+import { handleApolloError } from '@/utils/index';
 import styles from './updateEmailAddress.module.scss';
 import { useToast } from '@/context/ToastContext';
 import { routePath } from '@/utils/routes';
@@ -44,6 +47,7 @@ const UpdateEmailAddress: React.FC<UpdateEmailAddressProps> = ({
   const [setPrimaryUserEmailMutation] = useMutation(SetPrimaryUserEmailDocument);
   const [addUserEmailMutation] = useMutation(AddUserEmailDocument);
   const [removeUserEmailMutation] = useMutation(RemoveUserEmailDocument);
+  const [resendEmailConfirmation] = useResendEmailConfirmation();
 
   const clearErrors = () => {
     setErrors({});
@@ -81,7 +85,7 @@ const UpdateEmailAddress: React.FC<UpdateEmailAddressProps> = ({
       // Display other errors
       setErrors(prevErrors => ({
         ...prevErrors,
-        general: t('messages.errorSettingPrimaryEmail')
+        general: t('messages.errors.errorSettingPrimaryEmail')
       }));
       logECS('error', 'makePrimaryEmail', {
         error: err,
@@ -92,8 +96,8 @@ const UpdateEmailAddress: React.FC<UpdateEmailAddressProps> = ({
 
 
   // Show Success Message
-  const showSuccessToast = (messageKey: string) => {
-    toastState.add(t(messageKey), {
+  const showSuccessToast = (messageKey: string, values?: Record<string, string>) => {
+    toastState.add(t(messageKey, values), {
       type: 'success',
       priority: 1,
       timeout: 10000
@@ -129,12 +133,12 @@ const UpdateEmailAddress: React.FC<UpdateEmailAddressProps> = ({
       }
       // Clear the add alias input field
       setAddAliasValue('');
-      showSuccessToast('messages.emailAddressUpdateSuccess');
+      showSuccessToast('messages.emailAddressUpdateSuccess', { email: addAliasValue });
     } catch (err) {
       // Display other errors
       setErrors(prevErrors => ({
         ...prevErrors,
-        general: t("messages.errorAddingNewEmail")
+        general: t("messages.errors.errorAddingNewEmail")
       }));
       logECS('error', 'handleAddingAlias', {
         error: err,
@@ -171,12 +175,41 @@ const UpdateEmailAddress: React.FC<UpdateEmailAddressProps> = ({
       // Display other errors
       setErrors(prevErrors => ({
         ...prevErrors,
-        general: t('messages.errorDeletingEmail')
+        general: t('messages.errors.errorDeletingEmail')
       }));
       logECS('error', 'deleteEmail', {
         error: err,
         url: { path: routePath('account.profile') }
       });
+    }
+  }
+
+  const resendConfirmation = async (email: string) => {
+    try {
+      const response = await resendEmailConfirmation({
+        variables: { email }
+      });
+
+      const emailData = response?.data?.resendUserEmailConfirmation;
+      if (emailData?.errors) {
+        const [hasErrors, errs] = checkErrors(emailData.errors, ['general', 'userId', 'email']);
+        if (hasErrors) {
+          toastState.add(errs.email || errs.general || t('messages.errors.errorResendingVerification'), {
+            type: 'error'
+          });
+          return;
+        }
+      }
+      toastState.add(t('messages.verificationResent', { email }), {
+        type: 'success',
+        priority: 1,
+        timeout: 10000
+      });
+    } catch (err) {
+      const { wasRealError } = handleApolloError(err, 'UpdateEmailAddress.resendConfirmation');
+      if (wasRealError) {
+        toastState.add(t('messages.errors.errorResendingVerification'), { type: 'error' });
+      }
     }
   }
 
@@ -235,8 +268,10 @@ const UpdateEmailAddress: React.FC<UpdateEmailAddressProps> = ({
                 key={emailObj.email}
                 email={emailObj.email}
                 isAlias={true}
+                isConfirmed={emailObj.isConfirmed}
                 deleteEmail={deleteEmail}
                 makePrimaryEmail={makePrimaryEmail}
+                resendConfirmation={resendConfirmation}
               />
             ))}
 
