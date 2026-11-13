@@ -64,7 +64,7 @@ function RelatedWorksListItem({
   const doi = workVersion.work.doi;
   const title = workVersion.title || doi;
   const isUserAdded = relatedWork.sourceType === RelatedWorkSourceType.UserAdded;
-  const publicationYear = workVersion.publicationDate ? new Date(workVersion.publicationDate).getFullYear() : null;
+  const publicationYear = workVersion.publicationDate ? new Date(workVersion.publicationDate).getUTCFullYear() : null;
   const subtitleParts = [
     formatAuthorNames(workVersion.authors, MAX_AUTHOR_CHARS),
     workVersion.publicationVenue,

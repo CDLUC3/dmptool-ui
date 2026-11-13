@@ -365,6 +365,27 @@ describe("RelatedWorksListItem", () => {
     expect(screen.queryByRole("link", { name: /OpenAlex/ })).not.toBeInTheDocument();
   });
 
+  it("should show the publication year of a Jan 1 date in time zones behind UTC", () => {
+    // Setting process.env.TZ inside a test has no effect on Date in Jest
+    const getFullYear = jest.spyOn(Date.prototype, "getFullYear").mockImplementation(function (this: Date) {
+      return new Date(this.getTime() - 8 * 60 * 60 * 1000).getUTCFullYear();
+    });
+    try {
+      render(
+        <RelatedWorksListItemHarness
+          relatedWork={{
+            workVersion: { ...RELATED_WORK.workVersion, publicationDate: "2023-01-01" },
+          }}
+        />,
+      );
+
+      expect(screen.getByText("2023")).toBeInTheDocument();
+      expect(screen.queryByText("2022")).not.toBeInTheDocument();
+    } finally {
+      getFullYear.mockRestore();
+    }
+  });
+
   it("should only highlight matches when enabled", async () => {
     const { unmount } = render(<RelatedWorksListItemHarness />);
     const region = screen.getByRole("region", { hidden: true });
