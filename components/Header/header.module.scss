@@ -4,6 +4,9 @@
 .header {
   background-color: var(--bg-white);
   border-bottom: 1px solid var(--border-color);
+  // The global `header` rule (styles/_page.scss) adds a larger row gap and top padding than this header needs
+  row-gap: var(--space-2);
+  padding-top: 0;
 }
 
 .container {
@@ -39,14 +42,6 @@
   }
 }
 
-.paragraph {
-  color: var(--blue-900);
-  cursor: pointer;
-  display: block;
-  font-weight: var(--fw-bold);
-  margin: 0 0 var(--space-2);
-}
-
 .mobileIcon {
   padding: var(--space-2) var(--space-3);
   border: none;
@@ -59,60 +54,16 @@
   }
 }
 
-/* Dropdown menus */
+/* Mobile submenu groups */
 .dropdown {
   position: relative;
   display: inline-block;
 }
 
-.dropdownContent {
-  display: none;
-  position: absolute;
-  right: 0;
-  top: 100%;
-  list-style: none;
-  background-color: var(--bg-white);
-  min-width: 240px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  border: 1px solid var(--gray-200);
-  padding: var(--space-2);
-  z-index: 100;
-  border-radius: var(--border-radius-lg);
-  margin-top: var(--space-1);
-  opacity: 0;
-  transform: translateY(-8px);
-  transition: all 0.2s ease-in-out;
-}
-
-.dropdown:hover .dropdownContent {
-  display: block;
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.dropdownContent li {
-  margin: 0;
-
-  a {
-    display: block;
-    padding: var(--space-2) var(--space-3);
-    color: var(--slate-700);
-    text-decoration: none;
-    border-radius: var(--border-radius-sm);
-    transition: all 0.15s ease;
-    font-weight: var(--fw-medium);
-
-    &:hover {
-      background-color: var(--gray-50);
-      color: var(--blue-600);
-    }
-
-    &:focus {
-      outline: 2px solid var(--yellow-400);
-      outline-offset: 2px;
-      background-color: var(--yellow-200);
-    }
-  }
+// Heading for a group with no overview page, so it isn't a link
+.submenuLabel {
+  color: var(--blue-900);
+  font-weight: var(--fw-bold);
 }
 
 .skipnav {
@@ -212,7 +163,7 @@
     display: inline-block;
   }
 
-  a {
+  a:not(:global(.button-link)) {
     color: var(--blue-900);
     text-decoration: none;
     font-weight: var(--fw-bold);
@@ -229,9 +180,8 @@
     }
 
     &:focus {
-      outline: 2px solid var(--yellow-400);
+      outline: 2px solid var(--blue-900);
       outline-offset: 2px;
-      background-color: var(--yellow-200);
     }
   }
 }
@@ -256,9 +206,8 @@
   }
 
   &:focus {
-    outline: 2px solid var(--yellow-400);
+    outline: 2px solid var(--blue-900);
     outline-offset: 2px;
-    background-color: var(--yellow-200);
   }
 }
 
@@ -280,4 +229,100 @@
 
 .grow {
   flex-grow: 1;
+}
+
+/* Utility bar above the main navigation */
+.utilityBar {
+  // <header> is a wrapping flex row (styles/_page.scss); take a full row of its own
+  flex-basis: 100%;
+}
+
+.utilityBarContent {
+  justify-content: flex-end;
+  padding-top: var(--space-2);
+  padding-bottom: 0;
+}
+
+// The utility bar already spaces the top of the header
+.headerContent {
+  padding-top: var(--space-1);
+}
+
+/* Desktop dropdown menus (About, Admin, Account) */
+// `button` raises specificity above the shared `button.link` styles, which underline and remove padding
+.navigation button.menuTrigger {
+  gap: var(--space-1);
+  padding: var(--space-1);
+  font-weight: var(--fw-bold);
+  text-decoration: none;
+
+  &[data-hovered] {
+    text-decoration: none;
+  }
+}
+
+.chevron {
+  width: 0.4em;
+  height: 0.4em;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: translateY(-25%) rotate(45deg);
+
+  [data-pressed] > &,
+  [aria-expanded="true"] > & {
+    transform: translateY(25%) rotate(-135deg);
+  }
+}
+
+.navPopover {
+  min-width: 240px;
+}
+
+.navMenu {
+  padding: var(--space-2);
+}
+
+// Menu items with an href render as links; drop the global link underline and use the menu item colours
+a.navMenuItem,
+.navMenuItem {
+  display: block;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--border-radius-sm);
+  color: var(--slate-700);
+  font-size: var(--fs-base);
+  font-weight: var(--fw-medium);
+  text-decoration: none;
+  cursor: pointer;
+
+  &:hover,
+  &:visited {
+    color: var(--slate-700);
+    text-decoration: none;
+  }
+
+  &[data-focused] {
+    outline: none;
+    background: var(--highlight-background);
+    color: var(--highlight-foreground);
+  }
+
+  &[data-focus-visible] {
+    outline: 2px solid var(--blue-900);
+    outline-offset: -2px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skipnav,
+  .mobileMenu,
+  .mobileMenu button,
+  .navigation a,
+  .button {
+    transition: none;
+  }
+
+  .navPopover[data-entering],
+  .navPopover[data-exiting] {
+    animation: none;
+  }
 }

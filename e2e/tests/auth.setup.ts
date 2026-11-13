@@ -9,7 +9,7 @@ for (const role of ROLES) {
     await login(page, credentialsFor(role));
 
     // The header should show the logged-in state once the auth cookies are set
-    await expect(page.getByTestId('logoutButtonDesktop')).toBeVisible();
+    await expect(page.getByTestId('accountMenuDesktop')).toBeVisible();
 
     await page.context().storageState({ path: authFile(role) });
   });

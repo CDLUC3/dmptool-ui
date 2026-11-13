@@ -1,4 +1,6 @@
 import Image from "next/image";
+import { Link } from "@/i18n/routing";
+import { routePath } from "@/utils/routes";
 import styles from "./footer.module.scss";
 
 function Footer() {
@@ -17,12 +19,12 @@ function Footer() {
                   alt="DMP Tool"
                 />
                 <p>
-                  <a
-                    href="#"
+                  <Link
+                    href={routePath("app.login")}
                     className={`${styles["dmpui-frontend-btn"]} ${styles["dmpui-frontend-btn-secondary"]} ${styles["with-mark"]}`}
                   >
                     Get Started
-                  </a>
+                  </Link>
                 </p>
               </div>
 
@@ -30,22 +32,22 @@ function Footer() {
                 <h4>Quick links</h4>
                 <ul>
                   <li>
-                    <a href="">Funder Requirements</a>
+                    <Link href={routePath("app.funderRequirements")}>Funder Requirements</Link>
                   </li>
                   <li>
-                    <a href="">Public Plans</a>
+                    <Link href={routePath("app.publicPlans")}>Public Plans</Link>
                   </li>
                   <li>
-                    <a href="">Help</a>
+                    <Link href={routePath("app.help")}>Help</Link>
                   </li>
                   <li>
-                    <a href="">Terms & Privacy</a>
+                    <Link href={routePath("app.terms")}>Terms & Privacy</Link>
                   </li>
                   <li>
-                    <a href="/contact">Contact</a>
+                    <Link href={routePath("app.contact")}>Contact</Link>
                   </li>
                   <li>
-                    <a href="">Login</a>
+                    <Link href={routePath("app.login")}>Login</Link>
                   </li>
                 </ul>
               </div>

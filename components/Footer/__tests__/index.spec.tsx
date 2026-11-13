@@ -6,6 +6,12 @@ import { axe, toHaveNoViolations } from 'jest-axe';
 
 expect.extend(toHaveNoViolations);
 
+jest.mock('@/i18n/routing', () => ({
+  Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
+    <a href={href} {...props}>{children}</a>
+  ),
+}));
+
 // Footer component will be updated, so put in minimal tests for now
 describe('Footer', () => {
   it('should render the footer with the correct structure', () => {
@@ -38,6 +44,29 @@ describe('Footer', () => {
     const year = new Date().getFullYear()
     const regex = new RegExp(`Copyright ©\\s+${year}\\s+The Regents of the University of California`, 'i')
     expect(screen.getByText(regex)).toBeInTheDocument()
+  });
+
+  it('should link the Get Started button and quick links to their routes', () => {
+    render(<Footer />);
+
+    const expectedHrefs: Record<string, string> = {
+      'Get Started': '/login',
+      'Funder Requirements': '/funder-requirements',
+      'Public Plans': '/public-plans',
+      Help: '/help',
+      'Terms & Privacy': '/terms',
+      Contact: '/contact',
+      Login: '/login',
+    };
+    Object.entries(expectedHrefs).forEach(([name, href]) => {
+      expect(screen.getByRole('link', { name })).toHaveAttribute('href', href);
+    });
+  });
+
+  it('should not render any links with an empty or placeholder href', () => {
+    const { container } = render(<Footer />);
+
+    expect(container.querySelectorAll('a[href=""], a[href="#"]')).toHaveLength(0);
   });
 
   it('should render external links with target="_blank"', () => {

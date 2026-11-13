@@ -37,9 +37,9 @@
     "menuDashboard": "Painel de controle",
     "menuUpload": "Carregar plano",
     "menuCreatePlan": "Criar plano",
-    "menuProjectsPlans": "Painel de planos",
+    "menuProjectsPlans": "Planos",
     "menuPublicPlans": "Planos públicos",
-    "menuFunderRequirements": "Requisitos de Barbatana",
+    "menuFunderRequirements": "Requisitos dos financiadores",
     "menuAbout": "Sobre",
     "menuAdmin": "Administrador",
     "menuLanguage": "Idioma",
@@ -63,11 +63,16 @@
     "subMenuEditProfile": "Editar perfil",
     "subMenu3rdParty": "Apps de terceiros",
     "subMenuDevTools": "Ferramentas para desenvolvedor",
-    "subMenuEnglish": "Portuguese (Brazil)",
+    "subMenuEnglish": "English (US)",
     "subMenuPortuguese": "Português (Brasil)",
     "btnLogout": "Sair",
     "btnSignup": "Cadastre-se",
-    "btnLogin": "Entrar"
+    "btnLogin": "Entrar",
+    "menuAccount": "Conta",
+    "menuTemplates": "Modelos",
+    "subMenuAccountOverview": "Visão geral da conta",
+    "menuMainNavigation": "Principal",
+    "subMenuAdminOverview": "Visão geral da administração"
   },
   "SubHeader": {
     "ucopHomepage": "Página inicial do UCOP",
@@ -1234,6 +1239,49 @@
         "invalidSubject": "A senha deve ter pelo menos 2 caracteres",
         "invalidMessage": "O nome deve ter no m&iacute;nimo 2 caracteres",
         "formSubmittalFailed": "Falha ao enviar o formulário. Tente novamente mais tarde."
+      }
+    }
+  },
+  "PublicPlans": {
+    "title": "Planos públicos",
+    "description": "Navegue pelos planos de gestão de dados que seus responsáveis tornaram públicos.",
+    "comingSoon": "Esta página estará disponível em breve."
+  },
+  "FunderRequirements": {
+    "title": "Requisitos dos financiadores",
+    "description": "Veja os requisitos de plano de gestão de dados de cada financiador.",
+    "comingSoon": "Esta página estará disponível em breve."
+  },
+  "ComingSoon": {
+    "message": "Esta página estará disponível em breve.",
+    "pages": {
+      "about": {
+        "title": "Sobre o DMP Tool",
+        "description": "Saiba o que é o DMP Tool e quem o desenvolve."
+      },
+      "membership": {
+        "title": "Associação institucional",
+        "description": "Descubra como sua instituição pode aderir ao DMP Tool."
+      },
+      "faq": {
+        "title": "Perguntas frequentes",
+        "description": "Respostas para perguntas comuns sobre o DMP Tool."
+      },
+      "editorialBoard": {
+        "title": "Painel editorial",
+        "description": "Conheça as pessoas que revisam os modelos e as orientações dos financiadores no DMP Tool."
+      },
+      "logos": {
+        "title": "Logos do DMP Tool",
+        "description": "Baixe os logos do DMP Tool para divulgar a ferramenta na sua instituição."
+      },
+      "help": {
+        "title": "Ajuda",
+        "description": "Orientações para criar e gerenciar planos de gestão de dados com o DMP Tool."
+      },
+      "terms": {
+        "title": "Termos de uso e política de privacidade",
+        "description": "Leia os termos de uso e a política de privacidade do DMP Tool."
       }
     }
   }

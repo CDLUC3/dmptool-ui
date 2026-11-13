@@ -37,7 +37,7 @@
     "menuDashboard": "Dashboard",
     "menuUpload": "Upload Plan",
     "menuCreatePlan": "Create Plan",
-    "menuProjectsPlans": "Plan Dashboard",
+    "menuProjectsPlans": "Plans",
     "menuPublicPlans": "Public Plans",
     "menuFunderRequirements": "Funder Requirements",
     "menuAbout": "About",
@@ -67,7 +67,12 @@
     "subMenuPortuguese": "Português (Brasil)",
     "btnLogout": "Logout",
     "btnSignup": "Sign up",
-    "btnLogin": "Login"
+    "btnLogin": "Login",
+    "menuAccount": "Account",
+    "menuTemplates": "Templates",
+    "subMenuAccountOverview": "Account overview",
+    "menuMainNavigation": "Main",
+    "subMenuAdminOverview": "Admin overview"
   },
   "SubHeader": {
     "ucopHomepage": "UCOP homepage",
@@ -1220,6 +1225,49 @@
         "invalidSubject": "Subject field must be at least 2 characters long",
         "invalidMessage": "Message field must be at least 2 characters long",
         "formSubmittalFailed": "Form submission failed. Please try again later."
+      }
+    }
+  },
+  "PublicPlans": {
+    "title": "Public Plans",
+    "description": "Browse data management plans that their owners have made public.",
+    "comingSoon": "This page is coming soon."
+  },
+  "FunderRequirements": {
+    "title": "Funder Requirements",
+    "description": "See the data management plan requirements for each funder.",
+    "comingSoon": "This page is coming soon."
+  },
+  "ComingSoon": {
+    "message": "This page is coming soon.",
+    "pages": {
+      "about": {
+        "title": "About the DMP Tool",
+        "description": "Learn what the DMP Tool is and who builds it."
+      },
+      "membership": {
+        "title": "Institutional membership",
+        "description": "Find out how your institution can join the DMP Tool."
+      },
+      "faq": {
+        "title": "Frequently asked questions",
+        "description": "Answers to common questions about the DMP Tool."
+      },
+      "editorialBoard": {
+        "title": "Editorial board",
+        "description": "Meet the people who review the funder templates and guidance in the DMP Tool."
+      },
+      "logos": {
+        "title": "DMP Tool logos",
+        "description": "Download DMP Tool logos to promote the tool at your institution."
+      },
+      "help": {
+        "title": "Help",
+        "description": "Guidance on creating and managing data management plans with the DMP Tool."
+      },
+      "terms": {
+        "title": "Terms of use and privacy policy",
+        "description": "Read the terms of use and privacy policy for the DMP Tool."
       }
     }
   }

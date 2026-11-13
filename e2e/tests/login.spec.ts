@@ -13,7 +13,7 @@ test('logging in with email and password goes to the home page and shows the log
   await login(page, credentialsFor('researcher'));
 
   await expect(page).toHaveURL(new RegExp(`/${LOCALE}/?$`));
-  await expect(page.getByTestId('logoutButtonDesktop')).toBeVisible();
+  await expect(page.getByTestId('accountMenuDesktop')).toBeVisible();
 });
 
 test('logging in sets the http-only access and refresh token cookies', async ({ page }) => {
@@ -30,6 +30,6 @@ test('logging in sets the http-only access and refresh token cookies', async ({ 
 test('a logged-out user sees the Login button in the header', async ({ page }) => {
   await page.goto(`/${LOCALE}`);
 
-  await expect(page.getByTestId('logoutButtonDesktop')).toBeHidden();
+  await expect(page.getByTestId('accountMenuDesktop')).toBeHidden();
   await expect(page.getByRole('button', { name: 'Login', exact: true }).first()).toBeVisible();
 });
