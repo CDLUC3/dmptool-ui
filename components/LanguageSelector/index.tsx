@@ -1,50 +1,105 @@
-import { useState } from 'react';
-import { useSwitchLanguage } from '@/hooks/switchLanguage';
-import { useLocale } from 'next-intl';
-import { usePathname, useRouter, Link } from '@/i18n/routing';
+'use client'
 
+import { useLocale } from 'next-intl';
+import { useMutation, useQuery } from '@apollo/client/react';
+
+// GraphQL
+import { MeDocument, UpdateUserProfileDocument } from '@/generated/graphql';
+
+// Components
+import { TransitionButton } from '@/components/Form';
+
+// Utils and other
+import { useAuthContext } from '@/context/AuthContext';
+import { usePathname, useRouter } from '@/i18n/routing';
+import { refreshAuthTokens } from '@/utils/authHelper';
+import { handleApolloError, logECS } from '@/utils/index';
 import styles from './languageSelector.module.scss';
 
-// Define the interface for the locales
-interface LangInterface {
+export interface LangInterface {
   id: string;
   name: string;
 }
 
-// Define the interface for the props
-interface LanguageSelectorProps {
+export interface LanguageSelectorProps {
   locales: LangInterface[];
+  /** Accessible name for the group of languages */
+  label: string;
 }
 
-function LanguageSelector({ locales }: LanguageSelectorProps) {
-  const [newLocale, setNewLocale] = useState<string | null>(null);
+function LanguageSelector({ locales, label }: LanguageSelectorProps) {
   const pathname = usePathname();
   const currentLocale = useLocale();
   const router = useRouter();
+  const { isAuthenticated } = useAuthContext();
+  const { data } = useQuery(MeDocument, { skip: !isAuthenticated });
+  const [updateUserProfileMutation] = useMutation(UpdateUserProfileDocument);
 
-  // This is triggered every time the "newLocale" state changes
-  useSwitchLanguage(newLocale, currentLocale, pathname, router);
+  // Logged-in users' preferred language is saved to their profile and token
+  const savePreferredLanguage = async (locale: string) => {
+    if (!data?.me) return;
 
-  const updateLanguages = async (locale: string) => {
-    setNewLocale(locale);
-  }
+    try {
+      const response = await updateUserProfileMutation({
+        variables: {
+          input: {
+            givenName: data.me.givenName || '',
+            surName: data.me.surName || '',
+            affiliationId: data.me.affiliation?.uri,
+            languageId: locale,
+          },
+        },
+      });
+
+      const general = response.data?.updateUserProfile?.errors?.general;
+      if (general) {
+        logECS('error', 'LanguageSelector.savePreferredLanguage', { errors: general });
+        return;
+      }
+      await refreshAuthTokens();
+    } catch (err) {
+      handleApolloError(err, 'LanguageSelector.savePreferredLanguage');
+    }
+  };
 
   return (
-    <>
+    <div
+      role="group"
+      aria-label={label}
+      className={styles.languageSelector}
+    >
       {locales.map((locale) => (
-        <p className={styles.paragraph} key={locale.id}>
-          <Link
-            href=""
-            onClick={() => updateLanguages(locale.id)}
-            aria-label={`Switch to ${locale.name} language`}
-          >
-            {locale.name}
-          </Link>
-        </p>
+        <span
+          key={locale.id}
+          className={styles.item}
+        >
+          {locale.id === currentLocale ? (
+            <span
+              lang={locale.id}
+              aria-current="true"
+              className={styles.current}
+            >
+              {locale.name}
+            </span>
+          ) : (
+            <TransitionButton
+              className={`link ${styles.option}`}
+              showLoading={false}
+              loadingLabel={locale.name}
+              onPress={async ({ startTransition }) => {
+                await savePreferredLanguage(locale.id);
+                startTransition(() => {
+                  router.push(pathname, { locale: locale.id });
+                });
+              }}
+            >
+              <span lang={locale.id}>{locale.name}</span>
+            </TransitionButton>
+          )}
+        </span>
       ))}
-    </>
-  )
-
+    </div>
+  );
 }
 
 export default LanguageSelector;

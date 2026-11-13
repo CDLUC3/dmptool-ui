@@ -11,17 +11,21 @@ test.use(NO_TRACE);
 test.describe('on desktop', () => {
   test.use({ viewport: { width: 1280, height: 720 } });
 
-  test('logging out from the header goes to the login page', async ({ page }) => {
+  test('logging out from the Account menu goes to the login page', async ({ page }) => {
     await login(page, credentialsFor('researcher'));
 
-    // Login ends with a full page load, so retry until the header has hydrated and the click logs out
-    const loginUrl = new RegExp(`/${LOCALE}/login`);
+    // Login ends with a full page load, so retry until the header has hydrated and the menu opens
+    const logoutItem = page.getByTestId('logoutButtonDesktop');
     await expect(async () => {
-      if (!loginUrl.test(page.url())) {
-        await page.getByTestId('logoutButtonDesktop').click({ timeout: 2000 });
+      if (!(await logoutItem.isVisible())) {
+        await page.getByTestId('accountMenuDesktop').click({ timeout: 2000 });
       }
-      await expect(page).toHaveURL(loginUrl, { timeout: 2000 });
+      await expect(logoutItem).toBeVisible({ timeout: 2000 });
     }).toPass();
+
+    await logoutItem.click();
+
+    await expect(page).toHaveURL(new RegExp(`/${LOCALE}/login`));
   });
 });
 

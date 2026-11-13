@@ -246,7 +246,18 @@ body {
   white-space: nowrap;
 }
 
+// Keeps the footer at the bottom of the window on short pages.
+// Scoped with :has(> #App) so the embed layout, which has no #App, is unaffected.
+body:has(> #App) {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
 #App {
+  flex-grow: 1;
+  width: 100%;
   max-width: 1500px;
   margin-left: auto;
   margin-right: auto;

@@ -32,6 +32,15 @@ const excludedPaths = [
   "/contact",
   "/dmps",
   "/healthcheck",
+  "/public-plans",
+  "/funder-requirements",
+  "/about",
+  "/membership",
+  "/faq",
+  "/editorial-board",
+  "/logos",
+  "/help",
+  "/terms",
 ];
 
 // Check if the first path segment (after any locale prefix) is an excluded path. Matching whole

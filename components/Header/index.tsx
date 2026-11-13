@@ -2,19 +2,90 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
+import { useQuery } from "@apollo/client/react";
 
 import { useRouter, Link } from "@/i18n/routing";
 import { useTranslations } from "next-intl";
 import { useAuthContext } from "@/context/AuthContext";
 import { useCsrf } from "@/context/CsrfContext";
+import { MeDocument, UserRole } from "@/generated/graphql";
 
-import { faGlobe } from "@fortawesome/free-solid-svg-icons";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { Button } from "react-aria-components";
+import {
+  Button,
+  Menu,
+  MenuItem,
+  MenuTrigger,
+  Popover,
+  Separator,
+} from "react-aria-components";
 import styles from "./header.module.scss";
 import LanguageSelector from "../LanguageSelector";
+import { TransitionLink } from "@/components/Form";
 import { routePath } from "@/utils/routes";
 import logECS from '@/utils/clientLogger';
+import {
+  NavItem,
+  mainNavItems,
+  createPlanNavItem,
+  publicNavItems,
+  aboutNavItems,
+  adminNavItems,
+  adminNavItem,
+  accountNavItem,
+  accountNavItems,
+  navItemHref,
+} from "./navItems";
+
+interface NavMenuEntry {
+  id: string;
+  label: React.ReactNode;
+  textValue: string;
+  href?: string;
+  onAction?: () => void;
+  testId?: string;
+  separatorBefore?: boolean;
+}
+
+function NavMenu({ label, testId, entries }: { label: string; testId: string; entries: NavMenuEntry[] }) {
+  return (
+    <MenuTrigger>
+      <Button
+        className={`link ${styles.menuTrigger}`}
+        data-testid={testId}
+      >
+        {label}
+        <span
+          className={styles.chevron}
+          aria-hidden="true"
+        />
+      </Button>
+      <Popover
+        placement="bottom start"
+        className={`react-aria-Popover ${styles.navPopover}`}
+      >
+        <Menu
+          aria-label={label}
+          className={`react-aria-Menu ${styles.navMenu}`}
+        >
+          {entries.flatMap((entry) => [
+            ...(entry.separatorBefore ? [<Separator key={`${entry.id}-separator`} />] : []),
+            <MenuItem
+              key={entry.id}
+              id={entry.id}
+              href={entry.href}
+              onAction={entry.onAction}
+              textValue={entry.textValue}
+              data-testid={entry.testId}
+              className={`react-aria-MenuItem ${styles.navMenuItem}`}
+            >
+              {entry.label}
+            </MenuItem>,
+          ])}
+        </Menu>
+      </Popover>
+    </MenuTrigger>
+  );
+}
 
 function Header() {
   const [showMobileMenu, setShowMobileMenu] = useState(false);
@@ -27,6 +98,13 @@ function Header() {
   const router = useRouter();
   const { getCsrfToken } = useCsrf();
   const t = useTranslations("Header");
+  const Admin = useTranslations("Admin");
+  const Account = useTranslations("Account");
+  const { data: meData } = useQuery(MeDocument, { skip: !isAuthenticated });
+
+  // Only controls what is shown; the backend enforces admin permissions
+  const isAdminUser = meData?.me?.role === UserRole.Admin || meData?.me?.role === UserRole.Superadmin;
+  const visibleMainNavItems = mainNavItems.filter((item) => !item.adminOnly || isAdminUser);
 
   const locales = [
     {
@@ -85,8 +163,25 @@ function Header() {
     setShowMobileMenu(false);
   }
 
+  const renderLabel = (item: NavItem, translate: (key: string) => string = t) => translate(item.labelKey);
+
+  const toMenuEntry = (item: NavItem, translate: (key: string) => string = t): NavMenuEntry => ({
+    id: item.labelKey,
+    href: navItemHref(item),
+    label: renderLabel(item, translate),
+    textValue: translate(item.labelKey),
+  });
+
   return (
     <header className={styles.header}>
+      <div className={styles.utilityBar}>
+        <div className={`${styles.container} ${styles.utilityBarContent}`}>
+          <LanguageSelector
+            locales={locales}
+            label={t("menuLanguage")}
+          />
+        </div>
+      </div>
       <div className={`${styles.container} ${styles.headerContent}`}>
         <div className={`${styles.headerLogo} ${styles.grow}`}>
           <Link href={routePath("app.home")}>
@@ -101,237 +196,76 @@ function Header() {
           </Link>
         </div>
 
-        <div className={`${styles.navigation} ${styles.desktop}`}>
-          <ul role="menu">
+        <nav
+          className={`${styles.navigation} ${styles.desktop}`}
+          aria-label={t("menuMainNavigation")}
+        >
+          <ul>
             {/* Show authenticated user items first when logged in */}
-            {isAuthenticated === true && (
-              <>
-                <li role="menuitem">
-                  <Link href={routePath("projects.index")}>{t("menuProjectsPlans")}</Link>
+            {isAuthenticated === true &&
+              visibleMainNavItems.map((item) => (
+                <li key={item.labelKey}>
+                  <Link href={navItemHref(item)}>{renderLabel(item)}</Link>
                 </li>
-                <li role="menuitem">
-                  <Link href={routePath("projects.create.start")}>{t("menuCreatePlan")}</Link>
-                </li>
-              </>
-            )}
+              ))}
 
             {/* Always show public items */}
-            <li role="menuitem">
-              <Link
-                role="none"
-                href="/public-plans"
-              >
-                {t("menuPublicPlans")}
-              </Link>
-            </li>
-            <li role="menuitem">
-              <Link
-                role="none"
-                href="/funder-requirements"
-              >
-                {t("menuFunderRequirements")}
-              </Link>
-            </li>
+            {publicNavItems.map((item) => (
+              <li key={item.labelKey}>
+                <Link href={navItemHref(item)}>{renderLabel(item)}</Link>
+              </li>
+            ))}
 
-            <li role="menuitem">
-              <div
-                className={styles.dropdown}
-                role="menu"
-              >
-                <span>
-                  <Link
-                    role="none"
-                    href="#"
-                  >
-                    {t("menuAbout")}
-                  </Link>
-                </span>
-                <div
-                  className={styles.dropdownContent}
-                  role="menu"
-                >
-                  <p
-                    className={styles.paragraph}
-                    role="menuitem"
-                  >
-                    <Link
-                      href=""
-                      role="none"
-                    >
-                      {t("subMenuLearnMore")}
-                    </Link>
-                  </p>
-                  <p
-                    className={styles.paragraph}
-                    role="menuitem"
-                  >
-                    <Link
-                      href=""
-                      role="none"
-                    >
-                      {t("subMenuMembership")}
-                    </Link>
-                  </p>
-                  <p
-                    className={styles.paragraph}
-                    role="menuitem"
-                  >
-                    <Link
-                      href=""
-                      role="none"
-                    >
-                      {t("subMenuFAQs")}
-                    </Link>
-                  </p>
-                  <p
-                    className={styles.paragraph}
-                    role="menuitem"
-                  >
-                    <Link
-                      href=""
-                      role="none"
-                    >
-                      {t("subMenuEditorial")}
-                    </Link>
-                  </p>
-                  <p
-                    className={styles.paragraph}
-                    role="menuitem"
-                  >
-                    <Link
-                      href=""
-                      role="none"
-                    >
-                      {t("subMenuLogos")}
-                    </Link>
-                  </p>
-                </div>
-              </div>
+            <li>
+              <NavMenu
+                label={t("menuAbout")}
+                testId="aboutMenuDesktop"
+                entries={aboutNavItems.map((item) => toMenuEntry(item))}
+              />
             </li>
 
             {/* Show authenticated user items */}
             {isAuthenticated === true && (
               <>
-                <li role="menuitem">
-                  <div className={styles.dropdown}>
-                    <span>
-                      <Link href="#">{t("menuAdmin")}</Link>
-                    </span>
-                    <div className={styles.dropdownContent}>
-                      <p className={styles.paragraph}>
-                        <Link
-                          href={routePath("admin.organizationDetails")}
-                          role="menuitem"
-                        >
-                          {t("subMenuOrganisations")}
-                        </Link>
-                      </p>
-                      <p className={styles.paragraph}>
-                        <Link
-                          href=""
-                          role="menuitem"
-                        >
-                          {t("subMenuOrgDetails")}
-                        </Link>
-                      </p>
-                      <p className={styles.paragraph}>
-                        <Link
-                          href={routePath("admin.users")}
-                          role="menuitem"
-                        >
-                          {t("subMenuUsers")}
-                        </Link>
-                      </p>
-                      <p className={styles.paragraph}>
-                        <Link
-                          href={routePath("admin.projects")}
-                          role="menuitem"
-                        >
-                          {t("subMenuPlans")}
-                        </Link>
-                      </p>
-                      <p className={styles.paragraph}>
-                        <Link
-                          href=""
-                          role="menuitem"
-                        >
-                          {t("subMenuUsage")}
-                        </Link>
-                      </p>
-                      <p className={styles.paragraph}>
-                        <Link
-                          href={routePath("admin.templates")}
-                          role="menuitem"
-                        >
-                          {t("subMenuTemplates")}
-                        </Link>
-                      </p>
-                      <p className={styles.paragraph}>
-                        <Link
-                          href={routePath("admin.guidance.index")}
-                          role="menuitem"
-                        >
-                          {t("subMenuGuidance")}
-                        </Link>
-                      </p>
-                      <p className={styles.paragraph}>
-                        <Link
-                          href=""
-                          role="menuitem"
-                        >
-                          {t("subMenuThemes")}
-                        </Link>
-                      </p>
-                      <p className={styles.paragraph}>
-                        <Link
-                          href=""
-                          role="menuitem"
-                        >
-                          {t("subMenuApiClients")}
-                        </Link>
-                      </p>
-                      <p className={styles.paragraph}>
-                        <Link
-                          href=""
-                          role="menuitem"
-                        >
-                          {t("subMenuApiLogs")}
-                        </Link>
-                      </p>
-                      <p className={styles.paragraph}>
-                        <Link
-                          href={routePath("admin.notifications")}
-                          role="menuitem"
-                        >
-                          {t("subMenuNotifications")}
-                        </Link>
-                      </p>
-                    </div>
-                  </div>
+                {isAdminUser && (
+                  <li>
+                    <NavMenu
+                      label={t("menuAdmin")}
+                      testId="adminMenuDesktop"
+                      entries={[
+                        toMenuEntry(adminNavItem),
+                        ...adminNavItems.map((item) => toMenuEntry(item, Admin)),
+                      ]}
+                    />
+                  </li>
+                )}
+
+                <li>
+                  <NavMenu
+                    label={t("menuAccount")}
+                    testId="accountMenuDesktop"
+                    entries={[
+                      toMenuEntry(accountNavItem),
+                      ...accountNavItems.map((item) => toMenuEntry(item, Account)),
+                      {
+                        id: "logout",
+                        label: t("btnLogout"),
+                        textValue: t("btnLogout"),
+                        onAction: handleLogout,
+                        testId: "logoutButtonDesktop",
+                        separatorBefore: true,
+                      },
+                    ]}
+                  />
                 </li>
 
-                <li role="menuitem">
-                  <div className={styles.dropdown}>
-                    <a href="#">
-                      <FontAwesomeIcon
-                        icon={faGlobe}
-                        aria-label="Language"
-                      />
-                    </a>
-                    <div className={styles.dropdownContent}>
-                      <LanguageSelector locales={locales} />
-                    </div>
-                  </div>
-                </li>
-
-                <li role="menuitem">
-                  <Button
-                    className="react-aria-Button secondary"
-                    data-testid="logoutButtonDesktop"
-                    onPress={handleLogout}
+                <li>
+                  <TransitionLink
+                    href={navItemHref(createPlanNavItem)}
+                    className="button-link button--primary"
                   >
-                    {t("btnLogout")}
-                  </Button>
+                    {t(createPlanNavItem.labelKey)}
+                  </TransitionLink>
                 </li>
               </>
             )}
@@ -339,7 +273,7 @@ function Header() {
             {/* Show login/signup for non-authenticated users */}
             {isAuthenticated === false && (
               <>
-                <li role="menuitem">
+                <li>
                   <Button
                     className="react-aria-Button primary"
                     onPress={() => router.push(routePath("app.login"))}
@@ -347,10 +281,10 @@ function Header() {
                     {t("btnLogin")}
                   </Button>
                 </li>
-                <li role="menuitem">
+                <li>
                   <Button
                     className="react-aria-Button secondary"
-                    onPress={() => router.push("/signup")}
+                    onPress={() => router.push(routePath("app.signup"))}
                   >
                     {t("btnSignup")}
                   </Button>
@@ -358,7 +292,7 @@ function Header() {
               </>
             )}
           </ul>
-        </div>
+        </nav>
 
         {/*Mobile */}
         <button
@@ -376,6 +310,7 @@ function Header() {
         <div
           id="mobile-navigation"
           className={`${styles.mobile} ${styles.mobileMenu} ${showMobileMenu ? styles.showMenu : ""}`}
+          inert={!showMobileMenu}
         >
           <button
             id="mobile-menu-close"
@@ -390,247 +325,114 @@ function Header() {
               alt="Close mobile menu"
             />
           </button>
-          <ul role="menubar">
-            {/* Show authenticated user items first when logged in */}
-            {isAuthenticated === true && (
-              <>
-                <li role="menuitem">
-                  <Link href={routePath("projects.index")}>{t("menuProjectsPlans")}</Link>
-                </li>
-                <li role="menuitem">
-                  <Link href={routePath("projects.create.start")}>{t("menuCreatePlan")}</Link>
-                </li>
-              </>
-            )}
-
-            {/* Always show public items */}
-            <li role="menuitem">
-              <Link
-                role="none"
-                href="/public_plans"
-              >
-                {t("menuPublicPlans")}
-              </Link>
-            </li>
-            <li role="menuitem">
-              <Link
-                role="none"
-                href="/public_templates"
-              >
-                {t("menuFunderRequirements")}
-              </Link>
-            </li>
-
-            <li role="menuitem">
-              <div className={styles.dropdown}>
-                <span>
-                  <Link href="#">{t("menuAbout")}</Link>
-                </span>
-                <ul className={styles.submenu}>
-                  <li role="menuitem">
-                    <Link
-                      role="none"
-                      href="/about_us"
-                    >
-                      {t("subMenuLearnMore")}
-                    </Link>
+          <nav aria-label={t("menuMainNavigation")}>
+            <ul>
+              {/* Show authenticated user items first when logged in */}
+              {isAuthenticated === true &&
+                visibleMainNavItems.map((item) => (
+                  <li key={item.labelKey}>
+                    <Link href={navItemHref(item)}>{renderLabel(item)}</Link>
                   </li>
-                  <li role="menuitem">
-                    <Link
-                      role="none"
-                      href="/join_us"
-                    >
-                      {t("subMenuMembership")}
-                    </Link>
-                  </li>
-                  <li role="menuitem">
-                    <Link
-                      role="none"
-                      href="/faq"
-                    >
-                      {t("subMenuFAQs")}
-                    </Link>
-                  </li>
-                  <li role="menuitem">
-                    <Link
-                      role="none"
-                      href="/editorial_board"
-                    >
-                      {t("subMenuEditorial")}
-                    </Link>
-                  </li>
-                  <li role="menuitem">
-                    <Link
-                      role="none"
-                      href="/promote"
-                    >
-                      {t("subMenuLogos")}
-                    </Link>
-                  </li>
-                </ul>
-              </div>
-            </li>
+                ))}
 
-            {/* Show authenticated user items */}
-            {isAuthenticated === true && (
-              <>
-                <li role="menuitem">
-                  <div className={styles.dropdown}>
-                    <span>
-                      <Link href="#">{t("menuAdmin")}</Link>
-                    </span>
-                    <ul className={styles.submenu}>
-                      <li role="menuitem">
-                        <Link
-                          role="none"
-                          href={routePath("admin.organizationDetails")}
-                        >
-                          {t("subMenuOrganisations")}
-                        </Link>
-                      </li>
-                      <li role="menuitem">
-                        <Link
-                          role="none"
-                          href={routePath("admin.users")}
-                        >
-                          {t("subMenuUsers")}
-                        </Link>
-                      </li>
-                      <li role="menuitem">
-                        <Link
-                          role="none"
-                          href={routePath("admin.projects")}
-                        >
-                          {t("subMenuPlans")}
-                        </Link>
-                      </li>
-                      <li role="menuitem">
-                        <Link
-                          role="none"
-                          href="/usage"
-                        >
-                          {t("subMenuUsage")}
-                        </Link>
-                      </li>
-                      <li role="menuitem">
-                        <Link
-                          role="none"
-                          href={routePath("admin.templates")}
-                        >
-                          {t("subMenuTemplates")}
-                        </Link>
-                      </li>
-                      <li role="menuitem">
-                        <Link
-                          role="none"
-                          href={routePath("admin.guidance.index")}
-                        >
-                          {t("subMenuGuidance")}
-                        </Link>
-                      </li>
-                      <li role="menuitem">
-                        <Link
-                          role="none"
-                          href="/super_admin/themes"
-                        >
-                          {t("subMenuThemes")}
-                        </Link>
-                      </li>
-                      <li role="menuitem">
-                        <Link
-                          role="none"
-                          href="/super_admin/api_clients"
-                        >
-                          {t("subMenuApiClients")}
-                        </Link>
-                      </li>
-                      <li role="menuitem">
-                        <Link
-                          role="none"
-                          href="/super_admin/api_logs"
-                        >
-                          {t("subMenuApiLogs")}
-                        </Link>
-                      </li>
-                      <li role="menuitem">
-                        <Link
-                          role="none"
-                          href={routePath("admin.notifications")}
-                        >
-                          {t("subMenuNotifications")}
-                        </Link>
-                      </li>
-                    </ul>
-                  </div>
+              {/* Always show public items */}
+              {publicNavItems.map((item) => (
+                <li key={item.labelKey}>
+                  <Link href={navItemHref(item)}>{renderLabel(item)}</Link>
                 </li>
+              ))}
 
-                <li role="menuitem">
-                  <div className={styles.dropdown}>
-                    <span>
-                      <Link href="#">{t("menuLanguage")}</Link>
-                    </span>
-                    <ul
-                      className={styles.submenu}
-                      role="menu"
+              <li>
+                <div className={styles.dropdown}>
+                  <span className={styles.submenuLabel}>{t("menuAbout")}</span>
+                  <ul className={styles.submenu}>
+                    {aboutNavItems.map((item) => (
+                      <li key={item.labelKey}>
+                        <Link href={navItemHref(item)}>{renderLabel(item)}</Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </li>
+
+              {/* Show authenticated user items */}
+              {isAuthenticated === true && (
+                <>
+                  {isAdminUser && (
+                    <li>
+                      <div className={styles.dropdown}>
+                        <span>
+                          <Link href={navItemHref(adminNavItem)}>{t("menuAdmin")}</Link>
+                        </span>
+                        <ul className={styles.submenu}>
+                          {adminNavItems.map((item) => (
+                            <li key={item.labelKey}>
+                              <Link href={navItemHref(item)}>{renderLabel(item, Admin)}</Link>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </li>
+                  )}
+
+                  <li>
+                    <div className={styles.dropdown}>
+                      <span>
+                        <Link href={navItemHref(accountNavItem)}>{t("menuAccount")}</Link>
+                      </span>
+                      <ul className={styles.submenu}>
+                        {accountNavItems.map((item) => (
+                          <li key={item.labelKey}>
+                            <Link href={navItemHref(item)}>{renderLabel(item, Account)}</Link>
+                          </li>
+                        ))}
+                        <li>
+                          <Button
+                            className="link"
+                            data-testid="logoutButtonMobile"
+                            onPress={handleLogout}
+                          >
+                            {t("btnLogout")}
+                          </Button>
+                        </li>
+                      </ul>
+                    </div>
+                  </li>
+
+                  <li>
+                    <TransitionLink
+                      href={navItemHref(createPlanNavItem)}
+                      className="button-link button--primary"
                     >
-                      <li role="menuitem">
-                        <Link
-                          role="none"
-                          rel="nofollow"
-                          data-method="patch"
-                          href="/locale/en-US"
-                        >
-                          {t("subMenuEnglish")}
-                        </Link>
-                      </li>
-                      <li role="menuitem">
-                        <Link
-                          role="none"
-                          rel="nofollow"
-                          data-method="patch"
-                          href="/locale/pt-BR"
-                        >
-                          {t("subMenuPortuguese")}
-                        </Link>
-                      </li>
-                    </ul>
-                  </div>
-                </li>
+                      {t(createPlanNavItem.labelKey)}
+                    </TransitionLink>
+                  </li>
+                </>
+              )}
 
-                <li role="menuitem">
-                  <Button
-                    className="react-aria-Button secondary"
-                    data-testid="logoutButtonMobile"
-                    onPress={handleLogout}
-                  >
-                    {t("btnLogout")}
-                  </Button>
-                </li>
-              </>
-            )}
-
-            {/* Show login/signup for non-authenticated users */}
-            {isAuthenticated === false && (
-              <>
-                <li role="menuitem">
-                  <Button
-                    className="react-aria-Button primary"
-                    onPress={() => router.push(routePath("app.login"))}
-                  >
-                    {t("btnLogin")}
-                  </Button>
-                </li>
-                <li role="menuitem">
-                  <Button
-                    className="react-aria-Button secondary"
-                    onPress={() => router.push("/signup")}
-                  >
-                    {t("btnSignup")}
-                  </Button>
-                </li>
-              </>
-            )}
-          </ul>
+              {/* Show login/signup for non-authenticated users */}
+              {isAuthenticated === false && (
+                <>
+                  <li>
+                    <Button
+                      className="react-aria-Button primary"
+                      onPress={() => router.push(routePath("app.login"))}
+                    >
+                      {t("btnLogin")}
+                    </Button>
+                  </li>
+                  <li>
+                    <Button
+                      className="react-aria-Button secondary"
+                      onPress={() => router.push(routePath("app.signup"))}
+                    >
+                      {t("btnSignup")}
+                    </Button>
+                  </li>
+                </>
+              )}
+            </ul>
+          </nav>
         </div>
       </div>
     </header>

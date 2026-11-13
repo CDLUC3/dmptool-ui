@@ -47,6 +47,15 @@ const routes = {
   "app.login": "/login",
   "app.signup": "/signup",
   "app.contact": "/contact",
+  "app.publicPlans": "/public-plans",
+  "app.funderRequirements": "/funder-requirements",
+  "app.about": "/about",
+  "app.membership": "/membership",
+  "app.faq": "/faq",
+  "app.editorialBoard": "/editorial-board",
+  "app.logos": "/logos",
+  "app.help": "/help",
+  "app.terms": "/terms",
 
   // DMP Landing page route
   "dmp.landing": "/dmps/:slug",

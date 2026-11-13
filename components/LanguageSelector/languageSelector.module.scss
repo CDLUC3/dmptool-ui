@@ -1,30 +1,35 @@
-.dmpui-dropdown-content {
-  display: none;
-  position: absolute;
-  right: 0;
-  list-style: none;
-  background-color: #54D8FF;
-  min-width: 240px;
-  box-shadow: 0px 8px 16px 0px #004EAA;
-  padding: 12px 16px;
-  z-index: 100;
+// Hover and focus colours come from the shared `.link` button styles (styles/form/_button.scss)
+.languageSelector {
+  display: flex;
+  align-items: center;
+  font-size: var(--fs-xsmall);
+  line-height: 1.5;
 }
 
-.dmpui-dropdown:hover .dmpui-dropdown-content {
-  display: block;
+.item {
+  padding: 0 var(--space-2);
+
+  &:last-child {
+    padding-right: 0;
+  }
+
+  & + & {
+    border-left: 1px solid var(--slate-300);
+  }
 }
 
-.btnLanguageSelector {
-  background: 'none';
-  border: 'none';
-  padding: 0;
-  text-align: 'left' ;
-}
-
-.paragraph {
+.current {
   color: var(--blue-900);
-  cursor: pointer;
-  display: block;
   font-weight: var(--fw-bold);
-  margin: 0 0 var(--space-2);
+}
+
+// `button` raises specificity above `.react-aria-Button.link`, which underlines at rest
+.languageSelector button.option {
+  font-weight: var(--fw-normal);
+  text-decoration: none;
+
+  &[data-hovered],
+  &[data-focus-visible] {
+    text-decoration: underline;
+  }
 }
