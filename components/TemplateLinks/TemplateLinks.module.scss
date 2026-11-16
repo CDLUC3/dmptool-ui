@@ -1,0 +1,127 @@
+.templateLinks {
+  margin-bottom: var(--space-5);
+
+  h3 {
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0 0 var(--space-1);
+  }
+
+  h4 {
+    font-size: var(--fs-base);
+    font-weight: 600;
+    margin: 0;
+  }
+}
+
+.description {
+  font-size: var(--fs-small);
+  margin: 0 0 var(--space-4);
+}
+
+.linkGroup {
+  margin-bottom: var(--space-4);
+}
+
+.groupHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+
+.count {
+  font-size: var(--fs-small);
+  color: var(--gray-600);
+  flex-shrink: 0;
+}
+
+.empty {
+  font-size: var(--fs-small);
+  color: var(--gray-600);
+  margin: 0 0 var(--space-2);
+}
+
+.cards {
+  list-style: none;
+  margin: 0 0 var(--space-2);
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: var(--space-3);
+  border-radius: var(--border-radius-md);
+  background-color: var(--gray-50);
+  padding: var(--space-2) var(--space-3);
+}
+
+.cardText {
+  display: block;
+  min-width: 0;
+}
+
+.linkText {
+  font-size: var(--fs-small);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.openLink {
+  // DmpIcon's CSS fills icons with var(--icon-fill, var(--text-color)), so set the
+  // variable to color the icon like the other links
+  --icon-fill: var(--link-color);
+  display: inline-flex;
+  flex-shrink: 0;
+  margin-inline-start: var(--space-1);
+  vertical-align: middle;
+
+  &:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+    border-radius: var(--border-radius-sm);
+  }
+}
+
+.cardActions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-top: 0;
+  font-size: var(--fs-small);
+  white-space: nowrap;
+
+  // Nested under .cardActions so these win over the global button and .link colors
+  .editButton {
+    color: var(--text-color);
+  }
+
+  .removeButton {
+    color: var(--brand-error);
+  }
+
+  .editButton,
+  .removeButton {
+    &[data-hovered],
+    &[data-focus-visible] {
+      text-decoration: underline;
+    }
+
+    &[data-disabled] {
+      opacity: 0.6;
+    }
+  }
+}
+
+// The "+ Add" link sits in a panelRow so it gets the shared sidebar link styles.
+// The group already provides the spacing, so drop the panelRow's bottom margin
+// (this selector is more specific than `.side-panel .panelRow` in globals.scss)
+.templateLinks .linkGroup :global(.panelRow) {
+  margin-bottom: 0;
+}
