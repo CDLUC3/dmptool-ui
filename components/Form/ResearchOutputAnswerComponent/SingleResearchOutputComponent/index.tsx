@@ -421,7 +421,7 @@ const SingleResearchOutputComponent = ({
         firstInvalidFieldRef={firstInvalidFieldRef}
       />
       {columns.map((col, colIndex) => {
-        const value = currentRow ? currentRow.columns[colIndex].answer : '';
+        const value = currentRow?.columns[colIndex]?.answer ?? '';
         const name = col.heading.replace(/\s+/g, '_').toLowerCase();
         const fieldError = errors[`col-${colIndex}`];
         const translatedLabel = getTranslatedLabel(col);
@@ -988,7 +988,7 @@ const SingleResearchOutputComponent = ({
         <div className={styles.btnContainer}>
           {(!isNewEntry || hasOtherRows) && onCancel && (
             <Button
-              className={`${styles.editBtn} small secondary`}
+              className="secondary small"
               onPress={handleCancelClick}
               isDisabled={isDisabled}
             >

@@ -6,7 +6,7 @@ import createMiddleware from 'next-intl/middleware';
 import { routing } from './i18n/routing';
 import { verifyJwtToken } from './lib/server/auth';
 import logECS from '@/utils/clientLogger';
-import { ACCESS_TOKEN_NAME, REFRESH_TOKEN_NAME, refreshAuthTokens, SSO_PENDING_TOKEN_NAME } from "@/utils/authHelper";
+import { ACCESS_TOKEN_NAME, REFRESH_TOKEN_NAME, refreshAuthTokens } from "@/utils/authHelper";
 import { locales, defaultLocale } from './config/i18nConfig';
 
 interface JWTAccessToken extends JwtPayload {
@@ -33,6 +33,16 @@ const excludedPaths = [
   "/dmps",
   "/healthcheck",
 ];
+
+// Check if the first path segment (after any locale prefix) is an excluded path. Matching whole
+// segments prevents e.g. "/email" from also excluding "/admin/email-preferences"
+function isExcludedPath(pathname: string): boolean {
+  const segments = pathname.split("/").filter(Boolean);
+  if (segments.length > 0 && locales.includes(segments[0])) {
+    segments.shift();
+  }
+  return excludedPaths.includes(`/${segments[0] ?? ""}`);
+}
 
 // Check if the request is for a server action
 function isServerAction(request: NextRequest): boolean {
@@ -102,7 +112,7 @@ export async function proxy(request: NextRequest) {
    login to the original page they were trying to get to.*/
 
   // Exclude paths from authentication checks
-  const isExcludedPath = excludedPaths.some((path) => pathname.includes(path));
+  const isExcluded = isExcludedPath(pathname);
 
   // Also exclude server actions from authentication middleware
   const isServerActionRequest = isServerAction(request);
@@ -115,12 +125,6 @@ export async function proxy(request: NextRequest) {
 
   const accessToken = request.cookies.get(ACCESS_TOKEN_NAME);
   const refreshToken = request.cookies.get(REFRESH_TOKEN_NAME);
-  // TODO: We need to implement SSO soon, so leaving this here for now. The SSO_PENDING_TOKEN_NAME is used to store a
-  //       temporary token in the browser when a user successfully signs in via SSO but they do not yet have an account
-  //       in the DMPTool. This token is used to help create a new account for the user after they fill out the account
-  //       creation form. Once the account is created, the SSO_PENDING_TOKEN_NAME is deleted from the browser.
-  // eslint-disable-next-line unused-imports/no-unused-vars, @typescript-eslint/no-unused-vars
-  const ssoPendingToken = request.cookies.get(SSO_PENDING_TOKEN_NAME);
 
   const jwtResult = await getLocaleFromJWT(accessToken?.value);
 
@@ -137,7 +141,7 @@ export async function proxy(request: NextRequest) {
   const locale = urlLocale ?? (await getLocale(request, jwtResult));
 
   // Redirect to login if no tokens are found
-  if (!isExcludedPath && !isServerActionRequest) {
+  if (!isExcluded && !isServerActionRequest) {
     if (!accessToken && !refreshToken) {
       return NextResponse.redirect(new URL(`/${locale}/login`, request.url));
     }

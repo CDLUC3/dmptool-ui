@@ -23,6 +23,13 @@
   }
 }
 
+.requirementLabel {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #34343f;
+}
+
 .questionRequirement {
   max-width: 48rem;
   font-size: 0.8125rem;
@@ -54,15 +61,52 @@
   flex-shrink: 0;
 }
 
-.requiredBadge {
+.notAnsweredIcon {
+  display: inline-flex;
+  color: #8a8a94;
+  flex-shrink: 0;
+}
+
+.requiredRow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+/* The badge is the popover trigger; the extra class outranks the global `button` rules. */
+.requiredRow button.requiredBadge {
+  position: static;
   display: inline-flex;
   width: fit-content;
   align-items: center;
   gap: 0.35rem;
+  margin: 0;
   padding: 0.125rem 0.45rem;
+  border: 0;
   border-radius: 0.25rem;
+  appearance: none;
   background: #fff3df;
   color: #985a16;
+  font: inherit;
   font-size: 0.6875rem;
   font-weight: 500;
+  line-height: 1.5;
+  text-align: start;
+  cursor: pointer;
+  transition: none;
+  box-shadow: none;
+  text-decoration: none;
+
+  &:hover,
+  &[data-hovered],
+  &[data-pressed] {
+    background: #ffe7c2;
+    color: #985a16;
+  }
+
+  &:focus-visible,
+  &[data-focus-visible] {
+    outline: 2px solid var(--blue-900);
+    outline-offset: 2px;
+  }
 }

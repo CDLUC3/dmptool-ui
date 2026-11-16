@@ -130,6 +130,8 @@
       "orgOnlyHelpText": "Only plan writers from your organization will be able to view and use this template."
     },
     "descPublishedTemplate": "You can control who can use this published template.",
+    "lastPublishedVisibility": "Version {version} was published on {date} with <strong>{visibility}</strong> visibility.",
+    "unpublishedChangesSinceLastPublish": "It has changes since then that haven't been published yet.",
     "bullet": {
       "publishingTemplate": "After publication, all new plans will use this version.",
       "publishingTemplate2": "In-progress or existing plans will not be updated.",
@@ -144,7 +146,8 @@
     },
     "messages": {
       "errors": {
-        "selectVisibilityError": "Please select a visibility option before publishing."
+        "selectVisibilityError": "Please select a visibility option before publishing.",
+        "changeLogRequiredError": "A change log is required. Please describe what has changed in this version before publishing."
       }
     }
   },
@@ -441,10 +444,14 @@
       "guidanceText": "Question guidance (optional but recommended)",
       "sampleText": "Sample text",
       "comment": "Additional comment",
-      "bestPracticeTags": "Question Best Practices to include"
+      "bestPracticeTags": "Question Best Practices to include",
+      "editResearchOutput": "Edit {title}",
+      "viewResearchOutput": "View {title}",
+      "deleteResearchOutput": "Delete {title}"
     },
     "messages": {
-      "areYouSureYouWantToDelete": "Are you sure you want to delete this research output?",
+      "areYouSureYouWantToDelete": "Are you sure you want to delete {title}?",
+      "untitledResearchOutput": "Untitled Research Output",
       "errors": {
         "questionTextRequired": "Question text field is required.",
         "questionUpdateError": "Error when updating question",
@@ -467,7 +474,8 @@
       "deleteQuestion": "Delete question",
       "confirmDelete": "Confirm delete",
       "addResearchOutput": "Add Research Output",
-      "editResearchOutput": "Edit Research Output"
+      "editResearchOutput": "Edit Research Output",
+      "viewResearchOutput": "View Research Output"
     },
     "definitions": {
       "type": "Type",
@@ -491,13 +499,11 @@
       "headings": {
         "options": "Options",
         "logic": "Display Logic",
-        "confirmClearDisplayLogic": "Clear all display logic?",
-        "confirmMatchTypeChange": "Change match type?"
+        "confirmClearDisplayLogic": "Clear all display logic?"
       },
       "descriptions": {
         "displayLogic": "Configure display logic to show or hide this question based on how users answered previous multiple choice or checkbox questions. Add one or more conditions to determine when this question appears.",
-        "clearDisplayLogicWarning": "This will clear all your saved conditions for this question. This action cannot be undone.",
-        "matchTypeChangeWarning": "Switching the match type may clear some of your conditions if your existing conditions conflict with each other and will be removed."
+        "clearDisplayLogicWarning": "This will clear all your saved conditions for this question. This action cannot be undone."
       },
       "buttons": {
         "addDisplayLogic": "Add display logic",
@@ -524,7 +530,9 @@
         "ofTheFollowingMatch": "of the following conditions are met",
         "triggerQuestion": "The answer to this question",
         "conditionOption": "condition option",
-        "conditionOperator": "Condition operator"
+        "conditionOperator": "Condition operator",
+        "joinerAnd": "AND",
+        "joinerOr": "OR"
       },
       "helpText": {
         "noTriggerQuestionsAvailable": "No qualifying questions are available to use as a trigger for display logic."
@@ -534,9 +542,7 @@
           "triggerQuestionUnavailable": "This trigger question is not available."
         },
         "blockingTriggerQuestion": "This trigger question is blocking a change you tried to make. Remove this condition to continue.",
-        "removedUnavailableTriggerQuestions": "Some display logic was removed because a question it depended on is no longer available.",
-        "allMatchTypeRule": "When match type is All, each condition in a group must use a different option value.",
-        "anyMatchTypeRule": "When match type is Any, each condition in a group must be unique (no duplicate operator + option pairs)."
+        "removedUnavailableTriggerQuestions": "Some display logic was removed because a question it depended on is no longer available."
       }
     }
   },
@@ -651,7 +657,8 @@
       "success": {
         "questionAdded": "Question was successfully added.",
         "questionUpdated": "Question was successfully updated."
-      }
+      },
+      "displayLogicAfterSave": "Display logic can be added once this question has been saved."
     },
     "researchOutput": {
       "announcements": {

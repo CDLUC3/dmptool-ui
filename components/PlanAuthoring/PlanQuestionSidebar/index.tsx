@@ -2,7 +2,6 @@
 
 import React, {
   useCallback,
-  useEffect,
   useId,
   useLayoutEffect,
   useMemo,
@@ -13,37 +12,48 @@ import { useTranslations } from "next-intl";
 import { Button } from "react-aria-components";
 import { DmpIcon } from "@/components/Icons";
 import SafeHtml from "@/components/SafeHtml";
+import { GuidanceSourceType } from "@/generated/graphql";
 import type { PlanComment, PlanGuidanceSource } from "../model";
 import PlanGuidanceTabs from "../PlanGuidanceTabs";
 import PlanComments from "../PlanComments";
 import { usePlanComments } from "../usePlanComments";
 import styles from "./PlanQuestionSidebar.module.scss";
 
+const DEFAULT_GUIDANCE_PRIORITY = [
+  GuidanceSourceType.UserAffiliation,
+  GuidanceSourceType.TemplateOwner,
+];
+
+function defaultGuidanceSource(sources: PlanGuidanceSource[]): PlanGuidanceSource | null {
+  for (const type of DEFAULT_GUIDANCE_PRIORITY) {
+    const match = sources.find((source) => source.type === type);
+    if (match) {
+      return match;
+    }
+  }
+  return sources[0] ?? null;
+}
+
 interface PlanQuestionSidebarProps {
+  /** Joined into the label so each question's sidebar is named uniquely. */
+  questionTitleId: string;
   sources: PlanGuidanceSource[];
   comments: PlanComment[];
   canCustomize: boolean;
   canComment: boolean;
-  currentUserId: number;
-  canModerateComments: boolean;
-  loadGuidance: () => Promise<PlanGuidanceSource[]>;
-  loadComments: () => Promise<PlanComment[]>;
-  onAddComment: (text: string) => Promise<void>;
-  onUpdateComment: (commentId: number, text: string) => Promise<PlanComment>;
-  onDeleteComment: (commentId: number) => Promise<void>;
+  onAddComment: (text: string) => Promise<unknown>;
+  onUpdateComment: (commentId: string, text: string) => Promise<PlanComment>;
+  onDeleteComment: (commentId: string) => Promise<void>;
   onCustomize: () => void;
   className?: string;
 }
 
 export default function PlanQuestionSidebar({
+  questionTitleId,
   sources,
   comments,
   canCustomize,
   canComment,
-  currentUserId,
-  canModerateComments,
-  loadGuidance,
-  loadComments,
   onAddComment,
   onUpdateComment,
   onDeleteComment,
@@ -52,33 +62,19 @@ export default function PlanQuestionSidebar({
 }: PlanQuestionSidebarProps) {
   const t = useTranslations("PlanAuthoring");
   const commentsPanelId = useId();
-  const [selectedId, setSelectedId] = useState<string | null>(
-    sources[0]?.id ?? null
-  );
-  const [loadedSources, setLoadedSources] = useState<PlanGuidanceSource[] | null>(
-    null
-  );
-  const [loadedComments, setLoadedComments] = useState<PlanComment[] | null>(
-    null
-  );
-  const [loadingGuidance, setLoadingGuidance] = useState(false);
-  const [loadingComments, setLoadingComments] = useState(false);
+  const labelId = useId();
+  const [pickedId, setPickedId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"guidance" | "comments">("guidance");
   const [showGuidanceScrollFade, setShowGuidanceScrollFade] = useState(false);
   const guidancePanelRef = useRef<HTMLDivElement | null>(null);
 
-  useEffect(() => {
-    setSelectedId(sources[0]?.id ?? null);
-    setLoadedSources(null);
-    setLoadedComments(null);
-    setActiveTab("guidance");
-  }, [sources]);
-
-  const visibleSources = loadedSources ?? sources;
   const selectedSource = useMemo(
-    () => visibleSources.find((source) => source.id === selectedId) ?? null,
-    [selectedId, visibleSources]
+    () =>
+      sources.find((source) => source.id === pickedId) ??
+      defaultGuidanceSource(sources),
+    [pickedId, sources]
   );
+  const selectedId = selectedSource?.id ?? null;
 
   const updateGuidanceScrollFade = useCallback(() => {
     const panel = guidancePanelRef.current;
@@ -116,72 +112,42 @@ export default function PlanQuestionSidebar({
     };
   }, [
     activeTab,
-    loadingGuidance,
     selectedSource?.id,
     selectedSource?.bodyHtml,
     updateGuidanceScrollFade,
   ]);
 
-  const visibleComments = loadedComments ?? comments;
-  const unreadCount = comments.length;
   const commentsExpanded = activeTab === "comments";
-
-  const refreshComments = useCallback(async () => {
-    setLoadedComments(await loadComments());
-  }, [loadComments]);
-
-  const handleUpdateComment = useCallback(
-    async (commentId: number, text: string) => {
-      const updated = await onUpdateComment(commentId, text);
-      await refreshComments();
-      return updated;
-    },
-    [onUpdateComment, refreshComments]
-  );
-
-  const handleDeleteComment = useCallback(
-    async (commentId: number) => {
-      await onDeleteComment(commentId);
-      await refreshComments();
-    },
-    [onDeleteComment, refreshComments]
-  );
 
   const {
     localComments,
     editingCommentId,
     editingCommentText,
     setEditingCommentText,
+    mutationError,
     handleEditComment,
     handleUpdateComment: commitUpdateComment,
     handleCancelEdit,
     handleDeleteComment: commitDeleteComment,
-  } = usePlanComments({
-    comments: visibleComments,
-    onUpdateComment: handleUpdateComment,
-    onDeleteComment: handleDeleteComment,
-  });
+  } = usePlanComments({ comments, onUpdateComment, onDeleteComment });
 
   return (
-    <aside
+    <div
       className={[styles.questionSidebar, className].filter(Boolean).join(" ")}
-      aria-label={t("sidebar.ariaLabel")}
+      role="group"
+      aria-labelledby={`${labelId} ${questionTitleId}`}
+      data-comments-expanded={commentsExpanded}
     >
+      <span id={labelId} hidden>
+        {t("sidebar.ariaLabel")}
+      </span>
       <div className={styles.sidebarInner}>
         <PlanGuidanceTabs
-          sources={visibleSources}
+          sources={sources}
           selectedId={activeTab === "guidance" ? selectedId : null}
-          onSelect={async (id) => {
+          onSelect={(id) => {
             setActiveTab("guidance");
-            setSelectedId(id);
-            if (!loadedSources) {
-              setLoadingGuidance(true);
-              try {
-                setLoadedSources(await loadGuidance());
-              } finally {
-                setLoadingGuidance(false);
-              }
-            }
+            setPickedId(id);
           }}
           onCustomize={onCustomize}
           canCustomize={canCustomize}
@@ -193,10 +159,8 @@ export default function PlanQuestionSidebar({
               ref={guidancePanelRef}
               className={styles.guidancePanel}
             >
-              {loadingGuidance ? <p>{t("sidebar.loadingGuidance")}</p> : null}
               {selectedSource ? (
                 <>
-                  <p className={styles.eyebrow}>{t("sidebar.funderGuidance")}</p>
                   <h4>{selectedSource.label}</h4>
                   <SafeHtml
                     html={selectedSource.bodyHtml}
@@ -218,15 +182,14 @@ export default function PlanQuestionSidebar({
 
         <div
           id={commentsPanelId}
+          className={styles.commentsPanel}
           hidden={!commentsExpanded}
         >
           {commentsExpanded ? (
             <PlanComments
               comments={localComments}
               canAdd={canComment}
-              currentUserId={currentUserId}
-              canModerateComments={canModerateComments}
-              loading={loadingComments}
+              mutationError={mutationError}
               editingCommentId={editingCommentId}
               editingCommentText={editingCommentText}
               setEditingCommentText={setEditingCommentText}
@@ -234,10 +197,7 @@ export default function PlanQuestionSidebar({
               handleUpdateComment={commitUpdateComment}
               handleCancelEdit={handleCancelEdit}
               handleDeleteComment={commitDeleteComment}
-              onAdd={async (text) => {
-                await onAddComment(text);
-                await refreshComments();
-              }}
+              onAdd={onAddComment}
             />
           ) : null}
         </div>
@@ -248,20 +208,12 @@ export default function PlanQuestionSidebar({
         data-selected={commentsExpanded}
         aria-expanded={commentsExpanded}
         aria-controls={commentsPanelId}
-        onPress={async () => {
+        onPress={() => {
           if (commentsExpanded) {
             setActiveTab("guidance");
             return;
           }
           setActiveTab("comments");
-          if (!loadedComments) {
-            setLoadingComments(true);
-            try {
-              setLoadedComments(await loadComments());
-            } finally {
-              setLoadingComments(false);
-            }
-          }
         }}
       >
         <span className={styles.commentsTabLabel}>
@@ -275,12 +227,12 @@ export default function PlanQuestionSidebar({
             ? t("sidebar.hideComments")
             : t("sidebar.showComments")}
         </span>
-        {unreadCount ? (
+        {comments.length ? (
           <span className={styles.commentsCount}>
-            {t("sidebar.newCount", { count: unreadCount })}
+            {t("sidebar.commentCount", { count: comments.length })}
           </span>
         ) : null}
       </Button>
-    </aside>
+    </div>
   );
 }

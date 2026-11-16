@@ -1,39 +1,31 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Button, Form, TextArea } from "react-aria-components";
 import type { PlanComment } from "../model";
+import type { PlanCommentMutationError } from "../usePlanComments";
 import styles from "./PlanComments.module.scss";
 
-/**
- * Presentational comments list + composer.
- * Edit/delete UX mirrors components/Comments/CommentList.tsx so a later
- * migration can swap PlanComment ↔ MergedComment and wire useComments handlers.
- */
 interface PlanCommentsProps {
   comments: PlanComment[];
   canAdd: boolean;
-  currentUserId: number;
-  canModerateComments: boolean;
-  loading?: boolean;
-  editingCommentId: number | null;
+  mutationError?: PlanCommentMutationError | null;
+  editingCommentId: string | null;
   editingCommentText: string;
   setEditingCommentText: (text: string) => void;
   handleEditComment: (comment: PlanComment) => void;
   handleUpdateComment: (comment: PlanComment) => void;
   handleCancelEdit: () => void;
   handleDeleteComment: (comment: PlanComment) => void;
-  onAdd: (text: string) => Promise<void>;
+  onAdd: (text: string) => Promise<unknown>;
   className?: string;
 }
 
 export default function PlanComments({
   comments,
   canAdd,
-  currentUserId,
-  canModerateComments,
-  loading = false,
+  mutationError = null,
   editingCommentId,
   editingCommentText,
   setEditingCommentText,
@@ -48,6 +40,12 @@ export default function PlanComments({
   const Global = useTranslations("Global");
   const [text, setText] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [addFailed, setAddFailed] = useState(false);
+  const editTextAreaRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    editTextAreaRef.current?.focus({ preventScroll: true });
+  }, [editingCommentId]);
 
   const updateCommentHandler = (comment: PlanComment) => {
     if (!editingCommentText.trim()) {
@@ -58,11 +56,16 @@ export default function PlanComments({
 
   return (
     <div className={[styles.comments, className].filter(Boolean).join(" ")}>
-      {loading ? (
-        <p className={styles.commentsEmpty}>{t("comments.loading")}</p>
-      ) : null}
-      {!loading && comments.length === 0 ? (
+      {comments.length === 0 ? (
         <p className={styles.commentsEmpty}>{t("comments.empty")}</p>
+      ) : null}
+      {mutationError ? (
+        <p
+          className={styles.commentsError}
+          role="alert"
+        >
+          {t(`comments.${mutationError}`)}
+        </p>
       ) : null}
       <div
         className={styles.commentsList}
@@ -71,8 +74,6 @@ export default function PlanComments({
       >
         {comments.map((comment) => {
           const isEditing = editingCommentId === comment.id;
-          const isOwn = comment.authorId === currentUserId;
-          const canDelete = isOwn || canModerateComments;
 
           return (
             <div
@@ -104,18 +105,14 @@ export default function PlanComments({
                     setEditingCommentText(event.target.value)
                   }
                   rows={3}
-                  ref={(el) => {
-                    if (el) {
-                      el.focus({ preventScroll: true });
-                    }
-                  }}
+                  ref={editTextAreaRef}
                   aria-label={t("comments.editAria")}
                 />
               ) : (
                 <p className={styles.commentBody}>{comment.text}</p>
               )}
 
-              {isEditing || isOwn || canDelete ? (
+              {isEditing || comment.canEdit || comment.canDelete ? (
                 <div className={styles.buttonGroup}>
                   {isEditing ? (
                     <>
@@ -136,7 +133,7 @@ export default function PlanComments({
                     </>
                   ) : (
                     <>
-                      {isOwn ? (
+                      {comment.canEdit ? (
                         <button
                           type="button"
                           className={styles.actionLink}
@@ -145,7 +142,7 @@ export default function PlanComments({
                           {Global("buttons.edit")}
                         </button>
                       ) : null}
-                      {canDelete ? (
+                      {comment.canDelete ? (
                         <button
                           type="button"
                           className={styles.actionLink}
@@ -170,9 +167,13 @@ export default function PlanComments({
             return;
           }
           setSubmitting(true);
+          setAddFailed(false);
           try {
             await onAdd(text.trim());
             setText("");
+          } catch (error) {
+            console.error("Failed to add plan comment", error);
+            setAddFailed(true);
           } finally {
             setSubmitting(false);
           }
@@ -198,6 +199,14 @@ export default function PlanComments({
             </div>
           )}
         </div>
+        {addFailed ? (
+          <p
+            className={styles.commentsError}
+            role="alert"
+          >
+            {t("comments.addFailed")}
+          </p>
+        ) : null}
         <div className={styles.commentComposerActions}>
           <Button
             type="submit"

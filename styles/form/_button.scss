@@ -453,7 +453,8 @@ a.button-link.tertiary,
 }
 
 // Button size styles
-button.small {
+button.small,
+.react-aria-Button.small {
   padding: 6px 16px;
   border-radius: 0.5rem;
   font-size: 0.75rem;

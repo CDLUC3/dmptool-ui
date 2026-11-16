@@ -43,7 +43,7 @@ const ResetPassword: React.FC = () => {
   }
 
   //Localization
-  const t = useTranslations('LoginPage.resetPassword');
+  const t = useTranslations('AuthPage.resetPassword');
   const Global = useTranslations('Global');
 
   //States

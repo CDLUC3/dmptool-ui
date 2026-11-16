@@ -1,6 +1,5 @@
 import { ReactNode } from "react";
 import {
-  PlanSectionProgress,
   TemplateVisibility,
   PlanFeedback,
   ProjectFundingStatus,
@@ -467,7 +466,6 @@ export interface PlanOverviewInterface {
   funderName: string;
   primaryContact: string;
   members: PlanMember[];
-  versionedSections: PlanSectionProgress[];
   percentageAnswered: number;
   affiliationName?: string;
   sourceTemplate?: string;

@@ -1,5 +1,5 @@
 import { getRequestConfig } from 'next-intl/server';
-import deepmerge from 'deepmerge';
+import { mergeMessages } from '@/utils/mergeMessages';
 import { routing } from './routing';
 
 export default getRequestConfig(async ({ requestLocale }) => {
@@ -21,8 +21,7 @@ export default getRequestConfig(async ({ requestLocale }) => {
   // Load messages for a specific locale
   const loadMessages = async (localeToLoad: AllowedLocale) => {
     const mainMessages = (await import(`@/messages/${localeToLoad}/global.json`)).default;
-    const loginPageMessages = (await import(`@/messages/${localeToLoad}/loginPage.json`)).default;
-    const signupPageMessages = (await import(`@/messages/${localeToLoad}/signupPage.json`)).default;
+    const authPageMessages = (await import(`@/messages/${localeToLoad}/authPage.json`)).default;
     const templateMessages = (await import(`@/messages/${localeToLoad}/templateBuilder.json`)).default;
     const planBuilderProjectOverviewMessages = (await import(`@/messages/${localeToLoad}/planBuilderProjectOverview.json`)).default;
     const planBuilderPlanOverviewMessages = (await import(`@/messages/${localeToLoad}/planBuilderPlanOverview.json`)).default;
@@ -37,8 +36,7 @@ export default getRequestConfig(async ({ requestLocale }) => {
     // Merge all message objects
     return {
       ...mainMessages,
-      ...loginPageMessages,
-      ...signupPageMessages,
+      ...authPageMessages,
       ...templateMessages,
       ...messaging,
       ...planBuilderProjectOverviewMessages,
@@ -61,7 +59,7 @@ export default getRequestConfig(async ({ requestLocale }) => {
   if (locale !== fallbackLocale && ['en-US', 'pt-BR'].includes(locale)) {
     const localeMessages = await loadMessages(locale as AllowedLocale);  // Cast locale as AllowedLocale
     // Merge fallback messages with locale messages, prioritizing the locale messages
-    messages = deepmerge(fallbackMessages, localeMessages);
+    messages = mergeMessages(fallbackMessages, localeMessages);
   }
 
   return {

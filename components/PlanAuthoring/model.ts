@@ -1,3 +1,5 @@
+import type { GuidanceSourceType } from "@/generated/graphql";
+
 export type PlanSectionIdentity =
   | { kind: "base"; versionedSectionId: number }
   | { kind: "custom"; customSectionId: number };
@@ -6,14 +8,13 @@ export type PlanQuestionIdentity =
   | { kind: "base"; versionedQuestionId: number }
   | { kind: "custom"; customQuestionId: number };
 
-export type PlanQuestionMode = "view" | "editing";
-
 export type PlanQuestionSaveState =
-  | "clean"
-  | "dirty"
-  | "saving"
-  | "saved"
-  | "error";
+  | { status: "clean" }
+  | { status: "dirty" }
+  | { status: "saving" }
+  | { status: "saved" }
+  | { status: "invalid"; messages: string[] }
+  | { status: "failed"; message?: string };
 
 export interface PlanCapabilities {
   canEditAnswers: boolean;
@@ -21,14 +22,13 @@ export interface PlanCapabilities {
   /** Plan owners / moderators can delete any comment (mirrors planOwners in useComments). */
   canModerateComments: boolean;
   canCustomizeGuidance: boolean;
-  canPublish: boolean;
 }
 
 export interface PlanGuidanceSource {
   id: string;
+  type: GuidanceSourceType;
   label: string;
   shortName: string;
-  orgURI?: string;
   locked?: boolean;
   bodyHtml: string;
 }
@@ -37,34 +37,43 @@ export interface PlanGuidanceOrgOption {
   id: string;
   label: string;
   shortName: string;
-  orgURI: string;
 }
 
 export interface PlanComment {
-  id: number;
-  /** Author user id — compared to currentUserId for edit/delete (mirrors MergedComment.user.id). */
+  /** Opaque key; answer and feedback comment ids come from separate tables and can collide. */
+  id: string;
   authorId: number;
   authorName: string;
   createdLabel: string;
   text: string;
   isFeedback?: boolean;
+  canEdit: boolean;
+  canDelete: boolean;
   /** True when modified differs from created (mirrors CommentList edited indicator). */
   isEdited?: boolean;
 }
+
+export type PlanQuestionJsonError = "missing" | "parseFailed" | "unexpectedFormat";
 
 export interface PlanQuestionDefinition {
   identity: PlanQuestionIdentity;
   sectionIdentity: PlanSectionIdentity;
   title: string;
   requirementHtml?: string;
+  requirementOrgLabel?: string;
   required: boolean;
   questionType: string;
   parsedJson: Record<string, unknown>;
+  /** Set when the question JSON can't be rendered; parsedJson is then empty. */
+  jsonError?: PlanQuestionJsonError;
   answerJson: unknown | null;
   hasAnswer: boolean;
+  /** Hidden by the question's display logic, based on the plan's saved answers. */
+  isHidden?: boolean;
+  /** Epoch milliseconds. */
+  lastSavedAt?: number;
   guidanceSources: PlanGuidanceSource[];
   comments: PlanComment[];
-  displayOrder: number;
   sampleText?: string | null;
   customizationSampleText?: string | null;
   useSampleTextAsDefault?: boolean;
@@ -77,7 +86,6 @@ export interface PlanSectionDefinition {
   title: string;
   introductionHtml?: string;
   requirementsHtml?: string;
-  displayOrder: number;
   questions: PlanQuestionDefinition[];
 }
 
@@ -105,10 +113,6 @@ export interface PlanAuthoringModel {
   templateVersion: string;
   funderName: string;
   membersLabel: string;
-  relatedWorksLabel: string;
-  /** Signed-in user id — mirrors me.me.id for comment ownership checks. */
-  currentUserId: number;
-  currentUserName: string;
   progress: PlanAuthoringProgress;
   capabilities: PlanCapabilities;
   sections: PlanSectionDefinition[];
@@ -136,16 +140,23 @@ export function questionAnchorId(identity: PlanQuestionIdentity): string {
   return `plan-question-${questionKey(identity)}`;
 }
 
+/** Hidden questions aren't displayed or counted toward progress; their answers are kept. */
+export function visibleQuestions(
+  section: PlanSectionDefinition
+): PlanQuestionDefinition[] {
+  return section.questions.filter((question) => !question.isHidden);
+}
+
 export function computeProgress(
   sections: PlanSectionDefinition[]
 ): PlanAuthoringProgress {
   const totalQuestions = sections.reduce(
-    (sum, section) => sum + section.questions.length,
+    (sum, section) => sum + visibleQuestions(section).length,
     0
   );
   const answeredQuestions = sections.reduce(
     (sum, section) =>
-      sum + section.questions.filter((question) => question.hasAnswer).length,
+      sum + visibleQuestions(section).filter((question) => question.hasAnswer).length,
     0
   );
   const percentComplete =

@@ -306,6 +306,7 @@ const QuestionTypeSelectPage: React.FC = () => {
             breadcrumbs={<TemplateQuestionBreadcrumbs templateId={templateId} sectionId={sectionId} Global={Global} />}
             backUrl={routePath('template.q.new', { templateId }, { section_id: sectionId, step: 1 })}
             successUrl={routePath('template.show', { templateId })}
+            showDisplayLogicAfterSaveMessage
             onSave={async (commonFields) => {
               const input = {
                 templateId: Number(templateId),

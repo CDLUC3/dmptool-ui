@@ -66,6 +66,17 @@ import {
 
 import styles from "./guidanceGroupIndex.module.scss";
 
+const AUTOSAVE_DELAY_MS = 3000;
+const MINUTE_MS = 60 * 1000;
+
+interface GuidanceSaveStatus {
+  isDirty: boolean;
+  isSaving: boolean;
+  lastSavedAt: Date | null;
+}
+
+const EMPTY_SAVE_STATUS: GuidanceSaveStatus = { isDirty: false, isSaving: false, lastSavedAt: null };
+
 const GuidanceGroupIndexPage: React.FC = () => {
   const params = useParams();
   const router = useRouter();
@@ -81,11 +92,24 @@ const GuidanceGroupIndexPage: React.FC = () => {
   const [guidanceGroup, setGuidanceGroup] = useState<GuidanceGroup>();
   const [guidanceTexts, setGuidanceTexts] = useState<GuidanceText[]>([]);
   const [tagGuidanceList, setTagGuidanceList] = useState<TagGuidanceItem[]>([]);
-  const [savingGuidanceId, setSavingGuidanceId] = useState<string | null>(null);
   // State for error messages
   const [errorMessages, setErrorMessages] = useState<string[]>([]);
-  // Track whether there are unsaved changes
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState<boolean>(false);
+  // Per-tag autosave status (unsaved, saving, last saved)
+  const [saveStatusByTag, setSaveStatusByTag] = useState<Record<number, GuidanceSaveStatus>>({});
+  // Used to refresh the "Last saved X minutes ago" text
+  const [currentTime, setCurrentTime] = useState<Date>(new Date());
+
+  // Refs so autosave timers and window listeners always see the latest data
+  const tagGuidanceListRef = useRef<TagGuidanceItem[]>([]);
+  const savedTextByTagRef = useRef<Record<number, string>>({});
+  const autoSaveTimeoutsRef = useRef<Map<number, ReturnType<typeof setTimeout>>>(new Map());
+  const inFlightSavesRef = useRef<Map<number, Promise<void>>>(new Map());
+  const saveGuidanceRef = useRef<(tagId: number, isAutoSave?: boolean) => Promise<void>>(async () => { });
+  const hasUnsavedChangesRef = useRef<boolean>(false);
+  const historyGuardAddedRef = useRef<boolean>(false);
+  const skipUnloadWarningRef = useRef<boolean>(false);
+
+  const hasUnsavedChanges = Object.values(saveStatusByTag).some(s => s.isDirty || s.isSaving);
 
   // For translations
   const t = useTranslations("Guidance");
@@ -130,8 +154,61 @@ const GuidanceGroupIndexPage: React.FC = () => {
     fetchPolicy: "cache-and-network",
   });
 
+  const updateSaveStatus = useCallback((tagId: number, changes: Partial<GuidanceSaveStatus>) => {
+    setSaveStatusByTag(prev => ({
+      ...prev,
+      [tagId]: { ...EMPTY_SAVE_STATUS, ...prev[tagId], ...changes },
+    }));
+  }, []);
+
+  const getCurrentText = (tagId: number) =>
+    tagGuidanceListRef.current.find(item => item.tag.id === tagId)?.guidance?.guidanceText ?? "";
+
+  const getSavedText = (tagId: number) => savedTextByTagRef.current[tagId] ?? "";
+
+  const clearAutoSaveTimeout = (tagId: number) => {
+    const timeout = autoSaveTimeoutsRef.current.get(tagId);
+    if (timeout) {
+      clearTimeout(timeout);
+      autoSaveTimeoutsRef.current.delete(tagId);
+    }
+  };
+
+  const scheduleAutoSave = (tagId: number) => {
+    clearAutoSaveTimeout(tagId);
+    autoSaveTimeoutsRef.current.set(tagId, setTimeout(() => {
+      autoSaveTimeoutsRef.current.delete(tagId);
+      void saveGuidanceRef.current(tagId, true);
+    }, AUTOSAVE_DELAY_MS));
+  };
+
+  // Save anything waiting on the autosave timer, then wait for all saves to finish
+  const flushPendingSaves = useCallback(async () => {
+    const pendingTagIds = Array.from(autoSaveTimeoutsRef.current.keys());
+    await Promise.all(pendingTagIds.map(tagId => saveGuidanceRef.current(tagId, true)));
+    await Promise.all(Array.from(inFlightSavesRef.current.values()));
+  }, []);
+
+  const hasUnsavedGuidanceText = useCallback(() =>
+    tagGuidanceListRef.current.some(item =>
+      (item.guidance?.guidanceText ?? "") !== (savedTextByTagRef.current[item.tag.id as number] ?? "")
+    ), []);
+
   // Handler to update guidance text in state
   const handleGuidanceTextChange = (tagId: number, newText: string) => {
+    // TinyMCE also reports content on blur, so ignore events that don't change anything
+    if (newText === getCurrentText(tagId)) {
+      return;
+    }
+
+    const isDirty = newText !== getSavedText(tagId);
+    updateSaveStatus(tagId, { isDirty });
+    if (isDirty) {
+      scheduleAutoSave(tagId);
+    } else {
+      clearAutoSaveTimeout(tagId);
+    }
+
     setTagGuidanceList(prevList =>
       prevList.map(item => {
         if (item.tag.id === tagId) {
@@ -161,7 +238,9 @@ const GuidanceGroupIndexPage: React.FC = () => {
   const handleUnpublish = useCallback(async () => {
     setErrorMessages([]);
 
-    if (hasUnsavedChanges) {
+    await flushPendingSaves();
+
+    if (hasUnsavedGuidanceText()) {
       const confirmProceed = window.confirm(
         Global("messaging.unsavedChangesWarning") + " " + Global("messaging.continueAnyway")
       );
@@ -210,13 +289,15 @@ const GuidanceGroupIndexPage: React.FC = () => {
         }
       }
     }
-  }, [guidanceGroup, Global, router, hasUnsavedChanges, t, toastState]);
+  }, [guidanceGroup, Global, router, flushPendingSaves, hasUnsavedGuidanceText, t, toastState]);
 
 
   const handlePublish = useCallback(async () => {
     setErrorMessages([]);
 
-    if (hasUnsavedChanges) {
+    await flushPendingSaves();
+
+    if (hasUnsavedGuidanceText()) {
       const confirmProceed = window.confirm(
         Global("messaging.unsavedChangesWarning") + " " + Global("messaging.continueAnyway")
       );
@@ -265,26 +346,11 @@ const GuidanceGroupIndexPage: React.FC = () => {
         }
       }
     }
-  }, [guidanceGroup, Global, router, hasUnsavedChanges, t, toastState]);
+  }, [guidanceGroup, Global, router, flushPendingSaves, hasUnsavedGuidanceText, t, toastState]);
 
-  // Handler to update guidance or add new one based on the tagId
-  const handleSaveGuidance = async (tagId: number) => {
-    setErrorMessages([]);
-
-    // Find the guidance based on the tagId
-    const tagItem = tagGuidanceList.find(item => item.tag.id === tagId);
-
-    // If none exists then return
-    if (!tagItem) {
-      return;
-    }
-
-    // Get the text to save from the guidance object
-    const textToSave = tagItem.guidance?.guidanceText ?? "";
-
-    // Use a temporary ID for new guidance that's being saved
-    const savingId = tagItem.guidance?.id ?? `new-${tagId}`;
-    setSavingGuidanceId(savingId);
+  // Update guidance or add a new one for the tag. Returns true when the save succeeded.
+  const persistGuidance = async (tagItem: TagGuidanceItem, textToSave: string, isAutoSave: boolean): Promise<boolean> => {
+    const tagId = tagItem.tag.id as number;
 
     // Check if this is a real guidance (has a numeric ID) or a temporary one
     const isExistingGuidance = tagItem.guidance && !tagItem.guidance.id.startsWith('temp-');
@@ -300,7 +366,7 @@ const GuidanceGroupIndexPage: React.FC = () => {
 
       if (response.redirect) {
         router.push(response.redirect);
-        return;
+        return false;
       }
 
       if (!response.success) {
@@ -311,7 +377,7 @@ const GuidanceGroupIndexPage: React.FC = () => {
           errors: response.errors,
           url: { path: routePath("admin.guidance.groups.index", { groupId }) },
         });
-        return;
+        return false;
       } else {
         // Check if there are any GraphQL errors
         if (response?.data?.errors) {
@@ -323,19 +389,21 @@ const GuidanceGroupIndexPage: React.FC = () => {
               errors: errs,
               url: { path: routePath("admin.guidance.groups.index", { groupId }) },
             });
-            return; // Don't show success if there are errors
+            return false; // Don't show success if there are errors
           }
         }
 
         // Success case - no errors
-        setHasUnsavedChanges(false);
-        const successMessage = t("messages.success.guidanceTextUpdated", { tagName: tagItem.tag.name });
-        toastState.add(successMessage, { type: "success" });
+        if (!isAutoSave) {
+          const successMessage = t("messages.success.guidanceTextUpdated", { tagName: tagItem.tag.name });
+          toastState.add(successMessage, { type: "success" });
+        }
 
         // Optimistically update guidance group status if it was previously published
         setGuidanceGroup(prev => prev && prev.status === GuidanceGroupStatus.PUBLISHED
           ? { ...prev, status: GuidanceGroupStatus.UNPUBLISHED_CHANGES }
           : prev);
+        return true;
       }
     } else {
       // Create new guidance since none exists for this tag
@@ -348,7 +416,7 @@ const GuidanceGroupIndexPage: React.FC = () => {
 
       if (response.redirect) {
         router.push(response.redirect);
-        return;
+        return false;
       }
 
       if (!response.success) {
@@ -359,7 +427,7 @@ const GuidanceGroupIndexPage: React.FC = () => {
           errors: response.errors,
           url: { path: routePath("admin.guidance.groups.index", { groupId }) },
         });
-        return;
+        return false;
       } else {
         // Check if there are any GraphQL errors
         if (response?.data?.errors) {
@@ -371,14 +439,14 @@ const GuidanceGroupIndexPage: React.FC = () => {
               errors: errs,
               url: { path: routePath("admin.guidance.groups.index", { groupId }) },
             });
-            return; // Don't show success if there are errors
+            return false; // Don't show success if there are errors
           }
         }
         // Success case - no errors
-        setHasUnsavedChanges(false);
         // Optimistically update the local state to reflect the new guidance
-        const newGuidanceId = String((response as AddGuidanceResponse)?.data?.id);
-        if (newGuidanceId) {
+        const newGuidanceIdValue = (response as AddGuidanceResponse)?.data?.id;
+        if (newGuidanceIdValue != null) {
+          const newGuidanceId = String(newGuidanceIdValue);
           const newGuidance: GuidanceText = {
             id: newGuidanceId,
             guidanceText: textToSave,
@@ -391,14 +459,16 @@ const GuidanceGroupIndexPage: React.FC = () => {
           // Update guidanceTexts array
           setGuidanceTexts(prev => [...prev, newGuidance]);
 
-          // Update tagGuidanceList to link the new guidance to this tag
-          setTagGuidanceList(prev =>
-            prev.map(item =>
+          // Link the new guidance to this tag, keeping anything typed while the save was in progress.
+          // The ref is updated immediately so a queued save updates this guidance instead of adding a duplicate.
+          const linkNewGuidance = (list: TagGuidanceItem[]) =>
+            list.map(item =>
               item.tag.id === tagId
-                ? { ...item, guidance: newGuidance }
+                ? { ...item, guidance: { ...newGuidance, guidanceText: item.guidance?.guidanceText ?? textToSave } }
                 : item
-            )
-          );
+            );
+          tagGuidanceListRef.current = linkNewGuidance(tagGuidanceListRef.current);
+          setTagGuidanceList(linkNewGuidance);
         }
 
         // Optimistically update guidance group status if it was previously published
@@ -406,12 +476,99 @@ const GuidanceGroupIndexPage: React.FC = () => {
           ? { ...prev, status: GuidanceGroupStatus.UNPUBLISHED_CHANGES }
           : prev);
 
-        const successMessage = t("messages.success.guidanceTextAdded", { tagName: tagItem.tag.name });
-        toastState.add(successMessage, { type: "success" });
+        if (!isAutoSave) {
+          const successMessage = t("messages.success.guidanceTextAdded", { tagName: tagItem.tag.name });
+          toastState.add(successMessage, { type: "success" });
+        }
+        return true;
       }
-
     }
-    setSavingGuidanceId(null);
+  };
+
+  // Save the guidance for a tag, either from the Save button or from autosave
+  const saveGuidance = async (tagId: number, isAutoSave = false): Promise<void> => {
+    clearAutoSaveTimeout(tagId);
+
+    // Only one save per tag at a time, otherwise a new guidance could be created twice
+    const inFlightSave = inFlightSavesRef.current.get(tagId);
+    if (inFlightSave) {
+      return inFlightSave.then(() => saveGuidanceRef.current(tagId, isAutoSave));
+    }
+
+    const tagItem = tagGuidanceListRef.current.find(item => item.tag.id === tagId);
+    if (!tagItem) {
+      return;
+    }
+
+    const textToSave = tagItem.guidance?.guidanceText ?? "";
+
+    if (isAutoSave && textToSave === getSavedText(tagId)) {
+      updateSaveStatus(tagId, { isDirty: false });
+      return;
+    }
+
+    setErrorMessages([]);
+    updateSaveStatus(tagId, { isSaving: true });
+
+    const savePromise = (async () => {
+      const success = await persistGuidance(tagItem, textToSave, isAutoSave);
+
+      if (success) {
+        savedTextByTagRef.current[tagId] = textToSave;
+        updateSaveStatus(tagId, {
+          isSaving: false,
+          isDirty: getCurrentText(tagId) !== textToSave,
+          lastSavedAt: new Date(),
+        });
+      } else {
+        updateSaveStatus(tagId, { isSaving: false, isDirty: true });
+      }
+    })().finally(() => {
+      inFlightSavesRef.current.delete(tagId);
+    });
+
+    inFlightSavesRef.current.set(tagId, savePromise);
+    return savePromise;
+  };
+  saveGuidanceRef.current = saveGuidance;
+
+  // Screen reader announcement only changes with the save state, so the minute count isn't read out every minute
+  const getSaveAnnouncement = (tagId: number) => {
+    const status = saveStatusByTag[tagId];
+    if (status?.isSaving) return Global('buttons.saving');
+    if (status?.isDirty) return t('messages.unsavedChanges');
+    if (status?.lastSavedAt) return t('messages.savedJustNow');
+    return '';
+  };
+
+  // Helper function to format the last saved messaging, matching the plan question page
+  const getLastSavedText = (tagId: number) => {
+    const status = saveStatusByTag[tagId];
+    if (!status) {
+      return '';
+    }
+
+    if (status.isSaving) {
+      return Global('buttons.saving');
+    }
+
+    if (status.isDirty) {
+      return t('messages.unsavedChanges');
+    }
+
+    if (!status.lastSavedAt) {
+      return '';
+    }
+
+    const diffInMinutes = Math.floor(Math.max(currentTime.getTime() - status.lastSavedAt.getTime(), 0) / MINUTE_MS);
+
+    if (diffInMinutes === 0) {
+      return t('messages.savedJustNow');
+    } else if (diffInMinutes === 1) {
+      return t('messages.lastSavedOneMinuteAgo');
+    } else {
+      return t('messages.lastSavedMinutesAgo', { minutes: diffInMinutes });
+    }
   };
 
   // Set Guidance Texts data in state when fetched
@@ -425,6 +582,10 @@ const GuidanceGroupIndexPage: React.FC = () => {
         url: routePath("admin.guidance.groups.texts.edit", { groupId, textId: Number(g.id) }),
         tagId: typeof g.tagId === 'number' ? g.tagId : 0,
       }));
+
+      transformedGuidanceTexts.forEach(g => {
+        savedTextByTagRef.current[g.tagId] = g.guidanceText;
+      });
 
       setGuidanceTexts(transformedGuidanceTexts);
     }
@@ -506,47 +667,97 @@ const GuidanceGroupIndexPage: React.FC = () => {
     };
   }, [guidanceGroupData]);
 
+  useEffect(() => {
+    tagGuidanceListRef.current = tagGuidanceList;
+  }, [tagGuidanceList]);
+
+  useEffect(() => {
+    hasUnsavedChangesRef.current = hasUnsavedChanges;
+  }, [hasUnsavedChanges]);
+
+  // Push a single history entry the first time there are unsaved changes, so back navigation can be intercepted.
+  // Pushing on every edit would stack up entries now that changes are saved (and become clean) automatically.
+  useEffect(() => {
+    if (!hasUnsavedChanges || historyGuardAddedRef.current) return;
+    historyGuardAddedRef.current = true;
+    window.history.pushState(null, '', window.location.href);
+  }, [hasUnsavedChanges]);
+
   // Intercept browser back/forward navigation to warn user of unsaved changes
   useEffect(() => {
-    if (!hasUnsavedChanges) return;
-
     const handlePopState = () => {
-      const confirmLeave = window.confirm(
-        Global("messaging.unsavedChangesWarning"));
+      if (!historyGuardAddedRef.current) return;
 
-      if (!confirmLeave) {
-        // Push current state back to prevent navigation
-        window.history.pushState(null, '', window.location.href);
-      } else {
-        // User confirmed - allow navigation by going back
-        setHasUnsavedChanges(false);
-        window.history.back();
+      if (hasUnsavedChangesRef.current) {
+        const confirmLeave = window.confirm(Global("messaging.unsavedChangesWarning"));
+        if (!confirmLeave) {
+          // Push current state back to prevent navigation
+          window.history.pushState(null, '', window.location.href);
+          return;
+        }
+        skipUnloadWarningRef.current = true;
       }
+
+      // Step past the extra history entry
+      historyGuardAddedRef.current = false;
+      window.removeEventListener('popstate', handlePopState);
+      window.history.back();
     };
 
-    // Push a state to enable popstate detection
-    window.history.pushState(null, '', window.location.href);
     window.addEventListener('popstate', handlePopState);
-
     return () => {
       window.removeEventListener('popstate', handlePopState);
     };
-  }, [hasUnsavedChanges, Global]);
+  }, [Global]);
 
-  // Warn user of unsaved changes if they try to leave the page if they click on links or refresh/close the tab
+  // Autosave on window blur, and warn user of unsaved changes if they refresh/close the tab
   useEffect(() => {
+    const handleWindowBlur = () => {
+      void flushPendingSaves();
+    };
+
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (hasUnsavedChanges) {
+      if (hasUnsavedChangesRef.current && !skipUnloadWarningRef.current) {
         e.preventDefault();
         e.returnValue = ''; // Required for Chrome/Firefox to show the confirm dialog
       }
     };
 
+    window.addEventListener('blur', handleWindowBlur);
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => {
+      window.removeEventListener('blur', handleWindowBlur);
       window.removeEventListener('beforeunload', handleBeforeUnload);
     };
-  }, [hasUnsavedChanges]);
+  }, [flushPendingSaves]);
+
+  // Clear any pending autosaves when leaving the page
+  useEffect(() => {
+    const autoSaveTimeouts = autoSaveTimeoutsRef.current;
+    return () => {
+      autoSaveTimeouts.forEach(timeout => clearTimeout(timeout));
+      autoSaveTimeouts.clear();
+    };
+  }, []);
+
+  // Re-render on the next whole minute after any save, so "Last saved X minutes ago" ticks over on time
+  useEffect(() => {
+    const now = Date.now();
+    const nextTickTimes = Object.values(saveStatusByTag)
+      .filter(s => s.lastSavedAt)
+      .map(s => {
+        const savedAt = (s.lastSavedAt as Date).getTime();
+        return savedAt + (Math.floor(Math.max(now - savedAt, 0) / MINUTE_MS) + 1) * MINUTE_MS;
+      });
+
+    if (nextTickTimes.length === 0) return;
+
+    const timeout = setTimeout(() => {
+      setCurrentTime(new Date());
+    }, Math.max(Math.min(...nextTickTimes) - now, 0));
+
+    return () => clearTimeout(timeout);
+  }, [saveStatusByTag, currentTime]);
 
 
   // Determine button disabled states
@@ -597,6 +808,7 @@ const GuidanceGroupIndexPage: React.FC = () => {
                 .filter((it) => typeof it.tag.id === 'number')
                 .map((item) => {
                   const tagId = item.tag.id as number;
+                  const isSaving = saveStatusByTag[tagId]?.isSaving ?? false;
                   return (
                     <div
                       key={tagId}
@@ -629,22 +841,27 @@ const GuidanceGroupIndexPage: React.FC = () => {
                       <div>
                         <TinyMCEEditor
                           content={item.guidance?.guidanceText ?? ""}
-                          setContent={(value) => {
-                            handleGuidanceTextChange(tagId, value);
-                            setHasUnsavedChanges(true);
-                          }}
+                          setContent={(value) => handleGuidanceTextChange(tagId, value)}
                           id={`content-${tagId}`}
                           labelId={`contentLabel-${tagId}`}
                         />
                       </div>
 
                       <div className={styles.buttonWrapper}>
+                        <div className={styles.lastSaved} data-testid={`last-saved-${tagId}`}>
+                          {getLastSavedText(tagId)}
+                        </div>
+                        <span className="hidden-accessibly" role="status" aria-live="polite">
+                          {getSaveAnnouncement(tagId)}
+                        </span>
                         <Button
-                          onPress={() => handleSaveGuidance(tagId)}
-                          isDisabled={savingGuidanceId === item.guidance?.id || savingGuidanceId === `new-${tagId}`}
+                          onPress={() => {
+                            if (!isSaving) void saveGuidance(tagId);
+                          }}
+                          aria-disabled={isSaving}
                           className="button--primary"
                         >
-                          {(savingGuidanceId === item.guidance?.id || savingGuidanceId === `new-${tagId}`)
+                          {isSaving
                             ? Global("buttons.saving") || "Saving..."
                             : Global("buttons.save") || "Save"}
                         </Button>

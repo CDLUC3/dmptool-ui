@@ -1,10 +1,13 @@
+import { GuidanceSourceType } from "@/generated/graphql";
 import {
   collectLockedGuidanceOrgIds,
   computeProgress,
   questionKey,
   sectionKey,
+  visibleQuestions,
   type PlanSectionDefinition,
 } from "../model";
+import { makeQuestion, makeSection } from "../mocks";
 
 describe("PlanAuthoring model helpers", () => {
   it("keeps base and custom identity keys distinct", () => {
@@ -27,7 +30,6 @@ describe("PlanAuthoring model helpers", () => {
       {
         identity: { kind: "base", versionedSectionId: 1 },
         title: "One",
-        displayOrder: 1,
         questions: [
           {
             identity: { kind: "base", versionedQuestionId: 1 },
@@ -40,7 +42,6 @@ describe("PlanAuthoring model helpers", () => {
             hasAnswer: true,
             guidanceSources: [],
             comments: [],
-            displayOrder: 1,
           },
           {
             identity: { kind: "base", versionedQuestionId: 2 },
@@ -53,7 +54,6 @@ describe("PlanAuthoring model helpers", () => {
             hasAnswer: false,
             guidanceSources: [],
             comments: [],
-            displayOrder: 2,
           },
         ],
       },
@@ -71,7 +71,6 @@ describe("PlanAuthoring model helpers", () => {
       {
         identity: { kind: "base", versionedSectionId: 1 },
         title: "One",
-        displayOrder: 1,
         questions: [
           {
             identity: { kind: "base", versionedQuestionId: 1 },
@@ -85,6 +84,7 @@ describe("PlanAuthoring model helpers", () => {
             guidanceSources: [
               {
                 id: "nih",
+                type: GuidanceSourceType.TemplateOwner,
                 label: "NIH",
                 shortName: "NIH",
                 locked: true,
@@ -92,6 +92,7 @@ describe("PlanAuthoring model helpers", () => {
               },
               {
                 id: "uci",
+                type: GuidanceSourceType.UserAffiliation,
                 label: "UCI",
                 shortName: "UCI",
                 locked: false,
@@ -99,7 +100,6 @@ describe("PlanAuthoring model helpers", () => {
               },
             ],
             comments: [],
-            displayOrder: 1,
           },
           {
             identity: { kind: "base", versionedQuestionId: 2 },
@@ -113,6 +113,7 @@ describe("PlanAuthoring model helpers", () => {
             guidanceSources: [
               {
                 id: "nih",
+                type: GuidanceSourceType.TemplateOwner,
                 label: "NIH",
                 shortName: "NIH",
                 locked: true,
@@ -120,6 +121,7 @@ describe("PlanAuthoring model helpers", () => {
               },
               {
                 id: "stanford",
+                type: GuidanceSourceType.UserSelected,
                 label: "Stanford",
                 shortName: "SU",
                 locked: true,
@@ -127,7 +129,6 @@ describe("PlanAuthoring model helpers", () => {
               },
             ],
             comments: [],
-            displayOrder: 2,
           },
         ],
       },
@@ -137,5 +138,19 @@ describe("PlanAuthoring model helpers", () => {
       "nih",
       "stanford",
     ]);
+  });
+
+  it("leaves hidden questions out of the visible questions and the progress", () => {
+    const shown = makeQuestion({ identity: { kind: "base", versionedQuestionId: 1 }, hasAnswer: true });
+    const hiddenAnswered = makeQuestion({
+      identity: { kind: "base", versionedQuestionId: 2 },
+      hasAnswer: true,
+      isHidden: true,
+    });
+    const hiddenUnanswered = makeQuestion({ identity: { kind: "base", versionedQuestionId: 3 }, isHidden: true });
+    const section = makeSection({ questions: [shown, hiddenAnswered, hiddenUnanswered] });
+
+    expect(visibleQuestions(section)).toEqual([shown]);
+    expect(computeProgress([section])).toEqual({ answeredQuestions: 1, totalQuestions: 1, percentComplete: 100 });
   });
 });

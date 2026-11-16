@@ -1,33 +1,64 @@
 "use client";
 
-import React from "react";
-import { useTranslations } from "next-intl";
+import React, { useEffect, useState } from "react";
+import { useLocale, useTranslations } from "next-intl";
+import { formatRelativeFromTimestamp } from "@/utils/dateUtils";
 import type { PlanQuestionSaveState } from "../model";
 import styles from "./PlanQuestionSaveStatus.module.scss";
 
+const MINUTE_MS = 60 * 1000;
+
 interface PlanQuestionSaveStatusProps {
   state: PlanQuestionSaveState;
-  errorMessage?: string | null;
+  lastSavedAt?: number;
   className?: string;
 }
 
 export default function PlanQuestionSaveStatus({
   state,
-  errorMessage,
+  lastSavedAt,
   className,
 }: PlanQuestionSaveStatusProps) {
   const t = useTranslations("PlanAuthoring");
+  const QuestionPage = useTranslations("PlanOverviewQuestionPage");
+  const locale = useLocale();
+  const showLastSaved =
+    (state.status === "clean" || state.status === "saved") &&
+    lastSavedAt != null;
+  const [now, setNow] = useState(() => Date.now());
 
-  const labels: Record<PlanQuestionSaveState, string> = {
-    clean: "",
-    dirty: t("saveStatus.unsavedChanges"),
-    saving: t("saveStatus.saving"),
-    saved: t("saveStatus.saved"),
-    error: t("saveStatus.saveFailed"),
-  };
+  useEffect(() => {
+    if (!showLastSaved) {
+      return;
+    }
+    setNow(Date.now());
+    const interval = setInterval(() => setNow(Date.now()), MINUTE_MS);
+    return () => clearInterval(interval);
+  }, [showLastSaved, lastSavedAt]);
 
-  const text =
-    state === "error" && errorMessage ? errorMessage : labels[state];
+  const text = (() => {
+    if (showLastSaved) {
+      return now - lastSavedAt < MINUTE_MS
+        ? QuestionPage("messages.savedJustNow")
+        : t("saveStatus.lastSaved", {
+            relative: formatRelativeFromTimestamp(String(lastSavedAt), locale),
+          });
+    }
+    switch (state.status) {
+      case "clean":
+        return "";
+      case "dirty":
+        return t("saveStatus.unsavedChanges");
+      case "saving":
+        return t("saveStatus.saving");
+      case "saved":
+        return t("saveStatus.saved");
+      case "invalid":
+        return state.messages.join(" ");
+      case "failed":
+        return state.message ?? t("saveStatus.unableToSave");
+    }
+  })();
 
   if (!text) {
     return null;
@@ -36,7 +67,7 @@ export default function PlanQuestionSaveStatus({
   return (
     <p
       className={[styles.saveStatus, className].filter(Boolean).join(" ")}
-      data-state={state}
+      data-state={state.status}
       role="status"
       aria-live="polite"
     >

@@ -6,6 +6,7 @@ import { Checkbox } from "react-aria-components";
 interface CheckboxesQuestionProps {
   parsedQuestion: CheckboxesQuestionType;
   selectedCheckboxValues: string[];
+  name?: string;
   isDisabled?: boolean;
   handleCheckboxGroupChange: (values: string[]) => void;
 }
@@ -13,6 +14,7 @@ interface CheckboxesQuestionProps {
 const CheckboxesQuestionComponent: React.FC<CheckboxesQuestionProps> = ({
   parsedQuestion,
   selectedCheckboxValues,
+  name = "checkboxes",
   isDisabled = false,
   handleCheckboxGroupChange
 }) => {
@@ -27,7 +29,7 @@ const CheckboxesQuestionComponent: React.FC<CheckboxesQuestionProps> = ({
 
   return (
     <CheckboxGroupComponent
-      name="checkboxes"
+      name={name}
       value={value}
       onChange={handleCheckboxGroupChange}
       checkboxGroupLabel=""

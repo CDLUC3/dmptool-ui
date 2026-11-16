@@ -10,6 +10,12 @@
     height: 0;
     min-height: 100%;
     overflow: hidden;
+
+    // The row height follows the answer column, so a short answer would leave
+    // no room to read comments. The open panel gets a minimum height.
+    &[data-comments-expanded="true"] {
+      min-height: max(100%, 28rem);
+    }
   }
 }
 
@@ -19,6 +25,21 @@
   flex-direction: column;
   min-height: 0;
   overflow: hidden;
+}
+
+.commentsPanel {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+
+  &[hidden] {
+    display: none;
+  }
+
+  @media (max-width: 1023px) {
+    max-height: min(32rem, 70vh);
+  }
 }
 
 .commentsTab {
@@ -58,15 +79,6 @@
   gap: 0.375rem;
 }
 
-.eyebrow {
-  margin: 0;
-  font-size: 0.6875rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--gray-600);
-}
-
 .guidanceShell {
   position: relative;
   display: flex;
@@ -92,10 +104,6 @@
   // Stacked layout: keep a soft cap so guidance doesn't dominate the card.
   @media (max-width: 1023px) {
     max-height: min(22rem, 50vh);
-  }
-
-  .eyebrow {
-    margin: 0;
   }
 
   // Source label (outside the WYSIWYG body) stays slightly larger.

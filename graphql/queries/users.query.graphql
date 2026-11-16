@@ -5,6 +5,8 @@ query Me{
     surName
     languageId
     role
+    hasSSO
+    ssoEntityId
     emails {
       id
       email
@@ -57,7 +59,7 @@ query Users($term: String, $role: UserRole, $affiliationId: String, $paginationO
         displayName
         uri
       }
-      ssoId
+      hasSSO
       orcid
     }
     hasNextPage
@@ -81,7 +83,7 @@ query User($userId: Int!) {
       uri
     }
     languageId
-    ssoId
+    hasSSO
     orcid
   }
 }

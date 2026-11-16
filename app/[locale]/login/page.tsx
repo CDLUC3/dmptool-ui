@@ -1,228 +1,24 @@
-'use client'
+import React from "react";
+import { getTranslations } from "next-intl/server";
 
-import React, { useEffect, useRef, useState } from "react";
-import { useRouter } from '@/i18n/routing';
-import logECS from '@/utils/clientLogger';
-import { useCsrf } from "@/context/CsrfContext";
-import { handleErrors } from '@/utils/errorHandler';
-import { useAuthContext } from '@/context/AuthContext';
-import { useTranslations } from "next-intl";
-import {
-  Button,
-  Form,
-  Link,
-} from "react-aria-components";
-import {
-  ContentContainer,
-  LayoutContainer,
-  ToolbarContainer,
-} from '@/components/Container';
-import ErrorMessages from "@/components/ErrorMessages";
-import { FormInput } from '@/components/Form';
-import styles from './login.module.scss';
-import { routePath } from "@/utils/index";
+import { ContentContainer, LayoutContainer } from '@/components/Container';
+import { SSOCheckContainer } from "@/components/SSOCheck";
+import { Metadata } from "next";
 
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "AuthPage" });
+  return { title: `${t("loginTitle")} | DMP Tool` };
+}
 
-type LoginSteps =
-  | "email"
-  | "sso"
-  | "password";
-
-
-const LoginPage: React.FC = () => {
-  const t = useTranslations('LoginPage');
-  const Global = useTranslations('Global');
-  const errorRef = useRef<HTMLDivElement>(null);
-  const formRef = useRef<HTMLFormElement | null>(null);
-  const [step, setStep] = useState<LoginSteps>("email");
-
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-
-  const [errors, setErrors] = useState<string[]>([]);
-  const [loading, setLoading] = useState(false);
-  const { getCsrfToken } = useCsrf();
-  const router = useRouter();
-
-  const { setIsAuthenticated, clearCache } = useAuthContext();
-
-  const returnToEmail = () => {
-    setStep("email");
-  };
-
-  const onLoginSuccess = async () => {
-    // Clear any cached data
-    await clearCache();
-    setIsAuthenticated(true);
-    // Full navigation to a URL with no locale, so the middleware can choose
-    // the user's saved language from their new JWT (languageId)
-    window.location.assign(routePath('app.home'));
-  };
-
-  const handleLogin = async () => {
-    setLoading(true);
-    setErrors([]);  // Clear previous errors
-
-    const loginRequest = async (token: string | null) => {
-      return await fetch(`${process.env.NEXT_PUBLIC_AUTH_ENDPOINT}/sign-in`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRF-TOKEN': token || '',
-        },
-        body: JSON.stringify({
-          email,
-          password,
-        }),
-      });
-    }
-
-    /* eslint-disable @typescript-eslint/no-explicit-any */
-    try {
-      const response = await loginRequest(await getCsrfToken());
-
-      if (response.ok) {
-        await onLoginSuccess();
-      } else {
-        // CSRF tokens are single-use, so a token already used by sign-up or logout gets a 403 here.
-        // handleErrors retries with a fresh token, and must finish the login the same way on success.
-        await handleErrors(response, loginRequest, setErrors, router, '/login', onLoginSuccess);
-      }
-
-    } catch (err: any) {
-      logECS('error', 'Login error', {
-        error: err,
-        url: { path: '/sign-in' }
-      });
-      setErrors([t('loginError')]);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function handleSubmit(ev: React.FormEvent<HTMLFormElement>) {
-    ev.preventDefault();
-
-    switch (step) {
-      case "email":
-        // TODO: Detect SSO email and redirect to that page. For now just
-        // go to normal login step.
-        setStep("password");
-        break;
-
-      case "password":
-        handleLogin();
-        break;
-    }
-  }
-
-  function reFocusForm() {
-    if (formRef.current) {
-      // Focus the first input in the form.
-      const formEl = formRef.current as HTMLElement;
-      const inputEl = formEl.querySelector('input') as HTMLElement;
-      if (inputEl) inputEl.focus();
-    }
-  }
-
-  useEffect(() => {
-    reFocusForm();
-  }, [errors])
-
-  useEffect(() => {
-    if (step === "password") {
-      if (formRef.current) {
-        const formEl = formRef.current as HTMLElement;
-        const inputEl = formEl.querySelector('#password') as HTMLElement;
-        if (inputEl) inputEl.focus();
-      }
-    }
-  }, [step]);
-
-  useEffect(() => {
-    document.title = `${t('pageTitle')} | DMP Tool`;
-  }, []);
+const LoginPage: React.FC = async () => {
+  const t = await getTranslations("AuthPage");
 
   return (
     <LayoutContainer className="auth-container">
       <ContentContainer className="auth-card">
-        <h3>{t('pageTitle')}</h3>
-
-        <Form
-          className={styles.loginForm}
-          onSubmit={handleSubmit}
-          ref={formRef}
-          data-step={step}
-        >
-          <ErrorMessages errors={errors} ref={errorRef} />
-          {(step === "email" || step === "password") && (
-            <FormInput
-              name="email"
-              type="email"
-              label={t('emailAddress')}
-              ariaLabel={t('emailAddress')}
-              onChange={(e) => setEmail(e.target.value)}
-              value={email}
-              isRequired
-              readOnly={step === "password"}
-              autoComplete={step === "password" ? "off" : "email"}
-              inputClasses={step === "password" ? "disabled-look" : ""}
-              helpMessage={step === "email" ? t('singleSignOn') : undefined}
-              data-testid="emailInput"
-            />
-          )}
-
-          {(step === "password") && (
-            <FormInput
-              id="password"
-              name="password"
-              type="password"
-              label={t('password')}
-              ariaLabel={t('password')}
-              onChange={(e) => setPassword(e.target.value)}
-              isRequired
-              helpMessage={(
-                <Link href={routePath('login.forgotPassword')} className={styles.forgotPasswordLink}>
-                  {t('forgotPassword.title')}
-                </Link>
-              )}
-              data-testid="passInput"
-            />
-          )}
-
-          <ToolbarContainer className={styles.formActions}>
-            {(step === "email") && (
-              <Button
-                type="submit"
-                isDisabled={loading}
-                data-testid="actionContinue"
-              >
-                {loading ? '...' : t('continue')}
-              </Button>
-            )}
-
-            {(step === "password") && (
-              <div className="button-container">
-                <Button type="button" className="secondary" onPress={returnToEmail}>{Global('buttons.back')}</Button>
-                <Button
-                  type="submit"
-                  isDisabled={loading}
-                  data-testid="actionSubmit"
-                >
-                  {loading ? '...' : t('login')}
-                </Button>
-              </div>
-            )}
-          </ToolbarContainer>
-
-          <div className={styles.formLinks}>
-            {(step === "email") && (
-              <Link href="/signup/">{t('signupText')}</Link>
-            )}
-            <Link href="#">{t('getHelpText')}</Link>
-          </div>
-        </Form>
+        <h3>{t("loginTitle")}</h3>
+        <SSOCheckContainer mode="login" />
       </ContentContainer>
     </LayoutContainer>
   );

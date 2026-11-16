@@ -127,6 +127,25 @@ describe('proxy', () => {
     expect(result).toBe(NextResponse.redirect(new URL('/login', request.url)));
   });
 
+  it('should redirect to /login for a protected path that contains an excluded path as a substring', async () => {
+    request.nextUrl.pathname = '/en-US/admin/email-preferences';
+    request.cookies.get = jest.fn().mockReturnValue(undefined); // No tokens
+
+    await proxy(request);
+
+    expect(NextResponse.redirect).toHaveBeenCalledWith(new URL('/en-US/login', request.url));
+  });
+
+  it('should not redirect to /login for an excluded path with a locale prefix', async () => {
+    request.nextUrl.pathname = '/en-US/email/email-confirmed';
+    request.cookies.get = jest.fn().mockReturnValue(undefined); // No tokens
+
+    await proxy(request);
+
+    expect(NextResponse.redirect).not.toHaveBeenCalled();
+    expect(mockHandleI18nRouting).toHaveBeenCalledWith(request);
+  });
+
   it('should hand off to next-intl when the URL has a locale and a token is present', async () => {
     request.nextUrl.pathname = '/en-US/protected';
     request.cookies.get = jest.fn().mockImplementation((key) => {

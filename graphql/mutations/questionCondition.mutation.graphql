@@ -1,6 +1,8 @@
 mutation SaveQuestionDisplayLogic($input: SaveQuestionDisplayLogicInput!) {
   saveQuestionDisplayLogic(input: $input) {
     id
+    displayLogicAction
+    displayLogicMatchType
     errors {
       general
     }

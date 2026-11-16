@@ -10,7 +10,7 @@ import {
   ModalOverlay,
 } from "react-aria-components";
 import type { PlanSectionDefinition } from "../model";
-import { sectionKey } from "../model";
+import { sectionKey, visibleQuestions } from "../model";
 import { useSectionPickerShortcutLabel } from "../useSectionPickerShortcut";
 import styles from "./PlanSectionPickerDialog.module.scss";
 
@@ -170,10 +170,9 @@ export default function PlanSectionPickerDialog({
           >
             {filtered.map((section, index) => {
               const key = sectionKey(section.identity);
-              const answered = section.questions.filter(
-                (q) => q.hasAnswer
-              ).length;
-              const total = section.questions.length;
+              const questions = visibleQuestions(section);
+              const answered = questions.filter((q) => q.hasAnswer).length;
+              const total = questions.length;
               const complete = total > 0 && answered === total;
               const isCurrent = key === activeSectionKey;
               const isHighlighted = index === highlightedIndex;

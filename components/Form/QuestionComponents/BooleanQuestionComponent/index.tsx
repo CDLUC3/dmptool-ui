@@ -7,6 +7,7 @@ import { Radio } from 'react-aria-components';
 interface BooleanQuestionProps {
   parsedQuestion: BooleanQuestionType;
   selectedValue?: string;
+  name?: string;
   isDisabled?: boolean;
   handleRadioChange: (value: string) => void;
 }
@@ -14,6 +15,7 @@ interface BooleanQuestionProps {
 const BooleanQuestionComponent: React.FC<BooleanQuestionProps> = ({
   parsedQuestion,
   selectedValue,
+  name = 'visibility',
   isDisabled = false,
   handleRadioChange
 }) => {
@@ -28,7 +30,7 @@ const BooleanQuestionComponent: React.FC<BooleanQuestionProps> = ({
   return (
 
     <RadioGroupComponent
-      name="visibility"
+      name={name}
       value={value}
       radioGroupLabel=""
       onChange={handleRadioChange}

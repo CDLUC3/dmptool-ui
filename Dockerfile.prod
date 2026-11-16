@@ -1,6 +1,6 @@
 # Stage 1: Builder (all dependencies)
 # preferred node version chosen here (Active LTS = 22 as of 10/2024)
-FROM public.ecr.aws/docker/library/node:22.22-alpine3.23 AS builder
+FROM public.ecr.aws/docker/library/node:22.23.4-alpine3.23 AS builder
 WORKDIR /app
 
 # Copy dependencies from deps stage
@@ -34,7 +34,7 @@ RUN npm run build
 RUN npm prune --omit=dev
 
 # Stage 2: Runner
-FROM public.ecr.aws/docker/library/node:22.22-alpine3.23 AS runner
+FROM public.ecr.aws/docker/library/node:22.23.4-alpine3.23 AS runner
 WORKDIR /app
 
 # Install bash so we can use session manager to attach to the container

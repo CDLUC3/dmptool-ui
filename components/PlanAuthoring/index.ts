@@ -1,35 +1,4 @@
-import type {
-  PlanAuthoringModel,
-  PlanAuthoringVariant,
-  PlanCapabilities,
-  PlanComment,
-  PlanDocument,
-  PlanGuidanceOrgOption,
-  PlanGuidanceSource,
-  PlanQuestionDefinition,
-  PlanQuestionIdentity,
-  PlanQuestionMode,
-  PlanQuestionSaveState,
-  PlanSectionDefinition,
-  PlanSectionIdentity,
-} from "./model";
-import type { PlanAuthoringDataSource } from "./dataSource";
-
-export type {
-  PlanAuthoringModel,
-  PlanAuthoringVariant,
-  PlanCapabilities,
-  PlanComment,
-  PlanDocument,
-  PlanGuidanceOrgOption,
-  PlanGuidanceSource,
-  PlanQuestionDefinition,
-  PlanQuestionIdentity,
-  PlanQuestionMode,
-  PlanQuestionSaveState,
-  PlanSectionDefinition,
-  PlanSectionIdentity,
-  PlanAuthoringDataSource,
-};
-
+export type { PlanAuthoringDataSource } from "./dataSource";
 export { default as PlanAuthoring } from "./PlanAuthoringScreen";
+export { usePlanAuthoringDataSource } from "./usePlanAuthoringDataSource";
+export { default as PlanResearchOutputEditScreen } from "./PlanResearchOutputEditScreen";

@@ -6,6 +6,7 @@ import { getCalendarDateValue } from "@/utils/dateUtils";
 
 interface DateRangeQuestionProps {
   parsedQuestion: DateRangeQuestionType;
+  fieldName?: string;
   dateRange: {
     startDate: string | DateValue | CalendarDate | null;
     endDate: string | DateValue | CalendarDate | null;
@@ -19,6 +20,7 @@ interface DateRangeQuestionProps {
 
 const DateRangeQuestionComponent: React.FC<DateRangeQuestionProps> = ({
   parsedQuestion,
+  fieldName,
   dateRange,
   isDisabled = false,
   handleDateChange,
@@ -26,20 +28,22 @@ const DateRangeQuestionComponent: React.FC<DateRangeQuestionProps> = ({
   // Extract labels from JSON if available
   const startLabel = parsedQuestion?.columns?.start?.label;
   const endLabel = parsedQuestion?.columns?.end?.label;
+  const startName = fieldName ? `${fieldName}-start` : "startDate";
+  const endName = fieldName ? `${fieldName}-end` : "endDate";
   return (
     <div
       className='two-item-row'
       data-testid='date-range-container'
     >
       <DateComponent
-        name="startDate"
+        name={startName}
         value={getCalendarDateValue(dateRange.startDate)}
         onChange={newDate => handleDateChange('startDate', newDate)}
         label={startLabel}
         isDisabled={isDisabled}
       />
       <DateComponent
-        name="endDate"
+        name={endName}
         value={getCalendarDateValue(dateRange.endDate)}
         onChange={newDate => handleDateChange('endDate', newDate)}
         label={endLabel}

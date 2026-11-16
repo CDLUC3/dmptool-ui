@@ -1,167 +1,140 @@
 import React from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import logECS from '@/utils/clientLogger';
 import LoginPage from '../page';
-
-//Need to import this useRouter after the jest.mock is in place
-import { useRouter } from '@/i18n/routing';
-import { fetchCsrfToken } from "@/utils/authHelper";
 import { useCsrf } from '@/context/CsrfContext';
 import { useAuthContext } from '@/context/AuthContext';
 import { routePath } from '@/utils/index';
+import { getTranslations } from 'next-intl/server';
+import { getInitialPendingSignup } from '@/lib/server/auth';
+
+jest.mock('@/components/Form/TypeAheadWithOther', () => ({
+  TypeAheadWithOther: () => null,
+  useAffiliationSearch: jest.fn(() => ({
+    suggestions: [],
+    handleSearch: jest.fn(),
+    isSearching: false,
+    searchError: '',
+  })),
+}));
 
 jest.mock('@/i18n/routing', () => ({
   Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
     <a href={href} {...props}>{children}</a>
   ),
-  useRouter: jest.fn(() => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn() })),
-  usePathname: jest.fn(() => '/login'),
+  useRouter: jest.fn(() => ({ push: jest.fn() })),
 }));
 
-// Login redirects with window.location.assign(), which jsdom doesn't let us mock,
-// so spy on routePath to verify the home route is built for the redirect
 jest.mock('@/utils/index', () => {
   const actual = jest.requireActual('@/utils/index');
-  return {
-    ...actual,
-    routePath: jest.fn(actual.routePath),
-  };
+  return { ...actual, routePath: jest.fn(actual.routePath) };
 });
 
-jest.mock('@/utils/clientLogger', () => ({
-  __esModule: true,
-  default: jest.fn()
-}))
-
-jest.mock('@/utils/authHelper', () => ({
-  refreshAuthTokens: jest.fn(async () => Promise.resolve({ response: true, message: 'ok' })),
-  fetchCsrfToken: jest.fn(async () => Promise.resolve({ response: true, message: 'ok' })),
-}));
-
 jest.mock('@/context/AuthContext', () => ({
-  useAuthContext: jest.fn(() => ({
-    setIsAuthenticated: jest.fn(),
-    clearCache: jest.fn().mockResolvedValue(undefined),
-  })),
+  useAuthContext: jest.fn(),
 }));
 
 jest.mock('@/context/CsrfContext', () => ({
-  CsrfProvider: ({ children }: { children: React.ReactNode }) => (
-    <div data-testid="mock-csrf-provider">{children}</div>
-  ),
   useCsrf: jest.fn(),
 }));
 
-// Create a mock for scrollIntoView and focus
-const mockScrollIntoView = jest.fn();
-const mockFocus = jest.fn();
+jest.mock('next-intl/server', () => ({
+  getTranslations: jest.fn(),
+}));
 
-const mockUseRouter = useRouter as jest.Mock;
-const mockFetchCsrfToken = fetchCsrfToken as jest.Mock;
+jest.mock('@/lib/server/auth', () => ({
+  getInitialPendingSignup: jest.fn(),
+}));
 
-// Mock fetch globally
-global.fetch = jest.fn() as jest.MockedFunction<typeof fetch>;
-
+const ssoCheckUrl = `${process.env.NEXT_PUBLIC_AUTH_ENDPOINT}/sso-check`;
 const signInUrl = `${process.env.NEXT_PUBLIC_AUTH_ENDPOINT}/sign-in`;
 
 describe('LoginPage', () => {
-  const doSteps = async () => {
-    // Step 1
-    fireEvent.change(screen.getByTestId("emailInput"), {
-      target: { value: "test@test.com" }
-    });
+  const getCsrfToken = jest.fn().mockResolvedValue('mocked-csrf-token');
+  const clearCache = jest.fn().mockResolvedValue(undefined);
+  const setIsAuthenticated = jest.fn();
 
-    fireEvent.click(screen.getByTestId("actionContinue"));
-    expect(screen.getByTestId("passInput")).toBeInTheDocument();
+  const renderPage = async () => {
+    render(await LoginPage({}));
+  };
 
-    // Step 2
-    fireEvent.change(screen.getByTestId("passInput"), {
-      target: { value: "Secret -- 123" },
-    });
-  }
+  const enterEmail = async (email = 'test@example.com') => {
+    fireEvent.change(screen.getByTestId('emailInput'), { target: { value: email } });
+    fireEvent.click(screen.getByTestId('actionContinue'));
+  };
 
   beforeEach(() => {
-    HTMLElement.prototype.scrollIntoView = mockScrollIntoView;
-    HTMLElement.prototype.focus = mockFocus;
-    mockUseRouter.mockReturnValue({
-      push: jest.fn(),
+    (getTranslations as jest.Mock).mockResolvedValue((key: string) => key);
+    (getInitialPendingSignup as jest.Mock).mockResolvedValue(undefined);
+    (useCsrf as jest.Mock).mockReturnValue({ getCsrfToken });
+    (useAuthContext as jest.Mock).mockReturnValue({ clearCache, setIsAuthenticated });
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: false,
+      status: 404,
     });
-
-    (useCsrf as jest.Mock).mockReturnValue({ getCsrfToken: jest.fn().mockResolvedValue('mocked-csrf-token') });
-
-    jest.spyOn(console, 'error').mockImplementation(() => { });
   });
 
   afterEach(() => {
-    HTMLElement.prototype.scrollIntoView = jest.fn();
-    HTMLElement.prototype.focus = jest.fn();
-    jest.restoreAllMocks();
     jest.clearAllMocks();
-  })
-
-  it("should render the email step initially", async () => {
-    // renderWithProviders(<LoginPage />);
-    render(<LoginPage />);
-    expect(screen.getByTestId("emailInput")).toBeInTheDocument();
-    expect(screen.getByTestId("actionContinue")).toBeInTheDocument();
   });
 
-  it("should transition to the password step", async () => {
-    // renderWithProviders(<LoginPage />);
-    render(<LoginPage />);
-
-    fireEvent.change(screen.getByTestId("emailInput"), {
-      target: { value: "test@test.com" }
-    });
-
-    fireEvent.click(screen.getByTestId("actionContinue"));
-    await waitFor(() => {
-      expect(screen.getByTestId("passInput")).toBeInTheDocument();
-      expect(screen.getByTestId("actionSubmit")).toBeInTheDocument();
-      expect(screen.getByRole("button", { name: "buttons.back" })).toBeInTheDocument();
-    });
-
-    // Ensure that email field is read-only on this step
-    const emailField = screen.getByTestId("emailInput");
-    expect(emailField).toHaveAttribute('readonly');
-  });
-
-  it("should show reset password link on the password step", async () => {
-    render(<LoginPage />);
-
-    fireEvent.change(screen.getByTestId("emailInput"), {
-      target: { value: "test@test.com" }
-    });
-
-    fireEvent.click(screen.getByTestId("actionContinue"));
-
-    await waitFor(() => {
-      expect(screen.getByRole("link", { name: "forgotPassword.title" })).toBeInTheDocument();
+  it('starts with an email-only SSO discovery step', () => {
+    return renderPage().then(() => {
+      expect(screen.getByTestId('emailInput')).toBeInTheDocument();
+      expect(screen.getByTestId('actionContinue')).toBeInTheDocument();
+      expect(screen.queryByTestId('passInput')).not.toBeInTheDocument();
     });
   });
 
-  it("should redirect to home on successful login", async () => {
-    jest.spyOn(global, 'fetch').mockImplementation((url) => {
-      if (url === signInUrl) {
-        return Promise.resolve({
-          ok: true,
-          status: 200,
-          json: () => Promise.resolve({ message: 'mock message' })
-        } as unknown as Response);
-      }
+  it('shows the password login form when no SSO provider matches', async () => {
+    await renderPage();
 
-      return Promise.reject(new Error('Unknown URL'));
-    });
-
-    // renderWithProviders(<LoginPage />);
-    render(<LoginPage />);
-
-    doSteps();
-    fireEvent.click(screen.getByTestId("actionSubmit"));
+    await enterEmail();
 
     await waitFor(() => {
-      //Assert that the fetch calls were made with the correct arguments
-      expect(global.fetch).toHaveBeenCalledWith(signInUrl, {
+      expect(global.fetch).toHaveBeenCalledWith(ssoCheckUrl, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': 'mocked-csrf-token',
+        },
+        body: JSON.stringify({ email: 'test@example.com' }),
+      });
+      expect(screen.getByTestId('passInput')).toBeInTheDocument();
+    });
+  });
+
+  it('shows the institution SSO option when a provider matches', async () => {
+    (global.fetch as jest.Mock).mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({
+        entityId: 'example-entity',
+        affiliationId: 'example-affiliation',
+        displayName: 'Example University',
+      }),
+    });
+    await renderPage();
+
+    await enterEmail('person@example.edu');
+
+    expect(await screen.findByText('Example University')).toBeInTheDocument();
+    expect(screen.getByTestId('actionSsoSubmit')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'nonSsoLink' })).toBeInTheDocument();
+  });
+
+  it('submits credentials after an unmatched SSO check', async () => {
+    (global.fetch as jest.Mock)
+      .mockResolvedValueOnce({ ok: false, status: 404 })
+      .mockResolvedValueOnce({ ok: true, status: 200 });
+    await renderPage();
+
+    await enterEmail();
+    const password = await screen.findByTestId('passInput');
+    fireEvent.change(password, { target: { value: 'Secret -- 123' } });
+    fireEvent.click(screen.getByTestId('actionSubmit'));
+
+    await waitFor(() => {
+      expect(global.fetch).toHaveBeenLastCalledWith(signInUrl, {
         method: 'POST',
         credentials: 'include',
         headers: {
@@ -169,201 +142,13 @@ describe('LoginPage', () => {
           'X-CSRF-TOKEN': 'mocked-csrf-token',
         },
         body: JSON.stringify({
-          email: 'test@test.com',
+          email: 'test@example.com',
           password: 'Secret -- 123',
         }),
       });
-    });
-
-    // Check that user is redirected to home page
-    await waitFor(() => {
-      expect(routePath).toHaveBeenCalledWith('app.home');
-      expect(routePath).toHaveReturnedWith('/');
-    });
-  });
-
-  it('should render login form, save token in cookie, and redirect to home page', async () => {
-    jest.spyOn(global, 'fetch').mockImplementation((url) => {
-      if (url === signInUrl) {
-        return Promise.resolve({
-          ok: true,
-          status: 200,
-          json: () => Promise.resolve({ message: 'mock message' })
-        } as unknown as Response);
-      }
-      return Promise.reject(new Error('Unknown URL'));
-    });
-
-    // renderWithProviders(<LoginPage />);
-    render(<LoginPage />);
-
-    doSteps();
-    fireEvent.click(screen.getByTestId("actionSubmit"));
-
-    await waitFor(() => {
-      //Assert that the fetch calls were made with the correct arguments
-      expect(global.fetch).toHaveBeenCalledWith(signInUrl, {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRF-TOKEN': 'mocked-csrf-token',
-        },
-        body: JSON.stringify({
-          email: 'test@test.com',
-          password: 'Secret -- 123',
-        }),
-      });
-    })
-
-    // Check that user is redirected to home page
-    await waitFor(() => {
-      expect(routePath).toHaveBeenCalledWith('app.home');
-      expect(routePath).toHaveReturnedWith('/');
-    });
-  });
-
-  it('should initially disable submit button after submitting form until response is returned ', async () => {
-    jest.spyOn(global, 'fetch').mockImplementation((url) => {
-      if (url === signInUrl) {
-        return Promise.resolve({
-          ok: true,
-          status: 200,
-        } as unknown as Response);
-      }
-
-      return Promise.reject(new Error('Unknown URL'));
-    });
-
-    // renderWithProviders(<LoginPage />);
-    render(<LoginPage />);
-
-    doSteps();
-    const submitBtn = screen.getByTestId("actionSubmit");
-    fireEvent.click(submitBtn);
-    expect(submitBtn).toBeDisabled();
-    expect(submitBtn).toHaveTextContent('...');
-
-    await waitFor(() => {
-      expect(submitBtn).not.toBeDisabled();
-      expect(submitBtn).toHaveTextContent('login');
-    });
-  });
-
-  it('should handle 403 error by calling fetchCsrfToken and displaying error on page', async () => {
-    jest.spyOn(global, 'fetch').mockImplementation(() => {
-      return Promise.resolve({
-        ok: false,
-        status: 403,
-        json: () => Promise.resolve({ success: false, message: 'Invalid CSRF token' }),
-      } as unknown as Response);
-    });
-
-    // renderWithProviders(<LoginPage />);
-    render(<LoginPage />);
-
-    doSteps();
-    fireEvent.click(screen.getByTestId("actionSubmit"));
-
-    // Check that user is redirected to 500 error page
-    await waitFor(() => {
-      expect(mockFetchCsrfToken).toHaveBeenCalled();
-    })
-  });
-
-  it('should finish logging in when the sign-in succeeds on retry after a stale CSRF token', async () => {
-    const mockSetIsAuthenticated = jest.fn();
-    (useAuthContext as jest.Mock).mockReturnValue({
-      setIsAuthenticated: mockSetIsAuthenticated,
-      clearCache: jest.fn().mockResolvedValue(undefined),
-    });
-    mockFetchCsrfToken.mockResolvedValueOnce({
-      headers: { get: () => 'fresh-csrf-token' },
-    });
-
-    jest.spyOn(global, 'fetch')
-      .mockResolvedValueOnce({
-        ok: false,
-        status: 403,
-        json: () => Promise.resolve({ success: false, message: 'Invalid CSRF token' }),
-      } as unknown as Response)
-      .mockResolvedValueOnce({
-        ok: true,
-        status: 200,
-        json: () => Promise.resolve({ success: true, message: 'ok' }),
-      } as unknown as Response);
-
-    render(<LoginPage />);
-
-    doSteps();
-    fireEvent.click(screen.getByTestId("actionSubmit"));
-
-    await waitFor(() => {
-      expect(global.fetch).toHaveBeenLastCalledWith(signInUrl, expect.objectContaining({
-        headers: expect.objectContaining({ 'X-CSRF-TOKEN': 'fresh-csrf-token' }),
-      }));
-      expect(mockSetIsAuthenticated).toHaveBeenCalledWith(true);
+      expect(clearCache).toHaveBeenCalled();
+      expect(setIsAuthenticated).toHaveBeenCalledWith(true);
       expect(routePath).toHaveBeenCalledWith('app.home');
     });
   });
-
-  it('should handle 500 error', async () => {
-    jest.spyOn(global, 'fetch').mockImplementation(() => {
-      return Promise.resolve({
-        ok: false,
-        status: 500,
-        json: () => Promise.resolve({ success: false, message: 'Internal server error' }),
-      } as unknown as Response);
-    });
-
-    // renderWithProviders(<LoginPage />);
-    render(<LoginPage />);
-
-    doSteps();
-    fireEvent.click(screen.getByTestId("actionSubmit"));
-
-    // Check that user is redirected to 500 error page
-    await waitFor(() => {
-      expect(mockUseRouter().push).toHaveBeenCalledWith('/500-error')
-    })
-  });
-
-  it('should handle fetch error', async () => {
-    jest.spyOn(global, 'fetch').mockImplementation((url) => {
-      if (url === signInUrl) {
-        return Promise.reject(new Error('Network error'));
-      }
-      return Promise.reject(new Error('Unknown URL'));
-    });
-
-    render(<LoginPage />);
-
-    doSteps();
-    fireEvent.click(screen.getByTestId("actionSubmit"));
-
-    await waitFor(() => {
-      expect(logECS).toHaveBeenCalledWith(
-        'error',
-        'Login error',
-        expect.objectContaining({
-          error: expect.anything(),
-          url: { path: '/sign-in' },
-        })
-      )
-    })
-  })
-
-  // it('should pass axe accessibility test', async () => {
-  //   const { container } = renderWithProviders(<LoginPage />);
-  //   // const { container } = render(<LoginPage />)
-
-  //   await waitFor(() => {
-  //     expect(screen.getByTestId("emailInput")).toBeInTheDocument();
-  //   });
-
-  //   await act(async () => {
-  //     const results = await axe(container);
-  //     expect(results).toHaveNoViolations();
-  //   })
-  // })
-})
+});

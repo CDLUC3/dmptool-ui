@@ -15,18 +15,18 @@ const AffiliationSearchQuestionComponent: React.FC<AffiliationSearchQuestionProp
   handleAffiliationChange,
   handleOtherAffiliationChange
 }) => {
-  const Signup = useTranslations('SignupPage');
+  const t = useTranslations('AffiliationSearchQuestion');
   const { suggestions, handleSearch, isSearching, searchError } = useAffiliationSearch();
 
   return (
     <>
       <TypeAheadWithOther
-        label={parsedQuestion?.attributes?.label || Signup('institution')}
+        label={parsedQuestion?.attributes?.label || t('label')}
         fieldName="institution"
         setOtherField={setOtherField}
         isRequired={true}
         error={searchError ?? ''}
-        helpText={parsedQuestion?.attributes?.help || Signup('institutionHelp')}
+        helpText={parsedQuestion?.attributes?.help || t('helpText')}
         updateFormData={handleAffiliationChange}
         value={affiliationData?.affiliationName || ''}
         suggestions={suggestions}
@@ -39,8 +39,8 @@ const AffiliationSearchQuestionComponent: React.FC<AffiliationSearchQuestionProp
           <FormInput
             name="otherAffiliationName"
             type="text"
-            label="Other institution"
-            placeholder="Enter other institution name"
+            label={t('otherLabel')}
+            placeholder={t('otherPlaceholder')}
             value={otherAffiliationName}
             onChange={handleOtherAffiliationChange}
           />

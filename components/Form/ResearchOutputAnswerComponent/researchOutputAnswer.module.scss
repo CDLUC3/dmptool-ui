@@ -40,12 +40,6 @@
   background-color: var(--bg-white);
   border: 1px solid var(--border-color);
   border-radius: 6px;
-  transition: all 0.2s ease;
-
-  &:hover {
-    border-color: var(--focus-ring);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  }
 }
 
 .outputTitle {
@@ -64,32 +58,6 @@
 .outputActions {
   display: flex;
   gap: var(--space-2);
-}
-
-.editBtn { // This is needed because when the preview opens, the button state is active, with wrong styles
-  &:active:not(:disabled):not(:hover),
-  &[data-pressed]:not(:disabled):not(:hover) {
-    background: var(--bg-white) !important;
-  }
-
-  &:hover:not(:disabled) {
-    background: var(--blue-500) !important;
-    color: #fff !important;
-    box-shadow: 0 0 0 2px var(--blue-500) inset !important;
-  }
-}
-
-.deleteBtn {
-  &:active:not(:disabled):not(:hover),
-  &[data-pressed]:not(:disabled):not(:hover) {
-    background: var(--red-400) !important;
-  }
-
-  &:hover:not(:disabled) {
-    background: var(--blue-900);
-    color: #fff;
-    text-decoration: none;
-  }
 }
 
 .singleEditView {

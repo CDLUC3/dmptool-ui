@@ -3,10 +3,17 @@
 import React, { useCallback, useMemo, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "react-aria-components";
-import { TEXT_AREA_QUESTION_TYPE } from "@/lib/constants";
+import {
+  RESEARCH_OUTPUT_QUESTION_TYPE,
+  TEXT_AREA_QUESTION_TYPE,
+} from "@/lib/constants";
 import { useToast } from "@/context/ToastContext";
 import type { PlanAuthoringDataSource } from "../dataSource";
-import type { PlanCapabilities, PlanQuestionDefinition } from "../model";
+import type {
+  PlanCapabilities,
+  PlanQuestionDefinition,
+  PlanQuestionJsonError,
+} from "../model";
 import { questionAnchorId, questionKey } from "../model";
 import {
   buildSampleAnswerDraft,
@@ -14,6 +21,8 @@ import {
   resolveInitialAnswer,
 } from "../sampleAnswers";
 import { usePlanQuestionController } from "../usePlanQuestionController";
+import type { RegisterUnsavedChange } from "../useUnsavedChangesRegistry";
+import type { ResearchOutputRowHref } from "../researchOutputAnswer";
 import PlanQuestionHeader from "../PlanQuestionHeader";
 import PlanSampleAnswers from "../PlanSampleAnswers";
 import PlanQuestionAnswer from "../PlanQuestionAnswer";
@@ -21,27 +30,38 @@ import PlanQuestionSaveStatus from "../PlanQuestionSaveStatus";
 import PlanQuestionSidebar from "../PlanQuestionSidebar";
 import styles from "./PlanQuestion.module.scss";
 
+const JSON_ERROR_KEYS: Record<PlanQuestionJsonError, string> = {
+  missing: "messaging.errors.invalidQuestionType",
+  parseFailed: "messaging.errors.questionJSONFParseFailed",
+  unexpectedFormat: "messaging.errors.questionUnexpectedFormat",
+};
+
 interface PlanQuestionProps {
   question: PlanQuestionDefinition;
   capabilities: PlanCapabilities;
-  currentUserId: number;
   dataSource: PlanAuthoringDataSource;
   onCustomizeGuidance: () => void;
+  registerUnsavedChange?: RegisterUnsavedChange;
+  researchOutputRowHref?: ResearchOutputRowHref;
   className?: string;
 }
 
 export default function PlanQuestion({
   question,
   capabilities,
-  currentUserId,
   dataSource,
   onCustomizeGuidance,
+  registerUnsavedChange,
+  researchOutputRowHref,
   className,
 }: PlanQuestionProps) {
   const t = useTranslations("PlanAuthoring");
   const Global = useTranslations("Global");
   const toast = useToast();
   const key = questionKey(question.identity);
+  const titleId = `${questionAnchorId(question.identity)}-title`;
+  const isResearchOutput =
+    question.questionType === RESEARCH_OUTPUT_QUESTION_TYPE;
   const initialAnswer = useMemo(
     () => resolveInitialAnswer(question),
     [
@@ -52,19 +72,23 @@ export default function PlanQuestion({
     ]
   );
   const sampleAnswers = getPlanSampleAnswers(question);
+  const canEditAnswer = capabilities.canEditAnswers && !question.jsonError;
   const controller = usePlanQuestionController({
     questionKeyValue: key,
     initialAnswer,
     dataSource,
-    canEdit: capabilities.canEditAnswers,
+    canEdit: canEditAnswer,
+    registerUnsavedChange,
   });
+  const saveFailed =
+    controller.saveState.status === "failed" ||
+    controller.saveState.status === "invalid";
   const shellRef = useRef<HTMLElement | null>(null);
   const [heightPx, setHeightPx] = useState<number | null>(null);
 
-  const mode = controller.mode;
   const showSampleAnswers =
     question.questionType === TEXT_AREA_QUESTION_TYPE &&
-    capabilities.canEditAnswers &&
+    canEditAnswer &&
     sampleAnswers.length > 0;
 
   const onResizePointerDown = useCallback(
@@ -99,7 +123,7 @@ export default function PlanQuestion({
       ref={shellRef}
       id={questionAnchorId(question.identity)}
       className={[styles.planQuestion, className].filter(Boolean).join(" ")}
-      aria-labelledby={`${questionAnchorId(question.identity)}-title`}
+      aria-labelledby={titleId}
       data-resized={heightPx !== null}
       style={heightPx ? { height: `${heightPx}px` } : undefined}
     >
@@ -124,45 +148,48 @@ export default function PlanQuestion({
               }}
             />
           ) : null}
-          <PlanQuestionAnswer
-            question={question}
-            mode={mode}
-            draftAnswer={controller.draftAnswer}
-            disabled={!capabilities.canEditAnswers}
-            onChange={controller.setDraftAnswer}
-            onStartEditing={() => controller.setMode("editing")}
-          />
-          <div className={styles.questionActions}>
-            <PlanQuestionSaveStatus
-              state={controller.saveState}
-              errorMessage={controller.errorMessage}
-            />
-            {/* TODO(follow-up PR): for researchOutputTable, hide this Save
-                button while ResearchOutputAnswerComponent is in single-row
-                edit (onEditingStateChange), matching PlanOverviewQuestionPageShared. */}
-            {capabilities.canEditAnswers ? (
-              <Button
-                onPress={() => {
-                  void controller.saveNow();
-                }}
-              >
-                {Global("buttons.save")}
-              </Button>
-            ) : null}
-          </div>
+          {question.jsonError ? (
+            <p className={styles.questionError}>
+              {Global(JSON_ERROR_KEYS[question.jsonError])}
+            </p>
+          ) : (
+            <>
+              <PlanQuestionAnswer
+                question={question}
+                titleId={titleId}
+                draftAnswer={controller.draftAnswer}
+                disabled={!canEditAnswer}
+                onChange={controller.setDraftAnswer}
+                onSaveNow={controller.saveNow}
+                researchOutputRowHref={researchOutputRowHref}
+              />
+              <div className={styles.questionActions}>
+                {canEditAnswer ? (
+                  <PlanQuestionSaveStatus
+                    state={controller.saveState}
+                    lastSavedAt={question.lastSavedAt}
+                  />
+                ) : null}
+                {canEditAnswer && (!isResearchOutput || saveFailed) ? (
+                  <Button
+                    onPress={() => {
+                      void controller.saveNow();
+                    }}
+                  >
+                    {Global("buttons.save")}
+                  </Button>
+                ) : null}
+              </div>
+            </>
+          )}
         </div>
         <PlanQuestionSidebar
+          questionTitleId={titleId}
           sources={question.guidanceSources}
           comments={question.comments}
           canCustomize={capabilities.canCustomizeGuidance}
           canComment={capabilities.canComment && question.hasAnswer}
-          currentUserId={currentUserId}
-          canModerateComments={capabilities.canModerateComments}
-          loadGuidance={() => dataSource.loadGuidance(key)}
-          loadComments={() => dataSource.loadComments(key)}
-          onAddComment={(text) =>
-            dataSource.addComment(key, text).then(() => undefined)
-          }
+          onAddComment={(text) => dataSource.addComment(key, text)}
           onUpdateComment={(commentId, text) =>
             dataSource.updateComment(key, commentId, text)
           }

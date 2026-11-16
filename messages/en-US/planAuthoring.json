@@ -5,6 +5,7 @@
       "fundingTitle": "Funding for this plan",
       "membersTitle": "Plan members for this plan",
       "relatedWorksTitle": "Related works for this plan",
+      "relatedWorksEmpty": "Publish your plan to start adding published outputs to your DMP.",
       "adjustForPlan": "Adjust for this plan",
       "adjustFundingAria": "Adjust funding for this plan",
       "adjustMembersAria": "Adjust members for this plan",
@@ -17,7 +18,11 @@
       "writePlanIntro": "Work through each section below — answers save automatically. Use Jump to section to move between sections.",
       "questionsAnswered": "{answered} of {total} questions answered",
       "planDocument": "Plan document",
-      "planDocumentIntro": "This plan is represented by a single uploaded DMP document. Use <strong>Update document</strong> to replace it with a new file."
+      "planDocumentIntro": "This plan is represented by a single uploaded DMP document. Use <strong>Update document</strong> to replace it with a new file.",
+      "loadingPlan": "Loading plan…",
+      "loadFailed": "Unable to load this plan.",
+      "readOnlyTitle": "View only",
+      "readOnlyNotice": "You do not have the proper permissions to edit the answers in this plan."
     },
     "document": {
       "download": "Download",
@@ -51,11 +56,11 @@
       "resizeAria": "Resize question — drag, or double-click to reset",
       "resizeHint": "Drag to resize · double-click to reset",
       "answeredAria": "Answered",
-      "requiredByFunder": "Required by funder"
+      "requiredByFunder": "Required by funder",
+      "requirementsBy": "Requirements by {funder}"
     },
     "answer": {
       "notAnsweredYet": "Not answered yet.",
-      "editAnswer": "Edit answer",
       "label": "Answer",
       "numberLabel": "Number",
       "dateLabel": "Date"
@@ -64,25 +69,23 @@
       "unsavedChanges": "Unsaved changes",
       "saving": "Saving…",
       "saved": "Saved",
+      "lastSaved": "Last saved {relative}",
       "saveFailed": "Save failed",
       "unableToSave": "Unable to save answer."
     },
     "sidebar": {
       "ariaLabel": "Question guidance and comments",
-      "loadingGuidance": "Loading guidance…",
-      "funderGuidance": "Funder guidance",
       "selectGuidanceSource": "Select a guidance source.",
       "comments": "Comments",
       "showComments": "Show comments",
       "hideComments": "Hide comments",
-      "newCount": "{count} new"
+      "commentCount": "{count, plural, one {# comment} other {# comments}}"
     },
     "guidance": {
       "sourcesAria": "Guidance sources",
       "customize": "+ Customize"
     },
     "comments": {
-      "loading": "Loading comments…",
       "empty": "No comments yet.",
       "listAria": "Comments",
       "admin": " (admin)",
@@ -92,7 +95,10 @@
       "editAria": "Edit comment",
       "posting": "Posting…",
       "comment": "Comment",
-      "saveBeforeCommenting": "Save an answer before adding comments."
+      "saveBeforeCommenting": "Save an answer before adding comments.",
+      "addFailed": "Unable to add comment. Try again.",
+      "updateFailed": "Unable to update comment. Try again.",
+      "deleteFailed": "Unable to delete comment. Try again."
     },
     "customizeDialog": {
       "title": "Customize Best Practice",
@@ -106,7 +112,9 @@
       "searchByName": "Search by name",
       "enterNamePlaceholder": "Enter name…",
       "noMatchingSources": "No matching sources.",
-      "saveGuidanceSources": "Save guidance sources"
+      "saveGuidanceSources": "Save guidance sources",
+      "saveFailed": "Unable to update guidance sources. Try again.",
+      "searchFailed": "Unable to search organizations. Try again."
     },
     "sectionPicker": {
       "switchSectionAria": "Switch section",
@@ -134,7 +142,8 @@
     "section": {
       "badge": "Section {index}",
       "ofTotal": "Section {index} of {total}",
-      "backToTop": "Back to top of section {title}"
+      "backToTop": "Back to top of section {title}",
+      "noQuestions": "There are no questions available in this section."
     },
     "sampleAnswers": {
       "viewSampleAnswer": "View sample answer",
@@ -142,6 +151,15 @@
       "useAnswer": "Use answer",
       "organizationSampleText": "{org} sample text",
       "sampleTextAdded": "Sample text added"
+    },
+    "common": {
+      "retry": "Retry"
+    },
+    "researchOutput": {
+      "backToPlan": "Back to plan",
+      "notFoundTitle": "Research output not found",
+      "notFoundBody": "That research output question or row is missing from this plan.",
+      "saveFailed": "Unable to save research output."
     }
   }
 }

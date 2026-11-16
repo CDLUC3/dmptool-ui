@@ -2,9 +2,16 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
-import { Button } from "react-aria-components";
+import {
+  Button,
+  Dialog,
+  DialogTrigger,
+  OverlayArrow,
+  Popover,
+} from "react-aria-components";
 import { DmpIcon } from "@/components/Icons";
 import SafeHtml from "@/components/SafeHtml";
+import { stripHtmlTags } from "@/utils/general";
 import type { PlanQuestionDefinition } from "../model";
 import { questionAnchorId } from "../model";
 import styles from "./PlanQuestionHeader.module.scss";
@@ -20,6 +27,8 @@ export default function PlanQuestionHeader({
 }: PlanQuestionHeaderProps) {
   const t = useTranslations("PlanAuthoring");
   const Global = useTranslations("Global");
+  const PlanOverview = useTranslations("PlanOverview");
+  const anchorId = questionAnchorId(question.identity);
   const [expanded, setExpanded] = useState(false);
   const [overflowing, setOverflowing] = useState(false);
   const requirementRef = useRef<HTMLDivElement | null>(null);
@@ -51,6 +60,7 @@ export default function PlanQuestionHeader({
         {question.hasAnswer ? (
           <span
             className={styles.answeredIcon}
+            role="img"
             aria-label={t("question.answeredAria")}
           >
             <DmpIcon
@@ -59,18 +69,57 @@ export default function PlanQuestionHeader({
               height={20}
             />
           </span>
-        ) : null}
-        <h3 id={`${questionAnchorId(question.identity)}-title`}>
-          {question.title}
+        ) : (
+          <span
+            className={styles.notAnsweredIcon}
+            role="img"
+            aria-label={PlanOverview("question.notAnswered")}
+          >
+            <DmpIcon
+              icon="cancel"
+              width={20}
+              height={20}
+              fill="currentColor"
+            />
+          </span>
+        )}
+        <h3 id={`${anchorId}-title`}>
+          {stripHtmlTags(question.title)}
         </h3>
       </div>
       {question.required ? (
-        <span className={styles.requiredBadge}>
-          {t("question.requiredByFunder")}
-        </span>
+        <div className={styles.requiredRow}>
+          <DialogTrigger>
+            <Button className={styles.requiredBadge}>
+              {t("question.requiredByFunder")}
+            </Button>
+            <Popover className="dynamic-popover-width react-aria-Popover">
+              <OverlayArrow>
+                <svg
+                  width={12}
+                  height={12}
+                  viewBox="0 0 12 12"
+                  aria-hidden="true"
+                >
+                  <path d="M0 0 L6 6 L12 0" />
+                </svg>
+              </OverlayArrow>
+              <Dialog aria-label={t("question.requiredByFunder")}>
+                <div className="flex-col">
+                  {PlanOverview("page.requiredByFunderInfo")}
+                </div>
+              </Dialog>
+            </Popover>
+          </DialogTrigger>
+        </div>
       ) : null}
       {question.requirementHtml ? (
         <>
+          {question.requirementOrgLabel ? (
+            <p className={styles.requirementLabel}>
+              {t("question.requirementsBy", { funder: question.requirementOrgLabel })}
+            </p>
+          ) : null}
           <div
             ref={requirementRef}
             className={styles.questionRequirement}

@@ -6,6 +6,7 @@ import '@testing-library/jest-dom';
 import { axe, toHaveNoViolations } from 'jest-axe';
 import PlanComments from '../index';
 import type { PlanComment } from '../../model';
+import { makeComment } from '../../mocks';
 
 expect.extend(toHaveNoViolations);
 
@@ -26,8 +27,8 @@ jest.mock('react-aria-components', () => ({
       {children}
     </form>
   ),
-  Button: ({ children, isDisabled, className, type, ...rest }: any) => (
-    <button type={type} disabled={isDisabled} className={className} {...rest}>
+  Button: ({ children, isDisabled, className, type, onPress, ...rest }: any) => (
+    <button type={type} disabled={isDisabled} className={className} onClick={onPress} {...rest}>
       {children}
     </button>
   ),
@@ -44,22 +45,17 @@ jest.mock('react-aria-components', () => ({
   ),
 }));
 
-const baseComment: PlanComment = {
-  id: 1,
+const baseComment: PlanComment = makeComment({
   authorId: 100,
-  authorName: 'Ada Lovelace',
   text: 'This looks great.',
   createdLabel: 'Aug 22, 2026',
   isEdited: false,
   isFeedback: false,
-};
+});
 
 const defaultProps = {
   comments: [] as PlanComment[],
   canAdd: true,
-  currentUserId: 100,
-  canModerateComments: false,
-  loading: false,
   editingCommentId: null,
   editingCommentText: '',
   setEditingCommentText: jest.fn(),
@@ -75,14 +71,8 @@ describe('PlanComments', () => {
     jest.clearAllMocks();
   });
 
-  it('shows a loading message when loading is true', () => {
-    render(<PlanComments {...defaultProps} loading={true} />);
-
-    expect(screen.getByText('PlanAuthoring.comments.loading')).toBeInTheDocument();
-  });
-
-  it('shows an empty-state message when there are no comments and not loading', () => {
-    render(<PlanComments {...defaultProps} comments={[]} loading={false} />);
+  it('shows an empty-state message when there are no comments', () => {
+    render(<PlanComments {...defaultProps} comments={[]} />);
 
     expect(screen.getByText('PlanAuthoring.comments.empty')).toBeInTheDocument();
   });
@@ -121,51 +111,26 @@ describe('PlanComments', () => {
     expect(screen.getByText(/PlanAuthoring.comments.edited/)).toBeInTheDocument();
   });
 
-  it('shows an Edit button for the current user\'s own comment', () => {
-    render(<PlanComments {...defaultProps} comments={[baseComment]} currentUserId={100} />);
+  it('shows an Edit button when the comment can be edited', () => {
+    render(<PlanComments {...defaultProps} comments={[baseComment]} />);
 
     expect(screen.getByRole('button', { name: 'Global.buttons.edit' })).toBeInTheDocument();
   });
 
-  it('does not show an Edit button for another user\'s comment', () => {
-    render(<PlanComments {...defaultProps} comments={[baseComment]} currentUserId={999} />);
+  it('shows only Delete when the comment can be deleted but not edited (moderator)', () => {
+    render(
+      <PlanComments {...defaultProps} comments={[{ ...baseComment, canEdit: false }]} />
+    );
 
+    expect(screen.getByRole('button', { name: 'Global.buttons.delete' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Global.buttons.edit' })).not.toBeInTheDocument();
   });
 
-  it('shows a Delete button for the comment owner even without moderation rights', () => {
+  it('hides both Edit and Delete when the comment allows neither', () => {
     render(
       <PlanComments
         {...defaultProps}
-        comments={[baseComment]}
-        currentUserId={100}
-        canModerateComments={false}
-      />
-    );
-
-    expect(screen.getByRole('button', { name: 'Global.buttons.delete' })).toBeInTheDocument();
-  });
-
-  it('shows a Delete button for a moderator on someone else\'s comment', () => {
-    render(
-      <PlanComments
-        {...defaultProps}
-        comments={[baseComment]}
-        currentUserId={999}
-        canModerateComments={true}
-      />
-    );
-
-    expect(screen.getByRole('button', { name: 'Global.buttons.delete' })).toBeInTheDocument();
-  });
-
-  it('hides both Edit and Delete for a non-owner without moderation rights', () => {
-    render(
-      <PlanComments
-        {...defaultProps}
-        comments={[baseComment]}
-        currentUserId={999}
-        canModerateComments={false}
+        comments={[{ ...baseComment, canEdit: false, canDelete: false }]}
       />
     );
 
@@ -175,7 +140,7 @@ describe('PlanComments', () => {
 
   it('calls handleEditComment with the comment when Edit is clicked', async () => {
     const user = userEvent.setup();
-    render(<PlanComments {...defaultProps} comments={[baseComment]} currentUserId={100} />);
+    render(<PlanComments {...defaultProps} comments={[baseComment]} />);
 
     await user.click(screen.getByRole('button', { name: 'Global.buttons.edit' }));
 
@@ -184,7 +149,7 @@ describe('PlanComments', () => {
 
   it('calls handleDeleteComment with the comment when Delete is clicked', async () => {
     const user = userEvent.setup();
-    render(<PlanComments {...defaultProps} comments={[baseComment]} currentUserId={100} />);
+    render(<PlanComments {...defaultProps} comments={[baseComment]} />);
 
     await user.click(screen.getByRole('button', { name: 'Global.buttons.delete' }));
 
@@ -205,6 +170,27 @@ describe('PlanComments', () => {
       'Editing this comment'
     );
     expect(screen.queryByText('This looks great.')).not.toBeInTheDocument();
+  });
+
+  it('focuses the edit box when editing starts, and not again on later renders', () => {
+    const editing = (text: string) => (
+      <>
+        <button type="button">Elsewhere</button>
+        <PlanComments
+          {...defaultProps}
+          comments={[baseComment]}
+          editingCommentId={baseComment.id}
+          editingCommentText={text}
+        />
+      </>
+    );
+    const { rerender } = render(editing('Editing'));
+    expect(screen.getByRole('textbox', { name: 'PlanAuthoring.comments.editAria' })).toHaveFocus();
+
+    screen.getByRole('button', { name: 'Elsewhere' }).focus();
+    rerender(editing('Editing more'));
+
+    expect(screen.getByRole('button', { name: 'Elsewhere' })).toHaveFocus();
   });
 
   it('calls setEditingCommentText as the edit textarea changes', () => {
@@ -358,6 +344,53 @@ describe('PlanComments', () => {
     });
   });
 
+  it('shows an error and keeps the typed text when adding fails', async () => {
+    jest.spyOn(console, 'error').mockImplementation(() => undefined);
+    const user = userEvent.setup();
+    const onAdd = jest.fn().mockRejectedValue(new Error('network down'));
+    render(<PlanComments {...defaultProps} canAdd={true} onAdd={onAdd} />);
+
+    const textarea = screen.getByRole('textbox', { name: 'PlanAuthoring.comments.addAria' });
+    await user.type(textarea, 'Keep me');
+    await user.click(screen.getByRole('button', { name: 'PlanAuthoring.comments.comment' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('PlanAuthoring.comments.addFailed');
+    expect(textarea).toHaveValue('Keep me');
+    expect(screen.getByRole('button', { name: 'PlanAuthoring.comments.comment' })).not.toBeDisabled();
+  });
+
+  it('clears the add error after a successful retry', async () => {
+    jest.spyOn(console, 'error').mockImplementation(() => undefined);
+    const user = userEvent.setup();
+    const onAdd = jest
+      .fn()
+      .mockRejectedValueOnce(new Error('network down'))
+      .mockResolvedValueOnce(undefined);
+    render(<PlanComments {...defaultProps} canAdd={true} onAdd={onAdd} />);
+
+    const textarea = screen.getByRole('textbox', { name: 'PlanAuthoring.comments.addAria' });
+    await user.type(textarea, 'Retry me');
+    await user.click(screen.getByRole('button', { name: 'PlanAuthoring.comments.comment' }));
+    await screen.findByRole('alert');
+
+    await user.click(screen.getByRole('button', { name: 'PlanAuthoring.comments.comment' }));
+
+    await waitFor(() => {
+      expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    });
+    expect(textarea).toHaveValue('');
+    expect(onAdd).toHaveBeenLastCalledWith('Retry me');
+  });
+
+  it.each(['updateFailed', 'deleteFailed'] as const)(
+    'shows the %s mutation error',
+    (mutationError) => {
+      render(<PlanComments {...defaultProps} mutationError={mutationError} />);
+
+      expect(screen.getByRole('alert')).toHaveTextContent(`PlanAuthoring.comments.${mutationError}`);
+    }
+  );
+
   it('does not call onAdd when submitting with blank/whitespace-only text', () => {
     const onAdd = jest.fn();
     render(<PlanComments {...defaultProps} canAdd={true} onAdd={onAdd} />);
@@ -382,7 +415,7 @@ describe('PlanComments', () => {
   });
 
   it('renders multiple comments in order', () => {
-    const second: PlanComment = { ...baseComment, id: 2, authorName: 'Grace Hopper', text: 'Second comment' };
+    const second: PlanComment = { ...baseComment, id: 'answer-2', authorName: 'Grace Hopper', text: 'Second comment' };
     render(<PlanComments {...defaultProps} comments={[baseComment, second]} />);
 
     const items = screen.getAllByRole('listitem');
