@@ -973,5 +973,52 @@
       "notice": "Ela mostra o modelo publicado com as suas personalizações mais recentes, incluindo as que ainda não foram publicadas. As orientações da sua organização aparecem na própria aba.",
       "empty": "O modelo não tem perguntas para pré-visualizar."
     }
+  },
+  "TemplateLinks": {
+    "heading": "Links",
+    "description": "Exibidos com este modelo na página de Requisitos dos Financiadores. Até cinco de cada tipo.",
+    "count": "{count} de {max}",
+    "funder": {
+      "title": "Links do financiador",
+      "empty": "Nenhum link do financiador ainda.",
+      "add": "Adicionar link do financiador",
+      "addTitle": "Adicionar link do financiador",
+      "editTitle": "Editar link do financiador",
+      "listLabel": "Links do financiador"
+    },
+    "samplePlan": {
+      "title": "Links de planos de exemplo",
+      "empty": "Nenhum link de plano de exemplo ainda.",
+      "add": "Adicionar link de plano de exemplo",
+      "addTitle": "Adicionar link de plano de exemplo",
+      "editTitle": "Editar link de plano de exemplo",
+      "listLabel": "Links de planos de exemplo"
+    },
+    "labels": {
+      "linkText": "Texto do link",
+      "linkTextHelp": "Exibido como o link na página de Requisitos dos Financiadores",
+      "linkUrl": "URL do link",
+      "openLink": "Abrir {text} em uma nova aba",
+      "editLink": "Editar {text}",
+      "removeLink": "Remover {text}"
+    },
+    "buttons": {
+      "addLink": "Adicionar link",
+      "adding": "Adicionando...",
+      "saveLink": "Salvar link"
+    },
+    "messages": {
+      "added": "Link adicionado",
+      "updated": "Link atualizado",
+      "removed": "Link removido",
+      "errors": {
+        "textRequired": "Informe o texto do link",
+        "urlRequired": "Informe a URL do link",
+        "urlInvalid": "Informe uma URL válida que comece com https:// ou http://",
+        "loadFailed": "Não foi possível carregar os links deste modelo",
+        "saveFailed": "Não foi possível salvar o link. Tente novamente.",
+        "removeFailed": "Não foi possível remover o link. Tente novamente."
+      }
+    }
   }
 }

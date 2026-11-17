@@ -46,3 +46,41 @@ mutation UpdateTemplate($templateId: Int!, $name: String!) {
     }
   }
 }
+
+mutation AddTemplateLink($templateId: Int!, $linkType: TemplateLinkType!, $url: String!, $text: String) {
+  addTemplateLink(templateId: $templateId, linkType: $linkType, url: $url, text: $text) {
+    id
+    linkType
+    url
+    text
+    errors {
+      general
+      linkType
+      url
+      text
+    }
+  }
+}
+
+mutation UpdateTemplateLink($templateLinkId: Int!, $url: String!, $text: String) {
+  updateTemplateLink(templateLinkId: $templateLinkId, url: $url, text: $text) {
+    id
+    linkType
+    url
+    text
+    errors {
+      general
+      url
+      text
+    }
+  }
+}
+
+mutation RemoveTemplateLink($templateLinkId: Int!) {
+  removeTemplateLink(templateLinkId: $templateLinkId) {
+    id
+    errors {
+      general
+    }
+  }
+}

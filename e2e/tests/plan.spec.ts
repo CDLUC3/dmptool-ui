@@ -84,10 +84,28 @@ async function searchFunders(page: Page, term: string) {
   }).toPass();
 }
 
-// Searches for NIH, selects it, and continues to the Funding status step
+// After a funder search, returns the named funder's radio, clicking "Load more" until it's listed. Apollo sorts the
+// results by name and the page shows 5 at a time, so on an environment with the full ROR data (like AWS dev) a
+// search can match many funders and the one we want can be several pages down
+async function findFunder(page: Page, name: string): Promise<Locator> {
+  const results = page.getByRole('radiogroup', { name: /funders found/ });
+  const radios = results.getByRole('radio');
+  const funder = results.getByRole('radio', { name, exact: true });
+  const loadMore = page.getByRole('button', { name: 'Load more', exact: true });
+  while ((await funder.count()) === 0) {
+    expect(await loadMore.count(), `"${name}" is in the funder search results`).toBeGreaterThan(0);
+    const shown = await radios.count();
+    await loadMore.click();
+    await expect(radios).not.toHaveCount(shown);
+  }
+  return funder;
+}
+
+// Searches for NIH, selects it, and continues to the Funding status step. The search is NIH's full name, not "NIH",
+// because "NIH" is part of many other funders' names and domains
 async function chooseNIH(page: Page, projectId: number) {
-  await searchFunders(page, 'NIH');
-  await checkAria(page.getByRole('radiogroup', { name: /funders found/ }).getByRole('radio', { name: 'National Institutes of Health (nih.gov)' }));
+  await searchFunders(page, 'National Institutes of Health');
+  await checkAria(await findFunder(page, 'National Institutes of Health (nih.gov)'));
   await clickWhenHydrated(nextButton(page));
   await page.waitForURL(new RegExp(`/projects/${projectId}/create/fundings/\\d+/status`));
   await expect(page.getByRole('heading', { level: 1, name: 'Funding status' })).toBeVisible();
@@ -219,19 +237,21 @@ test.describe('creating a project', () => {
     await expect(page.getByRole('heading', { level: 1, name: 'Add Funding Details' })).toBeVisible();
 
     // Pick an existing funder from the suggestions. Typing a new name would create a new organization,
-    // which the tests can't remove afterwards
-    await page.getByRole('textbox', { name: 'Funder name' }).pressSequentially('National Science', { delay: 50 });
-    await page.getByRole('option', { name: 'National Science Foundation (nsf.gov)' }).click();
-    await fillWhenHydrated(page.getByRole('textbox', { name: 'Grant number/url' }), 'E2E-NSF-GRANT');
+    // which the tests can't remove afterwards. Use NIH: other funders like NSF aren't in every environment's data.
+    // Type its full name, because the suggestions are a single page sorted by name, and a shorter term matches
+    // too many organizations to list NIH when the environment has the full ROR data
+    await page.getByRole('textbox', { name: 'Funder name' }).pressSequentially('National Institutes of Health', { delay: 50 });
+    await page.getByRole('option', { name: 'National Institutes of Health (nih.gov)' }).click();
+    await fillWhenHydrated(page.getByRole('textbox', { name: 'Grant number/url' }), 'E2E-MANUAL-GRANT');
     await clickAndWaitFor(page, page.getByRole('button', { name: 'Save changes' }), new RegExp(`/projects/${projectId}/project`));
 
     await fillProjectDetails(page, title);
-    await finishProject(page, projectId, title, 'National Science Foundation (nsf.gov)');
+    await finishProject(page, projectId, title, 'National Institutes of Health (nih.gov)');
 
     const project = await savedProject(page, projectId);
     expect(project.fundings).toEqual([expect.objectContaining({
-      grantId: 'E2E-NSF-GRANT',
-      affiliation: expect.objectContaining({ displayName: 'National Science Foundation (nsf.gov)' }),
+      grantId: 'E2E-MANUAL-GRANT',
+      affiliation: expect.objectContaining({ displayName: 'National Institutes of Health (nih.gov)' }),
     })]);
   });
 
