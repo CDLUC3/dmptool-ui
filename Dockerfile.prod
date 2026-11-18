@@ -5,8 +5,16 @@ WORKDIR /app
 
 # Copy dependencies from deps stage
 COPY package*.json ./
+COPY scripts/check-npm-audit.cjs ./scripts/
 RUN npm ci
-RUN npm audit --omit=dev --audit-level=high
+# npm audit has no per-advisory ignore; the checker allows one known advisory
+# and fails on any other high/critical finding (see the script for details)
+RUN set +e; \
+    npm audit --omit=dev --audit-level=high --json > /tmp/npm-audit.json; \
+    audit_status=$?; \
+    set -e; \
+    node scripts/check-npm-audit.cjs /tmp/npm-audit.json "$audit_status"; \
+    rm -f /tmp/npm-audit.json
 
 COPY . .
 # Set production environment

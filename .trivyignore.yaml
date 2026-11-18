@@ -1,0 +1,16 @@
+# .trivyignore.yaml
+# ignoring `picomatch` ReDoS vulnerability until there is a patch for this vulnerability. It is used by 
+# `@parcel/watcher` and `sass --watch` for file watching, which is not executed at runtime in our application. 
+#The risk is low as it only affects development/build processes.
+vulnerabilities:
+  - id: CVE-2026-112366   # same advisory as GHSA-fc5q-39xc-vjpf (https://github.com/advisories/GHSA-fc5q-39xc-vjpf)
+    purls:
+      - pkg:npm/picomatch
+    expired_at: 2027-02-17
+    statement: >
+      ReDoS in picomatch; no patched version exists. Only reached via
+      @parcel/watcher (next-intl dev/build watcher, sass --watch), which compiles
+      config-defined ignore globs, never user input. Not executed at runtime so low risk for now.
+
+      `next-intl` uses it in its Next plugin to watch message and source files, and that only runs during `next dev/next build`.
+      `sass` uses it only for `sass --watch`, and Next doesn't do that when it compiles the `.module.scss files
