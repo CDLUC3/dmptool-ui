@@ -13,9 +13,9 @@ WORKDIR /app
 # and perform container health checks
 RUN apk add --no-cache bash curl
 
-# Copy package.json and package-lock.json
+# Copy package.json, package-lock.json and .npmrc
 # to the /app working directory
-COPY package*.json ./
+COPY package*.json .npmrc ./
 
 # Install dependencies in /app
 RUN npm ci

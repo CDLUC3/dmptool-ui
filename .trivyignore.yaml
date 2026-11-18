@@ -6,7 +6,7 @@ vulnerabilities:
   - id: CVE-2026-112366   # same advisory as GHSA-fc5q-39xc-vjpf (https://github.com/advisories/GHSA-fc5q-39xc-vjpf)
     purls:
       - pkg:npm/picomatch
-    expired_at: 2027-02-17
+    expired_at: 2027-01-17
     statement: >
       ReDoS in picomatch; no patched version exists. Only reached via
       @parcel/watcher (next-intl dev/build watcher, sass --watch), which compiles
