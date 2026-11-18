@@ -267,6 +267,8 @@
 - Removed the ununused `app/[locale]/users/[userId]/projects` page, since we no longer link to it since we updated the `app/[locale]/users/[userId]/manage` page to link to `projects` instead of `plans` [#379]
 
 ## Chore
+- Updated `@apollo/client` to `v4.3.8`, `@dmptool/types` `v4.0.1`, `graphql` to `v16.15.0`, `jose` to `v6.2.17`, `next` to `v16.4.5`, `react` to `v19.3.1`, `react-dom` to `v19.3.1`, `@graphql-codegen/cli` to `v6.3.1`,`@graphql-codegen/client-preset` to `v5.3.0`, `@graphql-codegen/typed-document-node` to `v6.1.8`,` @graphql-codegen/typescript` to `v5.0.10`,`@graphql-codegen/typescript-operations` to `v5.1.0`, `@types/node` to `v24.19.2`, `@types/react` to `v19.3.0`, `@types/react-dom` to `v19.3.0`, `eslint-plugin-unused-imports` to `v4.4.1`, `qs` to `v6.16.1`, `systeminformation` to `v5.33.16` [#627]
+- Added an exception for `npm audit` for `picomatch` high vulnerability in new `check-npm-audit.cjs` and updated `Dockerfile.prod` to use that exception. Also added `.trivyignore.yaml` [#627]
 - Updated `zod` to `v4.6.6` to address high vulnerability [#580]
 - Updated `versioning.yml` to just copy `package.json` and `CHANGELOG.md` back to `development` branch [#341]
 - Updated `next` to `v16.3.3`, `js-yaml` to `v4.3.2` and `sharp` to `v0.35.4` due to high vulnerabilities [#341]
