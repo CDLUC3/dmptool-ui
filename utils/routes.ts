@@ -55,6 +55,11 @@ const routes = {
   "login.forgotPassword": "/login/forgot-password",
   "login.resetPassword": "/login/reset-password",
 
+  // Email confirmation routes
+  "email.confirmEmail": "/email/confirm-email/:token",
+  "email.confirmed": "/email/email-confirmed",
+  "email.verificationFailed": "/email/verification-failed",
+
   // Project routes
   "projects.index": "/projects",
   "projects.show": "/projects/:projectId",

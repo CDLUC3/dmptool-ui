@@ -1,59 +1,48 @@
-import { fireEvent, render, screen } from '@testing-library/react';
-import { useRouter } from '@/i18n/routing';
+import React from 'react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import { axe, toHaveNoViolations } from 'jest-axe';
+import { useRouter } from '@/i18n/routing';
 import EmailConfirmed from '../page';
 
 expect.extend(toHaveNoViolations);
 
 jest.mock('@/i18n/routing', () => ({
-  useRouter: jest.fn(() => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn() })),
+  useRouter: jest.fn(),
 }));
 
 describe('EmailConfirmed', () => {
-  let mockRouter;
+  const mockPush = jest.fn();
 
   beforeEach(() => {
-    window.scrollTo = jest.fn(); // Called by the wrapping PageHeader
-    mockRouter = { push: jest.fn() };
-    (useRouter as jest.Mock).mockReturnValue(mockRouter);
+    window.scrollTo = jest.fn(); // Called by PageHeader
+    (useRouter as jest.Mock).mockReturnValue({ push: mockPush });
   });
 
   afterEach(() => {
     jest.clearAllMocks();
   });
 
-  it('should render the component with heading and paragraph', () => {
+  it('tells the user their email was confirmed', () => {
     render(<EmailConfirmed />);
 
-    // Check if the title and text are rendered
-    expect(screen.getByRole('heading', { name: /email confirmed/i })).toBeInTheDocument();
-    expect(screen.getByText(/thanks for confirming your alias email/i)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'confirmed.title' })).toBeInTheDocument();
+    expect(screen.getByText('confirmed.description')).toBeInTheDocument();
   });
 
-  it('should render a "Log in" button', () => {
+  it('takes the user to their profile', async () => {
     render(<EmailConfirmed />);
 
-    // Check if the button is rendered
-    const loginButton = screen.getByRole('button', { name: /log in/i });
-    expect(loginButton).toBeInTheDocument();
-  });
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'confirmed.button' }));
+    });
 
-  it('should navigate to "/login" when "Log in" button is clicked', () => {
-    render(<EmailConfirmed />);
-
-    // Get the login button and simulate a click
-    const loginButton = screen.getByRole('button', { name: /log in/i });
-    fireEvent.click(loginButton);
-
-    // Verify that router.push was called with "/login"
-    expect(mockRouter.push).toHaveBeenCalledWith('/login');
+    expect(mockPush).toHaveBeenCalledWith('/account/profile');
   });
 
   it('should pass axe accessibility test', async () => {
-    const renderResult = render(<EmailConfirmed />);
-    const container = renderResult.container;
-
-    const results = await axe(container);
-    expect(results).toHaveNoViolations();
-  })
+    const { container } = render(<EmailConfirmed />);
+    await act(async () => {
+      expect(await axe(container)).toHaveNoViolations();
+    });
+  });
 });

@@ -43,6 +43,12 @@ jest.mock("@/utils/index", () => ({
   routePath: (name: string) => `#/${name}`,
 }));
 
+const mockGetReturnTo = jest.fn();
+jest.mock("@/utils/returnTo", () => ({
+  getReturnTo: () => mockGetReturnTo(),
+  isEmailConfirmationReturn: (path?: string) => Boolean(path?.startsWith("/email/confirm-email/")),
+}));
+
 jest.mock("@/components/Form/TypeAheadWithOther", () => ({
   useAffiliationSearch: () => ({
     suggestions: [],
@@ -122,6 +128,7 @@ describe("SSOCheckContainer", () => {
     process.env.NEXT_PUBLIC_AUTH_ENDPOINT = "#auth";
 
     window.location.hash = "";
+    mockGetReturnTo.mockReturnValue(undefined);
   });
 
   describe("email step", () => {
@@ -215,6 +222,26 @@ describe("SSOCheckContainer", () => {
     });
   });
 
+  describe("email confirmation reminder", () => {
+    it("reminds the user which email to sign in with when they came from the email confirmation page", async () => {
+      mockGetReturnTo.mockReturnValue("/email/confirm-email/abc");
+      renderComponent("login");
+
+      expect(await screen.findByTestId("confirmEmailSignInHint")).toHaveTextContent("confirmEmailSignInHint");
+    });
+
+    it("does not show the reminder for other return pages or when registering", async () => {
+      mockGetReturnTo.mockReturnValue("/plans");
+      const { unmount } = renderComponent("login");
+      await waitFor(() => expect(screen.queryByTestId("confirmEmailSignInHint")).not.toBeInTheDocument());
+      unmount();
+
+      mockGetReturnTo.mockReturnValue("/email/confirm-email/abc");
+      renderComponent("register");
+      await waitFor(() => expect(screen.queryByTestId("confirmEmailSignInHint")).not.toBeInTheDocument());
+    });
+  });
+
   describe("sso-check results", () => {
     it("moves to the sso step when the email belongs to an SSO provider", async () => {
       const user = userEvent.setup();
@@ -243,6 +270,25 @@ describe("SSOCheckContainer", () => {
       await user.click(await screen.findByTestId("actionSsoSubmit"));
 
       const expected = new URLSearchParams({ email: "user@example.com", entityId: "entity-1" }).toString();
+      await waitFor(() => expect(window.location.hash).toBe(`#auth/sso/passthru?${expected}`));
+    });
+
+    it("passes returnTo to the SSO passthru URL so the user comes back to that page", async () => {
+      const user = userEvent.setup();
+      mockGetReturnTo.mockReturnValue("/email/confirm-email/abc");
+      mockFetch.mockResolvedValue(
+        jsonResponse(200, { entityId: "entity-1", displayName: "Test University", affiliationId: "aff-1" })
+      );
+      renderComponent();
+
+      await submitEmail(user, "user@example.com");
+      await user.click(await screen.findByTestId("actionSsoSubmit"));
+
+      const expected = new URLSearchParams({
+        email: "user@example.com",
+        entityId: "entity-1",
+        returnTo: "/email/confirm-email/abc",
+      }).toString();
       await waitFor(() => expect(window.location.hash).toBe(`#auth/sso/passthru?${expected}`));
     });
 
@@ -381,6 +427,20 @@ describe("SSOCheckContainer", () => {
       expect(JSON.parse(options.body)).toEqual({ email: "user@example.com", password: "Secret123!" });
       expect(mockClearCache).toHaveBeenCalled();
       expect(mockSetIsAuthenticated).toHaveBeenCalledWith(true);
+    });
+
+    it("returns to the returnTo page instead of the home page after login", async () => {
+      const user = userEvent.setup();
+      // A hash keeps jsdom from trying to load a new page
+      mockGetReturnTo.mockReturnValue("#/email/confirm-email/abc");
+      renderComponent("login");
+      await goToLogin(user);
+      mockFetch.mockResolvedValueOnce(jsonResponse(200));
+
+      await user.type(screen.getByLabelText("password"), "Secret123!");
+      await user.click(screen.getByTestId("actionSubmit"));
+
+      await waitFor(() => expect(window.location.hash).toBe("#/email/confirm-email/abc"));
     });
 
     it("shows a generic login error on a 4xx response", async () => {

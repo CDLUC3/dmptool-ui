@@ -1,5 +1,6 @@
 {
   "AuthPage": {
+    "confirmEmailSignInHint": "To confirm your new email address, sign in with the email address you normally use for DMP Tool, not the one you're confirming.",
     "loginTitle": "Login",
     "loginToLink": "Login to link your Single Sign on (SSO) account to your existing DMP Tool account",
     "registerTitle": "Create a DMP tool account",
@@ -78,6 +79,30 @@
     },
     "buttons": {
       "sending": "Sending..."
+    }
+  },
+  "EmailConfirmation": {
+    "confirm": {
+      "title": "Confirm your email address",
+      "confirming": "Confirming your email address...",
+      "retryButton": "Try again",
+      "signInTitle": "Sign in to confirm this email",
+      "signInDescription": "Sign in with the email address you already use for DMP Tool, not the one you're confirming. You'll come back to this page to finish confirming it.",
+      "signInButton": "Sign in",
+      "error": "Something went wrong while confirming your email address. Please try again."
+    },
+    "confirmed": {
+      "title": "Email confirmed",
+      "description": "Thanks for confirming your email address. You can now use it to sign in, and you'll see anything that was shared with it.",
+      "button": "Go to my profile"
+    },
+    "failed": {
+      "title": "We couldn't confirm your email",
+      "invalid": "This confirmation link is no longer valid. It may have expired or already been used. You can request a new link from your profile.",
+      "wrongAccount": "This confirmation link was sent for a different DMP Tool account. Sign out using the menu at the top of the page, sign in to the account that added this email address, and open the link again.",
+      "claimedByOther": "This email address is already confirmed on another DMP Tool account.",
+      "generic": "We couldn't confirm your email address. You can request a new link from your profile.",
+      "profileButton": "Go to my profile"
     }
   }
 }

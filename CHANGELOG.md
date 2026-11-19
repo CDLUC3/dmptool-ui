@@ -1,4 +1,6 @@
 ## Added
+- Added email confirmation for alias emails. After an alias is added on the profile page, and when "Resend verification link" is used, the UI asks `dmptool-auth` (`POST /email-confirmation/token`) to email a confirmation link. Moved the confirm page from `/email/confirm-email/[userId]/[token]` to `/email/confirm-email/[token]`, because the token already identifies the user. The page now asks signed-out users to sign in, and confirms the email (`POST /email-confirmation/confirm`) as soon as a signed-in user opens it. Email link scanners aren't signed in, so they can't use up the link. If the request fails unexpectedly, the page shows a "Try again" button. Added `useSendEmailConfirmation`, `utils/emailConfirmation.ts`, the `email.*` routes, and the `EmailConfirmation` translations in en-US and pt-BR [#106]
+- Added a `returnTo` param to the login page. The email confirmation page's Sign in button uses it so that the user comes back to the page, and their email is confirmed, after signing in, with a password or SSO (`returnTo` is passed to `dmptool-auth`'s `/sso/passthru`). Only paths on this site are accepted (`utils/returnTo.ts`). When `returnTo` is the email confirmation page, the login page reminds the user to sign in with the email they normally use, not the one they're confirming (`AuthPage.confirmEmailSignInHint`) [#106]
 - Added a "Links" section to the template edit page sidebar (`/template/[templateId]`) for templates owned by a funder (`owner.funder`). Admins can add, edit and remove up to five funder links and five sample plan links, which are shown with the template on the Funder Requirements page. Added the `TemplateLinks` component, the `TemplateLinks` query, the `AddTemplateLink`, `UpdateTemplateLink` and `RemoveTemplateLink` mutations, and `funder` on the `Template` query's `owner` [#251]
 - Alias emails on the profile page show Confirmed/Unconfirmed badges. Unconfirmed aliases can't be made primary, explain that they're awaiting confirmation, and offer "Resend verification link" (stand-in hook until the backend mutation lands). Add-alias help text and toast mention the verification link [#488]
 - Added Playwright integration tests for template customization in `e2e/tests/customization.spec.ts`: a funder admin's public template is customized by an admin in another organization (a custom question in the funder's section, and a custom section with a question), the customization is published, and a researcher in the admin's organization writes a plan that shows it. Added `e2e/tests/customization.spec.md`, helpers in `e2e/tests/helpers/customization.ts`, and a `visibility` option to `createPublishedTemplate` [#561]
@@ -74,6 +76,7 @@
 - Added `UpdateAffiliation` and `AffiliationById` queries [#203]
 
 ## Updated
+- Updated the `/email/email-confirmed` and `/email/verification-failed` pages to use translations. The confirmed page now links to the profile instead of the login page, and no longer says the alias can't be used to sign in. The failed page explains why the link didn't work (`?reason=invalid`, `wrongAccount` or `claimedByOther`) [#106]
 - Updated the e2e tests to run one at a time (`workers: 1`) locally as well as on CI, because several tests at once overload the Next.js dev server and cause timeouts [#561]
 - Updated the e2e login helper to retry the whole login if the page reloads part way through [#561]
 - Updated `README.md` with how to pass Playwright options from the root, and a "Running against the local dev server" section on the dev server's memory restarts during long runs [#561]
@@ -261,6 +264,7 @@
 - Fixed issue with Feedback Notification headers displaying for any collaborator on the Plan Overview, Section and Question pages. It should only display to Org Admins and Super Admins. Added shared isOrgAdmin hook for pages. [#249]
 
 ## Removed
+- Removed the `useResendEmailConfirmation` stand-in hook. It was replaced by `useSendEmailConfirmation`, which calls `dmptool-auth` directly [#106]
 - Removed Cypress, its config and its tests, which were replaced by Playwright [#559]
 - Removed the old `QuestionPreview` pop-up and `QuestionView` component, replaced by the new preview mode [#65]
 - Removed unused lib/graphql/client.ts [#579]
