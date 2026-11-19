@@ -26,6 +26,8 @@ export interface PlanCapabilities {
   isPreview?: boolean;
 }
 
+export const BEST_PRACTICE_GUIDANCE_LABEL = "DMP Tool";
+
 export interface PlanGuidanceSource {
   id: string;
   type: GuidanceSourceType;
