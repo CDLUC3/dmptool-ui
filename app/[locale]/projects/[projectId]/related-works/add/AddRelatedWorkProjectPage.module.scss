@@ -1,0 +1,10 @@
+.actions {
+  margin-top: var(--space-5);
+}
+
+.noPlans {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-4);
+}

@@ -89,6 +89,16 @@ jest.mock("@/components/BackButton", () => {
   };
 });
 
+// The Links section is tested in components/TemplateLinks; here we only check when the page shows it
+jest.mock("@/components/TemplateLinks", () => {
+  return {
+    __esModule: true,
+    default: ({ templateId }: { templateId: number }) => (
+      <div data-testid="mock-template-links">Template links for {templateId}</div>
+    ),
+  };
+});
+
 const mockArchiveTemplateData = {
   data: {
     archiveTemplate: {
@@ -1940,6 +1950,45 @@ describe("TemplateEditPage", () => {
       container = renderResult.container;
       const results = await axe(container);
       expect(results).toHaveNoViolations();
+    });
+  });
+
+  describe("Links section", () => {
+    const renderWithOwner = (owner: { displayName: string; id: number; funder: boolean } | null) => {
+      const templateWithOwner = { data: { template: { ...mockTemplateData, owner } }, loading: false, error: null };
+      const versions = { data: { templateVersions: mockTemplateVersions }, loading: false, error: null, refetch: jest.fn() };
+      mockUseQuery.mockImplementation((document) => {
+        if (document === TemplateDocument) return templateWithOwner as any;
+        if (document === TemplateVersionsDocument) return versions as any;
+        return { data: null, loading: false, error: undefined } as any;
+      });
+      render(<TemplateEditPage />);
+    };
+
+    it("should show the Links section when the template is owned by a funder", () => {
+      renderWithOwner({ displayName: "National Science Foundation", id: 1, funder: true });
+      expect(screen.getByTestId("mock-template-links")).toHaveTextContent("Template links for 123");
+
+      // The Links section has its own side panel, separate from the publish and settings panel
+      const panel = screen.getByTestId("template-links-panel");
+      expect(panel).toHaveClass("status-panel-content", "side-panel", "linksPanel");
+      expect(panel).toContainElement(screen.getByTestId("mock-template-links"));
+      const otherPanels = Array.from(document.querySelectorAll(".status-panel-content.side-panel"))
+        .filter((element) => element !== panel);
+      expect(otherPanels.length).toBeGreaterThan(0);
+      otherPanels.forEach((element) => expect(element).not.toContainElement(panel));
+    });
+
+    it("should not show the Links section when the template is not owned by a funder", () => {
+      renderWithOwner({ displayName: "University of California", id: 2, funder: false });
+      expect(screen.queryByTestId("mock-template-links")).not.toBeInTheDocument();
+      expect(screen.queryByTestId("template-links-panel")).not.toBeInTheDocument();
+    });
+
+    it("should not show the Links section when the template has no owner", () => {
+      renderWithOwner(null);
+      expect(screen.queryByTestId("mock-template-links")).not.toBeInTheDocument();
+      expect(screen.queryByTestId("template-links-panel")).not.toBeInTheDocument();
     });
   });
 });

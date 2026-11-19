@@ -1,4 +1,6 @@
 ## Added
+- Added an `ExternalLink` component for links that open in a new tab [#216]
+- Added a "Links" section to the template edit page sidebar (`/template/[templateId]`) for templates owned by a funder (`owner.funder`). Admins can add, edit and remove up to five funder links and five sample plan links, which are shown with the template on the Funder Requirements page. Added the `TemplateLinks` component, the `TemplateLinks` query, the `AddTemplateLink`, `UpdateTemplateLink` and `RemoveTemplateLink` mutations, and `funder` on the `Template` query's `owner` [#251]
 - Alias emails on the profile page show Confirmed/Unconfirmed badges. Unconfirmed aliases can't be made primary, explain that they're awaiting confirmation, and offer "Resend verification link" (stand-in hook until the backend mutation lands). Add-alias help text and toast mention the verification link [#488]
 - Added Playwright integration tests for template customization in `e2e/tests/customization.spec.ts`: a funder admin's public template is customized by an admin in another organization (a custom question in the funder's section, and a custom section with a question), the customization is published, and a researcher in the admin's organization writes a plan that shows it. Added `e2e/tests/customization.spec.md`, helpers in `e2e/tests/helpers/customization.ts`, and a `visibility` option to `createPublishedTemplate` [#561]
 - Added `npm run test:e2e:chromium`, which runs the e2e tests in Chromium only [#561]
@@ -73,6 +75,8 @@
 - Added `UpdateAffiliation` and `AffiliationById` queries [#203]
 
 ## Updated
+- Redesigned the related works pages with "Your research outputs", "Confirm matches" and "Dismissed" tabs, new cards, and empty and loading states [#216]
+- Updated the project related-works add flow to choose a plan with radio buttons, then continue to that plan's add page (one plan skips straight there) [#216]
 - Updated the e2e tests to run one at a time (`workers: 1`) locally as well as on CI, because several tests at once overload the Next.js dev server and cause timeouts [#561]
 - Updated the e2e login helper to retry the whole login if the page reloads part way through [#561]
 - Updated `README.md` with how to pass Playwright options from the root, and a "Running against the local dev server" section on the dev server's memory restarts during long runs [#561]
@@ -214,6 +218,7 @@
 - Fixed tagged guidance in the `PlanAuthoring` guidance sidebar so each tag's name shows as a heading above its guidance. The `PlanAuthoring` query now selects `title` on guidance items [#603]
 - Fixed best practice guidance being merged into the tab of the org that publishes it (CDL) in the `PlanAuthoring` guidance sidebar. It now has its own "DMP Tool" tab, matching the template preview [#603]
 - Fixed a template question's sample text in the `PlanAuthoring` "View sample answers" being labelled with the user's or customizing org (e.g. UCI) instead of the template owner (e.g. NIH). The label now comes from the plan's template owner [#603]
+- Fixed the `plan.spec.ts` e2e tests failing on AWS dev, where the full ROR data makes a funder search for "NIH" match about 80 funders, with NIH not on the first page. The tests now search for "National Institutes of Health" and click "Load more" until NIH is listed, and the "Add funder manually" test picks NIH instead of NSF, which isn't in dev's data [#561]
 - Fixed Create Template so a taken name shows an error on Next, using the new `TemplateNameAvailable` query. [#88]
 - Fixed the Template customizations page showing "No items found" and leaving the Search button disabled when the same term was searched again. The results now come from each request's own response, so a search answered from the Apollo cache is still shown [#561]
 - Fixed the title link of a template that isn't customized yet going to `/template/customizations/0`, a "Not Found" page. The title now creates the customization first, like the Update button [#561]
@@ -269,6 +274,8 @@
 - Removed the ununused `app/[locale]/users/[userId]/projects` page, since we no longer link to it since we updated the `app/[locale]/users/[userId]/manage` page to link to `projects` instead of `plans` [#379]
 
 ## Chore
+- Updated `@apollo/client` to `v4.3.8`, `@dmptool/types` `v4.0.1`, `graphql` to `v16.15.0`, `jose` to `v6.2.17`, `next` to `v16.4.5`, `react` to `v19.3.1`, `react-dom` to `v19.3.1`, `@graphql-codegen/cli` to `v6.3.1`,`@graphql-codegen/client-preset` to `v5.3.0`, `@graphql-codegen/typed-document-node` to `v6.1.8`,` @graphql-codegen/typescript` to `v5.0.10`,`@graphql-codegen/typescript-operations` to `v5.1.0`, `@types/node` to `v24.19.2`, `@types/react` to `v19.3.0`, `@types/react-dom` to `v19.3.0`, `eslint-plugin-unused-imports` to `v4.4.1`, `qs` to `v6.16.1`, `systeminformation` to `v5.33.16` [#627]
+- Added an exception for `npm audit` for `picomatch` high vulnerability in new `check-npm-audit.cjs` and updated `Dockerfile.prod` to use that exception. Also added `.trivyignore.yaml` [#627]
 - Updated `zod` to `v4.6.6` to address high vulnerability [#580]
 - Updated `versioning.yml` to just copy `package.json` and `CHANGELOG.md` back to `development` branch [#341]
 - Updated `next` to `v16.3.3`, `js-yaml` to `v4.3.2` and `sharp` to `v0.35.4` due to high vulnerabilities [#341]

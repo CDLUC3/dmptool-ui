@@ -1,0 +1,9 @@
+.icon {
+  --icon-fill: currentColor;
+  display: inline-block;
+  width: 0.85em;
+  height: 0.85em;
+  flex-shrink: 0;
+  margin-left: var(--space-1);
+  vertical-align: -0.1em;
+}

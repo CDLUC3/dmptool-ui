@@ -973,5 +973,52 @@
       "notice": "It shows the published template with your latest customizations, including any you haven't published yet. Your organization's guidance appears in its own tab.",
       "empty": "The template has no questions to preview."
     }
+  },
+  "TemplateLinks": {
+    "heading": "Links",
+    "description": "Shown with this template on the Funder Requirements page. Up to five of each type.",
+    "count": "{count} of {max}",
+    "funder": {
+      "title": "Funder links",
+      "empty": "No funder links yet.",
+      "add": "Add funder link",
+      "addTitle": "Add funder link",
+      "editTitle": "Edit funder link",
+      "listLabel": "Funder links"
+    },
+    "samplePlan": {
+      "title": "Sample plan links",
+      "empty": "No sample plan links yet.",
+      "add": "Add sample plan link",
+      "addTitle": "Add sample plan link",
+      "editTitle": "Edit sample plan link",
+      "listLabel": "Sample plan links"
+    },
+    "labels": {
+      "linkText": "Link text",
+      "linkTextHelp": "Shown as the link on Funder Requirements page",
+      "linkUrl": "Link URL",
+      "openLink": "Open {text} in a new tab",
+      "editLink": "Edit {text}",
+      "removeLink": "Remove {text}"
+    },
+    "buttons": {
+      "addLink": "Add link",
+      "adding": "Adding...",
+      "saveLink": "Save link"
+    },
+    "messages": {
+      "added": "Link added",
+      "updated": "Link updated",
+      "removed": "Link removed",
+      "errors": {
+        "textRequired": "Enter the link text",
+        "urlRequired": "Enter the link URL",
+        "urlInvalid": "Enter a valid URL that starts with https:// or http://",
+        "loadFailed": "Unable to load the links for this template",
+        "saveFailed": "Unable to save the link. Please try again.",
+        "removeFailed": "Unable to remove the link. Please try again."
+      }
+    }
   }
 }

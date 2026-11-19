@@ -71,6 +71,7 @@ query Template($templateId: Int!) {
     owner {
       displayName
       id
+      funder
     },
     latestPublishVisibility,
     bestPractice,
@@ -151,5 +152,25 @@ query TemplateCollaborators($templateId: Int!) {
     owner {
       name
     }
+  }
+}
+
+query TemplateLinks($templateId: Int!) {
+  template(templateId: $templateId) {
+    id
+    funderLinks: links(linkType: FUNDER) {
+      id
+      linkType
+      url
+      text
+    }
+    samplePlanLinks: links(linkType: SAMPLE_PLAN) {
+      id
+      linkType
+      url
+      text
+    }
+    maxFunderLinks: maxLinks(linkType: FUNDER)
+    maxSamplePlanLinks: maxLinks(linkType: SAMPLE_PLAN)
   }
 }
