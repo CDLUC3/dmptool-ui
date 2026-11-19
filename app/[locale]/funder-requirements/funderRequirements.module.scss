@@ -86,11 +86,11 @@
   border-radius: var(--border-radius-lg);
   background: var(--white);
 
-  &[data-hovered] {
+  &:hover {
     background: var(--gray-75);
   }
 
-  &[data-focus-visible] {
+  &:focus-visible {
     outline: 2px solid var(--focus-ring-color);
     outline-offset: var(--focus-ring-offset);
   }

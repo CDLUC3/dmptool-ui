@@ -82,14 +82,15 @@ const TemplateDownloads = ({ template }: { template: FunderTemplate }) => {
   return (
     <div className={styles.downloads}>
       {DOWNLOAD_FORMATS.map(({ format, icon }) => (
-        <Link
+        <a
           key={format}
           href={templateDownloadHref(template.id, format)}
+          download
           className={styles.downloadLink}
           aria-label={t("downloadAs", { name: template.name, format: t(`formats.${format}`) })}
         >
           <DmpIcon icon={icon} fill="currentColor" width={18} height={18} />
-        </Link>
+        </a>
       ))}
     </div>
   );
@@ -165,6 +166,7 @@ const FunderRequirementsPage: React.FC = () => {
   const formatDate = useFormatDate();
   const errorRef = useRef<HTMLDivElement | null>(null);
   const searchInputRef = useRef<HTMLInputElement | null>(null);
+  const resultsCountRef = useRef<HTMLParagraphElement | null>(null);
 
   const [errors, setErrors] = useState<string[]>([]);
   const [searchKey, setSearchKey] = useState(0);
@@ -224,6 +226,11 @@ const FunderRequirementsPage: React.FC = () => {
   const handleSearch = (term: string) => {
     setSearchTerm(term);
     setCurrentPage(1);
+  };
+
+  const handlePageClick = (page: number) => {
+    setCurrentPage(page);
+    resultsCountRef.current?.focus();
   };
 
   const handleClearSearch = () => {
@@ -290,7 +297,12 @@ const FunderRequirementsPage: React.FC = () => {
           )}
 
           {results && !hasNoTemplates && (
-            <p className={styles.resultsCount} aria-live="polite">
+            <p
+              ref={resultsCountRef}
+              tabIndex={-1}
+              className={styles.resultsCount}
+              aria-live="polite"
+            >
               {isRefreshing
                 ? Global("messaging.loading")
                 : t("resultsCount", { start: firstShown, end: lastShown, total: totalCount })}
@@ -376,7 +388,7 @@ const FunderRequirementsPage: React.FC = () => {
                       totalPages={Math.ceil(totalCount / LIMIT)}
                       hasPreviousPage={results.hasPreviousPage ?? false}
                       hasNextPage={results.hasNextPage ?? false}
-                      handlePageClick={setCurrentPage}
+                      handlePageClick={handlePageClick}
                     />
                   </div>
                 </>

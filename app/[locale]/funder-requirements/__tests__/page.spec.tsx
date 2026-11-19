@@ -3,6 +3,7 @@ import { act, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { NextIntlClientProvider } from "next-intl";
 import { axe, toHaveNoViolations } from "jest-axe";
+import { RouterProvider } from "react-aria-components";
 
 import { mockScrollTo } from "@/__mocks__/common";
 import messages from "@/messages/en-US/global.json";
@@ -124,6 +125,23 @@ describe("FunderRequirementsPage", () => {
       .toHaveAttribute("href", "/api/download-template?versionedTemplateId=2&format=docx");
     expect(within(row).getByRole("link", { name: "Download Alfred P. Sloan Foundation as PDF" }))
       .toHaveAttribute("href", "/api/download-template?versionedTemplateId=2&format=pdf");
+  });
+
+  it("should keep the locale out of the download links when the app's router adds it to other links", () => {
+    render(
+      <NextIntlClientProvider locale="en-US" messages={messages} timeZone="UTC">
+        <RouterProvider navigate={jest.fn()} useHref={(href) => `/en-US${href}`}>
+          <FunderRequirementsPage />
+        </RouterProvider>
+      </NextIntlClientProvider>
+    );
+
+    const breadcrumbs = screen.getByRole("list", { name: "Breadcrumbs" });
+    expect(within(breadcrumbs).getByRole("link", { name: "Home" })).toHaveAttribute("href", "/en-US/");
+    const download = within(getRowFor("Alfred P. Sloan Foundation"))
+      .getByRole("link", { name: "Download Alfred P. Sloan Foundation as Word" });
+    expect(download).toHaveAttribute("href", "/api/download-template?versionedTemplateId=2&format=docx");
+    expect(download).toHaveAttribute("download");
   });
 
   it("should list every funder link, each opening in a new tab", () => {
@@ -320,6 +338,26 @@ describe("FunderRequirementsPage", () => {
       "National Science Foundation (NSF): Generic",
       "U.S. Geological Survey (USGS)",
     ]);
+  });
+
+  it("should move focus to the results count after changing page", async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    await user.click(screen.getByRole("button", { name: /next/i }));
+    expect(screen.getByText("Showing 11–12 of 12 templates")).toHaveFocus();
+
+    await user.click(screen.getByRole("link", { name: /page 1/i, current: false }));
+    expect(screen.getByText("Showing 1–10 of 12 templates")).toHaveFocus();
+  });
+
+  it("should keep focus in the search box after searching", async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    await user.type(screen.getByRole("searchbox", { name: "Search" }), "sloan{Enter}");
+
+    expect(screen.getByRole("searchbox", { name: "Search" })).toHaveFocus();
   });
 
   it("should render each template as a card for small screens", () => {
