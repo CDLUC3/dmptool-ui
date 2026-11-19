@@ -146,6 +146,16 @@ describe('proxy', () => {
     expect(mockHandleI18nRouting).toHaveBeenCalledWith(request);
   });
 
+  it('should not redirect to /login for the public Funder Requirements page', async () => {
+    request.nextUrl.pathname = '/en-US/funder-requirements';
+    request.cookies.get = jest.fn().mockReturnValue(undefined); // No tokens
+
+    await proxy(request);
+
+    expect(NextResponse.redirect).not.toHaveBeenCalled();
+    expect(mockHandleI18nRouting).toHaveBeenCalledWith(request);
+  });
+
   it('should hand off to next-intl when the URL has a locale and a token is present', async () => {
     request.nextUrl.pathname = '/en-US/protected';
     request.cookies.get = jest.fn().mockImplementation((key) => {

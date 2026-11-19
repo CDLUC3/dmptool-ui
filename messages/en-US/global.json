@@ -1036,6 +1036,8 @@
       "requiredField": "Mark as required?",
       "previousPage": "Previous page",
       "nextPage": "Next page",
+      "pagination": "Pagination",
+      "pageNumber": "Page {page}",
       "name": "Name",
       "url": "URL",
       "unit": "Unit",
@@ -1220,6 +1222,52 @@
         "invalidSubject": "Subject field must be at least 2 characters long",
         "invalidMessage": "Message field must be at least 2 characters long",
         "formSubmittalFailed": "Form submission failed. Please try again later."
+      }
+    }
+  },
+  "FunderRequirements": {
+    "title": "Funder Requirements",
+    "description": "Templates for data management plans are based on the specific requirements listed in funder policy documents. The DMP Tool maintains these templates, however, researchers should always consult the program officers and policy documents directly for authoritative guidance. Sample plans are provided by a funder or another trusted party.",
+    "search": {
+      "label": "Search",
+      "placeholder": "Search by template or organization…"
+    },
+    "sort": {
+      "label": "Sort by",
+      "options": {
+        "nameAsc": "Template name (A–Z)",
+        "nameDesc": "Template name (Z–A)",
+        "organizationAsc": "Organization name (A–Z)",
+        "organizationDesc": "Organization name (Z–A)",
+        "modifiedDesc": "Last updated (newest first)",
+        "modifiedAsc": "Last updated (oldest first)"
+      }
+    },
+    "resultsCount": "{total, plural, =0 {Showing 0 templates} one {Showing {start}–{end} of # template} other {Showing {start}–{end} of # templates}}",
+    "noResults": "No templates match your search.",
+    "noResultsHint": "Check the spelling, or try a different template or organization name.",
+    "clearSearch": "Clear search",
+    "noTemplates": "There are no funder templates available yet.",
+    "none": "None",
+    "table": {
+      "label": "Funder templates",
+      "columns": {
+        "templateName": "Template name",
+        "download": "Download",
+        "organizationName": "Organization name",
+        "lastUpdated": "Last updated",
+        "funderLinks": "Funder links",
+        "samplePlans": "Sample plans (if available)"
+      }
+    },
+    "downloadAs": "Download {name} as {format}",
+    "formats": {
+      "docx": "Word",
+      "pdf": "PDF"
+    },
+    "messages": {
+      "errors": {
+        "loadFailed": "Something went wrong loading the funder templates. Please try again later."
       }
     }
   }

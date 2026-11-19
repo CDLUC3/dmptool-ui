@@ -1,4 +1,5 @@
 ## Added
+- Added the public Funder Requirements page (`/funder-requirements`): a searchable, sortable list of funder templates. It uses stub data until the backend adds a funder templates query and a download endpoint [#609]
 - Added an `ExternalLink` component for links that open in a new tab [#216]
 - Added a "Links" section to the template edit page sidebar (`/template/[templateId]`) for templates owned by a funder (`owner.funder`). Admins can add, edit and remove up to five funder links and five sample plan links, which are shown with the template on the Funder Requirements page. Added the `TemplateLinks` component, the `TemplateLinks` query, the `AddTemplateLink`, `UpdateTemplateLink` and `RemoveTemplateLink` mutations, and `funder` on the `Template` query's `owner` [#251]
 - Alias emails on the profile page show Confirmed/Unconfirmed badges. Unconfirmed aliases can't be made primary, explain that they're awaiting confirmation, and offer "Resend verification link" (stand-in hook until the backend mutation lands). Add-alias help text and toast mention the verification link [#488]
@@ -214,6 +215,8 @@
 - Updated `RepoSelectorForAnswer` to wait to query `Re3byUrIsDocument` until we have `preferredReposURIs` because preferred repos don't display even though they eventually do to trigger the display of the "preferred repositories" checkbox [#118]
 
 ## Fixed
+- Fixed `DmpTable` so a column's initial `direction` sets the table's sort, which screen readers announce through `aria-sort`, and hid the sort arrows from screen readers [#609]
+- Fixed the pt-BR "Funder Requirements" menu label, which read "Requisitos de Barbatana" ("fin requirements") instead of "Requisitos dos Financiadores" [#609]
 - Fixed the `plan.spec.ts` e2e tests failing on AWS dev, where the full ROR data makes a funder search for "NIH" match about 80 funders, with NIH not on the first page. The tests now search for "National Institutes of Health" and click "Load more" until NIH is listed, and the "Add funder manually" test picks NIH instead of NSF, which isn't in dev's data [#561]
 - Fixed Create Template so a taken name shows an error on Next, using the new `TemplateNameAvailable` query. [#88]
 - Fixed the Template customizations page showing "No items found" and leaving the Search button disabled when the same term was searched again. The results now come from each request's own response, so a search answered from the Apollo cache is still shown [#561]
