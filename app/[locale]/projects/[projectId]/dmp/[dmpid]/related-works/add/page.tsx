@@ -4,8 +4,6 @@ import { useTranslations } from "next-intl";
 
 import { Breadcrumb, Breadcrumbs, Link } from "react-aria-components";
 
-import { RelatedWorksIdentifierType } from "@/generated/graphql";
-
 import PageHeader from "@/components/PageHeader";
 import { ContentContainer, LayoutContainer } from "@/components/Container";
 
@@ -55,10 +53,7 @@ const AddRelatedWorkPlanPage = () => {
 
       <LayoutContainer>
         <ContentContainer>
-          <RelatedWorksAdd
-            identifier={planId}
-            identifierType={RelatedWorksIdentifierType.PlanId}
-          />
+          <RelatedWorksAdd planId={planId} />
         </ContentContainer>
       </LayoutContainer>
     </>

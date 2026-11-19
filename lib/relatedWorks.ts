@@ -37,13 +37,7 @@ export const formatAuthorNameFirstLast = (author: Author): string | null => {
   return parts.length > 0 ? parts.join(" ").trim() : null;
 };
 
-export const formatSubtitle = (
-  authors: Author[],
-  publicationVenue: string | null | undefined,
-  publicationDate: string | null | undefined,
-  maxAuthorChars: number,
-): { authorNames: string; containerTitle: string; publicationYear: string } => {
-  // Build author names
+export const formatAuthorNames = (authors: Author[], maxAuthorChars: number): string => {
   const names = authors.map(formatAuthorNameAbrev).filter((n): n is string => !!n);
 
   // Choose what names to display based on the total character length
@@ -58,6 +52,17 @@ export const formatSubtitle = (
     authorNames.push("et al");
   }
 
+  return authorNames.join(", ");
+};
+
+export const formatSubtitle = (
+  authors: Author[],
+  publicationVenue: string | null | undefined,
+  publicationDate: string | null | undefined,
+  maxAuthorChars: number,
+): { authorNames: string; containerTitle: string; publicationYear: string } => {
+  const authorNames = formatAuthorNames(authors, maxAuthorChars);
+
   // Build container title
   let containerTitle = "";
   if (publicationVenue) {
@@ -67,5 +72,5 @@ export const formatSubtitle = (
   // Build publication year
   const publicationYear = publicationDate ? `${new Date(publicationDate).getFullYear()}.` : "";
 
-  return { authorNames: authorNames.join(", ") + ". ", containerTitle, publicationYear };
+  return { authorNames: authorNames + ". ", containerTitle, publicationYear };
 };
