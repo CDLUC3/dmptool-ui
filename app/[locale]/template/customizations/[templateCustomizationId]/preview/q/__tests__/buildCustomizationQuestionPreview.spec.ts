@@ -37,6 +37,7 @@ const section = (
   guidance: null,
   customizationGuidance: null,
   tagIds: [],
+  tagNames: new Map(),
   questions,
 });
 

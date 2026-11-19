@@ -261,6 +261,38 @@ describe("toPlanAuthoringModel question fields", () => {
     expect(question.sampleTextOrgLabel).toBe("University of California");
   });
 
+  it("labels a custom question's requirements with the org that added the question", () => {
+    const [labelled, unlabelled] = mapQuestions(
+      [
+        makeRawQuestion({
+          questionType: "CUSTOM",
+          customQuestionId: 7,
+          requirementText: "<p>Org requires this</p>",
+          guidanceSources: [
+            makeRawGuidanceSource({
+              orgURI: UCOP,
+              type: GuidanceSourceType.UserAffiliation,
+              label: "University of California",
+              items: [{ guidanceText: "<p>custom</p>" }],
+            }),
+          ],
+        }),
+        makeRawQuestion({
+          questionType: "CUSTOM",
+          customQuestionId: 8,
+          requirementText: "<p>Org requires this</p>",
+          guidanceSources: [],
+        }),
+      ],
+      EMPTY_PLAN_AUTHORING_VIEWER,
+      { versionedTemplate: { name: "NIH", version: "v1", owner: { name: "National Institutes of Health", uri: "https://ror.org/nih" } } }
+    );
+
+    expect(labelled.requirementOrgLabel).toBe("University of California");
+    expect(unlabelled.requirementHtml).toBe("<p>Org requires this</p>");
+    expect(unlabelled.requirementOrgLabel).toBeUndefined();
+  });
+
   it.each([
     [
       "dateRange",
@@ -446,6 +478,31 @@ describe("toPlanAuthoringModel guidance", () => {
 
     expect(mapped.guidanceSources[0].bodyHtml).toBe(
       "<p>question</p><h5>Data &amp; &lt;Metadata&gt;</h5><p>tagged</p>"
+    );
+  });
+
+  it("shows template-specific guidance above the tag headings when the API lists it last", () => {
+    const [mapped] = mapQuestions(
+      [
+        makeRawQuestion({
+          guidanceSources: [
+            makeRawGuidanceSource({
+              orgURI: NSF,
+              type: GuidanceSourceType.TemplateOwner,
+              items: [
+                { title: "Data Collection", guidanceText: "<p>tagged</p>" },
+                { title: null, guidanceText: "<p>question</p>" },
+              ],
+            }),
+          ],
+        }),
+      ],
+      EMPTY_PLAN_AUTHORING_VIEWER,
+      plan
+    );
+
+    expect(mapped.guidanceSources[0].bodyHtml).toBe(
+      "<p>question</p><h5>Data Collection</h5><p>tagged</p>"
     );
   });
 

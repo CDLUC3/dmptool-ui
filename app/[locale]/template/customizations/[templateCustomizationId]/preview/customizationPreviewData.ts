@@ -14,7 +14,12 @@ import type { PreviewDisplayLogic } from "@/components/PlanPreview/displayLogic"
 import { loadPreviewGuidance } from "@/components/PlanPreview/loadPreviewGuidance";
 import { PreviewNotFoundError } from "@/components/PlanPreview/previewError";
 import { byDisplayOrder } from "@/components/PlanPreview/previewModel";
-import { previewTagIds, type PreviewGuidanceLookup, type PreviewOrg } from "@/components/PlanPreview/previewGuidance";
+import {
+  previewTagIds,
+  previewTagNames,
+  type PreviewGuidanceLookup,
+  type PreviewOrg,
+} from "@/components/PlanPreview/previewGuidance";
 
 export interface CustomizationPreviewQuestion {
   identity: PlanQuestionIdentity;
@@ -38,6 +43,7 @@ export interface CustomizationPreviewSection {
   guidance: string | null;
   customizationGuidance: string | null;
   tagIds: number[];
+  tagNames: ReadonlyMap<number, string>;
   questions: CustomizationPreviewQuestion[];
 }
 
@@ -215,6 +221,7 @@ export async function loadCustomizationPreview(
               customizationGuidance: null,
               // Custom sections' tags aren't in the API.
               tagIds: [],
+              tagNames: new Map(),
               questions,
             },
           ]
@@ -234,6 +241,7 @@ export async function loadCustomizationPreview(
               : null,
             // Versioned questions don't expose their own tags, so section tags stand in.
             tagIds: previewTagIds(null, section.tags),
+            tagNames: previewTagNames(null, section.tags),
             questions,
           },
         ]

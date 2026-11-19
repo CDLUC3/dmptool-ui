@@ -42,6 +42,7 @@ const baseSection = (questions: CustomizationPreviewQuestion[]): CustomizationPr
   guidance: "<p>Owner section guidance</p>",
   customizationGuidance: "<p>Org section guidance</p>",
   tagIds: [5],
+  tagNames: new Map([[5, "Data & <Metadata>"]]),
   questions,
 });
 
@@ -70,16 +71,20 @@ describe("toCustomizationPreviewModel", () => {
     );
 
     expect(tabs(model.sections[0].questions[0])).toEqual([
-      { type: GuidanceSourceType.BestPractice, label: "DMP Tool", bodyHtml: "<p>Best practice</p>" },
+      {
+        type: GuidanceSourceType.BestPractice,
+        label: "DMP Tool",
+        bodyHtml: "<h5>Data &amp; &lt;Metadata&gt;</h5><p>Best practice</p>",
+      },
       {
         type: GuidanceSourceType.UserAffiliation,
         label: ORG.displayName,
-        bodyHtml: "<p>Org section guidance</p><p>Org question guidance</p><p>Org tag</p>",
+        bodyHtml: "<p>Org section guidance</p><p>Org question guidance</p><h5>Data &amp; &lt;Metadata&gt;</h5><p>Org tag</p>",
       },
       {
         type: GuidanceSourceType.TemplateOwner,
         label: OWNER.displayName,
-        bodyHtml: "<p>Owner section guidance</p><p>Owner question guidance</p><p>Owner tag</p>",
+        bodyHtml: "<p>Owner section guidance</p><p>Owner question guidance</p><h5>Data &amp; &lt;Metadata&gt;</h5><p>Owner tag</p>",
       },
     ]);
   });

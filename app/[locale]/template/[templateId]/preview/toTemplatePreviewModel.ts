@@ -12,6 +12,7 @@ import type { PreviewDisplayLogic } from "@/components/PlanPreview/displayLogic"
 import {
   EMPTY_GUIDANCE_LOOKUP,
   previewTagIds,
+  previewTagNames,
   toPreviewGuidanceSources,
   type PreviewExampleGuidance,
   type PreviewGuidanceLookup,
@@ -73,6 +74,7 @@ function toQuestion(
     hasAnswer: false,
     guidanceSources: toPreviewGuidanceSources({
       tagIds: previewTagIds(question.tags, section.tags),
+      tagNames: previewTagNames(question.tags, section.tags),
       guidance,
       owner,
       ownerGuidanceHtml: [section.guidance, question.guidanceText],

@@ -15,6 +15,7 @@ import {
   deriveCommentCapabilities,
   type NewCommentTarget,
 } from "./commentCapabilities";
+import { guidanceBlockHtml } from "./guidanceHtml";
 import {
   BEST_PRACTICE_GUIDANCE_LABEL,
   computeProgress,
@@ -317,28 +318,31 @@ function isAlwaysShownSource(source: PlanAuthoringGuidanceSource): boolean {
   );
 }
 
-const HTML_ESCAPES: Record<string, string> = {
-  "&": "&amp;",
-  "<": "&lt;",
-  ">": "&gt;",
-  '"': "&quot;",
-  "'": "&#39;",
-};
-
-function escapeHtml(text: string): string {
-  return text.replace(/[&<>"']/g, (char) => HTML_ESCAPES[char]);
+// The resolver appends template-specific guidance (no title) after the tagged
+// items. Show it first, so it does not sit under the last tag's heading.
+function guidanceHtml(items: PlanAuthoringGuidanceSource["items"]): string[] {
+  const untitled = items.filter((item) => !item.title);
+  const titled = items.filter((item) => item.title);
+  return [...untitled, ...titled]
+    .map((item) => guidanceBlockHtml(item.title, item.guidanceText))
+    .filter(Boolean);
 }
 
-// Tagged items carry their tag name as the title; template-specific items have none.
-function guidanceItemHtml(
-  item: PlanAuthoringGuidanceSource["items"][number]
-): string {
-  if (!item.guidanceText) {
-    return "";
+// A custom question's requirements belong to the org that added it. The API
+// files its guidance and sample under that org; with neither, there is no
+// source to name it from.
+function toRequirementOrgLabel(
+  question: PlanAuthoringQuestion,
+  sources: PlanAuthoringGuidanceSource[],
+  plan: PlanAuthoringPlan
+): string | undefined {
+  if (!question.requirementText) {
+    return undefined;
   }
-  return item.title
-    ? `<h5>${escapeHtml(item.title)}</h5>${item.guidanceText}`
-    : item.guidanceText;
+  if (question.questionType === "CUSTOM") {
+    return sources[0]?.label ?? undefined;
+  }
+  return plan.versionedTemplate?.owner?.name ?? undefined;
 }
 
 // Both `affiliation-<uri>` and `customization-<uri>` sources can appear for
@@ -350,7 +354,7 @@ function toGuidanceSources(
 ): PlanGuidanceSource[] {
   const byOrg = new Map<string, { source: PlanGuidanceSource; html: string[] }>();
   sources.forEach((source) => {
-    const html = source.items.map(guidanceItemHtml).filter(Boolean);
+    const html = guidanceHtml(source.items);
     const isBestPractice = source.type === GuidanceSourceType.BestPractice;
     const key = isBestPractice ? source.id : source.orgURI;
     const existing = byOrg.get(key);
@@ -429,9 +433,7 @@ function toQuestion(
     sectionIdentity,
     title: question.questionText ?? "",
     requirementHtml: question.requirementText ?? undefined,
-    requirementOrgLabel: question.requirementText
-      ? plan.versionedTemplate?.owner?.name
-      : undefined,
+    requirementOrgLabel: toRequirementOrgLabel(question, sources, plan),
     required: question.required ?? false,
     questionType,
     parsedJson,
