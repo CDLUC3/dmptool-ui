@@ -31,6 +31,7 @@ const excludedPaths = [
   "/styleguide",
   "/contact",
   "/dmps",
+  "/funder-requirements",
   "/healthcheck",
 ];
 
