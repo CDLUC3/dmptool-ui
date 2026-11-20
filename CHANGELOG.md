@@ -214,6 +214,7 @@
 - Updated `RepoSelectorForAnswer` to wait to query `Re3byUrIsDocument` until we have `preferredReposURIs` because preferred repos don't display even though they eventually do to trigger the display of the "preferred repositories" checkbox [#118]
 
 ## Fixed
+- Fixed the `PlanAuthoring` guidance sidebar showing "Select a guidance source." when there was no guidance to select. It now says the template has no guidance, or points to Customize when other organizations have some [#584]
 - Fixed guidance and requirement labels from PR review: question guidance now shows above tag headings, template previews show tag names, and custom questions show "Requirements by" the org that added them [#603]
 - Fixed tagged guidance in the `PlanAuthoring` guidance sidebar so each tag's name shows as a heading above its guidance. The `PlanAuthoring` query now selects `title` on guidance items [#603]
 - Fixed best practice guidance being merged into the tab of the org that publishes it (CDL) in the `PlanAuthoring` guidance sidebar. It now has its own "DMP Tool" tab, matching the template preview [#603]

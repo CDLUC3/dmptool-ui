@@ -100,10 +100,18 @@ describe("PlanQuestionSidebar", () => {
       expect(guidancePill("UCB")).toBeChecked();
     });
 
-    it("asks to pick a source when there is none", () => {
-      renderSidebar({ sources: [] });
+    it("points to Customize when the question has none", () => {
+      renderSidebar({ sources: [], canCustomize: true });
 
-      expect(screen.getByText("Select a guidance source.")).toBeInTheDocument();
+      expect(screen.getByText(/No guidance for this question yet/)).toBeInTheDocument();
+    });
+
+    it("says the template has none when Customize is hidden", () => {
+      renderSidebar({ sources: [], canCustomize: false });
+
+      expect(
+        screen.getByText("There is no guidance available on this template.")
+      ).toBeInTheDocument();
     });
   });
 

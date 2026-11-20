@@ -77,7 +77,8 @@
     },
     "sidebar": {
       "ariaLabel": "Question guidance and comments",
-      "selectGuidanceSource": "Select a guidance source.",
+      "noQuestionGuidance": "No guidance for this question yet. Use Customize to add guidance from other organizations.",
+      "noTemplateGuidance": "There is no guidance available on this template.",
       "comments": "Comments",
       "showComments": "Show comments",
       "hideComments": "Hide comments",

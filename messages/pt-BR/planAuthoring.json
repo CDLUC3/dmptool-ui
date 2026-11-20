@@ -77,7 +77,8 @@
     },
     "sidebar": {
       "ariaLabel": "Orientação e comentários para perguntas",
-      "selectGuidanceSource": "Selecionar fonte de orientação.",
+      "noQuestionGuidance": "Ainda não há orientações para esta pergunta. Use Personalizar para adicionar orientações de outras organizações.",
+      "noTemplateGuidance": "Não há orientações disponíveis para este modelo.",
       "comments": "Comments",
       "showComments": "Mostrar comentários",
       "hideComments": "Ocultar comentários",

@@ -167,8 +167,14 @@ export default function PlanQuestionSidebar({
                     className={styles.guidanceBody}
                   />
                 </>
+              ) : canCustomize ? (
+                <p className={styles.guidanceBody}>
+                  {t("sidebar.noQuestionGuidance")}
+                </p>
               ) : (
-                <p>{t("sidebar.selectGuidanceSource")}</p>
+                <p className={styles.guidanceBody}>
+                  {t("sidebar.noTemplateGuidance")}
+                </p>
               )}
             </div>
             {showGuidanceScrollFade ? (
