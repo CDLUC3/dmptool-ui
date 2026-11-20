@@ -320,6 +320,7 @@ const SingleResearchOutputComponent = ({
               repositoryDescription?: string;
               repositoryKeywords?: string[];
               repositoryType?: string[];
+              repositoryLocation?: string;
               uri?: string;
               name?: string;
             };
@@ -331,7 +332,8 @@ const SingleResearchOutputComponent = ({
               repositoryWebsite: repo.repositoryWebsite || '',
               repositoryDescription: repo.repositoryDescription || '',
               repositoryKeywords: repo.repositoryKeywords || [],
-              repositoryType: repo.repositoryType || []
+              repositoryType: repo.repositoryType || [],
+              ...(repo.repositoryLocation ? { repositoryLocation: repo.repositoryLocation } : {}),
             }));
           }
         }
@@ -678,6 +680,7 @@ const SingleResearchOutputComponent = ({
               repositoryDescription?: string;
               repositoryKeywords?: string[];
               repositoryType?: string[];
+              repositoryLocation?: string;
             };
             const repoValue =
               Array.isArray(value) && value.length > 0 && typeof value[0] === "object" && "repositoryId" in value[0]
@@ -736,18 +739,44 @@ const SingleResearchOutputComponent = ({
                   preferredReposURIs={preferredRepoURIs}
                   onRepositoriesChange={(repos) => {
                     // Transform RepositoryInterface[] to the answer format
-                    // Save all repository data to preserve it across selections
-                    const repoAnswers = repos.map((repo) => ({
-                      repositoryId: repo.uri,
-                      repositoryName: repo.name,
-                      repositoryWebsite: repo.website,
-                      repositoryDescription: repo.description,
-                      repositoryKeywords: repo.keywords,
-                      repositoryType: repo.repositoryType,
-                    }));
+                    // Save all repository data to preserve it across selections, and keep the
+                    // output's own place in each repository that stays picked
+                    const locations = new Map(repoValue.map((r) => [r.repositoryId, r.repositoryLocation]));
+                    const repoAnswers = repos.map((repo) => {
+                      const location = locations.get(repo.uri);
+                      return {
+                        repositoryId: repo.uri,
+                        repositoryName: repo.name,
+                        repositoryWebsite: repo.website,
+                        repositoryDescription: repo.description,
+                        repositoryKeywords: repo.keywords,
+                        repositoryType: repo.repositoryType,
+                        ...(location ? { repositoryLocation: location } : {}),
+                      };
+                    });
                     handleCellChange(col.commonStandardId, colIndex, repoAnswers);
                   }}
                 />
+                {/* Where in each picked repository this output is: a folder, a collection, a project */}
+                {repoValue.map((repo, repoIndex) => (
+                  <FormInput
+                    key={repo.repositoryId}
+                    type="url"
+                    name={`${name}-location-${repoIndex}`}
+                    label={Global('labels.repositoryLocation', { name: repo.repositoryName })}
+                    value={repo.repositoryLocation ?? ""}
+                    onChange={(e) => {
+                      const location = e.target.value.trim();
+                      const updated = repoValue.map((r, i) => {
+                        if (i !== repoIndex) return r;
+                        const { repositoryLocation: _dropped, ...rest } = r;
+                        return location ? { ...rest, repositoryLocation: location } : rest;
+                      });
+                      handleCellChange(col.commonStandardId, colIndex, updated);
+                    }}
+                    disabled={isDisabled}
+                  />
+                ))}
               </div>
             );
           case ResearchOutputTableColumnsEnum.enum.metadata:
@@ -846,6 +875,11 @@ const SingleResearchOutputComponent = ({
 
             const selectedLicense =
               licenseAnswer.length > 0 && licenseAnswer[0]?.licenseId ? licenseAnswer[0].licenseId : "";
+
+            // A licence the answer already has stays visible, though it isn't one of the listed ones
+            if (selectedLicense && !licensesItems.some((item) => item.id === selectedLicense)) {
+              licensesItems = [...licensesItems, { id: selectedLicense, name: licenseAnswer[0].licenseName || selectedLicense }];
+            }
 
             return (
               <div

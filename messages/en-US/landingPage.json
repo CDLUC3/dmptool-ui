@@ -37,6 +37,7 @@
       "anticipatedVolume": "Anticipated volume",
       "releaseTimeline": "Release timeline",
       "intendedRepository": "Intended repository",
+      "repositoryLocation": "This output",
       "licenseForReuse": "License for reuse",
       "UntitledOutput": "Untitled output"
     },

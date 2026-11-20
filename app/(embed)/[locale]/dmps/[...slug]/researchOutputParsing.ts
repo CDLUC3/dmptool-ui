@@ -18,7 +18,9 @@ export type ParsedOutput = {
   issued?: string;
   byteSize?: number;
   byteSizeUnit?: string;
-  hosts: { url?: string; name?: string }[];
+  // url is the repository's website, or its id when it has none; location is where in the
+  // repository this output is (a folder, a collection)
+  hosts: { url?: string; name?: string; location?: string }[];
   metadataStandards: { uri?: string; name?: string }[];
   licenses: { uri?: string; name?: string }[];
 };
@@ -53,7 +55,11 @@ function parseRow(row: ResearchOutputTableRowAnswerType): ParsedOutput {
     issued: issuedCol?.answer,
     byteSize: byteSizeCol?.answer?.value,
     byteSizeUnit: byteSizeCol?.answer?.context,
-    hosts: (hostCol?.answer ?? []).map((h) => ({ url: h.repositoryId, name: h.repositoryName })),
+    hosts: (hostCol?.answer ?? []).map((h) => ({
+      url: h.repositoryWebsite || h.repositoryId,
+      name: h.repositoryName,
+      ...(h.repositoryLocation ? { location: h.repositoryLocation } : {}),
+    })),
     metadataStandards: (metadataCol?.answer ?? []).map((m) => ({
       uri: m.metadataStandardId,
       name: m.metadataStandardName,

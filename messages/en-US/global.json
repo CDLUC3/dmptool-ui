@@ -1052,6 +1052,7 @@
       "repositories": "Repositories",
       "metadataStandards": "Metadata Standards",
       "licenses": "Licenses",
+      "repositoryLocation": "Link to this output in {name}",
       "initialAccessLevels": "Initial Access Levels",
       "anticipatedReleaseDate": "Anticipated Release Date",
       "anticipatedFileSize": "Anticipated File Size",

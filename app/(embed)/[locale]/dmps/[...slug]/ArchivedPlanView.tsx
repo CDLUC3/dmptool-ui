@@ -722,6 +722,13 @@ export default function ArchivedPlanView({
                               ) : (
                                 h.name
                               )}
+                              {h.location && (
+                                <>
+                                  {' ('}
+                                  <a href={h.location} target="_blank" rel="noopener noreferrer">{t('output.repositoryLocation')}</a>
+                                  {')'}
+                                </>
+                              )}
                               {i < output.hosts.length - 1 ? ', ' : ''}
                             </span>
                           ))}

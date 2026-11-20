@@ -649,7 +649,7 @@ export const jsonToState = (
       }
 
       case RO_RELEASE_DATE: {
-        const col = findColumn(['releaseDate']);
+        const col = findColumn(['researchOutput.releaseDate', 'Anticipated Release Date', 'releaseDate']);
         if (col) {
           updated.enabled = col.enabled;
           updated.helpText = getHelpText(col.content.attributes);
@@ -659,7 +659,7 @@ export const jsonToState = (
       }
 
       case RO_FILE_SIZE: {
-        const col = findColumn(["fileSize"]);
+        const col = findColumn(['researchOutput.fileSize', 'Anticipated File Size', 'fileSize']);
         if (col) {
           updated.enabled = col.enabled;
           updated.helpText = getHelpText(col.content.attributes);

@@ -1066,6 +1066,7 @@
       "repositories": "Repositórios",
       "metadataStandards": "Padrões de Metadados",
       "licenses": "Licenças",
+      "repositoryLocation": "Link para este resultado em {name}",
       "initialAccessLevels": "Níveis de Acesso Inicial",
       "anticipatedReleaseDate": "Data de lançamento recomendada",
       "anticipatedFileSize": "Tamanho do arquivo esperado",

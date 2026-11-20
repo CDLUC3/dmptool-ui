@@ -148,6 +148,32 @@ describe('parseResearchOutputsFromAnswers', () => {
     });
   });
 
+  it('links a repository by its website, with the output\'s own place in it', () => {
+    const row = buildRow([
+      buildColumn('host', [
+        {
+          repositoryId: 'https://example.org/repositories/abc123',
+          repositoryName: 'Example Archive',
+          repositoryWebsite: 'https://archive.example.org/',
+          repositoryLocation: 'https://archive.example.org/collections/example-lab',
+        },
+        { repositoryId: 'https://example.org/repo/2', repositoryName: 'Example Other' },
+      ]),
+    ]);
+    mockSafeParse.mockReturnValueOnce({ success: true, data: { answer: [row] } });
+
+    const result = parseResearchOutputsFromAnswers([{ id: 1, json: JSON.stringify({}) }]);
+
+    expect(result[0].hosts).toEqual([
+      {
+        url: 'https://archive.example.org/',
+        name: 'Example Archive',
+        location: 'https://archive.example.org/collections/example-lab',
+      },
+      { url: 'https://example.org/repo/2', name: 'Example Other' },
+    ]);
+  });
+
   it('handles a row with all optional columns missing, defaulting arrays to empty', () => {
     const row = buildRow([]);
     mockSafeParse.mockReturnValueOnce({ success: true, data: { answer: [row] } });

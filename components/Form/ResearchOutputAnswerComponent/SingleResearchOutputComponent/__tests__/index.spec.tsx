@@ -278,6 +278,7 @@ const messages = {
       repositories: 'Repositories',
       metadataStandards: 'Metadata Standards',
       licenses: 'Licenses',
+      repositoryLocation: 'Link to this output in {name}',
       initialAccessLevels: 'Initial Access Levels',
       anticipatedReleaseDate: 'Anticipated Release Date',
       anticipatedFileSize: 'Anticipated File Size',
@@ -790,6 +791,55 @@ describe('SingleResearchOutputComponent', () => {
         const repoValue = screen.getByTestId('repo-value');
         expect(repoValue.textContent).toContain('[]');
       });
+    });
+
+    it('keeps the output\'s own place in a picked repository', async () => {
+      const mockRow = createMockRow('', '', '', [], [
+        {
+          repositoryId: 'https://zenodo.org',
+          repositoryName: 'Zenodo',
+          repositoryLocation: 'https://zenodo.org/communities/example-lab',
+        },
+      ]);
+
+      const CustomComponent = () => {
+        const [rows, setRows] = React.useState([mockRow]);
+        return (
+          <NextIntlClientProvider messages={messages} locale="en">
+            <SingleResearchOutputComponent columns={mockColumns} rows={rows} setRows={setRows} />
+            <div data-testid="rows">{JSON.stringify(rows)}</div>
+          </NextIntlClientProvider>
+        );
+      };
+
+      render(<CustomComponent />);
+
+      const location = screen.getByLabelText('labels.repositoryLocation');
+      expect(location).toHaveValue('https://zenodo.org/communities/example-lab');
+
+      await user.clear(location);
+      await user.type(location, 'https://zenodo.org/communities/other');
+      await waitFor(() => {
+        expect(screen.getByTestId('rows').textContent).toContain('"repositoryLocation":"https://zenodo.org/communities/other"');
+      });
+
+      // Picking repositories again keeps the location of one that stays picked
+      await user.click(screen.getByText('Add Repository'));
+      await waitFor(() => {
+        expect(screen.getByTestId('rows').textContent).toContain('"repositoryLocation":"https://zenodo.org/communities/other"');
+      });
+    });
+
+    it('shows a licence the answer has that isn\'t in the list', () => {
+      const mockRow = createMockRow('', '', '', [], [], [], [
+        { licenseId: 'https://spdx.org/licenses/Example-1.0.json', licenseName: 'Example-1.0' },
+      ]);
+
+      renderWithProviders(
+        <SingleResearchOutputComponent columns={mockColumns} rows={[mockRow]} setRows={mockSetRows} />
+      );
+
+      expect(screen.getByLabelText('labels.licenses')).toHaveValue('https://spdx.org/licenses/Example-1.0.json');
     });
 
     it('should handle metadata standard selection', async () => {
