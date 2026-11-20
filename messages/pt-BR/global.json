@@ -138,7 +138,10 @@
         "errorSettingPrimaryEmail": "Erro ao definir o e-mail principal",
         "errorAddingNewEmail": "Erro ao adicionar novo e-mail",
         "errorDeletingEmail": "Erro ao excluir e-mail",
-        "errorResendingVerification": "Erro ao reenviar o link de verificação"
+        "errorResendingVerification": "Erro ao reenviar o link de verificação",
+        "errorSendingVerification": "{email} foi adicionado, mas não foi possível enviar o e-mail de confirmação. Use \"Reenviar link de verificação\" para tentar novamente.",
+        "emailAlreadyConfirmed": "{email} já está confirmado.",
+        "emailClaimedByOther": "{email} já está confirmado em outra conta do DMP Tool."
       }
     }
   },

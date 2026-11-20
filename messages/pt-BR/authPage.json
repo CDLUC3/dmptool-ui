@@ -1,5 +1,6 @@
 {
   "AuthPage": {
+    "confirmEmailSignInHint": "Para confirmar seu novo endereço de e-mail, entre com o endereço de e-mail que você normalmente usa no DMP Tool, não com o que você está confirmando.",
     "loginTitle": "Entrar",
     "loginToLink": "Faça login para vincular sua conta de Logon Único (SSO) à sua conta existente na Ferramenta DMP",
     "registerTitle": "Criar uma conta de ferramenta DMP",
@@ -78,6 +79,30 @@
     },
     "buttons": {
       "sending": "Enviando..."
+    }
+  },
+  "EmailConfirmation": {
+    "confirm": {
+      "title": "Confirme seu endereço de e-mail",
+      "confirming": "Confirmando seu endereço de e-mail...",
+      "retryButton": "Tentar novamente",
+      "signInTitle": "Entre para confirmar este e-mail",
+      "signInDescription": "Entre com o endereço de e-mail que você já usa no DMP Tool, não com o que você está confirmando. Você voltará a esta página para concluir a confirmação.",
+      "signInButton": "Entrar",
+      "error": "Algo deu errado ao confirmar seu endereço de e-mail. Tente novamente."
+    },
+    "confirmed": {
+      "title": "E-mail confirmado",
+      "description": "Obrigado por confirmar seu endereço de e-mail. Agora você pode usá-lo para entrar e verá tudo o que foi compartilhado com ele.",
+      "button": "Ir para meu perfil"
+    },
+    "failed": {
+      "title": "Não foi possível confirmar seu e-mail",
+      "invalid": "Este link de confirmação não é mais válido. Ele pode ter expirado ou já ter sido usado. Você pode solicitar um novo link no seu perfil.",
+      "wrongAccount": "Este link de confirmação foi enviado para outra conta do DMP Tool. Saia usando o menu no topo da página, entre na conta que adicionou este endereço de e-mail e abra o link novamente.",
+      "claimedByOther": "Este endereço de e-mail já está confirmado em outra conta do DMP Tool.",
+      "generic": "Não foi possível confirmar seu endereço de e-mail. Você pode solicitar um novo link no seu perfil.",
+      "profileButton": "Ir para meu perfil"
     }
   }
 }

@@ -138,7 +138,10 @@
         "errorSettingPrimaryEmail": "Error when setting primary email",
         "errorAddingNewEmail": "Error when adding new email",
         "errorDeletingEmail": "Error when deleting email",
-        "errorResendingVerification": "Error when resending the verification link"
+        "errorResendingVerification": "Error when resending the verification link",
+        "errorSendingVerification": "{email} was added, but we couldn't send the confirmation email. Use \"Resend verification link\" to try again.",
+        "emailAlreadyConfirmed": "{email} is already confirmed.",
+        "emailClaimedByOther": "{email} is already confirmed on another DMP Tool account."
       }
     }
   },
