@@ -65,6 +65,22 @@ describe("DMP Table Component", () => {
     });
   });
 
+  it("should announce a column's initial sort direction to screen readers", () => {
+    render(
+      <DmpTable
+        columnData={[
+          { ...columns[1], direction: 'descending' as const },
+          { id: 'email', name: 'Email Column', allowsSorting: true, direction: '' as const },
+        ]}
+        rowData={rows}
+        label="Test Table"
+      />
+    );
+
+    expect(screen.getByRole('columnheader', { name: /Name Column/ })).toHaveAttribute('aria-sort', 'descending');
+    expect(screen.getByRole('columnheader', { name: /Email Column/ })).toHaveAttribute('aria-sort', 'none');
+  });
+
   it("should have no accessibility violations", async () => {
     const { container } = render(
       <DmpTable

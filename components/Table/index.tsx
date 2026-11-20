@@ -167,9 +167,12 @@ export function DmpTable({
   onDmpSortChange,
 }: DmpTableProps): React.ReactElement {
   const isFirstRender = useRef(true);
-  const [sorting, setSorting] = useState<SortDescriptor>({
-    column: "",
-    direction: "ascending",
+  const [sorting, setSorting] = useState<SortDescriptor>(() => {
+    const initialSort = Array.from(columnData).find(col => col.allowsSorting && col.direction);
+    return {
+      column: initialSort?.id ?? "",
+      direction: initialSort?.direction || "ascending",
+    };
   });
 
   // Track the internal state of columns and row data
@@ -220,11 +223,11 @@ export function DmpTable({
               {col.name}
             </span>
             {col.allowsSorting && (
-              <>
-                {!col.direction && (<span>⇅</span>)}
-                {col.direction == "ascending" && (<span>↑</span>)}
-                {col.direction == "descending" && (<span>↓</span>)}
-              </>
+              <span aria-hidden="true">
+                {!col.direction && "⇅"}
+                {col.direction == "ascending" && "↑"}
+                {col.direction == "descending" && "↓"}
+              </span>
             )}
           </Column>
         )}
