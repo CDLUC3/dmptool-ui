@@ -221,13 +221,13 @@ const ProjectsProjectCollaborationInvite = () => {
                   onChange={handleRadioChange}
                 >
                   <div>
+                    <Radio value="own">{ProjectsProjectCollaboration('own')}</Radio>
+                  </div>
+                  <div>
                     <Radio value="edit">{ProjectsProjectCollaboration('canEdit')}</Radio>
                   </div>
                   <div>
                     <Radio value="comment">{ProjectsProjectCollaboration('canComment')}</Radio>
-                  </div>
-                  <div>
-                    <Radio value="own">{ProjectsProjectCollaboration('own')}</Radio>
                   </div>
                 </RadioGroupComponent>
               </div>

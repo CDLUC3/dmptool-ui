@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { useRouter } from '@/i18n/routing';
-import { useTranslations } from 'next-intl';
+import { useFormatter, useTranslations } from 'next-intl';
 import {
   Breadcrumb,
   Breadcrumbs,
@@ -43,6 +43,7 @@ import Loading from '@/components/Loading';
 // Utils and other
 import { routePath } from '@/utils/routes';
 import { extractErrors } from '@/utils/errorHandler';
+import { formatWithTimeAndDate } from '@/utils/dateUtils';
 import { useToast } from '@/context/ToastContext';
 import { AccessLevelKey } from "@/app/types";
 
@@ -77,6 +78,7 @@ const ProjectsProjectCollaboration = () => {
   // Localization
   const Global = useTranslations('Global');
   const t = useTranslations('ProjectsProjectCollaboration');
+  const formatter = useFormatter();
 
   const [projectCollaborators, setProjectCollaborators] = useState<ProjectCollaborator[]>([]);
   const [hasAccess, setHasAccess] = useState<ProjectCollaborator[]>([]);
@@ -463,8 +465,8 @@ const ProjectsProjectCollaboration = () => {
               <ul>
                 <li><strong>{t('accessLevels.primary')}</strong> — {t('accessLevels.primaryDescription')}</li>
                 <li><strong>{t('accessLevels.own')}</strong> — {t('accessLevels.ownDescription')}</li>
-                <li><strong>{t('accessLevels.comment')}</strong> — {t('accessLevels.commentDescription')}</li>
                 <li><strong>{t('accessLevels.edit')}</strong> — {t('accessLevels.editDescription')}</li>
+                <li><strong>{t('accessLevels.comment')}</strong> — {t('accessLevels.commentDescription')}</li>
               </ul>
             </details>
             <div className={styles.membersList} role="list">
@@ -558,7 +560,7 @@ const ProjectsProjectCollaboration = () => {
                       <div className={styles.memberInfo}>
                         <h3 className={styles.memberName}>{pendingName ? pendingName : pending.email}</h3>
                         <p className={styles.memberEmail}>{pendingName ? pending.email : null}</p>
-                        <p className={styles.memberRole}>{pending.created}</p>
+                        <p className={styles.memberRole}>{pending.created ? formatWithTimeAndDate(pending.created, formatter.dateTime) : null}</p>
                       </div>
                       <AccessLevelRadioGroup
                         value={pendingAccessLevel}

@@ -86,6 +86,13 @@ describe('ProjectsProjectCollaborationInvite', () => {
     expect(within(addCollaboratorForm).getByText('para2')).toBeInTheDocument();
   });
 
+  it('should list access level radio options from most to least permissions', () => {
+    render(<ProjectsProjectCollaborationInvite />);
+
+    const radioValues = screen.getAllByRole('radio').map(radio => radio.getAttribute('value'));
+    expect(radioValues).toEqual(['own', 'edit', 'comment']);
+  });
+
   it('should open modal when user fills out form and clicks the \'Grant access\' button', async () => {
     (addProjectCollaboratorAction as jest.Mock).mockResolvedValue({
       success: true,
