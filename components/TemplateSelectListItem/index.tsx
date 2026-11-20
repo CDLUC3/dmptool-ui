@@ -68,7 +68,7 @@ function TemplateSelectListItem({ item, onSelect }: TemplateSelectListItemProps)
             <Button className={styles.bpLink}>
               {SelectListItem("messages.bestPracticeLabel")}
             </Button>
-            <Popover placement="bottom start" className={styles.bpPopover}>
+            <Popover placement="top start" className={styles.bpPopover}>
               <Dialog className={styles.bpPopoverContent} aria-label={bestPracticeInfoAria}>
                 {bestPracticeTooltip}
               </Dialog>

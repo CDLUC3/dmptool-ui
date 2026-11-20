@@ -2025,6 +2025,11 @@ function Page() {
               Users can also pass in the tooltip message, as well as the modal that they want displayed when the user
               clicks the icon.
             </p>
+            <p>
+              The tooltip opens above the button by default (<code>placement=&quot;top left&quot;</code>) so it
+              doesn&apos;t cover content below, and flips below when there isn&apos;t room. Pass <code>placement</code> to
+              change it.
+            </p>
             <Example>
               <TooltipWithDialog
                 text="You have an existing connection to ORCID."

@@ -299,6 +299,22 @@ describe("GuidanceGroupIndexPage", () => {
     });
   });
 
+  it("should open the tag info popover above the guidance editor", async () => {
+    render(
+      <MockedProvider mocks={mocks}>
+        <GuidanceGroupIndexPage />
+      </MockedProvider>,
+    );
+
+    await waitForElementToBeRemoved(() => screen.getByText("Global.messaging.loading"));
+
+    const [firstInfoButton] = await screen.findAllByRole("button", { name: "Click for more info" });
+    fireEvent.click(firstInfoButton);
+
+    const dialog = await screen.findByRole("dialog");
+    expect(dialog.closest(".react-aria-Popover")).toHaveAttribute("data-placement", "top");
+  });
+
   it('should update existing guidance text locally when editor changes', async () => {
     render(
       <MockedProvider mocks={mocks}>

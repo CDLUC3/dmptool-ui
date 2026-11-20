@@ -9,7 +9,8 @@ import {
   Modal,
   ModalOverlay,
   OverlayArrow,
-  PressEvent
+  PressEvent,
+  TooltipProps
 } from 'react-aria-components';
 import Image from 'next/image';
 import { DmpIcon } from "@/components/Icons";
@@ -25,6 +26,7 @@ interface TooltipWithDialogProps {
   imageUrl?: string;
   onPressAction: (e: PressEvent, close: () => void) => void; // Allow passing arguments
   children?: ReactNode;
+  placement?: TooltipProps['placement'];
 }
 
 const TooltipWithDialog = ({
@@ -35,7 +37,8 @@ const TooltipWithDialog = ({
   icon,
   imageUrl,
   onPressAction,
-  children
+  children,
+  placement = "top left"
 }: TooltipWithDialogProps) => {
   const [isConfirmed, setIsConfirmed] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
@@ -64,7 +67,7 @@ const TooltipWithDialog = ({
               <span><Image src={imageUrl} className={styles.icon} width={20} height={20} alt="" /></span>
             )}<span>{text}</span><span>{icon || <DmpIcon icon="cancel" />}</span>
           </Button>
-          <Tooltip placement="bottom left" className={styles.tooltip} data-testid="tooltip-container">
+          <Tooltip placement={placement} className={styles.tooltip} data-testid="tooltip-container">
             <OverlayArrow className={styles.tooltipArrow} />
             {tooltipText}
           </Tooltip>

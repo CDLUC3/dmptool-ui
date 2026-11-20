@@ -660,7 +660,7 @@ const RepoSelectorForAnswer = ({
                                         <Button className="popover-btn" aria-label="Click for more info">
                                           <div className="icon info"><DmpIcon icon="info" /></div>
                                         </Button>
-                                        <Popover>
+                                        <Popover placement="top">
                                           <OverlayArrow>
                                             <svg width={12} height={12} viewBox="0 0 12 12">
                                               <path d="M0 0 L6 6 L12 0" />
