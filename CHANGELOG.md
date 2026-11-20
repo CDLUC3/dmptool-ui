@@ -217,6 +217,10 @@
 ## Fixed
 - Fixed `DmpTable` so a column's initial `direction` sets the table's sort, which screen readers announce through `aria-sort`, and hid the sort arrows from screen readers [#609]
 - Fixed the pt-BR "Funder Requirements" menu label, which read "Requisitos de Barbatana" ("fin requirements") instead of "Requisitos dos Financiadores" [#609]
+- Fixed guidance and requirement labels from PR review: question guidance now shows above tag headings, template previews show tag names, and custom questions show "Requirements by" the org that added them [#603]
+- Fixed tagged guidance in the `PlanAuthoring` guidance sidebar so each tag's name shows as a heading above its guidance. The `PlanAuthoring` query now selects `title` on guidance items [#603]
+- Fixed best practice guidance being merged into the tab of the org that publishes it (CDL) in the `PlanAuthoring` guidance sidebar. It now has its own "DMP Tool" tab, matching the template preview [#603]
+- Fixed a template question's sample text in the `PlanAuthoring` "View sample answers" being labelled with the user's or customizing org (e.g. UCI) instead of the template owner (e.g. NIH). The label now comes from the plan's template owner [#603]
 - Fixed the `plan.spec.ts` e2e tests failing on AWS dev, where the full ROR data makes a funder search for "NIH" match about 80 funders, with NIH not on the first page. The tests now search for "National Institutes of Health" and click "Load more" until NIH is listed, and the "Add funder manually" test picks NIH instead of NSF, which isn't in dev's data [#561]
 - Fixed Create Template so a taken name shows an error on Next, using the new `TemplateNameAvailable` query. [#88]
 - Fixed the Template customizations page showing "No items found" and leaving the Search button disabled when the same term was searched again. The results now come from each request's own response, so a search answered from the Apollo cache is still shown [#561]

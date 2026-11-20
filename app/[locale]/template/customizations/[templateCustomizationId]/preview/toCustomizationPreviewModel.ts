@@ -51,6 +51,7 @@ function toQuestion(
       ? toPreviewGuidanceSources({ tagIds: [], guidance: EMPTY_GUIDANCE_LOOKUP, owner: null, researcher })
       : toPreviewGuidanceSources({
           tagIds: section.tagIds,
+          tagNames: section.tagNames,
           guidance,
           owner,
           ownerGuidanceHtml: [section.guidance, question.guidanceText],

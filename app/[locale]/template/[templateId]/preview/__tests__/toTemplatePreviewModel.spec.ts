@@ -1,4 +1,5 @@
 import { GuidanceSourceType } from "@/generated/graphql";
+import type { PreviewGuidanceLookup } from "@/components/PlanPreview/previewGuidance";
 import {
   EXAMPLE_ORG_GUIDANCE_ID,
   toTemplatePreviewModel as mapTemplate,
@@ -148,6 +149,50 @@ describe("toTemplatePreviewModel", () => {
     const sources = model.sections[0].questions[0].guidanceSources;
     expect(sources.map((source) => source.id)).toEqual([EXAMPLE_ORG_GUIDANCE_ID]);
     expect(sources[0].bodyHtml).toBe("<p>Example</p><p>Preview only note</p>");
+  });
+
+  it("puts each tag name above its tagged guidance, and leaves the question's own guidance untitled", () => {
+    const guidance: PreviewGuidanceLookup = {
+      bestPractice: [{ tagId: 5, guidanceText: "<p>Best</p>" }],
+      owner: [
+        { tagId: 5, guidanceText: "<p>Owner tag</p>" },
+        { tagId: 4, guidanceText: "<p>Unused section tag</p>" },
+      ],
+      org: [],
+    };
+    const model = mapTemplate(
+      makeTemplate({
+        sections: [
+          {
+            id: 1,
+            name: "Data",
+            displayOrder: 1,
+            guidance: "<p>Section</p>",
+            tags: [{ id: 4, name: "Storage" }],
+            questions: [
+              {
+                id: 10,
+                displayOrder: 1,
+                guidanceText: "<p>Question guidance</p>",
+                json: '{"type":"text"}',
+                tags: [{ id: 5, name: "Data & <Metadata>" }],
+              },
+            ],
+          },
+        ],
+      }),
+      EXAMPLE_GUIDANCE,
+      guidance
+    );
+
+    expect(model.sections[0].questions[0].guidanceSources.map(({ label, bodyHtml }) => [label, bodyHtml])).toEqual([
+      ["DMP Tool", "<h5>Data &amp; &lt;Metadata&gt;</h5><p>Best</p>"],
+      [
+        "National Science Foundation",
+        "<p>Section</p><p>Question guidance</p><h5>Data &amp; &lt;Metadata&gt;</h5><p>Owner tag</p>",
+      ],
+      ["Researcher's organization (example)", "<p>Example</p>"],
+    ]);
   });
 
   it("flags question JSON that can't be rendered", () => {
