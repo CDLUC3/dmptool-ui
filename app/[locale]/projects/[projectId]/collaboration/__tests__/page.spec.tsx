@@ -40,6 +40,9 @@ jest.mock('../actions', () => ({
 
 jest.mock('next-intl', () => ({
   useTranslations: jest.fn(() => jest.fn((key) => key)), // Mock `useTranslations`,
+  useFormatter: jest.fn(() => ({
+    dateTime: jest.fn((date: Date) => `formatted:${date.toISOString()}`),
+  })),
 }));
 
 jest.mock('next/navigation', () => ({
@@ -773,6 +776,46 @@ describe('ProjectsProjectCollaborationPage', () => {
     });
     const results = await axe(container);
     expect(results).toHaveNoViolations();
+  });
+
+  it('should list access level descriptions and radio options from most to least permissions', async () => {
+    await act(async () => {
+      render(
+        <MockedProvider mocks={MOCKS}>
+          <ProjectsProjectCollaboration />
+        </MockedProvider>
+      );
+    });
+
+    await screen.findByRole('link', { name: "links.inviteAPerson" });
+
+    const legendItems = within(screen.getByText('headings.accessLevels').closest('details') as HTMLElement)
+      .getAllByRole('listitem')
+      .map(item => item.querySelector('strong')?.textContent);
+    expect(legendItems).toEqual([
+      'accessLevels.primary',
+      'accessLevels.own',
+      'accessLevels.edit',
+      'accessLevels.comment',
+    ]);
+
+    const memberItem = screen.getByRole('listitem', { name: /Project member: User One/i });
+    const radioValues = within(memberItem).getAllByRole('radio').map(radio => radio.getAttribute('value'));
+    expect(radioValues).toEqual(['primary', 'own', 'edit', 'comment']);
+  });
+
+  it('should read the pending invite date as UTC before formatting it for the user', async () => {
+    await act(async () => {
+      render(
+        <MockedProvider mocks={MOCKS}>
+          <ProjectsProjectCollaboration />
+        </MockedProvider>
+      );
+    });
+
+    const pendingItem = await screen.findByRole('listitem', { name: /Pending invite:/i });
+    expect(within(pendingItem).getByText('formatted:2025-09-10T17:44:40.000Z')).toBeInTheDocument();
+    expect(within(pendingItem).queryByText('2025-09-10 17:44:40')).not.toBeInTheDocument();
   });
 
   describe('when isReadOnly is true', () => {

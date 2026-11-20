@@ -573,10 +573,10 @@
       "edit": "Editor",
       "comment": "Comentador",
       "own": "Coproprietário",
-      "primaryDescription": "O usuário é capaz de executar todas as ações em um Plano (normalmente restrito ao proprietário/criador), e sua afiliação é a organização associada ao projeto",
-      "editDescription": "Tem direitos de edição para os planos (pode escrever e editar os planos).",
-      "commentDescription": "Tem direitos de leitura do projeto (pode visualizar e comentar nos planos).",
-      "ownDescription": "Tem direitos de administrador para o projeto (pode convidar outros usuários, editar os planos e publicá-los)."
+      "primaryDescription": "O usuário é capaz de executar todas as ações em um Projeto (será sempre o criador original do projeto, a menos que seja transferido).",
+      "editDescription": "Tem direitos de edição para os Planos e direitos de leitura para os detalhes do Projeto (pode escrever e editar os planos).",
+      "commentDescription": "Tem direitos de leitura do Projeto e dos Planos (pode visualizar e comentar nos planos).",
+      "ownDescription": "Tem direitos de administrador para o Projeto (pode convidar outros usuários, editar os detalhes do projeto, criar e editar planos e publicá-los)."
     },
     "buttons": {
       "invite": "Convidar colaboradores",

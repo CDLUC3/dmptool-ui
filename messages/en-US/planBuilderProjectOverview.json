@@ -572,10 +572,10 @@
       "edit": "Editor",
       "comment": "Commenter",
       "own": "Co-Owner",
-      "primaryDescription": "The user is able to perform all actions on a Plan (typically restricted to the owner/creator), and their affiliation is the organization associated with the project",
-      "editDescription": "Has edit-rights to the plans (can write and edit the plans).",
-      "commentDescription": "Has read-rights to the project (can view and comment on the plans).",
-      "ownDescription": "Has admin-rights to the project (can invite other users, edit the plans, and publish them)."
+      "primaryDescription": "The user is able to perform all actions on a Project (will always be the original creator of the project unless transferred).",
+      "editDescription": "Has edit-rights to the Plans and read-rights to the Project details (can write and edit the plans).",
+      "commentDescription": "Has read-rights to the Project and Plans (can view and comment on the plans).",
+      "ownDescription": "Has admin-rights to the Project (can invite other users, edit project details, create and edit plans, and publish them)."
     },
     "buttons": {
       "invite": "Invite Collaborators",

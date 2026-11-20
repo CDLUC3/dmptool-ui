@@ -76,6 +76,7 @@
 - Added `UpdateAffiliation` and `AffiliationById` queries [#203]
 
 ## Updated
+- Updated the access level descriptions on the project collaboration page to say only Co-Owners can edit project details, and ordered the descriptions and radio buttons (collaboration and invite pages) from most to least permissions. Moved the radio buttons closer to the collaborator's name and formatted the pending invite date for the user's locale [#608]
 - Redesigned the related works pages with "Your research outputs", "Confirm matches" and "Dismissed" tabs, new cards, and empty and loading states [#216]
 - Updated the project related-works add flow to choose a plan with radio buttons, then continue to that plan's add page (one plan skips straight there) [#216]
 - Updated the e2e tests to run one at a time (`workers: 1`) locally as well as on CI, because several tests at once overload the Next.js dev server and cause timeouts [#561]
