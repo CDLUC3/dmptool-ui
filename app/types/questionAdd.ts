@@ -72,6 +72,8 @@ export interface RepositoryInterface {
   website?: string;
   keywords?: string[];
   repositoryType?: string[];
+  // Where in the repository this output is (a folder, a collection), on a plan's answer
+  location?: string;
 }
 
 export interface RepositoryFieldInterface {

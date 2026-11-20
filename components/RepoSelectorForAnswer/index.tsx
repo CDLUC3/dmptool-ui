@@ -134,8 +134,10 @@ const RepoSelectorForAnswer = ({
     const result: { [id: string]: RepositoryInterface } = {};
     return (value || []).reduce((acc, repo) => {
       if (repo.uri !== '') {
-        // Use complete data from cache if available, otherwise use the stored value
-        acc[repo.uri] = completeRepoData[repo.uri] || repo;
+        // Use complete data from cache if available, otherwise use the stored value. The
+        // output's own place in the repository is only in the stored value
+        const cached = completeRepoData[repo.uri];
+        acc[repo.uri] = cached ? { ...cached, ...(repo.location ? { location: repo.location } : {}) } : repo;
       }
       return acc;
     }, result);
@@ -317,6 +319,17 @@ const RepoSelectorForAnswer = ({
   };
 
   // Remove a single repository from selection
+  // Sets where in a picked repository the output is; an empty box clears it
+  const updateLocation = (repoId: string, location: string) => {
+    const trimmed = location.trim();
+    const updated = Object.values(selectedRepos).map((r) => {
+      if (r.uri !== repoId) return r;
+      const { location: _previous, ...rest } = r;
+      return trimmed ? { ...rest, location: trimmed } : rest;
+    });
+    onRepositoriesChange?.(updated);
+  };
+
   const removeRepo = (repoId: string) => {
     const repo = selectedRepos[repoId];
     const newSelected = Object.values(selectedRepos).filter(r => r.uri !== repoId);
@@ -539,6 +552,14 @@ const RepoSelectorForAnswer = ({
                         {Global('buttons.remove')}
                       </Button>
                     </div>
+                    {/* Where in this repository the output is: a folder, a collection, a project */}
+                    <FormInput
+                      type="url"
+                      name={`repo-location-${repo.uri}`}
+                      label={Global('labels.repositoryLocation', { name: repo.name })}
+                      value={repo.location ?? ''}
+                      onChange={(e) => updateLocation(repo.uri, e.target.value)}
+                    />
                   </div>
                 ))}
               </div>

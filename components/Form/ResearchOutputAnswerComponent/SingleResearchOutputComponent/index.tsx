@@ -706,6 +706,7 @@ const SingleResearchOutputComponent = ({
                     description: repo.repositoryDescription || "",
                     keywords: repo.repositoryKeywords || [],
                     repositoryType: repo.repositoryType || [],
+                    ...(repo.repositoryLocation ? { location: repo.repositoryLocation } : {}),
                   };
                 })
                 : [] // User explicitly removed all items - show empty
@@ -739,44 +740,20 @@ const SingleResearchOutputComponent = ({
                   preferredReposURIs={preferredRepoURIs}
                   onRepositoriesChange={(repos) => {
                     // Transform RepositoryInterface[] to the answer format
-                    // Save all repository data to preserve it across selections, and keep the
-                    // output's own place in each repository that stays picked
-                    const locations = new Map(repoValue.map((r) => [r.repositoryId, r.repositoryLocation]));
-                    const repoAnswers = repos.map((repo) => {
-                      const location = locations.get(repo.uri);
-                      return {
-                        repositoryId: repo.uri,
-                        repositoryName: repo.name,
-                        repositoryWebsite: repo.website,
-                        repositoryDescription: repo.description,
-                        repositoryKeywords: repo.keywords,
-                        repositoryType: repo.repositoryType,
-                        ...(location ? { repositoryLocation: location } : {}),
-                      };
-                    });
+                    // Save all repository data to preserve it across selections, with where in
+                    // each repository the output is
+                    const repoAnswers = repos.map((repo) => ({
+                      repositoryId: repo.uri,
+                      repositoryName: repo.name,
+                      repositoryWebsite: repo.website,
+                      repositoryDescription: repo.description,
+                      repositoryKeywords: repo.keywords,
+                      repositoryType: repo.repositoryType,
+                      ...(repo.location ? { repositoryLocation: repo.location } : {}),
+                    }));
                     handleCellChange(col.commonStandardId, colIndex, repoAnswers);
                   }}
                 />
-                {/* Where in each picked repository this output is: a folder, a collection, a project */}
-                {repoValue.map((repo, repoIndex) => (
-                  <FormInput
-                    key={repo.repositoryId}
-                    type="url"
-                    name={`${name}-location-${repoIndex}`}
-                    label={Global('labels.repositoryLocation', { name: repo.repositoryName })}
-                    value={repo.repositoryLocation ?? ""}
-                    onChange={(e) => {
-                      const location = e.target.value.trim();
-                      const updated = repoValue.map((r, i) => {
-                        if (i !== repoIndex) return r;
-                        const { repositoryLocation: _dropped, ...rest } = r;
-                        return location ? { ...rest, repositoryLocation: location } : rest;
-                      });
-                      handleCellChange(col.commonStandardId, colIndex, updated);
-                    }}
-                    disabled={isDisabled}
-                  />
-                ))}
               </div>
             );
           case ResearchOutputTableColumnsEnum.enum.metadata:

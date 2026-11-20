@@ -385,6 +385,22 @@ describe('RepoSelectorForAnswer', () => {
     });
   });
 
+  describe('Where the output is in each repository', () => {
+    it('shows and edits the output\'s own place in a picked repository', async () => {
+      const value = [{ ...mockValue[0], location: 'https://zenodo.org/communities/example-lab' }];
+      render(<RepoSelectorForAnswer value={value} onRepositoriesChange={mockOnRepositoriesChange} />);
+
+      const location = screen.getByLabelText('labels.repositoryLocation');
+      expect(location).toHaveValue('https://zenodo.org/communities/example-lab');
+
+      fireEvent.change(location, { target: { value: 'https://zenodo.org/communities/other' } });
+
+      expect(mockOnRepositoriesChange).toHaveBeenLastCalledWith([
+        expect.objectContaining({ uri: value[0].uri, location: 'https://zenodo.org/communities/other' }),
+      ]);
+    });
+  });
+
   describe('Custom Repository Form', () => {
     it('should show custom repository form when "Add Custom Repository" is clicked', async () => {
       render(<RepoSelectorForAnswer onRepositoriesChange={mockOnRepositoriesChange} />);

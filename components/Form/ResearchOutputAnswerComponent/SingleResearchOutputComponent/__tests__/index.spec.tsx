@@ -114,6 +114,15 @@ jest.mock('@/components/RepoSelectorForAnswer', () => {
         >
           Add Repository
         </button>
+        <button
+          onClick={() =>
+            onRepositoriesChange(
+              value.map((repo: any) => ({ ...repo, location: 'https://zenodo.org/communities/other' }))
+            )
+          }
+        >
+          Set Location
+        </button>
         <div data-testid="repo-value">{JSON.stringify(value)}</div>
       </div>
     );
@@ -814,17 +823,9 @@ describe('SingleResearchOutputComponent', () => {
 
       render(<CustomComponent />);
 
-      const location = screen.getByLabelText('labels.repositoryLocation');
-      expect(location).toHaveValue('https://zenodo.org/communities/example-lab');
-
-      await user.clear(location);
-      await user.type(location, 'https://zenodo.org/communities/other');
-      await waitFor(() => {
-        expect(screen.getByTestId('rows').textContent).toContain('"repositoryLocation":"https://zenodo.org/communities/other"');
-      });
-
-      // Picking repositories again keeps the location of one that stays picked
-      await user.click(screen.getByText('Add Repository'));
+      // The picker gets the location, and its change is saved on the answer
+      expect(screen.getByTestId('repo-value').textContent).toContain('"location":"https://zenodo.org/communities/example-lab"');
+      await user.click(screen.getByText('Set Location'));
       await waitFor(() => {
         expect(screen.getByTestId('rows').textContent).toContain('"repositoryLocation":"https://zenodo.org/communities/other"');
       });
