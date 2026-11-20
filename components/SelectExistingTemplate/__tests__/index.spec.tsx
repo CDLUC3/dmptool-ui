@@ -416,7 +416,7 @@ describe('TemplateSelectTemplatePage', () => {
       );
     });
     // Find all pagination navs by role and aria-label
-    const paginationNavs = screen.getAllByRole('navigation', { name: 'pagination' });
+    const paginationNavs = screen.getAllByRole('navigation', { name: 'labels.pagination' });
     expect(paginationNavs).toHaveLength(2); // One for each list
 
     // Check for the ordered lists inside each nav
@@ -425,11 +425,11 @@ describe('TemplateSelectTemplatePage', () => {
     });
 
     // My Org Templates pagination: totalCount=11, limit=5 => 3 pages
-    const orgTemplatePageLinks = within(paginationNavs[0]).getAllByRole('link', { name: /Page \d+/ });
+    const orgTemplatePageLinks = within(paginationNavs[0]).getAllByRole('link', { name: 'labels.pageNumber' });
     expect(orgTemplatePageLinks).toHaveLength(3);
 
     // Public Templates pagination: totalCount=32, limit=5 => 7 pages
-    const publicTemplatePageLinks = within(paginationNavs[1]).getAllByRole('link', { name: /Page \d+/ });
+    const publicTemplatePageLinks = within(paginationNavs[1]).getAllByRole('link', { name: 'labels.pageNumber' });
     expect(publicTemplatePageLinks).toHaveLength(7);
   });
 
@@ -440,12 +440,14 @@ describe('TemplateSelectTemplatePage', () => {
       );
     });
 
-    const paginationNavs = screen.getAllByRole('navigation', { name: 'pagination' });
+    const paginationNavs = screen.getAllByRole('navigation', { name: 'labels.pagination' });
+    const getPageLink = (nav: HTMLElement, page: number) =>
+      within(nav).getByText(String(page)).closest('a') as HTMLElement;
 
     // Check org templates pagination
-    const page1Link = within(paginationNavs[0]).getByRole('link', { name: 'Page 1' });
+    const page1Link = getPageLink(paginationNavs[0], 1);
     expect(page1Link).toHaveClass('current');
-    const page2Link = within(paginationNavs[0]).getByRole('link', { name: 'Page 2' });
+    const page2Link = getPageLink(paginationNavs[0], 2);
     expect(page2Link).not.toHaveClass('current');
     fireEvent.click(page2Link);
 
@@ -454,9 +456,9 @@ describe('TemplateSelectTemplatePage', () => {
     });
 
     // Check public templates pagination
-    const page1Link2 = within(paginationNavs[1]).getByRole('link', { name: 'Page 1' });
+    const page1Link2 = getPageLink(paginationNavs[1], 1);
     expect(page1Link2).toHaveClass('current');
-    const page2Link2 = within(paginationNavs[1]).getByRole('link', { name: 'Page 2' });
+    const page2Link2 = getPageLink(paginationNavs[1], 2);
     expect(page2Link2).not.toHaveClass('current');
     fireEvent.click(page2Link2);
 

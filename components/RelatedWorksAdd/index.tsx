@@ -8,7 +8,6 @@ import { Button, Input, Label, SearchField, Text } from "react-aria-components";
 import {
   FindWorkByIdentifierDocument,
   RelatedWorkSearchResult,
-  RelatedWorksIdentifierType,
   RelatedWorkStatus,
 } from "@/generated/graphql";
 
@@ -17,26 +16,21 @@ import { doiToUrl, extractDoi } from "@/lib/identifierUtils";
 import { useFormatDate } from "@/hooks/useFormatDate";
 import { upsertRelatedWorkAction } from "@/app/actions/upsertRelatedWorkAction";
 import { useLazyQuery } from "@apollo/client/react";
-import { ProjectPlanSelect } from "@/components/RelatedWorksSelect";
 import ErrorMessages from "@/components/ErrorMessages";
 
 const MAX_AUTHOR_CHARS = 40;
 
-interface RelatedWorksAddProps {
-  identifier: number;
-  identifierType: RelatedWorksIdentifierType;
+export interface RelatedWorksAddProps {
+  planId: number;
 }
 
-export const RelatedWorksAdd = ({ identifierType, identifier }: RelatedWorksAddProps) => {
+export const RelatedWorksAdd = ({ planId }: RelatedWorksAddProps) => {
   const Global = useTranslations("Global");
   const t = useTranslations("RelatedWorksAdd");
 
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [doi, setDoi] = useState<string | null>(null);
   const [lookupClicked, setLookupClicked] = useState<boolean>(false);
-  const [planId, setPlanId] = useState<number | null>(
-    identifierType === RelatedWorksIdentifierType.PlanId ? identifier : null,
-  );
   const [errors, setErrors] = useState<string[]>([]);
   const errorRef = useRef<HTMLDivElement>(null);
 
@@ -50,10 +44,6 @@ export const RelatedWorksAdd = ({ identifierType, identifier }: RelatedWorksAddP
     errorPolicy: "all",
   });
 
-  const displayDOISearch =
-    identifierType === RelatedWorksIdentifierType.PlanId ||
-    (identifierType === RelatedWorksIdentifierType.ProjectId && planId != null);
-
   return (
     <>
       <section
@@ -61,84 +51,56 @@ export const RelatedWorksAdd = ({ identifierType, identifier }: RelatedWorksAddP
         role="search"
         className={styles.searchSection}
       >
-        {identifierType === RelatedWorksIdentifierType.ProjectId && (
-          <SearchField
-            style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", marginBottom: "1rem" }}
+        <SearchField>
+          <Label htmlFor="doi-search">{t("searchLabel")}</Label>
+          <Input
+            id="doi-search"
+            aria-describedby="doi-search-help"
+            placeholder="10.1000/182"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+          <Button
+            aria-label={Global("buttons.lookup")}
+            onPress={async () => {
+              const extractedDoi = extractDoi(searchTerm);
+              setDoi(extractedDoi);
+              setLookupClicked(true);
+
+              if(!extractedDoi) {
+                return;
+              }
+
+              const response = await findWorkByIdentifier({
+                variables: { planId, doi: extractedDoi }
+              });
+
+              type GraphQLErrorItem = {
+                message: string;
+                extensions?: {
+                  details?: string;
+                };
+              };
+              type GraphQLErrors = {
+                errors: GraphQLErrorItem[];
+              };
+
+              const errors = (response?.error as unknown as GraphQLErrors)?.errors?.map((e: GraphQLErrorItem) => e?.extensions?.details ?? e.message) ?? [];
+              setErrors(errors);
+            }}
           >
-            <Label
-              htmlFor="doi-search"
-              style={{ display: "inline-block" }}
-            >
-              {t("planSelectLabel")}
-            </Label>
-            <ProjectPlanSelect
-              projectId={identifier}
-              selectedKey={planId}
-              setSelectedKey={setPlanId}
-            />
-            <Text
-              slot="description"
-              className="help-text"
-              id="plan-select-search-help"
-            >
-              {t.rich("planSelectDescription", {
-                code: (chunks) => <span style={{ backgroundColor: "rgb(236, 236, 236)" }}>{chunks}</span>,
-              })}
-            </Text>
-          </SearchField>
-        )}
-        {displayDOISearch && (
-          <SearchField>
-            <Label htmlFor="doi-search">{t("searchLabel")}</Label>
-            <Input
-              id="doi-search"
-              aria-describedby="doi-search-help"
-              placeholder="10.1000/182"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-            <Button
-              aria-label={Global("buttons.lookup")}
-              onPress={async () => {
-                const extractedDoi = extractDoi(searchTerm);
-                setDoi(extractedDoi);
-                setLookupClicked(true);
-
-                if(!extractedDoi) {
-                  return;
-                }
-
-                const response = await findWorkByIdentifier({
-                  variables: { planId, doi: extractedDoi }
-                });
-
-                type GraphQLErrorItem = {
-                  message: string;
-                  extensions?: {
-                    details?: string;
-                  };
-                };
-                type GraphQLErrors = {
-                  errors: GraphQLErrorItem[];
-                };
-
-                const errors = (response?.error as unknown as GraphQLErrors)?.errors?.map((e: GraphQLErrorItem) => e?.extensions?.details ?? e.message) ?? [];
-                setErrors(errors);
-              }}
-            >
-              {Global("buttons.lookup")}
-            </Button>
-            <Text
-              slot="description"
-              className="help-text"
-              id="doi-search-help"
-            >
-              {t.rich("searchDescription", {
-                code: (chunks) => <span style={{ backgroundColor: "rgb(236, 236, 236)" }}>{chunks}</span>,
-              })}
-            </Text>
-          </SearchField>
-        )}
+            {Global("buttons.lookup")}
+          </Button>
+          <Text
+            slot="description"
+            className="help-text"
+            id="doi-search-help"
+          >
+            {t.rich("searchDescription", {
+              code: (chunks) => <span style={{ backgroundColor: "rgb(236, 236, 236)" }}>{chunks}</span>,
+            })}
+          </Text>
+        </SearchField>
       </section>
 
       <section>
@@ -158,14 +120,12 @@ export const RelatedWorksAdd = ({ identifierType, identifier }: RelatedWorksAddP
             </div>
           )}
 
-        {displayDOISearch &&
-          searchResults &&
+        {searchResults &&
           searchResults.findWorkByIdentifier?.items
             ?.filter((rw): rw is RelatedWorkSearchResult => rw !== null && rw !== undefined)
             .map((rw, i) => {
               return (
                 <AddRelatedWorkPageListItem
-                  identifierType={identifierType}
                   relatedWork={rw}
                   refetchSearch={refetchSearch}
                   planId={planId}
@@ -181,14 +141,12 @@ export const RelatedWorksAdd = ({ identifierType, identifier }: RelatedWorksAddP
 };
 
 interface AddRelatedWorkPageListItemProps {
-  identifierType: RelatedWorksIdentifierType;
   relatedWork: RelatedWorkSearchResult;
   refetchSearch: () => Promise<unknown>;
-  planId: number | null;
+  planId: number;
 }
 
 function AddRelatedWorkPageListItem({
-  identifierType,
   relatedWork,
   refetchSearch,
   planId,
@@ -246,12 +204,6 @@ function AddRelatedWorkPageListItem({
 
         <div className={styles.overviewFooter}>
           <div className={styles.overviewMetadata}>
-            {relatedWork.planTitle != null && identifierType === RelatedWorksIdentifierType.ProjectId && (
-              <span data-testid="planTitle">
-                {t("fieldNames.planTitle")}: {relatedWork.planTitle}
-              </span>
-            )}
-
             {[RelatedWorkStatus.Accepted, RelatedWorkStatus.Rejected].includes(relatedWork.status) && (
               <span data-testid="dateReviewed">
                 {t("fieldNames.dateReviewed")}: {dateReviewed}

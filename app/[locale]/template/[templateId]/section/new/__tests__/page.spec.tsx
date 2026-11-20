@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { act, fireEvent, render, screen, waitFor } from '@/utils/test-utils';
+import { act, fireEvent, render, screen, waitFor, within } from '@/utils/test-utils';
 import { useMutation, useLazyQuery } from '@apollo/client/react';
 import {
   AddSectionDocument,
@@ -344,7 +344,7 @@ describe("SectionTypeSelectPage", () => {
     });
 
     // Find all pagination navs by role and aria-label
-    const paginationNavs = screen.getAllByRole('navigation', { name: 'pagination' });
+    const paginationNavs = screen.getAllByRole('navigation', { name: 'labels.pagination' });
     expect(paginationNavs).toHaveLength(2); // One for each list
 
     // Check for the ordered lists inside each nav
@@ -352,7 +352,7 @@ describe("SectionTypeSelectPage", () => {
       expect(nav.querySelector('ol')).toBeInTheDocument();
     });
 
-    const pageLinks = screen.getAllByRole('link', { name: /Page \d+/ });
+    const pageLinks = screen.getAllByRole('link', { name: 'labels.pageNumber' });
     expect(pageLinks).toHaveLength(8);
   });
 
@@ -364,7 +364,7 @@ describe("SectionTypeSelectPage", () => {
     });
 
     // Find all pagination navs by role and aria-label
-    const paginationNavs = screen.getAllByRole('navigation', { name: 'pagination' });
+    const paginationNavs = screen.getAllByRole('navigation', { name: 'labels.pagination' });
     expect(paginationNavs).toHaveLength(2); // One for each list
 
     // Check for the ordered lists inside each nav
@@ -372,17 +372,17 @@ describe("SectionTypeSelectPage", () => {
       expect(nav.querySelector('ol')).toBeInTheDocument();
     });
 
-    const pageLinks = screen.getAllByRole('link', { name: /Page \d+/ });
+    const pageLinks = screen.getAllByRole('link', { name: 'labels.pageNumber' });
     expect(pageLinks).toHaveLength(8);
-    const page1Link = screen.getAllByRole('link', { name: 'Page 1' });
-    expect(page1Link[0]).toHaveClass('current');
-    const page2Link = screen.getAllByRole('link', { name: 'Page 2' });
-    expect(page2Link[0]).not.toHaveClass('current');
-    fireEvent.click(page2Link[0]);
+    const page1Link = within(paginationNavs[0]).getByText('1').closest('a');
+    expect(page1Link).toHaveClass('current');
+    const page2Link = within(paginationNavs[0]).getByText('2').closest('a') as HTMLElement;
+    expect(page2Link).not.toHaveClass('current');
+    fireEvent.click(page2Link);
 
     await waitFor(() => {
-      expect(page2Link[0]).toHaveClass('current');
-      expect(page1Link[0]).not.toHaveClass('current');
+      expect(page2Link).toHaveClass('current');
+      expect(page1Link).not.toHaveClass('current');
       expect(screen.getByText('Affiliation section A')).toBeInTheDocument();
     });
   });
@@ -395,7 +395,7 @@ describe("SectionTypeSelectPage", () => {
     });
 
     // Find all pagination navs by role and aria-label
-    const paginationNavs = screen.getAllByRole('navigation', { name: 'pagination' });
+    const paginationNavs = screen.getAllByRole('navigation', { name: 'labels.pagination' });
     expect(paginationNavs).toHaveLength(2); // One for each list
 
     // Check for the ordered lists inside each nav
@@ -403,17 +403,17 @@ describe("SectionTypeSelectPage", () => {
       expect(nav.querySelector('ol')).toBeInTheDocument();
     });
 
-    const pageLinks = screen.getAllByRole('link', { name: /Page \d+/ });
+    const pageLinks = screen.getAllByRole('link', { name: 'labels.pageNumber' });
     expect(pageLinks).toHaveLength(8);
-    const page1Link = screen.getAllByRole('link', { name: 'Page 1' });
-    expect(page1Link[1]).toHaveClass('current');
-    const page2Link = screen.getAllByRole('link', { name: 'Page 2' });
-    expect(page2Link[1]).not.toHaveClass('current');
-    fireEvent.click(page2Link[1]);
+    const page1Link = within(paginationNavs[1]).getByText('1').closest('a');
+    expect(page1Link).toHaveClass('current');
+    const page2Link = within(paginationNavs[1]).getByText('2').closest('a') as HTMLElement;
+    expect(page2Link).not.toHaveClass('current');
+    fireEvent.click(page2Link);
 
     await waitFor(() => {
-      expect(page2Link[1]).toHaveClass('current');
-      expect(page1Link[1]).not.toHaveClass('current');
+      expect(page2Link).toHaveClass('current');
+      expect(page1Link).not.toHaveClass('current');
       expect(screen.getByText('Affiliation section A')).toBeInTheDocument();
     });
   });

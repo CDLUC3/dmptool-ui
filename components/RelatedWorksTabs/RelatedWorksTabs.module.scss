@@ -1,0 +1,25 @@
+.tabs {
+  :global(.react-aria-TabList) {
+    flex-wrap: wrap;
+  }
+
+  :global(.react-aria-Tab) {
+    padding: var(--space-2) var(--space-3);
+    font-size: var(--fs-base);
+    color: var(--slate-800);
+    border-radius: var(--border-radius-sm) var(--border-radius-sm) 0 0;
+
+    &[data-selected] {
+      background-color: var(--bg-white);
+      color: var(--text-color);
+    }
+
+    &[data-hovered]:not([data-selected]) {
+      text-decoration: underline;
+    }
+  }
+
+  :global(.react-aria-TabPanel) {
+    border-top-left-radius: 0;
+  }
+}

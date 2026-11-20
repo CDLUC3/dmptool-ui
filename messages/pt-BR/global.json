@@ -39,7 +39,7 @@
     "menuCreatePlan": "Criar plano",
     "menuProjectsPlans": "Painel de planos",
     "menuPublicPlans": "Planos públicos",
-    "menuFunderRequirements": "Requisitos de Barbatana",
+    "menuFunderRequirements": "Requisitos dos Financiadores",
     "menuAbout": "Sobre",
     "menuAdmin": "Administrador",
     "menuLanguage": "Idioma",
@@ -1053,6 +1053,8 @@
       "requiredField": "Marcar como obrigatório?",
       "previousPage": "Página anterior",
       "nextPage": "Próxima página",
+      "pagination": "Paginação",
+      "pageNumber": "Página {page}",
       "name": "Nome:",
       "url": "URL:",
       "unit": "Unidade",
@@ -1237,6 +1239,52 @@
         "invalidSubject": "A senha deve ter pelo menos 2 caracteres",
         "invalidMessage": "O nome deve ter no m&iacute;nimo 2 caracteres",
         "formSubmittalFailed": "Falha ao enviar o formulário. Tente novamente mais tarde."
+      }
+    }
+  },
+  "FunderRequirements": {
+    "title": "Requisitos dos Financiadores",
+    "description": "Os modelos de planos de gestão de dados são baseados nos requisitos específicos descritos nos documentos de política dos financiadores. A DMP Tool mantém esses modelos, mas os pesquisadores devem sempre consultar diretamente os responsáveis pelo programa e os documentos de política para obter orientações oficiais. Os planos de exemplo são fornecidos por um financiador ou por outra fonte confiável.",
+    "search": {
+      "label": "Buscar",
+      "placeholder": "Buscar por modelo ou organização…"
+    },
+    "sort": {
+      "label": "Ordenar por",
+      "options": {
+        "nameAsc": "Nome do modelo (A–Z)",
+        "nameDesc": "Nome do modelo (Z–A)",
+        "organizationAsc": "Nome da organização (A–Z)",
+        "organizationDesc": "Nome da organização (Z–A)",
+        "modifiedDesc": "Última atualização (mais recente primeiro)",
+        "modifiedAsc": "Última atualização (mais antiga primeiro)"
+      }
+    },
+    "resultsCount": "{total, plural, =0 {Mostrando 0 modelos} one {Mostrando {start}–{end} de # modelo} other {Mostrando {start}–{end} de # modelos}}",
+    "noResults": "Nenhum modelo corresponde à sua busca.",
+    "noResultsHint": "Verifique a ortografia ou tente outro nome de modelo ou de organização.",
+    "clearSearch": "Limpar busca",
+    "noTemplates": "Ainda não há modelos de financiadores disponíveis.",
+    "none": "Nenhum",
+    "table": {
+      "label": "Modelos dos financiadores",
+      "columns": {
+        "templateName": "Nome do modelo",
+        "download": "Baixar",
+        "organizationName": "Nome da organização",
+        "lastUpdated": "Última atualização",
+        "funderLinks": "Links do financiador",
+        "samplePlans": "Planos de exemplo (se disponíveis)"
+      }
+    },
+    "downloadAs": "Baixar {name} como {format}",
+    "formats": {
+      "docx": "Word",
+      "pdf": "PDF"
+    },
+    "messages": {
+      "errors": {
+        "loadFailed": "Ocorreu um erro ao carregar os modelos dos financiadores. Tente novamente mais tarde."
       }
     }
   }

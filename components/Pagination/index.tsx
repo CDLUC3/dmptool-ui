@@ -85,7 +85,7 @@ export default function Pagination({
   const pagesToRender = getPages();
 
   return (
-    <nav aria-label="pagination" className={styles.pagination}>
+    <nav aria-label={Global('labels.pagination')} className={styles.pagination}>
       <Button
         aria-label={Global('labels.previousPage')}
         onClick={() => handlePageClick(currentPage - 1)}
@@ -120,7 +120,8 @@ export default function Pagination({
               <Link
                 className={(page === currentPage) ? styles.current : ""}
                 href="#"
-                aria-label={`Page ${page}`}
+                aria-label={Global('labels.pageNumber', { page })}
+                aria-current={page === currentPage ? "page" : undefined}
                 onClick={(e) => {
                   e.preventDefault();
                   handlePageClick(Number(page));

@@ -9,7 +9,7 @@ interface PageHeaderProps {
   /** The main title of the page */
   title: string;
   /** Optional description text below the title */
-  description?: string;
+  description?: ReactNode;
   /** Whether to show the back button - defaults to true */
   showBackButton?: boolean;
   /** Optional breadcrumbs component */

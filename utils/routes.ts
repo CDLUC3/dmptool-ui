@@ -47,6 +47,7 @@ const routes = {
   "app.login": "/login",
   "app.signup": "/signup",
   "app.contact": "/contact",
+  "app.funderRequirements": "/funder-requirements",
 
   // DMP Landing page route
   "dmp.landing": "/dmps/:slug",

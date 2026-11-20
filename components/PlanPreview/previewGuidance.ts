@@ -1,5 +1,9 @@
 import { GuidanceSourceType } from "@/generated/graphql";
-import type { PlanGuidanceSource } from "@/components/PlanAuthoring/model";
+import { guidanceBlockHtml } from "@/components/PlanAuthoring/guidanceHtml";
+import {
+  BEST_PRACTICE_GUIDANCE_LABEL,
+  type PlanGuidanceSource,
+} from "@/components/PlanAuthoring/model";
 
 export interface PreviewOrg {
   uri: string;
@@ -36,8 +40,6 @@ export type PreviewResearcherGuidance =
   | { kind: "none" };
 
 export const EXAMPLE_ORG_GUIDANCE_ID = "template-preview-example-org";
-// Matches the label the API gives best practice guidance.
-const BEST_PRACTICE_LABEL = "DMP Tool";
 
 function orgShortName(org: PreviewOrg): string {
   return org.displayAbbreviation || org.acronyms?.find(Boolean) || org.displayName;
@@ -45,29 +47,47 @@ function orgShortName(org: PreviewOrg): string {
 
 interface PreviewTag {
   id?: number | null;
+  name?: string | null;
 }
 
+type PreviewTags = (PreviewTag | null)[] | null | undefined;
+
 /** A question's own tags, or its section's when it has none, as the API does. */
-export function previewTagIds(
-  questionTags: (PreviewTag | null)[] | null | undefined,
-  sectionTags: (PreviewTag | null)[] | null | undefined
-): number[] {
-  const ids = (tags: (PreviewTag | null)[] | null | undefined) =>
-    (tags ?? []).map((tag) => tag?.id).filter((id): id is number => id != null);
-  const own = ids(questionTags);
-  return own.length > 0 ? own : ids(sectionTags);
+function questionOrSectionTags(questionTags: PreviewTags, sectionTags: PreviewTags) {
+  const withId = (tags: PreviewTags) =>
+    (tags ?? []).filter((tag): tag is PreviewTag & { id: number } => tag?.id != null);
+  const own = withId(questionTags);
+  return own.length > 0 ? own : withId(sectionTags);
+}
+
+export function previewTagIds(questionTags: PreviewTags, sectionTags: PreviewTags): number[] {
+  return questionOrSectionTags(questionTags, sectionTags).map((tag) => tag.id);
+}
+
+export function previewTagNames(questionTags: PreviewTags, sectionTags: PreviewTags): ReadonlyMap<number, string> {
+  return new Map(
+    questionOrSectionTags(questionTags, sectionTags).flatMap((tag) =>
+      tag.name ? [[tag.id, tag.name] as const] : []
+    )
+  );
 }
 
 function nonBlank(html: (string | null | undefined)[] | undefined): string[] {
   return (html ?? []).filter((item): item is string => Boolean(item?.trim()));
 }
 
-function tagGuidanceHtml(items: PreviewTagGuidance[], tagIds: number[]): string[] {
-  return tagIds.flatMap((tagId) =>
-    items
+function tagGuidanceHtml(
+  items: PreviewTagGuidance[],
+  tagIds: number[],
+  tagNames: ReadonlyMap<number, string>
+): string[] {
+  return tagIds.flatMap((tagId) => {
+    const texts = items
       .filter((item) => item.tagId === tagId && item.guidanceText)
-      .map((item) => item.guidanceText as string)
-  );
+      .map((item) => item.guidanceText as string);
+    const html = guidanceBlockHtml(tagNames.get(tagId), texts.join(""));
+    return html ? [html] : [];
+  });
 }
 
 function orgSource(
@@ -92,27 +112,29 @@ function orgSource(
 /** The guidance tabs a researcher would see on a question, in the API's order. */
 export function toPreviewGuidanceSources({
   tagIds,
+  tagNames = new Map(),
   guidance,
   owner,
   ownerGuidanceHtml,
   researcher,
 }: {
   tagIds: number[];
+  tagNames?: ReadonlyMap<number, string>;
   guidance: PreviewGuidanceLookup;
   owner: PreviewOrg | null | undefined;
   /** Section then question guidance, shown before the owner's tag guidance. */
   ownerGuidanceHtml?: (string | null | undefined)[];
   researcher: PreviewResearcherGuidance;
 }): PlanGuidanceSource[] {
-  const bestPracticeHtml = tagGuidanceHtml(guidance.bestPractice, tagIds);
+  const bestPracticeHtml = tagGuidanceHtml(guidance.bestPractice, tagIds, tagNames);
   const bestPractice: PlanGuidanceSource[] =
     bestPracticeHtml.length > 0
       ? [
           {
             id: "bestPractice",
             type: GuidanceSourceType.BestPractice,
-            label: BEST_PRACTICE_LABEL,
-            shortName: BEST_PRACTICE_LABEL,
+            label: BEST_PRACTICE_GUIDANCE_LABEL,
+            shortName: BEST_PRACTICE_GUIDANCE_LABEL,
             bodyHtml: bestPracticeHtml.join(""),
           },
         ]
@@ -121,18 +143,18 @@ export function toPreviewGuidanceSources({
   const ownerSources = owner
     ? orgSource(owner, GuidanceSourceType.TemplateOwner, [
         ...nonBlank(ownerGuidanceHtml),
-        ...tagGuidanceHtml(guidance.owner, tagIds),
+        ...tagGuidanceHtml(guidance.owner, tagIds, tagNames),
       ])
     : [];
 
   if (researcher.kind === "org") {
-    const orgHtml = [...nonBlank(researcher.guidanceHtml), ...tagGuidanceHtml(guidance.org, tagIds)];
+    const orgHtml = [...nonBlank(researcher.guidanceHtml), ...tagGuidanceHtml(guidance.org, tagIds, tagNames)];
     // The plan shows one tab per org, with the customization's guidance first.
     if (owner && owner.uri === researcher.org.uri) {
       const merged = orgSource(owner, GuidanceSourceType.TemplateOwner, [
         ...nonBlank(researcher.guidanceHtml),
         ...nonBlank(ownerGuidanceHtml),
-        ...tagGuidanceHtml(guidance.owner, tagIds),
+        ...tagGuidanceHtml(guidance.owner, tagIds, tagNames),
       ]);
       return [...bestPractice, ...merged];
     }

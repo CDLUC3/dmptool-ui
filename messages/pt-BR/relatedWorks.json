@@ -1,146 +1,200 @@
 {
   "RelatedWorksPlanPage": {
-    "title": "Resultados de Pesquisa Publicados",
-    "description": "Corresponder os resultados de pesquisa publicados com o seu projeto de pesquisa.",
-    "buttons": {
-      "addRelatedWorkManually": "Adicionar Saída de Pesquisa Publicada"
-    }
+    "title": "Resultados de pesquisa publicados",
+    "description": "Enriqueça seus planos vinculando-os a resultados de pesquisa publicados, como conjuntos de dados, softwares e artigos. A vinculação torna seus resultados mais fáceis de encontrar, adiciona-os aos metadados do seu DMP-ID e mostra que você cumpriu os requisitos de compartilhamento do financiador. Para planos publicados, encontraremos resultados que podem corresponder — basta revisar e <strong>Confirmar correspondências</strong>. Você também pode adicionar os seus usando um DOI."
   },
   "RelatedWorksProjectPage": {
-    "title": "Resultados de Pesquisa Publicados",
-    "description": "Corresponder os resultados de pesquisa publicados com o seu projeto de pesquisa.",
-    "buttons": {
-      "addRelatedWorkManually": "Adicionar Saída de Pesquisa Publicada"
-    }
+    "title": "Resultados de pesquisa publicados",
+    "description": "Enriqueça seus planos vinculando-os a resultados de pesquisa publicados, como conjuntos de dados, softwares e artigos. A vinculação torna seus resultados mais fáceis de encontrar, adiciona-os aos metadados do seu DMP-ID e mostra que você cumpriu os requisitos de compartilhamento do financiador. Para planos publicados, encontraremos resultados que podem corresponder — basta revisar e <strong>Confirmar correspondências</strong>. Você também pode adicionar os seus usando um DOI."
   },
   "RelatedWorksList": {
     "filters": {
-      "planId": "Selecionar Plano",
-      "filterByConfidence": "Filtro por confiança",
-      "filterByType": "Filtrar por Tipo",
-      "filterByTypePlaceholder": "Todos os tipos",
-      "highlightMatches": "Destacar Partidas",
-      "sort": "Ordenar",
-      "reset": "Reset",
+      "planId": "Selecionar plano",
+      "sort": "Ordenar por",
       "sortBy": {
-        "ConfidenceHigh": "Confiança: Alta para Baixo",
-        "ConfidenceLow": "Confiança: Baixo para Alto",
-        "ReviewedNew": "Revisões: nova para antiga",
-        "ReviewedOld": "Revisão: antigo para novo",
-        "PublishedNew": "Publicação: nova para antiga",
-        "PublishedOld": "Publicação: antiga para nova",
-        "DateFoundNew": "Data de encontração: nova para antiga",
-        "DateFoundOld": "Data de encontração: antigo para novo"
+        "LikelihoodHigh": "Probabilidade de correspondência: alta para baixa",
+        "DateFoundNew": "Data em que foi encontrado: mais recente para mais antigo",
+        "DateConfirmedNew": "Data de confirmação ou adição: mais recente para mais antigo",
+        "DateDismissedNew": "Data de descarte: mais recente para mais antigo"
       }
     },
     "messages": {
       "PENDING": {
-        "noResults": "Nenhum trabalho pendente encontrado.\nVocê não tem nenhum trabalho pendente para revisar.",
-        "noFilteredResults": "Nenhum resultado pendente corresponde com seus filtros atuais."
+        "noFilteredResults": "Nenhuma sugestão corresponde a estes filtros."
       },
       "ACCEPTED": {
-        "noResults": "Nenhuma obra relacionada encontrada.\nVocê ainda não marcou nenhuma obra como relacionada. Confira a aba Pendente para começar.",
-        "noFilteredResults": "Nenhuma saída publicada corresponde aos filtros atuais."
+        "noFilteredResults": "Nenhum resultado de pesquisa corresponde a estes filtros."
       },
       "REJECTED": {
-        "noResults": "Nenhuma obra descartada encontrada.\nVocê não descartou nenhuma obra.",
-        "noFilteredResults": "Nenhum resultado rejeitado corresponde aos filtros atuais."
+        "noFilteredResults": "Nenhuma correspondência descartada para estes filtros."
+      },
+      "actions": {
+        "confirm": "Resultado de pesquisa confirmado como correspondência.",
+        "dismiss": "Correspondência descartada.",
+        "restore": "Correspondência restaurada para revisão.",
+        "unmatch": "Correspondência desfeita e resultado movido para Descartados."
+      },
+      "errors": {
+        "updateStatus": "Ocorreu um erro ao atualizar este resultado de pesquisa. Tente novamente."
+      }
+    },
+    "intro": {
+      "ACCEPTED": "Resultados de pesquisa publicados que você confirmou, além dos que você adicionou manualmente.",
+      "PENDING": "Estes podem estar relacionados. Confirme os que parecerem corretos — você pode ignorar o restante.",
+      "REJECTED": "Correspondências que você descartou. Se descartou alguma por engano, confirme-a ou restaure-a para revisão."
+    },
+    "summary": {
+      "REJECTED": "Mostrando {start}–{end} de {total} correspondências descartadas"
+    },
+    "planScope": {
+      "label": "Plano",
+      "viewAllPlans": "Ver todos os planos deste projeto"
+    },
+    "emptyStates": {
+      "ACCEPTED": {
+        "title": "Nenhum resultado de pesquisa vinculado ainda",
+        "description": "Quando você confirmar uma correspondência ou adicionar um resultado de pesquisa usando o DOI, ele será listado aqui e vinculado ao DMP-ID do seu plano."
+      },
+      "PENDING": {
+        "title": "Nenhuma correspondência para revisar",
+        "description": "Pesquisamos regularmente fontes acadêmicas públicas em busca de resultados de pesquisa que possam estar relacionados aos seus planos publicados. Novas correspondências aparecerão aqui para você confirmar."
+      },
+      "REJECTED": {
+        "title": "Nenhuma correspondência descartada",
+        "description": "As correspondências que você descarta ficam guardadas aqui, para que você possa restaurá-las para revisão ou confirmá-las mais tarde, se mudar de ideia."
+      },
+      "filtered": {
+        "description": "Tente escolher outro plano ou mostre os resultados de todos os planos.",
+        "showAllPlans": "Mostrar todos os planos"
+      },
+      "actions": {
+        "reviewMatches": "Revisar correspondências",
+        "addResearchOutput": "Adicionar resultado de pesquisa"
       }
     }
   },
   "RelatedWorksListItem": {
-    "title": "Abrir a versão publicada desta saída",
     "buttons": {
-      "expand": "Expanda",
-      "collapse": "Recolher",
-      "accept": "Concordo",
-      "reject": "Recusar"
+      "confirm": "Confirmar correspondência",
+      "dismiss": "Descartar",
+      "restore": "Restaurar para revisão",
+      "unmatch": "Desfazer correspondência",
+      "loading": {
+        "confirm": "Confirmando…",
+        "dismiss": "Descartando…",
+        "restore": "Restaurando…",
+        "unmatch": "Desfazendo…"
+      }
     },
     "fieldNames": {
-      "planTitle": "Planejamento",
-      "confidence": "Confiança",
-      "dateFound": "Data de Encontro",
-      "dateReviewed": "Avaliado",
-      "type": "tipo",
-      "source": "fonte",
-      "doi": "BAIXO",
+      "planTitle": "Plano",
+      "dateFound": "Data em que foi encontrado",
+      "type": "Tipo",
+      "source": "Fonte",
+      "doi": "DOI",
       "title": "Título",
       "abstract": "Resumo",
       "awardIds": "IDs de Prêmios",
       "authors": "Autores",
       "institutions": "Instituições",
-      "funders": "Finalizações"
+      "funders": "Financiadores",
+      "likelihood": "Probabilidade de correspondência",
+      "dateAdded": "Adicionado",
+      "dateConfirmed": "Confirmado",
+      "dateDismissed": "Descartado"
     },
     "instructions": {
-      "review": "Revise as informações sobre a saída da pesquisa deste candidato e em seguida aceite-as como publicadas ou rejeitadas como não relacionadas.",
-      "actions": {
-        "PENDING": "Se você rejeitar esta saída, você poderá recuperá-la mais tarde na guia Rejeitada.",
-        "ACCEPTED": "Se você rejeitar esta saída, você poderá recuperá-la mais tarde na guia Rejeitada.",
-        "REJECTED": "Você pode recuperar esta saída aceitando-a, você verá então na aba Aceitada."
-      }
-    }
+      "review": "Revise este candidato e confirme-o como correspondência se ele pertencer ao seu projeto."
+    },
+    "badges": {
+      "unpublished": "Não publicado",
+      "addedManually": "Adicionado manualmente",
+      "confirmedMatch": "Correspondência confirmada"
+    },
+    "actionsAria": {
+      "confirm": "Confirmar correspondência: {title}",
+      "dismiss": "Descartar: {title}",
+      "restore": "Restaurar para revisão: {title}",
+      "unmatch": "Desfazer correspondência: {title}"
+    },
+    "summaryLabel": "Resumo do resultado de pesquisa"
   },
   "RelatedWorksDataTypes": {
     "confidence": {
       "ALL": "Todas",
       "HIGH": "Alta",
       "MEDIUM": "Média",
-      "LOW": "baixo"
+      "LOW": "Baixa"
     },
     "status": {
-      "PENDING": "Pendente",
-      "ACCEPTED": "Publicado",
-      "REJECTED": "Rejeitados"
+      "PENDING": "Aguardando revisão",
+      "ACCEPTED": "Confirmado",
+      "REJECTED": "Descartado"
     },
     "workType": {
-      "ARTICLE": "artigo",
-      "AUDIO_VISUAL": "Visual de Áudio",
-      "BOOK": "Reservar",
+      "ARTICLE": "Artigo",
+      "AUDIO_VISUAL": "Audiovisual",
+      "BOOK": "Livro",
       "BOOK_CHAPTER": "Capítulo do Livro",
-      "COLLECTION": "Coleta",
+      "COLLECTION": "Coleção",
       "DATASET": "Conjunto de dados",
-      "DATA_PAPER": "Papel de dados",
-      "DISSERTATION": "Tese",
+      "DATA_PAPER": "Artigo de dados",
+      "DISSERTATION": "Dissertação",
       "EDITORIAL": "Editorial",
       "ERRATUM": "Erratum",
       "EVENT": "Evento",
-      "GRANT": "Conceder",
-      "IMAGE": "Imagem:",
+      "GRANT": "Financiamento",
+      "IMAGE": "Imagem",
       "INTERACTIVE_RESOURCE": "Recurso Interativo",
-      "LETTER": "Letra",
+      "LETTER": "Carta",
       "LIBGUIDES": "Libguides",
       "MODEL": "Modelo",
-      "OTHER": "De outros",
-      "PARATEXT": "PTx",
-      "PEER_REVIEW": "Guerras Médicas",
+      "OTHER": "Outro",
+      "PARATEXT": "Paratexto",
+      "PEER_REVIEW": "Revisão por pares",
       "PHYSICAL_OBJECT": "Objeto físico",
       "PREPRINT": "Pré-impressão",
-      "PRE_REGISTRATION": "Registro anterior",
-      "PROTOCOL": "Protocol",
-      "REFERENCE_ENTRY": "Lançamento de Referência",
+      "PRE_REGISTRATION": "Pré-registro",
+      "PROTOCOL": "Protocolo",
+      "REFERENCE_ENTRY": "Verbete de referência",
       "REPORT": "Relatório",
       "RETRACTION": "Retração",
-      "REVIEW": "Avaliar",
-      "SERVICE": "Service",
+      "REVIEW": "Resenha",
+      "SERVICE": "Serviço",
       "SOFTWARE": "Software",
-      "SOUND": "Sons",
+      "SOUND": "Som",
       "STANDARD": "Padrão",
-      "SUPPLEMENTARY_MATERIALS": "(Materiais complementares)",
-      "TEXT": "SMS",
+      "SUPPLEMENTARY_MATERIALS": "Materiais complementares",
+      "TEXT": "Texto",
       "TRADITIONAL_KNOWLEDGE": "Conhecimento Tradicional",
-      "WORKFLOW": "Workflow"
+      "WORKFLOW": "Fluxo de trabalho"
     }
   },
   "RelatedWorksTabs": {
     "tabs": {
-      "pending": "Pendente",
-      "accepted": "Publicado",
-      "rejected": "Rejeitados"
-    }
+      "pending": "Confirmar correspondências",
+      "accepted": "Seus resultados de pesquisa",
+      "rejected": "Descartados"
+    },
+    "ariaLabel": "Resultados de pesquisa publicados"
   },
   "AddRelatedWorkProjectPage": {
     "title": "Adicionar Saída de Pesquisa Publicada",
-    "description": "Para adicionar manualmente uma saída de pesquisa publicada a um projeto, selecione um plano, depois insira o DOI de saída abaixo e clique em Pesquisar para encontrá-lo. Clique em Aceitar para adicionar a saída ao projeto. Você pode executar várias pesquisas nesta página para adicionar mais de uma saída."
+    "description": "Cada resultado de pesquisa publicado é vinculado a um plano deste projeto. Escolha o plano ao qual este resultado pertence e, em seguida, adicione-o usando o DOI.",
+    "planLabel": "Para qual plano é este resultado de pesquisa?",
+    "planDescription": "Você pode adicionar resultados a planos não publicados. Eles serão incluídos quando o plano for publicado.",
+    "planStatus": {
+      "published": "Publicado",
+      "unpublished": "Ainda não publicado"
+    },
+    "noPlans": "Este projeto ainda não tem planos. Crie um plano na visão geral do projeto e, em seguida, adicione seus resultados de pesquisa a ele.",
+    "buttons": {
+      "projectOverview": "Ir para a visão geral do projeto"
+    },
+    "errors": {
+      "choosePlan": "Escolha um plano para continuar.",
+      "loadPlans": "Ocorreu um erro ao carregar os planos deste projeto. Tente novamente."
+    }
   },
   "AddRelatedWorkPlanPage": {
     "title": "Adicionar Saída de Pesquisa Publicada",
@@ -149,8 +203,6 @@
   "RelatedWorksAdd": {
     "title": "Adicionar Saída de Pesquisa Publicada",
     "searchLabel": "Digital Object Identifier (DOI)",
-    "planSelectLabel": "Selecionar plano",
-    "planSelectDescription": "Selecione um plano para adicionar uma saída de pesquisa publicada.",
     "searchDescription": "Insira o DOI da saída em formato curto ou URL (por exemplo, <code>10.1000/182</code> ou <code>https://doi.org/10.1000/182</code>), e clique em Procurar.",
     "invalidDoi": "Por favor, insira um DOI válido",
     "buttons": {
@@ -160,7 +212,6 @@
       "reject": "Recusar"
     },
     "fieldNames": {
-      "planTitle": "Planejamento",
       "status": "Situação",
       "type": "Tipo",
       "source": "Fonte",
@@ -169,5 +220,30 @@
   },
   "RelatedWorksSelect": {
     "planSelectPlaceholder": "Todos os Planos"
+  },
+  "RelatedWorksAddPanel": {
+    "title": "Adicione seu próprio resultado de pesquisa",
+    "descriptionPublished": "Conhece um conjunto de dados, artigo ou software publicado que não encontramos? Adicione-o a um dos seus planos usando o DOI.",
+    "descriptionUnpublished": "Adicione um conjunto de dados, artigo ou software publicado a um dos seus planos usando o DOI.",
+    "button": "Adicionar resultado de pesquisa"
+  },
+  "RelatedWorksUnpublished": {
+    "title": "Publique seu plano para encontrar resultados de pesquisa",
+    "planLabel": "Plano",
+    "viewAllPlans": "Ver todos os planos",
+    "intro": "Você precisa publicar seu plano antes que possamos encontrar resultados de pesquisa publicados que possam estar relacionados a ele. Enquanto isso, você pode adicionar os seus. Depois de publicado:",
+    "steps": {
+      "search": "Pesquisamos fontes acadêmicas públicas em busca de resultados de pesquisa publicados — conjuntos de dados, softwares e artigos — que possam estar relacionados ao seu plano.",
+      "review": "Você revisa as correspondências que encontramos e confirma as que pertencem ao plano.",
+      "linked": "Os resultados confirmados são vinculados ao seu plano e ao DMP-ID dele. Você também pode adicionar os seus a qualquer momento usando um DOI."
+    },
+    "buttons": {
+      "publish": "Publicar plano",
+      "add": "Adicione seu próprio resultado de pesquisa"
+    }
+  },
+  "ExpandableNameList": {
+    "showMore": "+{count} mais",
+    "showLess": "menos"
   }
 }
