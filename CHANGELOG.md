@@ -218,6 +218,7 @@
 - Updated `RepoSelectorForAnswer` to wait to query `Re3byUrIsDocument` until we have `preferredReposURIs` because preferred repos don't display even though they eventually do to trigger the display of the "preferred repositories" checkbox [#118]
 
 ## Fixed
+- Fixed info popovers covering the fields below them by opening them above their button, on the guidance group, plan writing, add/edit question and profile pages [#194]
 - Fixed `DmpTable` so a column's initial `direction` sets the table's sort, which screen readers announce through `aria-sort`, and hid the sort arrows from screen readers [#609]
 - Fixed the pt-BR "Funder Requirements" menu label, which read "Requisitos de Barbatana" ("fin requirements") instead of "Requisitos dos Financiadores" [#609]
 - Fixed guidance and requirement labels from PR review: question guidance now shows above tag headings, template previews show tag names, and custom questions show "Requirements by" the org that added them [#603]

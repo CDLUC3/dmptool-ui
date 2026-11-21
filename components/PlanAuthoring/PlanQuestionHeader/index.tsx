@@ -93,7 +93,7 @@ export default function PlanQuestionHeader({
             <Button className={styles.requiredBadge}>
               {t("question.requiredByFunder")}
             </Button>
-            <Popover className="dynamic-popover-width react-aria-Popover">
+            <Popover placement="top" className="dynamic-popover-width react-aria-Popover">
               <OverlayArrow>
                 <svg
                   width={12}
