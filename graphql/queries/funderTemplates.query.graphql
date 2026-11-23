@@ -1,0 +1,29 @@
+# Used by the public Funder Requirements page, so it must not require a login
+query PublishedFunderTemplates($term: String, $paginationOptions: PaginationOptions) {
+  publishedFunderTemplates(term: $term, paginationOptions: $paginationOptions) {
+    totalCount
+    limit
+    currentOffset
+    hasNextPage
+    hasPreviousPage
+    availableSortFields
+    items {
+      id
+      templateId
+      name
+      ownerURI
+      ownerDisplayName
+      modified
+      funderLinks: links(linkType: FUNDER) {
+        id
+        url
+        text
+      }
+      samplePlanLinks: links(linkType: SAMPLE_PLAN) {
+        id
+        url
+        text
+      }
+    }
+  }
+}

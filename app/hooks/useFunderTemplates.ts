@@ -1,33 +1,26 @@
 import { useMemo } from "react";
+import { useQuery } from "@apollo/client/react";
 import {
   PaginationOptions,
-  VersionedTemplateLink,
-  VersionedTemplateSearchResult,
+  PublishedFunderTemplatesDocument,
+  PublishedFunderTemplatesQuery,
 } from "@/generated/graphql";
-import { stubFunderTemplates } from "./funderTemplatesStubData";
 
-export type FunderTemplateLink = Pick<VersionedTemplateLink, "id" | "url" | "text">;
+type FunderTemplateResults = NonNullable<PublishedFunderTemplatesQuery["publishedFunderTemplates"]>;
+type FunderTemplateItem = NonNullable<NonNullable<FunderTemplateResults["items"]>[number]>;
 
-export type FunderTemplate = Pick<
-  VersionedTemplateSearchResult,
-  "templateId" | "ownerDisplayName" | "ownerURI" | "modified"
-> & {
-  id: number;
-  name: string;
+export type FunderTemplateLink = NonNullable<FunderTemplateItem["funderLinks"]>[number];
+
+// The API returns null when a Template has no links, so the hook always gives the page lists
+export type FunderTemplate = Omit<FunderTemplateItem, "funderLinks" | "samplePlanLinks"> & {
   funderLinks: FunderTemplateLink[];
   samplePlanLinks: FunderTemplateLink[];
 };
 
 export interface FunderTemplatesQueryData {
-  publishedFunderTemplates: {
-    __typename?: "PublishedTemplateSearchResults";
+  publishedFunderTemplates: Omit<FunderTemplateResults, "items" | "totalCount"> & {
     items: FunderTemplate[];
     totalCount: number;
-    limit: number;
-    currentOffset: number;
-    hasNextPage: boolean;
-    hasPreviousPage: boolean;
-    availableSortFields: string[];
   };
 }
 
@@ -40,71 +33,48 @@ export interface FunderTemplatesQueryOptions {
 
 export type TemplateDownloadFormat = "docx" | "pdf";
 
+// The sort fields that the publishedFunderTemplates query accepts
 export const FUNDER_TEMPLATE_SORT_FIELDS = ["vt.name", "a.displayName", "vt.modified"] as const;
-type FunderTemplateSortField = typeof FUNDER_TEMPLATE_SORT_FIELDS[number];
 
-const DEFAULT_LIMIT = 10;
-
-const sortValue: Record<FunderTemplateSortField, (template: FunderTemplate) => string | number> = {
-  "vt.name": (template) => template.name.toLowerCase(),
-  "a.displayName": (template) => (template.ownerDisplayName ?? "").toLowerCase(),
-  "vt.modified": (template) => new Date(template.modified ?? 0).getTime(),
-};
-
-const isSortField = (field: string | null | undefined): field is FunderTemplateSortField =>
-  FUNDER_TEMPLATE_SORT_FIELDS.includes(field as FunderTemplateSortField);
-// TODO: Neither dmptool-apollo-server nor dmptool-narrative-generator can export a template yet.
-// Replace this with the real download URL once that endpoint exists.
+// The /api/download-template route fetches the file from dmptool-narrative-generator
 export const templateDownloadHref = (versionedTemplateId: number, format: TemplateDownloadFormat) =>
   `/api/download-template?versionedTemplateId=${versionedTemplateId}&format=${format}`;
 
-// Stand-in until dmptool-apollo-server adds a query for the Funder Requirements page (#609). That query must work
-// without a login, return only published templates whose owner is a funder and whose visibility is PUBLIC, and
-// include each template's FUNDER and SAMPLE_PLAN links. It returns the same response shape as useQuery, so it can be
-// replaced with useQuery(<new>Document, { variables }).
-export function useFunderTemplates({ variables }: FunderTemplatesQueryOptions) {
-  const { term = "", paginationOptions } = variables;
-  const offset = paginationOptions?.offset ?? 0;
-  const limit = paginationOptions?.limit ?? DEFAULT_LIMIT;
-  const sortField = isSortField(paginationOptions?.sortField) ? paginationOptions.sortField : "vt.name";
-  const sortDir = paginationOptions?.sortDir === "DESC" ? "DESC" : "ASC";
-
-  const data = useMemo<FunderTemplatesQueryData>(() => {
-    const searchTerm = term.trim().toLowerCase();
-    const matches = stubFunderTemplates.filter((template) =>
-      !searchTerm
-      || template.name.toLowerCase().includes(searchTerm)
-      || (template.ownerDisplayName ?? "").toLowerCase().includes(searchTerm)
-    );
-
-    const getValue = sortValue[sortField];
-    const direction = sortDir === "ASC" ? 1 : -1;
-    const sorted = [...matches].sort((a, b) => {
-      const valueA = getValue(a);
-      const valueB = getValue(b);
-      if (valueA < valueB) return -1 * direction;
-      if (valueA > valueB) return 1 * direction;
-      return 0;
-    });
-
-    return {
-      publishedFunderTemplates: {
-        __typename: "PublishedTemplateSearchResults",
-        items: sorted.slice(offset, offset + limit),
-        totalCount: sorted.length,
-        limit,
-        currentOffset: offset,
-        hasNextPage: offset + limit < sorted.length,
-        hasPreviousPage: offset > 0,
-        availableSortFields: [...FUNDER_TEMPLATE_SORT_FIELDS],
-      },
-    };
-  }, [term, offset, limit, sortField, sortDir]);
+// Transform the query results into the shape the page uses: drop empty items, and use 0 and [] in place of a null
+// total count or link list, so the page does not need null checks
+const transformResults = (data?: PublishedFunderTemplatesQuery): FunderTemplatesQueryData | undefined => {
+  const results = data?.publishedFunderTemplates;
+  if (!results) return undefined;
 
   return {
-    data,
-    previousData: undefined as FunderTemplatesQueryData | undefined,
-    loading: false,
-    error: undefined as Error | undefined,
+    publishedFunderTemplates: {
+      ...results,
+      totalCount: results.totalCount ?? 0,
+      items: (results.items ?? [])
+        .filter((item): item is FunderTemplateItem => !!item)
+        .map((item) => ({
+          ...item,
+          funderLinks: item.funderLinks ?? [],
+          samplePlanLinks: item.samplePlanLinks ?? [],
+        })),
+    },
+  };
+};
+
+// Search the published, public funder Templates for the Funder Requirements page. The query does not need a login.
+//   - data: the results for the current variables. It is undefined while a request for new variables (a search,
+//     sort or page change) loads, unless those results are already cached
+//   - previousData: the results from the last request that finished. The page shows these while new results load,
+//     so the table stays on screen (see the page's `results`)
+export function useFunderTemplates({ variables }: FunderTemplatesQueryOptions) {
+  const { data, previousData, loading, error } = useQuery(PublishedFunderTemplatesDocument, { variables });
+  const transformedData = useMemo(() => transformResults(data), [data]);
+  const transformedPreviousData = useMemo(() => transformResults(previousData), [previousData]);
+
+  return {
+    data: transformedData,
+    previousData: transformedPreviousData,
+    loading,
+    error,
   };
 }
