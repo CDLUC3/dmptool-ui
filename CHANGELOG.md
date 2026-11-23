@@ -217,6 +217,8 @@
 - Updated `RepoSelectorForAnswer` to wait to query `Re3byUrIsDocument` until we have `preferredReposURIs` because preferred repos don't display even though they eventually do to trigger the display of the "preferred repositories" checkbox [#118]
 
 ## Fixed
+- Fixed duplicate fundings on the Add funding page (`/projects/:projectId/fundings/add`): a second submit while saving, such as a double click or a click while the next page loads, added the funding again. Save changes now ignores repeat submits, shows "Saving..." and stays disabled until the next page loads, and is enabled again when saving fails [#653]
+- Fixed the e2e test "Back returns to the previous step", which failed on AWS dev: it now waits for the Add funding details page before clicking Back, so it can't click the Back button of the page being replaced. `clickAndWaitFor` now finds its target again when the element it clicked has been removed from the page, and its failure message includes why the last click failed [#653]
 - Fixed `DmpTable` so a column's initial `direction` sets the table's sort, which screen readers announce through `aria-sort`, and hid the sort arrows from screen readers [#609]
 - Fixed the pt-BR "Funder Requirements" menu label, which read "Requisitos de Barbatana" ("fin requirements") instead of "Requisitos dos Financiadores" [#609]
 - Fixed guidance and requirement labels from PR review: question guidance now shows above tag headings, template previews show tag names, and custom questions show "Requirements by" the org that added them [#603]
@@ -279,6 +281,7 @@
 - Removed the ununused `app/[locale]/users/[userId]/projects` page, since we no longer link to it since we updated the `app/[locale]/users/[userId]/manage` page to link to `projects` instead of `plans` [#379]
 
 ## Chore
+- Fixed "not wrapped in act(...)" warnings in the admin users page, project search page and `EmailAddressRow` unit tests [#653]
 - Updated `@apollo/client` to `v4.3.8`, `@dmptool/types` `v4.0.1`, `graphql` to `v16.15.0`, `jose` to `v6.2.17`, `next` to `v16.4.5`, `react` to `v19.3.1`, `react-dom` to `v19.3.1`, `@graphql-codegen/cli` to `v6.3.1`,`@graphql-codegen/client-preset` to `v5.3.0`, `@graphql-codegen/typed-document-node` to `v6.1.8`,` @graphql-codegen/typescript` to `v5.0.10`,`@graphql-codegen/typescript-operations` to `v5.1.0`, `@types/node` to `v24.19.2`, `@types/react` to `v19.3.0`, `@types/react-dom` to `v19.3.0`, `eslint-plugin-unused-imports` to `v4.4.1`, `qs` to `v6.16.1`, `systeminformation` to `v5.33.16` [#627]
 - Added an exception for `npm audit` for `picomatch` high vulnerability in new `check-npm-audit.cjs` and updated `Dockerfile.prod` to use that exception. Also added `.trivyignore.yaml` [#627]
 - Updated `zod` to `v4.6.6` to address high vulnerability [#580]
