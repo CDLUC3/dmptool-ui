@@ -257,7 +257,11 @@ describe('ProjectsCreateProjectProjectSearch', () => {
       expect(screen.getByRole('button', { name: /buttons.addProjectManually/i })).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByRole('button', { name: /buttons.addProjectManually/i }));
+    // TransitionButton's onPress is async and resets its loading state in a finally
+    // block, so let it settle inside act() before the test ends.
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /buttons.addProjectManually/i }));
+    });
     expect(mockPush).toHaveBeenCalledWith('/projects/1/create/fundings/18/details?intent=plan');
   });
 

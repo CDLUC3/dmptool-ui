@@ -4032,7 +4032,7 @@ export type Query = {
   publishedCustomQuestions?: Maybe<Array<Maybe<PublishedQuestion>>>;
   /** Fetch a specific VersionedCustomSection for a plan - resolved via the caller's affiliation */
   publishedCustomSection?: Maybe<VersionedCustomSection>;
-  /** Search the published, public Templates owned by a funder, plus the default Template (no login required, used by the Funder Requirements page) */
+  /** Search the published, public Templates owned by a funder, plus the published default Template if it is public (no login required, used by the Funder Requirements page) */
   publishedFunderTemplates?: Maybe<FunderTemplateSearchResults>;
   /** Get a specific VersionedQuestion based on versionedQuestionId */
   publishedQuestion?: Maybe<VersionedQuestion>;
@@ -6827,16 +6827,12 @@ export type VersionedTemplateLink = {
   __typename?: 'VersionedTemplateLink';
   /** The timestamp when the Object was created */
   created?: Maybe<Scalars['String']['output']>;
-  /** The user who created the Object */
-  createdById?: Maybe<Scalars['Int']['output']>;
   /** The unique identifer for the Object */
   id?: Maybe<Scalars['Int']['output']>;
   /** The type of link */
   linkType: TemplateLinkType;
   /** The timestamp when the Object was last modifed */
   modified?: Maybe<Scalars['String']['output']>;
-  /** The user who last modified the Object */
-  modifiedById?: Maybe<Scalars['Int']['output']>;
   /** The text to display for the link */
   text?: Maybe<Scalars['String']['output']>;
   /** The URL */
