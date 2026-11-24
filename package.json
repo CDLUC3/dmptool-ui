@@ -54,7 +54,7 @@
     "react-dom": "19.3.1",
     "react-transition-progress": "0.0.4",
     "rxjs": "7.8.2",
-    "sanitize-html": "2.18.1",
+    "sanitize-html": "2.18.2",
     "tinymce": "8.9.3",
     "zod": "4.6.6"
   },
@@ -78,7 +78,7 @@
     "@types/pino": "7.0.5",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
-    "@types/sanitize-html": "2.16.1",
+    "@types/sanitize-html": "2.16.2",
     "@typescript-eslint/eslint-plugin": "8.68.0",
     "@typescript-eslint/parser": "8.68.0",
     "brace-expansion": "5.0.12",
