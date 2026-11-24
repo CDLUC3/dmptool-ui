@@ -278,6 +278,9 @@ test.describe('creating a project', () => {
     await page.goForward();
     await expect(page.getByRole('heading', { level: 1, name: 'Search for projects' })).toBeVisible();
     await clickAndWaitFor(page, page.getByRole('button', { name: 'Add project manually' }), /\/details/);
+    // Wait for the details page itself: the URL can change before it renders, and the Back button found then
+    // would be the one on the project search page it's replacing
+    await expect(page.getByRole('heading', { level: 1, name: 'Add funding details' })).toBeVisible();
     await clickAndWaitFor(page, page.getByRole('button', { name: 'Back' }), /\/project-search/);
     await expect(page.getByRole('heading', { level: 1, name: 'Search for projects' })).toBeVisible();
 

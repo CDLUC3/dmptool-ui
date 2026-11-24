@@ -17,27 +17,45 @@ export async function clickWhenHydrated(target: Locator) {
 }
 
 // Clicks a button or link that goes to another page, and waits for that page's URL.
-// In dev mode a click can be ignored, so it clicks again, but only while the element it clicked is still on the
-// page, enabled, and the URL hasn't changed. So a retry never lands on the next page's button of the same name,
-// and never clicks again while a save is in progress (the app disables its buttons then)
+// In dev mode a click can be ignored, so it clicks again, but only while the URL hasn't changed and the element is
+// enabled. So a retry never lands on the next page's button of the same name, and never clicks again while a save
+// is in progress (the app disables its buttons then).
+// If the element it clicked has been removed from the page while the URL stayed the same (the page re-rendered, or
+// the element was grabbed from the previous page just before it was replaced), it finds the target again.
+// Why each click failed is kept, and shown if the URL never arrives
 export async function clickAndWaitFor(page: Page, target: Locator, url: RegExp) {
   await whenHydrated(target);
   const startUrl = page.url();
-  const element = await target.elementHandle();
+  let element = await target.elementHandle();
   if (!element) throw new Error(`${target} isn't on the page`);
+  let lastClickError = 'none';
+  const click = async (timeout: number) => {
+    await element!.click({ timeout }).catch((err: Error) => {
+      lastClickError = err.message.split('\n')[0];
+    });
+  };
   // If the page reloads during this click, the retry below clicks again
-  await element.click({ timeout: 5000 }).catch(() => {});
+  await click(5000);
 
   // Pages can take a while to build the first time they're visited in dev mode, especially with several tests running
   await expect(async () => {
     if (url.test(page.url())) return;
-    const canClickAgain = page.url() === startUrl && await element.evaluate((el) =>
-      el.isConnected && !el.hasAttribute('disabled') && el.getAttribute('aria-disabled') !== 'true'
-    ).catch(() => false);
-    if (canClickAgain) {
-      await element.click({ timeout: 2000 }).catch(() => {});
+    if (page.url() === startUrl) {
+      const isConnected = await element!.evaluate((el) => el.isConnected).catch(() => false);
+      if (!isConnected) {
+        const found = await target.elementHandle({ timeout: 2000 }).catch(() => null);
+        if (found) {
+          await element!.dispose();
+          element = found;
+        }
+      }
+      const canClickAgain = await element!.evaluate((el) =>
+        el.isConnected && !el.hasAttribute('disabled') && el.getAttribute('aria-disabled') !== 'true'
+      ).catch(() => false);
+      if (canClickAgain) await click(2000);
     }
-    await expect(page).toHaveURL(url, { timeout: 5000 });
+    await expect(page, `waiting for ${url} after clicking ${target} (last click error: ${lastClickError})`)
+      .toHaveURL(url, { timeout: 5000 });
   }).toPass({ timeout: 45_000 });
   await element.dispose();
 }

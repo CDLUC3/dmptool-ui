@@ -203,7 +203,13 @@ const FunderRequirementsPage: React.FC = () => {
     if (wasRealError) setErrors([t("messages.errors.loadFailed")]);
   }, [error, t]);
 
-  // Keep the last results on screen while a search, sort or page change loads, so the table keeps keyboard focus.
+  // When a search, sort or page change starts a new request that isn't cached yet, Apollo sets `data` to undefined
+  // until it finishes, while `previousData` keeps the last results. Showing `previousData` in the meantime keeps the
+  // old rows on screen instead of replacing the table with the loading spinner. Removing the table would also lose
+  // the keyboard focus of someone who just sorted a column header. Screen readers hear "Loading" from the results
+  // count (a live region), and the table is marked aria-busy until the new rows arrive.
+  //   - isInitialLoad: the first visit, when there is nothing to show yet, so show the spinner
+  //   - isRefreshing: there are earlier results on screen while the new ones load
   const results = (data ?? previousData)?.publishedFunderTemplates;
   const isInitialLoad = loading && !results;
   const isRefreshing = loading && !!results;

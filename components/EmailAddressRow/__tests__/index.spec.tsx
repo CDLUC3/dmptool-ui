@@ -116,7 +116,10 @@ describe('EmailAddressRow', () => {
     );
 
     const resendButton = screen.getByRole('button', { name: 'btnResendVerification' });
-    resendButton.focus();
+    // React Aria's focus ring updates state on focus, so focus inside act().
+    act(() => {
+      resendButton.focus();
+    });
     await user.keyboard('{Enter}');
 
     expect(resendConfirmation).toHaveBeenCalledWith('alias@test.com');

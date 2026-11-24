@@ -1,80 +1,99 @@
-import { renderHook } from '@testing-library/react';
-import { PaginationType } from '@/generated/graphql';
-import {
-  FUNDER_TEMPLATE_SORT_FIELDS,
-  templateDownloadHref,
-  useFunderTemplates,
-} from '../useFunderTemplates';
-import { stubFunderTemplates } from '../funderTemplatesStubData';
+import React from 'react';
+import { renderHook, waitFor } from '@testing-library/react';
+import { MockedProvider } from '@apollo/client/testing/react';
+import { PaginationType, PublishedFunderTemplatesDocument } from '@/generated/graphql';
+import { templateDownloadHref, useFunderTemplates } from '../useFunderTemplates';
 
-const names = (items: { name: string }[]) => items.map((item) => item.name);
+const variables = {
+  term: 'nsf',
+  paginationOptions: { type: PaginationType.Offset, offset: 0, limit: 10, sortField: 'vt.name', sortDir: 'ASC' },
+};
+
+const item = (overrides = {}) => ({
+  __typename: 'FunderTemplateSearchResult',
+  id: 317,
+  templateId: 40,
+  name: 'Arctic Data Center: NSF Polar Programs',
+  ownerURI: 'https://ror.org/021nxhr62',
+  ownerDisplayName: 'National Science Foundation (nsf.gov)',
+  modified: '2026-11-19 23:33:21',
+  funderLinks: [{ __typename: 'VersionedTemplateLink', id: 1, url: 'https://www.nsf.gov/polar', text: 'Polar guidance' }],
+  samplePlanLinks: [],
+  ...overrides,
+});
+
+const response = (items: unknown[]) => ({
+  request: { query: PublishedFunderTemplatesDocument, variables },
+  result: {
+    data: {
+      publishedFunderTemplates: {
+        __typename: 'FunderTemplateSearchResults',
+        totalCount: items.length,
+        limit: 10,
+        currentOffset: 0,
+        hasNextPage: false,
+        hasPreviousPage: false,
+        availableSortFields: ['vt.name', 'a.displayName', 'vt.modified'],
+        items,
+      },
+    },
+  },
+});
+
+const renderWithMocks = (mocks: unknown[]) => renderHook(() => useFunderTemplates({ variables }), {
+  wrapper: ({ children }: { children: React.ReactNode }) =>
+    React.createElement(MockedProvider, { mocks: mocks as never }, children),
+});
 
 describe('useFunderTemplates', () => {
-  it('should return the first page sorted by template name when no options are given', () => {
-    const { result } = renderHook(() => useFunderTemplates({ variables: {} }));
-    const results = result.current.data.publishedFunderTemplates;
+  it('should load the funder templates with the search and pagination variables', async () => {
+    const { result } = renderWithMocks([response([item()])]);
 
-    expect(result.current.loading).toBe(false);
+    expect(result.current.loading).toBe(true);
+    expect(result.current.data).toBeUndefined();
+
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    const results = result.current.data?.publishedFunderTemplates;
     expect(result.current.error).toBeUndefined();
-    expect(results.totalCount).toBe(stubFunderTemplates.length);
-    expect(results.items).toHaveLength(10);
-    expect(results.currentOffset).toBe(0);
-    expect(results.hasPreviousPage).toBe(false);
-    expect(results.hasNextPage).toBe(true);
-    expect(results.availableSortFields).toEqual([...FUNDER_TEMPLATE_SORT_FIELDS]);
-    expect(names(results.items)[0]).toBe('Agency for Healthcare Research and Quality (AHRQ)');
-    expect(names(results.items)[9]).toBe('National Institutes of Health (NIH): Default DMSP');
-  });
-
-  it('should match the search term against the template name and the organization name, ignoring case', () => {
-    const { result, rerender } = renderHook(
-      ({ term }) => useFunderTemplates({ variables: { term } }),
-      { initialProps: { term: 'moore' } }
-    );
-    expect(names(result.current.data.publishedFunderTemplates.items)).toEqual(['Gordon and Betty Moore Foundation']);
-
-    rerender({ term: '  ENERGY.GOV ' });
-    expect(result.current.data.publishedFunderTemplates.totalCount).toBe(2);
-
-    rerender({ term: 'no such funder' });
-    expect(result.current.data.publishedFunderTemplates.items).toEqual([]);
-    expect(result.current.data.publishedFunderTemplates.totalCount).toBe(0);
-  });
-
-  it('should sort by organization name and by last updated date in either direction', () => {
-    const { result, rerender } = renderHook(
-      ({ sortField, sortDir }) => useFunderTemplates({
-        variables: { paginationOptions: { type: PaginationType.Offset, limit: 50, sortField, sortDir } },
-      }),
-      { initialProps: { sortField: 'vt.modified', sortDir: 'DESC' } }
-    );
-    const newestFirst = result.current.data.publishedFunderTemplates.items;
-    expect(newestFirst[0].name).toBe('Atlantic Offshore Research (RWSC & ROSA)');
-    expect(newestFirst[newestFirst.length - 1].name).toBe('U.S. Geological Survey (USGS)');
-
-    rerender({ sortField: 'a.displayName', sortDir: 'ASC' });
-    expect(result.current.data.publishedFunderTemplates.items[0].ownerDisplayName)
-      .toBe('Agency for Healthcare Research and Quality (ahrq.gov)');
-  });
-
-  it('should fall back to sorting by name when given an unknown sort field', () => {
-    const { result } = renderHook(() => useFunderTemplates({
-      variables: { paginationOptions: { sortField: 'vt.bogus', sortDir: 'DESC' } },
+    expect(results?.totalCount).toBe(1);
+    expect(results?.items[0]).toEqual(expect.objectContaining({
+      id: 317,
+      name: 'Arctic Data Center: NSF Polar Programs',
+      ownerDisplayName: 'National Science Foundation (nsf.gov)',
+      funderLinks: [expect.objectContaining({ url: 'https://www.nsf.gov/polar', text: 'Polar guidance' })],
+      samplePlanLinks: [],
     }));
-
-    expect(result.current.data.publishedFunderTemplates.items[0].name).toBe('U.S. Geological Survey (USGS)');
   });
 
-  it('should return the requested page', () => {
-    const { result } = renderHook(() => useFunderTemplates({
-      variables: { paginationOptions: { type: PaginationType.Offset, offset: 10, limit: 10 } },
-    }));
-    const results = result.current.data.publishedFunderTemplates;
+  it('should give the page empty lists when a template has no links', async () => {
+    const { result } = renderWithMocks([response([item({ funderLinks: null, samplePlanLinks: null })])]);
 
-    expect(results.items).toHaveLength(stubFunderTemplates.length - 10);
-    expect(results.currentOffset).toBe(10);
-    expect(results.hasPreviousPage).toBe(true);
-    expect(results.hasNextPage).toBe(false);
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    const template = result.current.data?.publishedFunderTemplates.items[0];
+    expect(template?.funderLinks).toEqual([]);
+    expect(template?.samplePlanLinks).toEqual([]);
+  });
+
+  it('should skip empty items in the results', async () => {
+    const { result } = renderWithMocks([response([null, item()])]);
+
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    expect(result.current.data?.publishedFunderTemplates.items.map((template) => template.id)).toEqual([317]);
+  });
+
+  it('should return the error when the query fails', async () => {
+    const { result } = renderWithMocks([{
+      request: { query: PublishedFunderTemplatesDocument, variables },
+      error: new Error('Network error'),
+    }]);
+
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    expect(result.current.error).toBeDefined();
+    expect(result.current.data).toBeUndefined();
   });
 });
 

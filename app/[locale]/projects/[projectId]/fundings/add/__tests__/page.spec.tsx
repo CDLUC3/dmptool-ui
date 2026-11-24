@@ -402,6 +402,68 @@ describe('AddProjectFunderManually', () => {
     });
   });
 
+  it('should save only once when the form is submitted again while saving', async () => {
+    const mockPush = jest.fn();
+    (useRouter as jest.Mock).mockReturnValue({ push: mockPush });
+
+    // Allow each mutation to be answered twice, so a duplicate submit would reach the mutations instead of failing
+    // on a missing mock, and count how often each one is sent. successMocks[0] adds the "Other" affiliation, and
+    // successMocks[2] adds the funding with the uri it returns
+    const [affiliationMock, , fundingMock] = successMocks;
+    const addAffiliationResult = jest.fn(() => affiliationMock.result);
+    const addProjectFundingResult = jest.fn(() => fundingMock.result);
+    const mocks = [
+      { ...affiliationMock, result: addAffiliationResult, maxUsageCount: 2 },
+      { ...fundingMock, result: addProjectFundingResult, maxUsageCount: 2 },
+    ];
+
+    await act(async () => {
+      render(
+        <MockedProvider mocks={mocks}>
+          <AddProjectFunderManually />
+        </MockedProvider>
+      );
+    });
+
+    const saveButton = screen.getByRole('button', { name: /buttons.saveChanges/i });
+    fillAndSubmitValidForm();
+    // Submit again before the first save has finished, e.g. a double click
+    fireEvent.submit(saveButton);
+
+    // The button shows that the save is in progress, and stays disabled after it succeeds
+    expect(saveButton).toHaveTextContent('buttons.saving');
+    expect(saveButton).toBeDisabled();
+
+    await waitFor(() => {
+      expect(mockPush).toHaveBeenCalledTimes(1);
+    });
+    expect(addAffiliationResult).toHaveBeenCalledTimes(1);
+    expect(addProjectFundingResult).toHaveBeenCalledTimes(1);
+    expect(saveButton).toBeDisabled();
+  });
+
+  it('should re-enable the Save button when saving fails', async () => {
+    (useRouter as jest.Mock).mockReturnValue({ push: jest.fn() });
+
+    await act(async () => {
+      render(
+        <MockedProvider mocks={errorMocks}>
+          <AddProjectFunderManually />
+        </MockedProvider>
+      );
+    });
+
+    // addAffiliation returns a field error for this name
+    fireEvent.change(screen.getByLabelText('labels.funderName'), { target: { value: 'Affiliate Field Error' } });
+    fireEvent.change(screen.getByLabelText('Other Institution'), { target: { value: 'Affiliate Field Error' } });
+    fireEvent.submit(screen.getByRole('button', { name: /buttons.saveChanges/i }));
+
+    // Once the error is shown, the button can be used to try again
+    expect(await screen.findByText('messages.errors.projectFundingUpdateFailed')).toBeInTheDocument();
+    const saveButton = screen.getByRole('button', { name: /buttons.saveChanges/i });
+    expect(saveButton).toBeEnabled();
+  });
+
   it('should return to project details when used inside the create flow', async () => {
     const mockPush = jest.fn();
     (useRouter as jest.Mock).mockReturnValue({ push: mockPush });

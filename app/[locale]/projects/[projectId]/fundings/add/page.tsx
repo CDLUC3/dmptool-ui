@@ -97,6 +97,10 @@ const AddProjectFunderManually = () => {
 
   const [errors, setErrors] = useState<string[]>([]);
   const [otherField, setOtherField] = useState(false);
+  // Blocks a second submit while a save is in progress. A ref, because state updates are batched and wouldn't stop
+  // a second click in the same tick. The state disables the Save button so users can see the save is in progress
+  const isSubmittingRef = useRef(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<FieldErrorsInterface>({
     affiliationId: '',
     otherAffiliationName: '',
@@ -189,10 +193,24 @@ const AddProjectFunderManually = () => {
     setFundingData({ ...fundingData, [name]: value });
   }
 
-  // Handle Form Submittal
+  // Handle Form Submittal. Each submit adds a funding, so a second submit while the first is saving (a double click,
+  // or a click while the next page loads) would add a duplicate. Ignore it, and keep the button disabled after a
+  // successful save until the page navigates away
   async function handleFormSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (isSubmittingRef.current) return;
+    isSubmittingRef.current = true;
+    setIsSubmitting(true);
 
+    const saved = await saveFunding();
+    if (!saved) {
+      isSubmittingRef.current = false;
+      setIsSubmitting(false);
+    }
+  }
+
+  // Saves the funding and goes to the next page. Returns false if it wasn't saved
+  async function saveFunding(): Promise<boolean> {
     // Clear previous error messages
     clearAllFieldErrors();
     setErrors([]);
@@ -204,7 +222,7 @@ const AddProjectFunderManually = () => {
         otherAffiliationName: addFunding('messages.errors.requiredOtherAffiliation')
       }));
       setErrors([addFunding('messages.errors.projectFundingUpdateFailed')]);
-      return;
+      return false;
     }
 
 
@@ -234,7 +252,7 @@ const AddProjectFunderManually = () => {
             affiliationId: String(errs.name),
           });
           setErrors([errs.general ?? addFunding('messages.errors.projectFundingUpdateFailed')]);
-          return; // stop if affiliation failed
+          return false; // stop if affiliation failed
         }
       } catch (err) {
         const error = err as Error;
@@ -246,7 +264,7 @@ const AddProjectFunderManually = () => {
           ...prev,
           error.message || addFunding("messages.errors.projectFundingUpdateFailed"),
         ]);
-        return;
+        return false;
       }
     } else {
       // Otherwise just use the affiliationId of selecting existing affiliation
@@ -280,13 +298,14 @@ const AddProjectFunderManually = () => {
         });
 
         setErrors([errs.general ?? addFunding('messages.errors.projectFundingUpdateFailed')]);
-        return;
+        return false;
       }
       // Success
       showSuccessToast();
       router.push(inFlow
         ? nextPath({ from: 'fundingAdd' }, flow, projectId)
         : routePath('projects.fundings.index', { projectId }));
+      return true;
 
     } catch (err) {
       const error = err as Error;
@@ -298,6 +317,7 @@ const AddProjectFunderManually = () => {
         ...prev,
         error.message || addFunding("messages.errors.projectFundingUpdateFailed"),
       ]);
+      return false;
     }
   }
 
@@ -397,7 +417,9 @@ const AddProjectFunderManually = () => {
             />
 
             <FlowActions>
-              <Button type="submit" className="submit-button">{global('buttons.saveChanges')}</Button>
+              <Button type="submit" className="submit-button" isDisabled={isSubmitting}>
+                {isSubmitting ? global('buttons.saving') : global('buttons.saveChanges')}
+              </Button>
             </FlowActions>
           </Form>
       </FlowAwareLayout>

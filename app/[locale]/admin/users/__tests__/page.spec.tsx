@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React from 'react';
 import "@testing-library/jest-dom";
-import { render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { axe, toHaveNoViolations } from 'jest-axe';
 import { MockedProvider } from "@apollo/client/testing/react";
@@ -232,6 +232,15 @@ describe('Admin - User Accounts Dashboard', () => {
     mockedHandleApolloError.mockReturnValue({
       wasRealError: true,
       message: 'Network error',
+    });
+  });
+
+  // MeDocument and UsersDocument resolve independently, and React Aria collections
+  // finish building after render. Flush any trailing updates inside act() so they
+  // don't land after the test ends and trigger "not wrapped in act(...)" warnings.
+  afterEach(async () => {
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
     });
   });
 
