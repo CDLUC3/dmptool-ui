@@ -15,6 +15,7 @@ import { useTranslations } from "next-intl";
 import { TypeAheadWithOther, useAffiliationSearch } from "@/components/Form/TypeAheadWithOther";
 import PasswordRequirementsList from "@/components/PasswordRequirementsList";
 import { handleErrors, isValidPassword, isValidEmail, routePath } from "@/utils/index";
+import { getReturnTo, isEmailConfirmationReturn } from "@/utils/returnTo";
 
 interface SSOCheckContainerProps {
   mode: Modes;
@@ -113,6 +114,14 @@ export const SSOCheckContainer: React.FC<SSOCheckContainerProps> = ({ mode, init
   const [termsAccepted, setTermsAccepted] = useState<boolean>(false);
 
   const { setIsAuthenticated, clearCache } = useAuthContext();
+
+  // When the user was sent here to confirm an email, remind them to sign in with the email they already use.
+  // The email they're confirming can't be used to sign in until it is confirmed. This is read after the first
+  // render, because the URL isn't available when the page is rendered on the server
+  const [isConfirmingEmail, setIsConfirmingEmail] = useState(false);
+  useEffect(() => {
+    setIsConfirmingEmail(mode === "login" && isEmailConfirmationReturn(getReturnTo()));
+  }, [mode]);
   const isPendingSsoSignup = mode === "register" && initialPendingSignup?.email === email;
 
   const returnToEmail = () => {
@@ -129,8 +138,9 @@ export const SSOCheckContainer: React.FC<SSOCheckContainerProps> = ({ mode, init
     await clearCache();
     setIsAuthenticated(true);
     // Full navigation to a URL with no locale, so the middleware can choose
-    // the user's saved language from their new JWT (languageId)
-    window.location.assign(routePath("app.home"));
+    // the user's saved language from their new JWT (languageId). Go back to the page that sent the
+    // user here (e.g. the email confirmation page) if there is one, otherwise go to the home page
+    window.location.assign(getReturnTo() ?? routePath("app.home"));
   };
 
   // After the user enters their email address, call the ssoCheck endpoint on the Auth service to determine which form
@@ -368,10 +378,14 @@ export const SSOCheckContainer: React.FC<SSOCheckContainerProps> = ({ mode, init
           // Set the user to the SSO provider's login page. The SSO provider will redirect back to the app after
           // successful authentication.
           setLoading(true);
-          const queryString = new URLSearchParams({
+          const ssoParams = new URLSearchParams({
             email,
             entityId: ssoEntityId || "",
-          }).toString();
+          });
+          // The Auth service carries returnTo through the SSO provider and sends the user back to it
+          const returnTo = getReturnTo();
+          if (returnTo) ssoParams.set("returnTo", returnTo);
+          const queryString = ssoParams.toString();
 
           window.location.href = `${process.env.NEXT_PUBLIC_AUTH_ENDPOINT}/sso/passthru?${queryString}`;
           break;
@@ -433,6 +447,10 @@ export const SSOCheckContainer: React.FC<SSOCheckContainerProps> = ({ mode, init
         errors={errors}
         ref={errorRef}
       />
+
+      {isConfirmingEmail && (
+        <p data-testid="confirmEmailSignInHint">{t("confirmEmailSignInHint")}</p>
+      )}
 
       <FormInput
         name="email"

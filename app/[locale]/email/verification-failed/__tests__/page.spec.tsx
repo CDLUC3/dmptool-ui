@@ -1,45 +1,64 @@
-import { ReactNode } from 'react';
-import { render } from '@testing-library/react';
+import React from 'react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import { axe, toHaveNoViolations } from 'jest-axe';
+import { useSearchParams } from 'next/navigation';
+import { useRouter } from '@/i18n/routing';
 import VerificationFailed from '../page';
 
 expect.extend(toHaveNoViolations);
 
-jest.mock('@/components/PageHeader', () => {
-  const mockPageHeader = jest.fn(({ children }: { children: ReactNode, title: string }) => (
-    <div data-testid="mock-page-wrapper">{children}</div>
-  ));
-  return {
-    __esModule: true,
-    default: mockPageHeader
-  }
-});
+jest.mock('@/i18n/routing', () => ({
+  useRouter: jest.fn(),
+}));
 
 describe('VerificationFailed', () => {
+  const mockPush = jest.fn();
+
+  const withReason = (reason?: string) => {
+    (useSearchParams as jest.Mock).mockReturnValue(new URLSearchParams(reason ? { reason } : {}));
+  };
 
   beforeEach(() => {
-    jest.clearAllMocks();
-  })
-  afterEach(() => {
-    jest.resetAllMocks();
+    window.scrollTo = jest.fn(); // Called by PageHeader
+    (useRouter as jest.Mock).mockReturnValue({ push: mockPush });
+    withReason();
   });
 
-  it('should render the component with PageHeader', async () => {
-    const titleProp = 'Verification failed';
-    const pageHeader = await import('@/components/PageHeader');
-    const mockPageHeader = pageHeader.default;
-    const { getByTestId } = render(<VerificationFailed />);
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
 
-    expect(getByTestId('mock-page-wrapper')).toBeInTheDocument();
-    // Check only the first argument (props) for the title prop
-    expect((mockPageHeader as jest.Mock).mock.calls[0][0]).toEqual(expect.objectContaining({ title: titleProp }));
-  })
+  it.each([
+    ['invalid', 'failed.invalid'],
+    ['claimedByOther', 'failed.claimedByOther'],
+    ['somethingElse', 'failed.generic'],
+    [undefined, 'failed.generic'],
+  ])('explains the failure for reason %s and links to the profile', async (reason, messageKey) => {
+    withReason(reason);
+    render(<VerificationFailed />);
+
+    expect(screen.getByRole('heading', { name: 'failed.title' })).toBeInTheDocument();
+    expect(screen.getByText(messageKey)).toBeInTheDocument();
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'failed.profileButton' }));
+    });
+    expect(mockPush).toHaveBeenCalledWith('/account/profile');
+  });
+
+  it('tells a user signed in to the wrong account to sign out, without a profile button', () => {
+    withReason('wrongAccount');
+    render(<VerificationFailed />);
+
+    expect(screen.getByText('failed.wrongAccount')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'failed.profileButton' })).not.toBeInTheDocument();
+  });
 
   it('should pass axe accessibility test', async () => {
-    const renderResult = render(<VerificationFailed />);
-    const container = renderResult.container;
-
-    const results = await axe(container);
-    expect(results).toHaveNoViolations();
-  })
+    withReason('invalid');
+    const { container } = render(<VerificationFailed />);
+    await act(async () => {
+      expect(await axe(container)).toHaveNoViolations();
+    });
+  });
 });

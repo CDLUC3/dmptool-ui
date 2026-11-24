@@ -19,12 +19,12 @@ import {
 } from '@/generated/graphql';
 import logECS from '@/utils/clientLogger';
 import { routePath } from '@/utils/routes';
-import { useResendEmailConfirmation } from '@/app/hooks/useResendEmailConfirmation';
+import { useSendEmailConfirmation } from '@/app/hooks/useSendEmailConfirmation';
 
 expect.extend(toHaveNoViolations);
 
-jest.mock('@/app/hooks/useResendEmailConfirmation', () => ({
-  useResendEmailConfirmation: jest.fn(),
+jest.mock('@/app/hooks/useSendEmailConfirmation', () => ({
+  useSendEmailConfirmation: jest.fn(),
 }));
 
 const GET_USER = MeDocument;
@@ -34,9 +34,11 @@ jest.mock('next/navigation', () => ({
 
 
 // Mock Apollo Client hooks
+const mockRefetchQueries = jest.fn();
 jest.mock('@apollo/client/react', () => ({
   useMutation: jest.fn(),
   useQuery: jest.fn(),
+  useApolloClient: () => ({ refetchQueries: mockRefetchQueries }),
 }));
 
 jest.mock('@/utils/clientLogger', () => ({
@@ -118,27 +120,19 @@ const mockEmailAddressesWithUnconfirmed = [
 
 // Cast with jest.mocked utility
 const mockUseMutation = jest.mocked(useMutation);
-const mockUseResendEmailConfirmation = jest.mocked(useResendEmailConfirmation);
+const mockUseSendEmailConfirmation = jest.mocked(useSendEmailConfirmation);
 
 let mockSetPrimaryUserEmailMutationFn: jest.Mock;
 let mockAddUserEmailMutationFn: jest.Mock;
 let mockRemoveUserEmailMutationFn: jest.Mock;
-let mockResendEmailConfirmationFn: jest.Mock;
+let mockSendEmailConfirmationFn: jest.Mock;
 
 const setupMocks = () => {
+  mockRefetchQueries.mockReset().mockResolvedValue([]);
 
-  mockResendEmailConfirmationFn = jest.fn().mockResolvedValue({
-    data: {
-      resendUserEmailConfirmation: {
-        email: 'pending@test.com',
-        isPrimary: false,
-        isConfirmed: false,
-        errors: null
-      }
-    }
-  });
+  mockSendEmailConfirmationFn = jest.fn().mockResolvedValue({ sent: true });
   /* eslint-disable @typescript-eslint/no-explicit-any */
-  mockUseResendEmailConfirmation.mockReturnValue([mockResendEmailConfirmationFn, { loading: false }] as any);
+  mockUseSendEmailConfirmation.mockReturnValue([mockSendEmailConfirmationFn, { loading: false }] as any);
 
   mockSetPrimaryUserEmailMutationFn = jest.fn().mockResolvedValue({
     data: { key: 'value' }
@@ -725,7 +719,55 @@ describe('UpdateEmailAddressPage', () => {
         timeout: 10000,
       });
     });
+    expect(mockSendEmailConfirmationFn).toHaveBeenCalledWith('msmith@test.com');
     expect(screen.getByLabelText(/headingAddAliasEmail/i)).toHaveValue('');
+  });
+
+  const addAlias = async (email: string) => {
+    mockAddUserEmailMutationFn.mockResolvedValueOnce({
+      data: { addUserEmail: { ...mockEmailData, email, errors: { general: null, userId: null, email: null } } }
+    });
+    render(<UpdateEmailAddress emailAddresses={mockEmailAddresses} />);
+    fireEvent.change(screen.getByLabelText(/headingAddAliasEmail/i), { target: { value: email } });
+    const addContainer = document.querySelector('.addContainer') as HTMLElement;
+    await act(async () => {
+      fireEvent.click(within(addContainer).getByRole('button', { name: 'btnAdd' }));
+    });
+  };
+
+  it('should tell the user when the alias was added but the confirmation email could not be sent', async () => {
+    mockSendEmailConfirmationFn.mockResolvedValueOnce({ sent: false, reason: 'failed' });
+
+    await addAlias('msmith@test.com');
+
+    await waitFor(() => {
+      expect(mockToastAdd).toHaveBeenCalledWith('messages.errors.errorSendingVerification', { type: 'error' });
+    });
+    expect(mockToastAdd).not.toHaveBeenCalledWith('messages.emailAddressUpdateSuccess', expect.anything());
+  });
+
+  it.each([
+    ['alreadyConfirmed', 'messages.errors.emailAlreadyConfirmed'],
+    ['claimedByOther', 'messages.errors.emailClaimedByOther'],
+  ])('should explain why no confirmation email was sent when the email is %s', async (reason, messageKey) => {
+    mockSendEmailConfirmationFn.mockResolvedValueOnce({ sent: false, reason });
+
+    await addAlias('msmith@test.com');
+
+    await waitFor(() => {
+      expect(mockToastAdd).toHaveBeenCalledWith(messageKey, { type: 'error' });
+    });
+  });
+
+  it('should log and tell the user when sending the confirmation email for a new alias throws', async () => {
+    mockSendEmailConfirmationFn.mockRejectedValueOnce(new Error('Network error'));
+
+    await addAlias('msmith@test.com');
+
+    await waitFor(() => {
+      expect(mockToastAdd).toHaveBeenCalledWith('messages.errors.errorSendingVerification', { type: 'error' });
+    });
+    expect(logECS).toHaveBeenCalledWith('error', 'UpdateEmailAddress.handleAddingAlias', { error: 'Network error' });
   });
 
   it('should show confirmed and unconfirmed states and only offer make primary on confirmed aliases', () => {
@@ -763,9 +805,7 @@ describe('UpdateEmailAddressPage', () => {
       fireEvent.click(screen.getByRole('button', { name: 'btnResendVerification' }));
     });
 
-    expect(mockResendEmailConfirmationFn).toHaveBeenCalledWith({
-      variables: { email: 'pending@test.com' }
-    });
+    expect(mockSendEmailConfirmationFn).toHaveBeenCalledWith('pending@test.com');
     await waitFor(() => {
       expect(mockToastAdd).toHaveBeenCalledWith('messages.verificationResent', {
         type: 'success',
@@ -775,17 +815,8 @@ describe('UpdateEmailAddressPage', () => {
     });
   });
 
-  it('should show an error toast with the backend message when resending returns errors', async () => {
-    mockResendEmailConfirmationFn.mockResolvedValueOnce({
-      data: {
-        resendUserEmailConfirmation: {
-          email: 'pending@test.com',
-          isPrimary: false,
-          isConfirmed: false,
-          errors: { general: 'Please wait before requesting another link', email: null, userId: null }
-        }
-      }
-    });
+  it('should show an error toast when the verification link could not be resent', async () => {
+    mockSendEmailConfirmationFn.mockResolvedValueOnce({ sent: false, reason: 'failed' });
 
     render(
       <UpdateEmailAddress
@@ -798,14 +829,62 @@ describe('UpdateEmailAddressPage', () => {
     });
 
     await waitFor(() => {
-      expect(mockToastAdd).toHaveBeenCalledWith('Please wait before requesting another link', { type: 'error' });
+      expect(mockToastAdd).toHaveBeenCalledWith('messages.errors.errorResendingVerification', { type: 'error' });
     });
     expect(mockToastAdd).not.toHaveBeenCalledWith('messages.verificationResent', expect.anything());
   });
 
+  const clickResend = async () => {
+    render(
+      <UpdateEmailAddress
+        emailAddresses={mockEmailAddressesWithUnconfirmed}
+      />
+    );
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'btnResendVerification' }));
+    });
+  };
+
+  it('should refresh the email list when the email turns out to be confirmed already', async () => {
+    mockSendEmailConfirmationFn.mockResolvedValueOnce({ sent: false, reason: 'alreadyConfirmed' });
+
+    await clickResend();
+
+    await waitFor(() => {
+      expect(mockToastAdd).toHaveBeenCalledWith('messages.errors.emailAlreadyConfirmed', { type: 'error' });
+    });
+    expect(mockRefetchQueries).toHaveBeenCalledWith({ include: [GET_USER] });
+  });
+
+  it.each(['claimedByOther', 'failed'])(
+    'should not refresh the email list when the link was not sent because %s',
+    async (reason) => {
+      mockSendEmailConfirmationFn.mockResolvedValueOnce({ sent: false, reason });
+
+      await clickResend();
+
+      await waitFor(() => expect(mockToastAdd).toHaveBeenCalled());
+      expect(mockRefetchQueries).not.toHaveBeenCalled();
+    }
+  );
+
+  it('should only log when refreshing the email list fails', async () => {
+    const refetchError = new Error('Network error');
+    mockRefetchQueries.mockRejectedValueOnce(refetchError);
+    mockSendEmailConfirmationFn.mockResolvedValueOnce({ sent: false, reason: 'alreadyConfirmed' });
+
+    await clickResend();
+
+    await waitFor(() => {
+      expect(logECS).toHaveBeenCalledWith('error', 'UpdateEmailAddress.sendConfirmation', { error: refetchError });
+    });
+    expect(mockToastAdd).toHaveBeenCalledTimes(1);
+    expect(mockToastAdd).toHaveBeenCalledWith('messages.errors.emailAlreadyConfirmed', { type: 'error' });
+  });
+
   it('should log and show an error toast when resending throws', async () => {
     const resendError = new Error('Network error');
-    mockResendEmailConfirmationFn.mockRejectedValueOnce(resendError);
+    mockSendEmailConfirmationFn.mockRejectedValueOnce(resendError);
 
     render(
       <UpdateEmailAddress
@@ -830,7 +909,7 @@ describe('UpdateEmailAddressPage', () => {
   it('should not show an error toast when the resend request is aborted', async () => {
     const abortError = new Error('The operation was aborted');
     abortError.name = 'AbortError';
-    mockResendEmailConfirmationFn.mockRejectedValueOnce(abortError);
+    mockSendEmailConfirmationFn.mockRejectedValueOnce(abortError);
 
     render(
       <UpdateEmailAddress
@@ -843,7 +922,7 @@ describe('UpdateEmailAddressPage', () => {
     });
 
     await waitFor(() => {
-      expect(mockResendEmailConfirmationFn).toHaveBeenCalled();
+      expect(mockSendEmailConfirmationFn).toHaveBeenCalled();
     });
     expect(mockToastAdd).not.toHaveBeenCalled();
   });

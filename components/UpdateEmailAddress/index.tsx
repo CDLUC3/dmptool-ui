@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from '@/i18n/routing';
 import { useTranslations } from 'next-intl';
 import { Button, Form, } from "react-aria-components";
-import { useMutation } from '@apollo/client/react';
+import { useApolloClient, useMutation } from '@apollo/client/react';
 
 // Graphql mutations
 import {
@@ -20,7 +20,7 @@ import ErrorMessages from '@/components/ErrorMessages';
 //Interfaces
 import { EmailInterface } from '@/app/types';
 // Hooks
-import { useResendEmailConfirmation } from '@/app/hooks/useResendEmailConfirmation';
+import { useSendEmailConfirmation } from '@/app/hooks/useSendEmailConfirmation';
 // Utils and other
 import logECS from '@/utils/clientLogger';
 import { handleApolloError } from '@/utils/index';
@@ -47,7 +47,8 @@ const UpdateEmailAddress: React.FC<UpdateEmailAddressProps> = ({
   const [setPrimaryUserEmailMutation] = useMutation(SetPrimaryUserEmailDocument);
   const [addUserEmailMutation] = useMutation(AddUserEmailDocument);
   const [removeUserEmailMutation] = useMutation(RemoveUserEmailDocument);
-  const [resendEmailConfirmation] = useResendEmailConfirmation();
+  const [sendEmailConfirmation] = useSendEmailConfirmation();
+  const apolloClient = useApolloClient();
 
   const clearErrors = () => {
     setErrors({});
@@ -103,6 +104,42 @@ const UpdateEmailAddress: React.FC<UpdateEmailAddressProps> = ({
       timeout: 10000
     });
   }
+  // Ask the Auth service to email a confirmation link, then tell the user how it went
+  const sendConfirmation = async (
+    email: string,
+    successKey: string,
+    failureKey: string,
+    reference: string
+  ) => {
+    try {
+      const result = await sendEmailConfirmation(email);
+      if (result.sent) {
+        showSuccessToast(successKey, { email });
+        return;
+      }
+
+      const messageKeys = {
+        alreadyConfirmed: 'messages.errors.emailAlreadyConfirmed',
+        claimedByOther: 'messages.errors.emailClaimedByOther',
+        failed: failureKey,
+      };
+      toastState.add(t(messageKeys[result.reason], { email }), { type: 'error' });
+
+      // The email was confirmed since the list was loaded (e.g. from the link in another tab), so refresh the
+      // list to show it as confirmed. The user has already been told, so a failed refresh is only logged
+      if (result.reason === 'alreadyConfirmed') {
+        apolloClient.refetchQueries({ include: [GET_USER] }).catch((error: unknown) => {
+          logECS('error', 'UpdateEmailAddress.sendConfirmation', { error });
+        });
+      }
+    } catch (err) {
+      const { wasRealError } = handleApolloError(err, reference);
+      if (wasRealError) {
+        toastState.add(t(failureKey, { email }), { type: 'error' });
+      }
+    }
+  }
+
   // Adding new email alias
   const handleAddingAlias = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -131,9 +168,14 @@ const UpdateEmailAddress: React.FC<UpdateEmailAddressProps> = ({
           return;
         }
       }
-      // Clear the add alias input field
+      // Clear the add alias input field, then send the confirmation link for the new alias
       setAddAliasValue('');
-      showSuccessToast('messages.emailAddressUpdateSuccess', { email: addAliasValue });
+      await sendConfirmation(
+        addAliasValue,
+        'messages.emailAddressUpdateSuccess',
+        'messages.errors.errorSendingVerification',
+        'UpdateEmailAddress.handleAddingAlias'
+      );
     } catch (err) {
       // Display other errors
       setErrors(prevErrors => ({
@@ -185,32 +227,12 @@ const UpdateEmailAddress: React.FC<UpdateEmailAddressProps> = ({
   }
 
   const resendConfirmation = async (email: string) => {
-    try {
-      const response = await resendEmailConfirmation({
-        variables: { email }
-      });
-
-      const emailData = response?.data?.resendUserEmailConfirmation;
-      if (emailData?.errors) {
-        const [hasErrors, errs] = checkErrors(emailData.errors, ['general', 'userId', 'email']);
-        if (hasErrors) {
-          toastState.add(errs.email || errs.general || t('messages.errors.errorResendingVerification'), {
-            type: 'error'
-          });
-          return;
-        }
-      }
-      toastState.add(t('messages.verificationResent', { email }), {
-        type: 'success',
-        priority: 1,
-        timeout: 10000
-      });
-    } catch (err) {
-      const { wasRealError } = handleApolloError(err, 'UpdateEmailAddress.resendConfirmation');
-      if (wasRealError) {
-        toastState.add(t('messages.errors.errorResendingVerification'), { type: 'error' });
-      }
-    }
+    await sendConfirmation(
+      email,
+      'messages.verificationResent',
+      'messages.errors.errorResendingVerification',
+      'UpdateEmailAddress.resendConfirmation'
+    );
   }
 
   const handleAliasChange = (e: React.ChangeEvent<HTMLInputElement>) => {
