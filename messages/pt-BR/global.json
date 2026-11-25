@@ -173,8 +173,38 @@
       }
     }
   },
+  "DeveloperTools": {
+    "title": "Ferramentas de desenvolvimento",
+    "description": "Gere, gerencie e rotacione suas chaves de API.",
+    "helpTextResearcher": "Você pode usar suas chaves de API para criar e gerenciar seus DMPs programaticamente.",
+    "helpTextAdmin": "Você pode usar suas chaves de API para criar e gerenciar os DMPs de seus usuários programaticamente.",
+    "securityWarning": "Mantenha suas chaves seguras. Nunca as envie para repositórios públicos ou as exponha em código executado no lado do cliente!",
+    "instructions": "Consulte nosso {link} para obter instruções sobre como usar a API.",
+    "instructionsLink": "Documentação da API",
+    "contactName": "Nome do contato",
+    "contactNameHelp": "O contato é a pessoa responsável por gerenciar esta chave de API. Isso é utilizado para fins de auditoria e suporte.",
+    "contactEmail": "E-mail do contato",
+    "contactEmailHelp": "Este e-mail será notificado quando novas versões da API forem lançadas.",
+    "btnUpdate": "Atualizar informações de contato",
+    "btnUpdating": "Atualizando...",
+    "clientId": "ID do cliente",
+    "clientIdHelp": "O Client ID é um identificador exclusivo para sua chave de API. Ele é utilizado para identificar sua aplicação ao realizar solicitações à API.",
+    "clientSecret": "Segredo do cliente",
+    "clientSecretHelp": "O segredo do cliente é uma string confidencial que é usada para autenticar sua aplicação com a API.",
+    "btnGenerate": "Gerar chave de API",
+    "btnRegenerate": "Regenerar segredo do cliente",
+    "btnSubmitting": "Gerando...",
+    "credentialsGenerated": "Suas credenciais de API foram geradas com sucesso.",
+    "credentialsRegenerated": "Seu segredo do cliente foi regenerado com sucesso.",
+    "errorGeneratingCredentials": "Erro ao gerar credenciais de API",
+    "errorRegeneratingCredentials": "Erro ao regenerar segredo do cliente",
+    "contactNameValidation": "O nome do contato deve ter pelo menos 2 caracteres",
+    "contactEmailValidation": "O e-mail do contato não é válido",
+    "clientIdValidation": "O ID do cliente é obrigatório. Clique no botão 'Gerar chave de API' para criar uma.",
+    "clientSecretValidation": "O segredo do cliente é obrigatório."
+  },
   "UpdatePassword": {
-    "breadcrumbHome": "Home",
+    "breadcrumbHome": "Início",
     "breadcrumbProfile": "Perfil",
     "title": "Atualize sua senha",
     "headingPasswordRequirements": "Senhas necessárias:",
@@ -796,6 +826,10 @@
           "notifications": {
             "title": "Notificações",
             "description": "Configure suas preferências de notificação e configurações de e-mail"
+          },
+          "developerTools": {
+            "title": "Ferramentas de Desenvolvedor",
+            "description": "Gere, gerencie e rotacione suas chaves de API"
           }
         }
       }

@@ -173,6 +173,38 @@
       }
     }
   },
+  "DeveloperTools": {
+    "breadcrumbHome": "Home",
+    "breadcrumbProfile": "Profile",
+    "title": "Developer tools",
+    "description": "Generate, manage, and rotate your API keys.",
+    "helpTextResearcher": "You can use your API keys to create and manage your DMPs programmatically.",
+    "helpTextAdmin": "You can use your API keys to create and manage your user's DMPs programmatically.",
+    "securityWarning": "Keep your keys secure. Never commit them to public repositories or expose them in client-side code!",
+    "instructions": "Please see our {link} for instructions on how to use the API.",
+    "instructionsLink": "API documentation",
+    "contactName": "Contact name",
+    "contactNameHelp": "The contact is the person responsible for managing this API key. This is used for auditing and support purposes.",
+    "contactEmail": "Contact email",
+    "contactEmailHelp": "This email will be notified when new versions of the API are released.",
+    "btnUpdate": "Update contact info",
+    "btnUpdating": "Updating...",
+    "clientId": "Client ID",
+    "clientIdHelp": "Client ID is a unique identifier for your API key. It is used to identify your application when making API requests.",
+    "clientSecret": "Client secret",
+    "clientSecretHelp": "The client secret is a confidential string that is used to authenticate your application with the API.",
+    "btnGenerate": "Generate API key",
+    "btnRegenerate": "Regenerate client secret",
+    "btnSubmitting": "Generating...",
+    "credentialsGenerated": "Your API credentials have been generated successfully.",
+    "credentialsRegenerated": "Your client secret has been regenerated successfully.",
+    "errorGeneratingCredentials": "Error when generating API credentials",
+    "errorRegeneratingCredentials": "Error when regenerating client secret",
+    "contactNameValidation": "Contact name must be at least 2 characters",
+    "contactEmailValidation": "Contact email is not valid",
+    "clientIdValidation": "Client ID is required. Click the 'Generate API key' button to create one.",
+    "clientSecretValidation": "Client secret is required."
+  },
   "UpdatePassword": {
     "breadcrumbHome": "Home",
     "breadcrumbProfile": "Profile",
@@ -782,6 +814,10 @@
           "notifications": {
             "title": "Notifications",
             "description": "Configure your notification preferences and email settings"
+          },
+          "developerTools": {
+            "title": "Developer Tools",
+            "description": "Generate, manage, and rotate your API keys"
           }
         }
       }

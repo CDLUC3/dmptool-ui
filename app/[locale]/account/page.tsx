@@ -40,6 +40,11 @@ const AccountOverviewPage: React.FC = () => {
           title: t('sections.userProfile.items.notifications.title'),
           description: t('sections.userProfile.items.notifications.description'),
           href: routePath('account.notifications')
+        },
+        {
+          title: t('sections.userProfile.items.developerTools.title'),
+          description: t('sections.userProfile.items.developerTools.description'),
+          href: routePath('account.dev-tools')
         }
       ]
     }
@@ -56,7 +61,7 @@ const AccountOverviewPage: React.FC = () => {
       <div className={styles.main}>
         <div className={styles.mainContent}>
           <LayoutWithPanel>
-            <ContentContainer className={styles.layoutContentContainer}>              
+            <ContentContainer className={styles.layoutContentContainer}>
               <PageLinkCard sections={accountSections} />
             </ContentContainer>
             <SidebarPanel className={styles.layoutSidebarPanel}>

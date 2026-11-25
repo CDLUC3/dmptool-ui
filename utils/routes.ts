@@ -148,6 +148,7 @@ const routes = {
   "account.password": "/account/update-password",
   "account.connections": "/account/connections",
   "account.notifications": "/account/notifications",
+  "account.dev-tools": "/account/dev-tools",
 
   // Admin routes
   "admin.index": "/admin",

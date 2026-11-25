@@ -1,0 +1,29 @@
+@use '@/styles/responsive' as r;
+
+.formRow {
+  margin-top: 20px;
+  margin-bottom: 0;
+}
+
+.oneItemRow {
+  max-width: 100%;
+  input {
+    max-width: 100%;
+  }
+}
+
+.twoItemRow {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+
+  > div {
+    flex: 1; /* Make both fields take equal width */
+    margin-bottom: var(--space-4);
+  }
+
+  @include r.device(sm) {
+    flex-direction: row;
+    gap: 20px;
+  }
+}
